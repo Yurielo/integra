@@ -1,0 +1,159 @@
+#!/usr/bin/env python3
+"""Validate Integra R0 repository truth without third-party dependencies."""
+
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+STATE_PATH = ROOT / "state" / "integra_state_v1.json"
+SCHEMA_PATH = ROOT / "schemas" / "integra_state_v1.schema.json"
+
+REQUIRED_DOCUMENTS = (
+    "README.md",
+    "AGENTS.md",
+    "DEVELOPMENT_WORKFLOW.md",
+    "docs/INTEGRA_PLAN.md",
+    "docs/PRODUCT_DEFINITION.md",
+    "docs/ROADMAP.md",
+    "docs/RISK_REGISTER.md",
+    "docs/ACCEPTANCE_CRITERIA.md",
+    "docs/architecture/INTEGRA_ARCHITECTURE.md",
+)
+
+REQUIRED_MODULES = {
+    "projects_and_sources",
+    "transcript_and_topic_studio",
+    "knowledge_studio",
+    "media_studio",
+    "marketing_studio_v1",
+    "learning_studio_v1",
+    "knowledge_assistant_v1",
+    "publishing_hub",
+    "operations_and_diagnostics",
+    "compatibility_and_migration",
+}
+
+REQUIRED_SOCIAL_PLATFORMS = {
+    "facebook_pages",
+    "instagram",
+    "threads",
+    "youtube",
+    "telegram",
+    "whatsapp_business",
+    "tiktok",
+}
+
+EXPECTED_ROADMAP_IDS = {
+    "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8A", "R8B",
+    "R8C", "R9A", "R9B", "R9C", "R10", "R11", "LEARNING_V1",
+    "ASSISTANT_V1", "SOCIAL_FOUNDATION", "SOCIAL_FACEBOOK",
+    "SOCIAL_INSTAGRAM", "SOCIAL_THREADS", "SOCIAL_YOUTUBE",
+    "SOCIAL_TELEGRAM", "SOCIAL_WHATSAPP", "SOCIAL_TIKTOK", "R12", "R13",
+    "R14", "R15",
+}
+
+EXPECTED_ISSUE_NUMBERS = set(range(2, 32))
+
+
+def load_json(path: Path) -> dict:
+    with path.open(encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def validate_state(state: dict, root: Path = ROOT) -> list[str]:
+    errors: list[str] = []
+
+    for relative in REQUIRED_DOCUMENTS:
+        if not (root / relative).is_file():
+            errors.append(f"missing required document: {relative}")
+
+    if state.get("schema_version") != "1.0":
+        errors.append("schema_version must be 1.0")
+    if state.get("product") != "Integra":
+        errors.append("product must be Integra")
+    if state.get("standalone_products_preserved") is not True:
+        errors.append("standalone_products_preserved must be true")
+
+    execution_policy = state.get("execution_policy", {})
+    expected_policy = {
+        "safe_roadmap_implementation": "AUTHORIZED_AFTER_DEPENDENCIES",
+        "merge": "EXPLICIT_AUTHORITY_REQUIRED",
+        "release": "EXPLICIT_AUTHORITY_REQUIRED",
+        "live_external_actions": "EXPLICIT_AUTHORITY_REQUIRED",
+        "protected_data": "EXPLICIT_AUTHORITY_REQUIRED",
+        "semantic_acceptance": "EXPLICIT_HUMAN_DECISION_REQUIRED",
+        "destructive_migration": "EXPLICIT_AUTHORITY_REQUIRED",
+        "source_repository_changes": "EXPLICIT_SCOPE_REQUIRED",
+    }
+    if execution_policy != expected_policy:
+        errors.append("execution_policy does not match the authorized boundary")
+
+    scope = state.get("release_scope", {})
+    modules = set(scope.get("required_modules", []))
+    missing_modules = REQUIRED_MODULES - modules
+    if missing_modules:
+        errors.append(f"missing required modules: {sorted(missing_modules)}")
+
+    platforms = set(scope.get("social_platforms", []))
+    missing_platforms = REQUIRED_SOCIAL_PLATFORMS - platforms
+    if missing_platforms:
+        errors.append(f"missing social platforms: {sorted(missing_platforms)}")
+
+    roadmap = state.get("roadmap")
+    if not isinstance(roadmap, list):
+        return errors + ["roadmap must be a list"]
+
+    ids = [entry.get("id") for entry in roadmap]
+    issues = [entry.get("issue") for entry in roadmap]
+    if len(ids) != len(set(ids)):
+        errors.append("roadmap IDs must be unique")
+    if len(issues) != len(set(issues)):
+        errors.append("roadmap issue numbers must be unique")
+    if set(issues) != EXPECTED_ISSUE_NUMBERS:
+        errors.append("roadmap issue numbers must cover GitHub Issues #2 through #31")
+
+    missing_ids = EXPECTED_ROADMAP_IDS - set(ids)
+    extra_ids = set(ids) - EXPECTED_ROADMAP_IDS
+    if missing_ids:
+        errors.append(f"missing roadmap IDs: {sorted(missing_ids)}")
+    if extra_ids:
+        errors.append(f"unexpected roadmap IDs: {sorted(extra_ids)}")
+
+    positions = {entry.get("id"): index for index, entry in enumerate(roadmap)}
+    for entry in roadmap:
+        entry_id = entry.get("id")
+        for dependency in entry.get("depends_on", []):
+            if dependency not in positions:
+                errors.append(f"{entry_id} has unknown dependency {dependency}")
+            elif positions[dependency] >= positions.get(entry_id, -1):
+                errors.append(f"{entry_id} dependency {dependency} must appear earlier")
+
+    if not state.get("stop_conditions") or len(state["stop_conditions"]) < 8:
+        errors.append("at least eight fail-closed stop conditions are required")
+
+    return errors
+
+
+def main() -> int:
+    state = load_json(STATE_PATH)
+    load_json(SCHEMA_PATH)
+    errors = validate_state(state)
+    if errors:
+        print("INTEGRA_GOVERNANCE_VALIDATION: FAIL")
+        for error in errors:
+            print(f"- {error}")
+        return 1
+    print("INTEGRA_GOVERNANCE_VALIDATION: PASS")
+    print(f"ROADMAP_ITEMS: {len(state['roadmap'])}")
+    print(f"REQUIRED_MODULES: {len(state['release_scope']['required_modules'])}")
+    print(f"SOCIAL_PLATFORMS: {len(state['release_scope']['social_platforms'])}")
+    print("STANDALONE_PRODUCTS_PRESERVED: YES")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

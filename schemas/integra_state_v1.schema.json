@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Yurielo/integra/schemas/integra_state_v1.schema.json",
+  "title": "Integra governed state v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "product",
+    "baseline_date",
+    "standalone_products_preserved",
+    "execution_policy",
+    "release_scope",
+    "roadmap",
+    "stop_conditions"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "product": { "const": "Integra" },
+    "baseline_date": { "type": "string", "format": "date" },
+    "standalone_products_preserved": { "const": true },
+    "execution_policy": {
+      "type": "object",
+      "required": [
+        "safe_roadmap_implementation",
+        "merge",
+        "release",
+        "live_external_actions",
+        "protected_data",
+        "semantic_acceptance",
+        "destructive_migration",
+        "source_repository_changes"
+      ],
+      "properties": {
+        "safe_roadmap_implementation": { "const": "AUTHORIZED_AFTER_DEPENDENCIES" },
+        "merge": { "const": "EXPLICIT_AUTHORITY_REQUIRED" },
+        "release": { "const": "EXPLICIT_AUTHORITY_REQUIRED" },
+        "live_external_actions": { "const": "EXPLICIT_AUTHORITY_REQUIRED" },
+        "protected_data": { "const": "EXPLICIT_AUTHORITY_REQUIRED" },
+        "semantic_acceptance": { "const": "EXPLICIT_HUMAN_DECISION_REQUIRED" },
+        "destructive_migration": { "const": "EXPLICIT_AUTHORITY_REQUIRED" },
+        "source_repository_changes": { "const": "EXPLICIT_SCOPE_REQUIRED" }
+      },
+      "additionalProperties": false
+    },
+    "release_scope": {
+      "type": "object",
+      "required": ["required_modules", "social_platforms", "deferred"],
+      "properties": {
+        "required_modules": {
+          "type": "array",
+          "minItems": 10,
+          "uniqueItems": true,
+          "items": { "type": "string" }
+        },
+        "social_platforms": {
+          "type": "array",
+          "minItems": 7,
+          "uniqueItems": true,
+          "items": { "type": "string" }
+        },
+        "deferred": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "roadmap": {
+      "type": "array",
+      "minItems": 19,
+      "items": {
+        "type": "object",
+        "required": ["id", "issue", "status", "depends_on"],
+        "properties": {
+          "id": { "type": "string" },
+          "issue": { "type": "integer", "minimum": 2 },
+          "status": {
+            "enum": ["IN_REVIEW", "PLANNED", "DEFERRED_UNTIL_DEPENDENCY", "HUMAN_GATE", "POST_1_0_DEFERRED"]
+          },
+          "depends_on": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+        },
+        "additionalProperties": false
+      }
+    },
+    "stop_conditions": {
+      "type": "array",
+      "minItems": 8,
+      "uniqueItems": true,
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}
