@@ -7,6 +7,7 @@
   "data_ownership_contract": "state/data_ownership_v1.json",
   "project_lease_schema": "schemas/project_lease_v1.schema.json",
   "worker_protocol_contract": "state/worker_protocol_v1.json",
+  "adapter_spike_evidence": "state/adapter_spike_v1.json",
   "execution_policy": {
     "safe_roadmap_implementation": "AUTHORIZED_AFTER_DEPENDENCIES",
     "merge": "EXPLICIT_AUTHORITY_REQUIRED",
@@ -54,7 +55,7 @@
     { "id": "R1", "issue": 3, "status": "ACCEPTED", "depends_on": ["R0"] },
     { "id": "R2", "issue": 4, "status": "ACCEPTED", "depends_on": ["R0", "R1"] },
     { "id": "R3", "issue": 5, "status": "ACCEPTED", "depends_on": ["R1", "R2"] },
-    { "id": "R4", "issue": 6, "status": "PLANNED", "depends_on": ["R1", "R2", "R3"] },
+    { "id": "R4", "issue": 6, "status": "ACCEPTED", "depends_on": ["R1", "R2", "R3"] },
     { "id": "R5", "issue": 7, "status": "PLANNED", "depends_on": ["R4"] },
     { "id": "R6", "issue": 8, "status": "PLANNED", "depends_on": ["R5"] },
     { "id": "R7", "issue": 9, "status": "PLANNED", "depends_on": ["R6"] },

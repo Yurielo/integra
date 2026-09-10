@@ -28,6 +28,9 @@ class GovernanceValidationTests(unittest.TestCase):
         cls.worker_protocol = json.loads(
             (ROOT / "state" / "worker_protocol_v1.json").read_text(encoding="utf-8")
         )
+        cls.adapter_spike = json.loads(
+            (ROOT / "state" / "adapter_spike_v1.json").read_text(encoding="utf-8")
+        )
 
     def test_repository_state_is_valid(self):
         self.assertEqual(VALIDATOR.validate_state(self.state), [])
@@ -105,6 +108,12 @@ class GovernanceValidationTests(unittest.TestCase):
         errors = VALIDATOR.validate_data_ownership(ownership)
         self.assertTrue(any("exactly one ownership" in error for error in errors))
 
+    def test_protocol_trace_namespaces_are_registered(self):
+        ownership = copy.deepcopy(self.ownership)
+        ownership["id_policy"]["namespaces"].remove("message")
+        errors = VALIDATOR.validate_data_ownership(ownership)
+        self.assertTrue(any("trace namespaces" in error for error in errors))
+
     def test_identity_hash_collision_must_hard_fail(self):
         ownership = copy.deepcopy(self.ownership)
         ownership["collision_policy"]["same_id_different_hash"] = "LAST_WRITER_WINS"
@@ -139,6 +148,29 @@ class GovernanceValidationTests(unittest.TestCase):
         protocol["schemas"].pop("artifact_reference")
         errors = VALIDATOR.validate_worker_protocol(protocol)
         self.assertTrue(any("all three accepted schemas" in error for error in errors))
+
+    def test_adapter_spike_evidence_is_valid(self):
+        self.assertEqual(
+            VALIDATOR.validate_adapter_spike(self.adapter_spike, self.baselines), []
+        )
+
+    def test_adapter_spike_must_match_pinned_source_commit(self):
+        evidence = copy.deepcopy(self.adapter_spike)
+        evidence["components"][0]["commit_sha"] = "0" * 40
+        errors = VALIDATOR.validate_adapter_spike(evidence, self.baselines)
+        self.assertTrue(any("commit differs" in error for error in errors))
+
+    def test_adapter_spike_source_mutation_is_forbidden(self):
+        evidence = copy.deepcopy(self.adapter_spike)
+        evidence["source_repositories_changed"] = True
+        errors = VALIDATOR.validate_adapter_spike(evidence, self.baselines)
+        self.assertTrue(any("must not modify" in error for error in errors))
+
+    def test_adapter_spike_controller_identity_is_pinned(self):
+        evidence = copy.deepcopy(self.adapter_spike)
+        evidence["controller"]["tree_sha"] = "not-a-tree"
+        errors = VALIDATOR.validate_adapter_spike(evidence, self.baselines)
+        self.assertTrue(any("controller has invalid tree_sha" in error for error in errors))
 
 
 if __name__ == "__main__":

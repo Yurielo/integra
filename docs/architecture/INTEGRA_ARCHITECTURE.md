@@ -29,6 +29,8 @@ versioned contracts and resource limits.
 R3 fixes that boundary as the dependency-free local JSONL contract documented
 in [`WORKER_PROTOCOL_V1.md`](WORKER_PROTOCOL_V1.md), with exact component,
 artifact, compatibility, job, cancellation, retry, timeout, and resume rules.
+R4 proves the boundary against both pinned components with read-only inputs and
+separate hashed output, as recorded in `state/adapter_spike_v1.json`.
 
 ## 2. Authority model
 

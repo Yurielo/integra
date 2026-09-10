@@ -1,0 +1,79 @@
+{
+  "schema_version": "1.0",
+  "verified_at": "2026-09-10T14:52:17Z",
+  "controller": {
+    "repository": "Yurielo/integra",
+    "commit_sha": "06a667537a0e6bf75143c631f4395907f85ef5fe",
+    "tree_sha": "2de58295fb0c9f5d18e1a0aa32755edbf66d9ed6"
+  },
+  "protocol_contract": "state/worker_protocol_v1.json",
+  "execution_environment": {
+    "operating_system": "macOS 26.5.2 (25F84)",
+    "architecture": "arm64"
+  },
+  "policy": {
+    "source_checkouts": "TEMPORARY_PINNED_READ_ONLY_INPUTS",
+    "outputs": "SEPARATE_NON_SOURCE_DIRECTORIES",
+    "source_mutation": "DENIED",
+    "network_service": "NOT_USED",
+    "private_data": "NOT_ACCESSED",
+    "external_action": "NOT_PERFORMED"
+  },
+  "components": [
+    {
+      "id": "seminartext",
+      "commit_sha": "a94936cd77cde13561c97c804ece1ac1134e01a6",
+      "tree_sha": "5f5951da1d5dcf957ef982510fde3537f601ea15",
+      "runtime": "Python 3.14.6 arm64",
+      "capability": "seminartext.canonical_evidence_validate",
+      "input_schema": "canonical_evidence_v1",
+      "input_sha256": "0710c575503f8333df1b3e92a43d7573438237f16fa4449226b8cbec953cea9d",
+      "protocol_stream_sha256": "ab1223477dbe20deb021c8791c5f601fc360b67d354e0c94b2a697303caf7c77",
+      "report_sha256": "91deb2451b4f8ff40f05ac4dfd427fb7fe35cd19731b7ce28db77478ff95adc5",
+      "stdout_sha256": "82c18b0509ac249c012897aceb753777ec4722eb4436a35c4830604f92c3ed3e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "elapsed_ms": 32,
+      "message_sequence": [
+        "HANDSHAKE_REQUEST", "HANDSHAKE_RESPONSE", "JOB_REQUEST",
+        "PROGRESS", "PROGRESS", "RESULT"
+      ],
+      "source_before": "CLEAN",
+      "source_after": "CLEAN",
+      "status": "PASS"
+    },
+    {
+      "id": "videotext",
+      "commit_sha": "2e098d1705b6815628bee1e023f4742718eabf02",
+      "tree_sha": "f5ec484df90e4db655d31b4174434c37f4d1491c",
+      "runtime": "Apple Swift 6.3.3 arm64",
+      "capability": "videotext.project_schema_probe",
+      "input_schema": "project_schema_v3",
+      "input_sha256": "ca97415c7adb516207d9841c62c0dde14c135ee29304008a398326d9f9724662",
+      "protocol_stream_sha256": "0ba357ee0118157ff837189967ab15ddc9163d4b43139e33203f99215ff2773f",
+      "report_sha256": "270e2df52965add861ab4b91f5f258886b7af169310580a18befd2ae13588143",
+      "stdout_sha256": "75b37dd76ec5c9c548b62f6b149e80f9e36cbdfdd007f3efc5ca867c93bb5def",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "elapsed_ms": 37874,
+      "message_sequence": [
+        "HANDSHAKE_REQUEST", "HANDSHAKE_RESPONSE", "JOB_REQUEST",
+        "PROGRESS", "PROGRESS", "RESULT"
+      ],
+      "source_before": "CLEAN",
+      "source_after": "CLEAN",
+      "status": "PASS"
+    }
+  ],
+  "contract_evidence": {
+    "handshake": "PASS",
+    "bounded_request_per_component": "PASS",
+    "progress": "PASS",
+    "cancellation": "PASS",
+    "input_and_output_hashes": "PASS",
+    "structured_failure_reporting": "PASS",
+    "timeout_unknown_outcome": "PASS",
+    "source_checkout_unchanged": "PASS",
+    "separate_output": "PASS"
+  },
+  "source_repositories_changed": false,
+  "status": "PASS"
+}
