@@ -1,9 +1,10 @@
 # Integra Integration Plan
 
 Version: 1.0 (consolidates audited planning revision v5)
-Status: PLANNING BASELINE — IMPLEMENTATION NOT AUTHORIZED
+Status: APPROVED BASELINE — SAFE ROADMAP IMPLEMENTATION AUTHORIZED
 Product name: Integra
 Recorded: 2026-09-09
+Implementation authorization recorded: 2026-09-10
 
 ## 1. Purpose
 
@@ -27,9 +28,13 @@ The complete product direction includes:
 - search and knowledge-assistant capabilities;
 - governed publishing, diagnostics, recovery, and quality control.
 
-This document is a plan, not execution authority. Every implementation stage
-must be authorized and must re-verify current repository, runtime, product-rule,
-data, and external-system state at execution time.
+The Product Owner has authorized safe roadmap implementation after the GitHub
+Issues and milestones were created. A stage may proceed when its dependencies
+and factual preconditions are verified. This standing implementation authority
+does not authorize merge, release, live external actions, credentials, private
+or governed data, semantic acceptance, destructive migration, source-product
+retirement, or source-repository changes. Those boundaries remain explicit and
+must be reverified at execution time.
 
 ## 2. Non-negotiable invariants
 
@@ -643,9 +648,13 @@ Stop and request the appropriate authority when there is:
 - an unpinned or changed dependency/runtime;
 - a material architecture choice not already accepted.
 
-## 18. First authorized implementation boundary
+## 18. Current implementation boundary
 
-The next recommended task is `INTEGRA-R0 — Establish Product Definition,
-Authority Model, Architecture and Executable Roadmap`.
+The current task is [Issue #2](https://github.com/Yurielo/integra/issues/2),
+`INTEGRA-R0 — Establish Product Definition, Authority Model, Architecture and
+Executable Roadmap`.
 
-This recorded plan does not itself authorize R0 or any later stage.
+The Product Owner instruction of 2026-09-10 authorizes safe implementation
+along this roadmap after dependency checks. It does not bypass the protected
+authorization boundaries listed in the Purpose, Development Workflow, or
+machine-readable state.
