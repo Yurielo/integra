@@ -30,8 +30,10 @@ their authoritative artifacts.
 - [Machine-readable worker protocol](state/worker_protocol_v1.json)
 - [R4 adapter spike certification](docs/baselines/R4_ADAPTER_SPIKE_CERTIFICATION.md)
 - [Machine-readable R4 evidence](state/adapter_spike_v1.json)
-- [R6 Core Alpha contract-replay checkpoint](docs/baselines/R6_CORE_ALPHA_CERTIFICATION.md)
-- [Machine-readable R6 checkpoint evidence](state/core_alpha_v1.json)
+- [R6 Core Alpha certification](docs/baselines/R6_CORE_ALPHA_CERTIFICATION.md)
+- [Machine-readable R6 replay evidence](state/core_alpha_v1.json)
+- [Machine-readable R6 pinned real-media evidence](state/core_alpha_real_v1.json)
+- [R6 binary media clip contract](schemas/videotext_media_clip_v1.contract.json)
 
 Validate the governance baseline with:
 

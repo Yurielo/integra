@@ -16,6 +16,8 @@ from integra_core.benchmark import (  # noqa: E402
     validate_benchmark_record,
 )
 from integra_core.core_alpha import ReplayStageWorker  # noqa: E402
+from integra_core.real_media import validate_actual_evidence  # noqa: E402
+from integra_core.protocol import content_sha256  # noqa: E402
 from scripts.check_agents import load_registry, validate_agent_team  # noqa: E402
 
 
@@ -41,6 +43,19 @@ AGENT_TEAM_SCHEMA_PATH = ROOT / "schemas" / "agent_team_v1.schema.json"
 CORE_ALPHA_PATH = ROOT / "state" / "core_alpha_v1.json"
 CORE_ALPHA_EVIDENCE_SCHEMA_PATH = ROOT / "schemas" / "core_alpha_evidence_v1.schema.json"
 CORE_ALPHA_MANIFEST_SCHEMA_PATH = ROOT / "schemas" / "core_alpha_manifest_v1.schema.json"
+CORE_ALPHA_REAL_PATH = ROOT / "state" / "core_alpha_real_v1.json"
+CORE_ALPHA_REAL_SCHEMA_PATH = ROOT / "schemas" / "core_alpha_real_evidence_v1.schema.json"
+EXPECTED_CORE_ALPHA_REAL_SHA256 = "1e812b3b976210978b7de76a63f76fc2afe59268f50437c1b6bb2eb5780ac3e3"
+EXPECTED_CORE_ALPHA_REAL_IMPLEMENTATION = {
+    "integra_core/core_alpha.py",
+    "integra_core/real_contracts.py",
+    "integra_core/real_media.py",
+    "scripts/run_core_alpha_real.py",
+    "workers/core_alpha_real_worker.py",
+    "workers/seminartext_topics_worker.py",
+    "workers/videotext_transcript_worker.swift",
+    "workers/videotext_clip_worker.swift",
+}
 
 REQUIRED_DOCUMENTS = (
     "README.md",
@@ -90,6 +105,20 @@ REQUIRED_DOCUMENTS = (
     "integra_core/core_alpha.py",
     "scripts/run_core_alpha.py",
     "tests/fixtures/core_alpha_v1/worker_outputs.json",
+    "schemas/core_alpha_real_evidence_v1.schema.json",
+    "schemas/videotext_transcript_v1.schema.json",
+    "schemas/seminartext_topic_drafts_v1.schema.json",
+    "schemas/seminartext_exception_review_v1.schema.json",
+    "schemas/seminartext_knowledge_candidate_v1.schema.json",
+    "schemas/videotext_media_clip_v1.contract.json",
+    "state/core_alpha_real_v1.json",
+    "integra_core/real_contracts.py",
+    "integra_core/real_media.py",
+    "scripts/run_core_alpha_real.py",
+    "workers/core_alpha_real_worker.py",
+    "workers/seminartext_topics_worker.py",
+    "workers/videotext_transcript_worker.swift",
+    "workers/videotext_clip_worker.swift",
 )
 
 REQUIRED_MODULES = {
@@ -235,6 +264,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("agent_team_contract must pin the governed agent registry")
     if state.get("core_alpha_evidence") != "state/core_alpha_v1.json":
         errors.append("core_alpha_evidence must pin the R6 checkpoint record")
+    if state.get("core_alpha_real_evidence") != "state/core_alpha_real_v1.json":
+        errors.append("core_alpha_real_evidence must pin the R6 actual execution record")
 
     execution_policy = state.get("execution_policy", {})
     expected_policy = {
@@ -302,8 +333,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
     for accepted_id in ("R0", "R1", "R2", "R3", "R4", "R5"):
         if statuses.get(accepted_id) != "ACCEPTED":
             errors.append(f"{accepted_id} must remain ACCEPTED")
-    if statuses.get("R6") != "IN_REVIEW":
-        errors.append("R6 must remain IN_REVIEW until the real local-video path passes")
+    if statuses.get("R6") != "ACCEPTED":
+        errors.append("R6 must be ACCEPTED after replay and pinned real-media evidence pass")
     for entry in roadmap:
         entry_id = entry.get("id")
         for dependency in entry.get("depends_on", []):
@@ -634,6 +665,74 @@ def validate_core_alpha_evidence(evidence: dict, root: Path = ROOT) -> list[str]
     return errors
 
 
+def validate_core_alpha_real_evidence(
+    evidence: dict, baselines: dict, root: Path = ROOT
+) -> list[str]:
+    errors = validate_actual_evidence(evidence)
+    if content_sha256(evidence) != EXPECTED_CORE_ALPHA_REAL_SHA256:
+        errors.append("R6 actual evidence differs from the independently reproduced governed record")
+    if evidence.get("issue") != 8:
+        errors.append("R6 actual evidence must belong to Issue #8")
+    baseline_components = {
+        item["id"]: {
+            "repository": item["repository"],
+            "commit_sha": item["commit_sha"],
+            "tree_sha": item["tree_sha"],
+            "version": item["version"],
+        }
+        for item in baselines.get("components", [])
+    }
+    if evidence.get("component_identities") != baseline_components:
+        errors.append("R6 actual component identities differ from the R1 baseline")
+    implementation = evidence.get("implementation")
+    if not isinstance(implementation, list) or len(implementation) < 5:
+        errors.append("R6 actual implementation inventory is incomplete")
+    else:
+        paths = []
+        for record in implementation:
+            if not isinstance(record, dict) or set(record) != {"path", "sha256"}:
+                errors.append("R6 actual implementation record is invalid")
+                continue
+            paths.append(record["path"])
+            path = root / record["path"]
+            if not path.is_file():
+                errors.append(f"R6 actual implementation is missing: {record['path']}")
+            elif sha256_file(path) != record["sha256"]:
+                errors.append(f"R6 actual implementation hash differs: {record['path']}")
+        if len(paths) != len(set(paths)):
+            errors.append("R6 actual implementation paths must be unique")
+        if set(paths) != EXPECTED_CORE_ALPHA_REAL_IMPLEMENTATION:
+            errors.append("R6 actual implementation inventory must be exact")
+    acceptance = evidence.get("acceptance", {})
+    required_acceptance = {
+        "real_local_video_decoded": True,
+        "pinned_components_executed": True,
+        "source_grounded_provenance": True,
+        "videotext_review_checkpoint": "SOURCE_TRANSCRIPT",
+        "seminartext_topics_generated": True,
+        "canonical_evidence_valid": True,
+        "exception_review_package_generated": True,
+        "provisional_knowledge_generated": True,
+        "videotext_media_clip_rendered": True,
+        "semantic_authority": "PROVISIONAL_ONLY",
+        "human_decisions_applied": 0,
+        "source_repositories_changed": False,
+        "protected_data_accessed": False,
+        "gold_accessed": False,
+    }
+    if acceptance != required_acceptance:
+        errors.append("R6 actual acceptance evidence differs from the governed contract")
+    if evidence.get("determinism") != {
+        "independent_runs_compared": 2,
+        "all_stage_hashes_identical": True,
+    }:
+        errors.append("R6 actual stage hashes must match across two independent runs")
+    limitations = evidence.get("limitations")
+    if not isinstance(limitations, list) or len(limitations) < 3 or len(limitations) != len(set(limitations)):
+        errors.append("R6 actual limitations must contain at least three unique statements")
+    return errors
+
+
 def main() -> int:
     state = load_json(STATE_PATH)
     baselines = load_json(BASELINES_PATH)
@@ -643,6 +742,7 @@ def main() -> int:
     capability_benchmark = load_json(CAPABILITY_BENCHMARK_PATH)
     agent_team = load_registry(AGENT_TEAM_PATH)
     core_alpha = load_json(CORE_ALPHA_PATH)
+    core_alpha_real = load_json(CORE_ALPHA_REAL_PATH)
     load_json(SCHEMA_PATH)
     load_json(BASELINES_SCHEMA_PATH)
     load_json(OWNERSHIP_SCHEMA_PATH)
@@ -656,6 +756,7 @@ def main() -> int:
     load_json(AGENT_TEAM_SCHEMA_PATH)
     load_json(CORE_ALPHA_EVIDENCE_SCHEMA_PATH)
     load_json(CORE_ALPHA_MANIFEST_SCHEMA_PATH)
+    load_json(CORE_ALPHA_REAL_SCHEMA_PATH)
     errors = (
         validate_state(state)
         + validate_component_baselines(baselines)
@@ -665,6 +766,7 @@ def main() -> int:
         + validate_capability_benchmark(capability_benchmark, baselines)
         + validate_agent_team(agent_team)
         + validate_core_alpha_evidence(core_alpha)
+        + validate_core_alpha_real_evidence(core_alpha_real, baselines)
     )
     if errors:
         print("INTEGRA_GOVERNANCE_VALIDATION: FAIL")
@@ -688,8 +790,10 @@ def main() -> int:
     print(f"R5_CAPABILITY_GROUPS: {len(capability_benchmark['capabilities'])}")
     print(f"AGENT_TEAM_ROLES: {len(agent_team['roles'])}")
     print(f"LEAD_AGENT: {agent_team['lead_agent']}")
-    print(f"R6_CORE_ALPHA: {core_alpha['status']}")
-    print(f"R6_EXECUTION_MODE: {core_alpha['execution_mode']}")
+    print(f"R6_CONTRACT_REPLAY: {core_alpha['status']}")
+    print(f"R6_REPLAY_EXECUTION_MODE: {core_alpha['execution_mode']}")
+    print(f"R6_REAL_MEDIA: {core_alpha_real['status']}")
+    print("R6_ACCEPTANCE: ACCEPTED")
     return 0
 
 

@@ -40,6 +40,9 @@ class GovernanceValidationTests(unittest.TestCase):
         cls.core_alpha = json.loads(
             (ROOT / "state" / "core_alpha_v1.json").read_text(encoding="utf-8")
         )
+        cls.core_alpha_real = json.loads(
+            (ROOT / "state" / "core_alpha_real_v1.json").read_text(encoding="utf-8")
+        )
 
     def test_repository_state_is_valid(self):
         self.assertEqual(VALIDATOR.validate_state(self.state), [])
@@ -109,15 +112,75 @@ class GovernanceValidationTests(unittest.TestCase):
             "R6 replay fixture hash differs from the governed record", errors
         )
 
-    def test_r6_cannot_be_accepted_by_contract_replay(self):
+    def test_r6_acceptance_requires_pinned_real_media_evidence(self):
         state = copy.deepcopy(self.state)
-        for entry in state["roadmap"]:
-            if entry["id"] == "R6":
-                entry["status"] = "ACCEPTED"
+        state["core_alpha_real_evidence"] = "state/other.json"
         errors = VALIDATOR.validate_state(state)
         self.assertIn(
-            "R6 must remain IN_REVIEW until the real local-video path passes", errors
+            "core_alpha_real_evidence must pin the R6 actual execution record", errors
         )
+
+    def test_core_alpha_real_evidence_is_valid(self):
+        self.assertEqual(
+            VALIDATOR.validate_core_alpha_real_evidence(
+                self.core_alpha_real, self.baselines
+            ),
+            [],
+        )
+
+    def test_core_alpha_real_evidence_cannot_promote_semantics(self):
+        evidence = copy.deepcopy(self.core_alpha_real)
+        evidence["stages"]["topics"]["semantic_status"] = "ACCEPTED"
+        errors = VALIDATOR.validate_core_alpha_real_evidence(
+            evidence, self.baselines
+        )
+        self.assertTrue(any("topics" in error for error in errors))
+
+    def test_core_alpha_real_evidence_requires_repeatable_stage_hashes(self):
+        evidence = copy.deepcopy(self.core_alpha_real)
+        evidence["determinism"]["all_stage_hashes_identical"] = False
+        errors = VALIDATOR.validate_core_alpha_real_evidence(
+            evidence, self.baselines
+        )
+        self.assertIn(
+            "R6 actual stage hashes must match across two independent runs", errors
+        )
+
+    def test_core_alpha_real_implementation_inventory_is_exact(self):
+        evidence = copy.deepcopy(self.core_alpha_real)
+        evidence["implementation"].pop()
+        errors = VALIDATOR.validate_core_alpha_real_evidence(
+            evidence, self.baselines
+        )
+        self.assertIn(
+            "R6 actual implementation inventory must be exact", errors
+        )
+
+    def test_core_alpha_real_record_is_immutably_bound(self):
+        mutations = []
+        for mutate in (
+            lambda value: value["source"].__setitem__("size_bytes", value["source"]["size_bytes"] + 1),
+            lambda value: value["models"]["topics"].__setitem__("name", "mutable-tag"),
+            lambda value: value["alignment"].__setitem__("aligned_word_intervals", 38),
+            lambda value: value["stages"]["topics"].__setitem__("sha256", "0" * 64),
+            lambda value: value.__setitem__("executed_at", "2026-09-10T00:00:00Z"),
+        ):
+            evidence = copy.deepcopy(self.core_alpha_real)
+            mutate(evidence)
+            mutations.append(evidence)
+        for evidence in mutations:
+            with self.subTest(evidence=evidence):
+                errors = VALIDATOR.validate_core_alpha_real_evidence(evidence, self.baselines)
+                self.assertIn(
+                    "R6 actual evidence differs from the independently reproduced governed record",
+                    errors,
+                )
+
+    def test_core_alpha_real_rejects_unknown_top_level_field(self):
+        evidence = copy.deepcopy(self.core_alpha_real)
+        evidence["unexpected"] = True
+        errors = VALIDATOR.validate_core_alpha_real_evidence(evidence, self.baselines)
+        self.assertTrue(any("top-level fields" in error for error in errors))
 
     def test_unknown_dependency_fails(self):
         state = copy.deepcopy(self.state)

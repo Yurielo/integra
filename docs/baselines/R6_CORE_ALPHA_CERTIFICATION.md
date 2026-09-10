@@ -48,11 +48,20 @@ outcome.
 - source must be a non-empty regular local file and not a symlink;
 - source applications are referenced by pinned identity and are not modified;
 - actual adapter execution uses safe `git archive` materializations of the
-  pinned trees rather than running against standalone working checkouts;
+  exact pinned commit rather than mutable `HEAD`; every extracted blob and
+  executable bit is checked against the pinned Git tree and the resulting
+  read-only tree is verified before and after every worker stage;
 - source checkouts are snapshotted including ignored files before and after the
   run, and Python bytecode writes are disabled inside the SeminarText adapter;
-- protected data, Gold, credentials, models, external accounts, and publication
-  are not accessed;
+- source materializations, builds, intermediate projects and exports use one
+  disposable scratch root; only validated, content-addressed artifacts are
+  promoted into the durable Integra control store;
+- worker configuration and model content identities are hash-bound in the R3
+  execution boundary and artifact origins, and active stages refresh the
+  Project Lease at bounded intervals;
+- protected data, Gold, credentials, external accounts, unapproved models, and
+  publication are not accessed; the two approved pinned local model artifacts
+  are invoked read-only and their exact content identities are recorded;
 - semantic artifacts remain `PROVISIONAL` or `REVIEW_REQUIRED` and the run has
   `semantic_authority = PROVISIONAL_ONLY`; semantic status is persisted and
   contradictory payload-level lifecycle claims fail closed.
@@ -74,6 +83,9 @@ unaligned (`word sequence 31`) rather than receiving fabricated timing. The
 Canonical Evidence validator passed with that word explicitly review-required.
 Two independent actual runs from one fixed implementation fingerprint produced
 identical SHA-256 values for all six stages, including the rendered clip.
+The JSON payloads were validated field-by-field down to word, Topic, review and
+export-file records. The binary clip passed both the strict ISO-BMFF contract
+and a functional ffprobe decode check; arbitrary non-empty bytes fail closed.
 
 The pinned SeminarText CLI currently raises a `NameError` while writing its QA
 report after successful Topic inference. The Integra adapter composes the same

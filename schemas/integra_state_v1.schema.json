@@ -16,6 +16,7 @@
     "capability_benchmark_evidence",
     "agent_team_contract",
     "core_alpha_evidence",
+    "core_alpha_real_evidence",
     "execution_policy",
     "release_scope",
     "roadmap",
@@ -49,6 +50,9 @@
     },
     "core_alpha_evidence": {
       "const": "state/core_alpha_v1.json"
+    },
+    "core_alpha_real_evidence": {
+      "const": "state/core_alpha_real_v1.json"
     },
     "execution_policy": {
       "type": "object",
