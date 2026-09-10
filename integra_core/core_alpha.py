@@ -98,6 +98,24 @@ EXPECTED_PINNED_COMPONENTS = {
         "runtime": {"kind": "pinned_component", "version": "0.6.4"},
     },
 }
+EXPECTED_REAL_COMPONENT_MODELS = {
+    "seminartext": [
+        {
+            "id": "gemma3:4b:manifest",
+            "identity_sha256": "a2af6cc3eb7fa8be8504abaf9b04e88f17a119ec3f04a3addf55f92841195f5a",
+        },
+        {
+            "id": "gemma3:4b:weights",
+            "identity_sha256": "aeda25e63ebd698fab8638ffb778e68bed908b960d39d0becc650fa981609d25",
+        },
+    ],
+    "videotext": [
+        {
+            "id": "ggml-large-v3.bin",
+            "identity_sha256": "64d182b440b98d5203c4f9bd541544d84c605196c4f7b845dfa11fb23594d1e2",
+        }
+    ],
+}
 MANIFEST_FIELDS = {
     "schema_version",
     "pipeline",
@@ -256,9 +274,9 @@ def validate_core_alpha_manifest(manifest: dict[str, Any]) -> None:
             raise CoreAlphaError(f"Core Alpha pinned component differs: {component_id}")
         models = actual_identity.get("models")
         if manifest["execution_mode"] == "PINNED_REAL_MEDIA":
-            if not isinstance(models, list) or not models:
+            if models != EXPECTED_REAL_COMPONENT_MODELS[component_id]:
                 raise CoreAlphaError(
-                    f"Core Alpha actual component lacks model provenance: {component_id}"
+                    f"Core Alpha actual component model provenance differs: {component_id}"
                 )
         elif models is not None:
             raise CoreAlphaError(
@@ -377,7 +395,7 @@ def validate_core_alpha_manifest(manifest: dict[str, Any]) -> None:
             )
         project_key = manifest["project_id"].rsplit(":", 1)[-1]
         expected_suffix = "source" if stage == "source" else (
-            "bin" if stage == "media_clip" else "json"
+            "mp4" if stage == "media_clip" else "json"
         )
         expected_path = (
             f"projects/{project_key}/artifacts/"
@@ -560,7 +578,7 @@ class CoreAlphaPipeline:
         self.controller = controller_identity
         self.components = load_component_identities(self.repository_root)
         if execution_mode == "PINNED_REAL_MEDIA":
-            if not isinstance(component_models, dict) or set(component_models) != set(self.components):
+            if component_models != EXPECTED_REAL_COMPONENT_MODELS:
                 raise CoreAlphaError("real-media execution requires exact component model pins")
             augmented: dict[str, dict[str, Any]] = {}
             for component_id, identity in self.components.items():
@@ -707,7 +725,13 @@ class CoreAlphaPipeline:
                 if callable(heartbeat_setter):
                     heartbeat_setter(None)
             self._refresh_lease(project_id, lease)
-            self._validate_stage_output(stage, output, parents, self.execution_mode)
+            self._validate_stage_output(
+                stage,
+                output,
+                parents,
+                self.execution_mode,
+                source_sha256=source_hash,
+            )
             self._refresh_lease(project_id, lease)
             operation_id = derive_imported_id(
                 "operation",
@@ -720,7 +744,7 @@ class CoreAlphaPipeline:
                 ),
             )
             payload_hash = sha256_bytes(output.payload)
-            suffix = "bin" if stage == "media_clip" else "json"
+            suffix = "mp4" if stage == "media_clip" else "json"
             relative = f"projects/{project_key}/artifacts/{payload_hash}.{suffix}"
             self._write_immutable(self.store_root / relative, output.payload)
             artifacts[stage] = self._artifact_reference(
@@ -912,6 +936,8 @@ class CoreAlphaPipeline:
         output: StageOutput,
         parents: tuple[dict[str, Any], ...],
         execution_mode: str,
+        *,
+        source_sha256: str | None = None,
     ) -> None:
         if not isinstance(output, StageOutput):
             raise CoreAlphaError(f"{stage}: worker output must use StageOutput")
@@ -948,7 +974,9 @@ class CoreAlphaPipeline:
         except (UnicodeDecodeError, json.JSONDecodeError) as error:
             raise CoreAlphaError(f"{stage}: worker payload must be valid JSON") from error
         if execution_mode == "PINNED_REAL_MEDIA":
-            self._validate_real_stage_payload(stage, document, output, parents)
+            self._validate_real_stage_payload(
+                stage, document, output, parents, source_sha256=source_sha256
+            )
             return
         expected_fields = {
             "input_artifact_ids",
@@ -1013,12 +1041,14 @@ class CoreAlphaPipeline:
             if not isinstance(result.get("title"), str) or not result["title"]:
                 raise CoreAlphaError("knowledge: replay title must be non-empty")
 
-    @staticmethod
     def _validate_real_stage_payload(
+        self,
         stage: str,
         document: Any,
         output: StageOutput,
         parents: tuple[dict[str, Any], ...],
+        *,
+        source_sha256: str | None,
     ) -> None:
         try:
             validate_real_stage_document(stage, document)
@@ -1030,6 +1060,52 @@ class CoreAlphaPipeline:
             raise CoreAlphaError(f"{stage}: real-media input identity differs")
         if document["input_content_sha256"] != [item["content_sha256"] for item in parents]:
             raise CoreAlphaError(f"{stage}: real-media input hashes differ")
+        if stage == "transcript":
+            expected = EXPECTED_REAL_COMPONENT_MODELS["videotext"][0]["identity_sha256"]
+            if document["result"]["model_sha256"] != expected:
+                raise CoreAlphaError("transcript: model hash differs from component identity")
+        if stage == "topics":
+            expected = EXPECTED_REAL_COMPONENT_MODELS["seminartext"]
+            if (
+                document["result"]["model_digest"] != expected[0]["identity_sha256"]
+                or document["result"]["model_weights_sha256"]
+                != expected[1]["identity_sha256"]
+            ):
+                raise CoreAlphaError("topics: model hashes differ from component identity")
+        if stage == "review":
+            if source_sha256 is None or document["stage_data"]["canonical_bundle"]["sources"][0]["content_sha256"] != source_sha256:
+                raise CoreAlphaError("review: canonical source hash differs from Core Alpha source")
+        if stage == "knowledge":
+            review_reference = parents[2]
+            review_path = self._require_confined_store_path(
+                self.store_root / review_reference["relative_path"]
+            )
+            review_bytes = review_path.read_bytes()
+            if (
+                len(review_bytes) != review_reference["size_bytes"]
+                or sha256_bytes(review_bytes) != review_reference["content_sha256"]
+            ):
+                raise CoreAlphaError("knowledge: upstream review artifact changed")
+            try:
+                review_document = json.loads(review_bytes)
+            except (UnicodeDecodeError, json.JSONDecodeError) as error:
+                raise CoreAlphaError("knowledge: upstream review artifact is invalid") from error
+            upstream_bundle = review_document["stage_data"]["canonical_bundle"]
+            generated_bundle = document["stage_data"]["canonical_evidence_document"]
+            invariant_fields = set(upstream_bundle) - {"artifact_id", "topics", "evidence_refs"}
+            if any(
+                generated_bundle.get(field) != upstream_bundle[field]
+                for field in invariant_fields
+            ):
+                raise CoreAlphaError("knowledge: canonical evidence differs from upstream review")
+            review_package = review_document["stage_data"]["review_package"]
+            if (
+                {item.get("id") for item in generated_bundle.get("topics", [])}
+                != {item.get("id") for item in review_package["topics"]}
+                or {item.get("id") for item in generated_bundle.get("evidence_refs", [])}
+                != {item.get("id") for item in review_package["evidence"]}
+            ):
+                raise CoreAlphaError("knowledge: semantic references differ from upstream review")
         if stage in SEMANTIC_STAGES:
             CoreAlphaPipeline._reject_semantic_promotion(stage, document)
 

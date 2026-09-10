@@ -9,6 +9,7 @@ from pathlib import Path
 from integra_core.core_alpha import (
     CoreAlphaError,
     CoreAlphaPipeline,
+    EXPECTED_REAL_COMPONENT_MODELS,
     ReplayStageWorker,
     STAGE_ORDER,
     StageOutput,
@@ -409,6 +410,19 @@ class CoreAlphaTests(unittest.TestCase):
         source.write_bytes(b"content")
         with self.assertRaisesRegex(CoreAlphaError, "local-video extension"):
             self.pipeline.run(source)
+
+    def test_real_media_pipeline_requires_exact_model_identities(self):
+        models = copy.deepcopy(EXPECTED_REAL_COMPONENT_MODELS)
+        models["seminartext"][0]["identity_sha256"] = "0" * 64
+        with self.assertRaisesRegex(CoreAlphaError, "exact component model pins"):
+            CoreAlphaPipeline(
+                repository_root=ROOT,
+                store_root=self.root / "actual-store",
+                controller_identity=self.controller,
+                worker=ReplayStageWorker(copy.deepcopy(self.fixture)),
+                execution_mode="PINNED_REAL_MEDIA",
+                component_models=models,
+            )
 
     def test_resume_rejects_changed_lineage(self):
         cancelled = self.pipeline.run(

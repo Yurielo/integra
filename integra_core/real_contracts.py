@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import math
+from pathlib import PurePosixPath
 from typing import Any
 
 
@@ -213,7 +215,7 @@ def _validate_review(result: Any, stage_data: Any) -> None:
         raise RealStageContractError("review result authority is invalid")
     stage_data = _exact(
         stage_data,
-        {"alignment_result", "canonical_bundle", "review_package"},
+        {"alignment_result", "canonical_bundle", "draft_input_document", "review_package"},
         "review stage_data",
     )
     alignment = _exact(
@@ -249,30 +251,38 @@ def _validate_review(result: Any, stage_data: Any) -> None:
     if not isinstance(bundle["sources"], list) or not bundle["sources"]:
         raise RealStageContractError("canonical sources are invalid")
     source_ids: set[str] = set()
+    source_by_id: dict[str, dict[str, Any]] = {}
     for index, source in enumerate(bundle["sources"]):
         source = _exact(
             source,
             {"content_sha256", "duration_seconds", "id", "kind", "lifecycle_status", "project_id", "sequence", "title"},
             f"canonical source {index}",
         )
-        source_ids.add(_text(source["id"], f"canonical source {index}.id"))
+        source_id = _text(source["id"], f"canonical source {index}.id")
+        source_ids.add(source_id)
+        source_by_id[source_id] = source
         _sha256(source["content_sha256"], f"canonical source {index}.content_sha256")
         if source["project_id"] != project["id"] or source["kind"] != "video" or source["lifecycle_status"] != "active":
             raise RealStageContractError(f"canonical source {index} identity is invalid")
         _number(source["duration_seconds"], f"canonical source {index}.duration_seconds")
         _integer(source["sequence"], f"canonical source {index}.sequence")
         _text(source["title"], f"canonical source {index}.title")
+    if len(source_ids) != len(bundle["sources"]):
+        raise RealStageContractError("canonical source IDs are not unique")
     revisions = bundle["transcript_revisions"]
     if not isinstance(revisions, list) or not revisions:
         raise RealStageContractError("canonical transcript revisions are invalid")
     revision_ids: set[str] = set()
+    revision_by_id: dict[str, dict[str, Any]] = {}
     for index, revision in enumerate(revisions):
         revision = _exact(
             revision,
             {"authority", "canonical_text", "id", "lifecycle_status", "parent_revision_id", "revision_kind", "revision_number", "source_id", "text_sha256", "transcript_provenance"},
             f"canonical revision {index}",
         )
-        revision_ids.add(_text(revision["id"], f"canonical revision {index}.id"))
+        revision_id = _text(revision["id"], f"canonical revision {index}.id")
+        revision_ids.add(revision_id)
+        revision_by_id[revision_id] = revision
         canonical_text = _text(revision["canonical_text"], f"canonical revision {index}.canonical_text")
         if hashlib.sha256(canonical_text.encode("utf-8")).hexdigest() != _sha256(revision["text_sha256"], f"canonical revision {index}.text_sha256"):
             raise RealStageContractError("canonical transcript hash differs")
@@ -287,6 +297,8 @@ def _validate_review(result: Any, stage_data: Any) -> None:
         if provenance["origin"] != "machine_generated" or provenance["verification_state"] != "machine_unverified" or provenance["reviewer"] is not None or provenance["verification_ranges"] != []:
             raise RealStageContractError("canonical transcript provenance is invalid")
         _text(provenance["method"], "canonical transcript method")
+    if len(revision_ids) != len(revisions):
+        raise RealStageContractError("canonical transcript revision IDs are not unique")
     words = bundle["words"]
     if not isinstance(words, list) or not words:
         raise RealStageContractError("canonical words are invalid")
@@ -296,14 +308,24 @@ def _validate_review(result: Any, stage_data: Any) -> None:
         "source_cue_ids", "source_id", "speaker_id", "start_seconds", "text",
         "timing_provenance", "transcript_revision_id",
     }
+    word_by_id: dict[str, dict[str, Any]] = {}
     for index, word in enumerate(words):
         word = _exact(word, word_fields, f"canonical word {index}")
         if word["sequence"] != index or word["source_id"] not in source_ids or word["transcript_revision_id"] not in revision_ids or word["alignment_status"] not in {"aligned", "unaligned"} or word["lifecycle_status"] != "active":
             raise RealStageContractError(f"canonical word {index} identity is invalid")
-        _text(word["id"], f"canonical word {index}.id")
+        word_id = _text(word["id"], f"canonical word {index}.id")
+        if word_id in word_by_id:
+            raise RealStageContractError("canonical word IDs are not unique")
+        word_by_id[word_id] = word
         _text(word["text"], f"canonical word {index}.text")
-        _integer(word["char_start"], f"canonical word {index}.char_start")
-        _integer(word["char_end"], f"canonical word {index}.char_end")
+        char_start = _integer(word["char_start"], f"canonical word {index}.char_start")
+        char_end = _integer(word["char_end"], f"canonical word {index}.char_end")
+        if char_end < char_start:
+            raise RealStageContractError(f"canonical word {index} character range is invalid")
+        if word["normalized_text"] is not None and not isinstance(word["normalized_text"], str):
+            raise RealStageContractError(f"canonical word {index} normalized_text is invalid")
+        if word["speaker_id"] is not None and not isinstance(word["speaker_id"], str):
+            raise RealStageContractError(f"canonical word {index} speaker_id is invalid")
         if not isinstance(word["qa_flags"], list) or not all(
             isinstance(flag, str) and flag for flag in word["qa_flags"]
         ):
@@ -329,6 +351,74 @@ def _validate_review(result: Any, stage_data: Any) -> None:
     for collection in ("benchmark_segments", "cues", "alignment_runs"):
         if not isinstance(bundle[collection], list) or not bundle[collection] or not all(isinstance(item, dict) and item for item in bundle[collection]):
             raise RealStageContractError(f"canonical {collection} are invalid")
+    for index, run in enumerate(bundle["alignment_runs"]):
+        run = _exact(
+            run,
+            {
+                "aligner", "aligner_version", "config_sha256", "id", "model",
+                "model_revision", "model_sha256", "source_content_sha256",
+                "source_id", "status", "transcript_revision_id",
+                "transcript_text_sha256",
+            },
+            f"canonical alignment run {index}",
+        )
+        for field in (
+            "aligner", "aligner_version", "id", "model", "model_revision",
+            "source_id", "transcript_revision_id",
+        ):
+            _text(run[field], f"canonical alignment run {index}.{field}")
+        for field in (
+            "config_sha256", "model_sha256", "source_content_sha256",
+            "transcript_text_sha256",
+        ):
+            _sha256(run[field], f"canonical alignment run {index}.{field}")
+        source = source_by_id.get(run["source_id"])
+        revision = revision_by_id.get(run["transcript_revision_id"])
+        if (
+            run["status"] != "valid"
+            or source is None
+            or revision is None
+            or revision["source_id"] != run["source_id"]
+            or run["source_content_sha256"] != source["content_sha256"]
+            or run["transcript_text_sha256"] != revision["text_sha256"]
+        ):
+            raise RealStageContractError("canonical alignment run is not valid")
+    for index, segment in enumerate(bundle["benchmark_segments"]):
+        segment = _exact(
+            segment,
+            {"id", "lifecycle_status", "sequence", "transcript_revision_id", "word_count", "word_end_id", "word_start_id"},
+            f"canonical benchmark segment {index}",
+        )
+        for field in ("id", "transcript_revision_id", "word_end_id", "word_start_id"):
+            _text(segment[field], f"canonical benchmark segment {index}.{field}")
+        _integer(segment["sequence"], f"canonical benchmark segment {index}.sequence")
+        _integer(segment["word_count"], f"canonical benchmark segment {index}.word_count", minimum=1)
+        start_word = word_by_id.get(segment["word_start_id"])
+        end_word = word_by_id.get(segment["word_end_id"])
+        if (
+            segment["lifecycle_status"] != "active"
+            or start_word is None
+            or end_word is None
+            or start_word["transcript_revision_id"] != segment["transcript_revision_id"]
+            or end_word["transcript_revision_id"] != segment["transcript_revision_id"]
+            or start_word["sequence"] > end_word["sequence"]
+            or segment["word_count"] != end_word["sequence"] - start_word["sequence"] + 1
+        ):
+            raise RealStageContractError("canonical benchmark segment lifecycle is invalid")
+    for index, cue in enumerate(bundle["cues"]):
+        cue = _exact(
+            cue,
+            {"char_end", "char_start", "id", "lifecycle_status", "sequence", "source_locator", "text", "transcript_revision_id"},
+            f"canonical cue {index}",
+        )
+        start = _integer(cue["char_start"], f"canonical cue {index}.char_start")
+        end = _integer(cue["char_end"], f"canonical cue {index}.char_end")
+        if end < start or cue["lifecycle_status"] != "active":
+            raise RealStageContractError(f"canonical cue {index} is invalid")
+        _integer(cue["sequence"], f"canonical cue {index}.sequence")
+        for field in ("id", "text", "transcript_revision_id"):
+            _text(cue[field], f"canonical cue {index}.{field}")
+        _time_interval(cue["source_locator"], f"canonical cue {index}.locator")
     if not isinstance(bundle["topics"], list) or not isinstance(bundle["evidence_refs"], list):
         raise RealStageContractError("canonical optional collections are invalid")
     package = _exact(
@@ -344,11 +434,34 @@ def _validate_review(result: Any, stage_data: Any) -> None:
         )
         _text(binding["artifact_id"], f"review package {field}.artifact_id")
         _sha256(binding["sha256"], f"review package {field}.sha256")
+    canonical_binding = package["canonical_evidence"]
+    expected_bundle_bytes = (
+        json.dumps(bundle, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    ).encode("utf-8")
+    if (
+        canonical_binding["artifact_id"] != bundle["artifact_id"]
+        or canonical_binding["sha256"] != hashlib.sha256(expected_bundle_bytes).hexdigest()
+    ):
+        raise RealStageContractError("review package canonical evidence binding differs")
+    draft_input = stage_data["draft_input_document"]
+    if not isinstance(draft_input, dict) or not draft_input:
+        raise RealStageContractError("review draft input is invalid")
+    draft_binding = package["draft_input"]
+    expected_draft_bytes = (
+        json.dumps(draft_input, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    ).encode("utf-8")
+    if (
+        draft_binding["artifact_id"] != draft_input.get("artifact_id")
+        or draft_binding["sha256"] != hashlib.sha256(expected_draft_bytes).hexdigest()
+    ):
+        raise RealStageContractError("review package draft input binding differs")
     package_project = _exact(package["project"], {"id", "title"}, "review project")
     package_seminar = _exact(package["seminar"], {"id", "title"}, "review seminar")
     for label, record in (("review project", package_project), ("review seminar", package_seminar)):
         _text(record["id"], f"{label}.id")
         _text(record["title"], f"{label}.title")
+    if package_project["id"] != project["id"]:
+        raise RealStageContractError("review project differs from canonical project")
     policy = _exact(
         package["review_policy"],
         {"authoring_gate", "automatic_acceptance", "machine_assisted_default", "review_gate"},
@@ -375,12 +488,27 @@ def _validate_review(result: Any, stage_data: Any) -> None:
         evidence_ids.add(_text(item["id"], f"review evidence {index}.id"))
         for field in ("claim", "quote", "source_id", "transcript_revision_id", "word_end_id", "word_start_id"):
             _text(item[field], f"review evidence {index}.{field}")
-        _time_interval(item["locator"], f"review evidence {index}.locator")
+        locator = _time_interval(item["locator"], f"review evidence {index}.locator")
         for field in ("word_end_sequence", "word_start_sequence"):
             _integer(item[field], f"review evidence {index}.{field}")
         _validate_machine_provenance(
             item["transcript_provenance"], f"review evidence {index}.provenance"
         )
+        if item["source_id"] not in source_ids or item["transcript_revision_id"] not in revision_ids:
+            raise RealStageContractError(f"review evidence {index} source lineage is unknown")
+        start_word = word_by_id.get(item["word_start_id"])
+        end_word = word_by_id.get(item["word_end_id"])
+        if (
+            start_word is None
+            or end_word is None
+            or start_word["sequence"] != item["word_start_sequence"]
+            or end_word["sequence"] != item["word_end_sequence"]
+            or start_word["sequence"] > end_word["sequence"]
+            or start_word["start_seconds"] is None
+            or end_word["end_seconds"] is None
+            or locator != (float(start_word["start_seconds"]), float(end_word["end_seconds"]))
+        ):
+            raise RealStageContractError(f"review evidence {index} word lineage differs")
     topics = package["topics"]
     if not isinstance(topics, list) or len(topics) != unreviewed:
         raise RealStageContractError("review package topic count differs")
@@ -395,7 +523,7 @@ def _validate_review(result: Any, stage_data: Any) -> None:
         topic = _exact(topic, review_topic_fields, f"review topic {index}")
         if topic["lifecycle_status"] != "REVIEW_REQUIRED" or topic["semantic_origin"] != "machine_assisted" or topic["review_history"] != []:
             raise RealStageContractError(f"review topic {index} authority is invalid")
-        _time_interval(topic["locator"], f"review topic {index}.locator")
+        locator = _time_interval(topic["locator"], f"review topic {index}.locator")
         for field in ("id", "proposed_summary", "proposed_title", "quote", "seminar_id", "source_id", "topic_set_id", "transcript_revision_id", "word_end_id", "word_start_id"):
             _text(topic[field], f"review topic {index}.{field}")
         for field in ("evidence_sha256", "topic_sha256"):
@@ -415,6 +543,22 @@ def _validate_review(result: Any, stage_data: Any) -> None:
         )
         for field in ("sequence", "word_end_sequence", "word_start_sequence"):
             _integer(topic[field], f"review topic {index}.{field}")
+        start_word = word_by_id.get(topic["word_start_id"])
+        end_word = word_by_id.get(topic["word_end_id"])
+        if (
+            topic["seminar_id"] != package_seminar["id"]
+            or topic["source_id"] not in source_ids
+            or topic["transcript_revision_id"] not in revision_ids
+            or start_word is None
+            or end_word is None
+            or start_word["sequence"] != topic["word_start_sequence"]
+            or end_word["sequence"] != topic["word_end_sequence"]
+            or start_word["sequence"] > end_word["sequence"]
+            or start_word["start_seconds"] is None
+            or end_word["end_seconds"] is None
+            or locator != (float(start_word["start_seconds"]), float(end_word["end_seconds"]))
+        ):
+            raise RealStageContractError(f"review topic {index} lineage differs")
 
 
 def _validate_machine_provenance(value: Any, label: str) -> None:
@@ -440,7 +584,11 @@ def _validate_knowledge(result: Any, stage_data: Any) -> None:
     manifest_hash = _sha256(result["manifest_sha256"], "knowledge manifest SHA-256")
     stage_data = _exact(
         stage_data,
-        {"export_files", "export_manifest", "export_manifest_text"},
+        {
+            "canonical_evidence_document", "canonical_knowledge_document",
+            "coverage_document", "export_files", "export_manifest",
+            "export_manifest_text",
+        },
         "knowledge stage_data",
     )
     manifest = _exact(
@@ -454,6 +602,26 @@ def _validate_knowledge(result: Any, stage_data: Any) -> None:
         _text(manifest[field], f"knowledge {field}")
     for field in ("canonical_evidence_sha256", "canonical_knowledge_sha256"):
         _sha256(manifest[field], f"knowledge {field}")
+    canonical_evidence = stage_data["canonical_evidence_document"]
+    canonical_knowledge = stage_data["canonical_knowledge_document"]
+    coverage_document = stage_data["coverage_document"]
+    if not isinstance(canonical_evidence, dict) or not isinstance(canonical_knowledge, dict):
+        raise RealStageContractError("knowledge canonical documents are invalid")
+    for label, value, id_field, hash_field in (
+        ("evidence", canonical_evidence, "canonical_evidence_artifact_id", "canonical_evidence_sha256"),
+        ("knowledge", canonical_knowledge, "canonical_knowledge_artifact_id", "canonical_knowledge_sha256"),
+    ):
+        encoded = (
+            json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+        ).encode("utf-8")
+        if value.get("artifact_id") != manifest[id_field] or hashlib.sha256(encoded).hexdigest() != manifest[hash_field]:
+            raise RealStageContractError(f"knowledge canonical {label} binding differs")
+    knowledge_evidence = canonical_knowledge.get("canonical_evidence")
+    if not isinstance(knowledge_evidence, dict) or (
+        knowledge_evidence.get("artifact_id") != canonical_evidence.get("artifact_id")
+        or knowledge_evidence.get("sha256") != manifest["canonical_evidence_sha256"]
+    ):
+        raise RealStageContractError("canonical knowledge evidence pointer differs")
     if manifest["ownership_classes"] != ["MANAGED_GENERATED", "USER_OWNED"]:
         raise RealStageContractError("knowledge ownership classes are invalid")
     if not isinstance(manifest["resolver_states"], dict) or not manifest["resolver_states"] or not all(isinstance(key, str) and key and isinstance(value, str) and value for key, value in manifest["resolver_states"].items()):
@@ -464,6 +632,9 @@ def _validate_knowledge(result: Any, stage_data: Any) -> None:
         raise RealStageContractError("knowledge export file inventory differs")
     for path, expected_hash in files.items():
         _text(path, "knowledge export path")
+        parsed = PurePosixPath(path)
+        if parsed.is_absolute() or ".." in parsed.parts or path != parsed.as_posix():
+            raise RealStageContractError(f"knowledge export path is unsafe: {path}")
         _sha256(expected_hash, f"knowledge file hash {path}")
         content = export_files[path]
         if not isinstance(content, str) or hashlib.sha256(content.encode("utf-8")).hexdigest() != expected_hash:
@@ -472,8 +643,6 @@ def _validate_knowledge(result: Any, stage_data: Any) -> None:
         stage_data["export_manifest_text"], "knowledge export_manifest_text"
     )
     try:
-        import json
-
         decoded_manifest = json.loads(manifest_text)
     except (ValueError, TypeError) as error:
         raise RealStageContractError("knowledge export manifest text is invalid") from error
@@ -482,6 +651,29 @@ def _validate_knowledge(result: Any, stage_data: Any) -> None:
     coverage = manifest["coverage"]
     if not isinstance(coverage, dict) or coverage.get("full_seminar_coverage") is not True or not isinstance(coverage.get("sources"), list) or not coverage["sources"]:
         raise RealStageContractError("knowledge coverage is invalid")
+    coverage = _exact(
+        coverage,
+        {"artifact_type", "full_seminar_coverage", "project_id", "schema_version", "sources"},
+        "knowledge coverage",
+    )
+    if coverage["artifact_type"] != "seminartext.project_knowledge_coverage" or coverage["schema_version"] != 1:
+        raise RealStageContractError("knowledge coverage identity is invalid")
+    _text(coverage["project_id"], "knowledge coverage project_id")
+    if coverage_document != coverage:
+        raise RealStageContractError("knowledge coverage document differs from manifest")
+    source_fields = {
+        "evidence_ids", "reason", "source_id", "status", "topic_ids",
+        "transcript_revision_ids", "word_count",
+    }
+    for index, source in enumerate(coverage["sources"]):
+        source = _exact(source, source_fields, f"knowledge coverage source {index}")
+        for field in ("evidence_ids", "topic_ids", "transcript_revision_ids"):
+            _string_list(source[field], f"knowledge coverage source {index}.{field}", non_empty=True)
+        _text(source["reason"], f"knowledge coverage source {index}.reason")
+        _text(source["source_id"], f"knowledge coverage source {index}.source_id")
+        _integer(source["word_count"], f"knowledge coverage source {index}.word_count", minimum=1)
+        if source["status"] != "COVERED":
+            raise RealStageContractError("knowledge coverage source is not COVERED")
 
 
 def validate_real_stage_document(stage: str, document: Any) -> None:

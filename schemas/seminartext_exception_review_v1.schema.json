@@ -22,10 +22,11 @@
     "stage": {"const": "review"},
     "stage_data": {
       "type": "object",
-      "required": ["alignment_result", "canonical_bundle", "review_package"],
+      "required": ["alignment_result", "canonical_bundle", "draft_input_document", "review_package"],
       "properties": {
         "alignment_result": {"$ref": "#/$defs/alignment_result"},
         "canonical_bundle": {"$ref": "#/$defs/canonical_bundle"},
+        "draft_input_document": {"type": "object", "minProperties": 1},
         "review_package": {"$ref": "#/$defs/review_package"}
       },
       "additionalProperties": false

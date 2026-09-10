@@ -7,8 +7,13 @@ import json
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
+from unittest import mock
 
-from integra_core.real_media import aggregate_whisper_words, validate_actual_evidence
+from integra_core.real_media import (
+    JsonlProcessStageWorker,
+    aggregate_whisper_words,
+    validate_actual_evidence,
+)
 from integra_core.real_contracts import (
     RealStageContractError,
     validate_mp4_clip,
@@ -42,6 +47,66 @@ class RealMediaTests(unittest.TestCase):
             "verification_state": "machine_unverified",
         }
 
+    @classmethod
+    def _valid_knowledge_document(cls):
+        content = "# knowledge\n"
+        canonical_evidence = {"artifact_id": "evidence", "topics": [], "evidence_refs": []}
+        canonical_evidence_hash = hashlib.sha256(
+            (json.dumps(canonical_evidence, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode()
+        ).hexdigest()
+        canonical_knowledge = {
+            "artifact_id": "knowledge",
+            "canonical_evidence": {
+                "artifact_id": "evidence",
+                "sha256": canonical_evidence_hash,
+            },
+        }
+        canonical_knowledge_hash = hashlib.sha256(
+            (json.dumps(canonical_knowledge, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode()
+        ).hexdigest()
+        coverage = {
+            "artifact_type": "seminartext.project_knowledge_coverage",
+            "full_seminar_coverage": True,
+            "project_id": "project",
+            "schema_version": 1,
+            "sources": [{
+                "evidence_ids": ["evidence"],
+                "reason": "covered",
+                "source_id": "source",
+                "status": "COVERED",
+                "topic_ids": ["topic"],
+                "transcript_revision_ids": ["revision"],
+                "word_count": 1,
+            }],
+        }
+        manifest = {
+            "artifact_type": "seminartext.managed_generated_export",
+            "canonical_evidence_artifact_id": "evidence",
+            "canonical_evidence_sha256": canonical_evidence_hash,
+            "canonical_knowledge_artifact_id": "knowledge",
+            "canonical_knowledge_sha256": canonical_knowledge_hash,
+            "coverage": coverage,
+            "files": {"Topics/topic.md": hashlib.sha256(content.encode()).hexdigest()},
+            "kind": "obsidian_derived_view",
+            "ownership_classes": ["MANAGED_GENERATED", "USER_OWNED"],
+            "resolver_states": {"source": "RESOLVER_UNAVAILABLE"},
+            "schema_version": 1,
+        }
+        manifest_text = json.dumps(manifest, sort_keys=True)
+        return cls.stage_document(
+            "knowledge",
+            {"lifecycle": "PROVISIONAL", "manifest_sha256": hashlib.sha256(manifest_text.encode()).hexdigest()},
+            {
+                "canonical_evidence_document": canonical_evidence,
+                "canonical_knowledge_document": canonical_knowledge,
+                "coverage_document": coverage,
+                "export_files": {"Topics/topic.md": content},
+                "export_manifest": manifest,
+                "export_manifest_text": manifest_text,
+            },
+            parents=3,
+        )
+
     def test_whisper_subwords_are_aggregated_without_fabricating_zero_duration(self) -> None:
         document = {
             "transcription": [
@@ -63,6 +128,18 @@ class RealMediaTests(unittest.TestCase):
         self.assertEqual(words[0]["score"], 0.9)
         self.assertEqual(omitted[0]["word"], "ноль")
         self.assertEqual(omitted[0]["reason"], "WHISPER_ZERO_DURATION_TOKEN")
+
+    def test_failed_lease_heartbeat_kills_and_reaps_worker(self) -> None:
+        worker = JsonlProcessStageWorker.__new__(JsonlProcessStageWorker)
+        worker._lease_heartbeat = mock.Mock(side_effect=RuntimeError("lease lost"))
+        worker.lease_heartbeats = 0
+        process = SimpleNamespace(pid=321, communicate=mock.Mock(return_value=(b"", b"")))
+        with mock.patch("integra_core.real_media.os.killpg") as killpg:
+            with self.assertRaisesRegex(RuntimeError, "lease lost"):
+                worker._refresh_active_lease(process, "topics")
+        killpg.assert_called_once_with(321, 9)
+        process.communicate.assert_called_once_with()
+        self.assertEqual(worker.lease_heartbeats, 0)
 
     def test_actual_evidence_requires_provisional_semantic_authority(self) -> None:
         document = json.loads((ROOT / "state/core_alpha_real_v1.json").read_text(encoding="utf-8"))
@@ -274,6 +351,7 @@ class RealMediaTests(unittest.TestCase):
             {
                 "alignment_result": {"alignment_run_id": "alignment", "bundle": "evidence/canonical_bundle.json", "status": "review_required", "unaligned_words": []},
                 "canonical_bundle": bundle,
+                "draft_input_document": {"artifact_id": "draft"},
                 "review_package": {
                     "artifact_id": "review",
                     "artifact_type": "seminartext.topic_review_package",
@@ -293,31 +371,23 @@ class RealMediaTests(unittest.TestCase):
             validate_real_stage_document("review", document)
 
     def test_knowledge_contract_binds_all_export_bytes(self) -> None:
-        content = "# knowledge\n"
-        content_hash = hashlib.sha256(content.encode()).hexdigest()
-        manifest = {
-            "artifact_type": "seminartext.managed_generated_export",
-            "canonical_evidence_artifact_id": "evidence",
-            "canonical_evidence_sha256": "a" * 64,
-            "canonical_knowledge_artifact_id": "knowledge",
-            "canonical_knowledge_sha256": "b" * 64,
-            "coverage": {"artifact_type": "seminartext.project_knowledge_coverage", "full_seminar_coverage": True, "project_id": "project", "schema_version": 1, "sources": [{}]},
-            "files": {"Topics/topic.md": content_hash},
-            "kind": "obsidian_derived_view",
-            "ownership_classes": ["MANAGED_GENERATED", "USER_OWNED"],
-            "resolver_states": {"source": "RESOLVER_UNAVAILABLE"},
-            "schema_version": 1,
-        }
-        manifest_text = json.dumps(manifest, sort_keys=True)
-        document = self.stage_document(
-            "knowledge",
-            {"lifecycle": "PROVISIONAL", "manifest_sha256": hashlib.sha256(manifest_text.encode()).hexdigest()},
-            {"export_files": {"Topics/topic.md": content}, "export_manifest": manifest, "export_manifest_text": manifest_text},
-            parents=3,
-        )
+        document = self._valid_knowledge_document()
         validate_real_stage_document("knowledge", document)
         document["stage_data"]["export_files"]["Topics/topic.md"] = "tampered"
         with self.assertRaisesRegex(RealStageContractError, "export bytes differ"):
+            validate_real_stage_document("knowledge", document)
+
+    def test_knowledge_contract_rejects_unsafe_export_path(self) -> None:
+        document = json.loads(json.dumps(self._valid_knowledge_document()))
+        content = document["stage_data"]["export_files"].pop("Topics/topic.md")
+        digest = document["stage_data"]["export_manifest"]["files"].pop("Topics/topic.md")
+        document["stage_data"]["export_files"]["../topic.md"] = content
+        document["stage_data"]["export_manifest"]["files"]["../topic.md"] = digest
+        manifest = document["stage_data"]["export_manifest"]
+        manifest_text = json.dumps(manifest, sort_keys=True)
+        document["stage_data"]["export_manifest_text"] = manifest_text
+        document["result"]["manifest_sha256"] = hashlib.sha256(manifest_text.encode()).hexdigest()
+        with self.assertRaisesRegex(RealStageContractError, "export path is unsafe"):
             validate_real_stage_document("knowledge", document)
 
     def test_media_contract_rejects_arbitrary_nonempty_bytes(self) -> None:

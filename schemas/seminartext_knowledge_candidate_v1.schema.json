@@ -21,8 +21,11 @@
     "stage": {"const": "knowledge"},
     "stage_data": {
       "type": "object",
-      "required": ["export_files", "export_manifest", "export_manifest_text"],
+      "required": ["canonical_evidence_document", "canonical_knowledge_document", "coverage_document", "export_files", "export_manifest", "export_manifest_text"],
       "properties": {
+        "canonical_evidence_document": {"type": "object", "minProperties": 1},
+        "canonical_knowledge_document": {"type": "object", "minProperties": 1},
+        "coverage_document": {"type": "object", "minProperties": 1},
         "export_files": {"type": "object", "minProperties": 1, "additionalProperties": {"type": "string"}},
         "export_manifest": {"$ref": "#/$defs/export_manifest"},
         "export_manifest_text": {"type": "string", "minLength": 1}

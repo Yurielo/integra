@@ -159,6 +159,29 @@ class JsonlProcessStageWorker:
     def set_lease_heartbeat(self, callback: Any) -> None:
         self._lease_heartbeat = callback
 
+    @staticmethod
+    def _kill_and_reap(process: subprocess.Popen[bytes]) -> None:
+        """Stop the isolated worker process group and always collect the child."""
+
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        process.communicate()
+
+    def _refresh_active_lease(self, process: subprocess.Popen[bytes], stage: str) -> None:
+        if self._lease_heartbeat is None:
+            self._kill_and_reap(process)
+            raise RealMediaError(
+                f"{stage}: lease heartbeat is unavailable during a running worker"
+            )
+        try:
+            self._lease_heartbeat()
+        except Exception:
+            self._kill_and_reap(process)
+            raise
+        self.lease_heartbeats += 1
+
     def run(
         self,
         stage: str,
@@ -236,8 +259,7 @@ class JsonlProcessStageWorker:
         self.messages.append(handshake)
         readable, _, _ = select.select([process.stdout], [], [], min(30, self.timeout_seconds))
         if not readable:
-            os.killpg(process.pid, signal.SIGKILL)
-            process.communicate()
+            self._kill_and_reap(process)
             raise RealMediaError(
                 f"{stage}: R3 worker did not complete its handshake"
             )
@@ -245,13 +267,11 @@ class JsonlProcessStageWorker:
         try:
             response = json.loads(response_line)
         except (UnicodeDecodeError, json.JSONDecodeError) as error:
-            os.killpg(process.pid, signal.SIGKILL)
-            process.communicate()
+            self._kill_and_reap(process)
             raise RealMediaError(f"{stage}: R3 worker emitted an invalid handshake") from error
         validate_message(response)
         if response["correlation_id"] != correlation or response["type"] != "HANDSHAKE_RESPONSE":
-            os.killpg(process.pid, signal.SIGKILL)
-            process.communicate()
+            self._kill_and_reap(process)
             raise RealMediaError(f"{stage}: R3 handshake correlation or type differs")
         self.messages.append(response)
         process.stdin.write(canonical_json(job) + b"\n")
@@ -263,8 +283,7 @@ class JsonlProcessStageWorker:
         while True:
             remaining = deadline - time.monotonic()
             if remaining <= 0:
-                os.killpg(process.pid, signal.SIGKILL)
-                process.communicate()
+                self._kill_and_reap(process)
                 raise RealMediaError(
                     f"{stage}: R3 worker exceeded its enforced timeout; outcome is unknown and was not retried"
                 )
@@ -274,14 +293,7 @@ class JsonlProcessStageWorker:
                 )
                 break
             except subprocess.TimeoutExpired:
-                if self._lease_heartbeat is None:
-                    os.killpg(process.pid, signal.SIGKILL)
-                    process.communicate()
-                    raise RealMediaError(
-                        f"{stage}: lease heartbeat is unavailable during a running worker"
-                    )
-                self._lease_heartbeat()
-                self.lease_heartbeats += 1
+                self._refresh_active_lease(process, stage)
         if process.returncode != 0:
             raise RealMediaError(
                 f"{stage}: R3 worker failed ({process.returncode}): "

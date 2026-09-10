@@ -408,6 +408,7 @@ def execute_review(config: dict[str, Any], inputs: list[dict[str, Any]], session
         {
             "alignment_result": aligned,
             "canonical_bundle": bundle,
+            "draft_input_document": drafts,
             "review_package": review_package,
         },
     ), None
@@ -471,11 +472,24 @@ def execute_knowledge(config: dict[str, Any], inputs: list[dict[str, Any]], sess
             raise WorkerFailure(f"knowledge export file hash differs: {relative}")
         export_files[relative] = content
     words = transcript["stage_data"]["word_intervals"]
+    knowledge_root = project / "knowledge"
+    canonical_evidence_document = json.loads(
+        (knowledge_root / "canonical_evidence.json").read_text(encoding="utf-8")
+    )
+    canonical_knowledge_document = json.loads(
+        (knowledge_root / "canonical_knowledge.json").read_text(encoding="utf-8")
+    )
+    coverage_document = json.loads(
+        (knowledge_root / "coverage.json").read_text(encoding="utf-8")
+    )
     return stage_payload(
         "knowledge",
         inputs,
         {"lifecycle": "PROVISIONAL", "manifest_sha256": sha256_file(manifest_path)},
         {
+            "canonical_evidence_document": canonical_evidence_document,
+            "canonical_knowledge_document": canonical_knowledge_document,
+            "coverage_document": coverage_document,
             "export_files": export_files,
             "export_manifest": manifest,
             "export_manifest_text": manifest_text,
@@ -613,7 +627,7 @@ def main() -> int:
     payload, locator = EXECUTORS[stage](config, inputs, session)
     verify_materialized_sources(config)
     digest = hashlib.sha256(payload).hexdigest()
-    suffix = "bin" if stage == "media_clip" else "json"
+    suffix = "mp4" if stage == "media_clip" else "json"
     job_key = job["payload"]["job_id"].rsplit(":", 1)[-1]
     relative = f".staging/{job_key}/{digest}.{suffix}"
     output_path = confined(artifact_store / relative, artifact_store, "worker output")
