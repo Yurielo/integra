@@ -1,0 +1,174 @@
+{
+  "schema_version": "1.0",
+  "fixture_type": "NORMALIZED_CONTRACT_REPLAY",
+  "protected_data": false,
+  "gold_labels": false,
+  "normalization_note": "Common assertions are mapped to deterministic source-native fixtures; semantic quality is not inferred without authorized Gold or human labels.",
+  "capabilities": [
+    {
+      "id": "media_preparation",
+      "normalized_assertions": ["source_hash_preserved", "bounded_fragment_valid", "source_checkout_unchanged"],
+      "candidates": [
+        {
+          "component_id": "seminartext",
+          "qualification": "NOT_QUALIFIED",
+          "reason": "Pinned baseline exposes ingestion orchestration but no R5-qualified reusable media-preparation contract.",
+          "evidence_paths": ["tests/test_project_transcribe_youtube.py"],
+          "commands": []
+        },
+        {
+          "component_id": "videotext",
+          "qualification": "QUALIFIED",
+          "evidence_paths": ["scripts/test_fragment_processing.sh", "Tests/FragmentProcessingProbe.swift"],
+          "commands": [{"id": "fragment_processing", "argv": ["bash", "scripts/test_fragment_processing.sh"], "success_marker": "FRAGMENT_PROCESSING_PROBE_PASS", "timeout_seconds": 300}]
+        }
+      ]
+    },
+    {
+      "id": "asr",
+      "normalized_assertions": ["language_metadata_preserved", "low_confidence_is_visible", "catastrophic_repetition_fails_closed"],
+      "candidates": [
+        {
+          "component_id": "seminartext",
+          "qualification": "NOT_QUALIFIED",
+          "reason": "Pinned baseline governs imported machine transcript evidence but has no directly replayable ASR engine contract for R5.",
+          "evidence_paths": ["tests/test_machine_transcript_evidence.py"],
+          "commands": []
+        },
+        {
+          "component_id": "videotext",
+          "qualification": "QUALIFIED",
+          "evidence_paths": ["scripts/test_transcription_quality.sh", "Tests/TranscriptionQualityProbe.swift", "Tests/Fixtures/Baseline/zero_duration_service_cue.srt"],
+          "commands": [{"id": "transcription_quality", "argv": ["bash", "scripts/test_transcription_quality.sh"], "success_marker": "TRANSCRIPTION_QUALITY_PROBE_PASS", "timeout_seconds": 300}]
+        }
+      ]
+    },
+    {
+      "id": "alignment",
+      "normalized_assertions": ["ordered_non_overlapping_locators", "exact_locator_provenance", "unaligned_ranges_are_explicit"],
+      "candidates": [
+        {
+          "component_id": "seminartext",
+          "qualification": "QUALIFIED",
+          "evidence_paths": ["tests/test_word_timeline_mvp.py", "analysis/word_timeline_mvp/frozen_whisperx_alignment.json"],
+          "commands": [{"id": "word_timeline", "argv": ["{python}", "-m", "pytest", "-q", "-p", "no:cacheprovider", "tests/test_word_timeline_mvp.py"], "success_marker": "passed", "timeout_seconds": 180}]
+        },
+        {
+          "component_id": "videotext",
+          "qualification": "QUALIFIED",
+          "evidence_paths": ["scripts/test_quote_ranges.sh", "Tests/QuoteRangeProbe.swift"],
+          "commands": [{"id": "quote_ranges", "argv": ["bash", "scripts/test_quote_ranges.sh"], "success_marker": "QUOTE_RANGE_PROBE_PASS", "timeout_seconds": 300}]
+        }
+      ]
+    },
+    {
+      "id": "translation",
+      "normalized_assertions": ["segment_cardinality_preserved", "segment_order_preserved", "source_revision_traceable"],
+      "candidates": [
+        {
+          "component_id": "seminartext",
+          "qualification": "QUALIFIED",
+          "evidence_paths": ["seminartext_modules/seminartext_translate.py", "tests/test_runtime_source_of_truth.py"],
+          "commands": [{"id": "translation_contract", "argv": ["{python}", "-m", "pytest", "-q", "-p", "no:cacheprovider", "tests/test_runtime_source_of_truth.py", "-k", "translate"], "success_marker": "passed", "timeout_seconds": 180}]
+        },
+        {
+          "component_id": "videotext",
+          "qualification": "QUALIFIED",
+          "evidence_paths": ["scripts/test_translation.sh", "Tests/TranslationAdapterProbe.swift"],
+          "commands": [{"id": "translation_adapter", "argv": ["bash", "scripts/test_translation.sh"], "success_marker": "TRANSLATION_ADAPTER_PROBE_PASS", "timeout_seconds": 300}]
+        }
+      ]
+    },
+    {
+      "id": "topics",
+      "normalized_assertions": ["boundary_ids_are_valid", "malformed_model_output_fails_closed", "lifecycle_and_provenance_are_explicit"],
+      "candidates": [
+        {
+          "component_id": "seminartext",
+          "qualification": "QUALIFIED",
+          "evidence_paths": ["seminartext_modules/seminartext_topics.py", "tests/test_runtime_source_of_truth.py", "governance/topic_engine_lifecycle.json", "governance/topic_engine_freeze.json"],
+          "commands": [{"id": "topic_contract", "argv": ["{python}", "-m", "pytest", "-q", "-p", "no:cacheprovider", "tests/test_runtime_source_of_truth.py", "-k", "topics"], "success_marker": "passed", "timeout_seconds": 180}]
+        },
+        {
+          "component_id": "videotext",
+          "qualification": "QUALIFIED",
+          "evidence_paths": ["scripts/test_topics.sh", "Tests/TopicAnalysisProbe.swift"],
+          "commands": [{"id": "topic_analysis", "argv": ["bash", "scripts/test_topics.sh"], "success_marker": "TOPIC PROBE PASS", "timeout_seconds": 300}]
+        }
+      ]
+    },
+    {
+      "id": "review_mechanics",
+      "normalized_assertions": ["machine_output_remains_provisional", "review_decision_is_traceable", "dependent_artifacts_are_invalidated"],
+      "candidates": [
+        {
+          "component_id": "seminartext",
+          "qualification": "QUALIFIED",
+          "evidence_paths": ["seminartext_modules/human_review_workflow.py", "tests/test_human_review_workflow.py", "tests/test_human_review_contract_v2.py"],
+          "commands": [{"id": "topic_review_v2", "argv": ["{python}", "-m", "pytest", "-q", "-p", "no:cacheprovider", "tests/test_human_review_workflow.py", "tests/test_human_review_contract_v2.py"], "success_marker": "passed", "timeout_seconds": 180}]
+        },
+        {
+          "component_id": "videotext",
+          "qualification": "QUALIFIED",
+          "evidence_paths": ["scripts/test_human_review.sh", "Tests/HumanReviewProbe.swift"],
+          "commands": [{"id": "transcript_review", "argv": ["bash", "scripts/test_human_review.sh"], "success_marker": "HUMAN_REVIEW_PROBE_PASS", "timeout_seconds": 300}]
+        }
+      ]
+    },
+    {
+      "id": "cache",
+      "normalized_assertions": ["cache_key_binds_inputs_and_configuration", "invalid_cache_is_rejected", "partial_cache_is_not_promoted"],
+      "candidates": [
+        {
+          "component_id": "seminartext",
+          "qualification": "NOT_QUALIFIED",
+          "reason": "Topic reuse exists, but the pinned baseline does not expose a general cache contract satisfying all R5 normalized assertions.",
+          "evidence_paths": ["seminartext_modules/seminartext_topics.py"],
+          "commands": []
+        },
+        {
+          "component_id": "videotext",
+          "qualification": "QUALIFIED",
+          "evidence_paths": ["scripts/test_topic_matrix.sh", "Tests/TopicMatrixProbe.swift", "Sources/videotext/Adapters/SegmentedWhisperTranscriber.swift"],
+          "commands": [{"id": "topic_cache_matrix", "argv": ["bash", "scripts/test_topic_matrix.sh"], "success_marker": "TOPIC_MATRIX_PROBE_PASS", "timeout_seconds": 300}]
+        }
+      ]
+    },
+    {
+      "id": "recovery",
+      "normalized_assertions": ["incomplete_state_is_preserved", "ambiguous_retry_is_denied", "resume_is_bounded"],
+      "candidates": [
+        {
+          "component_id": "seminartext",
+          "qualification": "QUALIFIED",
+          "evidence_paths": ["seminartext_modules/evidence_foundation.py", "tests/test_evidence_foundation_e2e.py"],
+          "commands": [{"id": "evidence_resume", "argv": ["{python}", "-m", "pytest", "-q", "-p", "no:cacheprovider", "tests/test_evidence_foundation_e2e.py"], "success_marker": "passed", "timeout_seconds": 180}]
+        },
+        {
+          "component_id": "videotext",
+          "qualification": "QUALIFIED",
+          "evidence_paths": ["scripts/test_recovery_watchdog.sh", "scripts/run_recovery_bounded.sh"],
+          "commands": [{"id": "recovery_watchdog", "argv": ["bash", "scripts/test_recovery_watchdog.sh"], "success_marker": "RECOVERY WATCHDOG PROBE PASS", "timeout_seconds": 60}]
+        }
+      ]
+    },
+    {
+      "id": "quality_validation",
+      "normalized_assertions": ["invalid_artifacts_are_blocked", "warnings_are_structured", "provenance_is_validated"],
+      "candidates": [
+        {
+          "component_id": "seminartext",
+          "qualification": "QUALIFIED",
+          "evidence_paths": ["tests/test_canonical_evidence_schema_v1.py", "tests/test_project_integrity_gate.py"],
+          "commands": [{"id": "canonical_quality", "argv": ["{python}", "-m", "pytest", "-q", "-p", "no:cacheprovider", "tests/test_canonical_evidence_schema_v1.py", "tests/test_project_integrity_gate.py"], "success_marker": "passed", "timeout_seconds": 180}]
+        },
+        {
+          "component_id": "videotext",
+          "qualification": "QUALIFIED",
+          "evidence_paths": ["scripts/test_transcription_quality.sh", "Tests/TranscriptionQualityProbe.swift"],
+          "commands": [{"id": "transcript_quality", "argv": ["bash", "scripts/test_transcription_quality.sh"], "success_marker": "TRANSCRIPTION_QUALITY_PROBE_PASS", "timeout_seconds": 300}]
+        }
+      ]
+    }
+  ]
+}

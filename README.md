@@ -34,3 +34,8 @@ Validate the governance baseline with:
 python3 scripts/validate_governance.py
 python3 -m unittest discover -s tests -v
 ```
+
+The accepted R5 capability selection and its raw two-run replay evidence are
+stored in `state/capability_benchmark_v1.json` and
+`state/capability_benchmark_raw_v1.json`. Reproduce it only with clean temporary
+checkouts of the pinned source commits using `scripts/run_capability_benchmark.py`.
