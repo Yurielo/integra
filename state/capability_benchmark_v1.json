@@ -1,0 +1,1463 @@
+{
+  "capabilities": [
+    {
+      "candidates": [
+        {
+          "component_id": "seminartext",
+          "correction_burden": {
+            "reason": "Pinned baseline exposes ingestion orchestration but no R5-qualified reusable media-preparation contract.",
+            "status": "NOT_MEASURED"
+          },
+          "hard_correctness": {
+            "reason": "Pinned baseline exposes ingestion orchestration but no R5-qualified reusable media-preparation contract.",
+            "status": "NOT_QUALIFIED"
+          },
+          "limitations": [
+            "Pinned baseline exposes ingestion orchestration but no R5-qualified reusable media-preparation contract."
+          ],
+          "provenance": {
+            "evidence_inputs": [
+              {
+                "path": "tests/test_project_transcribe_youtube.py",
+                "sha256": "488c2d432db2b37576fce10a9d4c7a880745fbf816ec0a2781a9d9f6cbfb9e58"
+              }
+            ],
+            "status": "PASS"
+          },
+          "quality": {
+            "reason": "Pinned baseline exposes ingestion orchestration but no R5-qualified reusable media-preparation contract.",
+            "semantic_quality": "NOT_MEASURED_NO_QUALIFIED_CONTRACT",
+            "status": "NOT_MEASURED"
+          },
+          "reproducibility": {
+            "reason": "Pinned baseline exposes ingestion orchestration but no R5-qualified reusable media-preparation contract.",
+            "status": "NOT_MEASURED"
+          },
+          "resources": {
+            "reason": "Pinned baseline exposes ingestion orchestration but no R5-qualified reusable media-preparation contract.",
+            "status": "NOT_MEASURED"
+          },
+          "runs": [],
+          "status": "NOT_QUALIFIED"
+        },
+        {
+          "component_id": "videotext",
+          "correction_burden": {
+            "reason": "NOT_APPLICABLE_TO_CONTRACT_REPLAY",
+            "status": "NOT_MEASURED"
+          },
+          "hard_correctness": {
+            "assertions_passed": 3,
+            "assertions_total": 3,
+            "status": "PASS"
+          },
+          "limitations": [
+            "No protected Dataset or Gold quality comparison was authorized.",
+            "Peak RSS was not measured by the dependency-free runner."
+          ],
+          "provenance": {
+            "evidence_inputs": [
+              {
+                "path": "scripts/test_fragment_processing.sh",
+                "sha256": "c49cd02f7855ffbcd18203c44c556efde30e677f39b061d3d35e1e5e96ecf17d"
+              },
+              {
+                "path": "Tests/FragmentProcessingProbe.swift",
+                "sha256": "d61f3933da47a21927fe803325ac49c20b0481ead921e0a22125ba908e68889c"
+              }
+            ],
+            "status": "PASS"
+          },
+          "quality": {
+            "contract_assertions_passed": 3,
+            "contract_assertions_total": 3,
+            "semantic_quality": "NOT_APPLICABLE_TO_CONTRACT_REPLAY",
+            "status": "PARTIAL"
+          },
+          "reproducibility": {
+            "all_runs_passed": true,
+            "note": "pytest duration text may change stdout hash without changing assertions",
+            "run_count": 2,
+            "status": "PASS",
+            "stdout_byte_stable": true
+          },
+          "resources": {
+            "elapsed_ms_max": 40455,
+            "elapsed_ms_median": 40218,
+            "elapsed_ms_min": 39981,
+            "measurement": "WALL_CLOCK_ELAPSED_ONLY",
+            "peak_rss_kb": null,
+            "status": "PARTIAL"
+          },
+          "runs": [
+            {
+              "command_id": "fragment_processing",
+              "elapsed_ms": 39981,
+              "exit_code": 0,
+              "repetition": 1,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "bf4963cd2f9bbc5d948af6d0fcf863b64f5d7bd94c85d89252ebf8a5d1d105b2"
+            },
+            {
+              "command_id": "fragment_processing",
+              "elapsed_ms": 40455,
+              "exit_code": 0,
+              "repetition": 2,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "bf4963cd2f9bbc5d948af6d0fcf863b64f5d7bd94c85d89252ebf8a5d1d105b2"
+            }
+          ],
+          "status": "PASS"
+        }
+      ],
+      "id": "media_preparation",
+      "normalized_assertions": [
+        "source_hash_preserved",
+        "bounded_fragment_valid",
+        "source_checkout_unchanged"
+      ],
+      "selection": {
+        "basis": [
+          "complete bounded-fragment probe",
+          "R1 real-media evidence"
+        ],
+        "challenger": [],
+        "decision_authority": "ISSUE_7_TECHNICAL_INTEGRATION_SELECTION",
+        "fallback": [],
+        "mode": "SINGLE_PRIMARY",
+        "primary": [
+          "videotext"
+        ],
+        "semantic_superiority_claimed": false
+      }
+    },
+    {
+      "candidates": [
+        {
+          "component_id": "seminartext",
+          "correction_burden": {
+            "reason": "Pinned baseline governs imported machine transcript evidence but has no directly replayable ASR engine contract for R5.",
+            "status": "NOT_MEASURED"
+          },
+          "hard_correctness": {
+            "reason": "Pinned baseline governs imported machine transcript evidence but has no directly replayable ASR engine contract for R5.",
+            "status": "NOT_QUALIFIED"
+          },
+          "limitations": [
+            "Pinned baseline governs imported machine transcript evidence but has no directly replayable ASR engine contract for R5."
+          ],
+          "provenance": {
+            "evidence_inputs": [
+              {
+                "path": "tests/test_machine_transcript_evidence.py",
+                "sha256": "5f372f492ddc5c4bfdd7d7e40890f7cc2e2a739f1fb6f31ec86234a30017c207"
+              }
+            ],
+            "status": "PASS"
+          },
+          "quality": {
+            "reason": "Pinned baseline governs imported machine transcript evidence but has no directly replayable ASR engine contract for R5.",
+            "semantic_quality": "NOT_MEASURED_NO_QUALIFIED_CONTRACT",
+            "status": "NOT_MEASURED"
+          },
+          "reproducibility": {
+            "reason": "Pinned baseline governs imported machine transcript evidence but has no directly replayable ASR engine contract for R5.",
+            "status": "NOT_MEASURED"
+          },
+          "resources": {
+            "reason": "Pinned baseline governs imported machine transcript evidence but has no directly replayable ASR engine contract for R5.",
+            "status": "NOT_MEASURED"
+          },
+          "runs": [],
+          "status": "NOT_QUALIFIED"
+        },
+        {
+          "component_id": "videotext",
+          "correction_burden": {
+            "reason": "NOT_MEASURED_NO_AUTHORIZED_HUMAN_LABELS",
+            "status": "NOT_MEASURED"
+          },
+          "hard_correctness": {
+            "assertions_passed": 3,
+            "assertions_total": 3,
+            "status": "PASS"
+          },
+          "limitations": [
+            "No protected Dataset or Gold quality comparison was authorized.",
+            "Peak RSS was not measured by the dependency-free runner."
+          ],
+          "provenance": {
+            "evidence_inputs": [
+              {
+                "path": "scripts/test_transcription_quality.sh",
+                "sha256": "95f1bc0b027f74c0f164aae7740e41cd849b9e73f9f61648b510efc93c016bd6"
+              },
+              {
+                "path": "Tests/TranscriptionQualityProbe.swift",
+                "sha256": "9b9ecb0ac9327fe2c374ce6edf6d116d73d5f99599e09d427a312a588e06c401"
+              },
+              {
+                "path": "Tests/Fixtures/Baseline/zero_duration_service_cue.srt",
+                "sha256": "7d9c2702822bdd09bd9491d8ab5068389f7b75f77551d59fabfc34f09573cee9"
+              }
+            ],
+            "status": "PASS"
+          },
+          "quality": {
+            "contract_assertions_passed": 3,
+            "contract_assertions_total": 3,
+            "semantic_quality": "NOT_APPLICABLE_TO_CONTRACT_REPLAY",
+            "status": "PARTIAL"
+          },
+          "reproducibility": {
+            "all_runs_passed": true,
+            "note": "pytest duration text may change stdout hash without changing assertions",
+            "run_count": 2,
+            "status": "PASS",
+            "stdout_byte_stable": true
+          },
+          "resources": {
+            "elapsed_ms_max": 40633,
+            "elapsed_ms_median": 39568,
+            "elapsed_ms_min": 38503,
+            "measurement": "WALL_CLOCK_ELAPSED_ONLY",
+            "peak_rss_kb": null,
+            "status": "PARTIAL"
+          },
+          "runs": [
+            {
+              "command_id": "transcription_quality",
+              "elapsed_ms": 38503,
+              "exit_code": 0,
+              "repetition": 1,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "0a720e1a10f95995d521982233d79a1d7924faa4eb8a1a05346ebbae5118c5a8"
+            },
+            {
+              "command_id": "transcription_quality",
+              "elapsed_ms": 40633,
+              "exit_code": 0,
+              "repetition": 2,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "0a720e1a10f95995d521982233d79a1d7924faa4eb8a1a05346ebbae5118c5a8"
+            }
+          ],
+          "status": "PASS"
+        }
+      ],
+      "id": "asr",
+      "normalized_assertions": [
+        "language_metadata_preserved",
+        "low_confidence_is_visible",
+        "catastrophic_repetition_fails_closed"
+      ],
+      "selection": {
+        "basis": [
+          "replayable transcript-quality gate",
+          "R1 consecutive real-media E2E"
+        ],
+        "challenger": [],
+        "decision_authority": "ISSUE_7_TECHNICAL_INTEGRATION_SELECTION",
+        "fallback": [],
+        "mode": "SINGLE_PRIMARY",
+        "primary": [
+          "videotext"
+        ],
+        "semantic_superiority_claimed": false
+      }
+    },
+    {
+      "candidates": [
+        {
+          "component_id": "seminartext",
+          "correction_burden": {
+            "reason": "NOT_APPLICABLE_TO_CONTRACT_REPLAY",
+            "status": "NOT_MEASURED"
+          },
+          "hard_correctness": {
+            "assertions_passed": 3,
+            "assertions_total": 3,
+            "status": "PASS"
+          },
+          "limitations": [
+            "No protected Dataset or Gold quality comparison was authorized.",
+            "Peak RSS was not measured by the dependency-free runner."
+          ],
+          "provenance": {
+            "evidence_inputs": [
+              {
+                "path": "tests/test_word_timeline_mvp.py",
+                "sha256": "e0382264f47d9ab8c327f2a9f5c00d9be14526d4fef3d273d104cdcfca3c02e4"
+              },
+              {
+                "path": "analysis/word_timeline_mvp/frozen_whisperx_alignment.json",
+                "sha256": "c68ad139278edb81daeaa7f22b7f233fa2cf1ca89e682f53cdfcdc4cadf17786"
+              }
+            ],
+            "status": "PASS"
+          },
+          "quality": {
+            "contract_assertions_passed": 3,
+            "contract_assertions_total": 3,
+            "semantic_quality": "NOT_APPLICABLE_TO_CONTRACT_REPLAY",
+            "status": "PARTIAL"
+          },
+          "reproducibility": {
+            "all_runs_passed": true,
+            "note": "pytest duration text may change stdout hash without changing assertions",
+            "run_count": 2,
+            "status": "PASS",
+            "stdout_byte_stable": false
+          },
+          "resources": {
+            "elapsed_ms_max": 1085,
+            "elapsed_ms_median": 1071,
+            "elapsed_ms_min": 1057,
+            "measurement": "WALL_CLOCK_ELAPSED_ONLY",
+            "peak_rss_kb": null,
+            "status": "PARTIAL"
+          },
+          "runs": [
+            {
+              "command_id": "word_timeline",
+              "elapsed_ms": 1085,
+              "exit_code": 0,
+              "repetition": 1,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "dfa60bd85afdc3d7e5c52d064f1c3029d4f412f72b83f2ea150b2ee7c11082e3"
+            },
+            {
+              "command_id": "word_timeline",
+              "elapsed_ms": 1057,
+              "exit_code": 0,
+              "repetition": 2,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "b6c0dc4a99248cfd9e5fd675fc5706f2fcb5706cc9b7546944b1873378fe5ae0"
+            }
+          ],
+          "status": "PASS"
+        },
+        {
+          "component_id": "videotext",
+          "correction_burden": {
+            "reason": "NOT_APPLICABLE_TO_CONTRACT_REPLAY",
+            "status": "NOT_MEASURED"
+          },
+          "hard_correctness": {
+            "assertions_passed": 3,
+            "assertions_total": 3,
+            "status": "PASS"
+          },
+          "limitations": [
+            "No protected Dataset or Gold quality comparison was authorized.",
+            "Peak RSS was not measured by the dependency-free runner."
+          ],
+          "provenance": {
+            "evidence_inputs": [
+              {
+                "path": "scripts/test_quote_ranges.sh",
+                "sha256": "e65b04766ed5a1a30dd39b18c30e7b898614084d7eb465ad48fc25197af8fe5c"
+              },
+              {
+                "path": "Tests/QuoteRangeProbe.swift",
+                "sha256": "40dddd7a8b4227252371194bc7361af324c8276a5081accbdc8644128ac46f18"
+              }
+            ],
+            "status": "PASS"
+          },
+          "quality": {
+            "contract_assertions_passed": 3,
+            "contract_assertions_total": 3,
+            "semantic_quality": "NOT_APPLICABLE_TO_CONTRACT_REPLAY",
+            "status": "PARTIAL"
+          },
+          "reproducibility": {
+            "all_runs_passed": true,
+            "note": "pytest duration text may change stdout hash without changing assertions",
+            "run_count": 2,
+            "status": "PASS",
+            "stdout_byte_stable": true
+          },
+          "resources": {
+            "elapsed_ms_max": 44763,
+            "elapsed_ms_median": 44365,
+            "elapsed_ms_min": 43967,
+            "measurement": "WALL_CLOCK_ELAPSED_ONLY",
+            "peak_rss_kb": null,
+            "status": "PARTIAL"
+          },
+          "runs": [
+            {
+              "command_id": "quote_ranges",
+              "elapsed_ms": 44763,
+              "exit_code": 0,
+              "repetition": 1,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "12c25e60326f62ff7c277406730cc9890cd9afb8f1afbda6d4bbe7a954ffd3cc"
+            },
+            {
+              "command_id": "quote_ranges",
+              "elapsed_ms": 43967,
+              "exit_code": 0,
+              "repetition": 2,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "12c25e60326f62ff7c277406730cc9890cd9afb8f1afbda6d4bbe7a954ffd3cc"
+            }
+          ],
+          "status": "PASS"
+        }
+      ],
+      "id": "alignment",
+      "normalized_assertions": [
+        "ordered_non_overlapping_locators",
+        "exact_locator_provenance",
+        "unaligned_ranges_are_explicit"
+      ],
+      "selection": {
+        "basis": [
+          "Canonical Word Timeline ownership",
+          "word-level provenance and explicit unaligned state"
+        ],
+        "challenger": [],
+        "decision_authority": "ISSUE_7_TECHNICAL_INTEGRATION_SELECTION",
+        "fallback": [
+          "videotext"
+        ],
+        "mode": "SINGLE_PRIMARY",
+        "primary": [
+          "seminartext"
+        ],
+        "semantic_superiority_claimed": false
+      }
+    },
+    {
+      "candidates": [
+        {
+          "component_id": "seminartext",
+          "correction_burden": {
+            "reason": "NOT_MEASURED_NO_AUTHORIZED_HUMAN_LABELS",
+            "status": "NOT_MEASURED"
+          },
+          "hard_correctness": {
+            "assertions_passed": 3,
+            "assertions_total": 3,
+            "status": "PASS"
+          },
+          "limitations": [
+            "No protected Dataset or Gold quality comparison was authorized.",
+            "Peak RSS was not measured by the dependency-free runner."
+          ],
+          "provenance": {
+            "evidence_inputs": [
+              {
+                "path": "seminartext_modules/seminartext_translate.py",
+                "sha256": "1f8219e00f208c46a3dbf25586ebc6b1e2c82815f50bbfd7b0a8cc8bf0c6df02"
+              },
+              {
+                "path": "tests/test_runtime_source_of_truth.py",
+                "sha256": "6c1878cdeed8cd7c1c2eef95c04de7084f69119e589811cb60385a2329802330"
+              }
+            ],
+            "status": "PASS"
+          },
+          "quality": {
+            "contract_assertions_passed": 3,
+            "contract_assertions_total": 3,
+            "semantic_quality": "NOT_MEASURED_NO_AUTHORIZED_GOLD",
+            "status": "PARTIAL"
+          },
+          "reproducibility": {
+            "all_runs_passed": true,
+            "note": "pytest duration text may change stdout hash without changing assertions",
+            "run_count": 2,
+            "status": "PASS",
+            "stdout_byte_stable": false
+          },
+          "resources": {
+            "elapsed_ms_max": 221,
+            "elapsed_ms_median": 192,
+            "elapsed_ms_min": 164,
+            "measurement": "WALL_CLOCK_ELAPSED_ONLY",
+            "peak_rss_kb": null,
+            "status": "PARTIAL"
+          },
+          "runs": [
+            {
+              "command_id": "translation_contract",
+              "elapsed_ms": 221,
+              "exit_code": 0,
+              "repetition": 1,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "e24c217dd2855c11251641a65e407c2acb513fadba85a1778e21c8860ea7f9f9"
+            },
+            {
+              "command_id": "translation_contract",
+              "elapsed_ms": 164,
+              "exit_code": 0,
+              "repetition": 2,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "8b91ffbfab1deb63e6c276074d73de1fc340bcf1f65079ad5fa0a48a42c04b78"
+            }
+          ],
+          "status": "PASS"
+        },
+        {
+          "component_id": "videotext",
+          "correction_burden": {
+            "reason": "NOT_MEASURED_NO_AUTHORIZED_HUMAN_LABELS",
+            "status": "NOT_MEASURED"
+          },
+          "hard_correctness": {
+            "assertions_passed": 3,
+            "assertions_total": 3,
+            "status": "PASS"
+          },
+          "limitations": [
+            "No protected Dataset or Gold quality comparison was authorized.",
+            "Peak RSS was not measured by the dependency-free runner."
+          ],
+          "provenance": {
+            "evidence_inputs": [
+              {
+                "path": "scripts/test_translation.sh",
+                "sha256": "9bc61bc7580b6bd8674e4977d332eecc7481321f9a4b44641104c51cbe5e35d4"
+              },
+              {
+                "path": "Tests/TranslationAdapterProbe.swift",
+                "sha256": "c755ffb44865359770a066861f7e0e322c3db22b306b188b0adf02287ee36bb4"
+              }
+            ],
+            "status": "PASS"
+          },
+          "quality": {
+            "contract_assertions_passed": 3,
+            "contract_assertions_total": 3,
+            "semantic_quality": "NOT_MEASURED_NO_AUTHORIZED_GOLD",
+            "status": "PARTIAL"
+          },
+          "reproducibility": {
+            "all_runs_passed": true,
+            "note": "pytest duration text may change stdout hash without changing assertions",
+            "run_count": 2,
+            "status": "PASS",
+            "stdout_byte_stable": true
+          },
+          "resources": {
+            "elapsed_ms_max": 45312,
+            "elapsed_ms_median": 44658,
+            "elapsed_ms_min": 44004,
+            "measurement": "WALL_CLOCK_ELAPSED_ONLY",
+            "peak_rss_kb": null,
+            "status": "PARTIAL"
+          },
+          "runs": [
+            {
+              "command_id": "translation_adapter",
+              "elapsed_ms": 45312,
+              "exit_code": 0,
+              "repetition": 1,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "c84eb77c2e8b7701a7a79a26fcea6e4737893152d3566a7202340892e7943d49"
+            },
+            {
+              "command_id": "translation_adapter",
+              "elapsed_ms": 44004,
+              "exit_code": 0,
+              "repetition": 2,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "c84eb77c2e8b7701a7a79a26fcea6e4737893152d3566a7202340892e7943d49"
+            }
+          ],
+          "status": "PASS"
+        }
+      ],
+      "id": "translation",
+      "normalized_assertions": [
+        "segment_cardinality_preserved",
+        "segment_order_preserved",
+        "source_revision_traceable"
+      ],
+      "selection": {
+        "basis": [
+          "application-integrated adapter and review lifecycle",
+          "SeminarText retained as deterministic contract fallback"
+        ],
+        "challenger": [],
+        "decision_authority": "ISSUE_7_TECHNICAL_INTEGRATION_SELECTION",
+        "fallback": [
+          "seminartext"
+        ],
+        "mode": "SINGLE_PRIMARY",
+        "primary": [
+          "videotext"
+        ],
+        "semantic_superiority_claimed": false
+      }
+    },
+    {
+      "candidates": [
+        {
+          "component_id": "seminartext",
+          "correction_burden": {
+            "reason": "NOT_MEASURED_NO_AUTHORIZED_HUMAN_LABELS",
+            "status": "NOT_MEASURED"
+          },
+          "hard_correctness": {
+            "assertions_passed": 3,
+            "assertions_total": 3,
+            "status": "PASS"
+          },
+          "limitations": [
+            "No protected Dataset or Gold quality comparison was authorized.",
+            "Peak RSS was not measured by the dependency-free runner."
+          ],
+          "provenance": {
+            "evidence_inputs": [
+              {
+                "path": "seminartext_modules/seminartext_topics.py",
+                "sha256": "d8a14e83b877024c3e016a33e594af17d512741a77735ff3d8c7d1262628c8db"
+              },
+              {
+                "path": "tests/test_runtime_source_of_truth.py",
+                "sha256": "6c1878cdeed8cd7c1c2eef95c04de7084f69119e589811cb60385a2329802330"
+              },
+              {
+                "path": "governance/topic_engine_lifecycle.json",
+                "sha256": "161a204fe43abc731679bb3479b1d957b43a81524291a85096932b5d650b3f2d"
+              },
+              {
+                "path": "governance/topic_engine_freeze.json",
+                "sha256": "723b0093c7f871e5ef721dd060ec639f1cc0523ba55966f0727cce101f22f300"
+              }
+            ],
+            "status": "PASS"
+          },
+          "quality": {
+            "contract_assertions_passed": 3,
+            "contract_assertions_total": 3,
+            "semantic_quality": "NOT_MEASURED_NO_AUTHORIZED_GOLD",
+            "status": "PARTIAL"
+          },
+          "reproducibility": {
+            "all_runs_passed": true,
+            "note": "pytest duration text may change stdout hash without changing assertions",
+            "run_count": 2,
+            "status": "PASS",
+            "stdout_byte_stable": false
+          },
+          "resources": {
+            "elapsed_ms_max": 218,
+            "elapsed_ms_median": 185,
+            "elapsed_ms_min": 152,
+            "measurement": "WALL_CLOCK_ELAPSED_ONLY",
+            "peak_rss_kb": null,
+            "status": "PARTIAL"
+          },
+          "runs": [
+            {
+              "command_id": "topic_contract",
+              "elapsed_ms": 218,
+              "exit_code": 0,
+              "repetition": 1,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "e24c217dd2855c11251641a65e407c2acb513fadba85a1778e21c8860ea7f9f9"
+            },
+            {
+              "command_id": "topic_contract",
+              "elapsed_ms": 152,
+              "exit_code": 0,
+              "repetition": 2,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "8b91ffbfab1deb63e6c276074d73de1fc340bcf1f65079ad5fa0a48a42c04b78"
+            }
+          ],
+          "status": "PASS"
+        },
+        {
+          "component_id": "videotext",
+          "correction_burden": {
+            "reason": "NOT_MEASURED_NO_AUTHORIZED_HUMAN_LABELS",
+            "status": "NOT_MEASURED"
+          },
+          "hard_correctness": {
+            "assertions_passed": 3,
+            "assertions_total": 3,
+            "status": "PASS"
+          },
+          "limitations": [
+            "No protected Dataset or Gold quality comparison was authorized.",
+            "Peak RSS was not measured by the dependency-free runner."
+          ],
+          "provenance": {
+            "evidence_inputs": [
+              {
+                "path": "scripts/test_topics.sh",
+                "sha256": "14917770875d4ec2df0533282a7a83c566029949028714f338e614b378e90f95"
+              },
+              {
+                "path": "Tests/TopicAnalysisProbe.swift",
+                "sha256": "c122dbfe41c105ad4593b0ca8175f4a3f2c5d2b31829288a6968c3ad96f746a7"
+              }
+            ],
+            "status": "PASS"
+          },
+          "quality": {
+            "contract_assertions_passed": 3,
+            "contract_assertions_total": 3,
+            "semantic_quality": "NOT_MEASURED_NO_AUTHORIZED_GOLD",
+            "status": "PARTIAL"
+          },
+          "reproducibility": {
+            "all_runs_passed": true,
+            "note": "pytest duration text may change stdout hash without changing assertions",
+            "run_count": 2,
+            "status": "PASS",
+            "stdout_byte_stable": true
+          },
+          "resources": {
+            "elapsed_ms_max": 45897,
+            "elapsed_ms_median": 44975,
+            "elapsed_ms_min": 44053,
+            "measurement": "WALL_CLOCK_ELAPSED_ONLY",
+            "peak_rss_kb": null,
+            "status": "PARTIAL"
+          },
+          "runs": [
+            {
+              "command_id": "topic_analysis",
+              "elapsed_ms": 45897,
+              "exit_code": 0,
+              "repetition": 1,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "ecdfdd476f911f67d08f8ed4dbb7a11453b294cbb76b5bbcf73dacc7d7d20170"
+            },
+            {
+              "command_id": "topic_analysis",
+              "elapsed_ms": 44053,
+              "exit_code": 0,
+              "repetition": 2,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "ecdfdd476f911f67d08f8ed4dbb7a11453b294cbb76b5bbcf73dacc7d7d20170"
+            }
+          ],
+          "status": "PASS"
+        }
+      ],
+      "id": "topics",
+      "normalized_assertions": [
+        "boundary_ids_are_valid",
+        "malformed_model_output_fails_closed",
+        "lifecycle_and_provenance_are_explicit"
+      ],
+      "selection": {
+        "basis": [
+          "accepted Topic lifecycle and frozen-candidate provenance",
+          "semantic superiority remains unclaimed"
+        ],
+        "challenger": [
+          "videotext"
+        ],
+        "decision_authority": "ISSUE_7_TECHNICAL_INTEGRATION_SELECTION",
+        "fallback": [],
+        "mode": "SINGLE_PRIMARY",
+        "primary": [
+          "seminartext"
+        ],
+        "semantic_superiority_claimed": false
+      }
+    },
+    {
+      "candidates": [
+        {
+          "component_id": "seminartext",
+          "correction_burden": {
+            "reason": "NOT_MEASURED_NO_AUTHORIZED_HUMAN_LABELS",
+            "status": "NOT_MEASURED"
+          },
+          "hard_correctness": {
+            "assertions_passed": 3,
+            "assertions_total": 3,
+            "status": "PASS"
+          },
+          "limitations": [
+            "No protected Dataset or Gold quality comparison was authorized.",
+            "Peak RSS was not measured by the dependency-free runner."
+          ],
+          "provenance": {
+            "evidence_inputs": [
+              {
+                "path": "seminartext_modules/human_review_workflow.py",
+                "sha256": "7187819a19360fe023c9ddcc3a723ca638a1b1b74769c02c41829cd344da72dc"
+              },
+              {
+                "path": "tests/test_human_review_workflow.py",
+                "sha256": "c2e41f0baf295b969fb99eb619d07fec4d2cf500942c61f402052ced2002e652"
+              },
+              {
+                "path": "tests/test_human_review_contract_v2.py",
+                "sha256": "e64a5f443c9af17ed4c6e0afb656c6e417ace1bd6d61934219b86ec1830368df"
+              }
+            ],
+            "status": "PASS"
+          },
+          "quality": {
+            "contract_assertions_passed": 3,
+            "contract_assertions_total": 3,
+            "semantic_quality": "NOT_MEASURED_NO_AUTHORIZED_GOLD",
+            "status": "PARTIAL"
+          },
+          "reproducibility": {
+            "all_runs_passed": true,
+            "note": "pytest duration text may change stdout hash without changing assertions",
+            "run_count": 2,
+            "status": "PASS",
+            "stdout_byte_stable": false
+          },
+          "resources": {
+            "elapsed_ms_max": 8778,
+            "elapsed_ms_median": 8757,
+            "elapsed_ms_min": 8736,
+            "measurement": "WALL_CLOCK_ELAPSED_ONLY",
+            "peak_rss_kb": null,
+            "status": "PARTIAL"
+          },
+          "runs": [
+            {
+              "command_id": "topic_review_v2",
+              "elapsed_ms": 8736,
+              "exit_code": 0,
+              "repetition": 1,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "1d7d74b9cafbdcb827353061b38589450ebfb455348678a64e911bc38b609bad"
+            },
+            {
+              "command_id": "topic_review_v2",
+              "elapsed_ms": 8778,
+              "exit_code": 0,
+              "repetition": 2,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "98fafdf155491045e6f2611eadddbc9ae04e49e39ce8e1fb7842d9c14ee331c5"
+            }
+          ],
+          "status": "PASS"
+        },
+        {
+          "component_id": "videotext",
+          "correction_burden": {
+            "reason": "NOT_MEASURED_NO_AUTHORIZED_HUMAN_LABELS",
+            "status": "NOT_MEASURED"
+          },
+          "hard_correctness": {
+            "assertions_passed": 3,
+            "assertions_total": 3,
+            "status": "PASS"
+          },
+          "limitations": [
+            "No protected Dataset or Gold quality comparison was authorized.",
+            "Peak RSS was not measured by the dependency-free runner."
+          ],
+          "provenance": {
+            "evidence_inputs": [
+              {
+                "path": "scripts/test_human_review.sh",
+                "sha256": "7ef4b6183a18af18ceaff910dfb03c1936b3e2b35d4f55aab382c40c2c40d21a"
+              },
+              {
+                "path": "Tests/HumanReviewProbe.swift",
+                "sha256": "9546de00be29d8c0cc59692f5ac777655e02cd5f15ec3f19f23c928ece89acaf"
+              }
+            ],
+            "status": "PASS"
+          },
+          "quality": {
+            "contract_assertions_passed": 3,
+            "contract_assertions_total": 3,
+            "semantic_quality": "NOT_MEASURED_NO_AUTHORIZED_GOLD",
+            "status": "PARTIAL"
+          },
+          "reproducibility": {
+            "all_runs_passed": true,
+            "note": "pytest duration text may change stdout hash without changing assertions",
+            "run_count": 2,
+            "status": "PASS",
+            "stdout_byte_stable": true
+          },
+          "resources": {
+            "elapsed_ms_max": 43211,
+            "elapsed_ms_median": 42836,
+            "elapsed_ms_min": 42460,
+            "measurement": "WALL_CLOCK_ELAPSED_ONLY",
+            "peak_rss_kb": null,
+            "status": "PARTIAL"
+          },
+          "runs": [
+            {
+              "command_id": "transcript_review",
+              "elapsed_ms": 43211,
+              "exit_code": 0,
+              "repetition": 1,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "480c3be782317e7dfcdc155be390e3b2d621cda9996d7bb29e8c8273d8e37360"
+            },
+            {
+              "command_id": "transcript_review",
+              "elapsed_ms": 42460,
+              "exit_code": 0,
+              "repetition": 2,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "480c3be782317e7dfcdc155be390e3b2d621cda9996d7bb29e8c8273d8e37360"
+            }
+          ],
+          "status": "PASS"
+        }
+      ],
+      "id": "review_mechanics",
+      "normalized_assertions": [
+        "machine_output_remains_provisional",
+        "review_decision_is_traceable",
+        "dependent_artifacts_are_invalidated"
+      ],
+      "selection": {
+        "basis": [
+          "SeminarText owns Topic/knowledge ReviewDecision",
+          "VideoText owns transcript/media review checkpoint"
+        ],
+        "challenger": [],
+        "decision_authority": "ISSUE_7_TECHNICAL_INTEGRATION_SELECTION",
+        "fallback": [],
+        "mode": "COMPOSED_PRIMARY",
+        "primary": [
+          "seminartext",
+          "videotext"
+        ],
+        "semantic_superiority_claimed": false
+      }
+    },
+    {
+      "candidates": [
+        {
+          "component_id": "seminartext",
+          "correction_burden": {
+            "reason": "Topic reuse exists, but the pinned baseline does not expose a general cache contract satisfying all R5 normalized assertions.",
+            "status": "NOT_MEASURED"
+          },
+          "hard_correctness": {
+            "reason": "Topic reuse exists, but the pinned baseline does not expose a general cache contract satisfying all R5 normalized assertions.",
+            "status": "NOT_QUALIFIED"
+          },
+          "limitations": [
+            "Topic reuse exists, but the pinned baseline does not expose a general cache contract satisfying all R5 normalized assertions."
+          ],
+          "provenance": {
+            "evidence_inputs": [
+              {
+                "path": "seminartext_modules/seminartext_topics.py",
+                "sha256": "d8a14e83b877024c3e016a33e594af17d512741a77735ff3d8c7d1262628c8db"
+              }
+            ],
+            "status": "PASS"
+          },
+          "quality": {
+            "reason": "Topic reuse exists, but the pinned baseline does not expose a general cache contract satisfying all R5 normalized assertions.",
+            "semantic_quality": "NOT_MEASURED_NO_QUALIFIED_CONTRACT",
+            "status": "NOT_MEASURED"
+          },
+          "reproducibility": {
+            "reason": "Topic reuse exists, but the pinned baseline does not expose a general cache contract satisfying all R5 normalized assertions.",
+            "status": "NOT_MEASURED"
+          },
+          "resources": {
+            "reason": "Topic reuse exists, but the pinned baseline does not expose a general cache contract satisfying all R5 normalized assertions.",
+            "status": "NOT_MEASURED"
+          },
+          "runs": [],
+          "status": "NOT_QUALIFIED"
+        },
+        {
+          "component_id": "videotext",
+          "correction_burden": {
+            "reason": "NOT_APPLICABLE_TO_CONTRACT_REPLAY",
+            "status": "NOT_MEASURED"
+          },
+          "hard_correctness": {
+            "assertions_passed": 3,
+            "assertions_total": 3,
+            "status": "PASS"
+          },
+          "limitations": [
+            "No protected Dataset or Gold quality comparison was authorized.",
+            "Peak RSS was not measured by the dependency-free runner."
+          ],
+          "provenance": {
+            "evidence_inputs": [
+              {
+                "path": "scripts/test_topic_matrix.sh",
+                "sha256": "d0f445491c05db1c30c90ff9c7c541afaacb0f27a1d0393dc49ec530572fcc82"
+              },
+              {
+                "path": "Tests/TopicMatrixProbe.swift",
+                "sha256": "1bae759586de04c695bea95e318933b351984b85035573ebeb36cf97b64a945b"
+              },
+              {
+                "path": "Sources/videotext/Adapters/SegmentedWhisperTranscriber.swift",
+                "sha256": "4d9283836952c0898dcf1b3e6675911e45157f85c412c20f20d3ed1364011aeb"
+              }
+            ],
+            "status": "PASS"
+          },
+          "quality": {
+            "contract_assertions_passed": 3,
+            "contract_assertions_total": 3,
+            "semantic_quality": "NOT_APPLICABLE_TO_CONTRACT_REPLAY",
+            "status": "PARTIAL"
+          },
+          "reproducibility": {
+            "all_runs_passed": true,
+            "note": "pytest duration text may change stdout hash without changing assertions",
+            "run_count": 2,
+            "status": "PASS",
+            "stdout_byte_stable": true
+          },
+          "resources": {
+            "elapsed_ms_max": 47221,
+            "elapsed_ms_median": 46364,
+            "elapsed_ms_min": 45506,
+            "measurement": "WALL_CLOCK_ELAPSED_ONLY",
+            "peak_rss_kb": null,
+            "status": "PARTIAL"
+          },
+          "runs": [
+            {
+              "command_id": "topic_cache_matrix",
+              "elapsed_ms": 45506,
+              "exit_code": 0,
+              "repetition": 1,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "6c825e11587b552cca10bddb3ecd0376b5110f5b481795b016dc9e84bb7bc93b"
+            },
+            {
+              "command_id": "topic_cache_matrix",
+              "elapsed_ms": 47221,
+              "exit_code": 0,
+              "repetition": 2,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "6c825e11587b552cca10bddb3ecd0376b5110f5b481795b016dc9e84bb7bc93b"
+            }
+          ],
+          "status": "PASS"
+        }
+      ],
+      "id": "cache",
+      "normalized_assertions": [
+        "cache_key_binds_inputs_and_configuration",
+        "invalid_cache_is_rejected",
+        "partial_cache_is_not_promoted"
+      ],
+      "selection": {
+        "basis": [
+          "input/model/config-bound cache probe",
+          "invalid and partial cache handling"
+        ],
+        "challenger": [],
+        "decision_authority": "ISSUE_7_TECHNICAL_INTEGRATION_SELECTION",
+        "fallback": [],
+        "mode": "SINGLE_PRIMARY",
+        "primary": [
+          "videotext"
+        ],
+        "semantic_superiority_claimed": false
+      }
+    },
+    {
+      "candidates": [
+        {
+          "component_id": "seminartext",
+          "correction_burden": {
+            "reason": "NOT_APPLICABLE_TO_CONTRACT_REPLAY",
+            "status": "NOT_MEASURED"
+          },
+          "hard_correctness": {
+            "assertions_passed": 3,
+            "assertions_total": 3,
+            "status": "PASS"
+          },
+          "limitations": [
+            "No protected Dataset or Gold quality comparison was authorized.",
+            "Peak RSS was not measured by the dependency-free runner."
+          ],
+          "provenance": {
+            "evidence_inputs": [
+              {
+                "path": "seminartext_modules/evidence_foundation.py",
+                "sha256": "6adcf15e9767c36ad2d0dfe3a6a995d90c41b5f1671b4c9434a4b48f590e3856"
+              },
+              {
+                "path": "tests/test_evidence_foundation_e2e.py",
+                "sha256": "2006fc9fe7c932dd9cd1040494d730709495a7ec193a1eb1bccb9ba101e6861e"
+              }
+            ],
+            "status": "PASS"
+          },
+          "quality": {
+            "contract_assertions_passed": 3,
+            "contract_assertions_total": 3,
+            "semantic_quality": "NOT_APPLICABLE_TO_CONTRACT_REPLAY",
+            "status": "PARTIAL"
+          },
+          "reproducibility": {
+            "all_runs_passed": true,
+            "note": "pytest duration text may change stdout hash without changing assertions",
+            "run_count": 2,
+            "status": "PASS",
+            "stdout_byte_stable": false
+          },
+          "resources": {
+            "elapsed_ms_max": 1207,
+            "elapsed_ms_median": 972,
+            "elapsed_ms_min": 737,
+            "measurement": "WALL_CLOCK_ELAPSED_ONLY",
+            "peak_rss_kb": null,
+            "status": "PARTIAL"
+          },
+          "runs": [
+            {
+              "command_id": "evidence_resume",
+              "elapsed_ms": 1207,
+              "exit_code": 0,
+              "repetition": 1,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "7e8cc7c130c0dbcf7082590c5a435ec73188f210f9fc63f1c948b5acec21818e"
+            },
+            {
+              "command_id": "evidence_resume",
+              "elapsed_ms": 737,
+              "exit_code": 0,
+              "repetition": 2,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "826bfa35c95def545fd29fb713eecbedcd1a95799915bbc827b33fa83924c849"
+            }
+          ],
+          "status": "PASS"
+        },
+        {
+          "component_id": "videotext",
+          "correction_burden": {
+            "reason": "NOT_APPLICABLE_TO_CONTRACT_REPLAY",
+            "status": "NOT_MEASURED"
+          },
+          "hard_correctness": {
+            "assertions_passed": 3,
+            "assertions_total": 3,
+            "status": "PASS"
+          },
+          "limitations": [
+            "No protected Dataset or Gold quality comparison was authorized.",
+            "Peak RSS was not measured by the dependency-free runner."
+          ],
+          "provenance": {
+            "evidence_inputs": [
+              {
+                "path": "scripts/test_recovery_watchdog.sh",
+                "sha256": "9305a13c3dc2326384e16c1c44e5489c66646671e9eab930491d93663b3a58ac"
+              },
+              {
+                "path": "scripts/run_recovery_bounded.sh",
+                "sha256": "da541d6a2c49f574779dbd2269c5ced18c6580f5d7e693237e32f01eb3301dba"
+              }
+            ],
+            "status": "PASS"
+          },
+          "quality": {
+            "contract_assertions_passed": 3,
+            "contract_assertions_total": 3,
+            "semantic_quality": "NOT_APPLICABLE_TO_CONTRACT_REPLAY",
+            "status": "PARTIAL"
+          },
+          "reproducibility": {
+            "all_runs_passed": true,
+            "note": "pytest duration text may change stdout hash without changing assertions",
+            "run_count": 2,
+            "status": "PASS",
+            "stdout_byte_stable": true
+          },
+          "resources": {
+            "elapsed_ms_max": 1394,
+            "elapsed_ms_median": 1234,
+            "elapsed_ms_min": 1073,
+            "measurement": "WALL_CLOCK_ELAPSED_ONLY",
+            "peak_rss_kb": null,
+            "status": "PARTIAL"
+          },
+          "runs": [
+            {
+              "command_id": "recovery_watchdog",
+              "elapsed_ms": 1394,
+              "exit_code": 0,
+              "repetition": 1,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "9987a6abab3665c3212723a7333b840df4f2d2e6807e39ff0def01d59a6190c4"
+            },
+            {
+              "command_id": "recovery_watchdog",
+              "elapsed_ms": 1073,
+              "exit_code": 0,
+              "repetition": 2,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "9987a6abab3665c3212723a7333b840df4f2d2e6807e39ff0def01d59a6190c4"
+            }
+          ],
+          "status": "PASS"
+        }
+      ],
+      "id": "recovery",
+      "normalized_assertions": [
+        "incomplete_state_is_preserved",
+        "ambiguous_retry_is_denied",
+        "resume_is_bounded"
+      ],
+      "selection": {
+        "basis": [
+          "bounded watchdog and project workflow recovery",
+          "SeminarText evidence resume retained"
+        ],
+        "challenger": [],
+        "decision_authority": "ISSUE_7_TECHNICAL_INTEGRATION_SELECTION",
+        "fallback": [
+          "seminartext"
+        ],
+        "mode": "SINGLE_PRIMARY",
+        "primary": [
+          "videotext"
+        ],
+        "semantic_superiority_claimed": false
+      }
+    },
+    {
+      "candidates": [
+        {
+          "component_id": "seminartext",
+          "correction_burden": {
+            "reason": "NOT_APPLICABLE_TO_CONTRACT_REPLAY",
+            "status": "NOT_MEASURED"
+          },
+          "hard_correctness": {
+            "assertions_passed": 3,
+            "assertions_total": 3,
+            "status": "PASS"
+          },
+          "limitations": [
+            "No protected Dataset or Gold quality comparison was authorized.",
+            "Peak RSS was not measured by the dependency-free runner."
+          ],
+          "provenance": {
+            "evidence_inputs": [
+              {
+                "path": "tests/test_canonical_evidence_schema_v1.py",
+                "sha256": "02f0533a7471fb0a04d85fe4b4a02bd1eba96a717dc89c4cc91ea788bd3c1bf6"
+              },
+              {
+                "path": "tests/test_project_integrity_gate.py",
+                "sha256": "5c399f254e55f3131610e91ae9d7bee8a9ce39ea5bf401f9b48b97612d37eb64"
+              }
+            ],
+            "status": "PASS"
+          },
+          "quality": {
+            "contract_assertions_passed": 3,
+            "contract_assertions_total": 3,
+            "semantic_quality": "NOT_APPLICABLE_TO_CONTRACT_REPLAY",
+            "status": "PARTIAL"
+          },
+          "reproducibility": {
+            "all_runs_passed": true,
+            "note": "pytest duration text may change stdout hash without changing assertions",
+            "run_count": 2,
+            "status": "PASS",
+            "stdout_byte_stable": false
+          },
+          "resources": {
+            "elapsed_ms_max": 7570,
+            "elapsed_ms_median": 7547,
+            "elapsed_ms_min": 7524,
+            "measurement": "WALL_CLOCK_ELAPSED_ONLY",
+            "peak_rss_kb": null,
+            "status": "PARTIAL"
+          },
+          "runs": [
+            {
+              "command_id": "canonical_quality",
+              "elapsed_ms": 7524,
+              "exit_code": 0,
+              "repetition": 1,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "219ffedb2c8a3486c681e217c15ffcae2e4e14f5426e21f47187f8183bd7f943"
+            },
+            {
+              "command_id": "canonical_quality",
+              "elapsed_ms": 7570,
+              "exit_code": 0,
+              "repetition": 2,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "49a24bd04ae78b1b9ea2061829874956ae477db9e7910ca9282acc6ca5d8c4da"
+            }
+          ],
+          "status": "PASS"
+        },
+        {
+          "component_id": "videotext",
+          "correction_burden": {
+            "reason": "NOT_APPLICABLE_TO_CONTRACT_REPLAY",
+            "status": "NOT_MEASURED"
+          },
+          "hard_correctness": {
+            "assertions_passed": 3,
+            "assertions_total": 3,
+            "status": "PASS"
+          },
+          "limitations": [
+            "No protected Dataset or Gold quality comparison was authorized.",
+            "Peak RSS was not measured by the dependency-free runner."
+          ],
+          "provenance": {
+            "evidence_inputs": [
+              {
+                "path": "scripts/test_transcription_quality.sh",
+                "sha256": "95f1bc0b027f74c0f164aae7740e41cd849b9e73f9f61648b510efc93c016bd6"
+              },
+              {
+                "path": "Tests/TranscriptionQualityProbe.swift",
+                "sha256": "9b9ecb0ac9327fe2c374ce6edf6d116d73d5f99599e09d427a312a588e06c401"
+              }
+            ],
+            "status": "PASS"
+          },
+          "quality": {
+            "contract_assertions_passed": 3,
+            "contract_assertions_total": 3,
+            "semantic_quality": "NOT_APPLICABLE_TO_CONTRACT_REPLAY",
+            "status": "PARTIAL"
+          },
+          "reproducibility": {
+            "all_runs_passed": true,
+            "note": "pytest duration text may change stdout hash without changing assertions",
+            "run_count": 2,
+            "status": "PASS",
+            "stdout_byte_stable": true
+          },
+          "resources": {
+            "elapsed_ms_max": 47459,
+            "elapsed_ms_median": 46872,
+            "elapsed_ms_min": 46285,
+            "measurement": "WALL_CLOCK_ELAPSED_ONLY",
+            "peak_rss_kb": null,
+            "status": "PARTIAL"
+          },
+          "runs": [
+            {
+              "command_id": "transcript_quality",
+              "elapsed_ms": 47459,
+              "exit_code": 0,
+              "repetition": 1,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "0a720e1a10f95995d521982233d79a1d7924faa4eb8a1a05346ebbae5118c5a8"
+            },
+            {
+              "command_id": "transcript_quality",
+              "elapsed_ms": 46285,
+              "exit_code": 0,
+              "repetition": 2,
+              "status": "PASS",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "0a720e1a10f95995d521982233d79a1d7924faa4eb8a1a05346ebbae5118c5a8"
+            }
+          ],
+          "status": "PASS"
+        }
+      ],
+      "id": "quality_validation",
+      "normalized_assertions": [
+        "invalid_artifacts_are_blocked",
+        "warnings_are_structured",
+        "provenance_is_validated"
+      ],
+      "selection": {
+        "basis": [
+          "SeminarText canonical evidence/provenance validation",
+          "VideoText media/transcript quality validation"
+        ],
+        "challenger": [],
+        "decision_authority": "ISSUE_7_TECHNICAL_INTEGRATION_SELECTION",
+        "fallback": [],
+        "mode": "COMPOSED_PRIMARY",
+        "primary": [
+          "seminartext",
+          "videotext"
+        ],
+        "semantic_superiority_claimed": false
+      }
+    }
+  ],
+  "component_baselines": "state/component_baselines_v1.json",
+  "controller": {
+    "commit_sha": "34d0fba679c21a0881dae4b19c1683cfccb6bc7b",
+    "repository": "Yurielo/integra",
+    "tree_sha": "6c02c28421b55b2415360edcde065eaf16c42350"
+  },
+  "environment": {
+    "architecture": "arm64",
+    "operating_system": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+    "python": "3.14.6"
+  },
+  "external_actions_performed": false,
+  "fixture_manifest": {
+    "path": "tests/fixtures/capability_benchmark_v1/manifest.json",
+    "sha256": "7b8fc95ce549bc0280d636de3c17765d2492a4915c5aec0758d6c3a233c8061c"
+  },
+  "gold_accessed": false,
+  "policy": {
+    "comparison_basis": "NORMALIZED_CONTRACT_REPLAY",
+    "correction_burden_without_human_labels": "NOT_MEASURED",
+    "selection_scope": "R6_TECHNICAL_INTEGRATION_DEFAULTS",
+    "semantic_quality_without_gold": "NOT_MEASURED",
+    "source_repositories": "PINNED_READ_ONLY"
+  },
+  "protected_data_accessed": false,
+  "raw_replay": {
+    "path": "state/capability_benchmark_raw_v1.json",
+    "sha256": "cd7614e1027a1a3e661fb7e4b90ed711faf6bb2890e66d8baf80ebc855c55566"
+  },
+  "schema_version": "1.0",
+  "semantic_acceptance_performed": false,
+  "source_repositories_changed": false,
+  "status": "PASS",
+  "verified_at": "2026-09-10T15:44:24.428640Z"
+}

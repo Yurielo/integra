@@ -13,6 +13,7 @@
     "project_lease_schema",
     "worker_protocol_contract",
     "adapter_spike_evidence",
+    "capability_benchmark_evidence",
     "execution_policy",
     "release_scope",
     "roadmap",
@@ -37,6 +38,9 @@
     },
     "adapter_spike_evidence": {
       "const": "state/adapter_spike_v1.json"
+    },
+    "capability_benchmark_evidence": {
+      "const": "state/capability_benchmark_v1.json"
     },
     "execution_policy": {
       "type": "object",

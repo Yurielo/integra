@@ -15,7 +15,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from integra_core.benchmark import canonical_bytes, validate_benchmark_record  # noqa: E402
+from integra_core.benchmark import sha256_file, validate_benchmark_record  # noqa: E402
 
 
 SELECTIONS = {
@@ -182,6 +182,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("raw", type=Path)
     parser.add_argument("output", type=Path)
+    parser.add_argument(
+        "--raw-output",
+        type=Path,
+        default=ROOT / "state/capability_benchmark_raw_v1.json",
+    )
     args = parser.parse_args()
     raw = load(args.raw)
     fixture = load(ROOT / raw["fixture_manifest"]["path"])
@@ -190,6 +195,10 @@ def main() -> int:
     if raw.get("source_before") != raw.get("source_after"):
         raise SystemExit("source state changed during R5 replay")
     fixture_by_id = {item["id"]: item for item in fixture["capabilities"]}
+    args.raw_output.write_text(
+        json.dumps(raw, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
     capabilities = []
     for observation in raw["capabilities"]:
         capability_id = observation["id"]
@@ -218,6 +227,10 @@ def main() -> int:
         "controller": raw["controller"],
         "component_baselines": "state/component_baselines_v1.json",
         "fixture_manifest": raw["fixture_manifest"],
+        "raw_replay": {
+            "path": "state/capability_benchmark_raw_v1.json",
+            "sha256": sha256_file(args.raw_output),
+        },
         "environment": raw["environment"],
         "policy": {
             "comparison_basis": "NORMALIZED_CONTRACT_REPLAY",
@@ -235,7 +248,10 @@ def main() -> int:
         "status": "PASS",
     }
     validate_benchmark_record(record)
-    args.output.write_bytes(canonical_bytes(record))
+    args.output.write_text(
+        json.dumps(record, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
     print(f"R5_GOVERNED_RECORD: PASS ({len(capabilities)} capabilities)")
     return 0
 

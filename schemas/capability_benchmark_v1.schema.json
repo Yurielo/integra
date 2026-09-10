@@ -5,7 +5,7 @@
   "type": "object",
   "required": [
     "schema_version", "verified_at", "controller", "component_baselines",
-    "fixture_manifest", "environment", "policy", "capabilities",
+    "fixture_manifest", "raw_replay", "environment", "policy", "capabilities",
     "protected_data_accessed", "gold_accessed", "semantic_acceptance_performed",
     "source_repositories_changed", "external_actions_performed", "status"
   ],
@@ -28,6 +28,15 @@
       "required": ["path", "sha256"],
       "properties": {
         "path": {"const": "tests/fixtures/capability_benchmark_v1/manifest.json"},
+        "sha256": {"$ref": "#/$defs/hash"}
+      },
+      "additionalProperties": false
+    },
+    "raw_replay": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"const": "state/capability_benchmark_raw_v1.json"},
         "sha256": {"$ref": "#/$defs/hash"}
       },
       "additionalProperties": false

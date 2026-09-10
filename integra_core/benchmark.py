@@ -63,6 +63,10 @@ def validate_benchmark_record(record: dict[str, Any]) -> None:
     if fixture.get("path") != "tests/fixtures/capability_benchmark_v1/manifest.json":
         errors.append("benchmark must pin the normalized fixture manifest")
     _require_hash(fixture.get("sha256"), "fixture manifest sha256", errors)
+    raw_replay = record.get("raw_replay", {})
+    if raw_replay.get("path") != "state/capability_benchmark_raw_v1.json":
+        errors.append("benchmark must retain the raw replay record")
+    _require_hash(raw_replay.get("sha256"), "raw replay sha256", errors)
 
     capabilities = record.get("capabilities")
     if not isinstance(capabilities, list):

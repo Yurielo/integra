@@ -7,8 +7,16 @@ import json
 import sys
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from integra_core.benchmark import (  # noqa: E402
+    BenchmarkValidationError,
+    sha256_file,
+    validate_benchmark_record,
+)
+
+
 STATE_PATH = ROOT / "state" / "integra_state_v1.json"
 SCHEMA_PATH = ROOT / "schemas" / "integra_state_v1.schema.json"
 BASELINES_PATH = ROOT / "state" / "component_baselines_v1.json"
@@ -23,6 +31,9 @@ COMPONENT_IDENTITY_SCHEMA_PATH = ROOT / "schemas" / "component_identity_v1.schem
 ADAPTER_SPIKE_PATH = ROOT / "state" / "adapter_spike_v1.json"
 ADAPTER_SPIKE_SCHEMA_PATH = ROOT / "schemas" / "adapter_spike_v1.schema.json"
 ADAPTER_REPORT_SCHEMA_PATH = ROOT / "schemas" / "adapter_probe_report_v1.schema.json"
+CAPABILITY_BENCHMARK_PATH = ROOT / "state" / "capability_benchmark_v1.json"
+CAPABILITY_BENCHMARK_RAW_PATH = ROOT / "state" / "capability_benchmark_raw_v1.json"
+CAPABILITY_BENCHMARK_SCHEMA_PATH = ROOT / "schemas" / "capability_benchmark_v1.schema.json"
 
 REQUIRED_DOCUMENTS = (
     "README.md",
@@ -52,6 +63,13 @@ REQUIRED_DOCUMENTS = (
     "state/adapter_spike_v1.json",
     "integra_core/adapter.py",
     "scripts/run_adapter_spike.py",
+    "docs/baselines/R5_CAPABILITY_BENCHMARK_CERTIFICATION.md",
+    "schemas/capability_benchmark_v1.schema.json",
+    "state/capability_benchmark_v1.json",
+    "state/capability_benchmark_raw_v1.json",
+    "integra_core/benchmark.py",
+    "scripts/run_capability_benchmark.py",
+    "scripts/compile_capability_benchmark.py",
 )
 
 REQUIRED_MODULES = {
@@ -117,6 +135,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("worker_protocol_contract must pin the R3 protocol registry")
     if state.get("adapter_spike_evidence") != "state/adapter_spike_v1.json":
         errors.append("adapter_spike_evidence must pin the R4 acceptance record")
+    if state.get("capability_benchmark_evidence") != "state/capability_benchmark_v1.json":
+        errors.append("capability_benchmark_evidence must pin the R5 acceptance record")
 
     execution_policy = state.get("execution_policy", {})
     expected_policy = {
@@ -165,7 +185,7 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
 
     positions = {entry.get("id"): index for index, entry in enumerate(roadmap)}
     statuses = {entry.get("id"): entry.get("status") for entry in roadmap}
-    for accepted_id in ("R0", "R1", "R2", "R3", "R4"):
+    for accepted_id in ("R0", "R1", "R2", "R3", "R4", "R5"):
         if statuses.get(accepted_id) != "ACCEPTED":
             errors.append(f"{accepted_id} must remain ACCEPTED")
     for entry in roadmap:
@@ -382,12 +402,40 @@ def validate_adapter_spike(evidence: dict, baselines: dict) -> list[str]:
     return errors
 
 
+def validate_capability_benchmark(evidence: dict, baselines: dict, root: Path = ROOT) -> list[str]:
+    errors: list[str] = []
+    try:
+        validate_benchmark_record(evidence)
+    except BenchmarkValidationError as exc:
+        errors.extend(str(exc).splitlines())
+        return errors
+    raw_reference = evidence["raw_replay"]
+    raw_path = root / raw_reference["path"]
+    if not raw_path.is_file() or sha256_file(raw_path) != raw_reference["sha256"]:
+        errors.append("R5 raw replay hash differs from the governed record")
+        return errors
+    raw = load_json(raw_path)
+    if raw.get("source_before") != raw.get("source_after"):
+        errors.append("R5 source checkout state changed during replay")
+    baseline_by_id = {item["id"]: item for item in baselines.get("components", [])}
+    for component_id, source in raw.get("source_before", {}).items():
+        baseline = baseline_by_id.get(component_id, {})
+        if source.get("commit_sha") != baseline.get("commit_sha"):
+            errors.append(f"R5 {component_id} commit differs from R1")
+        if source.get("tree_sha") != baseline.get("tree_sha"):
+            errors.append(f"R5 {component_id} tree differs from R1")
+        if source.get("status") != "CLEAN":
+            errors.append(f"R5 {component_id} checkout was not clean")
+    return errors
+
+
 def main() -> int:
     state = load_json(STATE_PATH)
     baselines = load_json(BASELINES_PATH)
     ownership = load_json(OWNERSHIP_PATH)
     worker_protocol = load_json(WORKER_PROTOCOL_PATH)
     adapter_spike = load_json(ADAPTER_SPIKE_PATH)
+    capability_benchmark = load_json(CAPABILITY_BENCHMARK_PATH)
     load_json(SCHEMA_PATH)
     load_json(BASELINES_SCHEMA_PATH)
     load_json(OWNERSHIP_SCHEMA_PATH)
@@ -397,12 +445,14 @@ def main() -> int:
     load_json(COMPONENT_IDENTITY_SCHEMA_PATH)
     load_json(ADAPTER_SPIKE_SCHEMA_PATH)
     load_json(ADAPTER_REPORT_SCHEMA_PATH)
+    load_json(CAPABILITY_BENCHMARK_SCHEMA_PATH)
     errors = (
         validate_state(state)
         + validate_component_baselines(baselines)
         + validate_data_ownership(ownership)
         + validate_worker_protocol(worker_protocol)
         + validate_adapter_spike(adapter_spike, baselines)
+        + validate_capability_benchmark(capability_benchmark, baselines)
     )
     if errors:
         print("INTEGRA_GOVERNANCE_VALIDATION: FAIL")
@@ -422,6 +472,8 @@ def main() -> int:
     print(f"R3_PROTOCOL_FIXTURES: {len(worker_protocol['fixtures'])}")
     print(f"R4_ADAPTER_SPIKE: {adapter_spike['status']}")
     print(f"R4_COMPONENT_PROBES: {len(adapter_spike['components'])}")
+    print(f"R5_CAPABILITY_BENCHMARK: {capability_benchmark['status']}")
+    print(f"R5_CAPABILITY_GROUPS: {len(capability_benchmark['capabilities'])}")
     return 0
 
 

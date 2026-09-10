@@ -32,6 +32,14 @@ artifact, compatibility, job, cancellation, retry, timeout, and resume rules.
 R4 proves the boundary against both pinned components with read-only inputs and
 separate hashed output, as recorded in `state/adapter_spike_v1.json`.
 
+R5 fixes technical integration defaults per capability rather than choosing one
+source application as a universal winner. VideoText is primary for media
+preparation, ASR, translation, cache, and recovery; SeminarText is primary for
+word alignment and Topics; review and quality validation are composed along the
+accepted ownership boundary. The exact replay evidence, retained fallbacks, and
+limitations are recorded in `state/capability_benchmark_v1.json`. These choices
+do not claim semantic superiority and do not authorize semantic acceptance.
+
 ## 2. Authority model
 
 ### Factual state authority
