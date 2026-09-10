@@ -158,7 +158,7 @@ def main() -> int:
                             command,
                             repetition,
                             (
-                                args.seminartext_python.resolve()
+                                args.seminartext_python.absolute()
                                 if component_id == "seminartext"
                                 else Path(sys.executable)
                             ),
