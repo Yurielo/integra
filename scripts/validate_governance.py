@@ -20,6 +20,9 @@ WORKER_PROTOCOL_PATH = ROOT / "state" / "worker_protocol_v1.json"
 WORKER_PROTOCOL_SCHEMA_PATH = ROOT / "schemas" / "worker_protocol_v1.schema.json"
 ARTIFACT_REFERENCE_SCHEMA_PATH = ROOT / "schemas" / "artifact_reference_v1.schema.json"
 COMPONENT_IDENTITY_SCHEMA_PATH = ROOT / "schemas" / "component_identity_v1.schema.json"
+ADAPTER_SPIKE_PATH = ROOT / "state" / "adapter_spike_v1.json"
+ADAPTER_SPIKE_SCHEMA_PATH = ROOT / "schemas" / "adapter_spike_v1.schema.json"
+ADAPTER_REPORT_SCHEMA_PATH = ROOT / "schemas" / "adapter_probe_report_v1.schema.json"
 
 REQUIRED_DOCUMENTS = (
     "README.md",
@@ -43,6 +46,10 @@ REQUIRED_DOCUMENTS = (
     "schemas/artifact_reference_v1.schema.json",
     "schemas/component_identity_v1.schema.json",
     "state/worker_protocol_v1.json",
+    "docs/baselines/R4_ADAPTER_SPIKE_CERTIFICATION.md",
+    "schemas/adapter_spike_v1.schema.json",
+    "schemas/adapter_probe_report_v1.schema.json",
+    "state/adapter_spike_v1.json",
 )
 
 REQUIRED_MODULES = {
@@ -106,6 +113,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("project_lease_schema must pin the R2 lease contract")
     if state.get("worker_protocol_contract") != "state/worker_protocol_v1.json":
         errors.append("worker_protocol_contract must pin the R3 protocol registry")
+    if state.get("adapter_spike_evidence") != "state/adapter_spike_v1.json":
+        errors.append("adapter_spike_evidence must pin the R4 acceptance record")
 
     execution_policy = state.get("execution_policy", {})
     expected_policy = {
@@ -154,7 +163,7 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
 
     positions = {entry.get("id"): index for index, entry in enumerate(roadmap)}
     statuses = {entry.get("id"): entry.get("status") for entry in roadmap}
-    for accepted_id in ("R0", "R1", "R2", "R3"):
+    for accepted_id in ("R0", "R1", "R2", "R3", "R4"):
         if statuses.get(accepted_id) != "ACCEPTED":
             errors.append(f"{accepted_id} must remain ACCEPTED")
     for entry in roadmap:
@@ -223,6 +232,9 @@ def validate_data_ownership(contract: dict) -> list[str]:
     forbidden = set(id_policy.get("mutable_inputs_forbidden", []))
     if not {"display_name", "filesystem_path", "sort_order"}.issubset(forbidden):
         errors.append("mutable names, paths, and ordering must not define stable IDs")
+    namespaces = set(id_policy.get("namespaces", []))
+    if not {"message", "session"}.issubset(namespaces):
+        errors.append("R3 protocol trace namespaces must be registered by R2 identity policy")
     ownership = contract.get("ownership", [])
     patterns = [entry.get("field_pattern") for entry in ownership]
     if len(patterns) != len(set(patterns)):
@@ -301,11 +313,74 @@ def validate_worker_protocol(contract: dict, root: Path = ROOT) -> list[str]:
     return errors
 
 
+def validate_adapter_spike(evidence: dict, baselines: dict) -> list[str]:
+    errors: list[str] = []
+    if evidence.get("schema_version") != "1.0":
+        errors.append("R4 evidence schema_version must be 1.0")
+    if evidence.get("protocol_contract") != "state/worker_protocol_v1.json":
+        errors.append("R4 must use the accepted R3 protocol")
+    if evidence.get("source_repositories_changed") is not False:
+        errors.append("R4 must not modify source repositories")
+    if evidence.get("status") != "PASS":
+        errors.append("R4 acceptance status must be PASS")
+    policy = evidence.get("policy", {})
+    expected_policy = {
+        "source_checkouts": "TEMPORARY_PINNED_READ_ONLY_INPUTS",
+        "outputs": "SEPARATE_NON_SOURCE_DIRECTORIES",
+        "source_mutation": "DENIED",
+        "network_service": "NOT_USED",
+        "private_data": "NOT_ACCESSED",
+        "external_action": "NOT_PERFORMED",
+    }
+    if policy != expected_policy:
+        errors.append("R4 safety policy differs from the accepted boundary")
+    baseline_by_id = {item.get("id"): item for item in baselines.get("components", [])}
+    components = evidence.get("components", [])
+    if {item.get("id") for item in components} != {"seminartext", "videotext"}:
+        errors.append("R4 must contain exactly one probe for each pinned component")
+    expected_sequence = [
+        "HANDSHAKE_REQUEST", "HANDSHAKE_RESPONSE", "JOB_REQUEST",
+        "PROGRESS", "PROGRESS", "RESULT",
+    ]
+    for component in components:
+        component_id = component.get("id")
+        baseline = baseline_by_id.get(component_id, {})
+        if component.get("commit_sha") != baseline.get("commit_sha"):
+            errors.append(f"R4 {component_id} commit differs from the R1 baseline")
+        if component.get("tree_sha") != baseline.get("tree_sha"):
+            errors.append(f"R4 {component_id} tree differs from the R1 baseline")
+        if component.get("message_sequence") != expected_sequence:
+            errors.append(f"R4 {component_id} message sequence is incomplete")
+        if component.get("source_before") != "CLEAN" or component.get("source_after") != "CLEAN":
+            errors.append(f"R4 {component_id} source checkout was not preserved")
+        if component.get("status") != "PASS":
+            errors.append(f"R4 {component_id} probe did not pass")
+        for field in (
+            "input_sha256", "protocol_stream_sha256", "report_sha256",
+            "stdout_sha256", "stderr_sha256",
+        ):
+            value = component.get(field, "")
+            if len(value) != 64 or any(char not in "0123456789abcdef" for char in value):
+                errors.append(f"R4 {component_id} has invalid {field}")
+    contract_evidence = evidence.get("contract_evidence", {})
+    required_checks = {
+        "handshake", "bounded_request_per_component", "progress", "cancellation",
+        "input_and_output_hashes", "structured_failure_reporting",
+        "timeout_unknown_outcome", "source_checkout_unchanged", "separate_output",
+    }
+    if set(contract_evidence) != required_checks or any(
+        value != "PASS" for value in contract_evidence.values()
+    ):
+        errors.append("R4 contract evidence is incomplete")
+    return errors
+
+
 def main() -> int:
     state = load_json(STATE_PATH)
     baselines = load_json(BASELINES_PATH)
     ownership = load_json(OWNERSHIP_PATH)
     worker_protocol = load_json(WORKER_PROTOCOL_PATH)
+    adapter_spike = load_json(ADAPTER_SPIKE_PATH)
     load_json(SCHEMA_PATH)
     load_json(BASELINES_SCHEMA_PATH)
     load_json(OWNERSHIP_SCHEMA_PATH)
@@ -313,11 +388,14 @@ def main() -> int:
     load_json(WORKER_PROTOCOL_SCHEMA_PATH)
     load_json(ARTIFACT_REFERENCE_SCHEMA_PATH)
     load_json(COMPONENT_IDENTITY_SCHEMA_PATH)
+    load_json(ADAPTER_SPIKE_SCHEMA_PATH)
+    load_json(ADAPTER_REPORT_SCHEMA_PATH)
     errors = (
         validate_state(state)
         + validate_component_baselines(baselines)
         + validate_data_ownership(ownership)
         + validate_worker_protocol(worker_protocol)
+        + validate_adapter_spike(adapter_spike, baselines)
     )
     if errors:
         print("INTEGRA_GOVERNANCE_VALIDATION: FAIL")
@@ -335,6 +413,8 @@ def main() -> int:
     print("R2_PROJECT_LEASE: DEFINED")
     print("R3_WORKER_PROTOCOL: ACCEPTED")
     print(f"R3_PROTOCOL_FIXTURES: {len(worker_protocol['fixtures'])}")
+    print(f"R4_ADAPTER_SPIKE: {adapter_spike['status']}")
+    print(f"R4_COMPONENT_PROBES: {len(adapter_spike['components'])}")
     return 0
 
 

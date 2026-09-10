@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Yurielo/integra/schemas/adapter_spike_v1.schema.json",
+  "title": "Integra R4 adapter spike acceptance v1",
+  "type": "object",
+  "required": [
+    "schema_version", "verified_at", "controller", "protocol_contract",
+    "execution_environment", "policy", "components", "contract_evidence",
+    "source_repositories_changed", "status"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "verified_at": { "type": "string", "format": "date-time" },
+    "controller": {
+      "type": "object",
+      "required": ["repository", "commit_sha", "tree_sha"],
+      "properties": {
+        "repository": { "const": "Yurielo/integra" },
+        "commit_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "tree_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+      },
+      "additionalProperties": false
+    },
+    "protocol_contract": { "const": "state/worker_protocol_v1.json" },
+    "execution_environment": { "type": "object" },
+    "policy": { "type": "object" },
+    "components": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "id", "commit_sha", "tree_sha", "runtime", "capability", "input_schema",
+          "input_sha256", "protocol_stream_sha256", "report_sha256", "stdout_sha256",
+          "stderr_sha256", "elapsed_ms", "message_sequence", "source_before",
+          "source_after", "status"
+        ],
+        "properties": {
+          "id": { "enum": ["seminartext", "videotext"] },
+          "commit_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+          "tree_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+          "runtime": { "type": "string" },
+          "capability": { "type": "string" },
+          "input_schema": { "type": "string" },
+          "input_sha256": { "$ref": "#/$defs/hash" },
+          "protocol_stream_sha256": { "$ref": "#/$defs/hash" },
+          "report_sha256": { "$ref": "#/$defs/hash" },
+          "stdout_sha256": { "$ref": "#/$defs/hash" },
+          "stderr_sha256": { "$ref": "#/$defs/hash" },
+          "elapsed_ms": { "type": "integer", "minimum": 0 },
+          "message_sequence": { "type": "array", "minItems": 6, "items": { "type": "string" } },
+          "source_before": { "const": "CLEAN" },
+          "source_after": { "const": "CLEAN" },
+          "status": { "const": "PASS" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "contract_evidence": { "type": "object" },
+    "source_repositories_changed": { "const": false },
+    "status": { "const": "PASS" }
+  },
+  "$defs": {
+    "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  },
+  "additionalProperties": false
+}

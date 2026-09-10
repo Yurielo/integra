@@ -49,6 +49,10 @@ retained rather than silently deleted.
 Heartbeat and release require exact lease ID, writer identity, and generation.
 This prevents an old process from releasing or extending a newer lease.
 
+R3 adds the `message` and `session` namespaces for immutable protocol-envelope
+and correlation identities. They are trace identifiers, not new mutable domain
+entities, and do not change the field-level ownership matrix.
+
 ## Simultaneous access
 
 - Multiple readers may be recorded while one writer owns the mutable entity.

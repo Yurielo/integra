@@ -6,7 +6,7 @@
     "namespaces": [
       "project", "source", "artifact", "revision", "topic", "evidence",
       "knowledge", "concept", "practice", "term", "relation", "review",
-      "job", "operation", "publication", "lease"
+      "job", "operation", "publication", "lease", "message", "session"
     ],
     "mutable_inputs_forbidden": ["display_name", "filesystem_path", "sort_order"]
   },

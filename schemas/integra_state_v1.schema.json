@@ -12,6 +12,7 @@
     "data_ownership_contract",
     "project_lease_schema",
     "worker_protocol_contract",
+    "adapter_spike_evidence",
     "execution_policy",
     "release_scope",
     "roadmap",
@@ -33,6 +34,9 @@
     },
     "worker_protocol_contract": {
       "const": "state/worker_protocol_v1.json"
+    },
+    "adapter_spike_evidence": {
+      "const": "state/adapter_spike_v1.json"
     },
     "execution_policy": {
       "type": "object",

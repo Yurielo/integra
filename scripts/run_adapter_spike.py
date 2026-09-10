@@ -151,8 +151,12 @@ def main() -> int:
         output_root=args.output_root,
         capabilities=(capability,),
     )
+    adapter.verify_source()
 
-    input_path = args.source_root / configuration["input"]
+    source_root = args.source_root.resolve()
+    input_path = (source_root / configuration["input"]).resolve()
+    if source_root not in input_path.parents or not input_path.is_file():
+        raise SystemExit("R4 input must be a regular file inside the pinned source checkout")
     input_bytes = input_path.read_bytes()
     input_hash = hashlib.sha256(input_bytes).hexdigest()
     operation_id = derive_imported_id(

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import signal
 import subprocess
 import tempfile
 import time
@@ -320,6 +321,7 @@ class LocalComponentAdapter:
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            start_new_session=True,
         )
         deadline = started + timeout_ms / 1000
         while True:
@@ -343,11 +345,17 @@ class LocalComponentAdapter:
 
     @staticmethod
     def _terminate(process: subprocess.Popen[bytes]) -> tuple[bytes, bytes]:
-        process.terminate()
+        try:
+            os.killpg(process.pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
         try:
             return process.communicate(timeout=2)
         except subprocess.TimeoutExpired:
-            process.kill()
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
             return process.communicate()
 
     def _progress(
@@ -441,6 +449,10 @@ class LocalComponentAdapter:
     @staticmethod
     def _atomic_write(path: Path, payload: bytes) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
+        if path.exists():
+            if path.read_bytes() != payload:
+                raise AdapterPreconditionError("content-addressed output collision")
+            return
         descriptor, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
         try:
             with os.fdopen(descriptor, "wb") as handle:

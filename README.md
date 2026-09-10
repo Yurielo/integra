@@ -25,6 +25,8 @@ their authoritative artifacts.
 - [Machine-readable ownership matrix](state/data_ownership_v1.json)
 - [Local worker and artifact contract](docs/architecture/WORKER_PROTOCOL_V1.md)
 - [Machine-readable worker protocol](state/worker_protocol_v1.json)
+- [R4 adapter spike certification](docs/baselines/R4_ADAPTER_SPIKE_CERTIFICATION.md)
+- [Machine-readable R4 evidence](state/adapter_spike_v1.json)
 
 Validate the governance baseline with:
 
