@@ -26,14 +26,25 @@ Every roadmap Issue must provide:
 
 ## Complete integration acceptance
 
+- Projects & Sources covers the complete Project Registry, history, lifecycle,
+  local audio/video, individual YouTube videos, playlists, and supported
+  document/image sources with stable identity and provenance.
+- Transcript & Topic Studio covers ASR, translation, Canonical Word Timeline,
+  quality findings, Topic levels/hierarchy, and exception-only review packages
+  without automatic semantic acceptance.
 - YouTube playlists resume and preserve collection/per-video provenance.
 - Documents, OCR, and multi-source alignment preserve exact source locators.
 - Knowledge, Media, Learning, Marketing, and Assistant modules link substantive
   outputs to evidence.
 - Obsidian and OneDrive publication is deterministic, collision-safe, and
   recoverable.
+- Publishing Hub previews and deterministically exports versioned Markdown,
+  JSON, DOCX, PDF, SRT, audio, and video packages.
 - Publishing Hub and seven social adapters pass contract/policy/capability
   validation; live external actions remain separately authorized.
+- Operations & Diagnostics proves job lifecycle, progress/ETA, capability
+  checks, resource scheduling, redacted logs, Integrity, recovery, model
+  unloading, and child-process cleanup.
 - Combined Beta passes on the M5/16 GB reference machine.
 
 ## Integra 1.0 acceptance

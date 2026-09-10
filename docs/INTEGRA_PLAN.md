@@ -31,10 +31,11 @@ The complete product direction includes:
 The Product Owner has authorized safe roadmap implementation after the GitHub
 Issues and milestones were created. A stage may proceed when its dependencies
 and factual preconditions are verified. This standing implementation authority
-does not authorize merge, release, live external actions, credentials, private
-or governed data, semantic acceptance, destructive migration, source-product
-retirement, or source-repository changes. Those boundaries remain explicit and
-must be reverified at execution time.
+authorizes verified in-scope merge under the fail-closed autonomous execution
+policy. It does not authorize release, live external actions, credentials,
+private or governed data, semantic acceptance, destructive migration,
+source-product retirement, or source-repository changes. Those boundaries
+remain explicit and must be reverified at execution time.
 
 ## 2. Non-negotiable invariants
 
@@ -134,18 +135,19 @@ The complete integration release must additionally support:
 
 ### 3.3 Product modules
 
-The roadmap also contains:
+R0 fixed the following modules as required Integra 1.0 scope:
 
 - Marketing Studio with initial project playbooks for “Лунные практики” and
   “Человек. Инструкция по применению”;
 - Learning Studio;
-- Knowledge Assistant.
+- Knowledge Assistant;
+- the Publishing Hub and seven social-adapter implementations defined in the
+  Product Definition.
 
-R0 must determine which of these modules are required for Integra 1.0. Until
-that decision is recorded, they must not make the Core Merge definition
-unbounded. Full RAG, automatic external social publishing, Microsoft Graph,
-bidirectional Obsidian sync, and personalized learning remain outside Core
-Merge unless separately adopted.
+They remain outside the bounded Core Merge but are mandatory before Combined
+Beta and Integra 1.0 acceptance. Full RAG, automatic external social
+publishing, Microsoft Graph, bidirectional Obsidian sync, and personalized
+learning remain outside Core Merge unless separately adopted.
 
 ## 4. Target user-facing modules
 
@@ -197,13 +199,20 @@ Merge unless separately adopted.
   prerequisites, difficulty levels, and learning routes;
 - every substantive output remains linked to exact evidence.
 
-### 4.7 Publishing Hub
+### 4.7 Knowledge Assistant
+
+- evidence-cited search and answers across projects, sources, Topics,
+  knowledge entities, media artifacts, and clips;
+- exact source, evidence, and media navigation with visible uncertainty and
+  provisional/accepted state.
+
+### 4.8 Publishing Hub
 
 - Obsidian, OneDrive, Markdown, JSON, DOCX, PDF, SRT, audio, and video outputs;
 - versions, manifests, checksums, publication queues, recovery, and collision
   handling.
 
-### 4.8 Operations & Diagnostics
+### 4.9 Operations & Diagnostics
 
 - job queue, progress, ETA, capability checks, logs, cache, cancellation,
   process shutdown, model lifecycle, Integrity, and recovery.
@@ -558,6 +567,14 @@ pinned components on real media and does not satisfy R6 acceptance. R6 remains
 `IN_REVIEW` until the real local-video path runs with source-grounded
 provenance, without weakening the existing semantic-authority boundary.
 
+### Operations & Diagnostics v1
+
+Implement the horizontal control-plane services required by subsequent stages:
+versioned jobs, progress and honest ETA, capability checks, Resource Scheduler,
+structured redacted logs, Integrity, cancellation, resume, recovery, model
+lifecycle, and child-process cleanup. This stage follows R6 and is a dependency
+of migration and source-expansion work.
+
 ### R7 — Read-only Import and Copy-on-write Migration
 
 Open representative existing SeminarText and VideoText projects, produce a
@@ -573,6 +590,22 @@ resume, provenance, and storage estimation.
 
 Implement and validate supported document types, structure, locators, OCR
 fallback, and source fidelity.
+
+### Projects & Sources v1
+
+Complete the Project Registry, project history and lifecycle, local audio,
+individual YouTube video handling, and stable source identity and provenance
+across all supported source types. This stage composes R7, R8A, and R8B rather
+than duplicating their pipelines.
+
+### Transcript & Topic Studio v1
+
+Complete media preparation, ASR, translation, Canonical Word Timeline access,
+transcript-quality findings, Topic levels and hierarchy, exception packages,
+and deterministic bulk ReviewDecision application. Machine semantic output
+remains `PROVISIONAL` or `REVIEW_REQUIRED` until an authorized human decision.
+This stage owns per-source Topic-to-locator binding; cross-source alignment
+remains owned by R8C.
 
 ### R8C — Multi-source Alignment
 
@@ -596,20 +629,40 @@ locators, Topic ranges, and media clips.
 
 ### R10 — Obsidian and OneDrive Publishing
 
-Implement the bounded one-way Obsidian export, filesystem-backed OneDrive
-publication, collision safety, queueing, integrity verification, and recovery.
+Implement versioned package preview; deterministic Markdown, JSON, DOCX, PDF,
+SRT, audio, and video export; the bounded one-way Obsidian export;
+filesystem-backed OneDrive publication; collision safety; queueing; integrity
+verification; and recovery.
 
 ### R11 — Marketing Studio v1
 
-After R0 fixes its release role, implement the shared Marketing Engine and the
-two initial versioned Project Playbooks with evidence-backed draft generation,
-QA, bulk review, and a single publication-package gate.
+As fixed by R0, implement the shared Marketing Engine and the two initial
+versioned Project Playbooks with evidence-backed draft generation, QA, bulk
+review, and a single publication-package gate.
+
+### Learning Studio v1
+
+Implement evidence-linked notes, summaries, methodology, FAQ, exercises,
+tests, prerequisites, difficulty levels, and learning routes.
+
+### Knowledge Assistant v1
+
+Implement evidence-cited search and answers across projects, sources, Topics,
+knowledge entities, media artifacts, and clips with exact round-trip navigation.
+
+### Social Adapter Foundation and Seven Platform Adapters
+
+After R10, implement the shared official-API contract and deterministic dry-run
+evidence, then the Facebook Pages, Instagram, Threads, YouTube, Telegram,
+WhatsApp Business, and TikTok adapters. Credentials, live account connection,
+and external publication remain separately authorized human gates.
 
 ### R12 — Combined Beta on the Reference Mac
 
 Run standalone and combined test matrices on the M5/16 GB reference machine,
 including resource scheduling, playlist resume, document processing, migration,
-Obsidian, OneDrive, recovery, and absence of leaked child processes.
+Obsidian, OneDrive, every required studio, Knowledge Assistant, social-adapter
+dry runs, recovery, and absence of leaked child processes.
 
 ### R13 — Security, Packaging, and Release E2E
 
@@ -646,9 +699,13 @@ In addition to Core Merge:
 
 - YouTube playlists work with resume and source provenance;
 - supported documents and multi-source alignment work;
+- Projects & Sources and Transcript & Topic Studio meet their complete 1.0
+  contracts;
 - one-way Obsidian export is deterministic and safe;
 - OneDrive publication and recovery are verified;
-- required R0-selected product modules are complete;
+- every required functional module and social-adapter contract is complete;
+- Operations & Diagnostics meets its job, resource, Integrity, recovery, and
+  process-cleanup contract;
 - the reference-Mac beta and release gates pass.
 
 ### Integra 1.0 complete
@@ -673,9 +730,10 @@ Stop and request the appropriate authority when there is:
 
 ## 18. Current implementation boundary
 
-The current task is [Issue #2](https://github.com/Yurielo/integra/issues/2),
-`INTEGRA-R0 — Establish Product Definition, Authority Model, Architecture and
-Executable Roadmap`.
+The current implementation stage is
+[Issue #8](https://github.com/Yurielo/integra/issues/8),
+`INTEGRA-R6 — Implement Core Alpha vertical slice`, with status `IN_REVIEW`
+until the real local-video path passes.
 
 The Product Owner instruction of 2026-09-10 authorizes safe implementation
 along this roadmap after dependency checks. It does not bypass the protected

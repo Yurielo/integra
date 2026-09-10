@@ -127,7 +127,62 @@ class GovernanceValidationTests(unittest.TestCase):
 
     def test_roadmap_issue_inventory_is_complete(self):
         self.assertEqual(
-            {entry["issue"] for entry in self.state["roadmap"]}, set(range(2, 32))
+            {
+                entry["id"]: entry["issue"]
+                for entry in self.state["roadmap"]
+            },
+            VALIDATOR.EXPECTED_ROADMAP_ISSUES,
+        )
+
+    def test_required_module_has_executable_stage(self):
+        state = copy.deepcopy(self.state)
+        state["roadmap"] = [
+            entry
+            for entry in state["roadmap"]
+            if entry["id"] != "OPERATIONS_AND_DIAGNOSTICS_V1"
+        ]
+        errors = VALIDATOR.validate_state(state)
+        self.assertTrue(
+            any(
+                "operations_and_diagnostics lacks executable roadmap coverage"
+                in error
+                for error in errors
+            )
+        )
+
+    def test_module_completion_dependencies_are_required(self):
+        state = copy.deepcopy(self.state)
+        entry = next(
+            item
+            for item in state["roadmap"]
+            if item["id"] == "TRANSCRIPT_AND_TOPIC_STUDIO_V1"
+        )
+        entry["depends_on"].remove("PROJECTS_AND_SOURCES_V1")
+        errors = VALIDATOR.validate_state(state)
+        self.assertTrue(
+            any(
+                "TRANSCRIPT_AND_TOPIC_STUDIO_V1 lacks required dependencies"
+                in error
+                for error in errors
+            )
+        )
+
+    def test_combined_beta_requires_established_module(self):
+        state = copy.deepcopy(self.state)
+        entry = next(item for item in state["roadmap"] if item["id"] == "R12")
+        entry["depends_on"].remove("R10")
+        errors = VALIDATOR.validate_state(state)
+        self.assertTrue(
+            any("R12 lacks required dependencies" in error for error in errors)
+        )
+
+    def test_combined_beta_requires_every_social_adapter(self):
+        state = copy.deepcopy(self.state)
+        entry = next(item for item in state["roadmap"] if item["id"] == "R12")
+        entry["depends_on"].remove("SOCIAL_FACEBOOK")
+        errors = VALIDATOR.validate_state(state)
+        self.assertTrue(
+            any("R12 lacks required dependencies" in error for error in errors)
         )
 
     def test_forward_dependency_fails(self):

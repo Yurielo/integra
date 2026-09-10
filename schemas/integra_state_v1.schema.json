@@ -103,7 +103,7 @@
     },
     "roadmap": {
       "type": "array",
-      "minItems": 19,
+      "minItems": 33,
       "items": {
         "type": "object",
         "required": ["id", "issue", "status", "depends_on"],
