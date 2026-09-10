@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "status": "PARTIAL",
+  "issue": 8,
+  "pipeline": "INTEGRA_CORE_ALPHA_V1",
+  "execution_mode": "CONTRACT_REPLAY",
+  "manifest_schema": "schemas/core_alpha_manifest_v1.schema.json",
+  "fixture": {
+    "path": "tests/fixtures/core_alpha_v1/worker_outputs.json",
+    "sha256": "c96ff3fd5027261867ac80a3246c0ae0e89e594f324789f4ea49028c9cff73a5"
+  },
+  "component_baselines": "state/component_baselines_v1.json",
+  "capability_selections": "state/capability_benchmark_v1.json",
+  "acceptance": {
+    "stage_sequence_complete": true,
+    "exact_artifact_lineage": true,
+    "pinned_component_identities": true,
+    "project_lease_enforced": true,
+    "concurrent_writer_blocked": true,
+    "store_path_symlinks_rejected": true,
+    "stage_output_contract_enforced": true,
+    "manifest_provenance_revalidated": true,
+    "cancellation_checkpoint": true,
+    "resume_revalidates_source_component_artifact_and_lineage": true,
+    "deterministic_outputs": true,
+    "semantic_authority": "PROVISIONAL_ONLY",
+    "semantic_status_persisted_and_payload_checked": true,
+    "source_repositories_changed": false,
+    "protected_data_accessed": false,
+    "gold_accessed": false,
+    "external_actions_performed": false
+  },
+  "limitations": [
+    "CONTRACT_REPLAY validates Core Alpha orchestration and artifact contracts; it does not decode the source or execute source-component inference or media rendering.",
+    "Replay source intervals are structurally validated synthetic locators, not proof that they match the duration or contents of the supplied media.",
+    "Issue #8 and R6 remain IN_REVIEW until the pinned components execute the real local-video path with exact source-grounded provenance; this checkpoint does not establish semantic quality or authorize semantic acceptance."
+  ]
+}

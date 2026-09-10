@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Yurielo/integra/schemas/core_alpha_evidence_v1.schema.json",
+  "title": "Integra Core Alpha contract-replay checkpoint evidence v1",
+  "type": "object",
+  "required": [
+    "schema_version", "status", "issue", "pipeline", "execution_mode",
+    "manifest_schema", "fixture", "component_baselines",
+    "capability_selections", "acceptance", "limitations"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "status": {"const": "PARTIAL"},
+    "issue": {"const": 8},
+    "pipeline": {"const": "INTEGRA_CORE_ALPHA_V1"},
+    "execution_mode": {"const": "CONTRACT_REPLAY"},
+    "manifest_schema": {"const": "schemas/core_alpha_manifest_v1.schema.json"},
+    "fixture": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"const": "tests/fixtures/core_alpha_v1/worker_outputs.json"},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      },
+      "additionalProperties": false
+    },
+    "component_baselines": {"const": "state/component_baselines_v1.json"},
+    "capability_selections": {"const": "state/capability_benchmark_v1.json"},
+    "acceptance": {
+      "type": "object",
+      "required": [
+        "stage_sequence_complete", "exact_artifact_lineage",
+        "pinned_component_identities", "project_lease_enforced",
+        "concurrent_writer_blocked", "store_path_symlinks_rejected",
+        "stage_output_contract_enforced", "manifest_provenance_revalidated",
+        "cancellation_checkpoint",
+        "resume_revalidates_source_component_artifact_and_lineage",
+        "deterministic_outputs", "semantic_authority",
+        "semantic_status_persisted_and_payload_checked",
+        "source_repositories_changed", "protected_data_accessed",
+        "gold_accessed", "external_actions_performed"
+      ],
+      "properties": {
+        "stage_sequence_complete": {"const": true},
+        "exact_artifact_lineage": {"const": true},
+        "pinned_component_identities": {"const": true},
+        "project_lease_enforced": {"const": true},
+        "concurrent_writer_blocked": {"const": true},
+        "store_path_symlinks_rejected": {"const": true},
+        "stage_output_contract_enforced": {"const": true},
+        "manifest_provenance_revalidated": {"const": true},
+        "cancellation_checkpoint": {"const": true},
+        "resume_revalidates_source_component_artifact_and_lineage": {"const": true},
+        "deterministic_outputs": {"const": true},
+        "semantic_authority": {"const": "PROVISIONAL_ONLY"},
+        "semantic_status_persisted_and_payload_checked": {"const": true},
+        "source_repositories_changed": {"const": false},
+        "protected_data_accessed": {"const": false},
+        "gold_accessed": {"const": false},
+        "external_actions_performed": {"const": false}
+      },
+      "additionalProperties": false
+    },
+    "limitations": {
+      "type": "array",
+      "minItems": 3,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    }
+  },
+  "additionalProperties": false
+}

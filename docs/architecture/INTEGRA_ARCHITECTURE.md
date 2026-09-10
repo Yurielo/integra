@@ -40,6 +40,14 @@ accepted ownership boundary. The exact replay evidence, retained fallbacks, and
 limitations are recorded in `state/capability_benchmark_v1.json`. These choices
 do not claim semantic superiority and do not authorize semantic acceptance.
 
+R6 is composing those selected ownership roles into the bounded
+`INTEGRA_CORE_ALPHA_V1` control-plane path. Its first implementation checkpoint
+is an explicit dependency-free `CONTRACT_REPLAY` with content-addressed artifacts,
+Project Lease enforcement, atomic checkpoints, cancellation, and fail-closed
+resume. It proves replay orchestration and lineage validation, not execution of
+the pinned source components, real model inference, rendering, source-grounded
+interval accuracy, semantic quality, or completion of R6.
+
 ## 2. Authority model
 
 ### Factual state authority

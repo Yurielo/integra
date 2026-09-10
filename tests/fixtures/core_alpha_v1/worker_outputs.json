@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "execution_mode": "CONTRACT_REPLAY",
+  "protected_data": false,
+  "gold_labels": false,
+  "stages": {
+    "transcript": {
+      "component_id": "videotext",
+      "capability": "videotext.asr",
+      "kind": "machine_transcript",
+      "schema_id": "videotext_transcript_replay_v1",
+      "encoding": "json",
+      "semantic_status": "NOT_APPLICABLE",
+      "source_locator": {"type": "time_interval", "start_seconds": 0.0, "end_seconds": 2.0},
+      "payload": {"language": "ru", "text": "Проверка локального видео", "assurance": "CONTRACT_REPLAY"}
+    },
+    "topics": {
+      "component_id": "seminartext",
+      "capability": "seminartext.topics",
+      "kind": "topic_drafts",
+      "schema_id": "seminartext_topic_replay_v1",
+      "encoding": "json",
+      "semantic_status": "PROVISIONAL",
+      "source_locator": {"type": "time_interval", "start_seconds": 0.0, "end_seconds": 2.0},
+      "payload": {"topics": [{"id": "topic:fixture:001", "title": "Проверка локального видео", "status": "PROVISIONAL"}]}
+    },
+    "review": {
+      "component_id": "seminartext",
+      "capability": "seminartext.topic_review",
+      "kind": "exception_review_result",
+      "schema_id": "exception_review_replay_v1",
+      "encoding": "json",
+      "semantic_status": "PROVISIONAL",
+      "payload": {"exceptions": [], "human_decision_required": false, "technical_status": "PASS"}
+    },
+    "knowledge": {
+      "component_id": "seminartext",
+      "capability": "seminartext.canonical_knowledge",
+      "kind": "canonical_knowledge_candidate",
+      "schema_id": "canonical_knowledge_replay_v1",
+      "encoding": "json",
+      "semantic_status": "PROVISIONAL",
+      "source_locator": {"type": "time_interval", "start_seconds": 0.0, "end_seconds": 2.0},
+      "payload": {"title": "Проверка локального видео", "lifecycle": "PROVISIONAL"}
+    },
+    "media_clip": {
+      "component_id": "videotext",
+      "capability": "videotext.media_clip",
+      "kind": "media_clip",
+      "schema_id": "videotext_media_clip_replay_v1",
+      "encoding": "base64",
+      "semantic_status": "NOT_APPLICABLE",
+      "source_locator": {"type": "time_interval", "start_seconds": 0.0, "end_seconds": 2.0},
+      "payload": "SU5URUdSQV9DT1JFX0FMUEhBX0NMSVBfVjE="
+    }
+  }
+}
