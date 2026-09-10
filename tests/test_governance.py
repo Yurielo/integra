@@ -166,6 +166,12 @@ class GovernanceValidationTests(unittest.TestCase):
         errors = VALIDATOR.validate_adapter_spike(evidence, self.baselines)
         self.assertTrue(any("must not modify" in error for error in errors))
 
+    def test_adapter_spike_controller_identity_is_pinned(self):
+        evidence = copy.deepcopy(self.adapter_spike)
+        evidence["controller"]["tree_sha"] = "not-a-tree"
+        errors = VALIDATOR.validate_adapter_spike(evidence, self.baselines)
+        self.assertTrue(any("controller has invalid tree_sha" in error for error in errors))
+
 
 if __name__ == "__main__":
     unittest.main()

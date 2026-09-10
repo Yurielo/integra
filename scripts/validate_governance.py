@@ -50,6 +50,8 @@ REQUIRED_DOCUMENTS = (
     "schemas/adapter_spike_v1.schema.json",
     "schemas/adapter_probe_report_v1.schema.json",
     "state/adapter_spike_v1.json",
+    "integra_core/adapter.py",
+    "scripts/run_adapter_spike.py",
 )
 
 REQUIRED_MODULES = {
@@ -323,6 +325,11 @@ def validate_adapter_spike(evidence: dict, baselines: dict) -> list[str]:
         errors.append("R4 must not modify source repositories")
     if evidence.get("status") != "PASS":
         errors.append("R4 acceptance status must be PASS")
+    controller = evidence.get("controller", {})
+    for field in ("commit_sha", "tree_sha"):
+        value = controller.get(field, "")
+        if len(value) != 40 or any(char not in "0123456789abcdef" for char in value):
+            errors.append(f"R4 controller has invalid {field}")
     policy = evidence.get("policy", {})
     expected_policy = {
         "source_checkouts": "TEMPORARY_PINNED_READ_ONLY_INPUTS",
