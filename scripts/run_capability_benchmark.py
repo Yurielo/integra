@@ -47,8 +47,8 @@ def verify_source(root: Path, baseline: dict[str, Any]) -> dict[str, str]:
     }
 
 
-def render_argv(argv: list[str]) -> list[str]:
-    return [sys.executable if token == "{python}" else token for token in argv]
+def render_argv(argv: list[str], python_executable: Path) -> list[str]:
+    return [str(python_executable) if token == "{python}" else token for token in argv]
 
 
 def run_command(
@@ -56,6 +56,7 @@ def run_command(
     output_root: Path,
     command: dict[str, Any],
     repetition: int,
+    python_executable: Path,
 ) -> dict[str, Any]:
     environment = os.environ.copy()
     environment["PYTHONDONTWRITEBYTECODE"] = "1"
@@ -65,7 +66,7 @@ def run_command(
     environment["TMPDIR"] = str(temporary)
     started = time.monotonic()
     completed = subprocess.run(
-        render_argv(command["argv"]),
+        render_argv(command["argv"], python_executable),
         cwd=source_root,
         env=environment,
         stdout=subprocess.PIPE,
@@ -101,6 +102,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--seminartext-root", type=Path, required=True)
     parser.add_argument("--videotext-root", type=Path, required=True)
+    parser.add_argument("--seminartext-python", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--repetitions", type=int, default=2)
     args = parser.parse_args()
@@ -151,7 +153,15 @@ def main() -> int:
                 for command in candidate["commands"]:
                     runs.append(
                         run_command(
-                            roots[component_id], output.parent / component_id, command, repetition
+                            roots[component_id],
+                            output.parent / component_id,
+                            command,
+                            repetition,
+                            (
+                                args.seminartext_python.resolve()
+                                if component_id == "seminartext"
+                                else Path(sys.executable)
+                            ),
                         )
                     )
             status = "PASS" if all(run["status"] == "PASS" for run in runs) else "FAIL"
@@ -166,7 +176,14 @@ def main() -> int:
                 }
             )
             if status != "PASS":
-                output.write_bytes(canonical_bytes({"capabilities": observations + [{"id": capability["id"], "candidates": candidate_results}]}))
+                output.write_bytes(
+                    canonical_bytes(
+                        {
+                            "capabilities": observations
+                            + [{"id": capability["id"], "candidates": candidate_results}]
+                        }
+                    )
+                )
                 return 1
         observations.append({"id": capability["id"], "candidates": candidate_results})
 
