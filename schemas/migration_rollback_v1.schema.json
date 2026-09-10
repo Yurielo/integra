@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Yurielo/integra/schemas/migration_rollback_v1.schema.json",
+  "title": "Integra copy-on-write rollback evidence v1",
+  "type": "object",
+  "required": [
+    "schema_version", "rollback_id", "plan_id", "project_id", "status",
+    "target_removed", "source_unchanged", "source_repository_changed"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "rollback_id": {"type": "string", "pattern": "^urn:integra:operation:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+    "plan_id": {"type": "string", "pattern": "^urn:integra:operation:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+    "project_id": {"type": "string", "pattern": "^urn:integra:project:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+    "status": {"const": "ROLLED_BACK"},
+    "target_removed": {"const": true},
+    "source_unchanged": {"const": true},
+    "source_repository_changed": {"const": false}
+  },
+  "additionalProperties": false
+}

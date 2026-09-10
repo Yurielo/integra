@@ -1,0 +1,23 @@
+{
+  "appName": "videotext",
+  "appVersion": "0.6.4",
+  "build": "migration-fixture",
+  "createdAt": "2026-09-10T00:00:00Z",
+  "updatedAt": "2026-09-10T00:00:00Z",
+  "sourceMediaPath": "source.mp4",
+  "projectFolderPath": "fixture://videotext-project",
+  "durationSeconds": 2.0,
+  "outputs": [],
+  "schemaVersion": 7,
+  "workflow": {
+    "status": "ready",
+    "progress": 0,
+    "mode": "resumeProject",
+    "operations": {}
+  },
+  "fragments": [],
+  "artifacts": [],
+  "transcriptRevisions": [],
+  "reviewTasks": [],
+  "topicRevisions": []
+}

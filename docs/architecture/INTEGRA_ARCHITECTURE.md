@@ -61,6 +61,13 @@ contract is [`OPERATIONS_AND_DIAGNOSTICS_V1.md`](OPERATIONS_AND_DIAGNOSTICS_V1.m
 It does not replace Project Lease or R3 messages and does not expand R6 worker
 resume beyond the accepted pipeline-prefix recovery boundary.
 
+R7 adds the read-only discovery and copy-on-write migration boundary documented
+in [`COPY_ON_WRITE_MIGRATION_V1.md`](COPY_ON_WRITE_MIGRATION_V1.md). Stable IDs
+exclude root paths and display names; a separate layout hash binds relative
+structure. Migration creates an unactivated Integra-owned copy, validates every
+byte and preserves exact rollback evidence. It never rewrites source projects
+or follows an external VideoText media locator without separate authority.
+
 ## 2. Authority model
 
 ### Factual state authority

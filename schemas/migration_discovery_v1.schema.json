@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Yurielo/integra/schemas/migration_discovery_v1.schema.json",
+  "title": "Integra read-only source discovery v1",
+  "type": "object",
+  "required": [
+    "schema_version", "discovery_id", "source_component", "source_format",
+    "source_schema_version", "source_root", "project_id",
+    "source_revision_sha256", "layout_sha256", "status", "read_only",
+    "source_compatibility", "file_count", "total_bytes", "files",
+    "source_references"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "discovery_id": {"type": "string", "pattern": "^urn:integra:operation:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+    "source_component": {"enum": ["seminartext", "videotext"]},
+    "source_format": {"enum": ["SEMINARTEXT_PROJECT", "VIDEOTEXT_PROJECT"]},
+    "source_schema_version": {"enum": ["1", "7"]},
+    "source_root": {"type": "string", "minLength": 1},
+    "project_id": {"type": "string", "pattern": "^urn:integra:project:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+    "source_revision_sha256": {"$ref": "#/$defs/sha256"},
+    "layout_sha256": {"$ref": "#/$defs/sha256"},
+    "status": {"const": "READY"},
+    "read_only": {"const": true},
+    "source_compatibility": {"const": "SUPPORTED"},
+    "file_count": {"type": "integer", "minimum": 1},
+    "total_bytes": {"type": "integer", "minimum": 0},
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/file"}
+    },
+    "source_references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["native_id", "kind", "locator_sha256", "scope", "accessed"],
+        "properties": {
+          "native_id": {"type": "string", "minLength": 1},
+          "kind": {"enum": ["MEDIA", "DOCUMENT"]},
+          "locator_sha256": {"$ref": "#/$defs/sha256"},
+          "scope": {"enum": ["IN_PROJECT", "EXTERNAL_REFERENCE"]},
+          "accessed": {"type": "boolean"}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "file": {
+      "type": "object",
+      "required": ["source_relative_path", "size_bytes", "content_sha256", "artifact_id"],
+      "properties": {
+        "source_relative_path": {"type": "string", "minLength": 1},
+        "size_bytes": {"type": "integer", "minimum": 0},
+        "content_sha256": {"$ref": "#/$defs/sha256"},
+        "artifact_id": {"type": "string", "pattern": "^urn:integra:artifact:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

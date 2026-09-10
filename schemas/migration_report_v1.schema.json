@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Yurielo/integra/schemas/migration_report_v1.schema.json",
+  "title": "Integra copy-on-write migration report v1",
+  "type": "object",
+  "required": [
+    "schema_version", "report_id", "plan_id", "job_id", "project_id",
+    "source_component", "source_root", "target_root", "target_locator_sha256", "status",
+    "source_revision_sha256", "source_layout_sha256", "copied_file_count",
+    "copied_bytes", "copied_files", "source_project_changed",
+    "source_repository_changed", "activation_performed", "target_state",
+    "rollback_supported", "operation_guarded", "reservation_id", "lease_id",
+    "lease_generation"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "report_id": {"type": "string", "pattern": "^urn:integra:artifact:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+    "plan_id": {"type": "string", "pattern": "^urn:integra:operation:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+    "job_id": {"type": "string", "pattern": "^urn:integra:job:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+    "project_id": {"type": "string", "pattern": "^urn:integra:project:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+    "source_component": {"enum": ["seminartext", "videotext"]},
+    "source_root": {"type": "string", "minLength": 1},
+    "target_root": {"type": "string", "minLength": 1},
+    "target_locator_sha256": {"$ref": "#/$defs/sha256"},
+    "status": {"const": "SUCCEEDED"},
+    "source_revision_sha256": {"$ref": "#/$defs/sha256"},
+    "source_layout_sha256": {"$ref": "#/$defs/sha256"},
+    "copied_file_count": {"type": "integer", "minimum": 1},
+    "copied_bytes": {"type": "integer", "minimum": 0},
+    "copied_files": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/mapping"}},
+    "source_project_changed": {"const": false},
+    "source_repository_changed": {"const": false},
+    "activation_performed": {"const": false},
+    "target_state": {"const": "READY_NOT_ACTIVATED"},
+    "rollback_supported": {"const": true},
+    "operation_guarded": {"const": true},
+    "reservation_id": {"type": "string", "pattern": "^urn:integra:reservation:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+    "lease_id": {"type": "string", "pattern": "^urn:integra:lease:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+    "lease_generation": {"type": "integer", "minimum": 1}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "mapping": {
+      "type": "object",
+      "required": ["artifact_id", "source_relative_path", "destination_relative_path", "size_bytes", "content_sha256"],
+      "properties": {
+        "artifact_id": {"type": "string", "pattern": "^urn:integra:artifact:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+        "source_relative_path": {"type": "string", "minLength": 1},
+        "destination_relative_path": {"type": "string", "pattern": "^source/"},
+        "size_bytes": {"type": "integer", "minimum": 0},
+        "content_sha256": {"$ref": "#/$defs/sha256"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

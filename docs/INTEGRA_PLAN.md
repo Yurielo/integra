@@ -597,6 +597,13 @@ Open representative existing SeminarText and VideoText projects, produce a
 migration plan and copy, validate it, and prove rollback without altering the
 original.
 
+The accepted v1 implementation uses sanitized representatives of SeminarText
+project schema v1 and VideoText project schema v7. It binds path-independent
+stable IDs, a separate layout hash, exact file mappings and a no-overwrite
+target. The imported copy remains `READY_NOT_ACTIVATED`; rollback deletes only
+an exact verified Integra-owned target. External VideoText media is classified
+by a hashed locator and not accessed by R7.
+
 ### R8A — YouTube Playlist Pipeline
 
 Implement collection discovery, selection, sequential processing, refresh,
