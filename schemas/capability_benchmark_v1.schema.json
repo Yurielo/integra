@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Yurielo/integra/schemas/capability_benchmark_v1.schema.json",
+  "title": "Integra normalized capability benchmark v1",
+  "type": "object",
+  "required": [
+    "schema_version", "verified_at", "controller", "component_baselines",
+    "fixture_manifest", "environment", "policy", "capabilities",
+    "protected_data_accessed", "gold_accessed", "semantic_acceptance_performed",
+    "source_repositories_changed", "external_actions_performed", "status"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "verified_at": {"type": "string", "format": "date-time"},
+    "controller": {
+      "type": "object",
+      "required": ["repository", "commit_sha", "tree_sha"],
+      "properties": {
+        "repository": {"const": "Yurielo/integra"},
+        "commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "tree_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+      },
+      "additionalProperties": false
+    },
+    "component_baselines": {"const": "state/component_baselines_v1.json"},
+    "fixture_manifest": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"const": "tests/fixtures/capability_benchmark_v1/manifest.json"},
+        "sha256": {"$ref": "#/$defs/hash"}
+      },
+      "additionalProperties": false
+    },
+    "environment": {"type": "object"},
+    "policy": {"type": "object"},
+    "capabilities": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "type": "object",
+        "required": ["id", "normalized_assertions", "candidates", "selection"],
+        "properties": {
+          "id": {"type": "string"},
+          "normalized_assertions": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}},
+          "candidates": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "object"}},
+          "selection": {
+            "type": "object",
+            "required": ["mode", "primary", "fallback", "challenger", "basis", "decision_authority", "semantic_superiority_claimed"],
+            "properties": {
+              "mode": {"enum": ["SINGLE_PRIMARY", "COMPOSED_PRIMARY"]},
+              "primary": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["seminartext", "videotext"]}},
+              "fallback": {"type": "array", "uniqueItems": true, "items": {"enum": ["seminartext", "videotext"]}},
+              "challenger": {"type": "array", "uniqueItems": true, "items": {"enum": ["seminartext", "videotext"]}},
+              "basis": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+              "decision_authority": {"const": "ISSUE_7_TECHNICAL_INTEGRATION_SELECTION"},
+              "semantic_superiority_claimed": {"const": false}
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "protected_data_accessed": {"const": false},
+    "gold_accessed": {"const": false},
+    "semantic_acceptance_performed": {"const": false},
+    "source_repositories_changed": {"const": false},
+    "external_actions_performed": {"const": false},
+    "status": {"const": "PASS"}
+  },
+  "$defs": {"hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}},
+  "additionalProperties": false
+}
