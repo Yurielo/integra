@@ -19,6 +19,8 @@ their authoritative artifacts.
 - [Acceptance criteria](docs/ACCEPTANCE_CRITERIA.md)
 - [Risk register](docs/RISK_REGISTER.md)
 - [Machine-readable state](state/integra_state_v1.json)
+- [Pinned component baselines](state/component_baselines_v1.json)
+- [R1 baseline certification](docs/baselines/R1_BASELINE_CERTIFICATION.md)
 
 Validate the governance baseline with:
 

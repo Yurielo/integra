@@ -11,6 +11,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 STATE_PATH = ROOT / "state" / "integra_state_v1.json"
 SCHEMA_PATH = ROOT / "schemas" / "integra_state_v1.schema.json"
+BASELINES_PATH = ROOT / "state" / "component_baselines_v1.json"
+BASELINES_SCHEMA_PATH = ROOT / "schemas" / "component_baselines_v1.schema.json"
 
 REQUIRED_DOCUMENTS = (
     "README.md",
@@ -22,6 +24,9 @@ REQUIRED_DOCUMENTS = (
     "docs/RISK_REGISTER.md",
     "docs/ACCEPTANCE_CRITERIA.md",
     "docs/architecture/INTEGRA_ARCHITECTURE.md",
+    "docs/baselines/R1_BASELINE_CERTIFICATION.md",
+    "schemas/component_baselines_v1.schema.json",
+    "state/component_baselines_v1.json",
 )
 
 REQUIRED_MODULES = {
@@ -77,6 +82,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("product must be Integra")
     if state.get("standalone_products_preserved") is not True:
         errors.append("standalone_products_preserved must be true")
+    if state.get("component_baseline_manifest") != "state/component_baselines_v1.json":
+        errors.append("component_baseline_manifest must pin the R1 manifest")
 
     execution_policy = state.get("execution_policy", {})
     expected_policy = {
@@ -138,10 +145,52 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
     return errors
 
 
+def validate_component_baselines(manifest: dict) -> list[str]:
+    errors: list[str] = []
+    if manifest.get("schema_version") != "1.0":
+        errors.append("component baseline schema_version must be 1.0")
+    policy = manifest.get("integration_policy", {})
+    if policy != {
+        "source_repositories": "READ_ONLY",
+        "dependency_mode": "PINNED_COMMIT_AND_VERSIONED_CONTRACT",
+        "unmerged_work_allowed": False,
+    }:
+        errors.append("component integration policy must remain read-only and pinned")
+    components = manifest.get("components", [])
+    if {component.get("id") for component in components} != {"seminartext", "videotext"}:
+        errors.append("component baselines must contain SeminarText and VideoText exactly")
+    for component in components:
+        component_id = component.get("id", "unknown")
+        if component.get("default_branch") != "main":
+            errors.append(f"{component_id} baseline must use main")
+        for field in ("commit_sha", "tree_sha"):
+            value = component.get(field, "")
+            if len(value) != 40 or any(char not in "0123456789abcdef" for char in value):
+                errors.append(f"{component_id} has invalid {field}")
+        if component.get("source_tree_clean") is not True:
+            errors.append(f"{component_id} source tree must be clean")
+        if not component.get("supported_contracts"):
+            errors.append(f"{component_id} must pin at least one supported contract")
+        for contract in component.get("supported_contracts", []):
+            digest = contract.get("sha256", "")
+            if len(digest) != 64 or any(char not in "0123456789abcdef" for char in digest):
+                errors.append(f"{component_id} contract {contract.get('id')} has invalid sha256")
+    acceptance = manifest.get("r1_acceptance", {})
+    if acceptance.get("manifest_reproducible") is not True:
+        errors.append("R1 manifest must be reproducible")
+    if acceptance.get("unmerged_work_is_dependency") is not False:
+        errors.append("unmerged work must not be an R1 dependency")
+    if acceptance.get("status") == "PASS" and not acceptance.get("source_applications_release_certified"):
+        errors.append("R1 cannot PASS without source application release certification")
+    return errors
+
+
 def main() -> int:
     state = load_json(STATE_PATH)
+    baselines = load_json(BASELINES_PATH)
     load_json(SCHEMA_PATH)
-    errors = validate_state(state)
+    load_json(BASELINES_SCHEMA_PATH)
+    errors = validate_state(state) + validate_component_baselines(baselines)
     if errors:
         print("INTEGRA_GOVERNANCE_VALIDATION: FAIL")
         for error in errors:
@@ -152,6 +201,8 @@ def main() -> int:
     print(f"REQUIRED_MODULES: {len(state['release_scope']['required_modules'])}")
     print(f"SOCIAL_PLATFORMS: {len(state['release_scope']['social_platforms'])}")
     print("STANDALONE_PRODUCTS_PRESERVED: YES")
+    print(f"PINNED_COMPONENTS: {len(baselines['components'])}")
+    print(f"R1_ACCEPTANCE: {baselines['r1_acceptance']['status']}")
     return 0
 
 
