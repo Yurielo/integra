@@ -115,16 +115,90 @@ REQUIRED_SOCIAL_PLATFORMS = {
     "tiktok",
 }
 
-EXPECTED_ROADMAP_IDS = {
-    "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8A", "R8B",
-    "R8C", "R9A", "R9B", "R9C", "R10", "R11", "LEARNING_V1",
-    "ASSISTANT_V1", "SOCIAL_FOUNDATION", "SOCIAL_FACEBOOK",
-    "SOCIAL_INSTAGRAM", "SOCIAL_THREADS", "SOCIAL_YOUTUBE",
-    "SOCIAL_TELEGRAM", "SOCIAL_WHATSAPP", "SOCIAL_TIKTOK", "R12", "R13",
-    "R14", "R15",
+EXPECTED_ROADMAP_ISSUES = {
+    "R0": 2,
+    "R1": 3,
+    "R2": 4,
+    "R3": 5,
+    "R4": 6,
+    "R5": 7,
+    "R6": 8,
+    "OPERATIONS_AND_DIAGNOSTICS_V1": 46,
+    "R7": 9,
+    "R8A": 10,
+    "R8B": 11,
+    "PROJECTS_AND_SOURCES_V1": 47,
+    "TRANSCRIPT_AND_TOPIC_STUDIO_V1": 48,
+    "R8C": 12,
+    "R9A": 13,
+    "R9B": 14,
+    "R9C": 15,
+    "R10": 16,
+    "R11": 17,
+    "LEARNING_V1": 18,
+    "ASSISTANT_V1": 19,
+    "SOCIAL_FOUNDATION": 20,
+    "SOCIAL_FACEBOOK": 21,
+    "SOCIAL_INSTAGRAM": 22,
+    "SOCIAL_THREADS": 23,
+    "SOCIAL_YOUTUBE": 24,
+    "SOCIAL_TELEGRAM": 25,
+    "SOCIAL_WHATSAPP": 26,
+    "SOCIAL_TIKTOK": 27,
+    "R12": 28,
+    "R13": 29,
+    "R14": 30,
+    "R15": 31,
 }
 
-EXPECTED_ISSUE_NUMBERS = set(range(2, 32))
+REQUIRED_MODULE_ROADMAP_IDS = {
+    "projects_and_sources": {"PROJECTS_AND_SOURCES_V1"},
+    "transcript_and_topic_studio": {"TRANSCRIPT_AND_TOPIC_STUDIO_V1"},
+    "knowledge_studio": {"R9A"},
+    "media_studio": {"R9B"},
+    "marketing_studio_v1": {"R11"},
+    "learning_studio_v1": {"LEARNING_V1"},
+    "knowledge_assistant_v1": {"ASSISTANT_V1"},
+    "publishing_hub": {"R10"},
+    "operations_and_diagnostics": {"OPERATIONS_AND_DIAGNOSTICS_V1"},
+    "compatibility_and_migration": {"R7"},
+}
+
+REQUIRED_ROADMAP_DEPENDENCIES = {
+    "OPERATIONS_AND_DIAGNOSTICS_V1": {"R6"},
+    "R7": {"R6", "OPERATIONS_AND_DIAGNOSTICS_V1"},
+    "R8A": {"R3", "R6", "OPERATIONS_AND_DIAGNOSTICS_V1"},
+    "R8B": {"R3", "R6", "OPERATIONS_AND_DIAGNOSTICS_V1"},
+    "PROJECTS_AND_SOURCES_V1": {"R6", "R7", "R8A", "R8B"},
+    "TRANSCRIPT_AND_TOPIC_STUDIO_V1": {"R6", "PROJECTS_AND_SOURCES_V1"},
+    "R8C": {
+        "R8A",
+        "R8B",
+        "PROJECTS_AND_SOURCES_V1",
+        "TRANSCRIPT_AND_TOPIC_STUDIO_V1",
+    },
+    "R9A": {"R6", "R8C", "TRANSCRIPT_AND_TOPIC_STUDIO_V1"},
+    "R9B": {"R5", "R6", "OPERATIONS_AND_DIAGNOSTICS_V1"},
+    "R12": {
+        "OPERATIONS_AND_DIAGNOSTICS_V1",
+        "R7",
+        "PROJECTS_AND_SOURCES_V1",
+        "TRANSCRIPT_AND_TOPIC_STUDIO_V1",
+        "R8C",
+        "R9C",
+        "R10",
+        "R11",
+        "LEARNING_V1",
+        "ASSISTANT_V1",
+        "SOCIAL_FACEBOOK",
+        "SOCIAL_INSTAGRAM",
+        "SOCIAL_THREADS",
+        "SOCIAL_YOUTUBE",
+        "SOCIAL_TELEGRAM",
+        "SOCIAL_WHATSAPP",
+        "SOCIAL_TIKTOK",
+    },
+}
 
 
 def load_json(path: Path) -> dict:
@@ -198,15 +272,30 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("roadmap IDs must be unique")
     if len(issues) != len(set(issues)):
         errors.append("roadmap issue numbers must be unique")
-    if set(issues) != EXPECTED_ISSUE_NUMBERS:
-        errors.append("roadmap issue numbers must cover GitHub Issues #2 through #31")
+    if set(issues) != set(EXPECTED_ROADMAP_ISSUES.values()):
+        errors.append("roadmap issue inventory differs from the governed mapping")
 
-    missing_ids = EXPECTED_ROADMAP_IDS - set(ids)
-    extra_ids = set(ids) - EXPECTED_ROADMAP_IDS
+    expected_ids = set(EXPECTED_ROADMAP_ISSUES)
+    missing_ids = expected_ids - set(ids)
+    extra_ids = set(ids) - expected_ids
     if missing_ids:
         errors.append(f"missing roadmap IDs: {sorted(missing_ids)}")
     if extra_ids:
         errors.append(f"unexpected roadmap IDs: {sorted(extra_ids)}")
+
+    entries_by_id = {entry.get("id"): entry for entry in roadmap}
+    for entry_id, expected_issue in EXPECTED_ROADMAP_ISSUES.items():
+        actual_issue = entries_by_id.get(entry_id, {}).get("issue")
+        if actual_issue != expected_issue:
+            errors.append(
+                f"{entry_id} must map to GitHub Issue #{expected_issue}"
+            )
+
+    for module, required_ids in REQUIRED_MODULE_ROADMAP_IDS.items():
+        if module in modules and not required_ids.issubset(set(ids)):
+            errors.append(
+                f"required module {module} lacks executable roadmap coverage"
+            )
 
     positions = {entry.get("id"): index for index, entry in enumerate(roadmap)}
     statuses = {entry.get("id"): entry.get("status") for entry in roadmap}
@@ -222,6 +311,15 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
                 errors.append(f"{entry_id} has unknown dependency {dependency}")
             elif positions[dependency] >= positions.get(entry_id, -1):
                 errors.append(f"{entry_id} dependency {dependency} must appear earlier")
+
+    for entry_id, required_dependencies in REQUIRED_ROADMAP_DEPENDENCIES.items():
+        actual_dependencies = set(entries_by_id.get(entry_id, {}).get("depends_on", []))
+        missing_dependencies = required_dependencies - actual_dependencies
+        if missing_dependencies:
+            errors.append(
+                f"{entry_id} lacks required dependencies: "
+                f"{sorted(missing_dependencies)}"
+            )
 
     if not state.get("stop_conditions") or len(state["stop_conditions"]) < 8:
         errors.append("at least eight fail-closed stop conditions are required")
