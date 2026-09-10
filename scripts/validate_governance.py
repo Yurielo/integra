@@ -180,8 +180,10 @@ def validate_component_baselines(manifest: dict) -> list[str]:
         errors.append("R1 manifest must be reproducible")
     if acceptance.get("unmerged_work_is_dependency") is not False:
         errors.append("unmerged work must not be an R1 dependency")
-    if acceptance.get("status") == "PASS" and not acceptance.get("source_applications_release_certified"):
-        errors.append("R1 cannot PASS without source application release certification")
+    if acceptance.get("status") == "PASS" and not acceptance.get("supported_standalone_gates_pass"):
+        errors.append("R1 cannot PASS unless supported standalone gates pass")
+    if acceptance.get("release_promotion_performed") is not False:
+        errors.append("R1 must not promote a source application release")
     return errors
 
 

@@ -88,13 +88,15 @@
       "required": [
         "manifest_reproducible",
         "unmerged_work_is_dependency",
-        "source_applications_release_certified",
+        "supported_standalone_gates_pass",
+        "release_promotion_performed",
         "status"
       ],
       "properties": {
         "manifest_reproducible": { "const": true },
         "unmerged_work_is_dependency": { "const": false },
-        "source_applications_release_certified": { "type": "boolean" },
+        "supported_standalone_gates_pass": { "type": "boolean" },
+        "release_promotion_performed": { "const": false },
         "status": { "enum": ["PASS", "PARTIAL", "FAIL"] }
       },
       "additionalProperties": false

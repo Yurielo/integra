@@ -72,11 +72,17 @@ class GovernanceValidationTests(unittest.TestCase):
         errors = VALIDATOR.validate_component_baselines(baselines)
         self.assertTrue(any("read-only and pinned" in error for error in errors))
 
-    def test_partial_r1_cannot_be_mislabeled_pass(self):
+    def test_r1_cannot_pass_without_supported_standalone_gates(self):
         baselines = copy.deepcopy(self.baselines)
-        baselines["r1_acceptance"]["status"] = "PASS"
+        baselines["r1_acceptance"]["supported_standalone_gates_pass"] = False
         errors = VALIDATOR.validate_component_baselines(baselines)
         self.assertTrue(any("cannot PASS" in error for error in errors))
+
+    def test_r1_cannot_promote_source_application_release(self):
+        baselines = copy.deepcopy(self.baselines)
+        baselines["r1_acceptance"]["release_promotion_performed"] = True
+        errors = VALIDATOR.validate_component_baselines(baselines)
+        self.assertTrue(any("must not promote" in error for error in errors))
 
 
 if __name__ == "__main__":

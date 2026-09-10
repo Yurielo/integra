@@ -48,7 +48,7 @@
   },
   "roadmap": [
     { "id": "R0", "issue": 2, "status": "ACCEPTED", "depends_on": [] },
-    { "id": "R1", "issue": 3, "status": "PARTIAL", "depends_on": ["R0"] },
+    { "id": "R1", "issue": 3, "status": "ACCEPTED", "depends_on": ["R0"] },
     { "id": "R2", "issue": 4, "status": "PLANNED", "depends_on": ["R0", "R1"] },
     { "id": "R3", "issue": 5, "status": "PLANNED", "depends_on": ["R1", "R2"] },
     { "id": "R4", "issue": 6, "status": "PLANNED", "depends_on": ["R1", "R2", "R3"] },
