@@ -348,6 +348,10 @@ def execute_review(config: dict[str, Any], inputs: list[dict[str, Any]], session
     evidence_check = json.loads(run([cli, "project-evidence-check", str(project), "--json"], env=environment))
     if evidence_check.get("status") != "PASS" or aligned.get("status") != "review_required":
         raise WorkerFailure("SeminarText Canonical Evidence validation failed")
+    # The CLI reports its local project path for diagnostics. Persist a stable
+    # project-relative locator so independent runs produce identical artifacts.
+    if "bundle" in aligned:
+        aligned["bundle"] = "evidence/canonical_bundle.json"
     bundle = json.loads((project / "evidence/canonical_bundle.json").read_text(encoding="utf-8"))
     drafts = make_topic_drafts(bundle, topics[0], config["topic_model"])
     drafts_path = project / "topic_drafts.json"
