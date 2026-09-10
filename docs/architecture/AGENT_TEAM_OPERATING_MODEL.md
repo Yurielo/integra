@@ -21,6 +21,7 @@ silence, an open Issue, or a specialist recommendation.
 | Role | Primary responsibility | Default mode |
 | --- | --- | --- |
 | `product-owner` | Lead coordination, scope, acceptance matrix, routing, final evidence consolidation | read-only |
+| `system-architect` | Cross-module architecture, NFRs, trade-offs, compatibility and ADR recommendations | read-only advisory |
 | `backend-developer` | Control plane, workers, adapters, contracts, orchestration, recovery | implementation |
 | `frontend-developer` | Native macOS interaction, state, accessibility, exact user-visible truth | implementation |
 | `database-architect` | Artifact/state schemas, ownership, migration, indexes and compatibility | design/implementation |
@@ -43,6 +44,8 @@ whose scope and acceptance criteria are already explicit.
 Specialists are activated by risk, not ceremony:
 
 - one implementation owner for a narrow change;
+- system architect when a decision crosses module boundaries, changes an
+  accepted architecture contract, or needs an ADR/NFR trade-off analysis;
 - database architect when persisted state, ownership, or migration changes;
 - frontend and backend together only across their contract boundary;
 - QA for independent acceptance evidence proportional to risk;

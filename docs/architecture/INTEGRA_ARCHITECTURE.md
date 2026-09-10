@@ -92,6 +92,8 @@ cannot introduce a competing authoritative writer.
 
 Integra delivery uses the governed role registry in `state/agent_team_v1.json`.
 The `product-owner` agent is the coordination entry point for material work;
+the read-only `system-architect` is activated for cross-module boundaries,
+NFR trade-offs and ADRs without acquiring implementation or human authority.
 backend, frontend, data, QA, CI/CD, review, planning, and documentation roles
 are selected only when their responsibility is relevant. This affects delivery
 ownership, not runtime architecture or product data ownership.
