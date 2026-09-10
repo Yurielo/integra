@@ -19,6 +19,9 @@ class GovernanceValidationTests(unittest.TestCase):
         cls.state = json.loads(
             (ROOT / "state" / "integra_state_v1.json").read_text(encoding="utf-8")
         )
+        cls.baselines = json.loads(
+            (ROOT / "state" / "component_baselines_v1.json").read_text(encoding="utf-8")
+        )
 
     def test_repository_state_is_valid(self):
         self.assertEqual(VALIDATOR.validate_state(self.state), [])
@@ -59,6 +62,21 @@ class GovernanceValidationTests(unittest.TestCase):
         state["roadmap"][0]["depends_on"] = ["R1"]
         errors = VALIDATOR.validate_state(state)
         self.assertTrue(any("must appear earlier" in error for error in errors))
+
+    def test_component_baselines_are_valid(self):
+        self.assertEqual(VALIDATOR.validate_component_baselines(self.baselines), [])
+
+    def test_unmerged_component_work_cannot_be_enabled(self):
+        baselines = copy.deepcopy(self.baselines)
+        baselines["integration_policy"]["unmerged_work_allowed"] = True
+        errors = VALIDATOR.validate_component_baselines(baselines)
+        self.assertTrue(any("read-only and pinned" in error for error in errors))
+
+    def test_partial_r1_cannot_be_mislabeled_pass(self):
+        baselines = copy.deepcopy(self.baselines)
+        baselines["r1_acceptance"]["status"] = "PASS"
+        errors = VALIDATOR.validate_component_baselines(baselines)
+        self.assertTrue(any("cannot PASS" in error for error in errors))
 
 
 if __name__ == "__main__":

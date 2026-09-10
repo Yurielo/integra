@@ -3,6 +3,7 @@
   "product": "Integra",
   "baseline_date": "2026-09-10",
   "standalone_products_preserved": true,
+  "component_baseline_manifest": "state/component_baselines_v1.json",
   "execution_policy": {
     "safe_roadmap_implementation": "AUTHORIZED_AFTER_DEPENDENCIES",
     "merge": "EXPLICIT_AUTHORITY_REQUIRED",
@@ -46,8 +47,8 @@
     ]
   },
   "roadmap": [
-    { "id": "R0", "issue": 2, "status": "IN_REVIEW", "depends_on": [] },
-    { "id": "R1", "issue": 3, "status": "PLANNED", "depends_on": ["R0"] },
+    { "id": "R0", "issue": 2, "status": "ACCEPTED", "depends_on": [] },
+    { "id": "R1", "issue": 3, "status": "PARTIAL", "depends_on": ["R0"] },
     { "id": "R2", "issue": 4, "status": "PLANNED", "depends_on": ["R0", "R1"] },
     { "id": "R3", "issue": 5, "status": "PLANNED", "depends_on": ["R1", "R2"] },
     { "id": "R4", "issue": 6, "status": "PLANNED", "depends_on": ["R1", "R2", "R3"] },

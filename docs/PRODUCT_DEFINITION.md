@@ -1,6 +1,6 @@
 # Integra Product Definition v1
 
-Status: `R0_IMPLEMENTED_PENDING_REVIEW`
+Status: `R0_ACCEPTED`
 
 Authority: Product Owner authorization to implement the approved Integra plan
 

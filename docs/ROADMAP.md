@@ -4,10 +4,10 @@ Source plan: `docs/INTEGRA_PLAN.md`
 
 Program Epic: [GitHub Issue #1](https://github.com/Yurielo/integra/issues/1)
 
-| Stage | Issue | Milestone | Depends on | Initial state |
+| Stage | Issue | Milestone | Depends on | Current state |
 | --- | ---: | --- | --- | --- |
-| R0 Product definition and governance | #2 | M0 | — | IN_REVIEW |
-| R1 Baseline certification | #3 | M0 | R0 | PLANNED |
+| R0 Product definition and governance | #2 | M0 | — | ACCEPTED |
+| R1 Baseline certification | #3 | M0 | R0 | PARTIAL |
 | R2 Ownership, IDs, lease | #4 | M0 | R0, R1 | PLANNED |
 | R3 Versioned contracts | #5 | M0 | R1, R2 | PLANNED |
 | R4 Adapter spike | #6 | M0 | R1–R3 | PLANNED |
@@ -38,3 +38,8 @@ is authorized by current policy or Product Owner instruction. Technical work
 continues autonomously inside that scope. Protected data, live accounts,
 external publication, semantics, destructive migration, merge, release, and
 source-product retirement retain their explicit gates.
+
+R1 is `PARTIAL` because the pinned VideoText baseline lacks the required
+post-change real-video release evidence. Its clean deterministic engineering
+baseline may support contract discovery, but it does not satisfy dependencies
+that require release or real-media certification.

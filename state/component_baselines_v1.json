@@ -1,0 +1,136 @@
+{
+  "schema_version": "1.0",
+  "verified_at": "2026-09-10T12:43:12Z",
+  "integration_policy": {
+    "source_repositories": "READ_ONLY",
+    "dependency_mode": "PINNED_COMMIT_AND_VERSIONED_CONTRACT",
+    "unmerged_work_allowed": false
+  },
+  "components": [
+    {
+      "id": "seminartext",
+      "repository": "Yurielo/seminartext",
+      "default_branch": "main",
+      "commit_sha": "a94936cd77cde13561c97c804ece1ac1134e01a6",
+      "tree_sha": "5f5951da1d5dcf957ef982510fde3537f601ea15",
+      "source_tree_clean": true,
+      "version": "4.0.0",
+      "supported_contracts": [
+        {
+          "id": "canonical_evidence_v1",
+          "path": "schemas/canonical_evidence_v1.schema.json",
+          "sha256": "08bab4381ba435a059a1b58ea5dbedadd57112a18421ea7ef84a10ddb52d44b8"
+        },
+        {
+          "id": "canonical_knowledge_v1",
+          "path": "schemas/canonical_knowledge_v1.schema.json",
+          "sha256": "33691770411b4e5fc4e923920619396f7281bcd655202f8f56ddba99b844111b"
+        },
+        {
+          "id": "topic_review_workflow_v2",
+          "path": "schemas/topic_review_workflow_v2.schema.json",
+          "sha256": "7dede105b8339f46c100c8bed07ad93ace01811e8c26d3a27d204cd6692012b0"
+        }
+      ],
+      "verification": {
+        "deterministic_suite": "PASS",
+        "ci": "PASS",
+        "real_media": "INCOMPLETE",
+        "test_result": "285 passed, 0 skipped",
+        "integrity": "PARTIAL: G1-G5/G7/G8 PASS; G6 NOT_IMPLEMENTED",
+        "runtime_truth": "PASS",
+        "github_run": "https://github.com/Yurielo/seminartext/actions/runs/33909188798"
+      },
+      "known_limitations": [
+        "End-to-end Integrity gate G6 is not implemented.",
+        "Product state is defined but not yet product-integrated.",
+        "Issue #68 semantic work remains outside this pinned baseline."
+      ]
+    },
+    {
+      "id": "videotext",
+      "repository": "Yurielo/videotext",
+      "default_branch": "main",
+      "commit_sha": "2e098d1705b6815628bee1e023f4742718eabf02",
+      "tree_sha": "f5ec484df90e4db655d31b4174434c37f4d1491c",
+      "source_tree_clean": true,
+      "version": "0.6.4",
+      "build": "2026.09.09.1",
+      "project_schema_version": 7,
+      "supported_contracts": [
+        {
+          "id": "project_schema_v7",
+          "path": "Sources/videotext/Core/ArtifactModels.swift",
+          "sha256": "23593caac6481f633c42c438d1d31bed06fa18a2102ad59e0d9984febe29b2af"
+        },
+        {
+          "id": "project_store_v7",
+          "path": "Sources/videotext/Services/ProjectStore.swift",
+          "sha256": "6e05c4bf5ea2aa0e88090ed65e52df79456e10752682e4199ec9bba09107bce1"
+        },
+        {
+          "id": "build_identity_0_6_4",
+          "path": "Sources/videotext/Core/Models.swift",
+          "sha256": "3a296beae82e5c5aa09aed04c1f4e43bd20f57954cc7aa8b47421b46fc96be2a"
+        }
+      ],
+      "verification": {
+        "deterministic_suite": "PASS",
+        "ci": "NOT_CONFIGURED",
+        "real_media": "INCOMPLETE",
+        "build": "PASS: temporary ad-hoc signed macOS application",
+        "probe_count": 28,
+        "passed_probes": [
+          "test_app_icon.sh",
+          "test_application_lifecycle.sh",
+          "test_audio_enhancement.sh",
+          "test_blur.sh",
+          "test_diagnostics.sh",
+          "test_eta.sh",
+          "test_filler_mute.sh",
+          "test_filler_words.sh",
+          "test_fragment_processing.sh",
+          "test_human_review.sh",
+          "test_language_detection.sh",
+          "test_layout.sh",
+          "test_ollama_memory_shutdown.sh",
+          "test_ollama_topics.sh",
+          "test_process_shutdown.sh",
+          "test_project_schema.sh",
+          "test_quote_ranges.sh",
+          "test_recovery_watchdog.sh",
+          "test_review_tasks.sh",
+          "test_speech_synthesis.sh",
+          "test_speed_adjustment.sh",
+          "test_topic_matrix.sh",
+          "test_topic_picker.sh",
+          "test_topics.sh",
+          "test_transcription_quality.sh",
+          "test_translation.sh",
+          "test_watermark.sh",
+          "test_whisper_vad.sh"
+        ],
+        "release_gate": "NOT_RUN",
+        "input_dependent_checks_not_run": [
+          "scripts/test_long_topics.sh <long-full.srt>",
+          "scripts/test_e2e.sh <short-video> <whisper-model>",
+          "scripts/release_gate.sh <short-video> <whisper-model>"
+        ],
+        "evidence_basis": "clean pinned checkout plus repository documentation"
+      },
+      "known_limitations": [
+        "No GitHub Actions checks are configured for the pinned main commit.",
+        "The long-topic probe requires an external long SRT and was not run without an authorized input.",
+        "The mandatory two consecutive real-video release E2E runs have not been completed after the last production change.",
+        "The repository-documented real-media benchmark artifacts are not committed at their documented work paths and were not found in the adjacent local work directory.",
+        "Release candidate, listening QA, and Product Owner release acceptance remain incomplete."
+      ]
+    }
+  ],
+  "r1_acceptance": {
+    "manifest_reproducible": true,
+    "unmerged_work_is_dependency": false,
+    "source_applications_release_certified": false,
+    "status": "PARTIAL"
+  }
+}
