@@ -130,6 +130,9 @@ def main() -> int:
     if any(output == root or root in output.parents for root in roots.values()):
         raise SystemExit("benchmark output must be outside pinned source checkouts")
     output.parent.mkdir(parents=True, exist_ok=True)
+    work_root = output.parent / "benchmark-work"
+    if any(work_root == root or root in work_root.parents for root in roots.values()):
+        raise SystemExit("benchmark work directory must be outside pinned source checkouts")
     reusable: dict[tuple[str, str], dict[str, Any]] = {}
     if args.resume_from and args.resume_from.is_file():
         retained = json.loads(args.resume_from.read_text(encoding="utf-8"))
@@ -178,7 +181,7 @@ def main() -> int:
                     runs.append(
                         run_command(
                             roots[component_id],
-                            output.parent / component_id,
+                            work_root / component_id,
                             command,
                             repetition,
                             (
