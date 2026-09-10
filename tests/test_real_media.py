@@ -1,0 +1,339 @@
+from __future__ import annotations
+
+import importlib.util
+import copy
+import hashlib
+import json
+import unittest
+from pathlib import Path
+from types import SimpleNamespace
+
+from integra_core.real_media import aggregate_whisper_words, validate_actual_evidence
+from integra_core.real_contracts import (
+    RealStageContractError,
+    validate_mp4_clip,
+    validate_real_stage_document,
+)
+
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+class RealMediaTests(unittest.TestCase):
+    @staticmethod
+    def stage_document(stage, result, stage_data, *, parents=1):
+        return {
+            "input_artifact_ids": [f"artifact-{index}" for index in range(parents)],
+            "input_content_sha256": [str(index) * 64 for index in range(parents)],
+            "result": result,
+            "schema_version": "1.0",
+            "semantic_status": "PROVISIONAL" if stage == "knowledge" else "REVIEW_REQUIRED",
+            "stage": stage,
+            "stage_data": stage_data,
+        }
+
+    @staticmethod
+    def machine_provenance():
+        return {
+            "method": "machine",
+            "origin": "machine_generated",
+            "reviewer": None,
+            "verification_ranges": [],
+            "verification_state": "machine_unverified",
+        }
+
+    def test_whisper_subwords_are_aggregated_without_fabricating_zero_duration(self) -> None:
+        document = {
+            "transcription": [
+                {
+                    "tokens": [
+                        {"text": "[_BEG_]", "offsets": {"from": 0, "to": 0}},
+                        {"text": " Провер", "offsets": {"from": 100, "to": 300}, "p": 0.8},
+                        {"text": "ка", "offsets": {"from": 300, "to": 500}, "p": 1.0},
+                        {"text": " ноль", "offsets": {"from": 600, "to": 600}, "p": 0.7},
+                        {"text": " готова", "offsets": {"from": 700, "to": 900}, "p": 0.9},
+                    ]
+                }
+            ]
+        }
+        words, omitted = aggregate_whisper_words(document)
+        self.assertEqual([item["word"] for item in words], ["Проверка", "готова"])
+        self.assertEqual(words[0]["start"], 0.1)
+        self.assertEqual(words[0]["end"], 0.5)
+        self.assertEqual(words[0]["score"], 0.9)
+        self.assertEqual(omitted[0]["word"], "ноль")
+        self.assertEqual(omitted[0]["reason"], "WHISPER_ZERO_DURATION_TOKEN")
+
+    def test_actual_evidence_requires_provisional_semantic_authority(self) -> None:
+        document = json.loads((ROOT / "state/core_alpha_real_v1.json").read_text(encoding="utf-8"))
+        self.assertEqual(validate_actual_evidence(document), [])
+        document["human_decisions_applied"] = 1
+        document["stages"]["topics"]["semantic_status"] = "ACCEPTED"
+        errors = validate_actual_evidence(document)
+        self.assertTrue(any("human_decisions" in item or "human decisions" in item for item in errors))
+        self.assertTrue(any("topics" in item for item in errors))
+
+    def test_actual_evidence_rejects_unknown_fields_and_tampered_identity(self) -> None:
+        base = json.loads((ROOT / "state/core_alpha_real_v1.json").read_text(encoding="utf-8"))
+        cases = []
+        extra = copy.deepcopy(base)
+        extra["unexpected"] = True
+        cases.append(extra)
+        stage = copy.deepcopy(base)
+        stage["stages"]["topics"]["sha256"] = "0" * 63
+        cases.append(stage)
+        model = copy.deepcopy(base)
+        model["models"]["topics"].pop("digest")
+        cases.append(model)
+        lineage = copy.deepcopy(base)
+        lineage["provenance"]["artifact_lineage"]["topics"]["parent_artifact_ids"] = [1]
+        cases.append(lineage)
+        for document in cases:
+            with self.subTest(document=document):
+                self.assertTrue(validate_actual_evidence(document))
+
+    def test_topic_adapter_invokes_pinned_engine_functions(self) -> None:
+        path = ROOT / "workers/seminartext_topics_worker.py"
+        spec = importlib.util.spec_from_file_location("topic_worker", path)
+        assert spec and spec.loader
+        worker = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(worker)
+        items = [
+            {"id": 1, "start": "00:00:00,000", "end": "00:00:01,000", "text": "Один"},
+            {"id": 2, "start": "00:00:01,000", "end": "00:00:02,000", "text": "Два"},
+        ]
+        fake = SimpleNamespace(
+            parse_srt=lambda _: items,
+            make_windows=lambda value: [value],
+            analyze_window_boundaries=lambda *_args, **_kwargs: [1],
+            topic_range_prompt=lambda value: value,
+            run_ollama_topic_label=lambda _model, _prompt, start, end: {
+                "start_id": start,
+                "evidence_start_id": start,
+                "evidence_end_id": end,
+                "title": "Черновик",
+                "summary": "Требует проверки",
+                "qa_status": "ok",
+                "qa_attempt": "test",
+            },
+            make_topics=lambda _items, rows: [{"title": rows[0]["title"]}],
+        )
+        result = worker.run_topics(fake, Path("unused.srt"), "local-model")
+        self.assertEqual(result["topics"][0]["semantic_status"], "REVIEW_REQUIRED")
+        self.assertEqual(result["component"], "seminartext")
+
+    def test_transcript_contract_rejects_empty_nested_word(self) -> None:
+        text = "слово"
+        document = self.stage_document(
+            "transcript",
+            {
+                "assurance": "MACHINE_UNVERIFIED",
+                "language": "ru",
+                "model_sha256": "a" * 64,
+                "text_sha256": hashlib.sha256(text.encode()).hexdigest(),
+                "word_count": 1,
+            },
+            {
+                "review_checkpoint": "SOURCE_TRANSCRIPT",
+                "srt_text": "1\n00:00:00,000 --> 00:00:01,000\nслово\n",
+                "transcript_text": text,
+                "whisper_document": {
+                    "result": {"language": "ru"},
+                    "transcription": [{"text": text}],
+                },
+                "word_intervals": [{}],
+                "omitted_zero_duration_tokens": [],
+            },
+        )
+        with self.assertRaisesRegex(RealStageContractError, "word 0 fields"):
+            validate_real_stage_document("transcript", document)
+
+    def test_topics_contract_rejects_missing_start_seconds(self) -> None:
+        topic = {
+            "end": "00:00:01,000",
+            "end_seconds": 1.0,
+            "evidence_end_id": 1,
+            "evidence_start_id": 1,
+            "number": 1,
+            "qa_attempt": "first",
+            "qa_status": "ok",
+            "semantic_status": "REVIEW_REQUIRED",
+            "start": "00:00:00,000",
+            "start_segment_id": 1,
+            "summary": "summary",
+            "title": "title",
+        }
+        row = {
+            "evidence_end_id": 1,
+            "evidence_start_id": 1,
+            "qa_attempt": "first",
+            "qa_status": "ok",
+            "semantic_status": "REVIEW_REQUIRED",
+            "start_id": 1,
+            "summary": "summary",
+            "title": "title",
+        }
+        document = self.stage_document(
+            "topics",
+            {
+                "model_digest": "a" * 64,
+                "model_weights_sha256": "b" * 64,
+                "topic_count": 1,
+            },
+            {
+                "topics_document": {
+                    "component": "seminartext",
+                    "component_entrypoint": "engine",
+                    "model": "model",
+                    "schema_version": "1.0",
+                    "topics": [topic],
+                    "windows": [{"boundaries": [], "rows": [row], "window": 1}],
+                }
+            },
+        )
+        with self.assertRaisesRegex(RealStageContractError, "topic 0 fields"):
+            validate_real_stage_document("topics", document)
+
+    def test_review_contract_rejects_empty_canonical_word(self) -> None:
+        text = "слово"
+        provenance = self.machine_provenance()
+        bundle = {
+            "alignment_runs": [{"id": "alignment"}],
+            "artifact_id": "bundle",
+            "artifact_type": "seminartext.canonical_evidence",
+            "benchmark_segments": [{"id": "segment"}],
+            "cues": [{"id": "cue"}],
+            "evidence_refs": [],
+            "project": {"id": "project", "lifecycle_status": "active", "title": "Project"},
+            "schema_version": "1.0.0",
+            "sources": [{
+                "content_sha256": "a" * 64,
+                "duration_seconds": 1.0,
+                "id": "source",
+                "kind": "video",
+                "lifecycle_status": "active",
+                "project_id": "project",
+                "sequence": 0,
+                "title": "Source",
+            }],
+            "topics": [],
+            "transcript_revisions": [{
+                "authority": "candidate",
+                "canonical_text": text,
+                "id": "revision",
+                "lifecycle_status": "active",
+                "parent_revision_id": None,
+                "revision_kind": "asr",
+                "revision_number": 1,
+                "source_id": "source",
+                "text_sha256": hashlib.sha256(text.encode()).hexdigest(),
+                "transcript_provenance": provenance,
+            }],
+            "words": [{}],
+        }
+        evidence = {
+            "claim": "claim",
+            "id": "evidence",
+            "locator": {"type": "time_interval", "start_seconds": 0.1, "end_seconds": 0.9},
+            "quote": text,
+            "source_id": "source",
+            "transcript_provenance": provenance,
+            "transcript_revision_id": "revision",
+            "word_end_id": "word",
+            "word_end_sequence": 0,
+            "word_start_id": "word",
+            "word_start_sequence": 0,
+        }
+        topic = {
+            "evidence_refs": ["evidence"],
+            "evidence_sha256": "b" * 64,
+            "generator": {"configuration_sha256": "c" * 64, "id": "generator", "version": "1"},
+            "id": "topic",
+            "lifecycle_status": "REVIEW_REQUIRED",
+            "locator": {"type": "time_interval", "start_seconds": 0.1, "end_seconds": 0.9},
+            "proposed_summary": "summary",
+            "proposed_title": "title",
+            "quote": text,
+            "review_history": [],
+            "semantic_origin": "machine_assisted",
+            "seminar_id": "seminar",
+            "sequence": 0,
+            "source_id": "source",
+            "topic_set_id": "set",
+            "topic_sha256": "d" * 64,
+            "transcript_provenance": provenance,
+            "transcript_revision_id": "revision",
+            "word_end_id": "word",
+            "word_end_sequence": 0,
+            "word_start_id": "word",
+            "word_start_sequence": 0,
+        }
+        document = self.stage_document(
+            "review",
+            {"human_decision_required": True, "technical_status": "REVIEW_REQUIRED", "unreviewed": 1},
+            {
+                "alignment_result": {"alignment_run_id": "alignment", "bundle": "evidence/canonical_bundle.json", "status": "review_required", "unaligned_words": []},
+                "canonical_bundle": bundle,
+                "review_package": {
+                    "artifact_id": "review",
+                    "artifact_type": "seminartext.topic_review_package",
+                    "canonical_evidence": {"artifact_id": "bundle", "sha256": "e" * 64},
+                    "draft_input": {"artifact_id": "draft", "sha256": "f" * 64},
+                    "evidence": [evidence],
+                    "project": {"id": "project", "title": "Project"},
+                    "review_policy": {"authoring_gate": "DOMAIN_AUTHORING", "automatic_acceptance": False, "machine_assisted_default": "REVIEW_REQUIRED", "review_gate": "DOMAIN_REVIEW"},
+                    "schema_version": "1.0.0",
+                    "seminar": {"id": "seminar", "title": "Seminar"},
+                    "topics": [topic],
+                },
+            },
+            parents=2,
+        )
+        with self.assertRaisesRegex(RealStageContractError, "canonical word 0 fields"):
+            validate_real_stage_document("review", document)
+
+    def test_knowledge_contract_binds_all_export_bytes(self) -> None:
+        content = "# knowledge\n"
+        content_hash = hashlib.sha256(content.encode()).hexdigest()
+        manifest = {
+            "artifact_type": "seminartext.managed_generated_export",
+            "canonical_evidence_artifact_id": "evidence",
+            "canonical_evidence_sha256": "a" * 64,
+            "canonical_knowledge_artifact_id": "knowledge",
+            "canonical_knowledge_sha256": "b" * 64,
+            "coverage": {"artifact_type": "seminartext.project_knowledge_coverage", "full_seminar_coverage": True, "project_id": "project", "schema_version": 1, "sources": [{}]},
+            "files": {"Topics/topic.md": content_hash},
+            "kind": "obsidian_derived_view",
+            "ownership_classes": ["MANAGED_GENERATED", "USER_OWNED"],
+            "resolver_states": {"source": "RESOLVER_UNAVAILABLE"},
+            "schema_version": 1,
+        }
+        manifest_text = json.dumps(manifest, sort_keys=True)
+        document = self.stage_document(
+            "knowledge",
+            {"lifecycle": "PROVISIONAL", "manifest_sha256": hashlib.sha256(manifest_text.encode()).hexdigest()},
+            {"export_files": {"Topics/topic.md": content}, "export_manifest": manifest, "export_manifest_text": manifest_text},
+            parents=3,
+        )
+        validate_real_stage_document("knowledge", document)
+        document["stage_data"]["export_files"]["Topics/topic.md"] = "tampered"
+        with self.assertRaisesRegex(RealStageContractError, "export bytes differ"):
+            validate_real_stage_document("knowledge", document)
+
+    def test_media_contract_rejects_arbitrary_nonempty_bytes(self) -> None:
+        with self.assertRaises(RealStageContractError):
+            validate_mp4_clip(b"not an mp4, but previously accepted")
+
+    def test_media_contract_accepts_complete_iso_bmff_box_inventory(self) -> None:
+        def box(kind: bytes, payload: bytes) -> bytes:
+            return (8 + len(payload)).to_bytes(4, "big") + kind + payload
+
+        validate_mp4_clip(
+            box(b"ftyp", b"isom\x00\x00\x02\x00")
+            + box(b"moov", b"metadata")
+            + box(b"mdat", b"sample")
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()

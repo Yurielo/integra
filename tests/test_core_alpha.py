@@ -487,6 +487,41 @@ class CoreAlphaTests(unittest.TestCase):
         with self.assertRaisesRegex(CoreAlphaError, "project lease conflict"):
             pipeline.run(self.source)
 
+    def test_worker_can_refresh_project_lease_during_each_stage(self):
+        delegate = ReplayStageWorker(copy.deepcopy(self.fixture))
+
+        class HeartbeatWorker:
+            def __init__(inner_self):
+                inner_self.callback = None
+                inner_self.refreshes = 0
+
+            def set_lease_heartbeat(inner_self, callback):
+                inner_self.callback = callback
+
+            def run(inner_self, stage, capability, component, inputs):
+                self.assertIsNotNone(inner_self.callback)
+                inner_self.callback()
+                inner_self.refreshes += 1
+                return delegate.run(stage, capability, component, inputs)
+
+        worker = HeartbeatWorker()
+        pipeline = CoreAlphaPipeline(
+            repository_root=ROOT,
+            store_root=self.store,
+            controller_identity=self.controller,
+            worker=worker,
+            writer_identity={
+                "component_id": "integra_control_plane",
+                "host_id": "test-host",
+                "process_id": 100,
+                "process_start_token": "test-process",
+            },
+            clock=lambda: datetime(2026, 9, 10, 17, 0, tzinfo=timezone.utc),
+        )
+        self.assertEqual(pipeline.run(self.source)["status"], "SUCCEEDED")
+        self.assertEqual(worker.refreshes, len(STAGE_ORDER))
+        self.assertIsNone(worker.callback)
+
 
 if __name__ == "__main__":
     unittest.main()

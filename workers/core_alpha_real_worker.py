@@ -22,7 +22,6 @@ from integra_core.core_alpha import (  # noqa: E402
     STAGE_CAPABILITIES,
     STAGE_COMPONENTS,
     STAGE_PARENTS,
-    load_component_identities,
     reject_symlink_components,
     stage_output_contract,
 )
@@ -32,6 +31,7 @@ from integra_core.protocol import (  # noqa: E402
     canonical_json,
     content_sha256,
     validate_artifact_reference,
+    validate_component_identity,
     validate_message,
 )
 from integra_core.real_media import aggregate_whisper_words, sha256_file  # noqa: E402
@@ -53,8 +53,12 @@ CONFIG_FIELDS = {
     "whisper_model_sha256",
     "topic_model",
     "topic_model_digest",
+    "topic_model_weights_sha256",
     "source_sha256",
     "source_suffix",
+    "component_identities",
+    "seminartext_tree_manifest_sha256",
+    "videotext_tree_manifest_sha256",
 }
 
 
@@ -84,6 +88,37 @@ def write_json(path: Path, value: Any) -> None:
         json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+
+
+def materialized_tree_sha256(root: Path) -> str:
+    records: list[dict[str, Any]] = []
+    for path in sorted(root.rglob("*")):
+        relative = path.relative_to(root).as_posix()
+        if path.is_symlink():
+            raise WorkerFailure(f"materialized source tree contains a symlink: {relative}")
+        if path.is_dir():
+            continue
+        if not path.is_file():
+            raise WorkerFailure(f"materialized source tree contains a special file: {relative}")
+        records.append(
+            {
+                "executable": bool(path.stat().st_mode & 0o111),
+                "path": relative,
+                "sha256": sha256_file(path),
+            }
+        )
+    if not records:
+        raise WorkerFailure("materialized source tree is empty")
+    return content_sha256(records)
+
+
+def verify_materialized_sources(config: dict[str, Any]) -> None:
+    for name in ("seminartext", "videotext"):
+        checkout = Path(config[f"{name}_checkout"]).resolve()
+        reject_symlink_components(checkout, label=f"{name} materialized checkout")
+        expected = config[f"{name}_tree_manifest_sha256"]
+        if materialized_tree_sha256(checkout) != expected:
+            raise WorkerFailure(f"{name} materialized source tree differs from its pin")
 
 
 def parse_marker(output: str, marker: str) -> dict[str, Any]:
@@ -229,6 +264,7 @@ def execute_transcript(config: dict[str, Any], inputs: list[dict[str, Any]], ses
         {
             "assurance": "MACHINE_UNVERIFIED",
             "language": "ru",
+            "model_sha256": config["whisper_model_sha256"],
             "text_sha256": hashlib.sha256(transcript_text.encode("utf-8")).hexdigest(),
             "word_count": len(words),
         },
@@ -283,7 +319,11 @@ def execute_topics(config: dict[str, Any], inputs: list[dict[str, Any]], session
     payload = stage_payload(
         "topics",
         inputs,
-        {"topic_count": len(topics), "model_digest": config["topic_model_digest"]},
+        {
+            "topic_count": len(topics),
+            "model_digest": config["topic_model_digest"],
+            "model_weights_sha256": config["topic_model_weights_sha256"],
+        },
         {"topics_document": document},
     )
     return payload, {
@@ -419,13 +459,27 @@ def execute_knowledge(config: dict[str, Any], inputs: list[dict[str, Any]], sess
     if result.get("status") != "EXPORTED":
         raise WorkerFailure("provisional knowledge view was not exported")
     manifest_path = destination / ".seminartext-export.json"
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest_text = manifest_path.read_text(encoding="utf-8")
+    manifest = json.loads(manifest_text)
+    export_files: dict[str, str] = {}
+    for relative, expected_hash in manifest.get("files", {}).items():
+        path = confined(destination / relative, destination, "knowledge export file")
+        if not path.is_file():
+            raise WorkerFailure(f"knowledge export file is missing: {relative}")
+        content = path.read_text(encoding="utf-8")
+        if hashlib.sha256(content.encode("utf-8")).hexdigest() != expected_hash:
+            raise WorkerFailure(f"knowledge export file hash differs: {relative}")
+        export_files[relative] = content
     words = transcript["stage_data"]["word_intervals"]
     return stage_payload(
         "knowledge",
         inputs,
         {"lifecycle": "PROVISIONAL", "manifest_sha256": sha256_file(manifest_path)},
-        {"export_manifest": manifest},
+        {
+            "export_files": export_files,
+            "export_manifest": manifest,
+            "export_manifest_text": manifest_text,
+        },
     ), {"type": "time_interval", "start_seconds": words[0]["start"], "end_seconds": words[-1]["end"]}
 
 
@@ -491,6 +545,7 @@ def main() -> int:
     config = json.loads(config_path.read_text(encoding="utf-8"))
     if not isinstance(config, dict) or set(config) != CONFIG_FIELDS:
         raise WorkerFailure("worker config fields differ from R6")
+    verify_materialized_sources(config)
     artifact_store = Path(config["artifact_store"]).resolve()
     session = Path(config["session_store"]).resolve()
     for path, label in ((artifact_store, "artifact store"), (session, "session store")):
@@ -507,13 +562,13 @@ def main() -> int:
     if handshake["payload"]["requested_capabilities"] != [capability]:
         raise WorkerFailure("requested capability differs from stage")
     expected_parents = STAGE_PARENTS[stage]
-    components = load_component_identities(ROOT)
+    components = config["component_identities"]
+    if not isinstance(components, dict) or set(components) != {"seminartext", "videotext"}:
+        raise WorkerFailure("worker component identity inventory is invalid")
+    for identity in components.values():
+        validate_component_identity(identity)
     component = components[STAGE_COMPONENTS[stage]]
     worker_identity = dict(component)
-    if stage == "transcript":
-        worker_identity["models"] = [{"id": Path(config["whisper_model"]).name, "identity_sha256": config["whisper_model_sha256"]}]
-    elif stage == "topics":
-        worker_identity["models"] = [{"id": config["topic_model"], "identity_sha256": config["topic_model_digest"]}]
     kind, schema_id = stage_output_contract(stage, "PINNED_REAL_MEDIA")
     expected_input_schemas = [
         "local_video_v1"
@@ -556,6 +611,7 @@ def main() -> int:
     for reference in inputs:
         read_input(reference, artifact_store)
     payload, locator = EXECUTORS[stage](config, inputs, session)
+    verify_materialized_sources(config)
     digest = hashlib.sha256(payload).hexdigest()
     suffix = "bin" if stage == "media_clip" else "json"
     job_key = job["payload"]["job_id"].rsplit(":", 1)[-1]
@@ -581,7 +637,7 @@ def main() -> int:
         "size_bytes": len(payload),
         "storage_scope": "INTEGRA_STORE",
         "relative_path": relative,
-        "origin": component,
+        "origin": worker_identity,
         "provenance": provenance,
     }
     validate_artifact_reference(reference)

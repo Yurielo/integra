@@ -126,13 +126,15 @@
     },
     "control_plane": {
       "type": "object",
-      "required": ["pipeline", "controller_commit_sha", "controller_tree_sha", "manifest_sha256", "project_lease_enforced", "prefix_cancellation_checkpoint_verified", "prefix_resume_revalidation_verified", "r3_contract_boundary", "validated_jsonl_messages", "worker_processes", "worker_resume_support", "stage_timeout_enforced"],
+      "required": ["pipeline", "controller_commit_sha", "controller_tree_sha", "manifest_sha256", "project_lease_enforced", "lease_heartbeats_during_workers", "media_clip_functional_probe", "prefix_cancellation_checkpoint_verified", "prefix_resume_revalidation_verified", "r3_contract_boundary", "validated_jsonl_messages", "worker_processes", "worker_resume_support", "stage_timeout_enforced"],
       "properties": {
         "pipeline": {"const": "INTEGRA_CORE_ALPHA_V1"},
         "controller_commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
         "controller_tree_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
         "manifest_sha256": {"$ref": "#/$defs/sha256"},
         "project_lease_enforced": {"const": true},
+        "lease_heartbeats_during_workers": {"type": "integer", "minimum": 1},
+        "media_clip_functional_probe": {"const": true},
         "prefix_cancellation_checkpoint_verified": {"const": true},
         "prefix_resume_revalidation_verified": {"const": true},
         "r3_contract_boundary": {"const": true},

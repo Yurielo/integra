@@ -9,6 +9,7 @@ import select
 import signal
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -139,17 +140,24 @@ class JsonlProcessStageWorker:
         config_path: Path,
         artifact_store: Path,
         controller: dict[str, Any],
-        models: dict[str, dict[str, str]],
+        config_sha256: str,
         timeout_seconds: int = 900,
+        heartbeat_interval_seconds: int = 60,
     ) -> None:
         self.worker_script = worker_script.resolve()
         self.config_path = config_path.resolve()
         self.artifact_store = artifact_store.resolve()
         self.controller = controller
-        self.models = models
+        self.config_sha256 = config_sha256
         self.timeout_seconds = timeout_seconds
+        self.heartbeat_interval_seconds = heartbeat_interval_seconds
         self.calls: list[str] = []
         self.messages: list[dict[str, Any]] = []
+        self.lease_heartbeats = 0
+        self._lease_heartbeat: Any = None
+
+    def set_lease_heartbeat(self, callback: Any) -> None:
+        self._lease_heartbeat = callback
 
     def run(
         self,
@@ -158,6 +166,8 @@ class JsonlProcessStageWorker:
         component: dict[str, Any],
         inputs: tuple[dict[str, Any], ...],
     ) -> StageOutput:
+        if sha256_file(self.config_path) != self.config_sha256:
+            raise RealMediaError(f"{stage}: worker configuration changed before execution")
         correlation = derive_imported_id(
             "session", "integra", "r6-real", content_sha256({"stage": stage})
         )
@@ -249,14 +259,29 @@ class JsonlProcessStageWorker:
         process.stdin.close()
         process.stdin = None
         self.messages.append(job)
-        try:
-            stdout, stderr = process.communicate(timeout=self.timeout_seconds)
-        except subprocess.TimeoutExpired as error:
-            os.killpg(process.pid, signal.SIGKILL)
-            process.communicate()
-            raise RealMediaError(
-                f"{stage}: R3 worker exceeded its enforced timeout; outcome is unknown and was not retried"
-            ) from error
+        deadline = time.monotonic() + self.timeout_seconds
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                os.killpg(process.pid, signal.SIGKILL)
+                process.communicate()
+                raise RealMediaError(
+                    f"{stage}: R3 worker exceeded its enforced timeout; outcome is unknown and was not retried"
+                )
+            try:
+                stdout, stderr = process.communicate(
+                    timeout=min(self.heartbeat_interval_seconds, remaining)
+                )
+                break
+            except subprocess.TimeoutExpired:
+                if self._lease_heartbeat is None:
+                    os.killpg(process.pid, signal.SIGKILL)
+                    process.communicate()
+                    raise RealMediaError(
+                        f"{stage}: lease heartbeat is unavailable during a running worker"
+                    )
+                self._lease_heartbeat()
+                self.lease_heartbeats += 1
         if process.returncode != 0:
             raise RealMediaError(
                 f"{stage}: R3 worker failed ({process.returncode}): "
@@ -277,11 +302,6 @@ class JsonlProcessStageWorker:
         if [response["type"], progress["type"], result["type"]] != ["HANDSHAKE_RESPONSE", "PROGRESS", "RESULT"]:
             raise RealMediaError(f"{stage}: R3 worker lifecycle is incomplete")
         expected_worker = dict(component)
-        model = self.models.get(stage)
-        if model:
-            expected_worker["models"] = [
-                {"id": model["name"], "identity_sha256": model["identity_sha256"]}
-            ]
         if response["payload"]["worker"] != expected_worker:
             raise RealMediaError(f"{stage}: R3 worker identity differs from the pin")
         expected_kind, expected_schema = stage_output_contract(stage, "PINNED_REAL_MEDIA")
@@ -342,6 +362,8 @@ class JsonlProcessStageWorker:
         except OSError:
             pass
         self.calls.append(stage)
+        if sha256_file(self.config_path) != self.config_sha256:
+            raise RealMediaError(f"{stage}: worker configuration changed during execution")
         return StageOutput(
             payload=output,
             kind=reference["kind"],
@@ -461,6 +483,8 @@ def validate_actual_evidence(document: dict[str, Any]) -> list[str]:
     control_keys = {
         "pipeline", "controller_commit_sha", "controller_tree_sha",
         "manifest_sha256", "project_lease_enforced",
+        "lease_heartbeats_during_workers",
+        "media_clip_functional_probe",
         "prefix_cancellation_checkpoint_verified",
         "prefix_resume_revalidation_verified", "r3_contract_boundary",
         "validated_jsonl_messages", "worker_processes",
@@ -476,6 +500,7 @@ def validate_actual_evidence(document: dict[str, Any]) -> list[str]:
         or control.get("validated_jsonl_messages") != 25
         or control.get("worker_processes") != 5
         or control.get("worker_resume_support") is not False
+        or not _positive_int(control.get("lease_heartbeats_during_workers"))
         or any(
             control.get(key) is not True
             for key in (
@@ -484,6 +509,7 @@ def validate_actual_evidence(document: dict[str, Any]) -> list[str]:
                 "prefix_resume_revalidation_verified",
                 "r3_contract_boundary",
                 "stage_timeout_enforced",
+                "media_clip_functional_probe",
             )
         )
     ):

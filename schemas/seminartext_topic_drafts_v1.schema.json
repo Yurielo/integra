@@ -9,10 +9,11 @@
     "input_content_sha256": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[0-9a-f]{64}$"}},
     "result": {
       "type": "object",
-      "required": ["topic_count", "model_digest"],
+      "required": ["topic_count", "model_digest", "model_weights_sha256"],
       "properties": {
         "topic_count": {"type": "integer", "minimum": 1},
-        "model_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        "model_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "model_weights_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
       },
       "additionalProperties": false
     },
@@ -31,11 +32,58 @@
             "component": {"const": "seminartext"},
             "component_entrypoint": {"type": "string", "minLength": 1},
             "model": {"type": "string", "minLength": 1},
-            "topics": {"type": "array", "minItems": 1, "items": {"type": "object"}},
-            "windows": {"type": "array", "minItems": 1, "items": {"type": "object"}}
+            "topics": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/topic"}},
+            "windows": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/window"}}
           },
           "additionalProperties": false
         }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "topic": {
+      "type": "object",
+      "required": ["end", "end_seconds", "evidence_end_id", "evidence_start_id", "number", "qa_attempt", "qa_status", "semantic_status", "start", "start_seconds", "start_segment_id", "summary", "title"],
+      "properties": {
+        "end": {"type": "string", "minLength": 1},
+        "end_seconds": {"type": "number", "exclusiveMinimum": 0},
+        "evidence_end_id": {"type": "integer", "minimum": 1},
+        "evidence_start_id": {"type": "integer", "minimum": 1},
+        "number": {"type": "integer", "minimum": 1},
+        "qa_attempt": {"type": "string", "minLength": 1},
+        "qa_status": {"type": "string", "minLength": 1},
+        "semantic_status": {"const": "REVIEW_REQUIRED"},
+        "start": {"type": "string", "minLength": 1},
+        "start_seconds": {"type": "number", "minimum": 0},
+        "start_segment_id": {"type": "integer", "minimum": 1},
+        "summary": {"type": "string", "minLength": 1},
+        "title": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "window": {
+      "type": "object",
+      "required": ["boundaries", "rows", "window"],
+      "properties": {
+        "boundaries": {"type": "array", "items": {"type": "integer", "minimum": 1}},
+        "rows": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/window_row"}},
+        "window": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": false
+    },
+    "window_row": {
+      "type": "object",
+      "required": ["evidence_end_id", "evidence_start_id", "qa_attempt", "qa_status", "semantic_status", "start_id", "summary", "title"],
+      "properties": {
+        "evidence_end_id": {"type": "integer", "minimum": 1},
+        "evidence_start_id": {"type": "integer", "minimum": 1},
+        "qa_attempt": {"type": "string", "minLength": 1},
+        "qa_status": {"type": "string", "minLength": 1},
+        "semantic_status": {"const": "REVIEW_REQUIRED"},
+        "start_id": {"type": "integer", "minimum": 1},
+        "summary": {"type": "string", "minLength": 1},
+        "title": {"type": "string", "minLength": 1}
       },
       "additionalProperties": false
     }

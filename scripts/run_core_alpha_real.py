@@ -23,6 +23,7 @@ sys.path.insert(0, str(ROOT))
 from integra_core.core_alpha import (  # noqa: E402
     CoreAlphaPipeline,
     ReplayStageWorker,
+    load_component_identities,
     reject_symlink_components,
 )
 from integra_core.protocol import canonical_json  # noqa: E402
@@ -54,6 +55,7 @@ PINNED_TOPIC_MODEL = {
 }
 IMPLEMENTATION_PATHS = (
     "integra_core/core_alpha.py",
+    "integra_core/real_contracts.py",
     "integra_core/real_media.py",
     "scripts/run_core_alpha_real.py",
     "workers/core_alpha_real_worker.py",
@@ -113,9 +115,36 @@ def checkout_snapshot(checkout: Path) -> dict[str, tuple[int, str]]:
     return snapshot
 
 
-def materialize_pinned_tree(checkout: Path, destination: Path) -> None:
+def materialized_tree_records(root: Path) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    for path in sorted(root.rglob("*")):
+        relative = path.relative_to(root).as_posix()
+        if path.is_symlink():
+            raise RealMediaError(f"materialized source contains a symlink: {relative}")
+        if path.is_dir():
+            continue
+        if not path.is_file():
+            raise RealMediaError(f"materialized source contains a special file: {relative}")
+        records.append(
+            {
+                "executable": bool(path.stat().st_mode & 0o111),
+                "path": relative,
+                "sha256": sha256_file(path),
+            }
+        )
+    if not records:
+        raise RealMediaError("materialized source tree is empty")
+    return records
+
+
+def git_blob_sha1(payload: bytes) -> str:
+    return hashlib.sha1(f"blob {len(payload)}\0".encode("ascii") + payload).hexdigest()
+
+
+def materialize_pinned_tree(name: str, checkout: Path, destination: Path) -> str:
+    expected = PINNED[name]
     archive = subprocess.run(
-        ["git", "-C", str(checkout), "archive", "--format=tar", "HEAD"],
+        ["git", "-C", str(checkout), "archive", "--format=tar", expected["sha"]],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
@@ -137,6 +166,45 @@ def materialize_pinned_tree(checkout: Path, destination: Path) -> None:
                 ):
                     raise RealMediaError("pinned source archive contains an unsafe entry")
             bundle.extractall(destination, filter="data")
+    tree = subprocess.run(
+        ["git", "-C", str(checkout), "ls-tree", "-r", "-z", expected["sha"]],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    if tree.returncode != 0:
+        raise RealMediaError("cannot inspect pinned Git tree")
+    expected_entries: dict[str, tuple[str, str]] = {}
+    for raw in tree.stdout.split(b"\0"):
+        if not raw:
+            continue
+        metadata, raw_path = raw.split(b"\t", 1)
+        mode, kind, object_id = metadata.decode("ascii").split()
+        path = raw_path.decode("utf-8")
+        if kind != "blob" or mode not in {"100644", "100755"}:
+            raise RealMediaError(f"unsupported pinned tree entry: {path}")
+        expected_entries[path] = (object_id, mode)
+    records = materialized_tree_records(destination)
+    if {record["path"] for record in records} != set(expected_entries):
+        raise RealMediaError("materialized file inventory differs from the pinned Git tree")
+    for record in records:
+        path = destination / record["path"]
+        object_id, mode = expected_entries[record["path"]]
+        if git_blob_sha1(path.read_bytes()) != object_id:
+            raise RealMediaError(f"materialized Git blob differs: {record['path']}")
+        if record["executable"] != (mode == "100755"):
+            raise RealMediaError(f"materialized executable mode differs: {record['path']}")
+        path.chmod(0o555 if record["executable"] else 0o444)
+    for directory in sorted(
+        (path for path in destination.rglob("*") if path.is_dir()),
+        key=lambda path: len(path.parts),
+        reverse=True,
+    ):
+        directory.chmod(0o555)
+    destination.chmod(0o555)
+    readonly_records = materialized_tree_records(destination)
+    if readonly_records != records:
+        raise RealMediaError("read-only materialized tree differs after protection")
+    return hashlib.sha256(canonical_json(records)).hexdigest()
 
 
 def command_version(command: list[str]) -> str:
@@ -222,6 +290,40 @@ def read_manifest_artifact(manifest: dict[str, Any], store: Path, stage: str) ->
     return payload
 
 
+def verify_media_clip_artifact(manifest: dict[str, Any], store: Path) -> None:
+    reference = manifest["artifacts"]["media_clip"]
+    path = (store / reference["relative_path"]).resolve()
+    try:
+        path.relative_to(store.resolve())
+    except ValueError as error:
+        raise RealMediaError("media clip escaped the control store") from error
+    probe = json.loads(
+        run(
+            [
+                "/opt/homebrew/bin/ffprobe",
+                "-v",
+                "error",
+                "-show_entries",
+                "format=duration:stream=codec_type",
+                "-of",
+                "json",
+                str(path),
+            ]
+        )
+    )
+    if not any(
+        isinstance(stream, dict) and stream.get("codec_type") == "video"
+        for stream in probe.get("streams", [])
+    ):
+        raise RealMediaError("media clip has no decodable video stream")
+    try:
+        duration = float(probe["format"]["duration"])
+    except (KeyError, TypeError, ValueError) as error:
+        raise RealMediaError("media clip has no valid decoded duration") from error
+    if duration <= 0:
+        raise RealMediaError("media clip decoded duration must be positive")
+
+
 def run_control_probe(source: Path, store: Path, controller: dict[str, Any]) -> None:
     probe_store = store / "control-probe"
     pipeline = CoreAlphaPipeline(
@@ -290,12 +392,15 @@ def main() -> int:
     identities = {name: verify_checkout(name, path) for name, path in originals.items()}
     snapshots = {name: checkout_snapshot(path) for name, path in originals.items()}
 
-    copies_root = store / "pinned-components"
+    scratch = tempfile.TemporaryDirectory(prefix="integra-r6-worker-")
+    scratch_root = Path(scratch.name)
+    copies_root = scratch_root / "pinned-components"
     copies_root.mkdir()
     copies: dict[str, Path] = {}
+    copy_manifests: dict[str, str] = {}
     for name, checkout in originals.items():
         copies[name] = copies_root / name
-        materialize_pinned_tree(checkout, copies[name])
+        copy_manifests[name] = materialize_pinned_tree(name, checkout, copies[name])
 
     whisper_hash_before = sha256_file(whisper_model)
     if whisper_hash_before != "64d182b440b98d5203c4f9bd541544d84c605196c4f7b845dfa11fb23594d1e2":
@@ -317,10 +422,32 @@ def main() -> int:
             "architecture": platform.machine(),
         },
     }
+    component_models = {
+        "seminartext": [
+            {
+                "id": f"{args.topic_model}:manifest",
+                "identity_sha256": topic_model["digest"],
+            },
+            {
+                "id": f"{args.topic_model}:weights",
+                "identity_sha256": topic_model["weights_sha256"],
+            },
+        ],
+        "videotext": [
+            {
+                "id": whisper_model.name,
+                "identity_sha256": whisper_hash_before,
+            }
+        ],
+    }
+    runtime_components = {
+        name: {**identity, "models": component_models[name]}
+        for name, identity in load_component_identities(ROOT).items()
+    }
     control_store = store / "control-plane"
-    session_store = store / "worker-session"
+    session_store = scratch_root / "worker-session"
     session_store.mkdir()
-    config_path = store / "real-worker-config.json"
+    config_path = scratch_root / "real-worker-config.json"
     write_json(
         config_path,
         {
@@ -332,25 +459,23 @@ def main() -> int:
             "whisper_model_sha256": whisper_hash_before,
             "topic_model": args.topic_model,
             "topic_model_digest": topic_model["digest"],
+            "topic_model_weights_sha256": topic_model["weights_sha256"],
             "source_sha256": source_hash,
             "source_suffix": source.suffix.lower(),
+            "component_identities": runtime_components,
+            "seminartext_tree_manifest_sha256": copy_manifests["seminartext"],
+            "videotext_tree_manifest_sha256": copy_manifests["videotext"],
         },
     )
+    config_path.chmod(0o444)
+    config_hash = sha256_file(config_path)
     worker = JsonlProcessStageWorker(
         worker_script=ROOT / "workers/core_alpha_real_worker.py",
         config_path=config_path,
         artifact_store=control_store,
         controller=controller,
-        models={
-            "transcript": {
-                "name": whisper_model.name,
-                "identity_sha256": whisper_hash_before,
-            },
-            "topics": {
-                "name": args.topic_model,
-                "identity_sha256": topic_model["digest"],
-            },
-        },
+        config_sha256=config_hash,
+        heartbeat_interval_seconds=10,
     )
     manifest = CoreAlphaPipeline(
         repository_root=ROOT,
@@ -358,6 +483,7 @@ def main() -> int:
         controller_identity=controller,
         worker=worker,
         execution_mode="PINNED_REAL_MEDIA",
+        component_models=component_models,
     ).run(source)
     if (
         manifest.get("status") != "SUCCEEDED"
@@ -365,7 +491,11 @@ def main() -> int:
         or len(worker.messages) != 25
     ):
         raise RealMediaError("governed R3 real-media path did not complete")
+    verify_media_clip_artifact(manifest, control_store)
     run_control_probe(source, store, controller)
+    scratch.cleanup()
+    if scratch_root.exists():
+        raise RealMediaError("disposable worker scratch was not removed")
 
     if (
         sha256_file(whisper_model) != whisper_hash_before
@@ -474,6 +604,8 @@ def main() -> int:
             "controller_tree_sha": controller["tree_sha"],
             "manifest_sha256": hashlib.sha256(canonical_json(manifest)).hexdigest(),
             "project_lease_enforced": manifest["project_lease_enforced"],
+            "lease_heartbeats_during_workers": worker.lease_heartbeats,
+            "media_clip_functional_probe": True,
             "prefix_cancellation_checkpoint_verified": True,
             "prefix_resume_revalidation_verified": True,
             "r3_contract_boundary": True,

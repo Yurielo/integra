@@ -18,6 +18,11 @@ from typing import Any, Protocol
 from .identity import derive_imported_id
 from .project_lease import LeaseConflict, LeaseStore
 from .protocol import canonical_json, validate_artifact_reference, validate_component_identity
+from .real_contracts import (
+    RealStageContractError,
+    validate_mp4_clip,
+    validate_real_stage_document,
+)
 
 
 STAGE_ORDER = ("transcript", "topics", "review", "knowledge", "media_clip")
@@ -243,8 +248,22 @@ def validate_core_alpha_manifest(manifest: dict[str, Any]) -> None:
         if identity["component_id"] != component_id:
             raise CoreAlphaError("Core Alpha component key differs from identity")
     for component_id, expected_identity in EXPECTED_PINNED_COMPONENTS.items():
-        if components[component_id] != expected_identity:
+        actual_identity = components[component_id]
+        base_identity = {
+            key: value for key, value in actual_identity.items() if key != "models"
+        }
+        if base_identity != expected_identity:
             raise CoreAlphaError(f"Core Alpha pinned component differs: {component_id}")
+        models = actual_identity.get("models")
+        if manifest["execution_mode"] == "PINNED_REAL_MEDIA":
+            if not isinstance(models, list) or not models:
+                raise CoreAlphaError(
+                    f"Core Alpha actual component lacks model provenance: {component_id}"
+                )
+        elif models is not None:
+            raise CoreAlphaError(
+                f"Core Alpha replay component unexpectedly binds models: {component_id}"
+            )
     selections = manifest.get("r5_selections")
     if not isinstance(selections, dict) or set(selections) != set(EXPECTED_SELECTIONS):
         raise CoreAlphaError("Core Alpha R5 selections are invalid")
@@ -528,6 +547,7 @@ class CoreAlphaPipeline:
         writer_identity: dict[str, Any] | None = None,
         clock: Callable[[], datetime] | None = None,
         execution_mode: str = "CONTRACT_REPLAY",
+        component_models: dict[str, list[dict[str, str]]] | None = None,
     ) -> None:
         validate_component_identity(controller_identity)
         self.repository_root = repository_root.resolve()
@@ -539,6 +559,19 @@ class CoreAlphaPipeline:
             raise CoreAlphaError("Core Alpha store must be outside the repository")
         self.controller = controller_identity
         self.components = load_component_identities(self.repository_root)
+        if execution_mode == "PINNED_REAL_MEDIA":
+            if not isinstance(component_models, dict) or set(component_models) != set(self.components):
+                raise CoreAlphaError("real-media execution requires exact component model pins")
+            augmented: dict[str, dict[str, Any]] = {}
+            for component_id, identity in self.components.items():
+                models = component_models[component_id]
+                if not isinstance(models, list) or not models:
+                    raise CoreAlphaError(f"real-media model pin is missing: {component_id}")
+                augmented[component_id] = {**identity, "models": models}
+                validate_component_identity(augmented[component_id])
+            self.components = augmented
+        elif component_models is not None:
+            raise CoreAlphaError("contract replay must not add runtime model pins")
         self.manifest_components = {
             "integra_control_plane": self.controller,
             **self.components,
@@ -663,9 +696,19 @@ class CoreAlphaPipeline:
             parents = tuple(artifacts[name] for name in STAGE_PARENTS[stage])
             component = self.components[STAGE_COMPONENTS[stage]]
             self._refresh_lease(project_id, lease)
-            output = self.worker.run(stage, STAGE_CAPABILITIES[stage], component, parents)
+            heartbeat_setter = getattr(self.worker, "set_lease_heartbeat", None)
+            if callable(heartbeat_setter):
+                heartbeat_setter(lambda: self._refresh_lease(project_id, lease))
+            try:
+                output = self.worker.run(
+                    stage, STAGE_CAPABILITIES[stage], component, parents
+                )
+            finally:
+                if callable(heartbeat_setter):
+                    heartbeat_setter(None)
             self._refresh_lease(project_id, lease)
             self._validate_stage_output(stage, output, parents, self.execution_mode)
+            self._refresh_lease(project_id, lease)
             operation_id = derive_imported_id(
                 "operation",
                 component["component_id"],
@@ -894,6 +937,11 @@ class CoreAlphaPipeline:
         else:
             _validate_time_interval_locator(stage, output.source_locator)
         if stage == "media_clip":
+            if execution_mode == "PINNED_REAL_MEDIA":
+                try:
+                    validate_mp4_clip(output.payload)
+                except RealStageContractError as error:
+                    raise CoreAlphaError(f"media_clip: {error}") from error
             return
         try:
             document = json.loads(output.payload)
@@ -972,131 +1020,16 @@ class CoreAlphaPipeline:
         output: StageOutput,
         parents: tuple[dict[str, Any], ...],
     ) -> None:
-        expected_fields = {
-            "input_artifact_ids",
-            "input_content_sha256",
-            "result",
-            "schema_version",
-            "semantic_status",
-            "stage",
-            "stage_data",
-        }
-        if not isinstance(document, dict) or set(document) != expected_fields:
-            raise CoreAlphaError(f"{stage}: real-media payload fields differ from R6")
-        if document["schema_version"] != "1.0" or document["stage"] != stage:
-            raise CoreAlphaError(f"{stage}: real-media payload identity differs from R6")
+        try:
+            validate_real_stage_document(stage, document)
+        except RealStageContractError as error:
+            raise CoreAlphaError(f"{stage}: {error}") from error
         if document["semantic_status"] != output.semantic_status:
             raise CoreAlphaError(f"{stage}: real-media semantic status differs")
         if document["input_artifact_ids"] != [item["artifact_id"] for item in parents]:
             raise CoreAlphaError(f"{stage}: real-media input identity differs")
         if document["input_content_sha256"] != [item["content_sha256"] for item in parents]:
             raise CoreAlphaError(f"{stage}: real-media input hashes differ")
-        result = document["result"]
-        stage_data = document["stage_data"]
-        if not isinstance(result, dict):
-            raise CoreAlphaError(f"{stage}: real-media result must be an object")
-        if not isinstance(stage_data, dict) or not stage_data:
-            raise CoreAlphaError(f"{stage}: real-media stage data must be a non-empty object")
-        required = {
-            "transcript": {"assurance", "language", "text_sha256", "word_count"},
-            "topics": {"topic_count", "model_digest"},
-            "review": {"unreviewed", "human_decision_required", "technical_status"},
-            "knowledge": {"lifecycle", "manifest_sha256"},
-        }[stage]
-        if set(result) != required:
-            raise CoreAlphaError(f"{stage}: real-media result fields differ from R6")
-        if stage == "transcript" and (
-            result.get("assurance") != "MACHINE_UNVERIFIED"
-            or result.get("language") != "ru"
-            or not isinstance(result.get("word_count"), int)
-            or result["word_count"] < 1
-            or not _is_sha256(result.get("text_sha256"))
-        ):
-            raise CoreAlphaError("transcript: real-media assurance/result is invalid")
-        if stage == "transcript" and set(stage_data) != {
-            "review_checkpoint", "srt_text", "transcript_text", "whisper_document",
-            "word_intervals", "omitted_zero_duration_tokens",
-        }:
-            raise CoreAlphaError("transcript: real-media stage data fields are invalid")
-        if stage == "transcript":
-            words = stage_data.get("word_intervals")
-            omitted = stage_data.get("omitted_zero_duration_tokens")
-            text = stage_data.get("transcript_text")
-            if (
-                stage_data.get("review_checkpoint") != "SOURCE_TRANSCRIPT"
-                or not isinstance(stage_data.get("srt_text"), str)
-                or not stage_data["srt_text"]
-                or not isinstance(text, str)
-                or not text
-                or sha256_bytes(text.encode("utf-8")) != result["text_sha256"]
-                or not isinstance(stage_data.get("whisper_document"), dict)
-                or not isinstance(words, list)
-                or len(words) != result["word_count"]
-                or not words
-                or not isinstance(omitted, list)
-            ):
-                raise CoreAlphaError("transcript: real-media stage data is invalid")
-        if stage == "topics" and (
-            not isinstance(result.get("topic_count"), int)
-            or result["topic_count"] < 1
-            or not _is_sha256(result.get("model_digest"))
-        ):
-            raise CoreAlphaError("topics: real-media model/result is invalid")
-        if stage == "topics" and set(stage_data) != {"topics_document"}:
-            raise CoreAlphaError("topics: real-media stage data fields are invalid")
-        if stage == "topics":
-            topic_document = stage_data.get("topics_document")
-            topics = topic_document.get("topics") if isinstance(topic_document, dict) else None
-            if (
-                not isinstance(topics, list)
-                or len(topics) != result["topic_count"]
-                or not topics
-                or any(
-                    not isinstance(topic, dict)
-                    or topic.get("semantic_status") != "REVIEW_REQUIRED"
-                    for topic in topics
-                )
-            ):
-                raise CoreAlphaError("topics: real-media stage data is invalid")
-        if stage == "review" and (
-            result.get("technical_status") != "REVIEW_REQUIRED"
-            or result.get("human_decision_required") is not True
-            or not isinstance(result.get("unreviewed"), int)
-            or result["unreviewed"] < 1
-        ):
-            raise CoreAlphaError("review: real-media result is invalid")
-        if stage == "review" and set(stage_data) != {
-            "alignment_result", "canonical_bundle", "review_package",
-        }:
-            raise CoreAlphaError("review: real-media stage data fields are invalid")
-        if stage == "review":
-            bundle = stage_data.get("canonical_bundle")
-            package = stage_data.get("review_package")
-            if (
-                not isinstance(stage_data.get("alignment_result"), dict)
-                or not isinstance(bundle, dict)
-                or not isinstance(bundle.get("words"), list)
-                or not bundle["words"]
-                or not isinstance(package, dict)
-                or not isinstance(package.get("topics"), list)
-                or len(package["topics"]) != result["unreviewed"]
-            ):
-                raise CoreAlphaError("review: real-media stage data is invalid")
-        if stage == "knowledge" and (
-            result.get("lifecycle") != "PROVISIONAL"
-            or not _is_sha256(result.get("manifest_sha256"))
-        ):
-            raise CoreAlphaError("knowledge: real-media result is invalid")
-        if stage == "knowledge" and set(stage_data) != {"export_manifest"}:
-            raise CoreAlphaError("knowledge: real-media stage data fields are invalid")
-        if stage == "knowledge":
-            export_manifest = stage_data.get("export_manifest")
-            if (
-                not isinstance(export_manifest, dict)
-                or not isinstance(export_manifest.get("files"), dict)
-                or not export_manifest["files"]
-            ):
-                raise CoreAlphaError("knowledge: real-media stage data is invalid")
         if stage in SEMANTIC_STAGES:
             CoreAlphaPipeline._reject_semantic_promotion(stage, document)
 
