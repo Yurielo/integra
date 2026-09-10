@@ -1,0 +1,28 @@
+{
+  "scenario": "acknowledged cancellation",
+  "expected": "PASS",
+  "messages": [
+    {
+      "protocol_version": "1.0",
+      "message_id": "urn:integra:message:20000000-0000-0000-0000-000000000001",
+      "correlation_id": "urn:integra:session:20000000-0000-0000-0000-000000000000",
+      "sent_at": "2026-09-10T14:10:00Z",
+      "type": "CANCEL_REQUEST",
+      "payload": {
+        "job_id": "urn:integra:job:20000000-0000-0000-0000-000000000010",
+        "reason": "user requested cancellation"
+      }
+    },
+    {
+      "protocol_version": "1.0",
+      "message_id": "urn:integra:message:20000000-0000-0000-0000-000000000002",
+      "correlation_id": "urn:integra:session:20000000-0000-0000-0000-000000000000",
+      "sent_at": "2026-09-10T14:10:01Z",
+      "type": "CANCEL_ACK",
+      "payload": {
+        "job_id": "urn:integra:job:20000000-0000-0000-0000-000000000010",
+        "status": "CANCELLED"
+      }
+    }
+  ]
+}

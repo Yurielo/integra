@@ -1,0 +1,74 @@
+{
+  "schema_version": "1.0",
+  "protocol_version": "1.0",
+  "transport": "LOCAL_STDIO_JSONL",
+  "framing": "ONE_UTF8_JSON_OBJECT_PER_LINE",
+  "schemas": {
+    "message": "schemas/worker_protocol_v1.schema.json",
+    "artifact_reference": "schemas/artifact_reference_v1.schema.json",
+    "component_identity": "schemas/component_identity_v1.schema.json"
+  },
+  "compatibility": {
+    "negotiation": "HIGHEST_EXACT_COMMON_PROTOCOL_VERSION",
+    "schema_policy": "EXACT_SCHEMA_VERSION",
+    "unknown_protocol": "FAIL_CLOSED",
+    "unknown_schema": "FAIL_CLOSED",
+    "backward_compatible_protocol_versions": []
+  },
+  "artifact_policy": {
+    "content_identity": "SHA256_CANONICAL_BYTES",
+    "paths": "NORMALIZED_RELATIVE_ONLY",
+    "storage_scopes": ["INTEGRA_STORE", "SOURCE_READ_ONLY"],
+    "provenance_required": true,
+    "atomic_promotion_required_for_writes": true
+  },
+  "job_policy": {
+    "idempotency": "SAME_KEY_SAME_CANONICAL_REQUEST_REPLAY_OTHERWISE_HARD_CONFLICT",
+    "timeouts": "POSITIVE_MILLISECONDS_REQUIRED",
+    "progress": "MONOTONIC_SEQUENCE_AND_FRACTION",
+    "cancellation": "ACKNOWLEDGED_TERMINAL_STATE",
+    "resume": "OPAQUE_TOKEN_BOUND_TO_JOB_CAPABILITY_WORKER_COMMIT_AND_INPUT_HASHES",
+    "unknown_outcome_retry": "DENIED",
+    "mutable_write": "VALID_PROJECT_LEASE_AND_ARTIFACT_PRECONDITION_REQUIRED"
+  },
+  "component_baseline_manifest": "state/component_baselines_v1.json",
+  "worker_identity_policy": {
+    "accepted_source": "PINNED_COMPONENT_BASELINE",
+    "required_fields": [
+      "component_id",
+      "repository",
+      "commit_sha",
+      "tree_sha",
+      "version",
+      "contracts",
+      "runtime"
+    ],
+    "model_identity": "SHA256_REQUIRED_WHEN_MODEL_IS_USED"
+  },
+  "message_types": [
+    "HANDSHAKE_REQUEST",
+    "HANDSHAKE_RESPONSE",
+    "JOB_REQUEST",
+    "PROGRESS",
+    "RESULT",
+    "ERROR",
+    "CANCEL_REQUEST",
+    "CANCEL_ACK"
+  ],
+  "error_classifications": [
+    "RETRYABLE",
+    "NON_RETRYABLE",
+    "INCOMPATIBLE",
+    "CANCELLED",
+    "UNKNOWN_OUTCOME"
+  ],
+  "fixtures": {
+    "success": { "path": "tests/fixtures/worker_protocol_v1/success.json", "expected": "PASS" },
+    "cancellation": { "path": "tests/fixtures/worker_protocol_v1/cancellation.json", "expected": "PASS" },
+    "retry": { "path": "tests/fixtures/worker_protocol_v1/retry.json", "expected": "PASS" },
+    "incompatibility": { "path": "tests/fixtures/worker_protocol_v1/incompatibility.json", "expected": "INCOMPATIBLE" },
+    "provenance": { "path": "tests/fixtures/worker_protocol_v1/provenance.json", "expected": "PASS" }
+  },
+  "network_service_required": false,
+  "status": "ACCEPTED"
+}

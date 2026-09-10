@@ -26,6 +26,10 @@ not prerequisites. Concrete UI framework, storage engine, and process transport
 choices remain R3/R4 implementation decisions provided they satisfy the
 versioned contracts and resource limits.
 
+R3 fixes that boundary as the dependency-free local JSONL contract documented
+in [`WORKER_PROTOCOL_V1.md`](WORKER_PROTOCOL_V1.md), with exact component,
+artifact, compatibility, job, cancellation, retry, timeout, and resume rules.
+
 ## 2. Authority model
 
 ### Factual state authority

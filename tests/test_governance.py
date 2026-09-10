@@ -25,6 +25,9 @@ class GovernanceValidationTests(unittest.TestCase):
         cls.ownership = json.loads(
             (ROOT / "state" / "data_ownership_v1.json").read_text(encoding="utf-8")
         )
+        cls.worker_protocol = json.loads(
+            (ROOT / "state" / "worker_protocol_v1.json").read_text(encoding="utf-8")
+        )
 
     def test_repository_state_is_valid(self):
         self.assertEqual(VALIDATOR.validate_state(self.state), [])
@@ -66,6 +69,12 @@ class GovernanceValidationTests(unittest.TestCase):
         errors = VALIDATOR.validate_state(state)
         self.assertTrue(any("must appear earlier" in error for error in errors))
 
+    def test_accepted_foundation_stage_cannot_regress(self):
+        state = copy.deepcopy(self.state)
+        next(entry for entry in state["roadmap"] if entry["id"] == "R3")["status"] = "PLANNED"
+        errors = VALIDATOR.validate_state(state)
+        self.assertIn("R3 must remain ACCEPTED", errors)
+
     def test_component_baselines_are_valid(self):
         self.assertEqual(VALIDATOR.validate_component_baselines(self.baselines), [])
 
@@ -101,6 +110,35 @@ class GovernanceValidationTests(unittest.TestCase):
         ownership["collision_policy"]["same_id_different_hash"] = "LAST_WRITER_WINS"
         errors = VALIDATOR.validate_data_ownership(ownership)
         self.assertTrue(any("must hard-fail" in error for error in errors))
+
+    def test_worker_protocol_contract_is_valid(self):
+        self.assertEqual(
+            VALIDATOR.validate_worker_protocol(self.worker_protocol), []
+        )
+
+    def test_worker_protocol_cannot_enable_network_requirement(self):
+        protocol = copy.deepcopy(self.worker_protocol)
+        protocol["network_service_required"] = True
+        errors = VALIDATOR.validate_worker_protocol(protocol)
+        self.assertTrue(any("network service" in error for error in errors))
+
+    def test_worker_protocol_unknown_outcome_retry_must_be_denied(self):
+        protocol = copy.deepcopy(self.worker_protocol)
+        protocol["job_policy"]["unknown_outcome_retry"] = "ALLOWED"
+        errors = VALIDATOR.validate_worker_protocol(protocol)
+        self.assertTrue(any("unknown outcomes" in error for error in errors))
+
+    def test_worker_protocol_fixture_inventory_is_complete(self):
+        protocol = copy.deepcopy(self.worker_protocol)
+        protocol["fixtures"].pop("provenance")
+        errors = VALIDATOR.validate_worker_protocol(protocol)
+        self.assertTrue(any("fixture inventory" in error for error in errors))
+
+    def test_worker_protocol_schema_registry_is_exact(self):
+        protocol = copy.deepcopy(self.worker_protocol)
+        protocol["schemas"].pop("artifact_reference")
+        errors = VALIDATOR.validate_worker_protocol(protocol)
+        self.assertTrue(any("all three accepted schemas" in error for error in errors))
 
 
 if __name__ == "__main__":

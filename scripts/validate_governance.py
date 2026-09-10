@@ -16,6 +16,10 @@ BASELINES_SCHEMA_PATH = ROOT / "schemas" / "component_baselines_v1.schema.json"
 OWNERSHIP_PATH = ROOT / "state" / "data_ownership_v1.json"
 OWNERSHIP_SCHEMA_PATH = ROOT / "schemas" / "data_ownership_v1.schema.json"
 LEASE_SCHEMA_PATH = ROOT / "schemas" / "project_lease_v1.schema.json"
+WORKER_PROTOCOL_PATH = ROOT / "state" / "worker_protocol_v1.json"
+WORKER_PROTOCOL_SCHEMA_PATH = ROOT / "schemas" / "worker_protocol_v1.schema.json"
+ARTIFACT_REFERENCE_SCHEMA_PATH = ROOT / "schemas" / "artifact_reference_v1.schema.json"
+COMPONENT_IDENTITY_SCHEMA_PATH = ROOT / "schemas" / "component_identity_v1.schema.json"
 
 REQUIRED_DOCUMENTS = (
     "README.md",
@@ -34,6 +38,11 @@ REQUIRED_DOCUMENTS = (
     "schemas/data_ownership_v1.schema.json",
     "schemas/project_lease_v1.schema.json",
     "state/data_ownership_v1.json",
+    "docs/architecture/WORKER_PROTOCOL_V1.md",
+    "schemas/worker_protocol_v1.schema.json",
+    "schemas/artifact_reference_v1.schema.json",
+    "schemas/component_identity_v1.schema.json",
+    "state/worker_protocol_v1.json",
 )
 
 REQUIRED_MODULES = {
@@ -95,6 +104,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("data_ownership_contract must pin the R2 ownership matrix")
     if state.get("project_lease_schema") != "schemas/project_lease_v1.schema.json":
         errors.append("project_lease_schema must pin the R2 lease contract")
+    if state.get("worker_protocol_contract") != "state/worker_protocol_v1.json":
+        errors.append("worker_protocol_contract must pin the R3 protocol registry")
 
     execution_policy = state.get("execution_policy", {})
     expected_policy = {
@@ -142,6 +153,10 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append(f"unexpected roadmap IDs: {sorted(extra_ids)}")
 
     positions = {entry.get("id"): index for index, entry in enumerate(roadmap)}
+    statuses = {entry.get("id"): entry.get("status") for entry in roadmap}
+    for accepted_id in ("R0", "R1", "R2", "R3"):
+        if statuses.get(accepted_id) != "ACCEPTED":
+            errors.append(f"{accepted_id} must remain ACCEPTED")
     for entry in roadmap:
         entry_id = entry.get("id")
         for dependency in entry.get("depends_on", []):
@@ -223,18 +238,86 @@ def validate_data_ownership(contract: dict) -> list[str]:
     return errors
 
 
+def validate_worker_protocol(contract: dict, root: Path = ROOT) -> list[str]:
+    errors: list[str] = []
+    if contract.get("schema_version") != "1.0" or contract.get("protocol_version") != "1.0":
+        errors.append("worker protocol and registry versions must be 1.0")
+    if contract.get("transport") != "LOCAL_STDIO_JSONL":
+        errors.append("R3 transport must remain local stdio JSONL")
+    if contract.get("network_service_required") is not False:
+        errors.append("R3 must not require a network service")
+    if contract.get("schemas") != {
+        "message": "schemas/worker_protocol_v1.schema.json",
+        "artifact_reference": "schemas/artifact_reference_v1.schema.json",
+        "component_identity": "schemas/component_identity_v1.schema.json",
+    }:
+        errors.append("R3 schema registry must pin all three accepted schemas")
+    compatibility = contract.get("compatibility", {})
+    expected_compatibility = {
+        "negotiation": "HIGHEST_EXACT_COMMON_PROTOCOL_VERSION",
+        "schema_policy": "EXACT_SCHEMA_VERSION",
+        "unknown_protocol": "FAIL_CLOSED",
+        "unknown_schema": "FAIL_CLOSED",
+        "backward_compatible_protocol_versions": [],
+    }
+    if compatibility != expected_compatibility:
+        errors.append("R3 compatibility policy must remain exact and fail closed")
+    expected_message_types = {
+        "HANDSHAKE_REQUEST", "HANDSHAKE_RESPONSE", "JOB_REQUEST", "PROGRESS",
+        "RESULT", "ERROR", "CANCEL_REQUEST", "CANCEL_ACK",
+    }
+    if set(contract.get("message_types", [])) != expected_message_types:
+        errors.append("R3 message type inventory is incomplete")
+    artifact_policy = contract.get("artifact_policy", {})
+    if artifact_policy.get("content_identity") != "SHA256_CANONICAL_BYTES":
+        errors.append("R3 artifacts must be content-addressed by SHA-256")
+    if artifact_policy.get("paths") != "NORMALIZED_RELATIVE_ONLY":
+        errors.append("R3 artifact paths must be normalized and relative")
+    job_policy = contract.get("job_policy", {})
+    if job_policy.get("unknown_outcome_retry") != "DENIED":
+        errors.append("R3 must deny automatic retry for unknown outcomes")
+    if job_policy.get("mutable_write") != "VALID_PROJECT_LEASE_AND_ARTIFACT_PRECONDITION_REQUIRED":
+        errors.append("R3 mutable jobs must require the accepted Project Lease")
+    if contract.get("component_baseline_manifest") != "state/component_baselines_v1.json":
+        errors.append("R3 worker identity must use the pinned R1 component baseline")
+    fixtures = contract.get("fixtures", {})
+    expected_fixtures = {"success", "cancellation", "retry", "incompatibility", "provenance"}
+    if set(fixtures) != expected_fixtures:
+        errors.append("R3 fixture inventory is incomplete")
+    for name, fixture in fixtures.items():
+        path = fixture.get("path", "")
+        if not path or not (root / path).is_file():
+            errors.append(f"missing R3 {name} fixture: {path}")
+            continue
+        try:
+            loaded = load_json(root / path)
+        except (OSError, json.JSONDecodeError):
+            errors.append(f"invalid JSON in R3 {name} fixture: {path}")
+            continue
+        if loaded.get("expected") != fixture.get("expected"):
+            errors.append(f"R3 {name} fixture expectation does not match registry")
+    if contract.get("status") != "ACCEPTED":
+        errors.append("R3 contract status must be ACCEPTED")
+    return errors
+
+
 def main() -> int:
     state = load_json(STATE_PATH)
     baselines = load_json(BASELINES_PATH)
     ownership = load_json(OWNERSHIP_PATH)
+    worker_protocol = load_json(WORKER_PROTOCOL_PATH)
     load_json(SCHEMA_PATH)
     load_json(BASELINES_SCHEMA_PATH)
     load_json(OWNERSHIP_SCHEMA_PATH)
     load_json(LEASE_SCHEMA_PATH)
+    load_json(WORKER_PROTOCOL_SCHEMA_PATH)
+    load_json(ARTIFACT_REFERENCE_SCHEMA_PATH)
+    load_json(COMPONENT_IDENTITY_SCHEMA_PATH)
     errors = (
         validate_state(state)
         + validate_component_baselines(baselines)
         + validate_data_ownership(ownership)
+        + validate_worker_protocol(worker_protocol)
     )
     if errors:
         print("INTEGRA_GOVERNANCE_VALIDATION: FAIL")
@@ -250,6 +333,8 @@ def main() -> int:
     print(f"R1_ACCEPTANCE: {baselines['r1_acceptance']['status']}")
     print(f"R2_OWNERSHIP_ENTRIES: {len(ownership['ownership'])}")
     print("R2_PROJECT_LEASE: DEFINED")
+    print("R3_WORKER_PROTOCOL: ACCEPTED")
+    print(f"R3_PROTOCOL_FIXTURES: {len(worker_protocol['fixtures'])}")
     return 0
 
 

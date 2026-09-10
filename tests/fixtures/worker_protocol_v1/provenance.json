@@ -1,0 +1,31 @@
+{
+  "scenario": "derived artifact retains all parent lineage",
+  "expected": "PASS",
+  "artifact": {
+    "artifact_id": "urn:integra:artifact:50000000-0000-0000-0000-000000000010",
+    "kind": "aligned_source_bundle",
+    "schema_id": "aligned_source_bundle_v1",
+    "schema_version": "1.0",
+    "content_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "size_bytes": 2048,
+    "storage_scope": "INTEGRA_STORE",
+    "relative_path": "artifacts/alignment/bundle.json",
+    "origin": {
+      "component_id": "integra_control_plane",
+      "repository": "Yurielo/integra",
+      "commit_sha": "1111111111111111111111111111111111111111",
+      "tree_sha": "2222222222222222222222222222222222222222",
+      "version": "0.1.0",
+      "contracts": ["worker_protocol_v1"],
+      "runtime": { "kind": "python", "version": "3.12", "architecture": "arm64" }
+    },
+    "provenance": {
+      "parent_artifact_ids": [
+        "urn:integra:artifact:50000000-0000-0000-0000-000000000001",
+        "urn:integra:artifact:50000000-0000-0000-0000-000000000002"
+      ],
+      "operation_id": "urn:integra:operation:50000000-0000-0000-0000-000000000020",
+      "source_locator": { "kind": "time_range", "start_ms": 1000, "end_ms": 2500 }
+    }
+  }
+}
