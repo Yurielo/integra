@@ -18,6 +18,7 @@
     "core_alpha_evidence",
     "core_alpha_real_evidence",
     "operations_and_diagnostics_evidence",
+    "migration_evidence",
     "execution_policy",
     "release_scope",
     "roadmap",
@@ -57,6 +58,9 @@
     },
     "operations_and_diagnostics_evidence": {
       "const": "state/operations_and_diagnostics_v1.json"
+    },
+    "migration_evidence": {
+      "const": "state/migration_v1.json"
     },
     "execution_policy": {
       "type": "object",

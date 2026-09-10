@@ -18,6 +18,7 @@ from integra_core.benchmark import (  # noqa: E402
 from integra_core.core_alpha import ReplayStageWorker  # noqa: E402
 from integra_core.real_media import validate_actual_evidence  # noqa: E402
 from integra_core.operations_fixtures import run_operations_fixtures  # noqa: E402
+from integra_core.migration_fixtures import run_migration_fixtures  # noqa: E402
 from integra_core.protocol import content_sha256  # noqa: E402
 from scripts.check_agents import load_registry, validate_agent_team  # noqa: E402
 
@@ -48,6 +49,8 @@ CORE_ALPHA_REAL_PATH = ROOT / "state" / "core_alpha_real_v1.json"
 CORE_ALPHA_REAL_SCHEMA_PATH = ROOT / "schemas" / "core_alpha_real_evidence_v1.schema.json"
 OPERATIONS_PATH = ROOT / "state" / "operations_and_diagnostics_v1.json"
 OPERATIONS_SCHEMA_PATH = ROOT / "schemas" / "operations_evidence_v1.schema.json"
+MIGRATION_PATH = ROOT / "state" / "migration_v1.json"
+MIGRATION_SCHEMA_PATH = ROOT / "schemas" / "migration_evidence_v1.schema.json"
 EXPECTED_OPERATIONS_IMPLEMENTATION = {
     "integra_core/operations.py",
     "integra_core/operations_fixtures.py",
@@ -69,6 +72,25 @@ EXPECTED_OPERATIONS_FIXTURES = {
     "capability_drift",
     "integrity_failure",
     "process_cleanup",
+}
+EXPECTED_MIGRATION_IMPLEMENTATION = {
+    "integra_core/migration.py",
+    "integra_core/migration_fixtures.py",
+    "schemas/migration_discovery_v1.schema.json",
+    "schemas/migration_plan_v1.schema.json",
+    "schemas/migration_report_v1.schema.json",
+    "schemas/migration_rollback_v1.schema.json",
+    "schemas/migration_evidence_v1.schema.json",
+}
+EXPECTED_MIGRATION_FIXTURES = {
+    "tests/fixtures/migration_v1/seminartext_project/seminar.yaml",
+    "tests/fixtures/migration_v1/seminartext_project/sources.json",
+    "tests/fixtures/migration_v1/seminartext_project/source/video/video_001.mp4",
+    "tests/fixtures/migration_v1/seminartext_project/transcript_video_001.txt",
+    "tests/fixtures/migration_v1/videotext_project/Support files/manifest.json",
+    "tests/fixtures/migration_v1/videotext_project/source.mp4",
+    "tests/fixtures/migration_v1/videotext_project/Texts/transcript.txt",
+    "tests/fixtures/migration_v1/videotext_project/Video/output.mp4",
 }
 EXPECTED_CORE_ALPHA_REAL_SHA256 = "7233cd2985d65d8616e217385b53935c671dbda69a686849a9864cba4565d47c"
 EXPECTED_CORE_ALPHA_REAL_IMPLEMENTATION = {
@@ -164,6 +186,15 @@ REQUIRED_DOCUMENTS = (
     "state/operations_and_diagnostics_v1.json",
     "integra_core/operations.py",
     "integra_core/operations_fixtures.py",
+    "docs/architecture/COPY_ON_WRITE_MIGRATION_V1.md",
+    "schemas/migration_discovery_v1.schema.json",
+    "schemas/migration_plan_v1.schema.json",
+    "schemas/migration_report_v1.schema.json",
+    "schemas/migration_rollback_v1.schema.json",
+    "schemas/migration_evidence_v1.schema.json",
+    "state/migration_v1.json",
+    "integra_core/migration.py",
+    "integra_core/migration_fixtures.py",
 )
 
 REQUIRED_MODULES = {
@@ -313,6 +344,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("core_alpha_real_evidence must pin the R6 actual execution record")
     if state.get("operations_and_diagnostics_evidence") != "state/operations_and_diagnostics_v1.json":
         errors.append("operations_and_diagnostics_evidence must pin Issue #46 acceptance")
+    if state.get("migration_evidence") != "state/migration_v1.json":
+        errors.append("migration_evidence must pin R7 acceptance")
 
     execution_policy = state.get("execution_policy", {})
     expected_policy = {
@@ -384,6 +417,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("R6 must be ACCEPTED after replay and pinned real-media evidence pass")
     if statuses.get("OPERATIONS_AND_DIAGNOSTICS_V1") != "ACCEPTED":
         errors.append("OPERATIONS_AND_DIAGNOSTICS_V1 must be ACCEPTED with pinned evidence")
+    if statuses.get("R7") != "ACCEPTED":
+        errors.append("R7 must be ACCEPTED with copy-on-write migration evidence")
     for entry in roadmap:
         entry_id = entry.get("id")
         for dependency in entry.get("depends_on", []):
@@ -901,6 +936,133 @@ def validate_operations_evidence(
     return errors
 
 
+def validate_migration_evidence(
+    evidence: dict, baselines: dict, root: Path = ROOT
+) -> list[str]:
+    errors: list[str] = []
+    expected_top_level = {
+        "schema_version", "issue", "status", "pinned_components",
+        "native_probe_evidence", "implementation", "fixture_inventory",
+        "acceptance", "limitations",
+    }
+    if not isinstance(evidence, dict) or set(evidence) != expected_top_level:
+        return ["R7 migration evidence fields must match the v1 contract"]
+    if evidence.get("schema_version") != "1.0":
+        errors.append("R7 migration evidence schema_version must be 1.0")
+    if evidence.get("issue") != 9 or evidence.get("status") != "PASS":
+        errors.append("R7 migration evidence must certify Issue #9 as PASS")
+
+    baseline_by_id = {
+        component.get("id"): component for component in baselines.get("components", [])
+    }
+    pinned = evidence.get("pinned_components", {})
+    if set(pinned) != {"seminartext", "videotext"}:
+        errors.append("R7 must pin SeminarText and VideoText exactly")
+    else:
+        for component_id, record in pinned.items():
+            baseline = baseline_by_id.get(component_id, {})
+            expected = {
+                "commit_sha": baseline.get("commit_sha"),
+                "tree_sha": baseline.get("tree_sha"),
+                "version": baseline.get("version"),
+                "source_repository_changed": False,
+            }
+            if record != expected:
+                errors.append(f"R7 pinned {component_id} identity differs from R1")
+
+    expected_native_probes = [
+        {
+            "component": "seminartext",
+            "commit_sha": "a94936cd77cde13561c97c804ece1ac1134e01a6",
+            "probe_path": "tests/test_project_add.py",
+            "probe_sha256": "903f550841deda2f963c85fb5184e698038e6456f86410b7c3e58699836a21c0",
+            "execution_mode": "PINNED_SOURCE_TEMPORARY_WORKSPACE",
+            "command": "PYTHONDONTWRITEBYTECODE=1 python3 tests/test_project_add.py",
+            "result": "PASS",
+            "observed_stdout": "project-add regression test passed",
+        },
+        {
+            "component": "videotext",
+            "commit_sha": "2e098d1705b6815628bee1e023f4742718eabf02",
+            "probe_path": "Tests/ProjectSchemaProbe.swift",
+            "probe_sha256": "1eff677030ff7411808c642faee280c731bf5ba3c2580d87ebbb43e0df39f313",
+            "execution_mode": "PINNED_SOURCE_TEMPORARY_WORKSPACE",
+            "command": "swiftc Sources/*.swift Tests/ProjectSchemaProbe.swift -o <temporary>/ProjectSchemaProbe && <temporary>/ProjectSchemaProbe",
+            "result": "PASS",
+            "observed_stdout": "PROJECT_SCHEMA_PROBE_PASS",
+        },
+    ]
+    if evidence.get("native_probe_evidence") != expected_native_probes:
+        errors.append("R7 native source compatibility evidence differs from pinned probes")
+
+    implementation = evidence.get("implementation")
+    if not isinstance(implementation, list):
+        errors.append("R7 implementation inventory must be a list")
+    else:
+        paths = {item.get("path") for item in implementation if isinstance(item, dict)}
+        if paths != EXPECTED_MIGRATION_IMPLEMENTATION or len(paths) != len(implementation):
+            errors.append("R7 implementation inventory must be exact")
+        for item in implementation:
+            if not isinstance(item, dict) or set(item) != {"path", "sha256"}:
+                errors.append("R7 implementation reference differs from v1")
+                continue
+            path = root / item["path"]
+            if not path.is_file() or sha256_file(path) != item["sha256"]:
+                errors.append(f"R7 implementation hash differs: {item['path']}")
+
+    fixtures = evidence.get("fixture_inventory")
+    if not isinstance(fixtures, list):
+        errors.append("R7 fixture inventory must be a list")
+    else:
+        paths = {item.get("path") for item in fixtures if isinstance(item, dict)}
+        if paths != EXPECTED_MIGRATION_FIXTURES or len(paths) != len(fixtures):
+            errors.append("R7 fixture inventory must be exact")
+        for item in fixtures:
+            if not isinstance(item, dict) or set(item) != {"path", "sha256"}:
+                errors.append("R7 fixture reference differs from v1")
+                continue
+            path = root / item["path"]
+            if not path.is_file() or sha256_file(path) != item["sha256"]:
+                errors.append(f"R7 fixture hash differs: {item['path']}")
+
+    expected_acceptance = {
+        "read_only_discovery": True,
+        "dry_run_has_zero_writes": True,
+        "copy_on_write_target": True,
+        "stable_ids_path_independent": True,
+        "source_and_target_hashes_verified": True,
+        "target_collision_fails_without_overwrite": True,
+        "validation_precedes_activation": True,
+        "exact_owned_target_rollback": True,
+        "interrupted_copy_recovery": True,
+        "seminartext_source_compatibility_preserved": True,
+        "videotext_source_compatibility_preserved": True,
+        "source_native_open_probes_passed": True,
+        "external_references_not_accessed": True,
+        "source_repositories_changed": False,
+        "private_data_accessed": False,
+        "protected_data_accessed": False,
+        "external_actions_performed": False,
+    }
+    if evidence.get("acceptance") != expected_acceptance:
+        errors.append("R7 acceptance evidence differs from the governed contract")
+    limitations = evidence.get("limitations")
+    if not isinstance(limitations, list) or len(limitations) < 2 or len(limitations) != len(set(limitations)):
+        errors.append("R7 limitations must contain at least two unique statements")
+    try:
+        results = run_migration_fixtures(root)
+    except Exception as error:
+        errors.append(f"R7 executable migration fixtures failed: {error}")
+    else:
+        if set(results) != {
+            "seminartext_copy_rollback", "videotext_copy_rollback",
+            "stable_ids_after_move", "target_collision_fail_closed",
+            "partial_copy_recovery",
+        } or any(status != "PASS" for status in results.values()):
+            errors.append("R7 executable migration fixture results are incomplete")
+    return errors
+
+
 def main() -> int:
     state = load_json(STATE_PATH)
     baselines = load_json(BASELINES_PATH)
@@ -912,6 +1074,7 @@ def main() -> int:
     core_alpha = load_json(CORE_ALPHA_PATH)
     core_alpha_real = load_json(CORE_ALPHA_REAL_PATH)
     operations = load_json(OPERATIONS_PATH)
+    migration = load_json(MIGRATION_PATH)
     load_json(SCHEMA_PATH)
     load_json(BASELINES_SCHEMA_PATH)
     load_json(OWNERSHIP_SCHEMA_PATH)
@@ -927,6 +1090,7 @@ def main() -> int:
     load_json(CORE_ALPHA_MANIFEST_SCHEMA_PATH)
     load_json(CORE_ALPHA_REAL_SCHEMA_PATH)
     load_json(OPERATIONS_SCHEMA_PATH)
+    load_json(MIGRATION_SCHEMA_PATH)
     errors = (
         validate_state(state)
         + validate_component_baselines(baselines)
@@ -938,6 +1102,7 @@ def main() -> int:
         + validate_core_alpha_evidence(core_alpha)
         + validate_core_alpha_real_evidence(core_alpha_real, baselines)
         + validate_operations_evidence(operations)
+        + validate_migration_evidence(migration, baselines)
     )
     if errors:
         print("INTEGRA_GOVERNANCE_VALIDATION: FAIL")
@@ -966,6 +1131,7 @@ def main() -> int:
     print(f"R6_REAL_MEDIA: {core_alpha_real['status']}")
     print("R6_ACCEPTANCE: ACCEPTED")
     print(f"OPERATIONS_AND_DIAGNOSTICS_V1: {operations['status']}")
+    print(f"R7_MIGRATION: {migration['status']}")
     return 0
 
 

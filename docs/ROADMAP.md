@@ -19,7 +19,7 @@ not add routine human gates or change stage dependencies.
 | R5 Capability benchmark | #7 | M1 | R4 | ACCEPTED |
 | R6 Core Alpha | #8 | M1 | R5 | ACCEPTED |
 | OPERATIONS_AND_DIAGNOSTICS_V1 | #46 | M1 | R6 | ACCEPTED |
-| R7 Copy-on-write migration | #9 | M1 | R6, OPERATIONS_AND_DIAGNOSTICS_V1 | PLANNED |
+| R7 Copy-on-write migration | #9 | M1 | R6, OPERATIONS_AND_DIAGNOSTICS_V1 | ACCEPTED |
 | R8A YouTube playlists | #10 | M2 | R3, R6, OPERATIONS_AND_DIAGNOSTICS_V1 | PLANNED |
 | R8B Documents and OCR | #11 | M2 | R3, R6, OPERATIONS_AND_DIAGNOSTICS_V1 | PLANNED |
 | PROJECTS_AND_SOURCES_V1 | #47 | M2 | R6, R7, R8A, R8B | PLANNED |

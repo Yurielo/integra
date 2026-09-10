@@ -1,0 +1,129 @@
+{
+  "schema_version": "1.0",
+  "issue": 9,
+  "status": "PASS",
+  "pinned_components": {
+    "seminartext": {
+      "commit_sha": "a94936cd77cde13561c97c804ece1ac1134e01a6",
+      "tree_sha": "5f5951da1d5dcf957ef982510fde3537f601ea15",
+      "version": "4.0.0",
+      "source_repository_changed": false
+    },
+    "videotext": {
+      "commit_sha": "2e098d1705b6815628bee1e023f4742718eabf02",
+      "tree_sha": "f5ec484df90e4db655d31b4174434c37f4d1491c",
+      "version": "0.6.4",
+      "source_repository_changed": false
+    }
+  },
+  "native_probe_evidence": [
+    {
+      "component": "seminartext",
+      "commit_sha": "a94936cd77cde13561c97c804ece1ac1134e01a6",
+      "probe_path": "tests/test_project_add.py",
+      "probe_sha256": "903f550841deda2f963c85fb5184e698038e6456f86410b7c3e58699836a21c0",
+      "execution_mode": "PINNED_SOURCE_TEMPORARY_WORKSPACE",
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 tests/test_project_add.py",
+      "result": "PASS",
+      "observed_stdout": "project-add regression test passed"
+    },
+    {
+      "component": "videotext",
+      "commit_sha": "2e098d1705b6815628bee1e023f4742718eabf02",
+      "probe_path": "Tests/ProjectSchemaProbe.swift",
+      "probe_sha256": "1eff677030ff7411808c642faee280c731bf5ba3c2580d87ebbb43e0df39f313",
+      "execution_mode": "PINNED_SOURCE_TEMPORARY_WORKSPACE",
+      "command": "swiftc Sources/*.swift Tests/ProjectSchemaProbe.swift -o <temporary>/ProjectSchemaProbe && <temporary>/ProjectSchemaProbe",
+      "result": "PASS",
+      "observed_stdout": "PROJECT_SCHEMA_PROBE_PASS"
+    }
+  ],
+  "implementation": [
+    {
+      "path": "integra_core/migration.py",
+      "sha256": "b72341babda31a2e79e04e1a965aaeb2d404f01dee62d150731318c1da8067d5"
+    },
+    {
+      "path": "integra_core/migration_fixtures.py",
+      "sha256": "baa36dfd3b5fb836b09fea189507420988f8d0ef699a06c92a23ecc341dd8bf6"
+    },
+    {
+      "path": "schemas/migration_discovery_v1.schema.json",
+      "sha256": "0b00b71f5c7852348327e6a1824bac00b9764602aa4dd2049ce46738d0e77eb0"
+    },
+    {
+      "path": "schemas/migration_plan_v1.schema.json",
+      "sha256": "3942fb3b892126ff2d640c82e62b5710b8711c667506f3a240bc423de2d90afb"
+    },
+    {
+      "path": "schemas/migration_report_v1.schema.json",
+      "sha256": "a5b75171e8c0168aca2b3214b73cfeb4c60a2e6389da79bb1385ffab34f34cbe"
+    },
+    {
+      "path": "schemas/migration_rollback_v1.schema.json",
+      "sha256": "6d277ec23f16f60e3835788214e9544f6c68f246bb5b2fec93e51e86dc018612"
+    },
+    {
+      "path": "schemas/migration_evidence_v1.schema.json",
+      "sha256": "2dd60c1a0f889a4a80d02fa2b4df2ce878792501dc5506c6326d54310029c690"
+    }
+  ],
+  "fixture_inventory": [
+    {
+      "path": "tests/fixtures/migration_v1/seminartext_project/seminar.yaml",
+      "sha256": "bbf185567ba77b25950adc045616333562004d93c1e7bfbf1d213753c3d379f5"
+    },
+    {
+      "path": "tests/fixtures/migration_v1/seminartext_project/sources.json",
+      "sha256": "116be4f1227fe3454558c11b805c79ebf4d0f20b25604886c9e2bde7cd195dc9"
+    },
+    {
+      "path": "tests/fixtures/migration_v1/seminartext_project/source/video/video_001.mp4",
+      "sha256": "da1944df0393ebade1644858e2462753f7381f6ba74bc63d98118ab4671dc60b"
+    },
+    {
+      "path": "tests/fixtures/migration_v1/seminartext_project/transcript_video_001.txt",
+      "sha256": "83812c814af300f34d40c24da9a94561cd7fa41e1c04d617467e9022af65fb0b"
+    },
+    {
+      "path": "tests/fixtures/migration_v1/videotext_project/Support files/manifest.json",
+      "sha256": "a7fc0c578adef3f135b600f130ca4a3a624f99ce42ed2424f3fbec6fc7733ec1"
+    },
+    {
+      "path": "tests/fixtures/migration_v1/videotext_project/source.mp4",
+      "sha256": "61b88ad08cce9aa685bd67b67352eec4d415c15a94edbf75663b53af7aaf0b22"
+    },
+    {
+      "path": "tests/fixtures/migration_v1/videotext_project/Texts/transcript.txt",
+      "sha256": "beedbe71cf4d17b4f57128ab5015a53934d85b5052f5e21caa0383e5c1430734"
+    },
+    {
+      "path": "tests/fixtures/migration_v1/videotext_project/Video/output.mp4",
+      "sha256": "6491a58ffb7c0b2cdf31f7d1d7494041fdd40172aac31888e44bb6f9a0d00e41"
+    }
+  ],
+  "acceptance": {
+    "read_only_discovery": true,
+    "dry_run_has_zero_writes": true,
+    "copy_on_write_target": true,
+    "stable_ids_path_independent": true,
+    "source_and_target_hashes_verified": true,
+    "target_collision_fails_without_overwrite": true,
+    "validation_precedes_activation": true,
+    "exact_owned_target_rollback": true,
+    "interrupted_copy_recovery": true,
+    "seminartext_source_compatibility_preserved": true,
+    "videotext_source_compatibility_preserved": true,
+    "source_native_open_probes_passed": true,
+    "external_references_not_accessed": true,
+    "source_repositories_changed": false,
+    "private_data_accessed": false,
+    "protected_data_accessed": false,
+    "external_actions_performed": false
+  },
+  "limitations": [
+    "R7 uses sanitized representative projects and does not open private user projects or launch either source GUI.",
+    "External VideoText media locators are classified by hash and remain reference-only until separately authorized source import exists.",
+    "Migrated output remains READY_NOT_ACTIVATED; Project Registry activation belongs to the later Projects and Sources stage."
+  ]
+}

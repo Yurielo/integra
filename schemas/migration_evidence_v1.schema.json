@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Yurielo/integra/schemas/migration_evidence_v1.schema.json",
+  "title": "Integra R7 migration acceptance evidence v1",
+  "type": "object",
+  "required": [
+    "schema_version", "issue", "status", "pinned_components",
+    "native_probe_evidence", "implementation", "fixture_inventory",
+    "acceptance", "limitations"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "issue": {"const": 9},
+    "status": {"const": "PASS"},
+    "pinned_components": {
+      "type": "object",
+      "required": ["seminartext", "videotext"],
+      "properties": {
+        "seminartext": {"$ref": "#/$defs/component"},
+        "videotext": {"$ref": "#/$defs/component"}
+      },
+      "additionalProperties": false
+    },
+    "native_probe_evidence": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {"$ref": "#/$defs/native_probe"}
+    },
+    "implementation": {"type": "array", "minItems": 7, "maxItems": 7, "items": {"$ref": "#/$defs/file"}},
+    "fixture_inventory": {"type": "array", "minItems": 8, "maxItems": 8, "items": {"$ref": "#/$defs/file"}},
+    "acceptance": {
+      "type": "object",
+      "required": [
+        "read_only_discovery", "dry_run_has_zero_writes",
+        "copy_on_write_target", "stable_ids_path_independent",
+        "source_and_target_hashes_verified",
+        "target_collision_fails_without_overwrite",
+        "validation_precedes_activation", "exact_owned_target_rollback",
+        "interrupted_copy_recovery",
+        "seminartext_source_compatibility_preserved",
+        "videotext_source_compatibility_preserved",
+        "source_native_open_probes_passed",
+        "external_references_not_accessed", "source_repositories_changed",
+        "private_data_accessed", "protected_data_accessed",
+        "external_actions_performed"
+      ],
+      "properties": {
+        "read_only_discovery": {"const": true},
+        "dry_run_has_zero_writes": {"const": true},
+        "copy_on_write_target": {"const": true},
+        "stable_ids_path_independent": {"const": true},
+        "source_and_target_hashes_verified": {"const": true},
+        "target_collision_fails_without_overwrite": {"const": true},
+        "validation_precedes_activation": {"const": true},
+        "exact_owned_target_rollback": {"const": true},
+        "interrupted_copy_recovery": {"const": true},
+        "seminartext_source_compatibility_preserved": {"const": true},
+        "videotext_source_compatibility_preserved": {"const": true},
+        "source_native_open_probes_passed": {"const": true},
+        "external_references_not_accessed": {"const": true},
+        "source_repositories_changed": {"const": false},
+        "private_data_accessed": {"const": false},
+        "protected_data_accessed": {"const": false},
+        "external_actions_performed": {"const": false}
+      },
+      "additionalProperties": false
+    },
+    "limitations": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "component": {
+      "type": "object",
+      "required": ["commit_sha", "tree_sha", "version", "source_repository_changed"],
+      "properties": {
+        "commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "tree_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "version": {"type": "string", "minLength": 1},
+        "source_repository_changed": {"const": false}
+      },
+      "additionalProperties": false
+    },
+    "file": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      },
+      "additionalProperties": false
+    },
+    "native_probe": {
+      "type": "object",
+      "required": [
+        "component", "commit_sha", "probe_path", "probe_sha256",
+        "execution_mode", "command", "result", "observed_stdout"
+      ],
+      "properties": {
+        "component": {"enum": ["seminartext", "videotext"]},
+        "commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "probe_path": {"type": "string", "minLength": 1},
+        "probe_sha256": {"$ref": "#/$defs/sha256"},
+        "execution_mode": {"const": "PINNED_SOURCE_TEMPORARY_WORKSPACE"},
+        "command": {"type": "string", "minLength": 1},
+        "result": {"const": "PASS"},
+        "observed_stdout": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
