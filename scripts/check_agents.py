@@ -14,6 +14,7 @@ REGISTRY_PATH = ROOT / "state" / "agent_team_v1.json"
 
 EXPECTED_ROLES = {
     "product-owner",
+    "system-architect",
     "backend-developer",
     "frontend-developer",
     "database-architect",
@@ -26,6 +27,7 @@ EXPECTED_ROLES = {
 
 EXPECTED_MODES = {
     "product-owner": "LEAD_READ_ONLY",
+    "system-architect": "READ_ONLY_ADVISORY",
     "backend-developer": "IMPLEMENTATION",
     "frontend-developer": "IMPLEMENTATION",
     "database-architect": "DESIGN_AND_IMPLEMENTATION",
@@ -90,7 +92,7 @@ def validate_agent_team(registry: dict, root: Path = ROOT) -> list[str]:
     if len(role_ids) != len(set(role_ids)):
         errors.append("agent role IDs must be unique")
     if set(role_ids) != EXPECTED_ROLES:
-        errors.append("agent role inventory must contain exactly the nine governed roles")
+        errors.append("agent role inventory must contain exactly the ten governed roles")
 
     for role in roles:
         role_id = role.get("id", "unknown")
@@ -129,7 +131,7 @@ def validate_agent_team(registry: dict, root: Path = ROOT) -> list[str]:
         for term in FORBIDDEN_LEGACY_TERMS:
             if term in text:
                 errors.append(f"{role_id} retains legacy term: {term}")
-        if role_id in {"product-owner", "github-pr-reviewer"} and parsed.get("sandbox_mode") != "read-only":
+        if role_id in {"product-owner", "system-architect", "github-pr-reviewer"} and parsed.get("sandbox_mode") != "read-only":
             errors.append(f"{role_id} must remain read-only")
 
     defaults = registry.get("default_systems", {})
@@ -167,7 +169,7 @@ def main() -> int:
         return 1
     print("INTEGRA_AGENT_TEAM_VALIDATION: PASS")
     print("LEAD_AGENT: product-owner")
-    print("AGENT_ROLES: 9")
+    print("AGENT_ROLES: 10")
     print("ACTIVATION_POLICY: RISK_BASED_MINIMAL_SET")
     print("HUMAN_PRODUCT_OWNER_AUTHORITY: RETAINED_FOR_GENUINE_GATES")
     print("ROUTINE_HUMAN_DISPATCH_REQUIRED: NO")

@@ -13,6 +13,7 @@
   },
   "roles": [
     {"id": "product-owner", "mode": "LEAD_READ_ONLY", "registration": ".codex/agents/product-owner.toml", "contract": ".codex/agents/product-owner.md"},
+    {"id": "system-architect", "mode": "READ_ONLY_ADVISORY", "registration": ".codex/agents/system-architect.toml", "contract": ".codex/agents/system-architect.md"},
     {"id": "backend-developer", "mode": "IMPLEMENTATION", "registration": ".codex/agents/backend-developer.toml", "contract": ".codex/agents/backend-developer.md"},
     {"id": "frontend-developer", "mode": "IMPLEMENTATION", "registration": ".codex/agents/frontend-developer.toml", "contract": ".codex/agents/frontend-developer.md"},
     {"id": "database-architect", "mode": "DESIGN_AND_IMPLEMENTATION", "registration": ".codex/agents/database-architect.toml", "contract": ".codex/agents/database-architect.md"},

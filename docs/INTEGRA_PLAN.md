@@ -45,7 +45,7 @@ lead coordinating agent: it maintains scope and acceptance criteria, selects
 only relevant specialists, assigns non-overlapping ownership, and consolidates
 evidence. The human Product Owner remains the authority at genuine gates.
 
-The team includes backend, frontend, data-contract, QA, CI/CD, independent PR
+The team includes system architecture, backend, frontend, data-contract, QA, CI/CD, independent PR
 review, delivery planning, and repository-documentation roles. These roles do
 not form a mandatory serial pipeline; a narrow change may use one implementer
 plus proportionate verification. Technical handoffs, safe repairs, CI, verified

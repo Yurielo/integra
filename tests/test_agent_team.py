@@ -40,7 +40,7 @@ class AgentTeamValidationTests(unittest.TestCase):
         registry["roles"].pop()
         errors = CHECKER.validate_agent_team(registry)
         self.assertIn(
-            "agent role inventory must contain exactly the nine governed roles", errors
+            "agent role inventory must contain exactly the ten governed roles", errors
         )
 
     def test_routine_human_dispatch_cannot_be_enabled(self):
@@ -78,6 +78,16 @@ class AgentTeamValidationTests(unittest.TestCase):
         registry["roles"][0]["mode"] = "IMPLEMENTATION"
         errors = CHECKER.validate_agent_team(registry)
         self.assertIn("role mode mismatch for product-owner", errors)
+
+    def test_system_architect_is_registered_read_only(self):
+        role = next(
+            item for item in self.registry["roles"] if item["id"] == "system-architect"
+        )
+        self.assertEqual(role["mode"], "READ_ONLY_ADVISORY")
+        registration = CHECKER.tomllib.loads(
+            (ROOT / role["registration"]).read_text(encoding="utf-8")
+        )
+        self.assertEqual(registration["sandbox_mode"], "read-only")
 
     def test_handoff_inventory_is_exact(self):
         registry = copy.deepcopy(self.registry)
