@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://integra.local/schemas/operations_job_v1.schema.json",
+  "title": "Integra Operations Job v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "job_id", "operation_id", "revision", "job_class", "capability", "resume_scope", "state", "progress", "cancellation", "checkpoint", "preflight", "reservation_id", "events", "terminal", "created_at", "updated_at"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "job_id": {"type": "string", "pattern": "^urn:integra:job:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"},
+    "operation_id": {"type": "string", "pattern": "^urn:integra:operation:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"},
+    "revision": {"type": "integer", "minimum": 1},
+    "job_class": {"enum": ["lightweight", "heavy-model", "heavy-media"]},
+    "capability": {"$ref": "#/$defs/versionedIdentity"},
+    "resume_scope": {"enum": ["NONE", "WORKER", "PIPELINE_PREFIX"]},
+    "state": {"enum": ["QUEUED", "PREFLIGHT", "WAITING_RESOURCES", "RUNNING", "PAUSE_REQUESTED", "PAUSED", "RESUMING", "RECOVERY_REQUIRED", "CANCEL_REQUESTED", "CANCELLED", "SUCCEEDED", "FAILED", "UNKNOWN_OUTCOME"]},
+    "progress": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sequence", "fraction", "stage", "eta_status", "eta_seconds"],
+      "properties": {
+        "sequence": {"type": "integer", "minimum": 0},
+        "fraction": {"type": "number", "minimum": 0, "maximum": 1},
+        "stage": {"type": "string", "minLength": 1},
+        "eta_status": {"enum": ["UNKNOWN", "ESTIMATED"]},
+        "eta_seconds": {"type": ["number", "null"], "minimum": 0}
+      }
+    },
+    "cancellation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["requested_at", "acknowledged_at"],
+      "properties": {"requested_at": {"type": ["string", "null"]}, "acknowledged_at": {"type": ["string", "null"]}}
+    },
+    "checkpoint": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["checkpoint_id", "created_at", "input_hashes", "worker_commit_sha", "capability_report_sha256", "config_sha256", "execution_identity_sha256", "protocol_binding_sha256", "binding_sha256"],
+          "properties": {
+            "checkpoint_id": {"type": "string", "minLength": 1},
+            "created_at": {"type": "string", "format": "date-time"},
+            "input_hashes": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[0-9a-f]{64}$"}},
+            "worker_commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+            "capability_report_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "config_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "execution_identity_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "protocol_binding_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "binding_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+          }
+        }
+      ]
+    },
+    "preflight": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["report_sha256", "measured_at"],
+          "properties": {
+            "report_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "measured_at": {"type": "string", "format": "date-time"}
+          }
+        }
+      ]
+    },
+    "reservation_id": {"type": ["string", "null"], "pattern": "^urn:integra:reservation:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"},
+    "events": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["sequence", "at", "from_state", "to_state", "evidence_sha256"],
+        "properties": {
+          "sequence": {"type": "integer", "minimum": 0},
+          "at": {"type": "string", "format": "date-time"},
+          "from_state": {"type": ["string", "null"]},
+          "to_state": {"enum": ["QUEUED", "PREFLIGHT", "WAITING_RESOURCES", "RUNNING", "PAUSE_REQUESTED", "PAUSED", "RESUMING", "RECOVERY_REQUIRED", "CANCEL_REQUESTED", "CANCELLED", "SUCCEEDED", "FAILED", "UNKNOWN_OUTCOME"]},
+          "evidence_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "terminal": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["finished_at", "outcome", "error_code"],
+          "properties": {
+            "finished_at": {"type": "string", "format": "date-time"},
+            "outcome": {"enum": ["CANCELLED", "SUCCEEDED", "FAILED", "UNKNOWN_OUTCOME"]},
+            "error_code": {"type": ["string", "null"]}
+          }
+        }
+      ]
+    },
+    "created_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"}
+  },
+  "$defs": {
+    "versionedIdentity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {"id": {"type": "string", "minLength": 1}, "version": {"type": "string", "minLength": 1}}
+    }
+  }
+}

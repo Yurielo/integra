@@ -1,0 +1,10 @@
+{
+  "expected_admission": "DENY",
+  "request_class": "heavy-model",
+  "scenario": "unsafe_resource",
+  "snapshot": {
+    "memory_pressure": "UNKNOWN",
+    "swap_state": "UNKNOWN",
+    "workspace_available": false
+  }
+}

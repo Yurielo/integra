@@ -1,0 +1,10 @@
+{
+  "expected_orphaned": false,
+  "scenario": "process_cleanup",
+  "signal_sequence": [
+    "SIGTERM",
+    "SIGKILL_IF_REQUIRED",
+    "REAP"
+  ],
+  "success_before_cleanup_forbidden": true
+}

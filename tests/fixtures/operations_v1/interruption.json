@@ -1,0 +1,7 @@
+{
+  "automatic_success_forbidden": true,
+  "event": "controller_restart",
+  "expected_state": "RECOVERY_REQUIRED",
+  "previous_state": "RUNNING",
+  "scenario": "interruption"
+}

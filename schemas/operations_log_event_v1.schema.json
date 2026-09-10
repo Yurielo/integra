@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://integra.local/schemas/operations_log_event_v1.schema.json",
+  "title": "Integra Redacted Operations Log Event v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "job_id", "operation_id", "sequence", "level", "event", "occurred_at", "details"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "job_id": {"type": "string", "pattern": "^urn:integra:job:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"},
+    "operation_id": {"type": "string", "pattern": "^urn:integra:operation:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"},
+    "sequence": {"type": "integer", "minimum": 0},
+    "level": {"enum": ["DEBUG", "INFO", "WARN", "ERROR"]},
+    "event": {
+      "enum": [
+        "capability_preflight", "cancellation_acknowledged",
+        "cancellation_requested", "checkpoint_created", "integrity_checked",
+        "job_created", "job_finished", "job_transition", "model_loaded",
+        "model_unloaded", "process_cleanup", "progress_updated",
+        "reservation_acquired", "reservation_released", "worker_failed",
+        "worker_started"
+      ]
+    },
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "details": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "artifact_id": {"type": "string", "pattern": "^(?:urn:integra:artifact:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|\\[REDACTED\\])$"},
+        "capability_id": {"type": "string", "pattern": "^(?:(?:integra|seminartext|videotext)\\.[a-z0-9]+(?:[._-][a-z0-9]+)*|\\[REDACTED\\])$"},
+        "classification": {"enum": ["OPERATIONAL", "PUBLIC", "REDACTED", "[REDACTED]"]},
+        "code": {"$ref": "#/$defs/publicCode"},
+        "component_id": {"type": "string", "pattern": "^(?:(?:integra|seminartext|videotext)\\.[a-z0-9]+(?:[._-][a-z0-9]+)*|\\[REDACTED\\])$"},
+        "content_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "reason_code": {"$ref": "#/$defs/publicCode"},
+        "size_bytes": {"type": "integer", "minimum": 0},
+        "state": {"$ref": "#/$defs/publicState"},
+        "status": {"$ref": "#/$defs/publicState"}
+      }
+    }
+  },
+  "$defs": {
+    "publicState": {
+      "enum": [
+        "ACTIVE", "ALLOW", "AVAILABLE", "BLOCKED", "CANCELLED",
+        "CANCEL_REQUESTED", "CLEAR", "COMPLETE", "CONFLICT", "CRITICAL",
+        "DENY", "ESTIMATED", "FAILED", "KNOWN", "NORMAL", "NOT_REQUIRED",
+        "NOT_RUNNING", "OWNER_RELEASE", "PASS", "PAUSED", "PAUSE_REQUESTED",
+        "PID_REUSED", "PREFLIGHT", "QUEUED", "READY", "RECOVERY_REQUIRED",
+        "RELEASED", "RESUMING", "RUNNING", "SAFE", "STALE", "SUCCEEDED",
+        "SYNC", "UNAVAILABLE", "UNKNOWN", "UNKNOWN_OUTCOME", "UNSAFE",
+        "VERIFIED_RECOVERY", "VERIFIED_STALE_RECOVERY", "WAITING_RESOURCES",
+        "WRITER_RELEASE", "[REDACTED]"
+      ]
+    },
+    "publicCode": {
+      "enum": [
+        "ACTIVE_RESERVATION_STATE_UNVERIFIED", "ALTERED_HASH",
+        "DISK_ESTIMATE_MISMATCH", "DUPLICATE_IDENTITY",
+        "FFMPEG_WHISPER_CONCURRENCY_DENIED", "HEAVY_MEDIA_ALREADY_ACTIVE",
+        "HEAVY_MODEL_ALREADY_ACTIVE", "IDENTITY_MISMATCH",
+        "IDENTITY_OR_PARTIAL_STATE", "INSUFFICIENT_CALCULATED_DISK",
+        "LEASE_UNSAFE", "MISSING_OR_ESCAPED", "PARTIAL_SIZE",
+        "PLAYLIST_ITEM_ALREADY_ACTIVE", "PROCESS_OR_MODEL_STATE_UNVERIFIED",
+        "PUBLICATION_TARGET_UNAVAILABLE", "UNSAFE_ARTIFACT_TYPE",
+        "UNSAFE_MEMORY_PRESSURE", "UNSAFE_OR_UNKNOWN_SWAP",
+        "UNVERIFIED_DISK_ESTIMATE", "UNVERIFIED_RESOURCE_METRIC",
+        "WHISPER_OLLAMA_CONCURRENCY_DENIED", "WORKSPACE_OR_DEVICE_UNAVAILABLE",
+        "[REDACTED]"
+      ]
+    }
+  }
+}

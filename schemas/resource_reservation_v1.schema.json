@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://integra.local/schemas/resource_reservation_v1.schema.json",
+  "title": "Integra Resource Reservation v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "reservation_id", "job_id", "operation_id", "host_id", "process_id", "process_start_token", "job_class", "workload", "model_family", "collection_id", "collection_kind", "capability_report_sha256", "state", "acquired_at", "released_at", "release_reason", "recovery", "process_cleanup", "snapshot_sha256"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "reservation_id": {"type": "string", "pattern": "^urn:integra:reservation:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"},
+    "job_id": {"type": "string", "pattern": "^urn:integra:job:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"},
+    "operation_id": {"type": "string", "pattern": "^urn:integra:operation:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"},
+    "host_id": {"type": "string", "minLength": 1},
+    "process_id": {"type": "integer", "minimum": 1},
+    "process_start_token": {"type": "string", "minLength": 1},
+    "job_class": {"enum": ["lightweight", "heavy-model", "heavy-media"]},
+    "workload": {"enum": ["ASR", "LLM", "FFMPEG_HEAVY", "MEDIA_LIGHT", "CPU_LIGHT"]},
+    "model_family": {"enum": [null, "WHISPER", "OLLAMA"]},
+    "collection_id": {"type": ["string", "null"]},
+    "collection_kind": {"enum": ["SINGLE", "PLAYLIST"]},
+    "capability_report_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "state": {"enum": ["ACTIVE", "RELEASED"]},
+    "acquired_at": {"type": "string", "format": "date-time"},
+    "released_at": {"type": ["string", "null"], "format": "date-time"},
+    "release_reason": {"enum": [null, "OWNER_RELEASE", "VERIFIED_RECOVERY"]},
+    "recovery": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["process_state", "job_state"],
+          "properties": {
+            "process_state": {"const": "NOT_RUNNING"},
+            "job_state": {"enum": ["RECOVERY_REQUIRED", "CANCELLED", "SUCCEEDED", "FAILED", "UNKNOWN_OUTCOME"]}
+          }
+        }
+      ]
+    },
+    "process_cleanup": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["status", "pid", "orphaned", "process_group_reaped"],
+          "properties": {
+            "status": {"const": "PASS"},
+            "pid": {"type": "integer", "minimum": 1},
+            "orphaned": {"const": false},
+            "process_group_reaped": {"const": true}
+          }
+        }
+      ]
+    },
+    "snapshot_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"state": {"const": "ACTIVE"}}},
+      "then": {
+        "properties": {
+          "released_at": {"type": "null"},
+          "release_reason": {"type": "null"},
+          "recovery": {"type": "null"},
+          "process_cleanup": {"type": "null"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"state": {"const": "RELEASED"}}},
+      "then": {
+        "properties": {
+          "released_at": {"type": "string", "format": "date-time"},
+          "release_reason": {"enum": ["OWNER_RELEASE", "VERIFIED_RECOVERY"]},
+          "process_cleanup": {"type": "object"}
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+{
+  "acceptance": {
+    "calculated_disk_authoritative": true,
+    "cancellation_acknowledged": true,
+    "capability_preflight_exact": true,
+    "checkpoint_resume_identity_bound": true,
+    "child_process_cleanup_verified": true,
+    "honest_eta": true,
+    "integrity_fail_closed": true,
+    "job_lifecycle_versioned": true,
+    "model_unload_owner_scoped": true,
+    "playlist_sequential": true,
+    "protected_scope_preserved": true,
+    "redacted_structured_logs": true,
+    "reference_16gb_policy_enforced": true,
+    "resource_reservations_atomic": true
+  },
+  "external_actions_performed": false,
+  "fixture_inventory": [
+    {
+      "path": "tests/fixtures/operations_v1/capability_drift.json",
+      "scenario": "capability_drift",
+      "sha256": "06c1f3c33f09cfffa0854f1bfd4a32fe3f9a714cba92bf0547ebb31a65767407"
+    },
+    {
+      "path": "tests/fixtures/operations_v1/integrity_failure.json",
+      "scenario": "integrity_failure",
+      "sha256": "150352b96d0d9def42e1ab5f51046f3bc05a0bd82ce75606793289bd0232a8a6"
+    },
+    {
+      "path": "tests/fixtures/operations_v1/interruption.json",
+      "scenario": "interruption",
+      "sha256": "59621580bf4eb522e01db447cd1927c80cc4071a645d39693dc77654fa376a0b"
+    },
+    {
+      "path": "tests/fixtures/operations_v1/process_cleanup.json",
+      "scenario": "process_cleanup",
+      "sha256": "63823cc04bab61b85a1ad43048036fe537ca0016c1a92bf930e7d01425150774"
+    },
+    {
+      "path": "tests/fixtures/operations_v1/resume.json",
+      "scenario": "resume",
+      "sha256": "30cef537d533d29d6283914c9e5f2144a79f784ca871ed6b99b8be10f41590b7"
+    },
+    {
+      "path": "tests/fixtures/operations_v1/success.json",
+      "scenario": "success",
+      "sha256": "eabb1e091de1e308fd2cb58fc7304440945a25ece970d9a0bc0a2fa73617083e"
+    },
+    {
+      "path": "tests/fixtures/operations_v1/unsafe_resource.json",
+      "scenario": "unsafe_resource",
+      "sha256": "e413ab37618cbfef31ea761243cb4f695b72a5cdc9e69b97038d9f39ce38ee62"
+    }
+  ],
+  "implementation": [
+    {
+      "path": "integra_core/operations.py",
+      "sha256": "89a7e42604d9ad3e98fa03631ac2f79ef14375fb11df829e55a17ae5135de37d"
+    },
+    {
+      "path": "integra_core/operations_fixtures.py",
+      "sha256": "c775d822ee9f852c91c86909700d452a0249ee05a1e893ccd6fceab32652600d"
+    },
+    {
+      "path": "schemas/capability_report_v1.schema.json",
+      "sha256": "a9e6213b83afe739837a0f872c5706bcd2854e22652ea7bf5f1a14f53281f6dd"
+    },
+    {
+      "path": "schemas/integrity_report_v1.schema.json",
+      "sha256": "fbbb0c27682a5eb4bfdf01d94437b76c147eb3dea52c6e46743e7ba7751c79f0"
+    },
+    {
+      "path": "schemas/model_residency_v1.schema.json",
+      "sha256": "6ca28a0eebd387b1240ef6d16abd9a98cd1af52756d0ada47331ffe84a04302e"
+    },
+    {
+      "path": "schemas/operations_evidence_v1.schema.json",
+      "sha256": "208146889ae9f47fcd32614b58e13dc9f9f43189c922847a437b8ac541707de9"
+    },
+    {
+      "path": "schemas/operations_job_v1.schema.json",
+      "sha256": "c1f04feec97c646bd31cba51aea1d0d7663838e6118e98ef76349f72fe85693b"
+    },
+    {
+      "path": "schemas/operations_log_event_v1.schema.json",
+      "sha256": "d33825b89ed7b0225ff15a1bfc30c2c8579b187a97e70b3f18db287b69eac862"
+    },
+    {
+      "path": "schemas/resource_request_v1.schema.json",
+      "sha256": "b25ab9192bcbe506cc8546f298f95142d4293ac5830bcde44e55a2e5df36b8d4"
+    },
+    {
+      "path": "schemas/resource_reservation_v1.schema.json",
+      "sha256": "36ee3f4cd79d981124107f7f92187459be5aefeee998c5cb43fea8830059f191"
+    },
+    {
+      "path": "schemas/resource_snapshot_v1.schema.json",
+      "sha256": "fe08dc97a1db14690922a32f76c708fe4f1c8e59fa137c46dbcf97cb7729289e"
+    }
+  ],
+  "issue": 46,
+  "protected_data_accessed": false,
+  "schema_version": "1.0",
+  "semantic_authority": "NONE",
+  "status": "PASS"
+}

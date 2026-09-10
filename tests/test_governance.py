@@ -43,6 +43,11 @@ class GovernanceValidationTests(unittest.TestCase):
         cls.core_alpha_real = json.loads(
             (ROOT / "state" / "core_alpha_real_v1.json").read_text(encoding="utf-8")
         )
+        cls.operations = json.loads(
+            (ROOT / "state" / "operations_and_diagnostics_v1.json").read_text(
+                encoding="utf-8"
+            )
+        )
 
     def test_repository_state_is_valid(self):
         self.assertEqual(VALIDATOR.validate_state(self.state), [])
@@ -182,6 +187,39 @@ class GovernanceValidationTests(unittest.TestCase):
         errors = VALIDATOR.validate_core_alpha_real_evidence(evidence, self.baselines)
         self.assertTrue(any("top-level fields" in error for error in errors))
 
+    def test_operations_evidence_is_pinned_and_valid(self):
+        self.assertEqual(VALIDATOR.validate_operations_evidence(self.operations), [])
+        state = copy.deepcopy(self.state)
+        state["operations_and_diagnostics_evidence"] = "state/other.json"
+        self.assertIn(
+            "operations_and_diagnostics_evidence must pin Issue #46 acceptance",
+            VALIDATOR.validate_state(state),
+        )
+
+    def test_operations_implementation_and_fixtures_are_hash_bound(self):
+        evidence = copy.deepcopy(self.operations)
+        evidence["implementation"][0]["sha256"] = "0" * 64
+        self.assertTrue(
+            any(
+                "Operations implementation hash differs" in error
+                for error in VALIDATOR.validate_operations_evidence(evidence)
+            )
+        )
+        evidence = copy.deepcopy(self.operations)
+        evidence["fixture_inventory"].pop()
+        self.assertIn(
+            "Operations fixture inventory must be exact",
+            VALIDATOR.validate_operations_evidence(evidence),
+        )
+
+    def test_operations_evidence_cannot_expand_protected_scope(self):
+        evidence = copy.deepcopy(self.operations)
+        evidence["protected_data_accessed"] = True
+        self.assertIn(
+            "Operations evidence must not access protected data",
+            VALIDATOR.validate_operations_evidence(evidence),
+        )
+
     def test_unknown_dependency_fails(self):
         state = copy.deepcopy(self.state)
         state["roadmap"][1]["depends_on"] = ["UNKNOWN"]
@@ -295,6 +333,21 @@ class GovernanceValidationTests(unittest.TestCase):
         ownership["id_policy"]["namespaces"].remove("message")
         errors = VALIDATOR.validate_data_ownership(ownership)
         self.assertTrue(any("trace namespaces" in error for error in errors))
+
+    def test_operations_ownership_is_exact(self):
+        ownership = copy.deepcopy(self.ownership)
+        entry = next(
+            item
+            for item in ownership["ownership"]
+            if item["field_pattern"] == "/operations/jobs/*"
+        )
+        entry["authoritative_owner"] = "worker"
+        self.assertTrue(
+            any(
+                "operations ownership differs" in error
+                for error in VALIDATOR.validate_data_ownership(ownership)
+            )
+        )
 
     def test_identity_hash_collision_must_hard_fail(self):
         ownership = copy.deepcopy(self.ownership)

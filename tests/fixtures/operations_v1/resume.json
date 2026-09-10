@@ -1,0 +1,16 @@
+{
+  "required_revalidation": [
+    "job_id",
+    "operation_id",
+    "capability",
+    "input_hashes",
+    "worker_commit_sha",
+    "capability_report_sha256",
+    "config_sha256",
+    "checkpoint_binding",
+    "preflight",
+    "resource_state"
+  ],
+  "resume_scope": "PIPELINE_PREFIX",
+  "scenario": "resume"
+}

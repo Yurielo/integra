@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://integra.local/schemas/integrity_report_v1.schema.json",
+  "title": "Integra Integrity Report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "findings"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "status": {"enum": ["PASS", "FAIL"]},
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["artifact_id", "code"],
+        "properties": {
+          "artifact_id": {"type": "string", "pattern": "^urn:integra:artifact:"},
+          "code": {"enum": ["IDENTITY_MISMATCH", "DUPLICATE_IDENTITY", "IDENTITY_OR_PARTIAL_STATE", "MISSING_OR_ESCAPED", "UNSAFE_ARTIFACT_TYPE", "PARTIAL_SIZE", "ALTERED_HASH"]}
+        }
+      }
+    }
+  }
+}

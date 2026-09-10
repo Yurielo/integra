@@ -54,6 +54,13 @@ resume is explicitly unsupported; Core Alpha prefix recovery remains the
 separate fail-closed mechanism. This is technical integration evidence only;
 semantic outputs remain review-required or provisional.
 
+Operations & Diagnostics v1 adds the sole durable JobStore, exact capability
+preflight, atomic host resource reservations, redacted correlated logs,
+product-neutral artifact Integrity and owned process/model cleanup. Its
+contract is [`OPERATIONS_AND_DIAGNOSTICS_V1.md`](OPERATIONS_AND_DIAGNOSTICS_V1.md).
+It does not replace Project Lease or R3 messages and does not expand R6 worker
+resume beyond the accepted pipeline-prefix recovery boundary.
+
 ## 2. Authority model
 
 ### Factual state authority

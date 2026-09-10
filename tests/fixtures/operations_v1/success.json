@@ -1,0 +1,14 @@
+{
+  "expected_terminal": "SUCCEEDED",
+  "required_checks": [
+    "measured_capability_preflight",
+    "store_captured_resource_snapshot",
+    "durable_reservation",
+    "output_promotion",
+    "integrity",
+    "durable_lease_release",
+    "durable_resource_release",
+    "process_cleanup"
+  ],
+  "scenario": "success"
+}
