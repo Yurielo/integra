@@ -56,7 +56,7 @@
   "implementation": [
     {
       "path": "integra_core/operations.py",
-      "sha256": "89a7e42604d9ad3e98fa03631ac2f79ef14375fb11df829e55a17ae5135de37d"
+      "sha256": "6b2167d2f069c8a05559ef1e55b3dfd7573ef8265cf237e9f5e67bb5573702ea"
     },
     {
       "path": "integra_core/operations_fixtures.py",

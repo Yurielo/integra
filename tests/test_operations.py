@@ -19,6 +19,7 @@ from integra_core.operations import (
     ProcessSupervisor,
     ResourceReservationStore,
     ResourceScheduler,
+    _sha256_regular_file,
     calculate_required_disk,
     capture_resource_snapshot,
     probe_capability,
@@ -47,6 +48,18 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class OperationsTests(unittest.TestCase):
+    def test_regular_file_hash_ignores_access_time_changes(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "runtime"
+            payload = b"runtime"
+            path.write_bytes(payload)
+            metadata = path.stat()
+            os.utime(path, ns=(1, metadata.st_mtime_ns))
+            self.assertEqual(
+                _sha256_regular_file(path, "runtime"),
+                hashlib.sha256(payload).hexdigest(),
+            )
+
     @staticmethod
     def lease_candidate(process_id: int, process_start_token: str) -> dict:
         return {

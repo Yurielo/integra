@@ -1165,19 +1165,46 @@ def probe_capability(
 
 
 def _sha256_regular_file(path: Path, label: str) -> str:
+    descriptor: int | None = None
     try:
-        metadata = path.lstat()
+        descriptor = os.open(
+            path,
+            os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_CLOEXEC", 0),
+        )
     except OSError as error:
         raise OperationsError(f"{label} file is unavailable") from error
-    if path.is_symlink() or not stat.S_ISREG(metadata.st_mode):
-        raise OperationsError(f"{label} file is not a regular file")
-    digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+    try:
+        metadata = os.fstat(descriptor)
+        if not stat.S_ISREG(metadata.st_mode):
+            raise OperationsError(f"{label} file is not a regular file")
+        signature = _stable_file_metadata(metadata)
+        digest = hashlib.sha256()
+        while True:
+            chunk = os.read(descriptor, 1024 * 1024)
+            if not chunk:
+                break
             digest.update(chunk)
-    if path.lstat() != metadata:
-        raise OperationsError(f"{label} file changed during hashing")
-    return digest.hexdigest()
+        if _stable_file_metadata(os.fstat(descriptor)) != signature:
+            raise OperationsError(f"{label} file changed during hashing")
+        return digest.hexdigest()
+    finally:
+        os.close(descriptor)
+
+
+def _stable_file_metadata(metadata: os.stat_result) -> tuple[int, ...]:
+    """Return change-sensitive metadata while deliberately excluding atime."""
+
+    return (
+        metadata.st_dev,
+        metadata.st_ino,
+        metadata.st_mode,
+        metadata.st_nlink,
+        metadata.st_uid,
+        metadata.st_gid,
+        metadata.st_size,
+        metadata.st_mtime_ns,
+        metadata.st_ctime_ns,
+    )
 
 
 @dataclass(frozen=True)
@@ -2053,6 +2080,7 @@ def _hash_confined_regular_file(
         metadata = os.fstat(file_descriptor)
         if not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
             raise OperationsError("artifact is not a single-linked regular file")
+        signature = _stable_file_metadata(metadata)
         digest = hashlib.sha256()
         size = 0
         while True:
@@ -2061,7 +2089,7 @@ def _hash_confined_regular_file(
                 break
             digest.update(chunk)
             size += len(chunk)
-        if os.fstat(file_descriptor) != metadata:
+        if _stable_file_metadata(os.fstat(file_descriptor)) != signature:
             raise OperationsError("artifact metadata changed during verification")
         return size, digest.hexdigest()
     except OSError as error:
