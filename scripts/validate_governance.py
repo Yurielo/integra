@@ -409,6 +409,10 @@ def validate_capability_benchmark(evidence: dict, baselines: dict, root: Path = 
     except BenchmarkValidationError as exc:
         errors.extend(str(exc).splitlines())
         return errors
+    fixture_reference = evidence["fixture_manifest"]
+    fixture_path = root / fixture_reference["path"]
+    if not fixture_path.is_file() or sha256_file(fixture_path) != fixture_reference["sha256"]:
+        errors.append("R5 normalized fixture hash differs from the governed record")
     raw_reference = evidence["raw_replay"]
     raw_path = root / raw_reference["path"]
     if not raw_path.is_file() or sha256_file(raw_path) != raw_reference["sha256"]:

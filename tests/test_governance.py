@@ -195,6 +195,12 @@ class GovernanceValidationTests(unittest.TestCase):
         errors = VALIDATOR.validate_capability_benchmark(evidence, self.baselines)
         self.assertTrue(any("source repositories" in error for error in errors))
 
+    def test_capability_benchmark_fixture_hash_is_bound(self):
+        evidence = copy.deepcopy(self.capability_benchmark)
+        evidence["fixture_manifest"]["sha256"] = "0" * 64
+        errors = VALIDATOR.validate_capability_benchmark(evidence, self.baselines)
+        self.assertTrue(any("fixture hash" in error for error in errors))
+
 
 if __name__ == "__main__":
     unittest.main()
