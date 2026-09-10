@@ -41,7 +41,7 @@
   "implementation": [
     {
       "path": "integra_core/migration.py",
-      "sha256": "e6f59e47a361fc4a8ca2407345bcab4335c643d2460641808c6384375e4ae2e7"
+      "sha256": "b72341babda31a2e79e04e1a965aaeb2d404f01dee62d150731318c1da8067d5"
     },
     {
       "path": "integra_core/migration_fixtures.py",

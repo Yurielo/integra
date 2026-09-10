@@ -53,6 +53,10 @@ and stable artifact ID.
 The target root is created with an exclusive operation; an existing target is
 always `BLOCKED` with `TARGET_EXISTS_NO_OVERWRITE`. Files are opened without
 following symlinks, copied into a new `source/` tree, flushed, and hashed.
+Every source and target path component is traversed relative to stable open
+directory descriptors. Copy and cleanup use descriptor-relative create,
+open, unlink, and rmdir operations, so replacing an intermediate pathname with
+a symlink cannot redirect a write or deletion outside the owned tree.
 Integra then writes its own project and migration manifests below `.integra/`.
 
 Copy, rollback, and interrupted recovery each require their own exact active

@@ -358,10 +358,31 @@ def execute_copy_on_write(
     parent = _validated_directory(Path(plan["target_parent"]), "target parent")
     if target.parent != parent:
         raise MigrationError("target parent changed after dry run")
+    parent_descriptor = _open_directory_fd(parent, "target parent")
+    target_descriptor: int | None = None
+    source_descriptor: int | None = None
     try:
-        target.mkdir(mode=0o700)
+        os.mkdir(target.name, mode=0o700, dir_fd=parent_descriptor)
+        target_descriptor = _open_child_directory_fd(
+            parent_descriptor, target.name, "migration target"
+        )
+        source_descriptor = _open_directory_fd(
+            Path(plan["source_root"]), "migration source"
+        )
     except FileExistsError as error:
-        raise MigrationError("target exists; copy-on-write migration will not overwrite it") from error
+        os.close(parent_descriptor)
+        raise MigrationError(
+            "target exists; copy-on-write migration will not overwrite it"
+        ) from error
+    except Exception:
+        if target_descriptor is not None:
+            os.close(target_descriptor)
+            try:
+                os.rmdir(target.name, dir_fd=parent_descriptor)
+            except OSError:
+                pass
+        os.close(parent_descriptor)
+        raise
     created_files: list[str] = []
     try:
         marker = {
@@ -372,34 +393,39 @@ def execute_copy_on_write(
             "target_locator_sha256": plan["target_locator_sha256"],
             "state": "IN_PROGRESS",
         }
-        _write_json_exclusive(target / IN_PROGRESS_MARKER, marker)
+        _write_json_exclusive_at(target_descriptor, (IN_PROGRESS_MARKER,), marker)
         created_files.append(IN_PROGRESS_MARKER)
-        (target / "source").mkdir(mode=0o700)
+        os.mkdir("source", mode=0o700, dir_fd=target_descriptor)
         for mapping in plan["mappings"]:
-            source_path = Path(plan["source_root"]).joinpath(
-                *_relative_parts(mapping["source_relative_path"])
-            )
-            destination = target.joinpath(
-                *_relative_parts(mapping["destination_relative_path"])
-            )
-            destination.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-            _copy_regular_file_exact(
-                source_path,
-                destination,
+            source_parts = _relative_parts(mapping["source_relative_path"])
+            destination_parts = _relative_parts(mapping["destination_relative_path"])
+            _ensure_directories_at(target_descriptor, destination_parts[:-1])
+            _copy_regular_file_exact_at(
+                source_descriptor,
+                source_parts,
+                target_descriptor,
+                destination_parts,
                 expected_size=mapping["size_bytes"],
                 expected_sha256=mapping["content_sha256"],
             )
             created_files.append(mapping["destination_relative_path"])
-        integra_root = target / INTEGRA_DIRECTORY
-        integra_root.mkdir(mode=0o700)
+        os.mkdir(INTEGRA_DIRECTORY, mode=0o700, dir_fd=target_descriptor)
         project_manifest = _expected_project_manifest(plan)
-        _write_json_exclusive(integra_root / PROJECT_MANIFEST, project_manifest)
+        _write_json_exclusive_at(
+            target_descriptor,
+            (INTEGRA_DIRECTORY, PROJECT_MANIFEST),
+            project_manifest,
+        )
         created_files.append(f"{INTEGRA_DIRECTORY}/{PROJECT_MANIFEST}")
         report = _expected_report(plan, operation)
         validate_report(report)
-        _write_json_exclusive(integra_root / MIGRATION_REPORT, report)
+        _write_json_exclusive_at(
+            target_descriptor,
+            (INTEGRA_DIRECTORY, MIGRATION_REPORT),
+            report,
+        )
         created_files.append(f"{INTEGRA_DIRECTORY}/{MIGRATION_REPORT}")
-        (target / IN_PROGRESS_MARKER).unlink()
+        os.unlink(IN_PROGRESS_MARKER, dir_fd=target_descriptor)
         created_files.remove(IN_PROGRESS_MARKER)
         integrity = validate_migration(discovery, plan, report)
         if integrity["status"] != "PASS":
@@ -408,6 +434,12 @@ def execute_copy_on_write(
     except Exception:
         _cleanup_failed_target(target, plan, created_files)
         raise
+    finally:
+        if source_descriptor is not None:
+            os.close(source_descriptor)
+        if target_descriptor is not None:
+            os.close(target_descriptor)
+        os.close(parent_descriptor)
 
 
 def validate_report(report: dict[str, Any]) -> None:
@@ -502,23 +534,45 @@ def validate_migration(
     current = discover_source_project(Path(plan["source_root"]), plan["source_component"])
     _require_same_source_snapshot(discovery, current)
     target = _validated_directory(Path(plan["target_root"]), "migration target")
-    if (target / IN_PROGRESS_MARKER).exists() or (target / IN_PROGRESS_MARKER).is_symlink():
-        raise MigrationError("migration target is still marked in progress")
     expected = {
         item["destination_relative_path"]: item for item in plan["mappings"]
     }
-    for relative, item in expected.items():
-        path = target.joinpath(*_relative_parts(relative))
-        if not path.is_file() or path.is_symlink():
-            raise MigrationError(f"migrated file is missing or unsafe: {relative}")
-        if path.stat().st_size != item["size_bytes"]:
-            raise MigrationError(f"migrated file size differs: {relative}")
-        if _sha256_regular_file(path, "migrated file") != item["content_sha256"]:
-            raise MigrationError(f"migrated file hash differs: {relative}")
-    project_path = target / INTEGRA_DIRECTORY / PROJECT_MANIFEST
-    report_path = target / INTEGRA_DIRECTORY / MIGRATION_REPORT
-    project_manifest = _read_json_regular(project_path, "Integra project manifest")
-    stored_report = _read_json_regular(report_path, "migration report")
+    target_descriptor = _open_directory_fd(target, "migration target")
+    try:
+        try:
+            os.stat(
+                IN_PROGRESS_MARKER,
+                dir_fd=target_descriptor,
+                follow_symlinks=False,
+            )
+        except FileNotFoundError:
+            pass
+        else:
+            raise MigrationError("migration target is still marked in progress")
+        inventory, _ = _snapshot_tree_at(target_descriptor)
+        inventory_by_path = {
+            item["source_relative_path"]: item for item in inventory
+        }
+        for relative, item in expected.items():
+            actual = inventory_by_path.get(relative)
+            if actual is None:
+                raise MigrationError(f"migrated file is missing: {relative}")
+            if actual["size_bytes"] != item["size_bytes"]:
+                raise MigrationError(f"migrated file size differs: {relative}")
+            if actual["content_sha256"] != item["content_sha256"]:
+                raise MigrationError(f"migrated file hash differs: {relative}")
+        project_manifest = _read_json_regular_at(
+            target_descriptor,
+            (INTEGRA_DIRECTORY, PROJECT_MANIFEST),
+            "Integra project manifest",
+        )
+        stored_report = _read_json_regular_at(
+            target_descriptor,
+            (INTEGRA_DIRECTORY, MIGRATION_REPORT),
+            "migration report",
+        )
+    finally:
+        os.close(target_descriptor)
     if stored_report != report:
         raise MigrationError("stored migration report differs from returned report")
     if project_manifest != _expected_project_manifest(plan):
@@ -527,7 +581,7 @@ def validate_migration(
         f"{INTEGRA_DIRECTORY}/{PROJECT_MANIFEST}",
         f"{INTEGRA_DIRECTORY}/{MIGRATION_REPORT}",
     }
-    actual_paths = {item["source_relative_path"] for item in _snapshot_files(target)}
+    actual_paths = set(inventory_by_path)
     if actual_paths != expected_paths:
         raise MigrationError("migration target contains missing or unexpected files")
     return {
@@ -596,53 +650,63 @@ def recover_incomplete_migration(
         plan, job_store, reservation_store, lease_store, now, action="recover"
     )
     target = _validated_directory(Path(plan["target_root"]), "partial migration target")
-    marker_path = target / IN_PROGRESS_MARKER
-    marker = _read_json_regular(marker_path, "migration marker")
-    if marker != {
-        "schema_version": "1.0",
-        "plan_id": plan["plan_id"],
-        "plan_sha256": plan["plan_sha256"],
-        "project_id": plan["project_id"],
-        "target_locator_sha256": plan["target_locator_sha256"],
-        "state": "IN_PROGRESS",
-    }:
-        raise MigrationError("partial migration marker differs from plan")
+    target_descriptor = _open_directory_fd(target, "partial migration target")
     allowed = {IN_PROGRESS_MARKER}
     mapping_by_path = {
         item["destination_relative_path"]: item for item in plan["mappings"]
     }
     project_manifest_path = f"{INTEGRA_DIRECTORY}/{PROJECT_MANIFEST}"
     migration_report_path = f"{INTEGRA_DIRECTORY}/{MIGRATION_REPORT}"
-    for item in _snapshot_files(target):
-        relative = item["source_relative_path"]
-        if relative == IN_PROGRESS_MARKER:
-            continue
-        mapping = mapping_by_path.get(relative)
-        if mapping is not None:
-            if (
-                item["size_bytes"] != mapping["size_bytes"]
-                or item["content_sha256"] != mapping["content_sha256"]
-            ):
-                raise MigrationError("partial migration contains altered bytes")
-        elif relative == project_manifest_path:
-            if _read_json_regular(
-                target.joinpath(*_relative_parts(relative)), "partial migration metadata"
-            ) != _expected_project_manifest(plan):
-                raise MigrationError("partial migration contains altered metadata")
-        elif relative == migration_report_path:
-            partial_report = _read_json_regular(
-                target.joinpath(*_relative_parts(relative)), "partial migration report"
-            )
-            validate_report(partial_report)
-            if any(partial_report[key] != plan[key] for key in (
-                "plan_id", "job_id", "project_id", "source_component", "source_root",
-                "target_root", "target_locator_sha256", "source_revision_sha256",
-                "source_layout_sha256",
-            )) or partial_report["copied_files"] != plan["mappings"]:
-                raise MigrationError("partial migration contains altered metadata")
-        else:
-            raise MigrationError("partial migration contains an unexpected file")
-        allowed.add(relative)
+    try:
+        marker = _read_json_regular_at(
+            target_descriptor, (IN_PROGRESS_MARKER,), "migration marker"
+        )
+        if marker != {
+            "schema_version": "1.0",
+            "plan_id": plan["plan_id"],
+            "plan_sha256": plan["plan_sha256"],
+            "project_id": plan["project_id"],
+            "target_locator_sha256": plan["target_locator_sha256"],
+            "state": "IN_PROGRESS",
+        }:
+            raise MigrationError("partial migration marker differs from plan")
+        inventory, _ = _snapshot_tree_at(target_descriptor)
+        for item in inventory:
+            relative = item["source_relative_path"]
+            if relative == IN_PROGRESS_MARKER:
+                continue
+            mapping = mapping_by_path.get(relative)
+            if mapping is not None:
+                if (
+                    item["size_bytes"] != mapping["size_bytes"]
+                    or item["content_sha256"] != mapping["content_sha256"]
+                ):
+                    raise MigrationError("partial migration contains altered bytes")
+            elif relative == project_manifest_path:
+                if _read_json_regular_at(
+                    target_descriptor,
+                    _relative_parts(relative),
+                    "partial migration metadata",
+                ) != _expected_project_manifest(plan):
+                    raise MigrationError("partial migration contains altered metadata")
+            elif relative == migration_report_path:
+                partial_report = _read_json_regular_at(
+                    target_descriptor,
+                    _relative_parts(relative),
+                    "partial migration report",
+                )
+                validate_report(partial_report)
+                if any(partial_report[key] != plan[key] for key in (
+                    "plan_id", "job_id", "project_id", "source_component",
+                    "source_root", "target_root", "target_locator_sha256",
+                    "source_revision_sha256", "source_layout_sha256",
+                )) or partial_report["copied_files"] != plan["mappings"]:
+                    raise MigrationError("partial migration contains altered metadata")
+            else:
+                raise MigrationError("partial migration contains an unexpected file")
+            allowed.add(relative)
+    finally:
+        os.close(target_descriptor)
     planned_directories = _parent_directories(
         set(mapping_by_path)
         | {project_manifest_path, migration_report_path, IN_PROGRESS_MARKER}
@@ -658,126 +722,228 @@ def recover_incomplete_migration(
 
 
 def _recognize_project(root: Path, component: str) -> dict[str, Any]:
-    if component == "seminartext":
-        seminar_path = root / "seminar.yaml"
-        registry_path = root / "sources.json"
-        if not seminar_path.is_file() or seminar_path.is_symlink():
-            raise MigrationError("SeminarText seminar.yaml is missing or unsafe")
-        seminar_text = seminar_path.read_text(encoding="utf-8")
-        if not seminar_text.strip() or "title:" not in seminar_text:
-            raise MigrationError("SeminarText seminar.yaml is not recognized")
-        registry = _read_json_regular(registry_path, "SeminarText sources registry")
+    root_descriptor = _open_directory_fd(root, "source project")
+    try:
+        if component == "seminartext":
+            seminar_text = _read_regular_bytes_at(
+                root_descriptor, ("seminar.yaml",), "SeminarText seminar.yaml"
+            ).decode("utf-8")
+            if not seminar_text.strip() or "title:" not in seminar_text:
+                raise MigrationError("SeminarText seminar.yaml is not recognized")
+            registry = _read_json_regular_at(
+                root_descriptor,
+                ("sources.json",),
+                "SeminarText sources registry",
+            )
+            if (
+                registry.get("schema_version") != 1
+                or not isinstance(registry.get("videos"), list)
+                or not isinstance(registry.get("documents"), list)
+            ):
+                raise MigrationError("SeminarText sources registry is unsupported")
+            native_ids: set[str] = set()
+            references = []
+            for collection, kind in (
+                ("videos", "MEDIA"),
+                ("documents", "DOCUMENT"),
+            ):
+                for item in registry[collection]:
+                    native_id = (
+                        item.get("source_id") if isinstance(item, dict) else None
+                    )
+                    locator = item.get("file") if isinstance(item, dict) else None
+                    if (
+                        not isinstance(native_id, str)
+                        or not native_id
+                        or native_id in native_ids
+                    ):
+                        raise MigrationError("SeminarText source identity is invalid")
+                    native_ids.add(native_id)
+                    if not isinstance(locator, str) or not locator:
+                        raise MigrationError("SeminarText source locator is invalid")
+                    parts = _relative_parts(locator)
+                    _verify_regular_file_at(
+                        root_descriptor,
+                        parts,
+                        "SeminarText registered source",
+                    )
+                    references.append({
+                        "native_id": native_id,
+                        "kind": kind,
+                        "locator_sha256": hashlib.sha256(locator.encode()).hexdigest(),
+                        "scope": "IN_PROJECT",
+                        "accessed": True,
+                    })
+            return {
+                "source_format": "SEMINARTEXT_PROJECT",
+                "source_schema_version": "1",
+                "source_references": references,
+            }
+        manifest = _read_json_regular_at(
+            root_descriptor,
+            ("Support files", "manifest.json"),
+            "VideoText manifest",
+        )
         if (
-            registry.get("schema_version") != 1
-            or not isinstance(registry.get("videos"), list)
-            or not isinstance(registry.get("documents"), list)
+            str(manifest.get("appName", "")).lower() != "videotext"
+            or manifest.get("schemaVersion") != 7
+            or not isinstance(manifest.get("sourceMediaPath"), str)
+            or not manifest["sourceMediaPath"]
         ):
-            raise MigrationError("SeminarText sources registry is unsupported")
-        native_ids: set[str] = set()
-        references = []
-        for collection, kind in (("videos", "MEDIA"), ("documents", "DOCUMENT")):
-            for item in registry[collection]:
-                native_id = item.get("source_id") if isinstance(item, dict) else None
-                locator = item.get("file") if isinstance(item, dict) else None
-                if not isinstance(native_id, str) or not native_id or native_id in native_ids:
-                    raise MigrationError("SeminarText source identity is invalid")
-                native_ids.add(native_id)
-                if not isinstance(locator, str) or not locator:
-                    raise MigrationError("SeminarText source locator is invalid")
+            raise MigrationError(
+                "VideoText project schema v7 is unsupported or incomplete"
+            )
+        locator = manifest["sourceMediaPath"]
+        locator_path = Path(locator)
+        in_project = False
+        if not locator_path.is_absolute():
+            try:
                 parts = _relative_parts(locator)
-                path = root.joinpath(*parts)
-                if not path.is_file() or path.is_symlink():
-                    raise MigrationError("SeminarText registered source is missing or unsafe")
-                references.append({
-                    "native_id": native_id,
-                    "kind": kind,
-                    "locator_sha256": hashlib.sha256(locator.encode()).hexdigest(),
-                    "scope": "IN_PROJECT",
-                    "accessed": True,
-                })
+                _verify_regular_file_at(
+                    root_descriptor, parts, "VideoText in-project media"
+                )
+            except MigrationError:
+                pass
+            else:
+                in_project = True
         return {
-            "source_format": "SEMINARTEXT_PROJECT",
-            "source_schema_version": "1",
-            "source_references": references,
+            "source_format": "VIDEOTEXT_PROJECT",
+            "source_schema_version": "7",
+            "source_references": [{
+                "native_id": "primary-media",
+                "kind": "MEDIA",
+                "locator_sha256": hashlib.sha256(locator.encode()).hexdigest(),
+                "scope": "IN_PROJECT" if in_project else "EXTERNAL_REFERENCE",
+                "accessed": in_project,
+            }],
         }
-    manifest = _read_json_regular(
-        root / "Support files" / "manifest.json", "VideoText manifest"
-    )
-    if (
-        str(manifest.get("appName", "")).lower() != "videotext"
-        or manifest.get("schemaVersion") != 7
-        or not isinstance(manifest.get("sourceMediaPath"), str)
-        or not manifest["sourceMediaPath"]
-    ):
-        raise MigrationError("VideoText project schema v7 is unsupported or incomplete")
-    locator = manifest["sourceMediaPath"]
-    locator_path = Path(locator)
-    in_project = False
-    if not locator_path.is_absolute():
-        try:
-            candidate = root.joinpath(*_relative_parts(locator))
-        except MigrationError:
-            candidate = None
-        if candidate is not None and candidate.is_file() and not candidate.is_symlink():
-            in_project = True
-    return {
-        "source_format": "VIDEOTEXT_PROJECT",
-        "source_schema_version": "7",
-        "source_references": [{
-            "native_id": "primary-media",
-            "kind": "MEDIA",
-            "locator_sha256": hashlib.sha256(locator.encode()).hexdigest(),
-            "scope": "IN_PROJECT" if in_project else "EXTERNAL_REFERENCE",
-            "accessed": in_project,
-        }],
-    }
+    except UnicodeError as error:
+        raise MigrationError("source project text encoding is invalid") from error
+    finally:
+        os.close(root_descriptor)
 
 
 def _snapshot_files(root: Path) -> list[dict[str, Any]]:
-    entries: list[dict[str, Any]] = []
-    for current, directory_names, file_names in os.walk(root, topdown=True, followlinks=False):
-        current_path = Path(current)
-        for name in sorted(directory_names):
-            path = current_path / name
-            metadata = path.lstat()
-            if path.is_symlink() or not stat.S_ISDIR(metadata.st_mode):
-                raise MigrationError("source tree contains an unsafe directory entry")
-        directory_names.sort()
-        for name in sorted(file_names):
-            path = current_path / name
-            metadata = path.lstat()
-            if path.is_symlink() or not stat.S_ISREG(metadata.st_mode):
-                raise MigrationError("project tree contains an unsafe file entry")
-            relative = path.relative_to(root).as_posix()
-            entries.append({
-                "source_relative_path": relative,
-                "size_bytes": metadata.st_size,
-                "content_sha256": _sha256_regular_file(path, "project file"),
-            })
-    entries.sort(key=lambda item: item["source_relative_path"])
-    return entries
+    descriptor = _open_directory_fd(root, "project root")
+    try:
+        entries, _ = _snapshot_tree_at(descriptor)
+        return [
+            {
+                "source_relative_path": item["source_relative_path"],
+                "size_bytes": item["size_bytes"],
+                "content_sha256": item["content_sha256"],
+            }
+            for item in entries
+        ]
+    finally:
+        os.close(descriptor)
 
 
-def _copy_regular_file_exact(
-    source: Path,
-    destination: Path,
+def _snapshot_tree_at(
+    root_descriptor: int,
+) -> tuple[list[dict[str, Any]], dict[str, tuple[int, int]]]:
+    """Inventory a tree through stable directory handles without following links."""
+
+    files: list[dict[str, Any]] = []
+    directories: dict[str, tuple[int, int]] = {}
+
+    def visit(directory_descriptor: int, prefix: tuple[str, ...]) -> None:
+        try:
+            names = sorted(os.listdir(directory_descriptor))
+        except OSError as error:
+            raise MigrationError("project directory cannot be inventoried") from error
+        for name in names:
+            try:
+                metadata = os.stat(
+                    name, dir_fd=directory_descriptor, follow_symlinks=False
+                )
+            except OSError as error:
+                raise MigrationError("project entry changed during inventory") from error
+            relative_parts = (*prefix, name)
+            relative = "/".join(relative_parts)
+            if stat.S_ISDIR(metadata.st_mode):
+                child = _open_child_directory_fd(
+                    directory_descriptor, name, "project directory"
+                )
+                try:
+                    opened = os.fstat(child)
+                    directories[relative] = (opened.st_dev, opened.st_ino)
+                    visit(child, relative_parts)
+                finally:
+                    os.close(child)
+            elif stat.S_ISREG(metadata.st_mode):
+                file_descriptor = None
+                try:
+                    file_descriptor = os.open(
+                        name,
+                        os.O_RDONLY
+                        | os.O_NOFOLLOW
+                        | getattr(os, "O_CLOEXEC", 0),
+                        dir_fd=directory_descriptor,
+                    )
+                    opened = os.fstat(file_descriptor)
+                    if (
+                        not stat.S_ISREG(opened.st_mode)
+                        or (opened.st_dev, opened.st_ino)
+                        != (metadata.st_dev, metadata.st_ino)
+                    ):
+                        raise MigrationError("project file changed during inventory")
+                    digest, size = _hash_open_file(file_descriptor)
+                    if os.fstat(file_descriptor).st_size != size:
+                        raise MigrationError("project file changed during hashing")
+                except OSError as error:
+                    raise MigrationError("project file cannot be inventoried") from error
+                finally:
+                    if file_descriptor is not None:
+                        os.close(file_descriptor)
+                files.append({
+                    "source_relative_path": relative,
+                    "size_bytes": size,
+                    "content_sha256": digest,
+                    "device": opened.st_dev,
+                    "inode": opened.st_ino,
+                })
+            else:
+                raise MigrationError("project tree contains an unsafe entry")
+
+    visit(root_descriptor, ())
+    files.sort(key=lambda item: item["source_relative_path"])
+    return files, directories
+
+
+def _copy_regular_file_exact_at(
+    source_root_descriptor: int,
+    source_parts: tuple[str, ...],
+    target_root_descriptor: int,
+    destination_parts: tuple[str, ...],
     *,
     expected_size: int,
     expected_sha256: str,
 ) -> None:
+    source_parent = _open_directory_chain_at(
+        source_root_descriptor, source_parts[:-1], "migration source parent"
+    )
+    destination_parent = _open_directory_chain_at(
+        target_root_descriptor,
+        destination_parts[:-1],
+        "migration destination parent",
+    )
     source_descriptor: int | None = None
     destination_descriptor: int | None = None
     try:
         source_descriptor = os.open(
-            source, os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_CLOEXEC", 0)
+            source_parts[-1],
+            os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_CLOEXEC", 0),
+            dir_fd=source_parent,
         )
         source_metadata = os.fstat(source_descriptor)
         if not stat.S_ISREG(source_metadata.st_mode):
             raise MigrationError("migration source is not a regular file")
         destination_descriptor = os.open(
-            destination,
+            destination_parts[-1],
             os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_CLOEXEC", 0),
             0o600,
+            dir_fd=destination_parent,
         )
         digest = hashlib.sha256()
         size = 0
@@ -796,6 +962,9 @@ def _copy_regular_file_exact(
             raise MigrationError("source changed after migration dry run")
         if os.fstat(source_descriptor).st_size != source_metadata.st_size:
             raise MigrationError("source size changed while copying")
+        destination_metadata = os.fstat(destination_descriptor)
+        if not stat.S_ISREG(destination_metadata.st_mode) or destination_metadata.st_size != size:
+            raise MigrationError("migration destination changed while copying")
     except OSError as error:
         raise MigrationError("copy-on-write file operation failed") from error
     finally:
@@ -803,8 +972,8 @@ def _copy_regular_file_exact(
             os.close(destination_descriptor)
         if source_descriptor is not None:
             os.close(source_descriptor)
-    if _sha256_regular_file(destination, "migrated file") != expected_sha256:
-        raise MigrationError("copied file hash verification failed")
+        os.close(destination_parent)
+        os.close(source_parent)
 
 
 def _require_plan_matches_discovery(plan: dict[str, Any], discovery: dict[str, Any]) -> None:
@@ -1013,38 +1182,91 @@ def _remove_owned_target(
     allowed_directories: set[str] | None = None,
 ) -> None:
     root = _validated_directory(target, "Integra-owned migration target")
-    inventory = _snapshot_files(root)
-    actual = {item["source_relative_path"] for item in inventory}
-    if actual != expected_files:
-        raise MigrationError("rollback target contains missing or unexpected files")
-    expected_directories = _parent_directories(expected_files)
-    actual_directories = {
-        path.relative_to(root).as_posix()
-        for path in root.rglob("*")
-        if path.is_dir() and not path.is_symlink()
-    }
-    directories_are_valid = (
-        actual_directories == expected_directories
-        if allowed_directories is None
-        else expected_directories <= actual_directories <= allowed_directories
-    )
-    if not directories_are_valid:
-        raise MigrationError("rollback target contains missing or unexpected directories")
-    for item in inventory:
-        path = root.joinpath(*_relative_parts(item["source_relative_path"]))
-        metadata = path.lstat()
-        if path.is_symlink() or not stat.S_ISREG(metadata.st_mode):
-            raise MigrationError("rollback target contains an unsafe file")
-    for item in inventory:
-        root.joinpath(*_relative_parts(item["source_relative_path"])).unlink()
-    directories = sorted(
-        (path for path in root.rglob("*") if path.is_dir() and not path.is_symlink()),
-        key=lambda path: len(path.parts),
-        reverse=True,
-    )
-    for directory in directories:
-        directory.rmdir()
-    root.rmdir()
+    parent = _validated_directory(root.parent, "migration target parent")
+    parent_descriptor = _open_directory_fd(parent, "migration target parent")
+    try:
+        root_descriptor = _open_child_directory_fd(
+            parent_descriptor, root.name, "Integra-owned migration target"
+        )
+    except Exception:
+        os.close(parent_descriptor)
+        raise
+    try:
+        root_identity = os.fstat(root_descriptor)
+        inventory, directory_identities = _snapshot_tree_at(root_descriptor)
+        actual = {item["source_relative_path"] for item in inventory}
+        if actual != expected_files:
+            raise MigrationError(
+                "rollback target contains missing or unexpected files"
+            )
+        expected_directories = _parent_directories(expected_files)
+        actual_directories = set(directory_identities)
+        directories_are_valid = (
+            actual_directories == expected_directories
+            if allowed_directories is None
+            else expected_directories <= actual_directories <= allowed_directories
+        )
+        if not directories_are_valid:
+            raise MigrationError(
+                "rollback target contains missing or unexpected directories"
+            )
+        for item in inventory:
+            parts = _relative_parts(item["source_relative_path"])
+            file_parent = _open_directory_chain_at(
+                root_descriptor, parts[:-1], "rollback file parent"
+            )
+            try:
+                metadata = os.stat(
+                    parts[-1], dir_fd=file_parent, follow_symlinks=False
+                )
+                if (
+                    not stat.S_ISREG(metadata.st_mode)
+                    or (metadata.st_dev, metadata.st_ino)
+                    != (item["device"], item["inode"])
+                ):
+                    raise MigrationError("rollback target changed before deletion")
+                os.unlink(parts[-1], dir_fd=file_parent)
+            except OSError as error:
+                raise MigrationError("rollback file deletion failed closed") from error
+            finally:
+                os.close(file_parent)
+        for relative in sorted(
+            actual_directories,
+            key=lambda value: len(_relative_parts(value)),
+            reverse=True,
+        ):
+            parts = _relative_parts(relative)
+            directory_parent = _open_directory_chain_at(
+                root_descriptor, parts[:-1], "rollback directory parent"
+            )
+            try:
+                metadata = os.stat(
+                    parts[-1],
+                    dir_fd=directory_parent,
+                    follow_symlinks=False,
+                )
+                if (
+                    not stat.S_ISDIR(metadata.st_mode)
+                    or (metadata.st_dev, metadata.st_ino)
+                    != directory_identities[relative]
+                ):
+                    raise MigrationError("rollback directory changed before deletion")
+                os.rmdir(parts[-1], dir_fd=directory_parent)
+            except OSError as error:
+                raise MigrationError("rollback directory deletion failed closed") from error
+            finally:
+                os.close(directory_parent)
+        current_root = os.stat(root.name, dir_fd=parent_descriptor, follow_symlinks=False)
+        if (
+            not stat.S_ISDIR(current_root.st_mode)
+            or (current_root.st_dev, current_root.st_ino)
+            != (root_identity.st_dev, root_identity.st_ino)
+        ):
+            raise MigrationError("migration target changed before root deletion")
+        os.rmdir(root.name, dir_fd=parent_descriptor)
+    finally:
+        os.close(root_descriptor)
+        os.close(parent_descriptor)
 
 
 def _parent_directories(relative_files: set[str]) -> set[str]:
@@ -1056,21 +1278,212 @@ def _parent_directories(relative_files: set[str]) -> set[str]:
     return directories
 
 
-def _write_json_exclusive(path: Path, value: dict[str, Any]) -> None:
-    payload = json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True).encode() + b"\n"
-    descriptor = os.open(
-        path,
-        os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_CLOEXEC", 0),
-        0o600,
+def _directory_open_flags() -> int:
+    return (
+        os.O_RDONLY
+        | os.O_DIRECTORY
+        | os.O_NOFOLLOW
+        | getattr(os, "O_CLOEXEC", 0)
     )
+
+
+def _open_directory_fd(path: Path, label: str) -> int:
+    """Open an absolute directory one no-follow component at a time."""
+
+    candidate = _absolute_without_resolving(Path(path))
     try:
+        initial = candidate.lstat()
+    except OSError as error:
+        raise MigrationError(f"{label} is unavailable") from error
+    if candidate.is_symlink() or not stat.S_ISDIR(initial.st_mode):
+        raise MigrationError(f"{label} is not a safe directory")
+    if candidate == Path("/"):
+        return os.open("/", _directory_open_flags())
+    try:
+        resolved_parent = candidate.parent.resolve(strict=True)
+    except OSError as error:
+        raise MigrationError(f"{label} parent is unavailable") from error
+    descriptor = os.open("/", _directory_open_flags())
+    try:
+        for part in resolved_parent.parts[1:]:
+            next_descriptor = _open_child_directory_fd(descriptor, part, label)
+            os.close(descriptor)
+            descriptor = next_descriptor
+        opened = _open_child_directory_fd(descriptor, candidate.name, label)
+        metadata = os.fstat(opened)
+        if (metadata.st_dev, metadata.st_ino) != (initial.st_dev, initial.st_ino):
+            os.close(opened)
+            raise MigrationError(f"{label} changed while opening")
+        os.close(descriptor)
+        return opened
+    except Exception:
+        os.close(descriptor)
+        raise
+
+
+def _open_child_directory_fd(parent_descriptor: int, name: str, label: str) -> int:
+    if not isinstance(name, str) or not name or "/" in name or name in {".", ".."}:
+        raise MigrationError(f"{label} path component is invalid")
+    try:
+        descriptor = os.open(
+            name,
+            _directory_open_flags(),
+            dir_fd=parent_descriptor,
+        )
+    except OSError as error:
+        raise MigrationError(f"{label} is unavailable or unsafe") from error
+    metadata = os.fstat(descriptor)
+    if not stat.S_ISDIR(metadata.st_mode):
+        os.close(descriptor)
+        raise MigrationError(f"{label} is not a directory")
+    return descriptor
+
+
+def _open_directory_chain_at(
+    root_descriptor: int,
+    parts: tuple[str, ...],
+    label: str,
+) -> int:
+    descriptor = os.dup(root_descriptor)
+    try:
+        for part in parts:
+            next_descriptor = _open_child_directory_fd(descriptor, part, label)
+            os.close(descriptor)
+            descriptor = next_descriptor
+        return descriptor
+    except Exception:
+        os.close(descriptor)
+        raise
+
+
+def _ensure_directories_at(
+    root_descriptor: int,
+    parts: tuple[str, ...],
+) -> None:
+    descriptor = os.dup(root_descriptor)
+    try:
+        for part in parts:
+            try:
+                os.mkdir(part, mode=0o700, dir_fd=descriptor)
+            except FileExistsError:
+                pass
+            next_descriptor = _open_child_directory_fd(
+                descriptor, part, "migration destination directory"
+            )
+            os.close(descriptor)
+            descriptor = next_descriptor
+    finally:
+        os.close(descriptor)
+
+
+def _hash_open_file(descriptor: int) -> tuple[str, int]:
+    digest = hashlib.sha256()
+    size = 0
+    while True:
+        chunk = os.read(descriptor, 1024 * 1024)
+        if not chunk:
+            break
+        digest.update(chunk)
+        size += len(chunk)
+    return digest.hexdigest(), size
+
+
+def _verify_regular_file_at(
+    root_descriptor: int,
+    parts: tuple[str, ...],
+    label: str,
+) -> None:
+    parent = _open_directory_chain_at(root_descriptor, parts[:-1], f"{label} parent")
+    descriptor = None
+    try:
+        descriptor = os.open(
+            parts[-1],
+            os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_CLOEXEC", 0),
+            dir_fd=parent,
+        )
+        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+            raise MigrationError(f"{label} is not a regular file")
+    except OSError as error:
+        raise MigrationError(f"{label} is missing or unsafe") from error
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+        os.close(parent)
+
+
+def _read_regular_bytes_at(
+    root_descriptor: int,
+    parts: tuple[str, ...],
+    label: str,
+) -> bytes:
+    parent = _open_directory_chain_at(root_descriptor, parts[:-1], f"{label} parent")
+    descriptor = None
+    try:
+        descriptor = os.open(
+            parts[-1],
+            os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_CLOEXEC", 0),
+            dir_fd=parent,
+        )
+        metadata = os.fstat(descriptor)
+        if not stat.S_ISREG(metadata.st_mode):
+            raise MigrationError(f"{label} is not a regular file")
+        chunks: list[bytes] = []
+        size = 0
+        while True:
+            chunk = os.read(descriptor, 1024 * 1024)
+            if not chunk:
+                break
+            chunks.append(chunk)
+            size += len(chunk)
+        if os.fstat(descriptor).st_size != size:
+            raise MigrationError(f"{label} changed while reading")
+        return b"".join(chunks)
+    except OSError as error:
+        raise MigrationError(f"{label} is missing or unsafe") from error
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+        os.close(parent)
+
+
+def _read_json_regular_at(
+    root_descriptor: int,
+    parts: tuple[str, ...],
+    label: str,
+) -> dict[str, Any]:
+    try:
+        value = json.loads(_read_regular_bytes_at(root_descriptor, parts, label))
+    except (UnicodeError, json.JSONDecodeError) as error:
+        raise MigrationError(f"{label} is invalid") from error
+    if not isinstance(value, dict):
+        raise MigrationError(f"{label} must be an object")
+    return value
+
+
+def _write_json_exclusive_at(
+    root_descriptor: int,
+    parts: tuple[str, ...],
+    value: dict[str, Any],
+) -> None:
+    payload = json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True).encode() + b"\n"
+    parent = _open_directory_chain_at(root_descriptor, parts[:-1], "JSON parent")
+    descriptor = None
+    try:
+        descriptor = os.open(
+            parts[-1],
+            os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_CLOEXEC", 0),
+            0o600,
+            dir_fd=parent,
+        )
         view = memoryview(payload)
         while view:
             written = os.write(descriptor, view)
             view = view[written:]
         os.fsync(descriptor)
     finally:
-        os.close(descriptor)
+        if descriptor is not None:
+            os.close(descriptor)
+        os.close(parent)
 
 
 def _read_json_regular(path: Path, label: str) -> dict[str, Any]:

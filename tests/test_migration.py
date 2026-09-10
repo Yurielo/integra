@@ -1,4 +1,5 @@
 import copy
+import hashlib
 import json
 import os
 import shutil
@@ -8,6 +9,9 @@ from pathlib import Path
 
 from integra_core.migration import (
     MigrationError,
+    _copy_regular_file_exact_at,
+    _open_directory_fd,
+    _remove_owned_target,
     build_dry_run,
     discover_source_project,
     execute_copy_on_write,
@@ -223,8 +227,51 @@ class MigrationTests(unittest.TestCase):
             source = Path(temporary) / "source"
             shutil.copytree(FIXTURES / "seminartext_project", source)
             (source / "link").symlink_to(source / "seminar.yaml")
-            with self.assertRaisesRegex(MigrationError, "unsafe file"):
+            with self.assertRaisesRegex(MigrationError, "unsafe"):
                 discover_source_project(source, "seminartext")
+
+    def test_descriptor_copy_does_not_follow_intermediate_target_symlink(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "source-root"
+            target = root / "target-root"
+            external = root / "external"
+            source.mkdir()
+            target.mkdir()
+            external.mkdir()
+            payload = b"descriptor-confined"
+            (source / "input.bin").write_bytes(payload)
+            (target / "source").symlink_to(external, target_is_directory=True)
+            source_descriptor = _open_directory_fd(source, "test source")
+            target_descriptor = _open_directory_fd(target, "test target")
+            try:
+                with self.assertRaises(MigrationError):
+                    _copy_regular_file_exact_at(
+                        source_descriptor,
+                        ("input.bin",),
+                        target_descriptor,
+                        ("source", "escaped.bin"),
+                        expected_size=len(payload),
+                        expected_sha256=hashlib.sha256(payload).hexdigest(),
+                    )
+            finally:
+                os.close(target_descriptor)
+                os.close(source_descriptor)
+            self.assertFalse((external / "escaped.bin").exists())
+
+    def test_descriptor_rollback_does_not_follow_intermediate_symlink(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            target = root / "target"
+            external = root / "external"
+            target.mkdir()
+            external.mkdir()
+            victim = external / "victim.txt"
+            victim.write_text("preserve", encoding="utf-8")
+            (target / "source").symlink_to(external, target_is_directory=True)
+            with self.assertRaises(MigrationError):
+                _remove_owned_target(target, {"source/victim.txt"})
+            self.assertEqual(victim.read_text(encoding="utf-8"), "preserve")
 
     def test_unexpected_target_file_blocks_rollback(self) -> None:
         source = FIXTURES / "seminartext_project"
@@ -321,6 +368,20 @@ class MigrationTests(unittest.TestCase):
             self.assertEqual(reference["scope"], "EXTERNAL_REFERENCE")
             self.assertFalse(reference["accessed"])
             self.assertNotIn("/private/not-authorized/source.mp4", json.dumps(discovery))
+
+    def test_videotext_manifest_parent_symlink_is_not_followed(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "project"
+            external = root / "external-support"
+            shutil.copytree(FIXTURES / "videotext_project", source)
+            shutil.copytree(source / "Support files", external)
+            shutil.rmtree(source / "Support files")
+            (source / "Support files").symlink_to(
+                external, target_is_directory=True
+            )
+            with self.assertRaises(MigrationError):
+                discover_source_project(source, "videotext")
 
     def test_noncanonical_seminartext_source_path_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
