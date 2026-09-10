@@ -31,6 +31,7 @@ from integra_core.real_media import (  # noqa: E402
     ACCEPTANCE,
     JsonlProcessStageWorker,
     RealMediaError,
+    determinism_run_record,
     sha256_file,
     validate_actual_evidence,
 )
@@ -62,6 +63,13 @@ IMPLEMENTATION_PATHS = (
     "workers/seminartext_topics_worker.py",
     "workers/videotext_transcript_worker.swift",
     "workers/videotext_clip_worker.swift",
+    "scripts/certify_core_alpha_real.py",
+    "schemas/core_alpha_real_evidence_v1.schema.json",
+    "schemas/videotext_transcript_v1.schema.json",
+    "schemas/seminartext_topic_drafts_v1.schema.json",
+    "schemas/seminartext_exception_review_v1.schema.json",
+    "schemas/seminartext_knowledge_candidate_v1.schema.json",
+    "schemas/videotext_media_clip_v1.contract.json",
 )
 
 
@@ -617,6 +625,7 @@ def main() -> int:
         "determinism": {
             "independent_runs_compared": 1,
             "all_stage_hashes_identical": None,
+            "runs": [],
         },
         "acceptance": ACCEPTANCE,
         "limitations": [
@@ -627,6 +636,7 @@ def main() -> int:
             "R3 stage workers declare no intra-job resume; Core Alpha prefix recovery is verified separately and fails closed.",
         ],
     }
+    report["determinism"]["runs"] = [determinism_run_record(report)]
     errors = validate_actual_evidence(report)
     if errors:
         raise RealMediaError("actual evidence is invalid: " + "; ".join(errors))

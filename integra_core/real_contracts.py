@@ -13,6 +13,12 @@ class RealStageContractError(ValueError):
     """Raised when a real-stage payload does not satisfy its exact contract."""
 
 
+def _canonical_bytes(value: Any) -> bytes:
+    return (json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode(
+        "utf-8"
+    )
+
+
 def _exact(value: Any, fields: set[str], label: str) -> dict[str, Any]:
     if not isinstance(value, dict) or set(value) != fields:
         raise RealStageContractError(f"{label} fields are invalid")
@@ -351,6 +357,7 @@ def _validate_review(result: Any, stage_data: Any) -> None:
     for collection in ("benchmark_segments", "cues", "alignment_runs"):
         if not isinstance(bundle[collection], list) or not bundle[collection] or not all(isinstance(item, dict) and item for item in bundle[collection]):
             raise RealStageContractError(f"canonical {collection} are invalid")
+    alignment_run_ids: set[str] = set()
     for index, run in enumerate(bundle["alignment_runs"]):
         run = _exact(
             run,
@@ -363,10 +370,14 @@ def _validate_review(result: Any, stage_data: Any) -> None:
             f"canonical alignment run {index}",
         )
         for field in (
-            "aligner", "aligner_version", "id", "model", "model_revision",
+            "aligner", "aligner_version", "model", "model_revision",
             "source_id", "transcript_revision_id",
         ):
             _text(run[field], f"canonical alignment run {index}.{field}")
+        run_id = _text(run["id"], f"canonical alignment run {index}.id")
+        if run_id in alignment_run_ids:
+            raise RealStageContractError("canonical alignment run IDs are not unique")
+        alignment_run_ids.add(run_id)
         for field in (
             "config_sha256", "model_sha256", "source_content_sha256",
             "transcript_text_sha256",
@@ -383,6 +394,17 @@ def _validate_review(result: Any, stage_data: Any) -> None:
             or run["transcript_text_sha256"] != revision["text_sha256"]
         ):
             raise RealStageContractError("canonical alignment run is not valid")
+    if alignment["alignment_run_id"] not in alignment_run_ids:
+        raise RealStageContractError("alignment result run is unknown")
+    expected_unaligned = [
+        word["sequence"] for word in words if word["alignment_status"] == "unaligned"
+    ]
+    if alignment["unaligned_words"] != expected_unaligned:
+        raise RealStageContractError("alignment result unaligned words differ")
+    for word in words:
+        timing_run_id = word["timing_provenance"]["alignment_run_id"]
+        if word["alignment_status"] == "aligned" and timing_run_id not in alignment_run_ids:
+            raise RealStageContractError("canonical word alignment run is unknown")
     for index, segment in enumerate(bundle["benchmark_segments"]):
         segment = _exact(
             segment,
@@ -405,6 +427,7 @@ def _validate_review(result: Any, stage_data: Any) -> None:
             or segment["word_count"] != end_word["sequence"] - start_word["sequence"] + 1
         ):
             raise RealStageContractError("canonical benchmark segment lifecycle is invalid")
+    cue_ids: set[str] = set()
     for index, cue in enumerate(bundle["cues"]):
         cue = _exact(
             cue,
@@ -416,9 +439,17 @@ def _validate_review(result: Any, stage_data: Any) -> None:
         if end < start or cue["lifecycle_status"] != "active":
             raise RealStageContractError(f"canonical cue {index} is invalid")
         _integer(cue["sequence"], f"canonical cue {index}.sequence")
-        for field in ("id", "text", "transcript_revision_id"):
-            _text(cue[field], f"canonical cue {index}.{field}")
+        cue_id = _text(cue["id"], f"canonical cue {index}.id")
+        if cue_id in cue_ids:
+            raise RealStageContractError("canonical cue IDs are not unique")
+        cue_ids.add(cue_id)
+        _text(cue["text"], f"canonical cue {index}.text")
+        if cue["transcript_revision_id"] not in revision_ids:
+            raise RealStageContractError("canonical cue transcript revision is unknown")
         _time_interval(cue["source_locator"], f"canonical cue {index}.locator")
+    for word in words:
+        if not set(word["source_cue_ids"]).issubset(cue_ids):
+            raise RealStageContractError("canonical word source cue is unknown")
     if not isinstance(bundle["topics"], list) or not isinstance(bundle["evidence_refs"], list):
         raise RealStageContractError("canonical optional collections are invalid")
     package = _exact(
@@ -435,9 +466,7 @@ def _validate_review(result: Any, stage_data: Any) -> None:
         _text(binding["artifact_id"], f"review package {field}.artifact_id")
         _sha256(binding["sha256"], f"review package {field}.sha256")
     canonical_binding = package["canonical_evidence"]
-    expected_bundle_bytes = (
-        json.dumps(bundle, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
-    ).encode("utf-8")
+    expected_bundle_bytes = _canonical_bytes(bundle)
     if (
         canonical_binding["artifact_id"] != bundle["artifact_id"]
         or canonical_binding["sha256"] != hashlib.sha256(expected_bundle_bytes).hexdigest()
@@ -447,9 +476,7 @@ def _validate_review(result: Any, stage_data: Any) -> None:
     if not isinstance(draft_input, dict) or not draft_input:
         raise RealStageContractError("review draft input is invalid")
     draft_binding = package["draft_input"]
-    expected_draft_bytes = (
-        json.dumps(draft_input, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
-    ).encode("utf-8")
+    expected_draft_bytes = _canonical_bytes(draft_input)
     if (
         draft_binding["artifact_id"] != draft_input.get("artifact_id")
         or draft_binding["sha256"] != hashlib.sha256(expected_draft_bytes).hexdigest()
@@ -478,6 +505,7 @@ def _validate_review(result: Any, stage_data: Any) -> None:
     if not isinstance(evidence, list) or not evidence:
         raise RealStageContractError("review evidence is invalid")
     evidence_ids: set[str] = set()
+    evidence_by_id: dict[str, dict[str, Any]] = {}
     evidence_fields = {
         "claim", "id", "locator", "quote", "source_id", "transcript_provenance",
         "transcript_revision_id", "word_end_id", "word_end_sequence",
@@ -485,7 +513,11 @@ def _validate_review(result: Any, stage_data: Any) -> None:
     }
     for index, item in enumerate(evidence):
         item = _exact(item, evidence_fields, f"review evidence {index}")
-        evidence_ids.add(_text(item["id"], f"review evidence {index}.id"))
+        evidence_id = _text(item["id"], f"review evidence {index}.id")
+        if evidence_id in evidence_ids:
+            raise RealStageContractError("review evidence IDs are not unique")
+        evidence_ids.add(evidence_id)
+        evidence_by_id[evidence_id] = item
         for field in ("claim", "quote", "source_id", "transcript_revision_id", "word_end_id", "word_start_id"):
             _text(item[field], f"review evidence {index}.{field}")
         locator = _time_interval(item["locator"], f"review evidence {index}.locator")
@@ -519,18 +551,32 @@ def _validate_review(result: Any, stage_data: Any) -> None:
         "topic_sha256", "transcript_provenance", "transcript_revision_id",
         "word_end_id", "word_end_sequence", "word_start_id", "word_start_sequence",
     }
+    topic_ids: set[str] = set()
     for index, topic in enumerate(topics):
         topic = _exact(topic, review_topic_fields, f"review topic {index}")
         if topic["lifecycle_status"] != "REVIEW_REQUIRED" or topic["semantic_origin"] != "machine_assisted" or topic["review_history"] != []:
             raise RealStageContractError(f"review topic {index} authority is invalid")
         locator = _time_interval(topic["locator"], f"review topic {index}.locator")
-        for field in ("id", "proposed_summary", "proposed_title", "quote", "seminar_id", "source_id", "topic_set_id", "transcript_revision_id", "word_end_id", "word_start_id"):
+        topic_id = _text(topic["id"], f"review topic {index}.id")
+        if topic_id in topic_ids:
+            raise RealStageContractError("review topic IDs are not unique")
+        topic_ids.add(topic_id)
+        for field in ("proposed_summary", "proposed_title", "quote", "seminar_id", "source_id", "topic_set_id", "transcript_revision_id", "word_end_id", "word_start_id"):
             _text(topic[field], f"review topic {index}.{field}")
         for field in ("evidence_sha256", "topic_sha256"):
             _sha256(topic[field], f"review topic {index}.{field}")
         _string_list(topic["evidence_refs"], f"review topic {index}.evidence_refs", non_empty=True)
         if not set(topic["evidence_refs"]).issubset(evidence_ids):
             raise RealStageContractError(f"review topic {index} has unknown evidence")
+        evidence_items = [evidence_by_id[evidence_id] for evidence_id in topic["evidence_refs"]]
+        if topic["evidence_sha256"] != hashlib.sha256(
+            _canonical_bytes(evidence_items)
+        ).hexdigest():
+            raise RealStageContractError(f"review topic {index} evidence hash differs")
+        topic_core = dict(topic)
+        supplied_topic_hash = topic_core.pop("topic_sha256")
+        if supplied_topic_hash != hashlib.sha256(_canonical_bytes(topic_core)).hexdigest():
+            raise RealStageContractError(f"review topic {index} hash differs")
         generator = _exact(
             topic["generator"], {"configuration_sha256", "id", "version"},
             f"review topic {index}.generator",

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import copy
 import json
 import os
 import select
@@ -72,6 +73,67 @@ def is_sha256(value: Any) -> bool:
 
 def is_git_sha(value: Any) -> bool:
     return isinstance(value, str) and len(value) == 40 and all(char in "0123456789abcdef" for char in value)
+
+
+def determinism_run_record(document: dict[str, Any]) -> dict[str, Any]:
+    stages = document.get("stages", {})
+    control = document.get("control_plane", {})
+    record = {
+        "executed_at": document.get("executed_at"),
+        "controller_commit_sha": control.get("controller_commit_sha"),
+        "controller_tree_sha": control.get("controller_tree_sha"),
+        "manifest_sha256": control.get("manifest_sha256"),
+        "stage_hashes": {
+            stage: stages.get(stage, {}).get("sha256") for stage in STAGES
+        },
+    }
+    return {"run_id": content_sha256(record), **record}
+
+
+def certify_deterministic_runs(
+    first: dict[str, Any], second: dict[str, Any]
+) -> dict[str, Any]:
+    """Combine two independently emitted run records after exact comparison."""
+
+    for label, document in (("first", first), ("second", second)):
+        errors = validate_actual_evidence(document)
+        if errors:
+            raise RealMediaError(f"{label} evidence is invalid: {'; '.join(errors)}")
+        if document["determinism"] != {
+            "independent_runs_compared": 1,
+            "all_stage_hashes_identical": None,
+            "runs": [determinism_run_record(document)],
+        }:
+            raise RealMediaError(f"{label} evidence is not a single-run record")
+    stable_fields = {
+        "schema_version", "status", "issue", "execution_mode",
+        "semantic_authority", "source_repositories_changed",
+        "protected_data_accessed", "human_decisions_applied", "reference_host",
+        "source", "component_identities", "implementation", "models",
+        "stage_sequence", "stages", "alignment", "provenance", "acceptance",
+        "limitations",
+    }
+    if any(first[field] != second[field] for field in stable_fields):
+        raise RealMediaError("independent run evidence differs")
+    first_control = dict(first["control_plane"])
+    second_control = dict(second["control_plane"])
+    first_control.pop("lease_heartbeats_during_workers")
+    second_control.pop("lease_heartbeats_during_workers")
+    if first_control != second_control:
+        raise RealMediaError("independent run control-plane evidence differs")
+    runs = [determinism_run_record(first), determinism_run_record(second)]
+    if runs[0]["run_id"] == runs[1]["run_id"]:
+        raise RealMediaError("independent run identities must differ")
+    certified = copy.deepcopy(first)
+    certified["determinism"] = {
+        "independent_runs_compared": 2,
+        "all_stage_hashes_identical": True,
+        "runs": runs,
+    }
+    errors = validate_actual_evidence(certified)
+    if errors:
+        raise RealMediaError("certified evidence is invalid: " + "; ".join(errors))
+    return certified
 
 
 def aggregate_whisper_words(document: dict[str, Any]) -> tuple[list[dict], list[dict]]:
@@ -163,6 +225,8 @@ class JsonlProcessStageWorker:
     def _kill_and_reap(process: subprocess.Popen[bytes]) -> None:
         """Stop the isolated worker process group and always collect the child."""
 
+        if getattr(process, "stdin", None) is not None and process.stdin.closed:
+            process.stdin = None
         try:
             os.killpg(process.pid, signal.SIGKILL)
         except ProcessLookupError:
@@ -263,22 +327,30 @@ class JsonlProcessStageWorker:
             raise RealMediaError(
                 f"{stage}: R3 worker did not complete its handshake"
             )
-        response_line = process.stdout.readline()
         try:
+            response_line = process.stdout.readline()
             response = json.loads(response_line)
-        except (UnicodeDecodeError, json.JSONDecodeError) as error:
+            validate_message(response)
+            if (
+                response["correlation_id"] != correlation
+                or response["type"] != "HANDSHAKE_RESPONSE"
+            ):
+                raise RealMediaError(
+                    f"{stage}: R3 handshake correlation or type differs"
+                )
+            self.messages.append(response)
+            process.stdin.write(canonical_json(job) + b"\n")
+            process.stdin.flush()
+            process.stdin.close()
+            process.stdin = None
+            self.messages.append(job)
+        except Exception as error:
             self._kill_and_reap(process)
-            raise RealMediaError(f"{stage}: R3 worker emitted an invalid handshake") from error
-        validate_message(response)
-        if response["correlation_id"] != correlation or response["type"] != "HANDSHAKE_RESPONSE":
-            self._kill_and_reap(process)
-            raise RealMediaError(f"{stage}: R3 handshake correlation or type differs")
-        self.messages.append(response)
-        process.stdin.write(canonical_json(job) + b"\n")
-        process.stdin.flush()
-        process.stdin.close()
-        process.stdin = None
-        self.messages.append(job)
+            if isinstance(error, (UnicodeDecodeError, json.JSONDecodeError)):
+                raise RealMediaError(
+                    f"{stage}: R3 worker emitted an invalid handshake"
+                ) from error
+            raise
         deadline = time.monotonic() + self.timeout_seconds
         while True:
             remaining = deadline - time.monotonic()
@@ -528,12 +600,52 @@ def validate_actual_evidence(document: dict[str, Any]) -> list[str]:
         errors.append("control_plane evidence is invalid")
 
     determinism = document.get("determinism")
-    if not isinstance(determinism, dict) or set(determinism) != {"independent_runs_compared", "all_stage_hashes_identical"}:
+    if not isinstance(determinism, dict) or set(determinism) != {"independent_runs_compared", "all_stage_hashes_identical", "runs"}:
         errors.append("determinism fields are invalid")
     else:
         count, identical = determinism.get("independent_runs_compared"), determinism.get("all_stage_hashes_identical")
-        if not _positive_int(count) or (count == 1 and identical is not None) or (count >= 2 and identical is not True):
+        runs = determinism.get("runs")
+        if (
+            not _positive_int(count)
+            or not isinstance(runs, list)
+            or len(runs) != count
+            or (count == 1 and identical is not None)
+            or (count >= 2 and identical is not True)
+        ):
             errors.append("determinism evidence is invalid")
+        else:
+            run_ids: set[str] = set()
+            for index, run in enumerate(runs):
+                expected_fields = {
+                    "run_id", "executed_at", "controller_commit_sha",
+                    "controller_tree_sha", "manifest_sha256", "stage_hashes",
+                }
+                if not isinstance(run, dict) or set(run) != expected_fields:
+                    errors.append(f"determinism run {index} fields are invalid")
+                    continue
+                expected_record = determinism_run_record(
+                    {
+                        "executed_at": run["executed_at"],
+                        "control_plane": {
+                            "controller_commit_sha": run["controller_commit_sha"],
+                            "controller_tree_sha": run["controller_tree_sha"],
+                            "manifest_sha256": run["manifest_sha256"],
+                        },
+                        "stages": {
+                            stage: {"sha256": run.get("stage_hashes", {}).get(stage)}
+                            for stage in STAGES
+                        },
+                    }
+                )
+                if run != expected_record or run["run_id"] in run_ids:
+                    errors.append(f"determinism run {index} identity is invalid")
+                run_ids.add(run["run_id"])
+                if (
+                    run["manifest_sha256"] != control.get("manifest_sha256")
+                    or run["stage_hashes"]
+                    != {stage: stages[stage]["sha256"] for stage in STAGES}
+                ):
+                    errors.append(f"determinism run {index} hashes differ")
     if document.get("acceptance") != ACCEPTANCE:
         errors.append("acceptance evidence differs from the fail-closed contract")
     limitations = document.get("limitations")

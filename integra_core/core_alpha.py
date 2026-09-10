@@ -395,7 +395,9 @@ def validate_core_alpha_manifest(manifest: dict[str, Any]) -> None:
             )
         project_key = manifest["project_id"].rsplit(":", 1)[-1]
         expected_suffix = "source" if stage == "source" else (
-            "mp4" if stage == "media_clip" else "json"
+            ("mp4" if manifest["execution_mode"] == "PINNED_REAL_MEDIA" else "bin")
+            if stage == "media_clip"
+            else "json"
         )
         expected_path = (
             f"projects/{project_key}/artifacts/"
@@ -744,7 +746,9 @@ class CoreAlphaPipeline:
                 ),
             )
             payload_hash = sha256_bytes(output.payload)
-            suffix = "mp4" if stage == "media_clip" else "json"
+            suffix = (
+                "mp4" if self.execution_mode == "PINNED_REAL_MEDIA" else "bin"
+            ) if stage == "media_clip" else "json"
             relative = f"projects/{project_key}/artifacts/{payload_hash}.{suffix}"
             self._write_immutable(self.store_root / relative, output.payload)
             artifacts[stage] = self._artifact_reference(
@@ -1066,48 +1070,199 @@ class CoreAlphaPipeline:
                 raise CoreAlphaError("transcript: model hash differs from component identity")
         if stage == "topics":
             expected = EXPECTED_REAL_COMPONENT_MODELS["seminartext"]
+            generated_topics = document["stage_data"]["topics_document"]["topics"]
+            expected_locator = {
+                "type": "time_interval",
+                "start_seconds": generated_topics[0]["start_seconds"],
+                "end_seconds": generated_topics[-1]["end_seconds"],
+            }
             if (
                 document["result"]["model_digest"] != expected[0]["identity_sha256"]
                 or document["result"]["model_weights_sha256"]
                 != expected[1]["identity_sha256"]
+                or document["stage_data"]["topics_document"]["model"]
+                != expected[0]["id"].removesuffix(":manifest")
+                or output.source_locator != expected_locator
             ):
-                raise CoreAlphaError("topics: model hashes differ from component identity")
+                raise CoreAlphaError("topics: model identity or output locator differs")
         if stage == "review":
-            if source_sha256 is None or document["stage_data"]["canonical_bundle"]["sources"][0]["content_sha256"] != source_sha256:
-                raise CoreAlphaError("review: canonical source hash differs from Core Alpha source")
-        if stage == "knowledge":
-            review_reference = parents[2]
-            review_path = self._require_confined_store_path(
-                self.store_root / review_reference["relative_path"]
+            transcript_document = self._load_parent_json(parents[0], "review transcript")
+            topics_document = self._load_parent_json(parents[1], "review Topics")
+            self._validate_review_upstream(
+                document, transcript_document, topics_document, source_sha256
             )
-            review_bytes = review_path.read_bytes()
-            if (
-                len(review_bytes) != review_reference["size_bytes"]
-                or sha256_bytes(review_bytes) != review_reference["content_sha256"]
-            ):
-                raise CoreAlphaError("knowledge: upstream review artifact changed")
-            try:
-                review_document = json.loads(review_bytes)
-            except (UnicodeDecodeError, json.JSONDecodeError) as error:
-                raise CoreAlphaError("knowledge: upstream review artifact is invalid") from error
-            upstream_bundle = review_document["stage_data"]["canonical_bundle"]
-            generated_bundle = document["stage_data"]["canonical_evidence_document"]
-            invariant_fields = set(upstream_bundle) - {"artifact_id", "topics", "evidence_refs"}
-            if any(
-                generated_bundle.get(field) != upstream_bundle[field]
-                for field in invariant_fields
-            ):
-                raise CoreAlphaError("knowledge: canonical evidence differs from upstream review")
-            review_package = review_document["stage_data"]["review_package"]
-            if (
-                {item.get("id") for item in generated_bundle.get("topics", [])}
-                != {item.get("id") for item in review_package["topics"]}
-                or {item.get("id") for item in generated_bundle.get("evidence_refs", [])}
-                != {item.get("id") for item in review_package["evidence"]}
-            ):
-                raise CoreAlphaError("knowledge: semantic references differ from upstream review")
+        if stage == "knowledge":
+            review_document = self._load_parent_json(parents[2], "knowledge review")
+            self._validate_knowledge_upstream(document, review_document)
         if stage in SEMANTIC_STAGES:
             CoreAlphaPipeline._reject_semantic_promotion(stage, document)
+
+    def _load_parent_json(self, reference: dict[str, Any], label: str) -> dict[str, Any]:
+        path = self._require_confined_store_path(
+            self.store_root / reference["relative_path"]
+        )
+        payload = path.read_bytes()
+        if (
+            len(payload) != reference["size_bytes"]
+            or sha256_bytes(payload) != reference["content_sha256"]
+        ):
+            raise CoreAlphaError(f"{label}: upstream artifact changed")
+        try:
+            document = json.loads(payload)
+        except (UnicodeDecodeError, json.JSONDecodeError) as error:
+            raise CoreAlphaError(f"{label}: upstream artifact is invalid") from error
+        if not isinstance(document, dict):
+            raise CoreAlphaError(f"{label}: upstream artifact is not an object")
+        return document
+
+    @staticmethod
+    def _validate_review_upstream(
+        document: dict[str, Any],
+        transcript_document: dict[str, Any],
+        topics_document: dict[str, Any],
+        source_sha256: str | None,
+    ) -> None:
+        bundle = document["stage_data"]["canonical_bundle"]
+        if (
+            source_sha256 is None
+            or len(bundle["sources"]) != 1
+            or len(bundle["transcript_revisions"]) != 1
+            or len(bundle["alignment_runs"]) != 1
+            or bundle["sources"][0]["content_sha256"] != source_sha256
+        ):
+            raise CoreAlphaError("review: canonical source identity differs")
+        transcript_result = transcript_document["result"]
+        transcript_data = transcript_document["stage_data"]
+        revision = bundle["transcript_revisions"][0]
+        alignment = bundle["alignment_runs"][0]
+        expected_whisper = EXPECTED_REAL_COMPONENT_MODELS["videotext"][0]
+        if (
+            revision["canonical_text"] != transcript_data["transcript_text"]
+            or revision["text_sha256"] != transcript_result["text_sha256"]
+            or alignment["model"] != expected_whisper["id"]
+            or alignment["model_sha256"] != expected_whisper["identity_sha256"]
+            or alignment["source_content_sha256"] != source_sha256
+            or alignment["transcript_text_sha256"] != transcript_result["text_sha256"]
+            or alignment["transcript_revision_id"] != revision["id"]
+        ):
+            raise CoreAlphaError("review: transcript or alignment differs from upstream")
+        source_topics = topics_document["stage_data"]["topics_document"]
+        draft = document["stage_data"]["draft_input_document"]
+        if (
+            source_topics["model"]
+            != EXPECTED_REAL_COMPONENT_MODELS["seminartext"][0]["id"].removesuffix(":manifest")
+            or len(draft["topics"]) != len(source_topics["topics"])
+        ):
+            raise CoreAlphaError("review: Topic draft differs from upstream")
+        for source_topic, draft_topic in zip(source_topics["topics"], draft["topics"]):
+            if (
+                draft_topic["proposed_title"] != source_topic["title"]
+                or draft_topic["proposed_summary"] != source_topic["summary"]
+                or draft_topic["lifecycle_status"] != source_topic["semantic_status"]
+            ):
+                raise CoreAlphaError("review: Topic draft differs from upstream")
+
+    @staticmethod
+    def _validate_knowledge_upstream(
+        document: dict[str, Any], review_document: dict[str, Any]
+    ) -> None:
+        upstream_bundle = review_document["stage_data"]["canonical_bundle"]
+        generated_bundle = document["stage_data"]["canonical_evidence_document"]
+        invariant_fields = set(upstream_bundle) - {"artifact_id", "topics", "evidence_refs"}
+        if any(
+            generated_bundle.get(field) != upstream_bundle[field]
+            for field in invariant_fields
+        ):
+            raise CoreAlphaError("knowledge: canonical evidence differs from upstream review")
+        review_package = review_document["stage_data"]["review_package"]
+        review_topics = {item["id"]: item for item in review_package["topics"]}
+        review_evidence = {item["id"]: item for item in review_package["evidence"]}
+        if (
+            len(review_topics) != len(review_package["topics"])
+            or len(review_evidence) != len(review_package["evidence"])
+            or len(generated_bundle["topics"]) != len(review_topics)
+            or len(generated_bundle["evidence_refs"]) != len(review_evidence)
+        ):
+            raise CoreAlphaError("knowledge: semantic reference inventory differs")
+        for generated in generated_bundle["topics"]:
+            source = review_topics.get(generated.get("id"))
+            expected_segments = [
+                item["id"]
+                for item in upstream_bundle["benchmark_segments"]
+                if item["transcript_revision_id"] == source["transcript_revision_id"]
+                and item["word_start_id"] == source["word_start_id"]
+                and item["word_end_id"] == source["word_end_id"]
+            ] if source is not None else []
+            if source is None or generated != {
+                "benchmark_segment_ids": expected_segments,
+                "id": source["id"],
+                "lifecycle_status": "active",
+                "origin": "semi_automatic",
+                "sequence": source["sequence"],
+                "title": source["proposed_title"],
+                "topic_set_id": source["topic_set_id"],
+                "transcript_revision_id": source["transcript_revision_id"],
+                "word_end_id": source["word_end_id"],
+                "word_start_id": source["word_start_id"],
+            }:
+                raise CoreAlphaError("knowledge: Topic differs from upstream review")
+        project_id = upstream_bundle["project"]["id"]
+        for generated in generated_bundle["evidence_refs"]:
+            source = review_evidence.get(generated.get("id"))
+            if source is None or generated != {
+                "id": source["id"],
+                "lifecycle_status": "verified",
+                "locator": source["locator"],
+                "project_id": project_id,
+                "source_id": source["source_id"],
+                "target": {
+                    "entity_id": source["word_start_id"],
+                    "entity_type": "word",
+                },
+                "transcript_revision_id": source["transcript_revision_id"],
+            }:
+                raise CoreAlphaError("knowledge: evidence differs from upstream review")
+        canonical_knowledge = document["stage_data"]["canonical_knowledge_document"]
+        if (
+            canonical_knowledge.get("artifact_type")
+            != "seminartext.canonical_knowledge"
+            or canonical_knowledge.get("schema_version") != "1.0.0"
+            or canonical_knowledge.get("concepts") != []
+            or canonical_knowledge.get("relations") != []
+            or canonical_knowledge.get("review_decisions") != []
+            or len(canonical_knowledge.get("topics", [])) != len(review_topics)
+        ):
+            raise CoreAlphaError("knowledge: canonical knowledge structure differs")
+        words = upstream_bundle["words"]
+        word_by_id = {item["id"]: item for item in words}
+        for generated in canonical_knowledge["topics"]:
+            source = review_topics.get(generated.get("id"))
+            if source is None:
+                raise CoreAlphaError("knowledge: canonical Topic is unknown")
+            start_word = word_by_id[source["word_start_id"]]
+            end_word = word_by_id[source["word_end_id"]]
+            if (
+                generated.get("title") != source["proposed_title"]
+                or generated.get("summary") != source["proposed_summary"]
+                or generated.get("status") != "PROVISIONAL"
+                or generated.get("seminar_id") != source["seminar_id"]
+                or generated.get("evidence_refs") != source["evidence_refs"]
+                or generated.get("concept_refs") != []
+                or generated.get("order_scope") != {"sequence": source["sequence"]}
+                or generated.get("temporal_scope")
+                != {
+                    "start_seconds": start_word["start_seconds"],
+                    "end_seconds": end_word["end_seconds"],
+                }
+                or generated.get("source_scope")
+                != {
+                    "source_ids": [source["source_id"]],
+                    "transcript_revision_ids": [source["transcript_revision_id"]],
+                    "order_start": source["word_start_sequence"],
+                    "order_end": source["word_end_sequence"],
+                }
+            ):
+                raise CoreAlphaError("knowledge: canonical Topic differs from review")
 
     @staticmethod
     def _reject_semantic_promotion(stage: str, value: Any) -> None:

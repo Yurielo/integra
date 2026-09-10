@@ -11,7 +11,10 @@ from unittest import mock
 
 from integra_core.real_media import (
     JsonlProcessStageWorker,
+    RealMediaError,
     aggregate_whisper_words,
+    certify_deterministic_runs,
+    determinism_run_record,
     validate_actual_evidence,
 )
 from integra_core.real_contracts import (
@@ -106,6 +109,175 @@ class RealMediaTests(unittest.TestCase):
             },
             parents=3,
         )
+
+    @classmethod
+    def _valid_review_document(cls):
+        text = "слово"
+        text_hash = hashlib.sha256(text.encode()).hexdigest()
+        provenance = cls.machine_provenance()
+        source_hash = "a" * 64
+        revision_id = "revision"
+        word_id = "word"
+        run_id = "alignment"
+        cue_id = "cue"
+        word = {
+            "alignment_status": "aligned",
+            "char_end": len(text),
+            "char_start": 0,
+            "confidence": 0.9,
+            "end_seconds": 0.9,
+            "id": word_id,
+            "lifecycle_status": "active",
+            "normalized_text": None,
+            "qa_flags": [],
+            "sequence": 0,
+            "source_cue_ids": [cue_id],
+            "source_id": "source",
+            "speaker_id": None,
+            "start_seconds": 0.1,
+            "text": text,
+            "timing_provenance": {
+                "alignment_run_id": run_id,
+                "kind": "forced_alignment",
+                "method": "native_word_intervals",
+            },
+            "transcript_revision_id": revision_id,
+        }
+        bundle = {
+            "alignment_runs": [{
+                "aligner": "aligner",
+                "aligner_version": "1",
+                "config_sha256": "b" * 64,
+                "id": run_id,
+                "model": "model",
+                "model_revision": "revision",
+                "model_sha256": "c" * 64,
+                "source_content_sha256": source_hash,
+                "source_id": "source",
+                "status": "valid",
+                "transcript_revision_id": revision_id,
+                "transcript_text_sha256": text_hash,
+            }],
+            "artifact_id": "bundle",
+            "artifact_type": "seminartext.canonical_evidence",
+            "benchmark_segments": [{
+                "id": "segment",
+                "lifecycle_status": "active",
+                "sequence": 0,
+                "transcript_revision_id": revision_id,
+                "word_count": 1,
+                "word_end_id": word_id,
+                "word_start_id": word_id,
+            }],
+            "cues": [{
+                "char_end": len(text),
+                "char_start": 0,
+                "id": cue_id,
+                "lifecycle_status": "active",
+                "sequence": 0,
+                "source_locator": {"type": "time_interval", "start_seconds": 0.1, "end_seconds": 0.9},
+                "text": text,
+                "transcript_revision_id": revision_id,
+            }],
+            "evidence_refs": [],
+            "project": {"id": "project", "lifecycle_status": "active", "title": "Project"},
+            "schema_version": "1.0.0",
+            "sources": [{
+                "content_sha256": source_hash,
+                "duration_seconds": 1.0,
+                "id": "source",
+                "kind": "video",
+                "lifecycle_status": "active",
+                "project_id": "project",
+                "sequence": 0,
+                "title": "Source",
+            }],
+            "topics": [],
+            "transcript_revisions": [{
+                "authority": "candidate",
+                "canonical_text": text,
+                "id": revision_id,
+                "lifecycle_status": "active",
+                "parent_revision_id": None,
+                "revision_kind": "asr",
+                "revision_number": 1,
+                "source_id": "source",
+                "text_sha256": text_hash,
+                "transcript_provenance": provenance,
+            }],
+            "words": [word],
+        }
+        evidence = {
+            "claim": "claim",
+            "id": "evidence",
+            "locator": {"type": "time_interval", "start_seconds": 0.1, "end_seconds": 0.9},
+            "quote": text,
+            "source_id": "source",
+            "transcript_provenance": provenance,
+            "transcript_revision_id": revision_id,
+            "word_end_id": word_id,
+            "word_end_sequence": 0,
+            "word_start_id": word_id,
+            "word_start_sequence": 0,
+        }
+        topic = {
+            "evidence_refs": ["evidence"],
+            "evidence_sha256": hashlib.sha256(cls._canonical_bytes([evidence])).hexdigest(),
+            "generator": {"configuration_sha256": "d" * 64, "id": "generator", "version": "1"},
+            "id": "topic",
+            "lifecycle_status": "REVIEW_REQUIRED",
+            "locator": {"type": "time_interval", "start_seconds": 0.1, "end_seconds": 0.9},
+            "proposed_summary": "summary",
+            "proposed_title": "title",
+            "quote": text,
+            "review_history": [],
+            "semantic_origin": "machine_assisted",
+            "seminar_id": "seminar",
+            "sequence": 0,
+            "source_id": "source",
+            "topic_set_id": "set",
+            "transcript_provenance": provenance,
+            "transcript_revision_id": revision_id,
+            "word_end_id": word_id,
+            "word_end_sequence": 0,
+            "word_start_id": word_id,
+            "word_start_sequence": 0,
+        }
+        topic["topic_sha256"] = hashlib.sha256(cls._canonical_bytes(topic)).hexdigest()
+        draft = {"artifact_id": "draft"}
+        package = {
+            "artifact_id": "review",
+            "artifact_type": "seminartext.topic_review_package",
+            "canonical_evidence": {
+                "artifact_id": "bundle",
+                "sha256": hashlib.sha256(cls._canonical_bytes(bundle)).hexdigest(),
+            },
+            "draft_input": {
+                "artifact_id": "draft",
+                "sha256": hashlib.sha256(cls._canonical_bytes(draft)).hexdigest(),
+            },
+            "evidence": [evidence],
+            "project": {"id": "project", "title": "Project"},
+            "review_policy": {"authoring_gate": "DOMAIN_AUTHORING", "automatic_acceptance": False, "machine_assisted_default": "REVIEW_REQUIRED", "review_gate": "DOMAIN_REVIEW"},
+            "schema_version": "1.0.0",
+            "seminar": {"id": "seminar", "title": "Seminar"},
+            "topics": [topic],
+        }
+        return cls.stage_document(
+            "review",
+            {"human_decision_required": True, "technical_status": "REVIEW_REQUIRED", "unreviewed": 1},
+            {
+                "alignment_result": {"alignment_run_id": run_id, "bundle": "evidence/canonical_bundle.json", "status": "review_required", "unaligned_words": []},
+                "canonical_bundle": bundle,
+                "draft_input_document": draft,
+                "review_package": package,
+            },
+            parents=2,
+        )
+
+    @staticmethod
+    def _canonical_bytes(value):
+        return (json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode()
 
     def test_whisper_subwords_are_aggregated_without_fabricating_zero_duration(self) -> None:
         document = {
@@ -370,6 +542,41 @@ class RealMediaTests(unittest.TestCase):
         with self.assertRaisesRegex(RealStageContractError, "canonical word 0 fields"):
             validate_real_stage_document("review", document)
 
+    def test_review_contract_binds_integrity_hashes(self) -> None:
+        document = self._valid_review_document()
+        validate_real_stage_document("review", document)
+        for field in ("evidence_sha256", "topic_sha256"):
+            mutated = copy.deepcopy(document)
+            mutated["stage_data"]["review_package"]["topics"][0][field] = "0" * 64
+            with self.subTest(field=field):
+                with self.assertRaisesRegex(RealStageContractError, "hash differs"):
+                    validate_real_stage_document("review", mutated)
+
+    def test_review_contract_rejects_broken_canonical_references(self) -> None:
+        for mutate, expected in (
+            (
+                lambda value: value["stage_data"]["canonical_bundle"]["words"][0].__setitem__("source_cue_ids", ["missing"]),
+                "source cue is unknown",
+            ),
+            (
+                lambda value: value["stage_data"]["canonical_bundle"]["cues"][0].__setitem__("transcript_revision_id", "missing"),
+                "transcript revision is unknown",
+            ),
+            (
+                lambda value: value["stage_data"]["alignment_result"].__setitem__("unaligned_words", [999]),
+                "unaligned words differ",
+            ),
+        ):
+            document = self._valid_review_document()
+            mutate(document)
+            bundle = document["stage_data"]["canonical_bundle"]
+            document["stage_data"]["review_package"]["canonical_evidence"]["sha256"] = hashlib.sha256(
+                self._canonical_bytes(bundle)
+            ).hexdigest()
+            with self.subTest(expected=expected):
+                with self.assertRaisesRegex(RealStageContractError, expected):
+                    validate_real_stage_document("review", document)
+
     def test_knowledge_contract_binds_all_export_bytes(self) -> None:
         document = self._valid_knowledge_document()
         validate_real_stage_document("knowledge", document)
@@ -403,6 +610,28 @@ class RealMediaTests(unittest.TestCase):
             + box(b"moov", b"metadata")
             + box(b"mdat", b"sample")
         )
+
+    def test_determinism_certification_retains_two_run_identities(self) -> None:
+        first = json.loads((ROOT / "state/core_alpha_real_v1.json").read_text())
+        first["determinism"] = {
+            "independent_runs_compared": 1,
+            "all_stage_hashes_identical": None,
+            "runs": [],
+        }
+        first["determinism"]["runs"] = [determinism_run_record(first)]
+        second = copy.deepcopy(first)
+        second["executed_at"] = "2026-09-10T23:59:59Z"
+        second["control_plane"]["lease_heartbeats_during_workers"] += 1
+        second["determinism"]["runs"] = [determinism_run_record(second)]
+        certified = certify_deterministic_runs(first, second)
+        self.assertEqual(certified["determinism"]["independent_runs_compared"], 2)
+        self.assertTrue(certified["determinism"]["all_stage_hashes_identical"])
+        self.assertEqual(len({item["run_id"] for item in certified["determinism"]["runs"]}), 2)
+
+        second["stages"]["topics"]["sha256"] = "0" * 64
+        second["determinism"]["runs"] = [determinism_run_record(second)]
+        with self.assertRaisesRegex(RealMediaError, "independent run evidence differs"):
+            certify_deterministic_runs(first, second)
 
 
 if __name__ == "__main__":

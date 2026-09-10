@@ -72,6 +72,7 @@ class CoreAlphaTests(unittest.TestCase):
         self.assertEqual(result["artifacts"]["transcript"]["origin"]["component_id"], "videotext")
         self.assertEqual(result["artifacts"]["topics"]["origin"]["component_id"], "seminartext")
         self.assertEqual(result["artifacts"]["media_clip"]["origin"]["component_id"], "videotext")
+        self.assertTrue(result["artifacts"]["media_clip"]["relative_path"].endswith(".bin"))
         expected_parents = [
             result["artifacts"][name]["artifact_id"]
             for name in ("transcript", "topics", "review")
@@ -423,6 +424,160 @@ class CoreAlphaTests(unittest.TestCase):
                 execution_mode="PINNED_REAL_MEDIA",
                 component_models=models,
             )
+
+    def test_real_review_is_bound_to_transcript_topic_and_model_parents(self):
+        source_hash = "a" * 64
+        text_hash = hashlib.sha256(b"text").hexdigest()
+        transcript = {
+            "result": {"text_sha256": text_hash},
+            "stage_data": {"transcript_text": "text"},
+        }
+        topics = {
+            "stage_data": {"topics_document": {
+                "model": "gemma3:4b",
+                "topics": [{"title": "title", "summary": "summary", "semantic_status": "REVIEW_REQUIRED"}],
+            }}
+        }
+        review = {
+            "stage_data": {
+                "canonical_bundle": {
+                    "sources": [{"content_sha256": source_hash}],
+                    "transcript_revisions": [{"id": "revision", "canonical_text": "text", "text_sha256": text_hash}],
+                    "alignment_runs": [{
+                        "model": "ggml-large-v3.bin",
+                        "model_sha256": EXPECTED_REAL_COMPONENT_MODELS["videotext"][0]["identity_sha256"],
+                        "source_content_sha256": source_hash,
+                        "transcript_text_sha256": text_hash,
+                        "transcript_revision_id": "revision",
+                    }],
+                },
+                "draft_input_document": {
+                    "topics": [{"proposed_title": "title", "proposed_summary": "summary", "lifecycle_status": "REVIEW_REQUIRED"}]
+                },
+            }
+        }
+        CoreAlphaPipeline._validate_review_upstream(review, transcript, topics, source_hash)
+        for path, value in (
+            (("canonical_bundle", "transcript_revisions", 0, "canonical_text"), "changed"),
+            (("canonical_bundle", "alignment_runs", 0, "model_sha256"), "0" * 64),
+            (("draft_input_document", "topics", 0, "proposed_title"), "changed"),
+        ):
+            mutated = copy.deepcopy(review)
+            target = mutated["stage_data"]
+            for key in path[:-1]:
+                target = target[key]
+            target[path[-1]] = value
+            with self.subTest(path=path):
+                with self.assertRaises(CoreAlphaError):
+                    CoreAlphaPipeline._validate_review_upstream(
+                        mutated, transcript, topics, source_hash
+                    )
+
+    def test_real_knowledge_is_bound_to_review_semantics(self):
+        review_topic = {
+            "id": "topic",
+            "proposed_title": "title",
+            "proposed_summary": "summary",
+            "sequence": 0,
+            "seminar_id": "seminar",
+            "source_id": "source",
+            "topic_set_id": "set",
+            "transcript_revision_id": "revision",
+            "word_start_id": "word-0",
+            "word_end_id": "word-1",
+            "word_start_sequence": 0,
+            "word_end_sequence": 1,
+            "evidence_refs": ["evidence"],
+        }
+        evidence = {
+            "id": "evidence",
+            "locator": {"type": "time_interval", "start_seconds": 0.1, "end_seconds": 0.9},
+            "source_id": "source",
+            "transcript_revision_id": "revision",
+            "word_start_id": "word-0",
+        }
+        bundle = {
+            "artifact_id": "upstream",
+            "project": {"id": "project", "title": "Project"},
+            "words": [
+                {"id": "word-0", "start_seconds": 0.1},
+                {"id": "word-1", "end_seconds": 0.9},
+            ],
+            "benchmark_segments": [{
+                "id": "segment",
+                "transcript_revision_id": "revision",
+                "word_start_id": "word-0",
+                "word_end_id": "word-1",
+            }],
+            "topics": [],
+            "evidence_refs": [],
+        }
+        generated_topic = {
+            "benchmark_segment_ids": ["segment"],
+            "id": "topic",
+            "lifecycle_status": "active",
+            "origin": "semi_automatic",
+            "sequence": 0,
+            "title": "title",
+            "topic_set_id": "set",
+            "transcript_revision_id": "revision",
+            "word_end_id": "word-1",
+            "word_start_id": "word-0",
+        }
+        generated_evidence = {
+            "id": "evidence",
+            "lifecycle_status": "verified",
+            "locator": evidence["locator"],
+            "project_id": "project",
+            "source_id": "source",
+            "target": {"entity_id": "word-0", "entity_type": "word"},
+            "transcript_revision_id": "revision",
+        }
+        knowledge_topic = {
+            "concept_refs": [],
+            "evidence_refs": ["evidence"],
+            "id": "topic",
+            "order_scope": {"sequence": 0},
+            "seminar_id": "seminar",
+            "source_scope": {
+                "source_ids": ["source"],
+                "transcript_revision_ids": ["revision"],
+                "order_start": 0,
+                "order_end": 1,
+            },
+            "status": "PROVISIONAL",
+            "summary": "summary",
+            "temporal_scope": {"start_seconds": 0.1, "end_seconds": 0.9},
+            "title": "title",
+        }
+        review = {
+            "stage_data": {
+                "canonical_bundle": bundle,
+                "review_package": {"topics": [review_topic], "evidence": [evidence]},
+            }
+        }
+        document = {
+            "stage_data": {
+                "canonical_evidence_document": {
+                    **{key: value for key, value in bundle.items() if key not in {"artifact_id", "topics", "evidence_refs"}},
+                    "artifact_id": "generated",
+                    "topics": [generated_topic],
+                    "evidence_refs": [generated_evidence],
+                },
+                "canonical_knowledge_document": {
+                    "artifact_type": "seminartext.canonical_knowledge",
+                    "schema_version": "1.0.0",
+                    "concepts": [],
+                    "relations": [],
+                    "review_decisions": [],
+                    "topics": [knowledge_topic],
+                },
+            }
+        }
+        CoreAlphaPipeline._validate_knowledge_upstream(document, review)
+        document["stage_data"]["canonical_evidence_document"]["topics"][0]["title"] = "fabricated"
+        with self.assertRaisesRegex(CoreAlphaError, "Topic differs"):
+            CoreAlphaPipeline._validate_knowledge_upstream(document, review)
 
     def test_resume_rejects_changed_lineage(self):
         cancelled = self.pipeline.run(
