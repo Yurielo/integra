@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Yurielo/integra/schemas/project_lease_v1.schema.json",
+  "title": "Integra Project Lease v1",
+  "type": "object",
+  "required": [
+    "schema_version", "lease_id", "project_id", "mutable_entity", "writer",
+    "operation_id", "acquired_at", "heartbeat_at", "expires_at",
+    "artifact_precondition", "readers", "generation", "state"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "lease_id": { "type": "string", "pattern": "^urn:integra:lease:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+    "project_id": { "type": "string", "pattern": "^urn:integra:project:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+    "mutable_entity": {
+      "type": "object",
+      "required": ["namespace", "entity_id"],
+      "properties": {
+        "namespace": { "type": "string", "pattern": "^[a-z][a-z0-9_]{1,31}$" },
+        "entity_id": { "type": "string", "pattern": "^urn:integra:[a-z][a-z0-9_]{1,31}:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" }
+      },
+      "additionalProperties": false
+    },
+    "writer": {
+      "type": "object",
+      "required": ["component_id", "host_id", "process_id", "process_start_token"],
+      "properties": {
+        "component_id": { "type": "string", "minLength": 1 },
+        "host_id": { "type": "string", "minLength": 1 },
+        "process_id": { "type": "integer", "minimum": 1 },
+        "process_start_token": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "operation_id": { "type": "string", "pattern": "^urn:integra:operation:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+    "acquired_at": { "type": "string", "format": "date-time" },
+    "heartbeat_at": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "released_at": { "type": "string", "format": "date-time" },
+    "release_reason": { "enum": ["WRITER_RELEASE", "VERIFIED_STALE_RECOVERY"] },
+    "artifact_precondition": {
+      "type": "object",
+      "required": ["revision_id", "content_sha256"],
+      "properties": {
+        "revision_id": { "type": "string", "minLength": 1 },
+        "content_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "readers": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "generation": { "type": "integer", "minimum": 1 },
+    "state": { "enum": ["ACTIVE", "RELEASED"] }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "state": { "const": "RELEASED" } } },
+      "then": { "required": ["released_at"] }
+    }
+  ],
+  "additionalProperties": false
+}

@@ -22,6 +22,9 @@ class GovernanceValidationTests(unittest.TestCase):
         cls.baselines = json.loads(
             (ROOT / "state" / "component_baselines_v1.json").read_text(encoding="utf-8")
         )
+        cls.ownership = json.loads(
+            (ROOT / "state" / "data_ownership_v1.json").read_text(encoding="utf-8")
+        )
 
     def test_repository_state_is_valid(self):
         self.assertEqual(VALIDATOR.validate_state(self.state), [])
@@ -83,6 +86,21 @@ class GovernanceValidationTests(unittest.TestCase):
         baselines["r1_acceptance"]["release_promotion_performed"] = True
         errors = VALIDATOR.validate_component_baselines(baselines)
         self.assertTrue(any("must not promote" in error for error in errors))
+
+    def test_data_ownership_contract_is_valid(self):
+        self.assertEqual(VALIDATOR.validate_data_ownership(self.ownership), [])
+
+    def test_duplicate_field_owner_fails(self):
+        ownership = copy.deepcopy(self.ownership)
+        ownership["ownership"].append(copy.deepcopy(ownership["ownership"][0]))
+        errors = VALIDATOR.validate_data_ownership(ownership)
+        self.assertTrue(any("exactly one ownership" in error for error in errors))
+
+    def test_identity_hash_collision_must_hard_fail(self):
+        ownership = copy.deepcopy(self.ownership)
+        ownership["collision_policy"]["same_id_different_hash"] = "LAST_WRITER_WINS"
+        errors = VALIDATOR.validate_data_ownership(ownership)
+        self.assertTrue(any("must hard-fail" in error for error in errors))
 
 
 if __name__ == "__main__":

@@ -9,6 +9,8 @@
     "baseline_date",
     "standalone_products_preserved",
     "component_baseline_manifest",
+    "data_ownership_contract",
+    "project_lease_schema",
     "execution_policy",
     "release_scope",
     "roadmap",
@@ -21,6 +23,12 @@
     "standalone_products_preserved": { "const": true },
     "component_baseline_manifest": {
       "const": "state/component_baselines_v1.json"
+    },
+    "data_ownership_contract": {
+      "const": "state/data_ownership_v1.json"
+    },
+    "project_lease_schema": {
+      "const": "schemas/project_lease_v1.schema.json"
     },
     "execution_policy": {
       "type": "object",

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Yurielo/integra/schemas/data_ownership_v1.schema.json",
+  "title": "Integra field ownership and stable identity contract v1",
+  "type": "object",
+  "required": ["schema_version", "id_policy", "ownership", "collision_policy"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "id_policy": {
+      "type": "object",
+      "required": ["format", "derivation", "namespaces", "mutable_inputs_forbidden"],
+      "properties": {
+        "format": { "const": "urn:integra:<namespace>:<uuid>" },
+        "derivation": { "const": "UUIDV5_COMPONENT_NATIVE_ID_SOURCE_REVISION_SHA256" },
+        "namespaces": { "type": "array", "minItems": 10, "uniqueItems": true, "items": { "type": "string" } },
+        "mutable_inputs_forbidden": { "type": "array", "minItems": 2, "uniqueItems": true, "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "ownership": {
+      "type": "array",
+      "minItems": 10,
+      "items": {
+        "type": "object",
+        "required": ["entity", "field_pattern", "authoritative_owner", "writer_resolution", "integra_access"],
+        "properties": {
+          "entity": { "type": "string", "minLength": 1 },
+          "field_pattern": { "type": "string", "pattern": "^/" },
+          "authoritative_owner": { "type": "string", "minLength": 1 },
+          "writer_resolution": { "enum": ["STATIC", "PINNED_ORIGIN_OWNER"] },
+          "integra_access": { "enum": ["READ_ONLY", "INDEX_REFERENCE", "PROPOSE", "AUTHORITATIVE_WRITE", "CONTROLLED_DERIVED_WRITE"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "collision_policy": {
+      "type": "object",
+      "required": ["same_id_same_hash", "same_id_different_hash", "different_id_same_hash"],
+      "properties": {
+        "same_id_same_hash": { "const": "SAME_IDENTITY" },
+        "same_id_different_hash": { "const": "HARD_CONFLICT" },
+        "different_id_same_hash": { "const": "REGISTER_EXPLICIT_ALIAS" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

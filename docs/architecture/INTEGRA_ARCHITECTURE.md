@@ -69,8 +69,10 @@ structure and lineage, not semantic truth.
 | Managed Obsidian view | Integra exporter | controlled one-way write |
 | OneDrive publication | Integra Publishing adapter | stage/verify/reference |
 
-R2 must refine this table to field-level ownership and stable ID namespaces
-before any shared mutable implementation.
+The accepted field-level matrix and stable ID namespaces are defined in
+[`DATA_OWNERSHIP_AND_PROJECT_LEASE.md`](DATA_OWNERSHIP_AND_PROJECT_LEASE.md)
+and `state/data_ownership_v1.json`. R3 messages must use those identities and
+cannot introduce a competing authoritative writer.
 
 ## 4. Project Lease
 
@@ -78,6 +80,9 @@ Every mutable project operation carries project ID, mutable entity, writer
 component, process instance, operation ID, acquisition time, expiry, heartbeat,
 and relevant readers. Only one writer may own a mutable entity. Stale-lock
 recovery verifies both process and artifact state and fails closed on doubt.
+The accepted schema is `schemas/project_lease_v1.schema.json`; the reference
+policy implementation uses per-entity file locks, atomic records, writer
+identity, and monotonic lease generations.
 
 ## 5. Trust boundaries
 

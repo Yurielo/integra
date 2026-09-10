@@ -1,0 +1,125 @@
+{
+  "schema_version": "1.0",
+  "id_policy": {
+    "format": "urn:integra:<namespace>:<uuid>",
+    "derivation": "UUIDV5_COMPONENT_NATIVE_ID_SOURCE_REVISION_SHA256",
+    "namespaces": [
+      "project", "source", "artifact", "revision", "topic", "evidence",
+      "knowledge", "concept", "practice", "term", "relation", "review",
+      "job", "operation", "publication", "lease"
+    ],
+    "mutable_inputs_forbidden": ["display_name", "filesystem_path", "sort_order"]
+  },
+  "ownership": [
+    {
+      "entity": "IntegraProject",
+      "field_pattern": "/projects/*",
+      "authoritative_owner": "integra.control_plane",
+      "writer_resolution": "STATIC",
+      "integra_access": "AUTHORITATIVE_WRITE"
+    },
+    {
+      "entity": "SourceReference",
+      "field_pattern": "/sources/*/identity",
+      "authoritative_owner": "integra.source_registry",
+      "writer_resolution": "STATIC",
+      "integra_access": "AUTHORITATIVE_WRITE"
+    },
+    {
+      "entity": "SourceNativeMetadata",
+      "field_pattern": "/sources/*/native_metadata",
+      "authoritative_owner": "origin.component",
+      "writer_resolution": "PINNED_ORIGIN_OWNER",
+      "integra_access": "INDEX_REFERENCE"
+    },
+    {
+      "entity": "MachineTranscriptRevision",
+      "field_pattern": "/artifacts/transcripts/*",
+      "authoritative_owner": "origin.transcript_component",
+      "writer_resolution": "PINNED_ORIGIN_OWNER",
+      "integra_access": "READ_ONLY"
+    },
+    {
+      "entity": "CanonicalWordTimeline",
+      "field_pattern": "/artifacts/word_timelines/*",
+      "authoritative_owner": "seminartext",
+      "writer_resolution": "STATIC",
+      "integra_access": "READ_ONLY"
+    },
+    {
+      "entity": "TopicDraft",
+      "field_pattern": "/artifacts/topic_drafts/*",
+      "authoritative_owner": "origin.topic_component",
+      "writer_resolution": "PINNED_ORIGIN_OWNER",
+      "integra_access": "PROPOSE"
+    },
+    {
+      "entity": "ReviewDecision",
+      "field_pattern": "/reviews/*/decision_payload",
+      "authoritative_owner": "integra.review_service",
+      "writer_resolution": "STATIC",
+      "integra_access": "AUTHORITATIVE_WRITE"
+    },
+    {
+      "entity": "ImportedReviewDecision",
+      "field_pattern": "/reviews/*/origin_record",
+      "authoritative_owner": "origin.review_contract",
+      "writer_resolution": "PINNED_ORIGIN_OWNER",
+      "integra_access": "READ_ONLY"
+    },
+    {
+      "entity": "CanonicalEvidence",
+      "field_pattern": "/knowledge/evidence/*",
+      "authoritative_owner": "seminartext",
+      "writer_resolution": "STATIC",
+      "integra_access": "READ_ONLY"
+    },
+    {
+      "entity": "CanonicalKnowledge",
+      "field_pattern": "/knowledge/entities/*",
+      "authoritative_owner": "seminartext",
+      "writer_resolution": "STATIC",
+      "integra_access": "READ_ONLY"
+    },
+    {
+      "entity": "MediaRecipeAndArtifact",
+      "field_pattern": "/media/*",
+      "authoritative_owner": "videotext",
+      "writer_resolution": "STATIC",
+      "integra_access": "READ_ONLY"
+    },
+    {
+      "entity": "PublicationPackage",
+      "field_pattern": "/publications/*",
+      "authoritative_owner": "integra.publishing_hub",
+      "writer_resolution": "STATIC",
+      "integra_access": "AUTHORITATIVE_WRITE"
+    },
+    {
+      "entity": "ManagedObsidianView",
+      "field_pattern": "/derived/obsidian/*",
+      "authoritative_owner": "integra.obsidian_exporter",
+      "writer_resolution": "STATIC",
+      "integra_access": "CONTROLLED_DERIVED_WRITE"
+    },
+    {
+      "entity": "OneDrivePublication",
+      "field_pattern": "/derived/onedrive/*",
+      "authoritative_owner": "integra.onedrive_publisher",
+      "writer_resolution": "STATIC",
+      "integra_access": "CONTROLLED_DERIVED_WRITE"
+    },
+    {
+      "entity": "ProjectLease",
+      "field_pattern": "/leases/*",
+      "authoritative_owner": "integra.lease_manager",
+      "writer_resolution": "STATIC",
+      "integra_access": "AUTHORITATIVE_WRITE"
+    }
+  ],
+  "collision_policy": {
+    "same_id_same_hash": "SAME_IDENTITY",
+    "same_id_different_hash": "HARD_CONFLICT",
+    "different_id_same_hash": "REGISTER_EXPLICIT_ALIAS"
+  }
+}
