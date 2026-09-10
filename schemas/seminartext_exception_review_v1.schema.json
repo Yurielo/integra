@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Yurielo/integra/schemas/seminartext_exception_review_v1.schema.json",
+  "title": "Integra SeminarText unresolved review artifact v1",
+  "type": "object",
+  "required": ["input_artifact_ids", "input_content_sha256", "result", "schema_version", "semantic_status", "stage", "stage_data"],
+  "properties": {
+    "input_artifact_ids": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "string"}},
+    "input_content_sha256": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "string", "pattern": "^[0-9a-f]{64}$"}},
+    "result": {
+      "type": "object",
+      "required": ["unreviewed", "human_decision_required", "technical_status"],
+      "properties": {
+        "unreviewed": {"type": "integer", "minimum": 1},
+        "human_decision_required": {"const": true},
+        "technical_status": {"const": "REVIEW_REQUIRED"}
+      },
+      "additionalProperties": false
+    },
+    "schema_version": {"const": "1.0"},
+    "semantic_status": {"const": "REVIEW_REQUIRED"},
+    "stage": {"const": "review"},
+    "stage_data": {
+      "type": "object",
+      "required": ["alignment_result", "canonical_bundle", "review_package"],
+      "properties": {
+        "alignment_result": {"type": "object"},
+        "canonical_bundle": {"type": "object", "required": ["project", "sources", "transcript_revisions", "words", "benchmark_segments"]},
+        "review_package": {"type": "object", "required": ["topics"]}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

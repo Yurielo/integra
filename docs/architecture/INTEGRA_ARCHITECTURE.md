@@ -40,13 +40,19 @@ accepted ownership boundary. The exact replay evidence, retained fallbacks, and
 limitations are recorded in `state/capability_benchmark_v1.json`. These choices
 do not claim semantic superiority and do not authorize semantic acceptance.
 
-R6 is composing those selected ownership roles into the bounded
-`INTEGRA_CORE_ALPHA_V1` control-plane path. Its first implementation checkpoint
-is an explicit dependency-free `CONTRACT_REPLAY` with content-addressed artifacts,
-Project Lease enforcement, atomic checkpoints, cancellation, and fail-closed
-resume. It proves replay orchestration and lineage validation, not execution of
-the pinned source components, real model inference, rendering, source-grounded
-interval accuracy, semantic quality, or completion of R6.
+R6 composes those selected ownership roles into the bounded
+`INTEGRA_CORE_ALPHA_V1` control-plane path. Dependency-free `CONTRACT_REPLAY`
+proves Project Lease enforcement, atomic checkpoints, cancellation and
+fail-closed resume. `PINNED_REAL_MEDIA` uses that same control plane and a real
+local stdio JSONL process boundary for every pinned source-component adapter
+stage. No media processing occurs before the stage loop: handshake precedes
+job submission, the adapter performs the operation under the active Project
+Lease, and the controller verifies the staged bytes before its single atomic
+promotion. The committed record binds exact source/model/implementation
+hashes, word/topic/clip intervals and complete artifact lineage. Worker-level
+resume is explicitly unsupported; Core Alpha prefix recovery remains the
+separate fail-closed mechanism. This is technical integration evidence only;
+semantic outputs remain review-required or provisional.
 
 ## 2. Authority model
 

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Yurielo/integra/schemas/seminartext_knowledge_candidate_v1.schema.json",
+  "title": "Integra SeminarText provisional knowledge candidate artifact v1",
+  "type": "object",
+  "required": ["input_artifact_ids", "input_content_sha256", "result", "schema_version", "semantic_status", "stage", "stage_data"],
+  "properties": {
+    "input_artifact_ids": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"type": "string"}},
+    "input_content_sha256": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"type": "string", "pattern": "^[0-9a-f]{64}$"}},
+    "result": {
+      "type": "object",
+      "required": ["lifecycle", "manifest_sha256"],
+      "properties": {
+        "lifecycle": {"const": "PROVISIONAL"},
+        "manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      },
+      "additionalProperties": false
+    },
+    "schema_version": {"const": "1.0"},
+    "semantic_status": {"const": "PROVISIONAL"},
+    "stage": {"const": "knowledge"},
+    "stage_data": {
+      "type": "object",
+      "required": ["export_manifest"],
+      "properties": {"export_manifest": {"type": "object", "required": ["schema_version", "artifact_type", "files"]}},
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

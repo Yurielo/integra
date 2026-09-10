@@ -58,6 +58,20 @@ also prove non-monotonic progress, unsafe retry, changed-request idempotency,
 invalid resume binding inputs, path traversal, and unleased mutation fail
 closed.
 
+## R6 operational use
+
+The `PINNED_REAL_MEDIA` Core Alpha path uses one local adapter subprocess per
+stage. The controller completes the handshake before submitting the job; the
+adapter then executes the pinned source capability and returns progress plus a
+terminal result. A result must reference an existing regular file inside the
+job-specific `.staging` directory. The controller verifies the exact bytes and
+provenance before Core Alpha performs the only permanent atomic promotion.
+
+These bounded adapters declare `supports_resume = false`. Core Alpha's
+checkpointed prefix resume is a separate controller capability, not an
+intra-job worker resume claim. A stage timeout terminates the adapter process
+group and is not retried as a known-safe outcome.
+
 ## Scope boundary
 
 R3 defines contracts and a dependency-free reference validator only. It does

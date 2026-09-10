@@ -173,6 +173,16 @@ class CoreAlphaTests(unittest.TestCase):
         with self.assertRaisesRegex(CoreAlphaError, "not a symlink"):
             self.pipeline.run(link)
 
+    def test_source_symlinked_ancestor_is_rejected(self):
+        actual = self.root / "actual"
+        actual.mkdir()
+        source = actual / "video.mp4"
+        source.write_bytes(b"video")
+        alias = self.root / "alias"
+        alias.symlink_to(actual, target_is_directory=True)
+        with self.assertRaisesRegex(CoreAlphaError, "not a symlink"):
+            self.pipeline.run(alias / "video.mp4")
+
     def test_symlinked_project_directory_cannot_escape_store(self):
         source_hash = hashlib.sha256(self.source.read_bytes()).hexdigest()
         project_id = derive_imported_id(

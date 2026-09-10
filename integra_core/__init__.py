@@ -16,6 +16,12 @@ from .project_lease import (
     RecoveryDecision,
     recovery_decision,
 )
+from .real_media import (
+    JsonlProcessStageWorker,
+    RealMediaError,
+    aggregate_whisper_words,
+    validate_actual_evidence,
+)
 from .protocol import (
     CompatibilityError,
     IdempotencyDecision,
@@ -43,7 +49,9 @@ __all__ = [
     "LeaseConflict",
     "LeaseStore",
     "LocalComponentAdapter",
+    "JsonlProcessStageWorker",
     "RecoveryDecision",
+    "RealMediaError",
     "ReplayStageWorker",
     "StageOutput",
     "ProgressTracker",
@@ -56,6 +64,8 @@ __all__ = [
     "validate_artifact_reference",
     "validate_benchmark_record",
     "validate_core_alpha_manifest",
+    "aggregate_whisper_words",
+    "validate_actual_evidence",
     "validate_message",
     "validate_resume_binding",
     "validate_resume_token",

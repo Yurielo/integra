@@ -559,13 +559,22 @@ Implement one bounded local-video path:
 
 Both source applications remain independently usable.
 
-The first implementation checkpoint is a dependency-free `CONTRACT_REPLAY` of
-this control-plane sequence. It proves pinned component routing, exact
-content-addressed replay lineage, Project Lease enforcement, cancellation,
-deterministic checkpoints, and fail-closed resume. It does not invoke the
-pinned components on real media and does not satisfy R6 acceptance. R6 remains
-`IN_REVIEW` until the real local-video path runs with source-grounded
-provenance, without weakening the existing semantic-authority boundary.
+R6 uses two complementary evidence layers. The dependency-free
+`CONTRACT_REPLAY` proves pinned routing, content-addressed lineage, Project
+Lease enforcement, cancellation, deterministic checkpoints and fail-closed
+resume. The `PINNED_REAL_MEDIA` run invokes accepted VideoText and SeminarText
+revisions on a generated non-private local video, then promotes their results
+through the same Core Alpha pipeline and validated R3 envelopes. It proves
+transcript, Topic, review-package, provisional-knowledge and media-clip output
+with source-grounded hashes, exact intervals and parent lineage. Machine
+semantic output remains `REVIEW_REQUIRED` or `PROVISIONAL`; technical R6
+acceptance is not a human semantic decision.
+
+Every real stage starts from the Core Alpha stage loop under the Project Lease,
+performs an ordered R3 stdio JSONL handshake and job in a separate adapter
+process, validates an existing staged result, and promotes those exact bytes.
+Source internals execute only from clean archived copies of the pinned Git
+trees; the standalone checkouts remain read-only.
 
 ### Operations & Diagnostics v1
 
@@ -732,8 +741,8 @@ Stop and request the appropriate authority when there is:
 
 The current implementation stage is
 [Issue #8](https://github.com/Yurielo/integra/issues/8),
-`INTEGRA-R6 — Implement Core Alpha vertical slice`, with status `IN_REVIEW`
-until the real local-video path passes.
+`INTEGRA-R6 — Implement Core Alpha vertical slice`, with status `ACCEPTED`
+after repeatable real local-video execution through the governed control plane.
 
 The Product Owner instruction of 2026-09-10 authorizes safe implementation
 along this roadmap after dependency checks. It does not bypass the protected

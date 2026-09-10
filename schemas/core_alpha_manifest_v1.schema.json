@@ -14,7 +14,7 @@
   "properties": {
     "schema_version": {"const": "1.0"},
     "pipeline": {"const": "INTEGRA_CORE_ALPHA_V1"},
-    "execution_mode": {"const": "CONTRACT_REPLAY"},
+    "execution_mode": {"enum": ["CONTRACT_REPLAY", "PINNED_REAL_MEDIA"]},
     "project_id": {"type": "string", "pattern": "^urn:integra:project:"},
     "source_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
     "status": {"enum": ["IN_PROGRESS", "CANCELLED", "SUCCEEDED"]},

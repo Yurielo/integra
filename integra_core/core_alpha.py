@@ -42,6 +42,13 @@ STAGE_OUTPUTS = {
     "knowledge": ("canonical_knowledge_candidate", "canonical_knowledge_replay_v1"),
     "media_clip": ("media_clip", "videotext_media_clip_replay_v1"),
 }
+REAL_STAGE_OUTPUTS = {
+    "transcript": ("machine_transcript", "videotext_transcript_v1"),
+    "topics": ("topic_drafts", "seminartext_topic_drafts_v1"),
+    "review": ("exception_review_result", "seminartext_exception_review_v1"),
+    "knowledge": ("canonical_knowledge_candidate", "seminartext_knowledge_candidate_v1"),
+    "media_clip": ("media_clip", "videotext_media_clip_v1"),
+}
 STAGE_PARENTS = {
     "transcript": ("source",),
     "topics": ("transcript",),
@@ -105,6 +112,7 @@ MANIFEST_FIELDS = {
     "source_repositories_changed",
     "protected_data_accessed",
 }
+EXECUTION_MODES = {"CONTRACT_REPLAY", "PINNED_REAL_MEDIA"}
 VIDEO_SUFFIXES = {".m4v", ".mkv", ".mov", ".mp4", ".webm"}
 SEMANTIC_STAGES = {"topics", "review", "knowledge"}
 
@@ -133,6 +141,12 @@ class StageWorker(Protocol):
     ) -> StageOutput: ...
 
 
+def stage_output_contract(stage: str, execution_mode: str) -> tuple[str, str]:
+    if execution_mode == "PINNED_REAL_MEDIA":
+        return REAL_STAGE_OUTPUTS[stage]
+    return STAGE_OUTPUTS[stage]
+
+
 def sha256_bytes(payload: bytes) -> str:
     return hashlib.sha256(payload).hexdigest()
 
@@ -145,6 +159,29 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _is_sha256(value: Any) -> bool:
+    return (
+        isinstance(value, str)
+        and len(value) == 64
+        and all(character in "0123456789abcdef" for character in value)
+    )
+
+
+def reject_symlink_components(path: Path, *, label: str) -> None:
+    """Reject an existing symlink at any level of an absolute path."""
+
+    candidate = path.expanduser().absolute()
+    cursor = Path(candidate.anchor)
+    for part in candidate.parts[1:]:
+        cursor = cursor / part
+        # macOS exposes /var and /tmp as fixed compatibility aliases into
+        # /private. They are OS roots, not user-controlled path redirections.
+        if cursor.is_symlink() and cursor not in {Path("/var"), Path("/tmp")}:
+            if label == "source":
+                raise CoreAlphaError("source must be a regular local file, not a symlink")
+            raise CoreAlphaError(f"{label} path contains a symlink")
+
+
 def validate_core_alpha_manifest(manifest: dict[str, Any]) -> None:
     """Validate the dependency-free semantic constraints of the R6 manifest."""
 
@@ -153,7 +190,6 @@ def validate_core_alpha_manifest(manifest: dict[str, Any]) -> None:
     expected_scalars = {
         "schema_version": "1.0",
         "pipeline": "INTEGRA_CORE_ALPHA_V1",
-        "execution_mode": "CONTRACT_REPLAY",
         "semantic_authority": "PROVISIONAL_ONLY",
         "project_lease_enforced": True,
         "external_actions_performed": False,
@@ -163,6 +199,8 @@ def validate_core_alpha_manifest(manifest: dict[str, Any]) -> None:
     for field, expected in expected_scalars.items():
         if manifest.get(field) != expected:
             raise CoreAlphaError(f"Core Alpha manifest has invalid {field}")
+    if manifest.get("execution_mode") not in EXECUTION_MODES:
+        raise CoreAlphaError("Core Alpha manifest has invalid execution_mode")
     source_hash = manifest.get("source_sha256", "")
     if len(source_hash) != 64 or any(char not in "0123456789abcdef" for char in source_hash):
         raise CoreAlphaError("Core Alpha manifest has invalid source hash")
@@ -245,7 +283,7 @@ def validate_core_alpha_manifest(manifest: dict[str, Any]) -> None:
         expected_kind, expected_schema = (
             ("local_video", "local_video_v1")
             if stage == "source"
-            else STAGE_OUTPUTS[stage]
+            else stage_output_contract(stage, manifest["execution_mode"])
         )
         if (reference["kind"], reference["schema_id"]) != (
             expected_kind,
@@ -259,6 +297,8 @@ def validate_core_alpha_manifest(manifest: dict[str, Any]) -> None:
         expected_status = (
             {"PROVISIONAL", "REVIEW_REQUIRED"}
             if stage in SEMANTIC_STAGES
+            else {"REVIEW_REQUIRED"}
+            if stage == "transcript" and manifest["execution_mode"] == "PINNED_REAL_MEDIA"
             else {"NOT_APPLICABLE"}
         )
         if reference.get("semantic_status") not in expected_status:
@@ -487,12 +527,12 @@ class CoreAlphaPipeline:
         lease_store: LeaseStore | None = None,
         writer_identity: dict[str, Any] | None = None,
         clock: Callable[[], datetime] | None = None,
+        execution_mode: str = "CONTRACT_REPLAY",
     ) -> None:
         validate_component_identity(controller_identity)
         self.repository_root = repository_root.resolve()
         raw_store = store_root.expanduser().absolute()
-        if raw_store.is_symlink():
-            raise CoreAlphaError("Core Alpha store must not be a symlink")
+        reject_symlink_components(raw_store, label="Core Alpha store")
         self.raw_store_root = raw_store
         self.store_root = raw_store.resolve()
         if self.store_root == self.repository_root or self.repository_root in self.store_root.parents:
@@ -517,6 +557,9 @@ class CoreAlphaPipeline:
             "process_start_token": f"pid-{os.getpid()}",
         }
         self.clock = clock or (lambda: datetime.now(timezone.utc))
+        if execution_mode not in EXECUTION_MODES:
+            raise CoreAlphaError("Core Alpha execution mode is unsupported")
+        self.execution_mode = execution_mode
 
     def run(
         self,
@@ -526,8 +569,7 @@ class CoreAlphaPipeline:
         resume_checkpoint: Path | None = None,
     ) -> dict[str, Any]:
         source_input = source.expanduser().absolute()
-        if source_input.is_symlink():
-            raise CoreAlphaError("source must be a regular local file, not a symlink")
+        reject_symlink_components(source_input, label="source")
         source = source_input.resolve()
         if not source.is_file():
             raise CoreAlphaError("source must be a regular local file, not a symlink")
@@ -554,6 +596,7 @@ class CoreAlphaPipeline:
                 artifacts,
                 cancel_requested,
                 resume_checkpoint,
+                lease,
             )
         finally:
             now = self._timestamp(self.clock())
@@ -576,6 +619,7 @@ class CoreAlphaPipeline:
         artifacts: dict[str, dict[str, Any]],
         cancel_requested: Callable[[str], bool] | None,
         resume_checkpoint: Path | None,
+        lease: dict[str, Any],
     ) -> dict[str, Any]:
 
         if resume_checkpoint is not None:
@@ -618,8 +662,10 @@ class CoreAlphaPipeline:
                 )
             parents = tuple(artifacts[name] for name in STAGE_PARENTS[stage])
             component = self.components[STAGE_COMPONENTS[stage]]
+            self._refresh_lease(project_id, lease)
             output = self.worker.run(stage, STAGE_CAPABILITIES[stage], component, parents)
-            self._validate_stage_output(stage, output, parents)
+            self._refresh_lease(project_id, lease)
+            self._validate_stage_output(stage, output, parents, self.execution_mode)
             operation_id = derive_imported_id(
                 "operation",
                 component["component_id"],
@@ -662,6 +708,25 @@ class CoreAlphaPipeline:
         self._write_mutable(project_root / "core_alpha_manifest.json", canonical_json(manifest))
         self._write_mutable(project_root / "checkpoint.json", canonical_json(manifest))
         return manifest
+
+    def _refresh_lease(self, project_id: str, lease: dict[str, Any]) -> None:
+        instant = self.clock()
+        if instant.tzinfo is None:
+            raise CoreAlphaError("Core Alpha clock must be timezone-aware")
+        heartbeat_at = self._timestamp(instant)
+        expires_at = self._timestamp(instant + timedelta(minutes=5))
+        try:
+            self.lease_store.heartbeat(
+                project_id,
+                project_id,
+                lease["lease_id"],
+                self.writer_identity,
+                lease["generation"],
+                heartbeat_at,
+                expires_at,
+            )
+        except LeaseConflict as error:
+            raise CoreAlphaError("project lease was lost during stage execution") from error
 
     def _acquire_project_lease(self, project_id: str, source_hash: str) -> dict[str, Any]:
         instant = self.clock()
@@ -708,7 +773,7 @@ class CoreAlphaPipeline:
         manifest = {
             "schema_version": "1.0",
             "pipeline": "INTEGRA_CORE_ALPHA_V1",
-            "execution_mode": "CONTRACT_REPLAY",
+            "execution_mode": self.execution_mode,
             "project_id": project_id,
             "source_sha256": source_hash,
             "status": status,
@@ -798,15 +863,16 @@ class CoreAlphaPipeline:
             if sha256_file(path) != reference["content_sha256"]:
                 raise CoreAlphaError(f"retained artifact hash changed: {name}")
 
-    @staticmethod
     def _validate_stage_output(
+        self,
         stage: str,
         output: StageOutput,
         parents: tuple[dict[str, Any], ...],
+        execution_mode: str,
     ) -> None:
         if not isinstance(output, StageOutput):
             raise CoreAlphaError(f"{stage}: worker output must use StageOutput")
-        expected_kind, expected_schema = STAGE_OUTPUTS[stage]
+        expected_kind, expected_schema = stage_output_contract(stage, execution_mode)
         if (output.kind, output.schema_id) != (expected_kind, expected_schema):
             raise CoreAlphaError(f"{stage}: worker output contract differs from R6")
         if output.schema_version != "1.0":
@@ -816,6 +882,8 @@ class CoreAlphaPipeline:
         allowed_statuses = (
             {"PROVISIONAL", "REVIEW_REQUIRED"}
             if stage in SEMANTIC_STAGES
+            else {"REVIEW_REQUIRED"}
+            if stage == "transcript" and execution_mode == "PINNED_REAL_MEDIA"
             else {"NOT_APPLICABLE"}
         )
         if output.semantic_status not in allowed_statuses:
@@ -831,6 +899,9 @@ class CoreAlphaPipeline:
             document = json.loads(output.payload)
         except (UnicodeDecodeError, json.JSONDecodeError) as error:
             raise CoreAlphaError(f"{stage}: worker payload must be valid JSON") from error
+        if execution_mode == "PINNED_REAL_MEDIA":
+            self._validate_real_stage_payload(stage, document, output, parents)
+            return
         expected_fields = {
             "input_artifact_ids",
             "input_content_sha256",
@@ -893,6 +964,141 @@ class CoreAlphaPipeline:
                 raise CoreAlphaError("knowledge: lifecycle contradicts provisional authority")
             if not isinstance(result.get("title"), str) or not result["title"]:
                 raise CoreAlphaError("knowledge: replay title must be non-empty")
+
+    @staticmethod
+    def _validate_real_stage_payload(
+        stage: str,
+        document: Any,
+        output: StageOutput,
+        parents: tuple[dict[str, Any], ...],
+    ) -> None:
+        expected_fields = {
+            "input_artifact_ids",
+            "input_content_sha256",
+            "result",
+            "schema_version",
+            "semantic_status",
+            "stage",
+            "stage_data",
+        }
+        if not isinstance(document, dict) or set(document) != expected_fields:
+            raise CoreAlphaError(f"{stage}: real-media payload fields differ from R6")
+        if document["schema_version"] != "1.0" or document["stage"] != stage:
+            raise CoreAlphaError(f"{stage}: real-media payload identity differs from R6")
+        if document["semantic_status"] != output.semantic_status:
+            raise CoreAlphaError(f"{stage}: real-media semantic status differs")
+        if document["input_artifact_ids"] != [item["artifact_id"] for item in parents]:
+            raise CoreAlphaError(f"{stage}: real-media input identity differs")
+        if document["input_content_sha256"] != [item["content_sha256"] for item in parents]:
+            raise CoreAlphaError(f"{stage}: real-media input hashes differ")
+        result = document["result"]
+        stage_data = document["stage_data"]
+        if not isinstance(result, dict):
+            raise CoreAlphaError(f"{stage}: real-media result must be an object")
+        if not isinstance(stage_data, dict) or not stage_data:
+            raise CoreAlphaError(f"{stage}: real-media stage data must be a non-empty object")
+        required = {
+            "transcript": {"assurance", "language", "text_sha256", "word_count"},
+            "topics": {"topic_count", "model_digest"},
+            "review": {"unreviewed", "human_decision_required", "technical_status"},
+            "knowledge": {"lifecycle", "manifest_sha256"},
+        }[stage]
+        if set(result) != required:
+            raise CoreAlphaError(f"{stage}: real-media result fields differ from R6")
+        if stage == "transcript" and (
+            result.get("assurance") != "MACHINE_UNVERIFIED"
+            or result.get("language") != "ru"
+            or not isinstance(result.get("word_count"), int)
+            or result["word_count"] < 1
+            or not _is_sha256(result.get("text_sha256"))
+        ):
+            raise CoreAlphaError("transcript: real-media assurance/result is invalid")
+        if stage == "transcript" and set(stage_data) != {
+            "review_checkpoint", "srt_text", "transcript_text", "whisper_document",
+            "word_intervals", "omitted_zero_duration_tokens",
+        }:
+            raise CoreAlphaError("transcript: real-media stage data fields are invalid")
+        if stage == "transcript":
+            words = stage_data.get("word_intervals")
+            omitted = stage_data.get("omitted_zero_duration_tokens")
+            text = stage_data.get("transcript_text")
+            if (
+                stage_data.get("review_checkpoint") != "SOURCE_TRANSCRIPT"
+                or not isinstance(stage_data.get("srt_text"), str)
+                or not stage_data["srt_text"]
+                or not isinstance(text, str)
+                or not text
+                or sha256_bytes(text.encode("utf-8")) != result["text_sha256"]
+                or not isinstance(stage_data.get("whisper_document"), dict)
+                or not isinstance(words, list)
+                or len(words) != result["word_count"]
+                or not words
+                or not isinstance(omitted, list)
+            ):
+                raise CoreAlphaError("transcript: real-media stage data is invalid")
+        if stage == "topics" and (
+            not isinstance(result.get("topic_count"), int)
+            or result["topic_count"] < 1
+            or not _is_sha256(result.get("model_digest"))
+        ):
+            raise CoreAlphaError("topics: real-media model/result is invalid")
+        if stage == "topics" and set(stage_data) != {"topics_document"}:
+            raise CoreAlphaError("topics: real-media stage data fields are invalid")
+        if stage == "topics":
+            topic_document = stage_data.get("topics_document")
+            topics = topic_document.get("topics") if isinstance(topic_document, dict) else None
+            if (
+                not isinstance(topics, list)
+                or len(topics) != result["topic_count"]
+                or not topics
+                or any(
+                    not isinstance(topic, dict)
+                    or topic.get("semantic_status") != "REVIEW_REQUIRED"
+                    for topic in topics
+                )
+            ):
+                raise CoreAlphaError("topics: real-media stage data is invalid")
+        if stage == "review" and (
+            result.get("technical_status") != "REVIEW_REQUIRED"
+            or result.get("human_decision_required") is not True
+            or not isinstance(result.get("unreviewed"), int)
+            or result["unreviewed"] < 1
+        ):
+            raise CoreAlphaError("review: real-media result is invalid")
+        if stage == "review" and set(stage_data) != {
+            "alignment_result", "canonical_bundle", "review_package",
+        }:
+            raise CoreAlphaError("review: real-media stage data fields are invalid")
+        if stage == "review":
+            bundle = stage_data.get("canonical_bundle")
+            package = stage_data.get("review_package")
+            if (
+                not isinstance(stage_data.get("alignment_result"), dict)
+                or not isinstance(bundle, dict)
+                or not isinstance(bundle.get("words"), list)
+                or not bundle["words"]
+                or not isinstance(package, dict)
+                or not isinstance(package.get("topics"), list)
+                or len(package["topics"]) != result["unreviewed"]
+            ):
+                raise CoreAlphaError("review: real-media stage data is invalid")
+        if stage == "knowledge" and (
+            result.get("lifecycle") != "PROVISIONAL"
+            or not _is_sha256(result.get("manifest_sha256"))
+        ):
+            raise CoreAlphaError("knowledge: real-media result is invalid")
+        if stage == "knowledge" and set(stage_data) != {"export_manifest"}:
+            raise CoreAlphaError("knowledge: real-media stage data fields are invalid")
+        if stage == "knowledge":
+            export_manifest = stage_data.get("export_manifest")
+            if (
+                not isinstance(export_manifest, dict)
+                or not isinstance(export_manifest.get("files"), dict)
+                or not export_manifest["files"]
+            ):
+                raise CoreAlphaError("knowledge: real-media stage data is invalid")
+        if stage in SEMANTIC_STAGES:
+            CoreAlphaPipeline._reject_semantic_promotion(stage, document)
 
     @staticmethod
     def _reject_semantic_promotion(stage: str, value: Any) -> None:

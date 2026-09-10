@@ -1,0 +1,248 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Yurielo/integra/schemas/core_alpha_real_evidence_v1.schema.json",
+  "title": "Integra Core Alpha pinned real-media evidence v1",
+  "type": "object",
+  "required": [
+    "schema_version", "status", "issue", "execution_mode", "executed_at",
+    "semantic_authority", "source_repositories_changed", "protected_data_accessed",
+    "human_decisions_applied", "reference_host", "source", "component_identities", "implementation",
+    "models", "stage_sequence", "stages", "alignment", "provenance", "control_plane", "determinism", "acceptance",
+    "limitations"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "status": {"const": "PASS"},
+    "issue": {"const": 8},
+    "execution_mode": {"const": "PINNED_REAL_MEDIA"},
+    "semantic_authority": {"const": "PROVISIONAL_ONLY"},
+    "source_repositories_changed": {"const": false},
+    "protected_data_accessed": {"const": false},
+    "human_decisions_applied": {"const": 0},
+    "executed_at": {"type": "string", "format": "date-time"},
+    "reference_host": {
+      "type": "object",
+      "required": ["os", "architecture", "python", "swift", "ffmpeg", "whisper_cpp", "ollama"],
+      "properties": {
+        "os": {"type": "string", "minLength": 1},
+        "architecture": {"type": "string", "minLength": 1},
+        "python": {"type": "string", "minLength": 1},
+        "swift": {"type": "string", "minLength": 1},
+        "ffmpeg": {"type": "string", "minLength": 1},
+        "whisper_cpp": {"type": "string", "minLength": 1},
+        "ollama": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "required": ["kind", "privacy", "sha256", "size_bytes", "duration_seconds", "language"],
+      "properties": {
+        "kind": {"const": "GENERATED_LOCAL_VIDEO"},
+        "privacy": {"const": "NON_PRIVATE_SYNTHETIC_SPEECH"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "size_bytes": {"type": "integer", "minimum": 1},
+        "duration_seconds": {"type": "number", "exclusiveMinimum": 0},
+        "language": {"const": "ru"}
+      },
+      "additionalProperties": false
+    },
+    "component_identities": {
+      "type": "object",
+      "required": ["seminartext", "videotext"],
+      "properties": {
+        "seminartext": {"$ref": "#/$defs/component"},
+        "videotext": {"$ref": "#/$defs/component"}
+      },
+      "additionalProperties": false
+    },
+    "implementation": {
+      "type": "array",
+      "minItems": 5,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/file_hash"}
+    },
+    "models": {
+      "type": "object",
+      "required": ["whisper", "topics"],
+      "properties": {
+        "whisper": {"type": "object", "required": ["name", "sha256"], "properties": {"name": {"type": "string"}, "sha256": {"$ref": "#/$defs/sha256"}}, "additionalProperties": false},
+        "topics": {"type": "object", "required": ["name", "provider", "digest", "weights_sha256"], "properties": {"name": {"type": "string", "minLength": 1}, "provider": {"const": "ollama"}, "digest": {"$ref": "#/$defs/sha256"}, "weights_sha256": {"$ref": "#/$defs/sha256"}}, "additionalProperties": false}
+      },
+      "additionalProperties": false
+    },
+    "stage_sequence": {
+      "const": ["source", "transcript", "topics", "review", "knowledge", "media_clip"]
+    },
+    "stages": {
+      "type": "object",
+      "required": ["source", "transcript", "topics", "review", "knowledge", "media_clip"],
+      "properties": {
+        "source": {"$ref": "#/$defs/stage"},
+        "transcript": {"$ref": "#/$defs/stage"},
+        "topics": {"$ref": "#/$defs/stage"},
+        "review": {"$ref": "#/$defs/stage"},
+        "knowledge": {"$ref": "#/$defs/stage"},
+        "media_clip": {"$ref": "#/$defs/stage"}
+      },
+      "additionalProperties": false
+    },
+    "alignment": {
+      "type": "object",
+      "required": ["aligned_word_intervals", "unaligned_word_sequences", "omitted_zero_duration_tokens", "fabricated_intervals"],
+      "properties": {
+        "aligned_word_intervals": {"const": 37},
+        "unaligned_word_sequences": {"const": [31]},
+        "omitted_zero_duration_tokens": {"const": 1},
+        "fabricated_intervals": {"const": 0}
+      },
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["project_id", "source_id", "transcript_revision_id", "word_interval", "topic_interval", "clip_interval", "artifact_lineage"],
+      "properties": {
+        "project_id": {"type": "string", "minLength": 1},
+        "source_id": {"type": "string", "minLength": 1},
+        "transcript_revision_id": {"type": "string", "minLength": 1},
+        "word_interval": {"$ref": "#/$defs/word_interval"},
+        "topic_interval": {"$ref": "#/$defs/time_interval"},
+        "clip_interval": {"$ref": "#/$defs/time_interval"},
+        "artifact_lineage": {
+          "type": "object",
+          "required": ["source", "transcript", "topics", "review", "knowledge", "media_clip"],
+          "properties": {
+            "source": {"$ref": "#/$defs/lineage"},
+            "transcript": {"$ref": "#/$defs/lineage"},
+            "topics": {"$ref": "#/$defs/lineage"},
+            "review": {"$ref": "#/$defs/lineage"},
+            "knowledge": {"$ref": "#/$defs/lineage"},
+            "media_clip": {"$ref": "#/$defs/lineage"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "control_plane": {
+      "type": "object",
+      "required": ["pipeline", "controller_commit_sha", "controller_tree_sha", "manifest_sha256", "project_lease_enforced", "prefix_cancellation_checkpoint_verified", "prefix_resume_revalidation_verified", "r3_contract_boundary", "validated_jsonl_messages", "worker_processes", "worker_resume_support", "stage_timeout_enforced"],
+      "properties": {
+        "pipeline": {"const": "INTEGRA_CORE_ALPHA_V1"},
+        "controller_commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "controller_tree_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "manifest_sha256": {"$ref": "#/$defs/sha256"},
+        "project_lease_enforced": {"const": true},
+        "prefix_cancellation_checkpoint_verified": {"const": true},
+        "prefix_resume_revalidation_verified": {"const": true},
+        "r3_contract_boundary": {"const": true},
+        "validated_jsonl_messages": {"const": 25},
+        "worker_processes": {"const": 5},
+        "worker_resume_support": {"const": false},
+        "stage_timeout_enforced": {"const": true}
+      },
+      "additionalProperties": false
+    },
+    "determinism": {
+      "type": "object",
+      "required": ["independent_runs_compared", "all_stage_hashes_identical"],
+      "properties": {
+        "independent_runs_compared": {"type": "integer", "minimum": 1},
+        "all_stage_hashes_identical": {"type": ["boolean", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "acceptance": {
+      "type": "object",
+      "required": [
+        "real_local_video_decoded", "pinned_components_executed",
+        "source_grounded_provenance", "videotext_review_checkpoint",
+        "seminartext_topics_generated", "canonical_evidence_valid",
+        "exception_review_package_generated", "provisional_knowledge_generated",
+        "videotext_media_clip_rendered", "semantic_authority",
+        "human_decisions_applied", "source_repositories_changed",
+        "protected_data_accessed", "gold_accessed"
+      ],
+      "properties": {
+        "real_local_video_decoded": {"const": true},
+        "pinned_components_executed": {"const": true},
+        "source_grounded_provenance": {"const": true},
+        "videotext_review_checkpoint": {"const": "SOURCE_TRANSCRIPT"},
+        "seminartext_topics_generated": {"const": true},
+        "canonical_evidence_valid": {"const": true},
+        "exception_review_package_generated": {"const": true},
+        "provisional_knowledge_generated": {"const": true},
+        "videotext_media_clip_rendered": {"const": true},
+        "semantic_authority": {"const": "PROVISIONAL_ONLY"},
+        "human_decisions_applied": {"const": 0},
+        "source_repositories_changed": {"const": false},
+        "protected_data_accessed": {"const": false},
+        "gold_accessed": {"const": false}
+      },
+      "additionalProperties": false
+    },
+    "limitations": {"type": "array", "minItems": 3, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "component": {
+      "type": "object",
+      "required": ["repository", "commit_sha", "tree_sha", "version"],
+      "properties": {
+        "repository": {"type": "string"},
+        "commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "tree_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "version": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "file_hash": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "properties": {"path": {"type": "string"}, "sha256": {"$ref": "#/$defs/sha256"}},
+      "additionalProperties": false
+    },
+    "stage": {
+      "type": "object",
+      "required": ["status", "semantic_status", "sha256", "size_bytes"],
+      "properties": {
+        "status": {"const": "PASS"},
+        "semantic_status": {"enum": ["NOT_APPLICABLE", "REVIEW_REQUIRED", "PROVISIONAL"]},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "size_bytes": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": false
+    },
+    "time_interval": {
+      "type": "object",
+      "required": ["start_seconds", "end_seconds"],
+      "properties": {
+        "start_seconds": {"type": "number", "minimum": 0},
+        "end_seconds": {"type": "number", "exclusiveMinimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "word_interval": {
+      "type": "object",
+      "required": ["start_id", "end_id", "start_seconds", "end_seconds"],
+      "properties": {
+        "start_id": {"type": "string", "minLength": 1},
+        "end_id": {"type": "string", "minLength": 1},
+        "start_seconds": {"type": "number", "minimum": 0},
+        "end_seconds": {"type": "number", "exclusiveMinimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "lineage": {
+      "type": "object",
+      "required": ["artifact_id", "parent_artifact_ids", "operation_id"],
+      "properties": {
+        "artifact_id": {"type": "string", "minLength": 1},
+        "parent_artifact_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "operation_id": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
