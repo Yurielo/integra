@@ -83,6 +83,10 @@ unaligned (`word sequence 31`) rather than receiving fabricated timing. The
 Canonical Evidence validator passed with that word explicitly review-required.
 Two independent actual runs from one fixed implementation fingerprint produced
 identical SHA-256 values for all six stages, including the rendered clip.
+The governed record retains both distinct run identities, execution timestamps,
+controller identities, manifests and complete per-stage hash sets; the
+determinism result is produced by `scripts/certify_core_alpha_real.py`, not by
+manually changing a single-run assertion.
 The JSON payloads were validated field-by-field down to word, Topic, review and
 export-file records. The binary clip passed both the strict ISO-BMFF contract
 and a functional ffprobe decode check; arbitrary non-empty bytes fail closed.

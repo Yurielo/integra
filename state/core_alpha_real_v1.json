@@ -38,10 +38,10 @@
     }
   },
   "control_plane": {
-    "controller_commit_sha": "a6d11dc28ae2171378c594c15bb7c93585f8f8a9",
-    "controller_tree_sha": "60e99584983d23e06efb82c6686e737ad9f5df89",
-    "lease_heartbeats_during_workers": 7,
-    "manifest_sha256": "7014093fbda8b61e7cb6317d0544423ca3af0aa42968ac746cc15db58993b7c8",
+    "controller_commit_sha": "c8293a75c19e085dd3eeea315e0e71705fb68f2e",
+    "controller_tree_sha": "e4a80af26e4fa8fd1ef29033d9b75ea141b93f4c",
+    "lease_heartbeats_during_workers": 8,
+    "manifest_sha256": "48f9c56b86e52da870c112535ff0cd16b8ab321dc7a98d5a2849d70738583027",
     "media_clip_functional_probe": true,
     "pipeline": "INTEGRA_CORE_ALPHA_V1",
     "prefix_cancellation_checkpoint_verified": true,
@@ -55,27 +55,59 @@
   },
   "determinism": {
     "all_stage_hashes_identical": true,
-    "independent_runs_compared": 2
+    "independent_runs_compared": 2,
+    "runs": [
+      {
+        "controller_commit_sha": "c8293a75c19e085dd3eeea315e0e71705fb68f2e",
+        "controller_tree_sha": "e4a80af26e4fa8fd1ef29033d9b75ea141b93f4c",
+        "executed_at": "2026-09-10T21:10:45.918899Z",
+        "manifest_sha256": "48f9c56b86e52da870c112535ff0cd16b8ab321dc7a98d5a2849d70738583027",
+        "run_id": "b24ad6afc32205adf15c0717186cc69fcbaff77fa1c1daeecdc84bf4693e5b59",
+        "stage_hashes": {
+          "knowledge": "be4014eb3487229103a97f5d9102076ab7928d3a83cf1863de462390e4df6e09",
+          "media_clip": "5bb6131fd2541ed09f243c7acede028a623f0f0690b2d2300a19415f86e33ef0",
+          "review": "d08aa713795df2f4794c16564e188410ee7df7db23f4f4ac9e3c0ac10588fdf1",
+          "source": "9c5b2046dda83bb5cc72ed27aaa22620a1c8ab3ae62ed8d0f32636187b429b2d",
+          "topics": "21697fa85d632701dd40ee0ce00262d080e857d83ca990e357e9b98f614f2d50",
+          "transcript": "ebeb0b69432fd28f127cae1d80d17e7fe422b1da62ec6f8b425109fd558e9cad"
+        }
+      },
+      {
+        "controller_commit_sha": "c8293a75c19e085dd3eeea315e0e71705fb68f2e",
+        "controller_tree_sha": "e4a80af26e4fa8fd1ef29033d9b75ea141b93f4c",
+        "executed_at": "2026-09-10T21:12:30.460292Z",
+        "manifest_sha256": "48f9c56b86e52da870c112535ff0cd16b8ab321dc7a98d5a2849d70738583027",
+        "run_id": "706d17e38a68249f21f2219e7c06c6e5dbacda89b7d57988ce7c1aa4ce37588b",
+        "stage_hashes": {
+          "knowledge": "be4014eb3487229103a97f5d9102076ab7928d3a83cf1863de462390e4df6e09",
+          "media_clip": "5bb6131fd2541ed09f243c7acede028a623f0f0690b2d2300a19415f86e33ef0",
+          "review": "d08aa713795df2f4794c16564e188410ee7df7db23f4f4ac9e3c0ac10588fdf1",
+          "source": "9c5b2046dda83bb5cc72ed27aaa22620a1c8ab3ae62ed8d0f32636187b429b2d",
+          "topics": "21697fa85d632701dd40ee0ce00262d080e857d83ca990e357e9b98f614f2d50",
+          "transcript": "ebeb0b69432fd28f127cae1d80d17e7fe422b1da62ec6f8b425109fd558e9cad"
+        }
+      }
+    ]
   },
-  "executed_at": "2026-09-10T20:38:15.278556Z",
+  "executed_at": "2026-09-10T21:10:45.918899Z",
   "execution_mode": "PINNED_REAL_MEDIA",
   "human_decisions_applied": 0,
   "implementation": [
     {
       "path": "integra_core/core_alpha.py",
-      "sha256": "143b4ff435f1b9c7287ef53019a4d8fa70d46798c1dc5f06518eaceaad760423"
+      "sha256": "1e5d04461239f59925616f1514d69410a35e38d7d7d49dac8c17c0cb291c30f0"
     },
     {
       "path": "integra_core/real_contracts.py",
-      "sha256": "f22894a6fe799e15851be745a60fd5fa2460f4741b0b78e695b6b4dc07ebeb93"
+      "sha256": "ff58174bd744312e6249d41080aaea8a60a5957938ef8f9e4f319403cd163e08"
     },
     {
       "path": "integra_core/real_media.py",
-      "sha256": "cea98b7d9d71e9e79a8ee1ed3fdb379d231db473b28f7f64ec58e7942c8e9099"
+      "sha256": "8e1d0f6725b90948651ec3bd049a3a7ac6de1210ee3fe1a17fdb7fedb265a671"
     },
     {
       "path": "scripts/run_core_alpha_real.py",
-      "sha256": "3e046212f28cf41cded3a54628e8cbee1f80b3c03838ab9de0a10bf302759e35"
+      "sha256": "ee57f8ef7a59217c423e9d53672dba8cc49ac024c9d977986d68ab9700a8490e"
     },
     {
       "path": "workers/core_alpha_real_worker.py",
@@ -92,6 +124,34 @@
     {
       "path": "workers/videotext_clip_worker.swift",
       "sha256": "fa514216b542a8457ddfa2a3d9830865cadb6a28f70887b9657d87e2da755de8"
+    },
+    {
+      "path": "scripts/certify_core_alpha_real.py",
+      "sha256": "7a35eb224241210e44abf9edcf6ff609fcc158788fb4f8fb8323822aebdc0f8c"
+    },
+    {
+      "path": "schemas/core_alpha_real_evidence_v1.schema.json",
+      "sha256": "363ff992de22972239536e651dd9fea3076f1f6fda2affe7ffdfe738f62ced39"
+    },
+    {
+      "path": "schemas/videotext_transcript_v1.schema.json",
+      "sha256": "80b89ba0a2f94aea0643d9ac612abda1e90fdc83d01ca6c3de2c92d4fb0ba13d"
+    },
+    {
+      "path": "schemas/seminartext_topic_drafts_v1.schema.json",
+      "sha256": "f2b536377515325900b9975ba278cc30603c76b4d9b110a45951db18c16c21b0"
+    },
+    {
+      "path": "schemas/seminartext_exception_review_v1.schema.json",
+      "sha256": "11790272f4a8a930ea239b41e9405549af44ff2418c32a29d1c8b65a4e5a164d"
+    },
+    {
+      "path": "schemas/seminartext_knowledge_candidate_v1.schema.json",
+      "sha256": "ac8c428354bb41305d0bd3412c6601349141d44ea295219ff2fa68e81c4f3963"
+    },
+    {
+      "path": "schemas/videotext_media_clip_v1.contract.json",
+      "sha256": "c8a06037f3b89b17c81d5ff789c1be62fb94d1b4d18db2278618c435bb932a47"
     }
   ],
   "issue": 8,

@@ -45,7 +45,7 @@ CORE_ALPHA_EVIDENCE_SCHEMA_PATH = ROOT / "schemas" / "core_alpha_evidence_v1.sch
 CORE_ALPHA_MANIFEST_SCHEMA_PATH = ROOT / "schemas" / "core_alpha_manifest_v1.schema.json"
 CORE_ALPHA_REAL_PATH = ROOT / "state" / "core_alpha_real_v1.json"
 CORE_ALPHA_REAL_SCHEMA_PATH = ROOT / "schemas" / "core_alpha_real_evidence_v1.schema.json"
-EXPECTED_CORE_ALPHA_REAL_SHA256 = "1e812b3b976210978b7de76a63f76fc2afe59268f50437c1b6bb2eb5780ac3e3"
+EXPECTED_CORE_ALPHA_REAL_SHA256 = "7233cd2985d65d8616e217385b53935c671dbda69a686849a9864cba4565d47c"
 EXPECTED_CORE_ALPHA_REAL_IMPLEMENTATION = {
     "integra_core/core_alpha.py",
     "integra_core/real_contracts.py",
@@ -55,6 +55,13 @@ EXPECTED_CORE_ALPHA_REAL_IMPLEMENTATION = {
     "workers/seminartext_topics_worker.py",
     "workers/videotext_transcript_worker.swift",
     "workers/videotext_clip_worker.swift",
+    "scripts/certify_core_alpha_real.py",
+    "schemas/core_alpha_real_evidence_v1.schema.json",
+    "schemas/videotext_transcript_v1.schema.json",
+    "schemas/seminartext_topic_drafts_v1.schema.json",
+    "schemas/seminartext_exception_review_v1.schema.json",
+    "schemas/seminartext_knowledge_candidate_v1.schema.json",
+    "schemas/videotext_media_clip_v1.contract.json",
 }
 
 REQUIRED_DOCUMENTS = (
@@ -685,8 +692,8 @@ def validate_core_alpha_real_evidence(
     if evidence.get("component_identities") != baseline_components:
         errors.append("R6 actual component identities differ from the R1 baseline")
     implementation = evidence.get("implementation")
-    if not isinstance(implementation, list) or len(implementation) < 5:
-        errors.append("R6 actual implementation inventory is incomplete")
+    if not isinstance(implementation, list) or len(implementation) != len(EXPECTED_CORE_ALPHA_REAL_IMPLEMENTATION):
+        errors.append("R6 actual implementation inventory must be exact")
     else:
         paths = []
         for record in implementation:
@@ -722,10 +729,13 @@ def validate_core_alpha_real_evidence(
     }
     if acceptance != required_acceptance:
         errors.append("R6 actual acceptance evidence differs from the governed contract")
-    if evidence.get("determinism") != {
-        "independent_runs_compared": 2,
-        "all_stage_hashes_identical": True,
-    }:
+    determinism = evidence.get("determinism", {})
+    if (
+        determinism.get("independent_runs_compared") != 2
+        or determinism.get("all_stage_hashes_identical") is not True
+        or not isinstance(determinism.get("runs"), list)
+        or len(determinism["runs"]) != 2
+    ):
         errors.append("R6 actual stage hashes must match across two independent runs")
     limitations = evidence.get("limitations")
     if not isinstance(limitations, list) or len(limitations) < 3 or len(limitations) != len(set(limitations)):
