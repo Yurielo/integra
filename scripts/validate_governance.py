@@ -39,6 +39,7 @@ REQUIRED_DOCUMENTS = (
     "README.md",
     "AGENTS.md",
     "DEVELOPMENT_WORKFLOW.md",
+    "docs/AUTONOMOUS_EXECUTION_POLICY.md",
     "docs/INTEGRA_PLAN.md",
     "docs/PRODUCT_DEFINITION.md",
     "docs/ROADMAP.md",
@@ -140,8 +141,9 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
 
     execution_policy = state.get("execution_policy", {})
     expected_policy = {
-        "safe_roadmap_implementation": "AUTHORIZED_AFTER_DEPENDENCIES",
-        "merge": "EXPLICIT_AUTHORITY_REQUIRED",
+        "safe_roadmap_implementation": "STANDING_AUTHORITY_AFTER_DEPENDENCIES",
+        "merge": "AUTO_AFTER_FAIL_CLOSED_GATES",
+        "runtime_reconciliation": "AUTO_GOVERNED_AFTER_FAIL_CLOSED_GATES",
         "release": "EXPLICIT_AUTHORITY_REQUIRED",
         "live_external_actions": "EXPLICIT_AUTHORITY_REQUIRED",
         "protected_data": "EXPLICIT_AUTHORITY_REQUIRED",

@@ -47,6 +47,7 @@
       "required": [
         "safe_roadmap_implementation",
         "merge",
+        "runtime_reconciliation",
         "release",
         "live_external_actions",
         "protected_data",
@@ -55,8 +56,9 @@
         "source_repository_changes"
       ],
       "properties": {
-        "safe_roadmap_implementation": { "const": "AUTHORIZED_AFTER_DEPENDENCIES" },
-        "merge": { "const": "EXPLICIT_AUTHORITY_REQUIRED" },
+        "safe_roadmap_implementation": { "const": "STANDING_AUTHORITY_AFTER_DEPENDENCIES" },
+        "merge": { "const": "AUTO_AFTER_FAIL_CLOSED_GATES" },
+        "runtime_reconciliation": { "const": "AUTO_GOVERNED_AFTER_FAIL_CLOSED_GATES" },
         "release": { "const": "EXPLICIT_AUTHORITY_REQUIRED" },
         "live_external_actions": { "const": "EXPLICIT_AUTHORITY_REQUIRED" },
         "protected_data": { "const": "EXPLICIT_AUTHORITY_REQUIRED" },
