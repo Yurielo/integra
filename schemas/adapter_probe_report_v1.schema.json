@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Yurielo/integra/schemas/adapter_probe_report_v1.schema.json",
+  "title": "Integra R4 adapter probe report v1",
+  "type": "object",
+  "required": [
+    "schema_version", "component", "capability", "job_id", "operation_id",
+    "input_artifact_ids", "input_content_sha256", "source_before", "source_after",
+    "command", "exit_code", "stdout_sha256", "stderr_sha256",
+    "stdout_size_bytes", "stderr_size_bytes", "elapsed_ms", "status"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "component": { "$ref": "component_identity_v1.schema.json" },
+    "capability": {
+      "type": "object",
+      "required": ["id", "version", "input_schema_ids", "output_schema_ids", "supports_resume"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "version": { "const": "1.0" },
+        "input_schema_ids": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+        "output_schema_ids": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+        "supports_resume": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "job_id": { "type": "string" },
+    "operation_id": { "type": "string" },
+    "input_artifact_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string" } },
+    "input_content_sha256": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^[0-9a-f]{64}$" } },
+    "source_before": { "$ref": "#/$defs/source_state" },
+    "source_after": { "$ref": "#/$defs/source_state" },
+    "command": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "exit_code": { "const": 0 },
+    "stdout_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "stderr_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "stdout_size_bytes": { "type": "integer", "minimum": 0 },
+    "stderr_size_bytes": { "type": "integer", "minimum": 0 },
+    "elapsed_ms": { "type": "integer", "minimum": 0 },
+    "status": { "const": "PASS" }
+  },
+  "$defs": {
+    "source_state": {
+      "type": "object",
+      "required": ["commit_sha", "tree_sha", "status"],
+      "properties": {
+        "commit_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "tree_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "status": { "const": "CLEAN" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

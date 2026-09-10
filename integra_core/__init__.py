@@ -1,5 +1,6 @@
 """Core dependency-free Integra contracts."""
 
+from .adapter import AdapterPreconditionError, CapabilitySpec, LocalComponentAdapter
 from .identity import CollisionDecision, derive_imported_id, resolve_collision
 from .project_lease import (
     LeaseConflict,
@@ -22,12 +23,15 @@ from .protocol import (
 )
 
 __all__ = [
+    "AdapterPreconditionError",
+    "CapabilitySpec",
     "CollisionDecision",
     "CompatibilityError",
     "IdempotencyDecision",
     "IdempotencyLedger",
     "LeaseConflict",
     "LeaseStore",
+    "LocalComponentAdapter",
     "RecoveryDecision",
     "ProgressTracker",
     "ProtocolViolation",
