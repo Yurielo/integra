@@ -1,6 +1,6 @@
 # R1 Pinned Component Baseline Certification
 
-Status: `IMPLEMENTED_PENDING_REVIEW_WITH_EVIDENCE_GAP`
+Status: `ACCEPTED`
 
 Verified: 2026-09-10
 
@@ -44,32 +44,36 @@ complete.
 - Fresh clean checkout build: PASS; the temporary `.app` passed plist,
   ad-hoc signing, and signature verification.
 - Twenty-eight input-independent deterministic standalone probes: PASS.
+- Long-topic probe: PASS on 3131 cues; 42 topics passed strict validation.
+- Current release gate: PASS for the pinned commit and unchanged release-input
+  hash; two consecutive real-video E2E runs, candidate signing, smoke, and
+  post-smoke signature verification passed.
 - GitHub CI: not configured; GitHub reports no check runs for the pinned commit.
 - The repository states that the last full local deterministic cycle passed,
   but also states that deterministic probes do not replace real-media,
   listening, or release E2E evidence.
 
-VideoText therefore has a usable pinned engineering baseline, but not a
-release-certified baseline. The required two consecutive real-video E2E runs
-after the last production change were not run in R1 because no authorized
-private media/model input or existing complete evidence package was available.
-The benchmark files named in VideoText documentation are not committed and
-were not found at their documented adjacent `work` locations.
-The long-topic probe also requires an external long SRT and was not counted as
-passed without that input.
+The release test used the same previously established read-only VideoText QA
+fixture and Whisper model. The evidence binds the hashes of the source commit,
+release inputs, video, model, and candidate; it does not make path names or
+media content an Integra dependency. The candidate was not promoted to the
+stable application path. The benchmark files named in VideoText documentation
+remain uncommitted and were not found at their documented adjacent `work`
+locations, so their narrative claims are limitations rather than R1 evidence.
 
 ## R1 disposition
 
 - Reproducible compatibility manifest: PASS.
 - Unmerged work excluded as a dependency: PASS.
 - Clean deterministic source gates: PASS for both components.
-- Complete source-application release/real-media certification: INCOMPLETE for
-  VideoText and G6 not implemented for SeminarText.
+- Supported standalone gates: PASS for both pinned components.
+- VideoText current real-media release gate: PASS without promotion.
+- SeminarText G6 remains explicitly `NOT_IMPLEMENTED`; R1 does not reinterpret
+  an unavailable gate as a failure of its supported standalone suite.
 
-R1 is therefore `PARTIAL`, not accepted. Integra may use these pins for
-read-only contract work, but promotion past any roadmap stage that requires
-real-media or release certification remains fail-closed until the missing
-evidence is supplied under an exact authorization.
+R1 is `ACCEPTED`. Integra may use these exact pins for contract and adapter
+work. This acceptance does not release either source product, authorize an
+installed-app replacement, or waive later Integra combined real-media gates.
 
 No Dataset, Gold, source-project data, source repository, installed stable app,
 credential, or external account was changed or accessed.
