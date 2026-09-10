@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Yurielo/integra/schemas/agent_team_v1.schema.json",
+  "title": "Integra governed agent team v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "status",
+    "lead_agent",
+    "human_product_owner_authority",
+    "activation_policy",
+    "execution_policy",
+    "default_systems",
+    "roles",
+    "handoff_required_fields",
+    "safeguards"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "status": {"const": "PRODUCT_OWNER_AUTHORIZED"},
+    "lead_agent": {"const": "product-owner"},
+    "human_product_owner_authority": {"const": "RETAINED_FOR_GENUINE_GATES"},
+    "activation_policy": {"const": "RISK_BASED_MINIMAL_SET"},
+    "execution_policy": {"const": "AUTONOMOUS_UNTIL_GENUINE_HUMAN_GATE"},
+    "default_systems": {
+      "type": "object",
+      "required": ["planning", "documentation", "jira", "confluence"],
+      "properties": {
+        "planning": {"const": "GITHUB_ISSUES_AND_MILESTONES"},
+        "documentation": {"const": "REPOSITORY_MARKDOWN"},
+        "jira": {"const": "EXPLICIT_EXTERNAL_SCOPE_REQUIRED"},
+        "confluence": {"const": "EXPLICIT_EXTERNAL_SCOPE_REQUIRED"}
+      },
+      "additionalProperties": false
+    },
+    "roles": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": ["id", "mode", "registration", "contract"],
+        "properties": {
+          "id": {"type": "string"},
+          "mode": {"type": "string"},
+          "registration": {"type": "string", "pattern": "^\\.codex/agents/.+\\.toml$"},
+          "contract": {"type": "string", "pattern": "^\\.codex/agents/.+\\.md$"}
+        },
+        "additionalProperties": false
+      }
+    },
+    "handoff_required_fields": {
+      "type": "array",
+      "minItems": 10,
+      "uniqueItems": true,
+      "items": {"type": "string"}
+    },
+    "safeguards": {
+      "type": "object",
+      "required": [
+        "all_roles_required_for_every_task",
+        "routine_human_dispatch_required",
+        "human_product_owner_may_be_impersonated",
+        "source_repositories_read_only_by_default",
+        "external_system_access_inferred_from_role_name",
+        "qa_and_pr_review_independent"
+      ],
+      "properties": {
+        "all_roles_required_for_every_task": {"const": false},
+        "routine_human_dispatch_required": {"const": false},
+        "human_product_owner_may_be_impersonated": {"const": false},
+        "source_repositories_read_only_by_default": {"const": true},
+        "external_system_access_inferred_from_role_name": {"const": false},
+        "qa_and_pr_review_independent": {"const": true}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

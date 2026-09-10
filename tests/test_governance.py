@@ -34,6 +34,9 @@ class GovernanceValidationTests(unittest.TestCase):
         cls.capability_benchmark = json.loads(
             (ROOT / "state" / "capability_benchmark_v1.json").read_text(encoding="utf-8")
         )
+        cls.agent_team = json.loads(
+            (ROOT / "state" / "agent_team_v1.json").read_text(encoding="utf-8")
+        )
 
     def test_repository_state_is_valid(self):
         self.assertEqual(VALIDATOR.validate_state(self.state), [])
@@ -64,6 +67,14 @@ class GovernanceValidationTests(unittest.TestCase):
         errors = VALIDATOR.validate_state(state)
         self.assertIn(
             "execution_policy does not match the authorized boundary", errors
+        )
+
+    def test_agent_team_contract_is_pinned(self):
+        state = copy.deepcopy(self.state)
+        state["agent_team_contract"] = "state/other.json"
+        errors = VALIDATOR.validate_state(state)
+        self.assertIn(
+            "agent_team_contract must pin the governed agent registry", errors
         )
 
     def test_unknown_dependency_fails(self):

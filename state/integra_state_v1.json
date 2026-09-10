@@ -9,6 +9,7 @@
   "worker_protocol_contract": "state/worker_protocol_v1.json",
   "adapter_spike_evidence": "state/adapter_spike_v1.json",
   "capability_benchmark_evidence": "state/capability_benchmark_v1.json",
+  "agent_team_contract": "state/agent_team_v1.json",
   "execution_policy": {
     "safe_roadmap_implementation": "STANDING_AUTHORITY_AFTER_DEPENDENCIES",
     "merge": "AUTO_AFTER_FAIL_CLOSED_GATES",

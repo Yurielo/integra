@@ -43,6 +43,25 @@ scope checks, commit, push, PR preparation, safe merge, post-merge verification,
 and transition to the next dependency-ready roadmap Issue. Routine stage
 completion is not a human gate.
 
+### 3.1 Agent routing
+
+The governed team is defined in
+`docs/architecture/AGENT_TEAM_OPERATING_MODEL.md`. `product-owner` is the lead
+coordinator for material or multi-role work; a fully specified narrow task may
+be routed directly to its specialist. The coordinator chooses a risk-based
+minimal set, assigns one owner per shared write scope, and consolidates
+evidence. It must not make all roles a serial checklist or ask the human Product
+Owner to relay deterministic handoffs.
+
+Role authority is:
+
+- **AUTO:** bounded planning, implementation, tests, repository documentation,
+  read-only review, CI repair, verified merge, Issue lifecycle, and eligible
+  governed local reconciliation under accepted policy;
+- **ADVISORY:** specialist recommendations that would change product,
+  architecture, lifecycle, semantics, release, or protected boundaries;
+- **RESERVED_HUMAN:** the genuine gates listed below.
+
 ## 4. Genuine human gates
 
 Stop only when the next action requires at least one of:
@@ -90,4 +109,5 @@ results are not retried automatically.
 
 Every completed Issue records branch and commit identities, changed files,
 tests, compatibility impact, data/account access, migrations, external actions,
-known limitations, and the next genuine authorization boundary.
+known limitations, participating agent roles and their evidence, and the next
+genuine authorization boundary.

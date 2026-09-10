@@ -88,6 +88,19 @@ The accepted field-level matrix and stable ID namespaces are defined in
 and `state/data_ownership_v1.json`. R3 messages must use those identities and
 cannot introduce a competing authoritative writer.
 
+## 3.1 Delivery-agent control plane
+
+Integra delivery uses the governed role registry in `state/agent_team_v1.json`.
+The `product-owner` agent is the coordination entry point for material work;
+backend, frontend, data, QA, CI/CD, review, planning, and documentation roles
+are selected only when their responsibility is relevant. This affects delivery
+ownership, not runtime architecture or product data ownership.
+
+The human Product Owner retains genuine decision authority. Agent-to-agent
+handoff, review, CI, merge, and roadmap advancement remain autonomous technical
+control-plane operations when accepted fail-closed conditions pass. The full
+contract is [`AGENT_TEAM_OPERATING_MODEL.md`](AGENT_TEAM_OPERATING_MODEL.md).
+
 ## 4. Project Lease
 
 Every mutable project operation carries project ID, mutable entity, writer

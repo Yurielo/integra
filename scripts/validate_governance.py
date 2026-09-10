@@ -15,6 +15,7 @@ from integra_core.benchmark import (  # noqa: E402
     sha256_file,
     validate_benchmark_record,
 )
+from scripts.check_agents import load_registry, validate_agent_team  # noqa: E402
 
 
 STATE_PATH = ROOT / "state" / "integra_state_v1.json"
@@ -34,12 +35,16 @@ ADAPTER_REPORT_SCHEMA_PATH = ROOT / "schemas" / "adapter_probe_report_v1.schema.
 CAPABILITY_BENCHMARK_PATH = ROOT / "state" / "capability_benchmark_v1.json"
 CAPABILITY_BENCHMARK_RAW_PATH = ROOT / "state" / "capability_benchmark_raw_v1.json"
 CAPABILITY_BENCHMARK_SCHEMA_PATH = ROOT / "schemas" / "capability_benchmark_v1.schema.json"
+AGENT_TEAM_PATH = ROOT / "state" / "agent_team_v1.json"
+AGENT_TEAM_SCHEMA_PATH = ROOT / "schemas" / "agent_team_v1.schema.json"
 
 REQUIRED_DOCUMENTS = (
     "README.md",
     "AGENTS.md",
+    ".codex/agents/README.md",
     "DEVELOPMENT_WORKFLOW.md",
     "docs/AUTONOMOUS_EXECUTION_POLICY.md",
+    "docs/architecture/AGENT_TEAM_OPERATING_MODEL.md",
     "docs/INTEGRA_PLAN.md",
     "docs/PRODUCT_DEFINITION.md",
     "docs/ROADMAP.md",
@@ -71,6 +76,9 @@ REQUIRED_DOCUMENTS = (
     "integra_core/benchmark.py",
     "scripts/run_capability_benchmark.py",
     "scripts/compile_capability_benchmark.py",
+    "schemas/agent_team_v1.schema.json",
+    "state/agent_team_v1.json",
+    "scripts/check_agents.py",
 )
 
 REQUIRED_MODULES = {
@@ -138,6 +146,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("adapter_spike_evidence must pin the R4 acceptance record")
     if state.get("capability_benchmark_evidence") != "state/capability_benchmark_v1.json":
         errors.append("capability_benchmark_evidence must pin the R5 acceptance record")
+    if state.get("agent_team_contract") != "state/agent_team_v1.json":
+        errors.append("agent_team_contract must pin the governed agent registry")
 
     execution_policy = state.get("execution_policy", {})
     expected_policy = {
@@ -442,6 +452,7 @@ def main() -> int:
     worker_protocol = load_json(WORKER_PROTOCOL_PATH)
     adapter_spike = load_json(ADAPTER_SPIKE_PATH)
     capability_benchmark = load_json(CAPABILITY_BENCHMARK_PATH)
+    agent_team = load_registry(AGENT_TEAM_PATH)
     load_json(SCHEMA_PATH)
     load_json(BASELINES_SCHEMA_PATH)
     load_json(OWNERSHIP_SCHEMA_PATH)
@@ -452,6 +463,7 @@ def main() -> int:
     load_json(ADAPTER_SPIKE_SCHEMA_PATH)
     load_json(ADAPTER_REPORT_SCHEMA_PATH)
     load_json(CAPABILITY_BENCHMARK_SCHEMA_PATH)
+    load_json(AGENT_TEAM_SCHEMA_PATH)
     errors = (
         validate_state(state)
         + validate_component_baselines(baselines)
@@ -459,6 +471,7 @@ def main() -> int:
         + validate_worker_protocol(worker_protocol)
         + validate_adapter_spike(adapter_spike, baselines)
         + validate_capability_benchmark(capability_benchmark, baselines)
+        + validate_agent_team(agent_team)
     )
     if errors:
         print("INTEGRA_GOVERNANCE_VALIDATION: FAIL")
@@ -480,6 +493,8 @@ def main() -> int:
     print(f"R4_COMPONENT_PROBES: {len(adapter_spike['components'])}")
     print(f"R5_CAPABILITY_BENCHMARK: {capability_benchmark['status']}")
     print(f"R5_CAPABILITY_GROUPS: {len(capability_benchmark['capabilities'])}")
+    print(f"AGENT_TEAM_ROLES: {len(agent_team['roles'])}")
+    print(f"LEAD_AGENT: {agent_team['lead_agent']}")
     return 0
 
 

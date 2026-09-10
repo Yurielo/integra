@@ -38,6 +38,21 @@ must be reverified at execution time.
 
 ## 2. Non-negotiable invariants
 
+### 2.0 Governed delivery team
+
+Integra is developed by a risk-routed Codex agent team. `product-owner` is the
+lead coordinating agent: it maintains scope and acceptance criteria, selects
+only relevant specialists, assigns non-overlapping ownership, and consolidates
+evidence. The human Product Owner remains the authority at genuine gates.
+
+The team includes backend, frontend, data-contract, QA, CI/CD, independent PR
+review, delivery planning, and repository-documentation roles. These roles do
+not form a mandatory serial pipeline; a narrow change may use one implementer
+plus proportionate verification. Technical handoffs, safe repairs, CI, verified
+merge, and progression along the accepted roadmap do not require user dispatch.
+The governed contract is
+`docs/architecture/AGENT_TEAM_OPERATING_MODEL.md`.
+
 ### 2.1 Parallel operation guarantee
 
 Until final Integra acceptance:
@@ -496,8 +511,8 @@ Before a public 1.0 release, the plan must define and verify:
 
 Persist the bounded product definition, 1.0 scope, out-of-scope list, authority
 model, data-ownership model, human-gate contract, Roadmap, machine-readable
-State, risk register, and acceptance criteria. R0 contains no product-code
-integration.
+State, risk register, acceptance criteria, and governed delivery-agent model.
+R0 contains no product-code integration.
 
 ### R1 — Baseline Certification
 

@@ -14,6 +14,7 @@
     "worker_protocol_contract",
     "adapter_spike_evidence",
     "capability_benchmark_evidence",
+    "agent_team_contract",
     "execution_policy",
     "release_scope",
     "roadmap",
@@ -41,6 +42,9 @@
     },
     "capability_benchmark_evidence": {
       "const": "state/capability_benchmark_v1.json"
+    },
+    "agent_team_contract": {
+      "const": "state/agent_team_v1.json"
     },
     "execution_policy": {
       "type": "object",
