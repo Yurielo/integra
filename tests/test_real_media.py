@@ -4,6 +4,9 @@ import importlib.util
 import copy
 import hashlib
 import json
+import subprocess
+import sys
+import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
@@ -313,6 +316,31 @@ class RealMediaTests(unittest.TestCase):
         process.communicate.assert_called_once_with()
         self.assertEqual(worker.lease_heartbeats, 0)
 
+    def test_partial_handshake_line_is_killed_at_deadline(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            script = Path(temporary) / "partial_worker.py"
+            script.write_text(
+                "import sys, time\n"
+                "sys.stdout.buffer.write(b'{\\\"partial\\\":')\n"
+                "sys.stdout.flush()\n"
+                "time.sleep(30)\n",
+                encoding="utf-8",
+            )
+            process = subprocess.Popen(
+                [sys.executable, str(script)],
+                stdout=subprocess.PIPE,
+                start_new_session=True,
+            )
+            worker = JsonlProcessStageWorker.__new__(JsonlProcessStageWorker)
+            worker.timeout_seconds = 1
+            worker.heartbeat_interval_seconds = 0.1
+            worker.lease_heartbeats = 0
+            worker._lease_heartbeat = lambda: None
+            with self.assertRaisesRegex(RealMediaError, "did not complete"):
+                worker._read_handshake_frame(process, "transcript")
+            self.assertIsNotNone(process.poll())
+            self.assertGreater(worker.lease_heartbeats, 0)
+
     def test_actual_evidence_requires_provisional_semantic_authority(self) -> None:
         document = json.loads((ROOT / "state/core_alpha_real_v1.json").read_text(encoding="utf-8"))
         self.assertEqual(validate_actual_evidence(document), [])
@@ -387,6 +415,12 @@ class RealMediaTests(unittest.TestCase):
                 "srt_text": "1\n00:00:00,000 --> 00:00:01,000\nслово\n",
                 "transcript_text": text,
                 "whisper_document": {
+                    "model": {"type": "large"},
+                    "params": {
+                        "language": "ru",
+                        "model": "/models/ggml-large-v3.bin",
+                        "translate": False,
+                    },
                     "result": {"language": "ru"},
                     "transcription": [{"text": text}],
                 },
@@ -632,6 +666,26 @@ class RealMediaTests(unittest.TestCase):
         second["determinism"]["runs"] = [determinism_run_record(second)]
         with self.assertRaisesRegex(RealMediaError, "independent run evidence differs"):
             certify_deterministic_runs(first, second)
+
+    def test_certified_evidence_binds_each_run_to_controller_identity(self) -> None:
+        evidence = json.loads((ROOT / "state/core_alpha_real_v1.json").read_text())
+        run = evidence["determinism"]["runs"][0]
+        run["controller_commit_sha"] = "0" * 40
+        run["run_id"] = determinism_run_record(
+            {
+                "executed_at": run["executed_at"],
+                "control_plane": {
+                    "controller_commit_sha": run["controller_commit_sha"],
+                    "controller_tree_sha": run["controller_tree_sha"],
+                    "manifest_sha256": run["manifest_sha256"],
+                },
+                "stages": {
+                    stage: {"sha256": digest}
+                    for stage, digest in run["stage_hashes"].items()
+                },
+            }
+        )["run_id"]
+        self.assertIn("determinism run 0 hashes differ", validate_actual_evidence(evidence))
 
 
 if __name__ == "__main__":

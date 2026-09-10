@@ -115,6 +115,20 @@ def _validate_transcript(result: Any, stage_data: Any) -> None:
         or whisper["result"].get("language") != "ru"
     ):
         raise RealStageContractError("Whisper document is invalid")
+    params = whisper.get("params")
+    model = whisper.get("model")
+    if (
+        not isinstance(params, dict)
+        or set(params) != {"language", "model", "translate"}
+        or params["language"] != "ru"
+        or not isinstance(params["model"], str)
+        or not params["model"]
+        or params["translate"] is not False
+        or not isinstance(model, dict)
+        or not isinstance(model.get("type"), str)
+        or not model["type"]
+    ):
+        raise RealStageContractError("Whisper model metadata is invalid")
     words = stage_data["word_intervals"]
     if not isinstance(words, list) or len(words) != word_count:
         raise RealStageContractError("transcript word interval count differs")

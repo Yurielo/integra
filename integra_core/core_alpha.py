@@ -1065,8 +1065,14 @@ class CoreAlphaPipeline:
         if document["input_content_sha256"] != [item["content_sha256"] for item in parents]:
             raise CoreAlphaError(f"{stage}: real-media input hashes differ")
         if stage == "transcript":
-            expected = EXPECTED_REAL_COMPONENT_MODELS["videotext"][0]["identity_sha256"]
-            if document["result"]["model_sha256"] != expected:
+            expected_model = EXPECTED_REAL_COMPONENT_MODELS["videotext"][0]
+            whisper = document["stage_data"]["whisper_document"]
+            if (
+                document["result"]["model_sha256"]
+                != expected_model["identity_sha256"]
+                or Path(whisper["params"]["model"]).name != expected_model["id"]
+                or whisper["model"]["type"] != "large"
+            ):
                 raise CoreAlphaError("transcript: model hash differs from component identity")
         if stage == "topics":
             expected = EXPECTED_REAL_COMPONENT_MODELS["seminartext"]
@@ -1222,47 +1228,220 @@ class CoreAlphaPipeline:
                 "transcript_revision_id": source["transcript_revision_id"],
             }:
                 raise CoreAlphaError("knowledge: evidence differs from upstream review")
-        canonical_knowledge = document["stage_data"]["canonical_knowledge_document"]
-        if (
-            canonical_knowledge.get("artifact_type")
-            != "seminartext.canonical_knowledge"
-            or canonical_knowledge.get("schema_version") != "1.0.0"
-            or canonical_knowledge.get("concepts") != []
-            or canonical_knowledge.get("relations") != []
-            or canonical_knowledge.get("review_decisions") != []
-            or len(canonical_knowledge.get("topics", [])) != len(review_topics)
-        ):
-            raise CoreAlphaError("knowledge: canonical knowledge structure differs")
+
+        knowledge_input_id = "project_knowledge_input_integra_r6_actual_v1"
+        provenance = {
+            "origin": "derived",
+            "source_artifact_id": knowledge_input_id,
+        }
         words = upstream_bundle["words"]
         word_by_id = {item["id"]: item for item in words}
-        for generated in canonical_knowledge["topics"]:
-            source = review_topics.get(generated.get("id"))
-            if source is None:
-                raise CoreAlphaError("knowledge: canonical Topic is unknown")
+        revisions = {
+            item["id"]: item for item in upstream_bundle["transcript_revisions"]
+        }
+        source_evidence_records = []
+        for source in review_package["evidence"]:
+            first = word_by_id[source["word_start_id"]]
+            last = word_by_id[source["word_end_id"]]
+            selected = sorted(
+                (
+                    item
+                    for item in words
+                    if item["transcript_revision_id"]
+                    == source["transcript_revision_id"]
+                    and first["sequence"] <= item["sequence"] <= last["sequence"]
+                ),
+                key=lambda item: item["sequence"],
+            )
+            aligned = [
+                item for item in selected if item["alignment_status"] != "unaligned"
+            ]
+            revision = revisions[source["transcript_revision_id"]]
+            expected_locator = {
+                "type": "time_interval",
+                "start_seconds": aligned[0]["start_seconds"],
+                "end_seconds": aligned[-1]["end_seconds"],
+            }
+            source_evidence_records.append(
+                {
+                    "canonical_source_id": source["source_id"],
+                    "canonical_transcript_revision_id": source[
+                        "transcript_revision_id"
+                    ],
+                    "canonical_word_end_id": source["word_end_id"],
+                    "canonical_word_start_id": source["word_start_id"],
+                    "claim": source["claim"],
+                    "id": source["id"],
+                    "locator": expected_locator,
+                    "quote": revision["canonical_text"][
+                        first["char_start"] : last["char_end"]
+                    ],
+                    "timing_status": (
+                        "aligned_word_range"
+                        if len(aligned) == len(selected)
+                        else "aligned_envelope_with_explicit_unaligned_words"
+                    ),
+                    "unaligned_word_ids": [
+                        item["id"]
+                        for item in selected
+                        if item["alignment_status"] == "unaligned"
+                    ],
+                }
+            )
+        source_evidence = {
+            "artifact_id": (
+                "artifact_project_knowledge_input_integra_r6_actual_v1_evidence"
+            ),
+            "artifact_type": "seminartext.project_knowledge_evidence",
+            "concepts": [],
+            "evidence": sorted(source_evidence_records, key=lambda item: item["id"]),
+            "schema_version": "1.0.0",
+            "source_input_artifact_id": knowledge_input_id,
+            "topics": [{"id": item_id} for item_id in sorted(review_topics)],
+        }
+        pretty_hash = lambda value: sha256_bytes(
+            (
+                json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+            ).encode("utf-8")
+        )
+        expected_knowledge_topics = []
+        for source in review_package["topics"]:
             start_word = word_by_id[source["word_start_id"]]
             end_word = word_by_id[source["word_end_id"]]
-            if (
-                generated.get("title") != source["proposed_title"]
-                or generated.get("summary") != source["proposed_summary"]
-                or generated.get("status") != "PROVISIONAL"
-                or generated.get("seminar_id") != source["seminar_id"]
-                or generated.get("evidence_refs") != source["evidence_refs"]
-                or generated.get("concept_refs") != []
-                or generated.get("order_scope") != {"sequence": source["sequence"]}
-                or generated.get("temporal_scope")
-                != {
-                    "start_seconds": start_word["start_seconds"],
-                    "end_seconds": end_word["end_seconds"],
+            expected_knowledge_topics.append(
+                {
+                    "concept_refs": [],
+                    "evidence_refs": source["evidence_refs"],
+                    "id": source["id"],
+                    "order_scope": {"sequence": source["sequence"]},
+                    "provenance": {
+                        **provenance,
+                        "source_status": "product_review_required",
+                    },
+                    "seminar_id": source["seminar_id"],
+                    "source_scope": {
+                        "order_end": source["word_end_sequence"],
+                        "order_start": source["word_start_sequence"],
+                        "source_ids": [source["source_id"]],
+                        "transcript_revision_ids": [
+                            source["transcript_revision_id"]
+                        ],
+                    },
+                    "status": "PROVISIONAL",
+                    "summary": source["proposed_summary"],
+                    "temporal_scope": {
+                        "end_seconds": end_word["end_seconds"],
+                        "start_seconds": start_word["start_seconds"],
+                    },
+                    "title": source["proposed_title"],
+                    "version": 1,
                 }
-                or generated.get("source_scope")
-                != {
-                    "source_ids": [source["source_id"]],
-                    "transcript_revision_ids": [source["transcript_revision_id"]],
-                    "order_start": source["word_start_sequence"],
-                    "order_end": source["word_end_sequence"],
+            )
+        expected_canonical_knowledge = {
+            "artifact_id": (
+                "artifact_project_knowledge_input_integra_r6_actual_v1_canonical_v1"
+            ),
+            "artifact_type": "seminartext.canonical_knowledge",
+            "canonical_evidence": {
+                "artifact_id": generated_bundle["artifact_id"],
+                "path": "knowledge/canonical_evidence.json",
+                "schema_version": generated_bundle["schema_version"],
+                "sha256": pretty_hash(generated_bundle),
+            },
+            "concepts": [],
+            "project": {
+                "id": project_id,
+                "provenance": provenance,
+                "status": "PROVISIONAL",
+                "title": upstream_bundle["project"]["title"],
+                "version": 1,
+            },
+            "relation_type_registry": [
+                {
+                    "description": "The source concept provides support for the target claim.",
+                    "id": "supports",
+                },
+                {
+                    "description": "The source and target claims are explicitly competing or conflicting.",
+                    "id": "contradicts",
+                },
+                {
+                    "description": "The source concept narrows or elaborates the target concept.",
+                    "id": "refines",
+                },
+                {
+                    "description": "The source concept requires the target concept as a prerequisite.",
+                    "id": "depends_on",
+                },
+                {
+                    "description": "The source and target concepts are associated without an inferred ontology.",
+                    "id": "associated_with",
+                },
+            ],
+            "relations": [],
+            "review_decisions": [],
+            "schema_version": "1.0.0",
+            "seminars": [
+                {
+                    "id": "seminar_integra_r6_core_alpha",
+                    "project_id": project_id,
+                    "provenance": provenance,
+                    "status": "PROVISIONAL",
+                    "title": "Integra R6 Core Alpha",
+                    "topic_refs": [item["id"] for item in review_package["topics"]],
+                    "version": 1,
                 }
-            ):
-                raise CoreAlphaError("knowledge: canonical Topic differs from review")
+            ],
+            "source_evidence": {
+                "artifact_id": source_evidence["artifact_id"],
+                "path": "knowledge/source_evidence.json",
+                "schema_version": source_evidence["schema_version"],
+                "sha256": pretty_hash(source_evidence),
+            },
+            "topics": expected_knowledge_topics,
+            "version": 1,
+        }
+        canonical_knowledge = document["stage_data"]["canonical_knowledge_document"]
+        if canonical_knowledge != expected_canonical_knowledge:
+            raise CoreAlphaError("knowledge: canonical knowledge differs from review")
+
+        expected_coverage = {
+            "artifact_type": "seminartext.project_knowledge_coverage",
+            "full_seminar_coverage": True,
+            "project_id": project_id,
+            "schema_version": 1,
+            "sources": [
+                {
+                    "evidence_ids": sorted(
+                        item["id"]
+                        for item in review_package["evidence"]
+                        if item["source_id"] == source["id"]
+                    ),
+                    "reason": (
+                        "Machine-assisted provisional Topic and exact source evidence "
+                        "are supplied; semantic review remains required."
+                    ),
+                    "source_id": source["id"],
+                    "status": "COVERED",
+                    "topic_ids": sorted(
+                        item["id"]
+                        for item in review_package["topics"]
+                        if item["source_id"] == source["id"]
+                    ),
+                    "transcript_revision_ids": sorted(
+                        item["id"]
+                        for item in upstream_bundle["transcript_revisions"]
+                        if item["source_id"] == source["id"]
+                    ),
+                    "word_count": sum(
+                        1 for item in words if item["source_id"] == source["id"]
+                    ),
+                }
+                for source in upstream_bundle["sources"]
+            ],
+        }
+        if document["stage_data"]["coverage_document"] != expected_coverage:
+            raise CoreAlphaError("knowledge: coverage differs from upstream review")
 
     @staticmethod
     def _reject_semantic_promotion(stage: str, value: Any) -> None:

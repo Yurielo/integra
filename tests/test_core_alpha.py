@@ -474,12 +474,13 @@ class CoreAlphaTests(unittest.TestCase):
                     )
 
     def test_real_knowledge_is_bound_to_review_semantics(self):
+        canonical_text = "one two"
         review_topic = {
-            "id": "topic",
+            "id": "topic_integra_r6_001",
             "proposed_title": "title",
             "proposed_summary": "summary",
             "sequence": 0,
-            "seminar_id": "seminar",
+            "seminar_id": "seminar_integra_r6_core_alpha",
             "source_id": "source",
             "topic_set_id": "set",
             "transcript_revision_id": "revision",
@@ -491,17 +492,47 @@ class CoreAlphaTests(unittest.TestCase):
         }
         evidence = {
             "id": "evidence",
+            "claim": "claim",
             "locator": {"type": "time_interval", "start_seconds": 0.1, "end_seconds": 0.9},
+            "quote": canonical_text,
             "source_id": "source",
             "transcript_revision_id": "revision",
             "word_start_id": "word-0",
+            "word_end_id": "word-1",
         }
         bundle = {
             "artifact_id": "upstream",
+            "schema_version": "1.0.0",
             "project": {"id": "project", "title": "Project"},
+            "sources": [{"id": "source"}],
+            "transcript_revisions": [{
+                "canonical_text": canonical_text,
+                "id": "revision",
+                "source_id": "source",
+            }],
             "words": [
-                {"id": "word-0", "start_seconds": 0.1},
-                {"id": "word-1", "end_seconds": 0.9},
+                {
+                    "alignment_status": "aligned",
+                    "char_start": 0,
+                    "char_end": 3,
+                    "end_seconds": 0.4,
+                    "id": "word-0",
+                    "sequence": 0,
+                    "source_id": "source",
+                    "start_seconds": 0.1,
+                    "transcript_revision_id": "revision",
+                },
+                {
+                    "alignment_status": "aligned",
+                    "char_start": 4,
+                    "char_end": 7,
+                    "end_seconds": 0.9,
+                    "id": "word-1",
+                    "sequence": 1,
+                    "source_id": "source",
+                    "start_seconds": 0.5,
+                    "transcript_revision_id": "revision",
+                },
             ],
             "benchmark_segments": [{
                 "id": "segment",
@@ -514,7 +545,7 @@ class CoreAlphaTests(unittest.TestCase):
         }
         generated_topic = {
             "benchmark_segment_ids": ["segment"],
-            "id": "topic",
+            "id": "topic_integra_r6_001",
             "lifecycle_status": "active",
             "origin": "semi_automatic",
             "sequence": 0,
@@ -536,9 +567,14 @@ class CoreAlphaTests(unittest.TestCase):
         knowledge_topic = {
             "concept_refs": [],
             "evidence_refs": ["evidence"],
-            "id": "topic",
+            "id": "topic_integra_r6_001",
             "order_scope": {"sequence": 0},
-            "seminar_id": "seminar",
+            "provenance": {
+                "origin": "derived",
+                "source_artifact_id": "project_knowledge_input_integra_r6_actual_v1",
+                "source_status": "product_review_required",
+            },
+            "seminar_id": "seminar_integra_r6_core_alpha",
             "source_scope": {
                 "source_ids": ["source"],
                 "transcript_revision_ids": ["revision"],
@@ -549,6 +585,7 @@ class CoreAlphaTests(unittest.TestCase):
             "summary": "summary",
             "temporal_scope": {"start_seconds": 0.1, "end_seconds": 0.9},
             "title": "title",
+            "version": 1,
         }
         review = {
             "stage_data": {
@@ -556,28 +593,117 @@ class CoreAlphaTests(unittest.TestCase):
                 "review_package": {"topics": [review_topic], "evidence": [evidence]},
             }
         }
+        generated_bundle = {
+            **{key: value for key, value in bundle.items() if key not in {"artifact_id", "topics", "evidence_refs"}},
+            "artifact_id": "generated",
+            "topics": [generated_topic],
+            "evidence_refs": [generated_evidence],
+        }
+        provenance = {
+            "origin": "derived",
+            "source_artifact_id": "project_knowledge_input_integra_r6_actual_v1",
+        }
+        source_evidence = {
+            "artifact_id": "artifact_project_knowledge_input_integra_r6_actual_v1_evidence",
+            "artifact_type": "seminartext.project_knowledge_evidence",
+            "concepts": [],
+            "evidence": [{
+                "canonical_source_id": "source",
+                "canonical_transcript_revision_id": "revision",
+                "canonical_word_end_id": "word-1",
+                "canonical_word_start_id": "word-0",
+                "claim": "claim",
+                "id": "evidence",
+                "locator": evidence["locator"],
+                "quote": canonical_text,
+                "timing_status": "aligned_word_range",
+                "unaligned_word_ids": [],
+            }],
+            "schema_version": "1.0.0",
+            "source_input_artifact_id": "project_knowledge_input_integra_r6_actual_v1",
+            "topics": [{"id": "topic_integra_r6_001"}],
+        }
+        canonical_hash = lambda value: hashlib.sha256(
+            (json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode()
+        ).hexdigest()
+        relation_registry = [
+            {"description": "The source concept provides support for the target claim.", "id": "supports"},
+            {"description": "The source and target claims are explicitly competing or conflicting.", "id": "contradicts"},
+            {"description": "The source concept narrows or elaborates the target concept.", "id": "refines"},
+            {"description": "The source concept requires the target concept as a prerequisite.", "id": "depends_on"},
+            {"description": "The source and target concepts are associated without an inferred ontology.", "id": "associated_with"},
+        ]
+        canonical_knowledge = {
+            "artifact_id": "artifact_project_knowledge_input_integra_r6_actual_v1_canonical_v1",
+            "artifact_type": "seminartext.canonical_knowledge",
+            "canonical_evidence": {
+                "artifact_id": "generated",
+                "path": "knowledge/canonical_evidence.json",
+                "schema_version": generated_bundle["schema_version"],
+                "sha256": canonical_hash(generated_bundle),
+            },
+            "concepts": [],
+            "project": {"id": "project", "provenance": provenance, "status": "PROVISIONAL", "title": "Project", "version": 1},
+            "relation_type_registry": relation_registry,
+            "relations": [],
+            "review_decisions": [],
+            "schema_version": "1.0.0",
+            "seminars": [{
+                "id": "seminar_integra_r6_core_alpha",
+                "project_id": "project",
+                "provenance": provenance,
+                "status": "PROVISIONAL",
+                "title": "Integra R6 Core Alpha",
+                "topic_refs": ["topic_integra_r6_001"],
+                "version": 1,
+            }],
+            "source_evidence": {
+                "artifact_id": source_evidence["artifact_id"],
+                "path": "knowledge/source_evidence.json",
+                "schema_version": "1.0.0",
+                "sha256": canonical_hash(source_evidence),
+            },
+            "topics": [knowledge_topic],
+            "version": 1,
+        }
+        coverage = {
+            "artifact_type": "seminartext.project_knowledge_coverage",
+            "full_seminar_coverage": True,
+            "project_id": "project",
+            "schema_version": 1,
+            "sources": [{
+                "evidence_ids": ["evidence"],
+                "reason": "Machine-assisted provisional Topic and exact source evidence are supplied; semantic review remains required.",
+                "source_id": "source",
+                "status": "COVERED",
+                "topic_ids": ["topic_integra_r6_001"],
+                "transcript_revision_ids": ["revision"],
+                "word_count": 2,
+            }],
+        }
         document = {
             "stage_data": {
-                "canonical_evidence_document": {
-                    **{key: value for key, value in bundle.items() if key not in {"artifact_id", "topics", "evidence_refs"}},
-                    "artifact_id": "generated",
-                    "topics": [generated_topic],
-                    "evidence_refs": [generated_evidence],
-                },
-                "canonical_knowledge_document": {
-                    "artifact_type": "seminartext.canonical_knowledge",
-                    "schema_version": "1.0.0",
-                    "concepts": [],
-                    "relations": [],
-                    "review_decisions": [],
-                    "topics": [knowledge_topic],
-                },
+                "canonical_evidence_document": generated_bundle,
+                "canonical_knowledge_document": canonical_knowledge,
+                "coverage_document": coverage,
             }
         }
         CoreAlphaPipeline._validate_knowledge_upstream(document, review)
-        document["stage_data"]["canonical_evidence_document"]["topics"][0]["title"] = "fabricated"
-        with self.assertRaisesRegex(CoreAlphaError, "Topic differs"):
-            CoreAlphaPipeline._validate_knowledge_upstream(document, review)
+        for target, field in (
+            ("canonical_evidence_document", "topics"),
+            ("canonical_knowledge_document", "project"),
+            ("coverage_document", "project_id"),
+        ):
+            mutated = copy.deepcopy(document)
+            if field == "topics":
+                mutated["stage_data"][target][field][0]["title"] = "fabricated"
+            elif field == "project":
+                mutated["stage_data"][target][field]["title"] = "fabricated"
+            else:
+                mutated["stage_data"][target][field] = "fabricated"
+            with self.subTest(target=target):
+                with self.assertRaises(CoreAlphaError):
+                    CoreAlphaPipeline._validate_knowledge_upstream(mutated, review)
 
     def test_resume_rejects_changed_lineage(self):
         cancelled = self.pipeline.run(

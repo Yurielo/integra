@@ -246,6 +246,50 @@ class JsonlProcessStageWorker:
             raise
         self.lease_heartbeats += 1
 
+    def _read_handshake_frame(
+        self, process: subprocess.Popen[bytes], stage: str
+    ) -> bytes:
+        """Read one bounded JSONL frame without allowing a partial line to hang."""
+
+        assert process.stdout is not None
+        deadline = time.monotonic() + min(30, self.timeout_seconds)
+        frame = bytearray()
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                self._kill_and_reap(process)
+                raise RealMediaError(
+                    f"{stage}: R3 worker did not complete its handshake"
+                )
+            wait = min(self.heartbeat_interval_seconds, remaining)
+            readable, _, _ = select.select([process.stdout], [], [], wait)
+            if not readable:
+                if time.monotonic() >= deadline:
+                    self._kill_and_reap(process)
+                    raise RealMediaError(
+                        f"{stage}: R3 worker did not complete its handshake"
+                    )
+                self._refresh_active_lease(process, stage)
+                continue
+            chunk = os.read(process.stdout.fileno(), 65536)
+            if not chunk:
+                self._kill_and_reap(process)
+                raise RealMediaError(
+                    f"{stage}: R3 worker ended before completing its handshake"
+                )
+            frame.extend(chunk)
+            if len(frame) > 1024 * 1024:
+                self._kill_and_reap(process)
+                raise RealMediaError(f"{stage}: R3 handshake frame is oversized")
+            if b"\n" in frame:
+                line, remainder = bytes(frame).split(b"\n", 1)
+                if remainder:
+                    self._kill_and_reap(process)
+                    raise RealMediaError(
+                        f"{stage}: R3 worker emitted data before job dispatch"
+                    )
+                return line
+
     def run(
         self,
         stage: str,
@@ -321,14 +365,8 @@ class JsonlProcessStageWorker:
         process.stdin.write(canonical_json(handshake) + b"\n")
         process.stdin.flush()
         self.messages.append(handshake)
-        readable, _, _ = select.select([process.stdout], [], [], min(30, self.timeout_seconds))
-        if not readable:
-            self._kill_and_reap(process)
-            raise RealMediaError(
-                f"{stage}: R3 worker did not complete its handshake"
-            )
         try:
-            response_line = process.stdout.readline()
+            response_line = self._read_handshake_frame(process, stage)
             response = json.loads(response_line)
             validate_message(response)
             if (
@@ -642,6 +680,9 @@ def validate_actual_evidence(document: dict[str, Any]) -> list[str]:
                 run_ids.add(run["run_id"])
                 if (
                     run["manifest_sha256"] != control.get("manifest_sha256")
+                    or run["controller_commit_sha"]
+                    != control.get("controller_commit_sha")
+                    or run["controller_tree_sha"] != control.get("controller_tree_sha")
                     or run["stage_hashes"]
                     != {stage: stages[stage]["sha256"] for stage in STAGES}
                 ):

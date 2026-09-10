@@ -13,7 +13,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from integra_core.protocol import canonical_json
 from integra_core.real_media import certify_deterministic_runs
 
 
@@ -32,8 +31,11 @@ def write_atomic(path: Path, document: dict) -> None:
     temporary = Path(temporary_name)
     try:
         with os.fdopen(descriptor, "wb") as stream:
-            stream.write(canonical_json(document))
-            stream.write(b"\n")
+            stream.write(
+                (json.dumps(document, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode(
+                    "utf-8"
+                )
+            )
             stream.flush()
             os.fsync(stream.fileno())
         os.replace(temporary, path)
