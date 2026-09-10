@@ -64,6 +64,9 @@ the review contract permit it.
 - Integra consumes pinned components through versioned contracts.
 - Discovery is read-only; migration is dry-run first and copy-on-write.
 - One writer may own a mutable entity at a time under the Project Lease.
+- Project Lease operations follow `schemas/project_lease_v1.schema.json` and
+  `docs/architecture/DATA_OWNERSHIP_AND_PROJECT_LEASE.md`; expiry alone never
+  authorizes recovery.
 - A standalone regression blocks promotion of Integra.
 
 ## 6. External systems

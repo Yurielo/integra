@@ -13,6 +13,9 @@ STATE_PATH = ROOT / "state" / "integra_state_v1.json"
 SCHEMA_PATH = ROOT / "schemas" / "integra_state_v1.schema.json"
 BASELINES_PATH = ROOT / "state" / "component_baselines_v1.json"
 BASELINES_SCHEMA_PATH = ROOT / "schemas" / "component_baselines_v1.schema.json"
+OWNERSHIP_PATH = ROOT / "state" / "data_ownership_v1.json"
+OWNERSHIP_SCHEMA_PATH = ROOT / "schemas" / "data_ownership_v1.schema.json"
+LEASE_SCHEMA_PATH = ROOT / "schemas" / "project_lease_v1.schema.json"
 
 REQUIRED_DOCUMENTS = (
     "README.md",
@@ -27,6 +30,10 @@ REQUIRED_DOCUMENTS = (
     "docs/baselines/R1_BASELINE_CERTIFICATION.md",
     "schemas/component_baselines_v1.schema.json",
     "state/component_baselines_v1.json",
+    "docs/architecture/DATA_OWNERSHIP_AND_PROJECT_LEASE.md",
+    "schemas/data_ownership_v1.schema.json",
+    "schemas/project_lease_v1.schema.json",
+    "state/data_ownership_v1.json",
 )
 
 REQUIRED_MODULES = {
@@ -84,6 +91,10 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("standalone_products_preserved must be true")
     if state.get("component_baseline_manifest") != "state/component_baselines_v1.json":
         errors.append("component_baseline_manifest must pin the R1 manifest")
+    if state.get("data_ownership_contract") != "state/data_ownership_v1.json":
+        errors.append("data_ownership_contract must pin the R2 ownership matrix")
+    if state.get("project_lease_schema") != "schemas/project_lease_v1.schema.json":
+        errors.append("project_lease_schema must pin the R2 lease contract")
 
     execution_policy = state.get("execution_policy", {})
     expected_policy = {
@@ -187,12 +198,44 @@ def validate_component_baselines(manifest: dict) -> list[str]:
     return errors
 
 
+def validate_data_ownership(contract: dict) -> list[str]:
+    errors: list[str] = []
+    if contract.get("schema_version") != "1.0":
+        errors.append("data ownership schema_version must be 1.0")
+    id_policy = contract.get("id_policy", {})
+    if id_policy.get("derivation") != "UUIDV5_COMPONENT_NATIVE_ID_SOURCE_REVISION_SHA256":
+        errors.append("imported stable IDs must use immutable UUIDv5 inputs")
+    forbidden = set(id_policy.get("mutable_inputs_forbidden", []))
+    if not {"display_name", "filesystem_path", "sort_order"}.issubset(forbidden):
+        errors.append("mutable names, paths, and ordering must not define stable IDs")
+    ownership = contract.get("ownership", [])
+    patterns = [entry.get("field_pattern") for entry in ownership]
+    if len(patterns) != len(set(patterns)):
+        errors.append("every field pattern must have exactly one ownership entry")
+    for entry in ownership:
+        if not entry.get("authoritative_owner"):
+            errors.append(f"missing authoritative owner for {entry.get('field_pattern')}")
+        if entry.get("writer_resolution") not in {"STATIC", "PINNED_ORIGIN_OWNER"}:
+            errors.append(f"invalid writer resolution for {entry.get('field_pattern')}")
+    collisions = contract.get("collision_policy", {})
+    if collisions.get("same_id_different_hash") != "HARD_CONFLICT":
+        errors.append("same ID with a different identity hash must hard-fail")
+    return errors
+
+
 def main() -> int:
     state = load_json(STATE_PATH)
     baselines = load_json(BASELINES_PATH)
+    ownership = load_json(OWNERSHIP_PATH)
     load_json(SCHEMA_PATH)
     load_json(BASELINES_SCHEMA_PATH)
-    errors = validate_state(state) + validate_component_baselines(baselines)
+    load_json(OWNERSHIP_SCHEMA_PATH)
+    load_json(LEASE_SCHEMA_PATH)
+    errors = (
+        validate_state(state)
+        + validate_component_baselines(baselines)
+        + validate_data_ownership(ownership)
+    )
     if errors:
         print("INTEGRA_GOVERNANCE_VALIDATION: FAIL")
         for error in errors:
@@ -205,6 +248,8 @@ def main() -> int:
     print("STANDALONE_PRODUCTS_PRESERVED: YES")
     print(f"PINNED_COMPONENTS: {len(baselines['components'])}")
     print(f"R1_ACCEPTANCE: {baselines['r1_acceptance']['status']}")
+    print(f"R2_OWNERSHIP_ENTRIES: {len(ownership['ownership'])}")
+    print("R2_PROJECT_LEASE: DEFINED")
     return 0
 
 

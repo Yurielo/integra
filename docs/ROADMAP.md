@@ -8,7 +8,7 @@ Program Epic: [GitHub Issue #1](https://github.com/Yurielo/integra/issues/1)
 | --- | ---: | --- | --- | --- |
 | R0 Product definition and governance | #2 | M0 | — | ACCEPTED |
 | R1 Baseline certification | #3 | M0 | R0 | ACCEPTED |
-| R2 Ownership, IDs, lease | #4 | M0 | R0, R1 | PLANNED |
+| R2 Ownership, IDs, lease | #4 | M0 | R0, R1 | ACCEPTED |
 | R3 Versioned contracts | #5 | M0 | R1, R2 | PLANNED |
 | R4 Adapter spike | #6 | M0 | R1–R3 | PLANNED |
 | R5 Capability benchmark | #7 | M1 | R4 | PLANNED |
