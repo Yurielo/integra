@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://integra.local/schemas/resource_snapshot_v1.schema.json",
+  "title": "Integra Resource Snapshot v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["memory_pressure", "swap_used_bytes", "swap_state", "free_disk_bytes", "required_disk_bytes", "disk_estimate", "workspace_available", "device_available", "loaded_models", "loaded_models_state", "child_processes", "child_processes_state", "lease_state", "publication_target_state"],
+  "properties": {
+    "memory_pressure": {"enum": ["NORMAL", "WARN", "CRITICAL", "UNKNOWN"]},
+    "swap_used_bytes": {"type": "integer", "minimum": 0},
+    "swap_state": {"enum": ["SAFE", "UNSAFE", "UNKNOWN"]},
+    "free_disk_bytes": {"type": "integer", "minimum": 0},
+    "required_disk_bytes": {"type": "integer", "minimum": 0},
+    "disk_estimate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "extracted_audio", "cache", "intermediate_media", "final_output", "safety_margin"],
+      "properties": {
+        "source": {"type": "integer", "minimum": 0},
+        "extracted_audio": {"type": "integer", "minimum": 0},
+        "cache": {"type": "integer", "minimum": 0},
+        "intermediate_media": {"type": "integer", "minimum": 0},
+        "final_output": {"type": "integer", "minimum": 0},
+        "safety_margin": {"type": "integer", "minimum": 0}
+      }
+    },
+    "workspace_available": {"type": "boolean"},
+    "device_available": {"type": "boolean"},
+    "loaded_models": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "loaded_models_state": {"enum": ["KNOWN", "UNKNOWN"]},
+    "child_processes": {"type": "array", "items": {"type": "integer"}, "uniqueItems": true},
+    "child_processes_state": {"enum": ["KNOWN", "UNKNOWN"]},
+    "lease_state": {"enum": ["CLEAR", "OWNED_BY_JOB", "CONFLICT", "UNKNOWN"]},
+    "publication_target_state": {"enum": ["AVAILABLE", "UNAVAILABLE", "UNKNOWN", "NOT_REQUIRED"]}
+  }
+}

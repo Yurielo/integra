@@ -1,0 +1,6 @@
+{
+  "changed_identity": "model.identity_sha256",
+  "execution_started": false,
+  "expected_preflight": "BLOCKED",
+  "scenario": "capability_drift"
+}

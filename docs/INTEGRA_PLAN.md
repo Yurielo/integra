@@ -584,6 +584,13 @@ structured redacted logs, Integrity, cancellation, resume, recovery, model
 lifecycle, and child-process cleanup. This stage follows R6 and is a dependency
 of migration and source-expansion work.
 
+The accepted v1 implementation uses one atomic versioned JobStore, exact
+capability preflight, a distinct atomic host ResourceReservation store, an
+explicit calculated-disk record, recursively redacted/allowlisted logs,
+product-neutral artifact Integrity, verified process-group shutdown and
+job-owned model unloading. Unknown operational truth blocks unsafe work;
+technical success is persisted only after Integrity and cleanup.
+
 ### R7 — Read-only Import and Copy-on-write Migration
 
 Open representative existing SeminarText and VideoText projects, produce a

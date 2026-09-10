@@ -6,7 +6,8 @@
     "namespaces": [
       "project", "source", "artifact", "revision", "topic", "evidence",
       "knowledge", "concept", "practice", "term", "relation", "review",
-      "job", "operation", "publication", "lease", "message", "session"
+      "job", "operation", "publication", "lease", "message", "session",
+      "reservation"
     ],
     "mutable_inputs_forbidden": ["display_name", "filesystem_path", "sort_order"]
   },
@@ -113,6 +114,27 @@
       "entity": "ProjectLease",
       "field_pattern": "/leases/*",
       "authoritative_owner": "integra.lease_manager",
+      "writer_resolution": "STATIC",
+      "integra_access": "AUTHORITATIVE_WRITE"
+    },
+    {
+      "entity": "OperationsJob",
+      "field_pattern": "/operations/jobs/*",
+      "authoritative_owner": "integra.operations",
+      "writer_resolution": "STATIC",
+      "integra_access": "AUTHORITATIVE_WRITE"
+    },
+    {
+      "entity": "HostResourceReservation",
+      "field_pattern": "/operations/reservations/*",
+      "authoritative_owner": "integra.resource_scheduler",
+      "writer_resolution": "STATIC",
+      "integra_access": "AUTHORITATIVE_WRITE"
+    },
+    {
+      "entity": "ModelResidency",
+      "field_pattern": "/operations/model_residencies/*",
+      "authoritative_owner": "integra.resource_scheduler",
       "writer_resolution": "STATIC",
       "integra_access": "AUTHORITATIVE_WRITE"
     }

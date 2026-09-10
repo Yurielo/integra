@@ -17,6 +17,7 @@ from integra_core.benchmark import (  # noqa: E402
 )
 from integra_core.core_alpha import ReplayStageWorker  # noqa: E402
 from integra_core.real_media import validate_actual_evidence  # noqa: E402
+from integra_core.operations_fixtures import run_operations_fixtures  # noqa: E402
 from integra_core.protocol import content_sha256  # noqa: E402
 from scripts.check_agents import load_registry, validate_agent_team  # noqa: E402
 
@@ -45,6 +46,30 @@ CORE_ALPHA_EVIDENCE_SCHEMA_PATH = ROOT / "schemas" / "core_alpha_evidence_v1.sch
 CORE_ALPHA_MANIFEST_SCHEMA_PATH = ROOT / "schemas" / "core_alpha_manifest_v1.schema.json"
 CORE_ALPHA_REAL_PATH = ROOT / "state" / "core_alpha_real_v1.json"
 CORE_ALPHA_REAL_SCHEMA_PATH = ROOT / "schemas" / "core_alpha_real_evidence_v1.schema.json"
+OPERATIONS_PATH = ROOT / "state" / "operations_and_diagnostics_v1.json"
+OPERATIONS_SCHEMA_PATH = ROOT / "schemas" / "operations_evidence_v1.schema.json"
+EXPECTED_OPERATIONS_IMPLEMENTATION = {
+    "integra_core/operations.py",
+    "integra_core/operations_fixtures.py",
+    "schemas/operations_job_v1.schema.json",
+    "schemas/capability_report_v1.schema.json",
+    "schemas/resource_snapshot_v1.schema.json",
+    "schemas/resource_reservation_v1.schema.json",
+    "schemas/operations_log_event_v1.schema.json",
+    "schemas/integrity_report_v1.schema.json",
+    "schemas/operations_evidence_v1.schema.json",
+    "schemas/model_residency_v1.schema.json",
+    "schemas/resource_request_v1.schema.json",
+}
+EXPECTED_OPERATIONS_FIXTURES = {
+    "success",
+    "interruption",
+    "resume",
+    "unsafe_resource",
+    "capability_drift",
+    "integrity_failure",
+    "process_cleanup",
+}
 EXPECTED_CORE_ALPHA_REAL_SHA256 = "7233cd2985d65d8616e217385b53935c671dbda69a686849a9864cba4565d47c"
 EXPECTED_CORE_ALPHA_REAL_IMPLEMENTATION = {
     "integra_core/core_alpha.py",
@@ -126,6 +151,19 @@ REQUIRED_DOCUMENTS = (
     "workers/seminartext_topics_worker.py",
     "workers/videotext_transcript_worker.swift",
     "workers/videotext_clip_worker.swift",
+    "docs/architecture/OPERATIONS_AND_DIAGNOSTICS_V1.md",
+    "schemas/operations_evidence_v1.schema.json",
+    "schemas/operations_job_v1.schema.json",
+    "schemas/capability_report_v1.schema.json",
+    "schemas/resource_snapshot_v1.schema.json",
+    "schemas/resource_reservation_v1.schema.json",
+    "schemas/operations_log_event_v1.schema.json",
+    "schemas/integrity_report_v1.schema.json",
+    "schemas/model_residency_v1.schema.json",
+    "schemas/resource_request_v1.schema.json",
+    "state/operations_and_diagnostics_v1.json",
+    "integra_core/operations.py",
+    "integra_core/operations_fixtures.py",
 )
 
 REQUIRED_MODULES = {
@@ -273,6 +311,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("core_alpha_evidence must pin the R6 checkpoint record")
     if state.get("core_alpha_real_evidence") != "state/core_alpha_real_v1.json":
         errors.append("core_alpha_real_evidence must pin the R6 actual execution record")
+    if state.get("operations_and_diagnostics_evidence") != "state/operations_and_diagnostics_v1.json":
+        errors.append("operations_and_diagnostics_evidence must pin Issue #46 acceptance")
 
     execution_policy = state.get("execution_policy", {})
     expected_policy = {
@@ -342,6 +382,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
             errors.append(f"{accepted_id} must remain ACCEPTED")
     if statuses.get("R6") != "ACCEPTED":
         errors.append("R6 must be ACCEPTED after replay and pinned real-media evidence pass")
+    if statuses.get("OPERATIONS_AND_DIAGNOSTICS_V1") != "ACCEPTED":
+        errors.append("OPERATIONS_AND_DIAGNOSTICS_V1 must be ACCEPTED with pinned evidence")
     for entry in roadmap:
         entry_id = entry.get("id")
         for dependency in entry.get("depends_on", []):
@@ -418,7 +460,7 @@ def validate_data_ownership(contract: dict) -> list[str]:
     if not {"display_name", "filesystem_path", "sort_order"}.issubset(forbidden):
         errors.append("mutable names, paths, and ordering must not define stable IDs")
     namespaces = set(id_policy.get("namespaces", []))
-    if not {"message", "session"}.issubset(namespaces):
+    if not {"message", "session", "reservation"}.issubset(namespaces):
         errors.append("R3 protocol trace namespaces must be registered by R2 identity policy")
     ownership = contract.get("ownership", [])
     patterns = [entry.get("field_pattern") for entry in ownership]
@@ -429,6 +471,28 @@ def validate_data_ownership(contract: dict) -> list[str]:
             errors.append(f"missing authoritative owner for {entry.get('field_pattern')}")
         if entry.get("writer_resolution") not in {"STATIC", "PINNED_ORIGIN_OWNER"}:
             errors.append(f"invalid writer resolution for {entry.get('field_pattern')}")
+    entries_by_pattern = {entry.get("field_pattern"): entry for entry in ownership}
+    expected_operations_ownership = {
+        "/operations/jobs/*": ("OperationsJob", "integra.operations"),
+        "/operations/reservations/*": (
+            "HostResourceReservation",
+            "integra.resource_scheduler",
+        ),
+        "/operations/model_residencies/*": (
+            "ModelResidency",
+            "integra.resource_scheduler",
+        ),
+    }
+    for pattern, (entity, owner) in expected_operations_ownership.items():
+        entry = entries_by_pattern.get(pattern)
+        if entry != {
+            "entity": entity,
+            "field_pattern": pattern,
+            "authoritative_owner": owner,
+            "writer_resolution": "STATIC",
+            "integra_access": "AUTHORITATIVE_WRITE",
+        }:
+            errors.append(f"operations ownership differs for {pattern}")
     collisions = contract.get("collision_policy", {})
     if collisions.get("same_id_different_hash") != "HARD_CONFLICT":
         errors.append("same ID with a different identity hash must hard-fail")
@@ -743,6 +807,100 @@ def validate_core_alpha_real_evidence(
     return errors
 
 
+def validate_operations_evidence(
+    evidence: dict, root: Path = ROOT
+) -> list[str]:
+    errors: list[str] = []
+    expected_top_level = {
+        "schema_version",
+        "issue",
+        "status",
+        "semantic_authority",
+        "protected_data_accessed",
+        "external_actions_performed",
+        "implementation",
+        "fixture_inventory",
+        "acceptance",
+    }
+    if not isinstance(evidence, dict) or set(evidence) != expected_top_level:
+        return ["Operations evidence fields must match the v1 contract"]
+    if evidence.get("schema_version") != "1.0":
+        errors.append("Operations evidence schema_version must be 1.0")
+    if evidence.get("issue") != 46 or evidence.get("status") != "PASS":
+        errors.append("Operations evidence must certify Issue #46 as PASS")
+    if evidence.get("semantic_authority") != "NONE":
+        errors.append("Operations evidence cannot claim semantic authority")
+    if evidence.get("protected_data_accessed") is not False:
+        errors.append("Operations evidence must not access protected data")
+    if evidence.get("external_actions_performed") is not False:
+        errors.append("Operations evidence must not claim external actions")
+
+    implementation = evidence.get("implementation")
+    if not isinstance(implementation, list):
+        errors.append("Operations implementation inventory must be a list")
+    else:
+        paths = {item.get("path") for item in implementation if isinstance(item, dict)}
+        if paths != EXPECTED_OPERATIONS_IMPLEMENTATION or len(implementation) != len(paths):
+            errors.append("Operations implementation inventory must be exact")
+        for item in implementation:
+            if not isinstance(item, dict) or set(item) != {"path", "sha256"}:
+                errors.append("Operations implementation reference differs from v1")
+                continue
+            path = root / item["path"]
+            if not path.is_file() or sha256_file(path) != item["sha256"]:
+                errors.append(f"Operations implementation hash differs: {item['path']}")
+
+    fixture_inventory = evidence.get("fixture_inventory")
+    if not isinstance(fixture_inventory, list):
+        errors.append("Operations fixture inventory must be a list")
+    else:
+        scenarios = {
+            item.get("scenario") for item in fixture_inventory if isinstance(item, dict)
+        }
+        if scenarios != EXPECTED_OPERATIONS_FIXTURES or len(fixture_inventory) != len(scenarios):
+            errors.append("Operations fixture inventory must be exact")
+        for item in fixture_inventory:
+            if not isinstance(item, dict) or set(item) != {"scenario", "path", "sha256"}:
+                errors.append("Operations fixture reference differs from v1")
+                continue
+            expected_path = f"tests/fixtures/operations_v1/{item['scenario']}.json"
+            if item["path"] != expected_path:
+                errors.append(f"Operations fixture path differs: {item['scenario']}")
+                continue
+            path = root / item["path"]
+            if not path.is_file() or sha256_file(path) != item["sha256"]:
+                errors.append(f"Operations fixture hash differs: {item['scenario']}")
+
+    expected_acceptance = {
+        "job_lifecycle_versioned": True,
+        "honest_eta": True,
+        "cancellation_acknowledged": True,
+        "checkpoint_resume_identity_bound": True,
+        "capability_preflight_exact": True,
+        "resource_reservations_atomic": True,
+        "reference_16gb_policy_enforced": True,
+        "calculated_disk_authoritative": True,
+        "playlist_sequential": True,
+        "redacted_structured_logs": True,
+        "integrity_fail_closed": True,
+        "model_unload_owner_scoped": True,
+        "child_process_cleanup_verified": True,
+        "protected_scope_preserved": True,
+    }
+    if evidence.get("acceptance") != expected_acceptance:
+        errors.append("Operations acceptance differs from the Issue #46 contract")
+    try:
+        results = run_operations_fixtures(root)
+    except Exception as error:
+        errors.append(f"Operations executable fixtures failed: {error}")
+    else:
+        if set(results) != EXPECTED_OPERATIONS_FIXTURES or any(
+            status != "PASS" for status in results.values()
+        ):
+            errors.append("Operations executable fixture results are incomplete")
+    return errors
+
+
 def main() -> int:
     state = load_json(STATE_PATH)
     baselines = load_json(BASELINES_PATH)
@@ -753,6 +911,7 @@ def main() -> int:
     agent_team = load_registry(AGENT_TEAM_PATH)
     core_alpha = load_json(CORE_ALPHA_PATH)
     core_alpha_real = load_json(CORE_ALPHA_REAL_PATH)
+    operations = load_json(OPERATIONS_PATH)
     load_json(SCHEMA_PATH)
     load_json(BASELINES_SCHEMA_PATH)
     load_json(OWNERSHIP_SCHEMA_PATH)
@@ -767,6 +926,7 @@ def main() -> int:
     load_json(CORE_ALPHA_EVIDENCE_SCHEMA_PATH)
     load_json(CORE_ALPHA_MANIFEST_SCHEMA_PATH)
     load_json(CORE_ALPHA_REAL_SCHEMA_PATH)
+    load_json(OPERATIONS_SCHEMA_PATH)
     errors = (
         validate_state(state)
         + validate_component_baselines(baselines)
@@ -777,6 +937,7 @@ def main() -> int:
         + validate_agent_team(agent_team)
         + validate_core_alpha_evidence(core_alpha)
         + validate_core_alpha_real_evidence(core_alpha_real, baselines)
+        + validate_operations_evidence(operations)
     )
     if errors:
         print("INTEGRA_GOVERNANCE_VALIDATION: FAIL")
@@ -804,6 +965,7 @@ def main() -> int:
     print(f"R6_REPLAY_EXECUTION_MODE: {core_alpha['execution_mode']}")
     print(f"R6_REAL_MEDIA: {core_alpha_real['status']}")
     print("R6_ACCEPTANCE: ACCEPTED")
+    print(f"OPERATIONS_AND_DIAGNOSTICS_V1: {operations['status']}")
     return 0
 
 

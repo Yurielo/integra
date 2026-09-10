@@ -1,0 +1,6 @@
+{
+  "expected_integrity": "FAIL",
+  "finding": "ALTERED_HASH",
+  "scenario": "integrity_failure",
+  "terminal_success_allowed": false
+}

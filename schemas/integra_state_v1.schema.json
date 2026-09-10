@@ -17,6 +17,7 @@
     "agent_team_contract",
     "core_alpha_evidence",
     "core_alpha_real_evidence",
+    "operations_and_diagnostics_evidence",
     "execution_policy",
     "release_scope",
     "roadmap",
@@ -53,6 +54,9 @@
     },
     "core_alpha_real_evidence": {
       "const": "state/core_alpha_real_v1.json"
+    },
+    "operations_and_diagnostics_evidence": {
+      "const": "state/operations_and_diagnostics_v1.json"
     },
     "execution_policy": {
       "type": "object",

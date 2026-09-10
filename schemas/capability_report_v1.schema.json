@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://integra.local/schemas/capability_report_v1.schema.json",
+  "title": "Integra Capability Preflight v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "capability", "worker", "component", "model", "runtime", "source", "target", "contract"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "status": {"enum": ["READY", "BLOCKED"]},
+    "capability": {"$ref": "#/$defs/versionedIdentity"},
+    "worker": {"$ref": "#/$defs/hashedIdentity"},
+    "component": {"$ref": "component_identity_v1.schema.json"},
+    "model": {"$ref": "#/$defs/hashedIdentity"},
+    "runtime": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "version", "executable_sha256", "probe_arguments_sha256"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1},
+        "executable_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "probe_arguments_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "content_sha256"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "content_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "target": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "state"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "state": {"enum": ["AVAILABLE", "UNAVAILABLE", "UNKNOWN"]}
+      }
+    },
+    "contract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "schema_sha256"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "schema_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    }
+  },
+  "$defs": {
+    "versionedIdentity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1}
+      }
+    },
+    "hashedIdentity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "identity_sha256"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "identity_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://integra.local/schemas/resource_request_v1.schema.json",
+  "title": "Integra Resource Request v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["operation_id", "job_class", "workload", "model_family", "collection_id", "collection_kind", "requires_publication_target", "capability_report_sha256"],
+  "properties": {
+    "operation_id": {"type": "string", "pattern": "^urn:integra:operation:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"},
+    "job_class": {"enum": ["lightweight", "heavy-model", "heavy-media"]},
+    "workload": {"enum": ["ASR", "LLM", "FFMPEG_HEAVY", "MEDIA_LIGHT", "CPU_LIGHT"]},
+    "model_family": {"enum": [null, "WHISPER", "OLLAMA"]},
+    "collection_id": {"type": ["string", "null"]},
+    "collection_kind": {"enum": ["SINGLE", "PLAYLIST"]},
+    "requires_publication_target": {"type": "boolean"},
+    "capability_report_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"collection_kind": {"const": "PLAYLIST"}}},
+      "then": {"properties": {"collection_id": {"type": "string", "minLength": 1}}}
+    },
+    {
+      "if": {"properties": {"collection_kind": {"const": "SINGLE"}}},
+      "then": {"properties": {"collection_id": {"type": "null"}}}
+    }
+  ]
+}

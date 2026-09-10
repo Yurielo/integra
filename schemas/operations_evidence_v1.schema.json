@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://integra.local/schemas/operations_evidence_v1.schema.json",
+  "title": "Integra Operations & Diagnostics Acceptance Evidence v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "issue", "status", "semantic_authority", "protected_data_accessed", "external_actions_performed", "implementation", "fixture_inventory", "acceptance"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "issue": {"const": 46},
+    "status": {"const": "PASS"},
+    "semantic_authority": {"const": "NONE"},
+    "protected_data_accessed": {"const": false},
+    "external_actions_performed": {"const": false},
+    "implementation": {
+      "type": "array", "minItems": 11, "maxItems": 11,
+      "items": {"$ref": "#/$defs/fileReference"}
+    },
+    "fixture_inventory": {
+      "type": "array", "minItems": 7, "maxItems": 7,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["scenario", "path", "sha256"],
+        "properties": {
+          "scenario": {"enum": ["success", "interruption", "resume", "unsafe_resource", "capability_drift", "integrity_failure", "process_cleanup"]},
+          "path": {"type": "string", "pattern": "^tests/fixtures/operations_v1/"},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "acceptance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["job_lifecycle_versioned", "honest_eta", "cancellation_acknowledged", "checkpoint_resume_identity_bound", "capability_preflight_exact", "resource_reservations_atomic", "reference_16gb_policy_enforced", "calculated_disk_authoritative", "playlist_sequential", "redacted_structured_logs", "integrity_fail_closed", "model_unload_owner_scoped", "child_process_cleanup_verified", "protected_scope_preserved"],
+      "properties": {
+        "job_lifecycle_versioned": {"const": true},
+        "honest_eta": {"const": true},
+        "cancellation_acknowledged": {"const": true},
+        "checkpoint_resume_identity_bound": {"const": true},
+        "capability_preflight_exact": {"const": true},
+        "resource_reservations_atomic": {"const": true},
+        "reference_16gb_policy_enforced": {"const": true},
+        "calculated_disk_authoritative": {"const": true},
+        "playlist_sequential": {"const": true},
+        "redacted_structured_logs": {"const": true},
+        "integrity_fail_closed": {"const": true},
+        "model_unload_owner_scoped": {"const": true},
+        "child_process_cleanup_verified": {"const": true},
+        "protected_scope_preserved": {"const": true}
+      }
+    }
+  },
+  "$defs": {
+    "fileReference": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    }
+  }
+}
