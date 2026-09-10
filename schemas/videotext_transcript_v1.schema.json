@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Yurielo/integra/schemas/videotext_transcript_v1.schema.json",
+  "title": "Integra VideoText real transcript artifact v1",
+  "type": "object",
+  "required": ["input_artifact_ids", "input_content_sha256", "result", "schema_version", "semantic_status", "stage", "stage_data"],
+  "properties": {
+    "input_artifact_ids": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "input_content_sha256": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[0-9a-f]{64}$"}},
+    "result": {
+      "type": "object",
+      "required": ["assurance", "language", "model_sha256", "text_sha256", "word_count"],
+      "properties": {
+        "assurance": {"const": "MACHINE_UNVERIFIED"},
+        "language": {"const": "ru"},
+        "model_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "text_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "word_count": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": false
+    },
+    "schema_version": {"const": "1.0"},
+    "semantic_status": {"const": "REVIEW_REQUIRED"},
+    "stage": {"const": "transcript"},
+    "stage_data": {
+      "type": "object",
+      "required": ["review_checkpoint", "srt_text", "transcript_text", "whisper_document", "word_intervals", "omitted_zero_duration_tokens"],
+      "properties": {
+        "review_checkpoint": {"const": "SOURCE_TRANSCRIPT"},
+        "srt_text": {"type": "string", "minLength": 1},
+        "transcript_text": {"type": "string", "minLength": 1},
+        "whisper_document": {
+          "type": "object",
+          "required": ["result", "transcription"],
+          "properties": {
+            "result": {"type": "object", "required": ["language"], "properties": {"language": {"const": "ru"}}},
+            "transcription": {"type": "array", "minItems": 1, "items": {"type": "object"}}
+          }
+        },
+        "word_intervals": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/word_interval"}},
+        "omitted_zero_duration_tokens": {"type": "array", "items": {"$ref": "#/$defs/omitted_token"}}
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "word_interval": {
+      "type": "object",
+      "required": ["word", "start", "end", "score"],
+      "properties": {
+        "word": {"type": "string", "minLength": 1},
+        "start": {"type": "number", "minimum": 0},
+        "end": {"type": "number", "exclusiveMinimum": 0},
+        "score": {"type": "number", "minimum": 0, "maximum": 1}
+      },
+      "additionalProperties": false
+    },
+    "omitted_token": {
+      "type": "object",
+      "required": ["word", "start", "end", "score", "reason", "segment_index"],
+      "properties": {
+        "word": {"type": "string", "minLength": 1},
+        "start": {"type": "number", "minimum": 0},
+        "end": {"type": "number", "minimum": 0},
+        "score": {"type": "number", "minimum": 0, "maximum": 1},
+        "reason": {"const": "WHISPER_ZERO_DURATION_TOKEN"},
+        "segment_index": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -58,6 +58,40 @@ also prove non-monotonic progress, unsafe retry, changed-request idempotency,
 invalid resume binding inputs, path traversal, and unleased mutation fail
 closed.
 
+## R6 operational use
+
+The `PINNED_REAL_MEDIA` Core Alpha path uses one local adapter subprocess per
+stage. The controller completes the handshake before submitting the job; the
+adapter then executes the pinned source capability and returns progress plus a
+terminal result. A result must reference an existing regular file inside the
+job-specific `.staging` directory. The controller verifies the exact bytes and
+provenance before Core Alpha performs the only permanent atomic promotion.
+
+For this path, model identities are part of both the handshake worker identity
+and every RESULT artifact origin. The controller materializes the exact pinned
+Git commit into a read-only temporary tree, verifies every blob and executable
+bit against `git ls-tree`, and the worker re-hashes that tree before and after
+each stage. Worker configuration is also immutable and hash-checked. Temporary
+source trees, build products and SeminarText exports are removed after the run;
+the content-addressed Integra control store is the only durable output path.
+
+Long-running adapters refresh the Project Lease from the controller at bounded
+intervals shorter than the lease TTL. Missing heartbeat capability terminates
+the process group and fails closed; stage timeout remains unretried.
+
+JSON stages are checked against exact nested contracts in
+`schemas/videotext_transcript_v1.schema.json`,
+`schemas/seminartext_topic_drafts_v1.schema.json`,
+`schemas/seminartext_exception_review_v1.schema.json`, and
+`schemas/seminartext_knowledge_candidate_v1.schema.json`. The binary clip uses
+`schemas/videotext_media_clip_v1.contract.json`; its complete ISO-BMFF box
+inventory and a decoded ffprobe video stream are both required.
+
+These bounded adapters declare `supports_resume = false`. Core Alpha's
+checkpointed prefix resume is a separate controller capability, not an
+intra-job worker resume claim. A stage timeout terminates the adapter process
+group and is not retried as a known-safe outcome.
+
 ## Scope boundary
 
 R3 defines contracts and a dependency-free reference validator only. It does

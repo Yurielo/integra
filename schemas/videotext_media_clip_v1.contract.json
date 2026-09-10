@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "contract_id": "videotext_media_clip_v1",
+  "artifact_kind": "MEDIA",
+  "encoding": "BINARY",
+  "container": "ISO_BMFF",
+  "file_extension": ".mp4",
+  "required_top_level_boxes": ["ftyp", "moov", "mdat"],
+  "validation": {
+    "implementation": "integra_core.real_contracts.validate_mp4_clip",
+    "complete_box_walk_required": true,
+    "first_box": "ftyp",
+    "truncated_or_out_of_bounds_box": "REJECT"
+  }
+}

@@ -1,0 +1,311 @@
+{
+  "acceptance": {
+    "canonical_evidence_valid": true,
+    "exception_review_package_generated": true,
+    "gold_accessed": false,
+    "human_decisions_applied": 0,
+    "pinned_components_executed": true,
+    "protected_data_accessed": false,
+    "provisional_knowledge_generated": true,
+    "real_local_video_decoded": true,
+    "semantic_authority": "PROVISIONAL_ONLY",
+    "seminartext_topics_generated": true,
+    "source_grounded_provenance": true,
+    "source_repositories_changed": false,
+    "videotext_media_clip_rendered": true,
+    "videotext_review_checkpoint": "SOURCE_TRANSCRIPT"
+  },
+  "alignment": {
+    "aligned_word_intervals": 37,
+    "fabricated_intervals": 0,
+    "omitted_zero_duration_tokens": 1,
+    "unaligned_word_sequences": [
+      31
+    ]
+  },
+  "component_identities": {
+    "seminartext": {
+      "commit_sha": "a94936cd77cde13561c97c804ece1ac1134e01a6",
+      "repository": "Yurielo/seminartext",
+      "tree_sha": "5f5951da1d5dcf957ef982510fde3537f601ea15",
+      "version": "4.0.0"
+    },
+    "videotext": {
+      "commit_sha": "2e098d1705b6815628bee1e023f4742718eabf02",
+      "repository": "Yurielo/videotext",
+      "tree_sha": "f5ec484df90e4db655d31b4174434c37f4d1491c",
+      "version": "0.6.4"
+    }
+  },
+  "control_plane": {
+    "controller_commit_sha": "c8293a75c19e085dd3eeea315e0e71705fb68f2e",
+    "controller_tree_sha": "e4a80af26e4fa8fd1ef29033d9b75ea141b93f4c",
+    "lease_heartbeats_during_workers": 8,
+    "manifest_sha256": "48f9c56b86e52da870c112535ff0cd16b8ab321dc7a98d5a2849d70738583027",
+    "media_clip_functional_probe": true,
+    "pipeline": "INTEGRA_CORE_ALPHA_V1",
+    "prefix_cancellation_checkpoint_verified": true,
+    "prefix_resume_revalidation_verified": true,
+    "project_lease_enforced": true,
+    "r3_contract_boundary": true,
+    "stage_timeout_enforced": true,
+    "validated_jsonl_messages": 25,
+    "worker_processes": 5,
+    "worker_resume_support": false
+  },
+  "determinism": {
+    "all_stage_hashes_identical": true,
+    "independent_runs_compared": 2,
+    "runs": [
+      {
+        "controller_commit_sha": "c8293a75c19e085dd3eeea315e0e71705fb68f2e",
+        "controller_tree_sha": "e4a80af26e4fa8fd1ef29033d9b75ea141b93f4c",
+        "executed_at": "2026-09-10T21:10:45.918899Z",
+        "manifest_sha256": "48f9c56b86e52da870c112535ff0cd16b8ab321dc7a98d5a2849d70738583027",
+        "run_id": "b24ad6afc32205adf15c0717186cc69fcbaff77fa1c1daeecdc84bf4693e5b59",
+        "stage_hashes": {
+          "knowledge": "be4014eb3487229103a97f5d9102076ab7928d3a83cf1863de462390e4df6e09",
+          "media_clip": "5bb6131fd2541ed09f243c7acede028a623f0f0690b2d2300a19415f86e33ef0",
+          "review": "d08aa713795df2f4794c16564e188410ee7df7db23f4f4ac9e3c0ac10588fdf1",
+          "source": "9c5b2046dda83bb5cc72ed27aaa22620a1c8ab3ae62ed8d0f32636187b429b2d",
+          "topics": "21697fa85d632701dd40ee0ce00262d080e857d83ca990e357e9b98f614f2d50",
+          "transcript": "ebeb0b69432fd28f127cae1d80d17e7fe422b1da62ec6f8b425109fd558e9cad"
+        }
+      },
+      {
+        "controller_commit_sha": "c8293a75c19e085dd3eeea315e0e71705fb68f2e",
+        "controller_tree_sha": "e4a80af26e4fa8fd1ef29033d9b75ea141b93f4c",
+        "executed_at": "2026-09-10T21:12:30.460292Z",
+        "manifest_sha256": "48f9c56b86e52da870c112535ff0cd16b8ab321dc7a98d5a2849d70738583027",
+        "run_id": "706d17e38a68249f21f2219e7c06c6e5dbacda89b7d57988ce7c1aa4ce37588b",
+        "stage_hashes": {
+          "knowledge": "be4014eb3487229103a97f5d9102076ab7928d3a83cf1863de462390e4df6e09",
+          "media_clip": "5bb6131fd2541ed09f243c7acede028a623f0f0690b2d2300a19415f86e33ef0",
+          "review": "d08aa713795df2f4794c16564e188410ee7df7db23f4f4ac9e3c0ac10588fdf1",
+          "source": "9c5b2046dda83bb5cc72ed27aaa22620a1c8ab3ae62ed8d0f32636187b429b2d",
+          "topics": "21697fa85d632701dd40ee0ce00262d080e857d83ca990e357e9b98f614f2d50",
+          "transcript": "ebeb0b69432fd28f127cae1d80d17e7fe422b1da62ec6f8b425109fd558e9cad"
+        }
+      }
+    ]
+  },
+  "executed_at": "2026-09-10T21:10:45.918899Z",
+  "execution_mode": "PINNED_REAL_MEDIA",
+  "human_decisions_applied": 0,
+  "implementation": [
+    {
+      "path": "integra_core/core_alpha.py",
+      "sha256": "1e5d04461239f59925616f1514d69410a35e38d7d7d49dac8c17c0cb291c30f0"
+    },
+    {
+      "path": "integra_core/real_contracts.py",
+      "sha256": "ff58174bd744312e6249d41080aaea8a60a5957938ef8f9e4f319403cd163e08"
+    },
+    {
+      "path": "integra_core/real_media.py",
+      "sha256": "8e1d0f6725b90948651ec3bd049a3a7ac6de1210ee3fe1a17fdb7fedb265a671"
+    },
+    {
+      "path": "scripts/run_core_alpha_real.py",
+      "sha256": "ee57f8ef7a59217c423e9d53672dba8cc49ac024c9d977986d68ab9700a8490e"
+    },
+    {
+      "path": "workers/core_alpha_real_worker.py",
+      "sha256": "77dd89aa1ef31e1c3571719f0af48b25dc6bcd3e783b98d0f3384a42093fdfc5"
+    },
+    {
+      "path": "workers/seminartext_topics_worker.py",
+      "sha256": "3683c2ee9d2cb218ca3ab7f0bd0439812401bbf84edcd431c74bb99995e52009"
+    },
+    {
+      "path": "workers/videotext_transcript_worker.swift",
+      "sha256": "3601efa1427bc2e6d541324112a9d538e81a0c7d5841ded3588003d1303299fc"
+    },
+    {
+      "path": "workers/videotext_clip_worker.swift",
+      "sha256": "fa514216b542a8457ddfa2a3d9830865cadb6a28f70887b9657d87e2da755de8"
+    },
+    {
+      "path": "scripts/certify_core_alpha_real.py",
+      "sha256": "7a35eb224241210e44abf9edcf6ff609fcc158788fb4f8fb8323822aebdc0f8c"
+    },
+    {
+      "path": "schemas/core_alpha_real_evidence_v1.schema.json",
+      "sha256": "363ff992de22972239536e651dd9fea3076f1f6fda2affe7ffdfe738f62ced39"
+    },
+    {
+      "path": "schemas/videotext_transcript_v1.schema.json",
+      "sha256": "80b89ba0a2f94aea0643d9ac612abda1e90fdc83d01ca6c3de2c92d4fb0ba13d"
+    },
+    {
+      "path": "schemas/seminartext_topic_drafts_v1.schema.json",
+      "sha256": "f2b536377515325900b9975ba278cc30603c76b4d9b110a45951db18c16c21b0"
+    },
+    {
+      "path": "schemas/seminartext_exception_review_v1.schema.json",
+      "sha256": "11790272f4a8a930ea239b41e9405549af44ff2418c32a29d1c8b65a4e5a164d"
+    },
+    {
+      "path": "schemas/seminartext_knowledge_candidate_v1.schema.json",
+      "sha256": "ac8c428354bb41305d0bd3412c6601349141d44ea295219ff2fa68e81c4f3963"
+    },
+    {
+      "path": "schemas/videotext_media_clip_v1.contract.json",
+      "sha256": "c8a06037f3b89b17c81d5ff789c1be62fb94d1b4d18db2278618c435bb932a47"
+    }
+  ],
+  "issue": 8,
+  "limitations": [
+    "The bounded evidence uses one generated 22.08-second Russian local video and does not establish quality on representative user media.",
+    "The machine Topic and knowledge output remain REVIEW_REQUIRED or PROVISIONAL; R6 technical acceptance is not semantic acceptance.",
+    "One Whisper token had a zero-duration native interval and was left unaligned rather than assigned fabricated timing.",
+    "The pinned SeminarText CLI entrypoint contains a QA-report NameError after inference; the Integra adapter composes the same pinned functions without changing the source checkout.",
+    "R3 stage workers declare no intra-job resume; Core Alpha prefix recovery is verified separately and fails closed."
+  ],
+  "models": {
+    "topics": {
+      "digest": "a2af6cc3eb7fa8be8504abaf9b04e88f17a119ec3f04a3addf55f92841195f5a",
+      "name": "gemma3:4b",
+      "provider": "ollama",
+      "weights_sha256": "aeda25e63ebd698fab8638ffb778e68bed908b960d39d0becc650fa981609d25"
+    },
+    "whisper": {
+      "name": "ggml-large-v3.bin",
+      "sha256": "64d182b440b98d5203c4f9bd541544d84c605196c4f7b845dfa11fb23594d1e2"
+    }
+  },
+  "protected_data_accessed": false,
+  "provenance": {
+    "artifact_lineage": {
+      "knowledge": {
+        "artifact_id": "urn:integra:artifact:785b60dd-d9a6-51dc-b51d-2e43ec9f8fc5",
+        "operation_id": "urn:integra:operation:64c4bec7-9f0d-5f50-8edc-1e5c90aa5c1f",
+        "parent_artifact_ids": [
+          "urn:integra:artifact:af99f60e-10a1-5661-8f28-c0388d8f3793",
+          "urn:integra:artifact:f6292368-c8d3-5525-9c71-94b22c472a88",
+          "urn:integra:artifact:ffe8c07d-9995-596f-84ce-644425f02f45"
+        ]
+      },
+      "media_clip": {
+        "artifact_id": "urn:integra:artifact:40d9a2bc-be23-5ec6-b4e0-5c97edf84a00",
+        "operation_id": "urn:integra:operation:b4e4050a-948e-5d75-aad7-1accc92a44c4",
+        "parent_artifact_ids": [
+          "urn:integra:artifact:e94e5d2a-739a-56e3-b27d-9aa6a0fea47c",
+          "urn:integra:artifact:f6292368-c8d3-5525-9c71-94b22c472a88",
+          "urn:integra:artifact:ffe8c07d-9995-596f-84ce-644425f02f45"
+        ]
+      },
+      "review": {
+        "artifact_id": "urn:integra:artifact:ffe8c07d-9995-596f-84ce-644425f02f45",
+        "operation_id": "urn:integra:operation:f2d156d3-8858-58ea-bd08-261d097ef67b",
+        "parent_artifact_ids": [
+          "urn:integra:artifact:af99f60e-10a1-5661-8f28-c0388d8f3793",
+          "urn:integra:artifact:f6292368-c8d3-5525-9c71-94b22c472a88"
+        ]
+      },
+      "source": {
+        "artifact_id": "urn:integra:artifact:e94e5d2a-739a-56e3-b27d-9aa6a0fea47c",
+        "operation_id": "urn:integra:operation:c1c58ac9-5541-553a-a882-de0b2b04c3a8",
+        "parent_artifact_ids": []
+      },
+      "topics": {
+        "artifact_id": "urn:integra:artifact:f6292368-c8d3-5525-9c71-94b22c472a88",
+        "operation_id": "urn:integra:operation:d60ec788-efd0-5c4c-80f2-e336fda885a7",
+        "parent_artifact_ids": [
+          "urn:integra:artifact:af99f60e-10a1-5661-8f28-c0388d8f3793"
+        ]
+      },
+      "transcript": {
+        "artifact_id": "urn:integra:artifact:af99f60e-10a1-5661-8f28-c0388d8f3793",
+        "operation_id": "urn:integra:operation:d023d8a1-2a85-5af7-9e1a-70c1645d8df1",
+        "parent_artifact_ids": [
+          "urn:integra:artifact:e94e5d2a-739a-56e3-b27d-9aa6a0fea47c"
+        ]
+      }
+    },
+    "clip_interval": {
+      "end_seconds": 19.75,
+      "start_seconds": 0.1
+    },
+    "project_id": "project_integra_r6_9c5b2046dda8",
+    "source_id": "source_video_001",
+    "topic_interval": {
+      "end_seconds": 19.75,
+      "start_seconds": 0.1
+    },
+    "transcript_revision_id": "transcript_revision_video_001_r1",
+    "word_interval": {
+      "end_id": "transcript_revision_video_001_r1:word:000037",
+      "end_seconds": 19.53,
+      "start_id": "transcript_revision_video_001_r1:word:000000",
+      "start_seconds": 0.03
+    }
+  },
+  "reference_host": {
+    "architecture": "arm64",
+    "ffmpeg": "ffmpeg version 8.1.2 Copyright (c) 2000-2026 the FFmpeg developers",
+    "ollama": "ollama version is 0.33.1",
+    "os": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+    "python": "3.14.6",
+    "swift": "Apple Swift version 6.3.3 (swiftlang-6.3.3.1.3 clang-2100.1.1.101)",
+    "whisper_cpp": "whisper-cpp 1.9.2"
+  },
+  "schema_version": "1.0",
+  "semantic_authority": "PROVISIONAL_ONLY",
+  "source": {
+    "duration_seconds": 22.08,
+    "kind": "GENERATED_LOCAL_VIDEO",
+    "language": "ru",
+    "privacy": "NON_PRIVATE_SYNTHETIC_SPEECH",
+    "sha256": "9c5b2046dda83bb5cc72ed27aaa22620a1c8ab3ae62ed8d0f32636187b429b2d",
+    "size_bytes": 208464
+  },
+  "source_repositories_changed": false,
+  "stage_sequence": [
+    "source",
+    "transcript",
+    "topics",
+    "review",
+    "knowledge",
+    "media_clip"
+  ],
+  "stages": {
+    "knowledge": {
+      "semantic_status": "PROVISIONAL",
+      "sha256": "be4014eb3487229103a97f5d9102076ab7928d3a83cf1863de462390e4df6e09",
+      "size_bytes": 43785,
+      "status": "PASS"
+    },
+    "media_clip": {
+      "semantic_status": "NOT_APPLICABLE",
+      "sha256": "5bb6131fd2541ed09f243c7acede028a623f0f0690b2d2300a19415f86e33ef0",
+      "size_bytes": 272601,
+      "status": "PASS"
+    },
+    "review": {
+      "semantic_status": "REVIEW_REQUIRED",
+      "sha256": "d08aa713795df2f4794c16564e188410ee7df7db23f4f4ac9e3c0ac10588fdf1",
+      "size_bytes": 32676,
+      "status": "PASS"
+    },
+    "source": {
+      "semantic_status": "NOT_APPLICABLE",
+      "sha256": "9c5b2046dda83bb5cc72ed27aaa22620a1c8ab3ae62ed8d0f32636187b429b2d",
+      "size_bytes": 208464,
+      "status": "PASS"
+    },
+    "topics": {
+      "semantic_status": "REVIEW_REQUIRED",
+      "sha256": "21697fa85d632701dd40ee0ce00262d080e857d83ca990e357e9b98f614f2d50",
+      "size_bytes": 1804,
+      "status": "PASS"
+    },
+    "transcript": {
+      "semantic_status": "REVIEW_REQUIRED",
+      "sha256": "ebeb0b69432fd28f127cae1d80d17e7fe422b1da62ec6f8b425109fd558e9cad",
+      "size_bytes": 18889,
+      "status": "PASS"
+    }
+  },
+  "status": "PASS"
+}

@@ -18,6 +18,11 @@ from typing import Any, Protocol
 from .identity import derive_imported_id
 from .project_lease import LeaseConflict, LeaseStore
 from .protocol import canonical_json, validate_artifact_reference, validate_component_identity
+from .real_contracts import (
+    RealStageContractError,
+    validate_mp4_clip,
+    validate_real_stage_document,
+)
 
 
 STAGE_ORDER = ("transcript", "topics", "review", "knowledge", "media_clip")
@@ -41,6 +46,13 @@ STAGE_OUTPUTS = {
     "review": ("exception_review_result", "exception_review_replay_v1"),
     "knowledge": ("canonical_knowledge_candidate", "canonical_knowledge_replay_v1"),
     "media_clip": ("media_clip", "videotext_media_clip_replay_v1"),
+}
+REAL_STAGE_OUTPUTS = {
+    "transcript": ("machine_transcript", "videotext_transcript_v1"),
+    "topics": ("topic_drafts", "seminartext_topic_drafts_v1"),
+    "review": ("exception_review_result", "seminartext_exception_review_v1"),
+    "knowledge": ("canonical_knowledge_candidate", "seminartext_knowledge_candidate_v1"),
+    "media_clip": ("media_clip", "videotext_media_clip_v1"),
 }
 STAGE_PARENTS = {
     "transcript": ("source",),
@@ -86,6 +98,24 @@ EXPECTED_PINNED_COMPONENTS = {
         "runtime": {"kind": "pinned_component", "version": "0.6.4"},
     },
 }
+EXPECTED_REAL_COMPONENT_MODELS = {
+    "seminartext": [
+        {
+            "id": "gemma3:4b:manifest",
+            "identity_sha256": "a2af6cc3eb7fa8be8504abaf9b04e88f17a119ec3f04a3addf55f92841195f5a",
+        },
+        {
+            "id": "gemma3:4b:weights",
+            "identity_sha256": "aeda25e63ebd698fab8638ffb778e68bed908b960d39d0becc650fa981609d25",
+        },
+    ],
+    "videotext": [
+        {
+            "id": "ggml-large-v3.bin",
+            "identity_sha256": "64d182b440b98d5203c4f9bd541544d84c605196c4f7b845dfa11fb23594d1e2",
+        }
+    ],
+}
 MANIFEST_FIELDS = {
     "schema_version",
     "pipeline",
@@ -105,6 +135,7 @@ MANIFEST_FIELDS = {
     "source_repositories_changed",
     "protected_data_accessed",
 }
+EXECUTION_MODES = {"CONTRACT_REPLAY", "PINNED_REAL_MEDIA"}
 VIDEO_SUFFIXES = {".m4v", ".mkv", ".mov", ".mp4", ".webm"}
 SEMANTIC_STAGES = {"topics", "review", "knowledge"}
 
@@ -133,6 +164,12 @@ class StageWorker(Protocol):
     ) -> StageOutput: ...
 
 
+def stage_output_contract(stage: str, execution_mode: str) -> tuple[str, str]:
+    if execution_mode == "PINNED_REAL_MEDIA":
+        return REAL_STAGE_OUTPUTS[stage]
+    return STAGE_OUTPUTS[stage]
+
+
 def sha256_bytes(payload: bytes) -> str:
     return hashlib.sha256(payload).hexdigest()
 
@@ -145,6 +182,29 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _is_sha256(value: Any) -> bool:
+    return (
+        isinstance(value, str)
+        and len(value) == 64
+        and all(character in "0123456789abcdef" for character in value)
+    )
+
+
+def reject_symlink_components(path: Path, *, label: str) -> None:
+    """Reject an existing symlink at any level of an absolute path."""
+
+    candidate = path.expanduser().absolute()
+    cursor = Path(candidate.anchor)
+    for part in candidate.parts[1:]:
+        cursor = cursor / part
+        # macOS exposes /var and /tmp as fixed compatibility aliases into
+        # /private. They are OS roots, not user-controlled path redirections.
+        if cursor.is_symlink() and cursor not in {Path("/var"), Path("/tmp")}:
+            if label == "source":
+                raise CoreAlphaError("source must be a regular local file, not a symlink")
+            raise CoreAlphaError(f"{label} path contains a symlink")
+
+
 def validate_core_alpha_manifest(manifest: dict[str, Any]) -> None:
     """Validate the dependency-free semantic constraints of the R6 manifest."""
 
@@ -153,7 +213,6 @@ def validate_core_alpha_manifest(manifest: dict[str, Any]) -> None:
     expected_scalars = {
         "schema_version": "1.0",
         "pipeline": "INTEGRA_CORE_ALPHA_V1",
-        "execution_mode": "CONTRACT_REPLAY",
         "semantic_authority": "PROVISIONAL_ONLY",
         "project_lease_enforced": True,
         "external_actions_performed": False,
@@ -163,6 +222,8 @@ def validate_core_alpha_manifest(manifest: dict[str, Any]) -> None:
     for field, expected in expected_scalars.items():
         if manifest.get(field) != expected:
             raise CoreAlphaError(f"Core Alpha manifest has invalid {field}")
+    if manifest.get("execution_mode") not in EXECUTION_MODES:
+        raise CoreAlphaError("Core Alpha manifest has invalid execution_mode")
     source_hash = manifest.get("source_sha256", "")
     if len(source_hash) != 64 or any(char not in "0123456789abcdef" for char in source_hash):
         raise CoreAlphaError("Core Alpha manifest has invalid source hash")
@@ -205,8 +266,22 @@ def validate_core_alpha_manifest(manifest: dict[str, Any]) -> None:
         if identity["component_id"] != component_id:
             raise CoreAlphaError("Core Alpha component key differs from identity")
     for component_id, expected_identity in EXPECTED_PINNED_COMPONENTS.items():
-        if components[component_id] != expected_identity:
+        actual_identity = components[component_id]
+        base_identity = {
+            key: value for key, value in actual_identity.items() if key != "models"
+        }
+        if base_identity != expected_identity:
             raise CoreAlphaError(f"Core Alpha pinned component differs: {component_id}")
+        models = actual_identity.get("models")
+        if manifest["execution_mode"] == "PINNED_REAL_MEDIA":
+            if models != EXPECTED_REAL_COMPONENT_MODELS[component_id]:
+                raise CoreAlphaError(
+                    f"Core Alpha actual component model provenance differs: {component_id}"
+                )
+        elif models is not None:
+            raise CoreAlphaError(
+                f"Core Alpha replay component unexpectedly binds models: {component_id}"
+            )
     selections = manifest.get("r5_selections")
     if not isinstance(selections, dict) or set(selections) != set(EXPECTED_SELECTIONS):
         raise CoreAlphaError("Core Alpha R5 selections are invalid")
@@ -245,7 +320,7 @@ def validate_core_alpha_manifest(manifest: dict[str, Any]) -> None:
         expected_kind, expected_schema = (
             ("local_video", "local_video_v1")
             if stage == "source"
-            else STAGE_OUTPUTS[stage]
+            else stage_output_contract(stage, manifest["execution_mode"])
         )
         if (reference["kind"], reference["schema_id"]) != (
             expected_kind,
@@ -259,6 +334,8 @@ def validate_core_alpha_manifest(manifest: dict[str, Any]) -> None:
         expected_status = (
             {"PROVISIONAL", "REVIEW_REQUIRED"}
             if stage in SEMANTIC_STAGES
+            else {"REVIEW_REQUIRED"}
+            if stage == "transcript" and manifest["execution_mode"] == "PINNED_REAL_MEDIA"
             else {"NOT_APPLICABLE"}
         )
         if reference.get("semantic_status") not in expected_status:
@@ -318,7 +395,9 @@ def validate_core_alpha_manifest(manifest: dict[str, Any]) -> None:
             )
         project_key = manifest["project_id"].rsplit(":", 1)[-1]
         expected_suffix = "source" if stage == "source" else (
-            "bin" if stage == "media_clip" else "json"
+            ("mp4" if manifest["execution_mode"] == "PINNED_REAL_MEDIA" else "bin")
+            if stage == "media_clip"
+            else "json"
         )
         expected_path = (
             f"projects/{project_key}/artifacts/"
@@ -487,18 +566,32 @@ class CoreAlphaPipeline:
         lease_store: LeaseStore | None = None,
         writer_identity: dict[str, Any] | None = None,
         clock: Callable[[], datetime] | None = None,
+        execution_mode: str = "CONTRACT_REPLAY",
+        component_models: dict[str, list[dict[str, str]]] | None = None,
     ) -> None:
         validate_component_identity(controller_identity)
         self.repository_root = repository_root.resolve()
         raw_store = store_root.expanduser().absolute()
-        if raw_store.is_symlink():
-            raise CoreAlphaError("Core Alpha store must not be a symlink")
+        reject_symlink_components(raw_store, label="Core Alpha store")
         self.raw_store_root = raw_store
         self.store_root = raw_store.resolve()
         if self.store_root == self.repository_root or self.repository_root in self.store_root.parents:
             raise CoreAlphaError("Core Alpha store must be outside the repository")
         self.controller = controller_identity
         self.components = load_component_identities(self.repository_root)
+        if execution_mode == "PINNED_REAL_MEDIA":
+            if component_models != EXPECTED_REAL_COMPONENT_MODELS:
+                raise CoreAlphaError("real-media execution requires exact component model pins")
+            augmented: dict[str, dict[str, Any]] = {}
+            for component_id, identity in self.components.items():
+                models = component_models[component_id]
+                if not isinstance(models, list) or not models:
+                    raise CoreAlphaError(f"real-media model pin is missing: {component_id}")
+                augmented[component_id] = {**identity, "models": models}
+                validate_component_identity(augmented[component_id])
+            self.components = augmented
+        elif component_models is not None:
+            raise CoreAlphaError("contract replay must not add runtime model pins")
         self.manifest_components = {
             "integra_control_plane": self.controller,
             **self.components,
@@ -517,6 +610,9 @@ class CoreAlphaPipeline:
             "process_start_token": f"pid-{os.getpid()}",
         }
         self.clock = clock or (lambda: datetime.now(timezone.utc))
+        if execution_mode not in EXECUTION_MODES:
+            raise CoreAlphaError("Core Alpha execution mode is unsupported")
+        self.execution_mode = execution_mode
 
     def run(
         self,
@@ -526,8 +622,7 @@ class CoreAlphaPipeline:
         resume_checkpoint: Path | None = None,
     ) -> dict[str, Any]:
         source_input = source.expanduser().absolute()
-        if source_input.is_symlink():
-            raise CoreAlphaError("source must be a regular local file, not a symlink")
+        reject_symlink_components(source_input, label="source")
         source = source_input.resolve()
         if not source.is_file():
             raise CoreAlphaError("source must be a regular local file, not a symlink")
@@ -554,6 +649,7 @@ class CoreAlphaPipeline:
                 artifacts,
                 cancel_requested,
                 resume_checkpoint,
+                lease,
             )
         finally:
             now = self._timestamp(self.clock())
@@ -576,6 +672,7 @@ class CoreAlphaPipeline:
         artifacts: dict[str, dict[str, Any]],
         cancel_requested: Callable[[str], bool] | None,
         resume_checkpoint: Path | None,
+        lease: dict[str, Any],
     ) -> dict[str, Any]:
 
         if resume_checkpoint is not None:
@@ -618,8 +715,26 @@ class CoreAlphaPipeline:
                 )
             parents = tuple(artifacts[name] for name in STAGE_PARENTS[stage])
             component = self.components[STAGE_COMPONENTS[stage]]
-            output = self.worker.run(stage, STAGE_CAPABILITIES[stage], component, parents)
-            self._validate_stage_output(stage, output, parents)
+            self._refresh_lease(project_id, lease)
+            heartbeat_setter = getattr(self.worker, "set_lease_heartbeat", None)
+            if callable(heartbeat_setter):
+                heartbeat_setter(lambda: self._refresh_lease(project_id, lease))
+            try:
+                output = self.worker.run(
+                    stage, STAGE_CAPABILITIES[stage], component, parents
+                )
+            finally:
+                if callable(heartbeat_setter):
+                    heartbeat_setter(None)
+            self._refresh_lease(project_id, lease)
+            self._validate_stage_output(
+                stage,
+                output,
+                parents,
+                self.execution_mode,
+                source_sha256=source_hash,
+            )
+            self._refresh_lease(project_id, lease)
             operation_id = derive_imported_id(
                 "operation",
                 component["component_id"],
@@ -631,7 +746,9 @@ class CoreAlphaPipeline:
                 ),
             )
             payload_hash = sha256_bytes(output.payload)
-            suffix = "bin" if stage == "media_clip" else "json"
+            suffix = (
+                "mp4" if self.execution_mode == "PINNED_REAL_MEDIA" else "bin"
+            ) if stage == "media_clip" else "json"
             relative = f"projects/{project_key}/artifacts/{payload_hash}.{suffix}"
             self._write_immutable(self.store_root / relative, output.payload)
             artifacts[stage] = self._artifact_reference(
@@ -662,6 +779,25 @@ class CoreAlphaPipeline:
         self._write_mutable(project_root / "core_alpha_manifest.json", canonical_json(manifest))
         self._write_mutable(project_root / "checkpoint.json", canonical_json(manifest))
         return manifest
+
+    def _refresh_lease(self, project_id: str, lease: dict[str, Any]) -> None:
+        instant = self.clock()
+        if instant.tzinfo is None:
+            raise CoreAlphaError("Core Alpha clock must be timezone-aware")
+        heartbeat_at = self._timestamp(instant)
+        expires_at = self._timestamp(instant + timedelta(minutes=5))
+        try:
+            self.lease_store.heartbeat(
+                project_id,
+                project_id,
+                lease["lease_id"],
+                self.writer_identity,
+                lease["generation"],
+                heartbeat_at,
+                expires_at,
+            )
+        except LeaseConflict as error:
+            raise CoreAlphaError("project lease was lost during stage execution") from error
 
     def _acquire_project_lease(self, project_id: str, source_hash: str) -> dict[str, Any]:
         instant = self.clock()
@@ -708,7 +844,7 @@ class CoreAlphaPipeline:
         manifest = {
             "schema_version": "1.0",
             "pipeline": "INTEGRA_CORE_ALPHA_V1",
-            "execution_mode": "CONTRACT_REPLAY",
+            "execution_mode": self.execution_mode,
             "project_id": project_id,
             "source_sha256": source_hash,
             "status": status,
@@ -798,15 +934,18 @@ class CoreAlphaPipeline:
             if sha256_file(path) != reference["content_sha256"]:
                 raise CoreAlphaError(f"retained artifact hash changed: {name}")
 
-    @staticmethod
     def _validate_stage_output(
+        self,
         stage: str,
         output: StageOutput,
         parents: tuple[dict[str, Any], ...],
+        execution_mode: str,
+        *,
+        source_sha256: str | None = None,
     ) -> None:
         if not isinstance(output, StageOutput):
             raise CoreAlphaError(f"{stage}: worker output must use StageOutput")
-        expected_kind, expected_schema = STAGE_OUTPUTS[stage]
+        expected_kind, expected_schema = stage_output_contract(stage, execution_mode)
         if (output.kind, output.schema_id) != (expected_kind, expected_schema):
             raise CoreAlphaError(f"{stage}: worker output contract differs from R6")
         if output.schema_version != "1.0":
@@ -816,6 +955,8 @@ class CoreAlphaPipeline:
         allowed_statuses = (
             {"PROVISIONAL", "REVIEW_REQUIRED"}
             if stage in SEMANTIC_STAGES
+            else {"REVIEW_REQUIRED"}
+            if stage == "transcript" and execution_mode == "PINNED_REAL_MEDIA"
             else {"NOT_APPLICABLE"}
         )
         if output.semantic_status not in allowed_statuses:
@@ -826,11 +967,21 @@ class CoreAlphaPipeline:
         else:
             _validate_time_interval_locator(stage, output.source_locator)
         if stage == "media_clip":
+            if execution_mode == "PINNED_REAL_MEDIA":
+                try:
+                    validate_mp4_clip(output.payload)
+                except RealStageContractError as error:
+                    raise CoreAlphaError(f"media_clip: {error}") from error
             return
         try:
             document = json.loads(output.payload)
         except (UnicodeDecodeError, json.JSONDecodeError) as error:
             raise CoreAlphaError(f"{stage}: worker payload must be valid JSON") from error
+        if execution_mode == "PINNED_REAL_MEDIA":
+            self._validate_real_stage_payload(
+                stage, document, output, parents, source_sha256=source_sha256
+            )
+            return
         expected_fields = {
             "input_artifact_ids",
             "input_content_sha256",
@@ -893,6 +1044,404 @@ class CoreAlphaPipeline:
                 raise CoreAlphaError("knowledge: lifecycle contradicts provisional authority")
             if not isinstance(result.get("title"), str) or not result["title"]:
                 raise CoreAlphaError("knowledge: replay title must be non-empty")
+
+    def _validate_real_stage_payload(
+        self,
+        stage: str,
+        document: Any,
+        output: StageOutput,
+        parents: tuple[dict[str, Any], ...],
+        *,
+        source_sha256: str | None,
+    ) -> None:
+        try:
+            validate_real_stage_document(stage, document)
+        except RealStageContractError as error:
+            raise CoreAlphaError(f"{stage}: {error}") from error
+        if document["semantic_status"] != output.semantic_status:
+            raise CoreAlphaError(f"{stage}: real-media semantic status differs")
+        if document["input_artifact_ids"] != [item["artifact_id"] for item in parents]:
+            raise CoreAlphaError(f"{stage}: real-media input identity differs")
+        if document["input_content_sha256"] != [item["content_sha256"] for item in parents]:
+            raise CoreAlphaError(f"{stage}: real-media input hashes differ")
+        if stage == "transcript":
+            expected_model = EXPECTED_REAL_COMPONENT_MODELS["videotext"][0]
+            whisper = document["stage_data"]["whisper_document"]
+            if (
+                document["result"]["model_sha256"]
+                != expected_model["identity_sha256"]
+                or Path(whisper["params"]["model"]).name != expected_model["id"]
+                or whisper["model"]["type"] != "large"
+            ):
+                raise CoreAlphaError("transcript: model hash differs from component identity")
+        if stage == "topics":
+            expected = EXPECTED_REAL_COMPONENT_MODELS["seminartext"]
+            generated_topics = document["stage_data"]["topics_document"]["topics"]
+            expected_locator = {
+                "type": "time_interval",
+                "start_seconds": generated_topics[0]["start_seconds"],
+                "end_seconds": generated_topics[-1]["end_seconds"],
+            }
+            if (
+                document["result"]["model_digest"] != expected[0]["identity_sha256"]
+                or document["result"]["model_weights_sha256"]
+                != expected[1]["identity_sha256"]
+                or document["stage_data"]["topics_document"]["model"]
+                != expected[0]["id"].removesuffix(":manifest")
+                or output.source_locator != expected_locator
+            ):
+                raise CoreAlphaError("topics: model identity or output locator differs")
+        if stage == "review":
+            transcript_document = self._load_parent_json(parents[0], "review transcript")
+            topics_document = self._load_parent_json(parents[1], "review Topics")
+            self._validate_review_upstream(
+                document, transcript_document, topics_document, source_sha256
+            )
+        if stage == "knowledge":
+            review_document = self._load_parent_json(parents[2], "knowledge review")
+            self._validate_knowledge_upstream(document, review_document)
+        if stage in SEMANTIC_STAGES:
+            CoreAlphaPipeline._reject_semantic_promotion(stage, document)
+
+    def _load_parent_json(self, reference: dict[str, Any], label: str) -> dict[str, Any]:
+        path = self._require_confined_store_path(
+            self.store_root / reference["relative_path"]
+        )
+        payload = path.read_bytes()
+        if (
+            len(payload) != reference["size_bytes"]
+            or sha256_bytes(payload) != reference["content_sha256"]
+        ):
+            raise CoreAlphaError(f"{label}: upstream artifact changed")
+        try:
+            document = json.loads(payload)
+        except (UnicodeDecodeError, json.JSONDecodeError) as error:
+            raise CoreAlphaError(f"{label}: upstream artifact is invalid") from error
+        if not isinstance(document, dict):
+            raise CoreAlphaError(f"{label}: upstream artifact is not an object")
+        return document
+
+    @staticmethod
+    def _validate_review_upstream(
+        document: dict[str, Any],
+        transcript_document: dict[str, Any],
+        topics_document: dict[str, Any],
+        source_sha256: str | None,
+    ) -> None:
+        bundle = document["stage_data"]["canonical_bundle"]
+        if (
+            source_sha256 is None
+            or len(bundle["sources"]) != 1
+            or len(bundle["transcript_revisions"]) != 1
+            or len(bundle["alignment_runs"]) != 1
+            or bundle["sources"][0]["content_sha256"] != source_sha256
+        ):
+            raise CoreAlphaError("review: canonical source identity differs")
+        transcript_result = transcript_document["result"]
+        transcript_data = transcript_document["stage_data"]
+        revision = bundle["transcript_revisions"][0]
+        alignment = bundle["alignment_runs"][0]
+        expected_whisper = EXPECTED_REAL_COMPONENT_MODELS["videotext"][0]
+        if (
+            revision["canonical_text"] != transcript_data["transcript_text"]
+            or revision["text_sha256"] != transcript_result["text_sha256"]
+            or alignment["model"] != expected_whisper["id"]
+            or alignment["model_sha256"] != expected_whisper["identity_sha256"]
+            or alignment["source_content_sha256"] != source_sha256
+            or alignment["transcript_text_sha256"] != transcript_result["text_sha256"]
+            or alignment["transcript_revision_id"] != revision["id"]
+        ):
+            raise CoreAlphaError("review: transcript or alignment differs from upstream")
+        source_topics = topics_document["stage_data"]["topics_document"]
+        draft = document["stage_data"]["draft_input_document"]
+        if (
+            source_topics["model"]
+            != EXPECTED_REAL_COMPONENT_MODELS["seminartext"][0]["id"].removesuffix(":manifest")
+            or len(draft["topics"]) != len(source_topics["topics"])
+        ):
+            raise CoreAlphaError("review: Topic draft differs from upstream")
+        for source_topic, draft_topic in zip(source_topics["topics"], draft["topics"]):
+            if (
+                draft_topic["proposed_title"] != source_topic["title"]
+                or draft_topic["proposed_summary"] != source_topic["summary"]
+                or draft_topic["lifecycle_status"] != source_topic["semantic_status"]
+            ):
+                raise CoreAlphaError("review: Topic draft differs from upstream")
+
+    @staticmethod
+    def _validate_knowledge_upstream(
+        document: dict[str, Any], review_document: dict[str, Any]
+    ) -> None:
+        upstream_bundle = review_document["stage_data"]["canonical_bundle"]
+        generated_bundle = document["stage_data"]["canonical_evidence_document"]
+        invariant_fields = set(upstream_bundle) - {"artifact_id", "topics", "evidence_refs"}
+        if any(
+            generated_bundle.get(field) != upstream_bundle[field]
+            for field in invariant_fields
+        ):
+            raise CoreAlphaError("knowledge: canonical evidence differs from upstream review")
+        review_package = review_document["stage_data"]["review_package"]
+        review_topics = {item["id"]: item for item in review_package["topics"]}
+        review_evidence = {item["id"]: item for item in review_package["evidence"]}
+        if (
+            len(review_topics) != len(review_package["topics"])
+            or len(review_evidence) != len(review_package["evidence"])
+            or len(generated_bundle["topics"]) != len(review_topics)
+            or len(generated_bundle["evidence_refs"]) != len(review_evidence)
+        ):
+            raise CoreAlphaError("knowledge: semantic reference inventory differs")
+        for generated in generated_bundle["topics"]:
+            source = review_topics.get(generated.get("id"))
+            expected_segments = [
+                item["id"]
+                for item in upstream_bundle["benchmark_segments"]
+                if item["transcript_revision_id"] == source["transcript_revision_id"]
+                and item["word_start_id"] == source["word_start_id"]
+                and item["word_end_id"] == source["word_end_id"]
+            ] if source is not None else []
+            if source is None or generated != {
+                "benchmark_segment_ids": expected_segments,
+                "id": source["id"],
+                "lifecycle_status": "active",
+                "origin": "semi_automatic",
+                "sequence": source["sequence"],
+                "title": source["proposed_title"],
+                "topic_set_id": source["topic_set_id"],
+                "transcript_revision_id": source["transcript_revision_id"],
+                "word_end_id": source["word_end_id"],
+                "word_start_id": source["word_start_id"],
+            }:
+                raise CoreAlphaError("knowledge: Topic differs from upstream review")
+        project_id = upstream_bundle["project"]["id"]
+        for generated in generated_bundle["evidence_refs"]:
+            source = review_evidence.get(generated.get("id"))
+            if source is None or generated != {
+                "id": source["id"],
+                "lifecycle_status": "verified",
+                "locator": source["locator"],
+                "project_id": project_id,
+                "source_id": source["source_id"],
+                "target": {
+                    "entity_id": source["word_start_id"],
+                    "entity_type": "word",
+                },
+                "transcript_revision_id": source["transcript_revision_id"],
+            }:
+                raise CoreAlphaError("knowledge: evidence differs from upstream review")
+
+        knowledge_input_id = "project_knowledge_input_integra_r6_actual_v1"
+        provenance = {
+            "origin": "derived",
+            "source_artifact_id": knowledge_input_id,
+        }
+        words = upstream_bundle["words"]
+        word_by_id = {item["id"]: item for item in words}
+        revisions = {
+            item["id"]: item for item in upstream_bundle["transcript_revisions"]
+        }
+        source_evidence_records = []
+        for source in review_package["evidence"]:
+            first = word_by_id[source["word_start_id"]]
+            last = word_by_id[source["word_end_id"]]
+            selected = sorted(
+                (
+                    item
+                    for item in words
+                    if item["transcript_revision_id"]
+                    == source["transcript_revision_id"]
+                    and first["sequence"] <= item["sequence"] <= last["sequence"]
+                ),
+                key=lambda item: item["sequence"],
+            )
+            aligned = [
+                item for item in selected if item["alignment_status"] != "unaligned"
+            ]
+            revision = revisions[source["transcript_revision_id"]]
+            expected_locator = {
+                "type": "time_interval",
+                "start_seconds": aligned[0]["start_seconds"],
+                "end_seconds": aligned[-1]["end_seconds"],
+            }
+            source_evidence_records.append(
+                {
+                    "canonical_source_id": source["source_id"],
+                    "canonical_transcript_revision_id": source[
+                        "transcript_revision_id"
+                    ],
+                    "canonical_word_end_id": source["word_end_id"],
+                    "canonical_word_start_id": source["word_start_id"],
+                    "claim": source["claim"],
+                    "id": source["id"],
+                    "locator": expected_locator,
+                    "quote": revision["canonical_text"][
+                        first["char_start"] : last["char_end"]
+                    ],
+                    "timing_status": (
+                        "aligned_word_range"
+                        if len(aligned) == len(selected)
+                        else "aligned_envelope_with_explicit_unaligned_words"
+                    ),
+                    "unaligned_word_ids": [
+                        item["id"]
+                        for item in selected
+                        if item["alignment_status"] == "unaligned"
+                    ],
+                }
+            )
+        source_evidence = {
+            "artifact_id": (
+                "artifact_project_knowledge_input_integra_r6_actual_v1_evidence"
+            ),
+            "artifact_type": "seminartext.project_knowledge_evidence",
+            "concepts": [],
+            "evidence": sorted(source_evidence_records, key=lambda item: item["id"]),
+            "schema_version": "1.0.0",
+            "source_input_artifact_id": knowledge_input_id,
+            "topics": [{"id": item_id} for item_id in sorted(review_topics)],
+        }
+        pretty_hash = lambda value: sha256_bytes(
+            (
+                json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+            ).encode("utf-8")
+        )
+        expected_knowledge_topics = []
+        for source in review_package["topics"]:
+            start_word = word_by_id[source["word_start_id"]]
+            end_word = word_by_id[source["word_end_id"]]
+            expected_knowledge_topics.append(
+                {
+                    "concept_refs": [],
+                    "evidence_refs": source["evidence_refs"],
+                    "id": source["id"],
+                    "order_scope": {"sequence": source["sequence"]},
+                    "provenance": {
+                        **provenance,
+                        "source_status": "product_review_required",
+                    },
+                    "seminar_id": source["seminar_id"],
+                    "source_scope": {
+                        "order_end": source["word_end_sequence"],
+                        "order_start": source["word_start_sequence"],
+                        "source_ids": [source["source_id"]],
+                        "transcript_revision_ids": [
+                            source["transcript_revision_id"]
+                        ],
+                    },
+                    "status": "PROVISIONAL",
+                    "summary": source["proposed_summary"],
+                    "temporal_scope": {
+                        "end_seconds": end_word["end_seconds"],
+                        "start_seconds": start_word["start_seconds"],
+                    },
+                    "title": source["proposed_title"],
+                    "version": 1,
+                }
+            )
+        expected_canonical_knowledge = {
+            "artifact_id": (
+                "artifact_project_knowledge_input_integra_r6_actual_v1_canonical_v1"
+            ),
+            "artifact_type": "seminartext.canonical_knowledge",
+            "canonical_evidence": {
+                "artifact_id": generated_bundle["artifact_id"],
+                "path": "knowledge/canonical_evidence.json",
+                "schema_version": generated_bundle["schema_version"],
+                "sha256": pretty_hash(generated_bundle),
+            },
+            "concepts": [],
+            "project": {
+                "id": project_id,
+                "provenance": provenance,
+                "status": "PROVISIONAL",
+                "title": upstream_bundle["project"]["title"],
+                "version": 1,
+            },
+            "relation_type_registry": [
+                {
+                    "description": "The source concept provides support for the target claim.",
+                    "id": "supports",
+                },
+                {
+                    "description": "The source and target claims are explicitly competing or conflicting.",
+                    "id": "contradicts",
+                },
+                {
+                    "description": "The source concept narrows or elaborates the target concept.",
+                    "id": "refines",
+                },
+                {
+                    "description": "The source concept requires the target concept as a prerequisite.",
+                    "id": "depends_on",
+                },
+                {
+                    "description": "The source and target concepts are associated without an inferred ontology.",
+                    "id": "associated_with",
+                },
+            ],
+            "relations": [],
+            "review_decisions": [],
+            "schema_version": "1.0.0",
+            "seminars": [
+                {
+                    "id": "seminar_integra_r6_core_alpha",
+                    "project_id": project_id,
+                    "provenance": provenance,
+                    "status": "PROVISIONAL",
+                    "title": "Integra R6 Core Alpha",
+                    "topic_refs": [item["id"] for item in review_package["topics"]],
+                    "version": 1,
+                }
+            ],
+            "source_evidence": {
+                "artifact_id": source_evidence["artifact_id"],
+                "path": "knowledge/source_evidence.json",
+                "schema_version": source_evidence["schema_version"],
+                "sha256": pretty_hash(source_evidence),
+            },
+            "topics": expected_knowledge_topics,
+            "version": 1,
+        }
+        canonical_knowledge = document["stage_data"]["canonical_knowledge_document"]
+        if canonical_knowledge != expected_canonical_knowledge:
+            raise CoreAlphaError("knowledge: canonical knowledge differs from review")
+
+        expected_coverage = {
+            "artifact_type": "seminartext.project_knowledge_coverage",
+            "full_seminar_coverage": True,
+            "project_id": project_id,
+            "schema_version": 1,
+            "sources": [
+                {
+                    "evidence_ids": sorted(
+                        item["id"]
+                        for item in review_package["evidence"]
+                        if item["source_id"] == source["id"]
+                    ),
+                    "reason": (
+                        "Machine-assisted provisional Topic and exact source evidence "
+                        "are supplied; semantic review remains required."
+                    ),
+                    "source_id": source["id"],
+                    "status": "COVERED",
+                    "topic_ids": sorted(
+                        item["id"]
+                        for item in review_package["topics"]
+                        if item["source_id"] == source["id"]
+                    ),
+                    "transcript_revision_ids": sorted(
+                        item["id"]
+                        for item in upstream_bundle["transcript_revisions"]
+                        if item["source_id"] == source["id"]
+                    ),
+                    "word_count": sum(
+                        1 for item in words if item["source_id"] == source["id"]
+                    ),
+                }
+                for source in upstream_bundle["sources"]
+            ],
+        }
+        if document["stage_data"]["coverage_document"] != expected_coverage:
+            raise CoreAlphaError("knowledge: coverage differs from upstream review")
 
     @staticmethod
     def _reject_semantic_promotion(stage: str, value: Any) -> None:

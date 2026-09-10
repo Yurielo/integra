@@ -9,6 +9,7 @@ from pathlib import Path
 from integra_core.core_alpha import (
     CoreAlphaError,
     CoreAlphaPipeline,
+    EXPECTED_REAL_COMPONENT_MODELS,
     ReplayStageWorker,
     STAGE_ORDER,
     StageOutput,
@@ -71,6 +72,7 @@ class CoreAlphaTests(unittest.TestCase):
         self.assertEqual(result["artifacts"]["transcript"]["origin"]["component_id"], "videotext")
         self.assertEqual(result["artifacts"]["topics"]["origin"]["component_id"], "seminartext")
         self.assertEqual(result["artifacts"]["media_clip"]["origin"]["component_id"], "videotext")
+        self.assertTrue(result["artifacts"]["media_clip"]["relative_path"].endswith(".bin"))
         expected_parents = [
             result["artifacts"][name]["artifact_id"]
             for name in ("transcript", "topics", "review")
@@ -172,6 +174,16 @@ class CoreAlphaTests(unittest.TestCase):
         link.symlink_to(self.source)
         with self.assertRaisesRegex(CoreAlphaError, "not a symlink"):
             self.pipeline.run(link)
+
+    def test_source_symlinked_ancestor_is_rejected(self):
+        actual = self.root / "actual"
+        actual.mkdir()
+        source = actual / "video.mp4"
+        source.write_bytes(b"video")
+        alias = self.root / "alias"
+        alias.symlink_to(actual, target_is_directory=True)
+        with self.assertRaisesRegex(CoreAlphaError, "not a symlink"):
+            self.pipeline.run(alias / "video.mp4")
 
     def test_symlinked_project_directory_cannot_escape_store(self):
         source_hash = hashlib.sha256(self.source.read_bytes()).hexdigest()
@@ -400,6 +412,299 @@ class CoreAlphaTests(unittest.TestCase):
         with self.assertRaisesRegex(CoreAlphaError, "local-video extension"):
             self.pipeline.run(source)
 
+    def test_real_media_pipeline_requires_exact_model_identities(self):
+        models = copy.deepcopy(EXPECTED_REAL_COMPONENT_MODELS)
+        models["seminartext"][0]["identity_sha256"] = "0" * 64
+        with self.assertRaisesRegex(CoreAlphaError, "exact component model pins"):
+            CoreAlphaPipeline(
+                repository_root=ROOT,
+                store_root=self.root / "actual-store",
+                controller_identity=self.controller,
+                worker=ReplayStageWorker(copy.deepcopy(self.fixture)),
+                execution_mode="PINNED_REAL_MEDIA",
+                component_models=models,
+            )
+
+    def test_real_review_is_bound_to_transcript_topic_and_model_parents(self):
+        source_hash = "a" * 64
+        text_hash = hashlib.sha256(b"text").hexdigest()
+        transcript = {
+            "result": {"text_sha256": text_hash},
+            "stage_data": {"transcript_text": "text"},
+        }
+        topics = {
+            "stage_data": {"topics_document": {
+                "model": "gemma3:4b",
+                "topics": [{"title": "title", "summary": "summary", "semantic_status": "REVIEW_REQUIRED"}],
+            }}
+        }
+        review = {
+            "stage_data": {
+                "canonical_bundle": {
+                    "sources": [{"content_sha256": source_hash}],
+                    "transcript_revisions": [{"id": "revision", "canonical_text": "text", "text_sha256": text_hash}],
+                    "alignment_runs": [{
+                        "model": "ggml-large-v3.bin",
+                        "model_sha256": EXPECTED_REAL_COMPONENT_MODELS["videotext"][0]["identity_sha256"],
+                        "source_content_sha256": source_hash,
+                        "transcript_text_sha256": text_hash,
+                        "transcript_revision_id": "revision",
+                    }],
+                },
+                "draft_input_document": {
+                    "topics": [{"proposed_title": "title", "proposed_summary": "summary", "lifecycle_status": "REVIEW_REQUIRED"}]
+                },
+            }
+        }
+        CoreAlphaPipeline._validate_review_upstream(review, transcript, topics, source_hash)
+        for path, value in (
+            (("canonical_bundle", "transcript_revisions", 0, "canonical_text"), "changed"),
+            (("canonical_bundle", "alignment_runs", 0, "model_sha256"), "0" * 64),
+            (("draft_input_document", "topics", 0, "proposed_title"), "changed"),
+        ):
+            mutated = copy.deepcopy(review)
+            target = mutated["stage_data"]
+            for key in path[:-1]:
+                target = target[key]
+            target[path[-1]] = value
+            with self.subTest(path=path):
+                with self.assertRaises(CoreAlphaError):
+                    CoreAlphaPipeline._validate_review_upstream(
+                        mutated, transcript, topics, source_hash
+                    )
+
+    def test_real_knowledge_is_bound_to_review_semantics(self):
+        canonical_text = "one two"
+        review_topic = {
+            "id": "topic_integra_r6_001",
+            "proposed_title": "title",
+            "proposed_summary": "summary",
+            "sequence": 0,
+            "seminar_id": "seminar_integra_r6_core_alpha",
+            "source_id": "source",
+            "topic_set_id": "set",
+            "transcript_revision_id": "revision",
+            "word_start_id": "word-0",
+            "word_end_id": "word-1",
+            "word_start_sequence": 0,
+            "word_end_sequence": 1,
+            "evidence_refs": ["evidence"],
+        }
+        evidence = {
+            "id": "evidence",
+            "claim": "claim",
+            "locator": {"type": "time_interval", "start_seconds": 0.1, "end_seconds": 0.9},
+            "quote": canonical_text,
+            "source_id": "source",
+            "transcript_revision_id": "revision",
+            "word_start_id": "word-0",
+            "word_end_id": "word-1",
+        }
+        bundle = {
+            "artifact_id": "upstream",
+            "schema_version": "1.0.0",
+            "project": {"id": "project", "title": "Project"},
+            "sources": [{"id": "source"}],
+            "transcript_revisions": [{
+                "canonical_text": canonical_text,
+                "id": "revision",
+                "source_id": "source",
+            }],
+            "words": [
+                {
+                    "alignment_status": "aligned",
+                    "char_start": 0,
+                    "char_end": 3,
+                    "end_seconds": 0.4,
+                    "id": "word-0",
+                    "sequence": 0,
+                    "source_id": "source",
+                    "start_seconds": 0.1,
+                    "transcript_revision_id": "revision",
+                },
+                {
+                    "alignment_status": "aligned",
+                    "char_start": 4,
+                    "char_end": 7,
+                    "end_seconds": 0.9,
+                    "id": "word-1",
+                    "sequence": 1,
+                    "source_id": "source",
+                    "start_seconds": 0.5,
+                    "transcript_revision_id": "revision",
+                },
+            ],
+            "benchmark_segments": [{
+                "id": "segment",
+                "transcript_revision_id": "revision",
+                "word_start_id": "word-0",
+                "word_end_id": "word-1",
+            }],
+            "topics": [],
+            "evidence_refs": [],
+        }
+        generated_topic = {
+            "benchmark_segment_ids": ["segment"],
+            "id": "topic_integra_r6_001",
+            "lifecycle_status": "active",
+            "origin": "semi_automatic",
+            "sequence": 0,
+            "title": "title",
+            "topic_set_id": "set",
+            "transcript_revision_id": "revision",
+            "word_end_id": "word-1",
+            "word_start_id": "word-0",
+        }
+        generated_evidence = {
+            "id": "evidence",
+            "lifecycle_status": "verified",
+            "locator": evidence["locator"],
+            "project_id": "project",
+            "source_id": "source",
+            "target": {"entity_id": "word-0", "entity_type": "word"},
+            "transcript_revision_id": "revision",
+        }
+        knowledge_topic = {
+            "concept_refs": [],
+            "evidence_refs": ["evidence"],
+            "id": "topic_integra_r6_001",
+            "order_scope": {"sequence": 0},
+            "provenance": {
+                "origin": "derived",
+                "source_artifact_id": "project_knowledge_input_integra_r6_actual_v1",
+                "source_status": "product_review_required",
+            },
+            "seminar_id": "seminar_integra_r6_core_alpha",
+            "source_scope": {
+                "source_ids": ["source"],
+                "transcript_revision_ids": ["revision"],
+                "order_start": 0,
+                "order_end": 1,
+            },
+            "status": "PROVISIONAL",
+            "summary": "summary",
+            "temporal_scope": {"start_seconds": 0.1, "end_seconds": 0.9},
+            "title": "title",
+            "version": 1,
+        }
+        review = {
+            "stage_data": {
+                "canonical_bundle": bundle,
+                "review_package": {"topics": [review_topic], "evidence": [evidence]},
+            }
+        }
+        generated_bundle = {
+            **{key: value for key, value in bundle.items() if key not in {"artifact_id", "topics", "evidence_refs"}},
+            "artifact_id": "generated",
+            "topics": [generated_topic],
+            "evidence_refs": [generated_evidence],
+        }
+        provenance = {
+            "origin": "derived",
+            "source_artifact_id": "project_knowledge_input_integra_r6_actual_v1",
+        }
+        source_evidence = {
+            "artifact_id": "artifact_project_knowledge_input_integra_r6_actual_v1_evidence",
+            "artifact_type": "seminartext.project_knowledge_evidence",
+            "concepts": [],
+            "evidence": [{
+                "canonical_source_id": "source",
+                "canonical_transcript_revision_id": "revision",
+                "canonical_word_end_id": "word-1",
+                "canonical_word_start_id": "word-0",
+                "claim": "claim",
+                "id": "evidence",
+                "locator": evidence["locator"],
+                "quote": canonical_text,
+                "timing_status": "aligned_word_range",
+                "unaligned_word_ids": [],
+            }],
+            "schema_version": "1.0.0",
+            "source_input_artifact_id": "project_knowledge_input_integra_r6_actual_v1",
+            "topics": [{"id": "topic_integra_r6_001"}],
+        }
+        canonical_hash = lambda value: hashlib.sha256(
+            (json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode()
+        ).hexdigest()
+        relation_registry = [
+            {"description": "The source concept provides support for the target claim.", "id": "supports"},
+            {"description": "The source and target claims are explicitly competing or conflicting.", "id": "contradicts"},
+            {"description": "The source concept narrows or elaborates the target concept.", "id": "refines"},
+            {"description": "The source concept requires the target concept as a prerequisite.", "id": "depends_on"},
+            {"description": "The source and target concepts are associated without an inferred ontology.", "id": "associated_with"},
+        ]
+        canonical_knowledge = {
+            "artifact_id": "artifact_project_knowledge_input_integra_r6_actual_v1_canonical_v1",
+            "artifact_type": "seminartext.canonical_knowledge",
+            "canonical_evidence": {
+                "artifact_id": "generated",
+                "path": "knowledge/canonical_evidence.json",
+                "schema_version": generated_bundle["schema_version"],
+                "sha256": canonical_hash(generated_bundle),
+            },
+            "concepts": [],
+            "project": {"id": "project", "provenance": provenance, "status": "PROVISIONAL", "title": "Project", "version": 1},
+            "relation_type_registry": relation_registry,
+            "relations": [],
+            "review_decisions": [],
+            "schema_version": "1.0.0",
+            "seminars": [{
+                "id": "seminar_integra_r6_core_alpha",
+                "project_id": "project",
+                "provenance": provenance,
+                "status": "PROVISIONAL",
+                "title": "Integra R6 Core Alpha",
+                "topic_refs": ["topic_integra_r6_001"],
+                "version": 1,
+            }],
+            "source_evidence": {
+                "artifact_id": source_evidence["artifact_id"],
+                "path": "knowledge/source_evidence.json",
+                "schema_version": "1.0.0",
+                "sha256": canonical_hash(source_evidence),
+            },
+            "topics": [knowledge_topic],
+            "version": 1,
+        }
+        coverage = {
+            "artifact_type": "seminartext.project_knowledge_coverage",
+            "full_seminar_coverage": True,
+            "project_id": "project",
+            "schema_version": 1,
+            "sources": [{
+                "evidence_ids": ["evidence"],
+                "reason": "Machine-assisted provisional Topic and exact source evidence are supplied; semantic review remains required.",
+                "source_id": "source",
+                "status": "COVERED",
+                "topic_ids": ["topic_integra_r6_001"],
+                "transcript_revision_ids": ["revision"],
+                "word_count": 2,
+            }],
+        }
+        document = {
+            "stage_data": {
+                "canonical_evidence_document": generated_bundle,
+                "canonical_knowledge_document": canonical_knowledge,
+                "coverage_document": coverage,
+            }
+        }
+        CoreAlphaPipeline._validate_knowledge_upstream(document, review)
+        for target, field in (
+            ("canonical_evidence_document", "topics"),
+            ("canonical_knowledge_document", "project"),
+            ("coverage_document", "project_id"),
+        ):
+            mutated = copy.deepcopy(document)
+            if field == "topics":
+                mutated["stage_data"][target][field][0]["title"] = "fabricated"
+            elif field == "project":
+                mutated["stage_data"][target][field]["title"] = "fabricated"
+            else:
+                mutated["stage_data"][target][field] = "fabricated"
+            with self.subTest(target=target):
+                with self.assertRaises(CoreAlphaError):
+                    CoreAlphaPipeline._validate_knowledge_upstream(mutated, review)
+
     def test_resume_rejects_changed_lineage(self):
         cancelled = self.pipeline.run(
             self.source, cancel_requested=lambda stage: stage == "topics"
@@ -476,6 +781,41 @@ class CoreAlphaTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(CoreAlphaError, "project lease conflict"):
             pipeline.run(self.source)
+
+    def test_worker_can_refresh_project_lease_during_each_stage(self):
+        delegate = ReplayStageWorker(copy.deepcopy(self.fixture))
+
+        class HeartbeatWorker:
+            def __init__(inner_self):
+                inner_self.callback = None
+                inner_self.refreshes = 0
+
+            def set_lease_heartbeat(inner_self, callback):
+                inner_self.callback = callback
+
+            def run(inner_self, stage, capability, component, inputs):
+                self.assertIsNotNone(inner_self.callback)
+                inner_self.callback()
+                inner_self.refreshes += 1
+                return delegate.run(stage, capability, component, inputs)
+
+        worker = HeartbeatWorker()
+        pipeline = CoreAlphaPipeline(
+            repository_root=ROOT,
+            store_root=self.store,
+            controller_identity=self.controller,
+            worker=worker,
+            writer_identity={
+                "component_id": "integra_control_plane",
+                "host_id": "test-host",
+                "process_id": 100,
+                "process_start_token": "test-process",
+            },
+            clock=lambda: datetime(2026, 9, 10, 17, 0, tzinfo=timezone.utc),
+        )
+        self.assertEqual(pipeline.run(self.source)["status"], "SUCCEEDED")
+        self.assertEqual(worker.refreshes, len(STAGE_ORDER))
+        self.assertIsNone(worker.callback)
 
 
 if __name__ == "__main__":
