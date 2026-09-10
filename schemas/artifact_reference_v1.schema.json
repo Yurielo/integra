@@ -23,6 +23,9 @@
     "kind": { "type": "string", "minLength": 1 },
     "schema_id": { "type": "string", "minLength": 1 },
     "schema_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+$" },
+    "semantic_status": {
+      "enum": ["NOT_APPLICABLE", "PROVISIONAL", "REVIEW_REQUIRED"]
+    },
     "content_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
     "size_bytes": { "type": "integer", "minimum": 0 },
     "storage_scope": { "enum": ["INTEGRA_STORE", "SOURCE_READ_ONLY"] },

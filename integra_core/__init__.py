@@ -2,6 +2,13 @@
 
 from .adapter import AdapterPreconditionError, CapabilitySpec, LocalComponentAdapter
 from .benchmark import BenchmarkValidationError, validate_benchmark_record
+from .core_alpha import (
+    CoreAlphaError,
+    CoreAlphaPipeline,
+    ReplayStageWorker,
+    StageOutput,
+    validate_core_alpha_manifest,
+)
 from .identity import CollisionDecision, derive_imported_id, resolve_collision
 from .project_lease import (
     LeaseConflict,
@@ -28,6 +35,8 @@ __all__ = [
     "BenchmarkValidationError",
     "CapabilitySpec",
     "CollisionDecision",
+    "CoreAlphaError",
+    "CoreAlphaPipeline",
     "CompatibilityError",
     "IdempotencyDecision",
     "IdempotencyLedger",
@@ -35,6 +44,8 @@ __all__ = [
     "LeaseStore",
     "LocalComponentAdapter",
     "RecoveryDecision",
+    "ReplayStageWorker",
+    "StageOutput",
     "ProgressTracker",
     "ProtocolViolation",
     "derive_imported_id",
@@ -44,6 +55,7 @@ __all__ = [
     "resolve_collision",
     "validate_artifact_reference",
     "validate_benchmark_record",
+    "validate_core_alpha_manifest",
     "validate_message",
     "validate_resume_binding",
     "validate_resume_token",

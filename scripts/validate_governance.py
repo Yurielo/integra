@@ -15,6 +15,7 @@ from integra_core.benchmark import (  # noqa: E402
     sha256_file,
     validate_benchmark_record,
 )
+from integra_core.core_alpha import ReplayStageWorker  # noqa: E402
 from scripts.check_agents import load_registry, validate_agent_team  # noqa: E402
 
 
@@ -37,6 +38,9 @@ CAPABILITY_BENCHMARK_RAW_PATH = ROOT / "state" / "capability_benchmark_raw_v1.js
 CAPABILITY_BENCHMARK_SCHEMA_PATH = ROOT / "schemas" / "capability_benchmark_v1.schema.json"
 AGENT_TEAM_PATH = ROOT / "state" / "agent_team_v1.json"
 AGENT_TEAM_SCHEMA_PATH = ROOT / "schemas" / "agent_team_v1.schema.json"
+CORE_ALPHA_PATH = ROOT / "state" / "core_alpha_v1.json"
+CORE_ALPHA_EVIDENCE_SCHEMA_PATH = ROOT / "schemas" / "core_alpha_evidence_v1.schema.json"
+CORE_ALPHA_MANIFEST_SCHEMA_PATH = ROOT / "schemas" / "core_alpha_manifest_v1.schema.json"
 
 REQUIRED_DOCUMENTS = (
     "README.md",
@@ -79,6 +83,13 @@ REQUIRED_DOCUMENTS = (
     "schemas/agent_team_v1.schema.json",
     "state/agent_team_v1.json",
     "scripts/check_agents.py",
+    "docs/baselines/R6_CORE_ALPHA_CERTIFICATION.md",
+    "schemas/core_alpha_evidence_v1.schema.json",
+    "schemas/core_alpha_manifest_v1.schema.json",
+    "state/core_alpha_v1.json",
+    "integra_core/core_alpha.py",
+    "scripts/run_core_alpha.py",
+    "tests/fixtures/core_alpha_v1/worker_outputs.json",
 )
 
 REQUIRED_MODULES = {
@@ -148,6 +159,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("capability_benchmark_evidence must pin the R5 acceptance record")
     if state.get("agent_team_contract") != "state/agent_team_v1.json":
         errors.append("agent_team_contract must pin the governed agent registry")
+    if state.get("core_alpha_evidence") != "state/core_alpha_v1.json":
+        errors.append("core_alpha_evidence must pin the R6 acceptance record")
 
     execution_policy = state.get("execution_policy", {})
     expected_policy = {
@@ -197,7 +210,7 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
 
     positions = {entry.get("id"): index for index, entry in enumerate(roadmap)}
     statuses = {entry.get("id"): entry.get("status") for entry in roadmap}
-    for accepted_id in ("R0", "R1", "R2", "R3", "R4", "R5"):
+    for accepted_id in ("R0", "R1", "R2", "R3", "R4", "R5", "R6"):
         if statuses.get(accepted_id) != "ACCEPTED":
             errors.append(f"{accepted_id} must remain ACCEPTED")
     for entry in roadmap:
@@ -445,6 +458,82 @@ def validate_capability_benchmark(evidence: dict, baselines: dict, root: Path = 
     return errors
 
 
+def validate_core_alpha_evidence(evidence: dict, root: Path = ROOT) -> list[str]:
+    errors: list[str] = []
+    expected_top_level = {
+        "schema_version",
+        "status",
+        "issue",
+        "pipeline",
+        "execution_mode",
+        "manifest_schema",
+        "fixture",
+        "component_baselines",
+        "capability_selections",
+        "acceptance",
+        "limitations",
+    }
+    if not isinstance(evidence, dict) or set(evidence) != expected_top_level:
+        return ["R6 evidence fields must match the v1 contract"]
+    expected_values = {
+        "schema_version": "1.0",
+        "status": "PASS",
+        "issue": 8,
+        "pipeline": "INTEGRA_CORE_ALPHA_V1",
+        "execution_mode": "CONTRACT_REPLAY",
+        "manifest_schema": "schemas/core_alpha_manifest_v1.schema.json",
+        "component_baselines": "state/component_baselines_v1.json",
+        "capability_selections": "state/capability_benchmark_v1.json",
+    }
+    for field, expected in expected_values.items():
+        if evidence.get(field) != expected:
+            errors.append(f"R6 evidence has invalid {field}")
+    fixture = evidence.get("fixture", {})
+    if not isinstance(fixture, dict) or set(fixture) != {"path", "sha256"}:
+        errors.append("R6 fixture reference is invalid")
+    else:
+        fixture_path = root / fixture.get("path", "")
+        if not fixture_path.is_file():
+            errors.append("R6 replay fixture is missing")
+        elif sha256_file(fixture_path) != fixture.get("sha256"):
+            errors.append("R6 replay fixture hash differs from the governed record")
+        else:
+            try:
+                ReplayStageWorker(load_json(fixture_path))
+            except (OSError, json.JSONDecodeError, ValueError, RuntimeError) as error:
+                errors.append(f"R6 replay fixture is invalid: {error}")
+    expected_acceptance = {
+        "stage_sequence_complete": True,
+        "exact_artifact_lineage": True,
+        "pinned_component_identities": True,
+        "project_lease_enforced": True,
+        "concurrent_writer_blocked": True,
+        "store_path_symlinks_rejected": True,
+        "stage_output_contract_enforced": True,
+        "manifest_provenance_revalidated": True,
+        "cancellation_checkpoint": True,
+        "resume_revalidates_source_component_artifact_and_lineage": True,
+        "deterministic_outputs": True,
+        "semantic_authority": "PROVISIONAL_ONLY",
+        "semantic_status_persisted_and_payload_checked": True,
+        "source_repositories_changed": False,
+        "protected_data_accessed": False,
+        "gold_accessed": False,
+        "external_actions_performed": False,
+    }
+    if evidence.get("acceptance") != expected_acceptance:
+        errors.append("R6 acceptance evidence differs from the fail-closed contract")
+    limitations = evidence.get("limitations")
+    if (
+        not isinstance(limitations, list)
+        or len(limitations) < 3
+        or len(limitations) != len(set(limitations))
+        or not all(isinstance(item, str) and item for item in limitations)
+    ):
+        errors.append("R6 limitations must contain at least three unique statements")
+    return errors
+
+
 def main() -> int:
     state = load_json(STATE_PATH)
     baselines = load_json(BASELINES_PATH)
@@ -453,6 +542,7 @@ def main() -> int:
     adapter_spike = load_json(ADAPTER_SPIKE_PATH)
     capability_benchmark = load_json(CAPABILITY_BENCHMARK_PATH)
     agent_team = load_registry(AGENT_TEAM_PATH)
+    core_alpha = load_json(CORE_ALPHA_PATH)
     load_json(SCHEMA_PATH)
     load_json(BASELINES_SCHEMA_PATH)
     load_json(OWNERSHIP_SCHEMA_PATH)
@@ -464,6 +554,8 @@ def main() -> int:
     load_json(ADAPTER_REPORT_SCHEMA_PATH)
     load_json(CAPABILITY_BENCHMARK_SCHEMA_PATH)
     load_json(AGENT_TEAM_SCHEMA_PATH)
+    load_json(CORE_ALPHA_EVIDENCE_SCHEMA_PATH)
+    load_json(CORE_ALPHA_MANIFEST_SCHEMA_PATH)
     errors = (
         validate_state(state)
         + validate_component_baselines(baselines)
@@ -472,6 +564,7 @@ def main() -> int:
         + validate_adapter_spike(adapter_spike, baselines)
         + validate_capability_benchmark(capability_benchmark, baselines)
         + validate_agent_team(agent_team)
+        + validate_core_alpha_evidence(core_alpha)
     )
     if errors:
         print("INTEGRA_GOVERNANCE_VALIDATION: FAIL")
@@ -495,6 +588,8 @@ def main() -> int:
     print(f"R5_CAPABILITY_GROUPS: {len(capability_benchmark['capabilities'])}")
     print(f"AGENT_TEAM_ROLES: {len(agent_team['roles'])}")
     print(f"LEAD_AGENT: {agent_team['lead_agent']}")
+    print(f"R6_CORE_ALPHA: {core_alpha['status']}")
+    print(f"R6_EXECUTION_MODE: {core_alpha['execution_mode']}")
     return 0
 
 

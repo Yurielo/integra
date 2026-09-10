@@ -550,6 +550,13 @@ Implement one bounded local-video path:
 
 Both source applications remain independently usable.
 
+The first accepted slice is a dependency-free `CONTRACT_REPLAY` of this full
+control-plane path. It proves pinned component routing, exact content-addressed
+lineage, Project Lease enforcement, cancellation, deterministic checkpoints,
+and fail-closed resume without claiming real model inference, rendering, or
+semantic quality. Later integration and release layers retain those real-media
+acceptance obligations.
+
 ### R7 — Read-only Import and Copy-on-write Migration
 
 Open representative existing SeminarText and VideoText projects, produce a

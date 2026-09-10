@@ -185,11 +185,22 @@ def validate_artifact_reference(reference: dict[str, Any]) -> None:
         "origin",
         "provenance",
     }
-    _require_object_fields(reference, required, required, "artifact reference")
+    _require_object_fields(
+        reference,
+        required,
+        required | {"semantic_status"},
+        "artifact reference",
+    )
     _require_urn(reference["artifact_id"], "artifact_id")
     for field in ("kind", "schema_id", "schema_version"):
         if not isinstance(reference[field], str) or not reference[field]:
             raise ProtocolViolation(f"artifact {field} must be non-empty")
+    if "semantic_status" in reference and reference["semantic_status"] not in {
+        "NOT_APPLICABLE",
+        "PROVISIONAL",
+        "REVIEW_REQUIRED",
+    }:
+        raise ProtocolViolation("artifact semantic_status is invalid")
     if not VERSION_PATTERN.fullmatch(reference["schema_version"]):
         raise ProtocolViolation("artifact schema_version must use numeric major.minor form")
     _require_sha256(reference["content_sha256"], "artifact content hash")

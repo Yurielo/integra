@@ -37,6 +37,9 @@ class GovernanceValidationTests(unittest.TestCase):
         cls.agent_team = json.loads(
             (ROOT / "state" / "agent_team_v1.json").read_text(encoding="utf-8")
         )
+        cls.core_alpha = json.loads(
+            (ROOT / "state" / "core_alpha_v1.json").read_text(encoding="utf-8")
+        )
 
     def test_repository_state_is_valid(self):
         self.assertEqual(VALIDATOR.validate_state(self.state), [])
@@ -75,6 +78,35 @@ class GovernanceValidationTests(unittest.TestCase):
         errors = VALIDATOR.validate_state(state)
         self.assertIn(
             "agent_team_contract must pin the governed agent registry", errors
+        )
+
+    def test_core_alpha_evidence_is_pinned(self):
+        state = copy.deepcopy(self.state)
+        state["core_alpha_evidence"] = "state/other.json"
+        errors = VALIDATOR.validate_state(state)
+        self.assertIn(
+            "core_alpha_evidence must pin the R6 acceptance record", errors
+        )
+
+    def test_core_alpha_evidence_is_valid(self):
+        self.assertEqual(
+            VALIDATOR.validate_core_alpha_evidence(self.core_alpha), []
+        )
+
+    def test_core_alpha_cannot_claim_semantic_acceptance(self):
+        evidence = copy.deepcopy(self.core_alpha)
+        evidence["acceptance"]["semantic_authority"] = "ACCEPTED"
+        errors = VALIDATOR.validate_core_alpha_evidence(evidence)
+        self.assertIn(
+            "R6 acceptance evidence differs from the fail-closed contract", errors
+        )
+
+    def test_core_alpha_fixture_hash_is_bound(self):
+        evidence = copy.deepcopy(self.core_alpha)
+        evidence["fixture"]["sha256"] = "0" * 64
+        errors = VALIDATOR.validate_core_alpha_evidence(evidence)
+        self.assertIn(
+            "R6 replay fixture hash differs from the governed record", errors
         )
 
     def test_unknown_dependency_fails(self):

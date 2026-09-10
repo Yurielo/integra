@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Yurielo/integra/schemas/core_alpha_manifest_v1.schema.json",
+  "title": "Integra Core Alpha manifest v1",
+  "type": "object",
+  "required": [
+    "schema_version", "pipeline", "execution_mode", "project_id",
+    "source_sha256", "status", "next_stage", "stage_order",
+    "completed_stages", "artifacts", "component_identities", "r5_selections",
+    "semantic_authority", "project_lease_enforced",
+    "external_actions_performed", "source_repositories_changed",
+    "protected_data_accessed"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "pipeline": {"const": "INTEGRA_CORE_ALPHA_V1"},
+    "execution_mode": {"const": "CONTRACT_REPLAY"},
+    "project_id": {"type": "string", "pattern": "^urn:integra:project:"},
+    "source_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "status": {"enum": ["IN_PROGRESS", "CANCELLED", "SUCCEEDED"]},
+    "next_stage": {"type": ["string", "null"]},
+    "stage_order": {"const": ["transcript", "topics", "review", "knowledge", "media_clip"]},
+    "completed_stages": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "artifacts": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {"enum": ["source", "transcript", "topics", "review", "knowledge", "media_clip"]},
+      "additionalProperties": {"$ref": "artifact_reference_v1.schema.json"}
+    },
+    "component_identities": {
+      "type": "object",
+      "required": ["integra_control_plane", "seminartext", "videotext"],
+      "properties": {
+        "integra_control_plane": {"$ref": "component_identity_v1.schema.json"},
+        "seminartext": {"$ref": "component_identity_v1.schema.json"},
+        "videotext": {"$ref": "component_identity_v1.schema.json"}
+      },
+      "additionalProperties": false
+    },
+    "r5_selections": {
+      "type": "object",
+      "required": ["asr", "topics", "review_mechanics", "quality_validation"],
+      "properties": {
+        "asr": {"type": "object"},
+        "topics": {"type": "object"},
+        "review_mechanics": {"type": "object"},
+        "quality_validation": {"type": "object"}
+      },
+      "additionalProperties": false
+    },
+    "semantic_authority": {"const": "PROVISIONAL_ONLY"},
+    "project_lease_enforced": {"const": true},
+    "external_actions_performed": {"const": false},
+    "source_repositories_changed": {"const": false},
+    "protected_data_accessed": {"const": false}
+  },
+  "additionalProperties": false
+}
