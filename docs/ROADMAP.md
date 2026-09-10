@@ -4,6 +4,11 @@ Source plan: `docs/INTEGRA_PLAN.md`
 
 Program Epic: [GitHub Issue #1](https://github.com/Yurielo/integra/issues/1)
 
+Delivery is coordinated by the governed nine-role agent team defined in
+[`AGENT_TEAM_OPERATING_MODEL.md`](architecture/AGENT_TEAM_OPERATING_MODEL.md).
+`product-owner` is the lead agent; specialist activation is risk-based and does
+not add routine human gates or change stage dependencies.
+
 | Stage | Issue | Milestone | Depends on | Current state |
 | --- | ---: | --- | --- | --- |
 | R0 Product definition and governance | #2 | M0 | — | ACCEPTED |

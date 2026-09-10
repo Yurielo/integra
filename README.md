@@ -17,6 +17,8 @@ their authoritative artifacts.
 - [Executable roadmap](docs/ROADMAP.md)
 - [Development workflow](DEVELOPMENT_WORKFLOW.md)
 - [Continuous autonomous execution policy](docs/AUTONOMOUS_EXECUTION_POLICY.md)
+- [Agent team operating model](docs/architecture/AGENT_TEAM_OPERATING_MODEL.md)
+- [Machine-readable agent registry](state/agent_team_v1.json)
 - [Acceptance criteria](docs/ACCEPTANCE_CRITERIA.md)
 - [Risk register](docs/RISK_REGISTER.md)
 - [Machine-readable state](state/integra_state_v1.json)
@@ -33,6 +35,7 @@ Validate the governance baseline with:
 
 ```bash
 python3 scripts/validate_governance.py
+python3 scripts/check_agents.py
 python3 -m unittest discover -s tests -v
 ```
 
