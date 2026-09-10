@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Yurielo/integra/schemas/component_identity_v1.schema.json",
+  "title": "Integra component identity v1",
+  "type": "object",
+  "required": [
+    "component_id",
+    "repository",
+    "commit_sha",
+    "tree_sha",
+    "version",
+    "contracts",
+    "runtime"
+  ],
+  "properties": {
+    "component_id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]+$" },
+    "repository": { "type": "string", "minLength": 1 },
+    "commit_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "tree_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "version": { "type": "string", "minLength": 1 },
+    "contracts": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "runtime": {
+      "type": "object",
+      "required": ["kind", "version"],
+      "properties": {
+        "kind": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "architecture": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "models": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "identity_sha256"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "identity_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Yurielo/integra/schemas/artifact_reference_v1.schema.json",
+  "title": "Integra artifact reference v1",
+  "type": "object",
+  "required": [
+    "artifact_id",
+    "kind",
+    "schema_id",
+    "schema_version",
+    "content_sha256",
+    "size_bytes",
+    "storage_scope",
+    "relative_path",
+    "origin",
+    "provenance"
+  ],
+  "properties": {
+    "artifact_id": {
+      "type": "string",
+      "pattern": "^urn:integra:[a-z][a-z0-9_]{1,31}:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "kind": { "type": "string", "minLength": 1 },
+    "schema_id": { "type": "string", "minLength": 1 },
+    "schema_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+$" },
+    "content_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "size_bytes": { "type": "integer", "minimum": 0 },
+    "storage_scope": { "enum": ["INTEGRA_STORE", "SOURCE_READ_ONLY"] },
+    "relative_path": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//).+$"
+    },
+    "origin": { "$ref": "component_identity_v1.schema.json" },
+    "provenance": {
+      "type": "object",
+      "required": ["parent_artifact_ids", "operation_id"],
+      "properties": {
+        "parent_artifact_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^urn:integra:[a-z][a-z0-9_]{1,31}:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          }
+        },
+        "operation_id": {
+          "type": "string",
+          "pattern": "^urn:integra:[a-z][a-z0-9_]{1,31}:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "source_locator": { "type": "object" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

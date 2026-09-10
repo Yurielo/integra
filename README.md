@@ -23,6 +23,8 @@ their authoritative artifacts.
 - [R1 baseline certification](docs/baselines/R1_BASELINE_CERTIFICATION.md)
 - [Data ownership and Project Lease](docs/architecture/DATA_OWNERSHIP_AND_PROJECT_LEASE.md)
 - [Machine-readable ownership matrix](state/data_ownership_v1.json)
+- [Local worker and artifact contract](docs/architecture/WORKER_PROTOCOL_V1.md)
+- [Machine-readable worker protocol](state/worker_protocol_v1.json)
 
 Validate the governance baseline with:
 

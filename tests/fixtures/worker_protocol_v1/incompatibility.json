@@ -1,0 +1,6 @@
+{
+  "scenario": "worker selected a protocol not offered by the controller",
+  "expected": "INCOMPATIBLE",
+  "controller_versions": ["1.0"],
+  "worker_versions": ["2.0"]
+}

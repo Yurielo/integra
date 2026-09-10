@@ -1,0 +1,124 @@
+{
+  "scenario": "successful local worker job",
+  "expected": "PASS",
+  "messages": [
+    {
+      "protocol_version": "1.0",
+      "message_id": "urn:integra:message:10000000-0000-0000-0000-000000000001",
+      "correlation_id": "urn:integra:session:10000000-0000-0000-0000-000000000000",
+      "sent_at": "2026-09-10T14:00:00Z",
+      "type": "HANDSHAKE_REQUEST",
+      "payload": {
+        "supported_protocol_versions": ["1.0"],
+        "requested_capabilities": ["canonical_evidence.validate"],
+        "controller": {
+          "component_id": "integra_control_plane",
+          "repository": "Yurielo/integra",
+          "commit_sha": "1111111111111111111111111111111111111111",
+          "tree_sha": "2222222222222222222222222222222222222222",
+          "version": "0.1.0",
+          "contracts": ["worker_protocol_v1"],
+          "runtime": { "kind": "python", "version": "3.12", "architecture": "arm64" }
+        }
+      }
+    },
+    {
+      "protocol_version": "1.0",
+      "message_id": "urn:integra:message:10000000-0000-0000-0000-000000000002",
+      "correlation_id": "urn:integra:session:10000000-0000-0000-0000-000000000000",
+      "sent_at": "2026-09-10T14:00:01Z",
+      "type": "HANDSHAKE_RESPONSE",
+      "payload": {
+        "selected_protocol_version": "1.0",
+        "worker": {
+          "component_id": "seminartext",
+          "repository": "Yurielo/seminartext",
+          "commit_sha": "a94936cd77cde13561c97c804ece1ac1134e01a6",
+          "tree_sha": "5f5951da1d5dcf957ef982510fde3537f601ea15",
+          "version": "4.0.0",
+          "contracts": ["canonical_evidence_v1"],
+          "runtime": { "kind": "python", "version": "3.12", "architecture": "arm64" }
+        },
+        "capabilities": [
+          {
+            "id": "canonical_evidence.validate",
+            "version": "1.0",
+            "input_schema_ids": ["canonical_evidence_v1"],
+            "output_schema_ids": ["validation_report_v1"],
+            "supports_resume": false
+          }
+        ],
+        "compatibility": {
+          "schema_policy": "EXACT_SCHEMA_VERSION",
+          "backward_compatible_protocol_versions": []
+        }
+      }
+    },
+    {
+      "protocol_version": "1.0",
+      "message_id": "urn:integra:message:10000000-0000-0000-0000-000000000003",
+      "correlation_id": "urn:integra:session:10000000-0000-0000-0000-000000000000",
+      "sent_at": "2026-09-10T14:00:02Z",
+      "type": "JOB_REQUEST",
+      "payload": {
+        "job_id": "urn:integra:job:10000000-0000-0000-0000-000000000010",
+        "operation_id": "urn:integra:operation:10000000-0000-0000-0000-000000000011",
+        "idempotency_key": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "capability": "canonical_evidence.validate",
+        "timeout_ms": 30000,
+        "inputs": [
+          {
+            "artifact_id": "urn:integra:artifact:10000000-0000-0000-0000-000000000020",
+            "kind": "canonical_evidence",
+            "schema_id": "canonical_evidence_v1",
+            "schema_version": "1.0",
+            "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "size_bytes": 1024,
+            "storage_scope": "SOURCE_READ_ONLY",
+            "relative_path": "seminartext/evidence/input.json",
+            "origin": {
+              "component_id": "seminartext",
+              "repository": "Yurielo/seminartext",
+              "commit_sha": "a94936cd77cde13561c97c804ece1ac1134e01a6",
+              "tree_sha": "5f5951da1d5dcf957ef982510fde3537f601ea15",
+              "version": "4.0.0",
+              "contracts": ["canonical_evidence_v1"],
+              "runtime": { "kind": "python", "version": "3.12", "architecture": "arm64" }
+            },
+            "provenance": {
+              "parent_artifact_ids": [],
+              "operation_id": "urn:integra:operation:10000000-0000-0000-0000-000000000011"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "protocol_version": "1.0",
+      "message_id": "urn:integra:message:10000000-0000-0000-0000-000000000004",
+      "correlation_id": "urn:integra:session:10000000-0000-0000-0000-000000000000",
+      "sent_at": "2026-09-10T14:00:03Z",
+      "type": "PROGRESS",
+      "payload": {
+        "job_id": "urn:integra:job:10000000-0000-0000-0000-000000000010",
+        "sequence": 1,
+        "fraction": 0.5,
+        "stage": "validating",
+        "eta_ms": 1000
+      }
+    },
+    {
+      "protocol_version": "1.0",
+      "message_id": "urn:integra:message:10000000-0000-0000-0000-000000000005",
+      "correlation_id": "urn:integra:session:10000000-0000-0000-0000-000000000000",
+      "sent_at": "2026-09-10T14:00:04Z",
+      "type": "RESULT",
+      "payload": {
+        "job_id": "urn:integra:job:10000000-0000-0000-0000-000000000010",
+        "operation_id": "urn:integra:operation:10000000-0000-0000-0000-000000000011",
+        "status": "SUCCEEDED",
+        "outputs": []
+      }
+    }
+  ]
+}

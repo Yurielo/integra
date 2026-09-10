@@ -11,6 +11,7 @@
     "component_baseline_manifest",
     "data_ownership_contract",
     "project_lease_schema",
+    "worker_protocol_contract",
     "execution_policy",
     "release_scope",
     "roadmap",
@@ -29,6 +30,9 @@
     },
     "project_lease_schema": {
       "const": "schemas/project_lease_v1.schema.json"
+    },
+    "worker_protocol_contract": {
+      "const": "state/worker_protocol_v1.json"
     },
     "execution_policy": {
       "type": "object",

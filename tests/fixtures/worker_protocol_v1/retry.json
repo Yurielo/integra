@@ -1,0 +1,22 @@
+{
+  "scenario": "explicitly classified retry",
+  "expected": "PASS",
+  "messages": [
+    {
+      "protocol_version": "1.0",
+      "message_id": "urn:integra:message:30000000-0000-0000-0000-000000000001",
+      "correlation_id": "urn:integra:session:30000000-0000-0000-0000-000000000000",
+      "sent_at": "2026-09-10T14:20:00Z",
+      "type": "ERROR",
+      "payload": {
+        "job_id": "urn:integra:job:30000000-0000-0000-0000-000000000010",
+        "code": "WORKER_BUSY",
+        "message": "The selected local worker is temporarily busy.",
+        "classification": "RETRYABLE",
+        "safe_to_retry": true,
+        "retry_after_ms": 1000,
+        "details": { "attempt": 1 }
+      }
+    }
+  ]
+}
