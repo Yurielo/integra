@@ -8,21 +8,27 @@ integration, read these current repository truths:
 2. `docs/architecture/INTEGRA_ARCHITECTURE.md`
 3. `state/integra_state_v1.json`
 4. `DEVELOPMENT_WORKFLOW.md`
+5. `docs/AUTONOMOUS_EXECUTION_POLICY.md`
 
-Work only from an explicitly authorized GitHub Issue or exact Product Owner
-instruction. Open Issues, roadmap order, prior reports, and silence are context,
-not independent authority for protected data, semantic acceptance, external
-publication, destructive migration, source-repository changes, merge, release,
-or credential access.
+Work only from the accepted roadmap, an explicitly authorized GitHub Issue, or
+an exact Product Owner instruction. The accepted roadmap plus satisfied
+dependencies provides standing authority for safe technical delivery under
+`docs/AUTONOMOUS_EXECUTION_POLICY.md`. Open Issues, prior reports, and silence
+are not authority for protected data, semantic acceptance, live external
+publication, destructive migration, source-repository changes, release, or
+credential access.
 
-Within an bounded authorized work, complete all safe deterministic technical
-substeps without routine human dispatch. Stop only at a genuine decision or
-authorization boundary defined in `DEVELOPMENT_WORKFLOW.md`.
+Within bounded authorized work, complete all safe deterministic technical
+substeps without routine human dispatch. Do not ask before the next
+dependency-ready Issue, verified PR merge, post-merge verification, or eligible
+governed local runtime reconciliation. Stop only at a genuine decision or
+authorization boundary defined in `DEVELOPMENT_WORKFLOW.md` and the autonomous
+execution policy.
 
 SeminarText and VideoText are protected source products. Unless the exact task
 explicitly authorizes a source-repository change, treat them as read-only,
 pinned external components. Never overwrite source projects during migration.
 
 Before a PR, run the governance validator, relevant focused tests, the full
-supported suite, and `git diff --check`. Report the exact changed-file scope,
-remaining human gate, and one next step.
+supported suite, and `git diff --check`. Report the exact changed-file scope at
+a genuine gate or final completion; routine reports must not pause execution.

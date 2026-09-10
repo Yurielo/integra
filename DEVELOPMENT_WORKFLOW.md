@@ -10,7 +10,8 @@ conflicting claims:
 2. **Authorization:** the latest explicit Product Owner instruction applicable
    to the exact action.
 3. **Governance:** accepted files on Integra `main`, especially the product
-   definition, architecture, and machine-readable state.
+   definition, architecture, autonomous execution policy, and machine-readable
+   state.
 4. **Evidence only:** Issues, PR discussions, historical reports, plans, and
    conversations that are not themselves current authorization.
 
@@ -29,15 +30,18 @@ or credentials.
 5. Run focused tests, the full supported suite, governance validation, and
    `git diff --check`.
 6. Open a PR with acceptance evidence and explicit source-product impact.
-7. Merge or deploy only when current policy or an exact Product Owner
-   authorization permits the action.
+7. Merge and eligible governed local runtime reconciliation proceed
+   automatically when every fail-closed condition in
+   `docs/AUTONOMOUS_EXECUTION_POLICY.md` is proven. Release and protected or
+   external actions retain their explicit gates.
 
 ## 3. Autonomous technical work
 
 After a bounded task is authorized, Codex continues through safe deterministic
 substeps: inspection, implementation, tests, documentation, local fixtures,
-scope checks, commit, push, and PR preparation. Routine stage completion is not
-a human gate.
+scope checks, commit, push, PR preparation, safe merge, post-merge verification,
+and transition to the next dependency-ready roadmap Issue. Routine stage
+completion is not a human gate.
 
 ## 4. Genuine human gates
 
@@ -50,12 +54,18 @@ Stop only when the next action requires at least one of:
   already covered by an accepted standing policy;
 - destructive or irreversible migration;
 - source-repository modification outside the exact authorized scope;
-- merge, release, deployment, or retirement authority not already granted;
+- release, live deployment/publication, or retirement authority not already
+  granted;
 - resolution of an unexplained conflict, drift, data loss, or ambiguity.
 
 Human review is exception-only. Repeated exceptions should be clustered into a
 single evidence package and one explicit bulk decision whenever authority and
 the review contract permit it.
+
+Verified in-scope PR merge, explained governed local runtime reconciliation,
+Issue closure, CI handling, and roadmap advancement are explicitly not human
+gates. Their exact fail-closed conditions are defined in
+`docs/AUTONOMOUS_EXECUTION_POLICY.md`.
 
 ## 5. Protected source applications
 

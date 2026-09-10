@@ -50,9 +50,17 @@ class GovernanceValidationTests(unittest.TestCase):
         errors = VALIDATOR.validate_state(state)
         self.assertIn("standalone_products_preserved must be true", errors)
 
-    def test_merge_is_not_implicitly_authorized(self):
+    def test_merge_requires_fail_closed_automation_policy(self):
         state = copy.deepcopy(self.state)
         state["execution_policy"]["merge"] = "AUTHORIZED"
+        errors = VALIDATOR.validate_state(state)
+        self.assertIn(
+            "execution_policy does not match the authorized boundary", errors
+        )
+
+    def test_runtime_reconciliation_requires_governed_fail_closed_policy(self):
+        state = copy.deepcopy(self.state)
+        state["execution_policy"]["runtime_reconciliation"] = "UNRESTRICTED"
         errors = VALIDATOR.validate_state(state)
         self.assertIn(
             "execution_policy does not match the authorized boundary", errors

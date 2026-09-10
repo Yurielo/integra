@@ -16,6 +16,7 @@ their authoritative artifacts.
 - [Architecture and authority model](docs/architecture/INTEGRA_ARCHITECTURE.md)
 - [Executable roadmap](docs/ROADMAP.md)
 - [Development workflow](DEVELOPMENT_WORKFLOW.md)
+- [Continuous autonomous execution policy](docs/AUTONOMOUS_EXECUTION_POLICY.md)
 - [Acceptance criteria](docs/ACCEPTANCE_CRITERIA.md)
 - [Risk register](docs/RISK_REGISTER.md)
 - [Machine-readable state](state/integra_state_v1.json)
