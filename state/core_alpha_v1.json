@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "status": "PASS",
+  "status": "PARTIAL",
   "issue": 8,
   "pipeline": "INTEGRA_CORE_ALPHA_V1",
   "execution_mode": "CONTRACT_REPLAY",
@@ -31,8 +31,8 @@
     "external_actions_performed": false
   },
   "limitations": [
-    "CONTRACT_REPLAY validates Core Alpha orchestration and artifact contracts; it does not execute model inference or media rendering.",
-    "R6 does not establish semantic quality or authorize semantic acceptance.",
-    "Real-media and source-component end-to-end execution remains a later acceptance layer using separately authorized inputs."
+    "CONTRACT_REPLAY validates Core Alpha orchestration and artifact contracts; it does not decode the source or execute source-component inference or media rendering.",
+    "Replay source intervals are structurally validated synthetic locators, not proof that they match the duration or contents of the supplied media.",
+    "Issue #8 and R6 remain IN_REVIEW until the pinned components execute the real local-video path with exact source-grounded provenance; this checkpoint does not establish semantic quality or authorize semantic acceptance."
   ]
 }

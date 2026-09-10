@@ -160,7 +160,7 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
     if state.get("agent_team_contract") != "state/agent_team_v1.json":
         errors.append("agent_team_contract must pin the governed agent registry")
     if state.get("core_alpha_evidence") != "state/core_alpha_v1.json":
-        errors.append("core_alpha_evidence must pin the R6 acceptance record")
+        errors.append("core_alpha_evidence must pin the R6 checkpoint record")
 
     execution_policy = state.get("execution_policy", {})
     expected_policy = {
@@ -210,9 +210,11 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
 
     positions = {entry.get("id"): index for index, entry in enumerate(roadmap)}
     statuses = {entry.get("id"): entry.get("status") for entry in roadmap}
-    for accepted_id in ("R0", "R1", "R2", "R3", "R4", "R5", "R6"):
+    for accepted_id in ("R0", "R1", "R2", "R3", "R4", "R5"):
         if statuses.get(accepted_id) != "ACCEPTED":
             errors.append(f"{accepted_id} must remain ACCEPTED")
+    if statuses.get("R6") != "IN_REVIEW":
+        errors.append("R6 must remain IN_REVIEW until the real local-video path passes")
     for entry in roadmap:
         entry_id = entry.get("id")
         for dependency in entry.get("depends_on", []):
@@ -477,7 +479,7 @@ def validate_core_alpha_evidence(evidence: dict, root: Path = ROOT) -> list[str]
         return ["R6 evidence fields must match the v1 contract"]
     expected_values = {
         "schema_version": "1.0",
-        "status": "PASS",
+        "status": "PARTIAL",
         "issue": 8,
         "pipeline": "INTEGRA_CORE_ALPHA_V1",
         "execution_mode": "CONTRACT_REPLAY",
@@ -522,7 +524,7 @@ def validate_core_alpha_evidence(evidence: dict, root: Path = ROOT) -> list[str]
         "external_actions_performed": False,
     }
     if evidence.get("acceptance") != expected_acceptance:
-        errors.append("R6 acceptance evidence differs from the fail-closed contract")
+        errors.append("R6 checkpoint evidence differs from the fail-closed contract")
     limitations = evidence.get("limitations")
     if (
         not isinstance(limitations, list)

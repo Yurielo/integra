@@ -17,7 +17,7 @@ not add routine human gates or change stage dependencies.
 | R3 Versioned contracts | #5 | M0 | R1, R2 | ACCEPTED |
 | R4 Adapter spike | #6 | M0 | R1–R3 | ACCEPTED |
 | R5 Capability benchmark | #7 | M1 | R4 | ACCEPTED |
-| R6 Core Alpha | #8 | M1 | R5 | ACCEPTED |
+| R6 Core Alpha | #8 | M1 | R5 | IN_REVIEW |
 | R7 Copy-on-write migration | #9 | M1 | R6 | PLANNED |
 | R8A YouTube playlists | #10 | M2 | R6, R3 | PLANNED |
 | R8B Documents and OCR | #11 | M2 | R6, R3 | PLANNED |
@@ -50,9 +50,9 @@ clean build, all input-independent probes, the long-topic probe, and two
 sequential real-video E2E runs through its release gate. The candidate was not
 promoted and R1 does not authorize source-product release.
 
-R6 composes the bounded vertical slice as a dependency-free contract replay
-with exact artifact provenance, pinned component identities, Project Lease,
-cancellation, and fail-closed resume. Its accepted evidence is
-`state/core_alpha_v1.json`. It does not claim real model inference, media
-rendering, or semantic quality; those remain later integration and release
-acceptance layers.
+R6 currently has a dependency-free contract-replay checkpoint with exact
+replay lineage, pinned component identities, Project Lease, cancellation, and
+fail-closed resume. Its partial evidence is `state/core_alpha_v1.json`. It does
+not invoke the pinned components on real media or prove source-grounded
+intervals, inference, rendering, or semantic quality. Issue #8 remains open and
+R6 remains `IN_REVIEW` until the actual local-video path passes.

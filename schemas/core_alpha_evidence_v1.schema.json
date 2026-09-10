@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/Yurielo/integra/schemas/core_alpha_evidence_v1.schema.json",
-  "title": "Integra Core Alpha acceptance evidence v1",
+  "title": "Integra Core Alpha contract-replay checkpoint evidence v1",
   "type": "object",
   "required": [
     "schema_version", "status", "issue", "pipeline", "execution_mode",
@@ -10,7 +10,7 @@
   ],
   "properties": {
     "schema_version": {"const": "1.0"},
-    "status": {"const": "PASS"},
+    "status": {"const": "PARTIAL"},
     "issue": {"const": 8},
     "pipeline": {"const": "INTEGRA_CORE_ALPHA_V1"},
     "execution_mode": {"const": "CONTRACT_REPLAY"},

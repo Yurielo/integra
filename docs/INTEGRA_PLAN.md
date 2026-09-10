@@ -550,12 +550,13 @@ Implement one bounded local-video path:
 
 Both source applications remain independently usable.
 
-The first accepted slice is a dependency-free `CONTRACT_REPLAY` of this full
-control-plane path. It proves pinned component routing, exact content-addressed
-lineage, Project Lease enforcement, cancellation, deterministic checkpoints,
-and fail-closed resume without claiming real model inference, rendering, or
-semantic quality. Later integration and release layers retain those real-media
-acceptance obligations.
+The first implementation checkpoint is a dependency-free `CONTRACT_REPLAY` of
+this control-plane sequence. It proves pinned component routing, exact
+content-addressed replay lineage, Project Lease enforcement, cancellation,
+deterministic checkpoints, and fail-closed resume. It does not invoke the
+pinned components on real media and does not satisfy R6 acceptance. R6 remains
+`IN_REVIEW` until the real local-video path runs with source-grounded
+provenance, without weakening the existing semantic-authority boundary.
 
 ### R7 — Read-only Import and Copy-on-write Migration
 

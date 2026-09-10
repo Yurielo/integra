@@ -85,7 +85,7 @@ class GovernanceValidationTests(unittest.TestCase):
         state["core_alpha_evidence"] = "state/other.json"
         errors = VALIDATOR.validate_state(state)
         self.assertIn(
-            "core_alpha_evidence must pin the R6 acceptance record", errors
+            "core_alpha_evidence must pin the R6 checkpoint record", errors
         )
 
     def test_core_alpha_evidence_is_valid(self):
@@ -98,7 +98,7 @@ class GovernanceValidationTests(unittest.TestCase):
         evidence["acceptance"]["semantic_authority"] = "ACCEPTED"
         errors = VALIDATOR.validate_core_alpha_evidence(evidence)
         self.assertIn(
-            "R6 acceptance evidence differs from the fail-closed contract", errors
+            "R6 checkpoint evidence differs from the fail-closed contract", errors
         )
 
     def test_core_alpha_fixture_hash_is_bound(self):
@@ -107,6 +107,16 @@ class GovernanceValidationTests(unittest.TestCase):
         errors = VALIDATOR.validate_core_alpha_evidence(evidence)
         self.assertIn(
             "R6 replay fixture hash differs from the governed record", errors
+        )
+
+    def test_r6_cannot_be_accepted_by_contract_replay(self):
+        state = copy.deepcopy(self.state)
+        for entry in state["roadmap"]:
+            if entry["id"] == "R6":
+                entry["status"] = "ACCEPTED"
+        errors = VALIDATOR.validate_state(state)
+        self.assertIn(
+            "R6 must remain IN_REVIEW until the real local-video path passes", errors
         )
 
     def test_unknown_dependency_fails(self):

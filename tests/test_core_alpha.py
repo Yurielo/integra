@@ -212,6 +212,24 @@ class CoreAlphaTests(unittest.TestCase):
         with self.assertRaisesRegex(CoreAlphaError, "output contract differs"):
             pipeline.run(self.source)
 
+    def test_invalid_or_fabricated_stage_locator_fails_closed(self):
+        for stage, locator in (
+            ("topics", {"type": "time_interval", "start_seconds": 2, "end_seconds": 1}),
+            ("knowledge", {"type": "fabricated", "value": "unknown"}),
+            ("review", {"type": "time_interval", "start_seconds": 0, "end_seconds": 2}),
+        ):
+            with self.subTest(stage=stage):
+                fixture = copy.deepcopy(self.fixture)
+                fixture["stages"][stage]["source_locator"] = locator
+                pipeline = CoreAlphaPipeline(
+                    repository_root=ROOT,
+                    store_root=self.store / stage,
+                    controller_identity=self.controller,
+                    worker=ReplayStageWorker(fixture),
+                )
+                with self.assertRaisesRegex(CoreAlphaError, "source locator|time interval"):
+                    pipeline.run(self.source)
+
     def test_non_replay_worker_cannot_assert_semantic_acceptance(self):
         base_worker = ReplayStageWorker(copy.deepcopy(self.fixture))
 

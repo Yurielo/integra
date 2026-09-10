@@ -1,16 +1,17 @@
-# R6 Core Alpha Certification
+# R6 Core Alpha Contract-Replay Checkpoint
 
-Status: `PASS`
+Status: `PARTIAL`
 
 Issue: [#8](https://github.com/Yurielo/integra/issues/8)
 
 ## Outcome
 
-R6 implements the bounded local-video control-plane path:
+This checkpoint implements a deterministic control-plane replay harness for the
+intended bounded local-video path:
 
 `source -> transcript -> Topics -> exception-only review -> knowledge candidate -> media clip`
 
-The path produces immutable content-addressed artifacts, exact parent lineage,
+The replay produces immutable content-addressed artifacts, exact parent lineage,
 pinned SeminarText and VideoText component identities, deterministic manifests,
 and visible provisional semantic authority. Mutable project checkpoint and
 manifest writes are guarded by the accepted Project Lease.
@@ -42,11 +43,17 @@ lease under the accepted R2 contract.
 
 The dependency-free fixture
 `tests/fixtures/core_alpha_v1/worker_outputs.json` is bound by SHA-256 in
-`state/core_alpha_v1.json`. The implementation and tests prove orchestration,
-ownership, cancellation, recovery, deterministic output, and provenance.
+`state/core_alpha_v1.json`. The implementation and tests prove replay
+orchestration, ownership, cancellation, recovery, deterministic output, and
+lineage validation.
 
 This is explicitly `CONTRACT_REPLAY`. It does not claim that ASR, Topic
-semantics, knowledge semantics, or media rendering ran on real media in R6.
-Those remain later integration and release acceptance layers with authorized
-inputs. This limitation prevents replay evidence from being misrepresented as
-model or product-quality evidence.
+semantics, knowledge semantics, or media rendering ran on real media. The
+source media is not decoded and the pinned source components are not invoked.
+Replay interval locators are structurally validated synthetic evidence; they
+are not verified against the duration or contents of the supplied media.
+
+Issue #8 and R6 therefore remain `IN_REVIEW`. Completion still requires the
+pinned components to execute the actual local-video path with source-grounded
+provenance. This checkpoint must not be represented as R6 product acceptance or
+as model, rendering, source-fidelity, or semantic-quality evidence.

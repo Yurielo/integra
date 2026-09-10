@@ -309,6 +309,13 @@ def validate_core_alpha_manifest(manifest: dict[str, Any]) -> None:
             }
             if reference["provenance"].get("source_locator") != expected_locator:
                 raise CoreAlphaError("Core Alpha source locator differs")
+        elif stage == "review":
+            if "source_locator" in reference["provenance"]:
+                raise CoreAlphaError("review: source locator is not part of the R6 contract")
+        else:
+            _validate_time_interval_locator(
+                stage, reference["provenance"].get("source_locator")
+            )
         project_key = manifest["project_id"].rsplit(":", 1)[-1]
         expected_suffix = "source" if stage == "source" else (
             "bin" if stage == "media_clip" else "json"
@@ -446,6 +453,27 @@ class ReplayStageWorker:
             source_locator=record.get("source_locator"),
             semantic_status=semantic_status,
         )
+
+
+def _validate_time_interval_locator(stage: str, locator: Any) -> None:
+    if not isinstance(locator, dict) or set(locator) != {
+        "type",
+        "start_seconds",
+        "end_seconds",
+    }:
+        raise CoreAlphaError(f"{stage}: source locator must be an exact time interval")
+    start = locator.get("start_seconds")
+    end = locator.get("end_seconds")
+    if (
+        locator.get("type") != "time_interval"
+        or isinstance(start, bool)
+        or isinstance(end, bool)
+        or not isinstance(start, (int, float))
+        or not isinstance(end, (int, float))
+        or start < 0
+        or end <= start
+    ):
+        raise CoreAlphaError(f"{stage}: source time interval is invalid")
 
 
 class CoreAlphaPipeline:
@@ -792,6 +820,11 @@ class CoreAlphaPipeline:
         )
         if output.semantic_status not in allowed_statuses:
             raise CoreAlphaError(f"{stage}: semantic status violates provisional authority")
+        if stage == "review":
+            if output.source_locator is not None:
+                raise CoreAlphaError("review: source locator is not part of the R6 contract")
+        else:
+            _validate_time_interval_locator(stage, output.source_locator)
         if stage == "media_clip":
             return
         try:
