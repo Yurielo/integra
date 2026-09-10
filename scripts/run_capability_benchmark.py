@@ -105,6 +105,7 @@ def main() -> int:
     parser.add_argument("--seminartext-python", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--repetitions", type=int, default=2)
+    parser.add_argument("--resume-from", type=Path)
     args = parser.parse_args()
     if args.repetitions < 2:
         raise SystemExit("R5 requires at least two replay repetitions")
@@ -129,6 +130,14 @@ def main() -> int:
     if any(output == root or root in output.parents for root in roots.values()):
         raise SystemExit("benchmark output must be outside pinned source checkouts")
     output.parent.mkdir(parents=True, exist_ok=True)
+    reusable: dict[tuple[str, str], dict[str, Any]] = {}
+    if args.resume_from and args.resume_from.is_file():
+        retained = json.loads(args.resume_from.read_text(encoding="utf-8"))
+        for retained_capability in retained.get("capabilities", []):
+            for retained_candidate in retained_capability.get("candidates", []):
+                reusable[(retained_capability["id"], retained_candidate["component_id"])] = (
+                    retained_candidate
+                )
 
     observations = []
     for capability in fixture["capabilities"]:
@@ -147,6 +156,21 @@ def main() -> int:
                         "runs": [],
                     }
                 )
+                continue
+            evidence = input_evidence(roots[component_id], candidate["evidence_paths"])
+            retained_candidate = reusable.get((capability["id"], component_id))
+            expected_run_count = args.repetitions * len(candidate["commands"])
+            if (
+                retained_candidate
+                and retained_candidate.get("status") == "PASS"
+                and retained_candidate.get("evidence_inputs") == evidence
+                and len(retained_candidate.get("runs", [])) == expected_run_count
+                and all(
+                    run.get("status") == "PASS"
+                    for run in retained_candidate.get("runs", [])
+                )
+            ):
+                candidate_results.append(retained_candidate)
                 continue
             runs = []
             for repetition in range(1, args.repetitions + 1):
@@ -169,9 +193,7 @@ def main() -> int:
                 {
                     "component_id": component_id,
                     "status": status,
-                    "evidence_inputs": input_evidence(
-                        roots[component_id], candidate["evidence_paths"]
-                    ),
+                    "evidence_inputs": evidence,
                     "runs": runs,
                 }
             )

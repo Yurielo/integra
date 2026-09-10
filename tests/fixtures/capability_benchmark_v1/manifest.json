@@ -93,7 +93,7 @@
           "component_id": "videotext",
           "qualification": "QUALIFIED",
           "evidence_paths": ["scripts/test_topics.sh", "Tests/TopicAnalysisProbe.swift"],
-          "commands": [{"id": "topic_analysis", "argv": ["bash", "scripts/test_topics.sh"], "success_marker": "TOPIC_ANALYSIS_PROBE_PASS", "timeout_seconds": 300}]
+          "commands": [{"id": "topic_analysis", "argv": ["bash", "scripts/test_topics.sh"], "success_marker": "TOPIC PROBE PASS", "timeout_seconds": 300}]
         }
       ]
     },
