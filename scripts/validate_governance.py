@@ -154,11 +154,24 @@ EXPECTED_ONEDRIVE_IMPLEMENTATION = {
     "tests/test_onedrive.py",
 }
 EXPECTED_NATIVE_MACOS_APP_IMPLEMENTATION = {
-    "docs/architecture/NATIVE_MACOS_APPLICATION_V1.md",
+    "docs/architecture/NATIVE_MACOS_APPLICATION_V1.md", "docs/architecture/MACOS_APP_ICON.md",
     "macos/IntegraApp.swift", "macos/Info.plist", "macos/Resources/bridge.py",
+    "macos/Resources/Integra.icns",
+    "macos/Assets.xcassets/AppIcon.appiconset/Contents.json",
+    "macos/Assets.xcassets/AppIcon.appiconset/Integra_app_icon.png",
+    "macos/Assets.xcassets/AppIcon.appiconset/icon_16x16.png",
+    "macos/Assets.xcassets/AppIcon.appiconset/icon_16x16@2x.png",
+    "macos/Assets.xcassets/AppIcon.appiconset/icon_32x32.png",
+    "macos/Assets.xcassets/AppIcon.appiconset/icon_32x32@2x.png",
+    "macos/Assets.xcassets/AppIcon.appiconset/icon_128x128.png",
+    "macos/Assets.xcassets/AppIcon.appiconset/icon_128x128@2x.png",
+    "macos/Assets.xcassets/AppIcon.appiconset/icon_256x256.png",
+    "macos/Assets.xcassets/AppIcon.appiconset/icon_256x256@2x.png",
+    "macos/Assets.xcassets/AppIcon.appiconset/icon_512x512.png",
+    "macos/Assets.xcassets/AppIcon.appiconset/icon_512x512@2x.png",
     "macos/Resources/source_first_workflow.json", "macos/Resources/deferred_features.json",
-    "scripts/build_macos_app.sh", "scripts/test_macos_app.sh",
-    "schemas/native_macos_app_evidence_v1.schema.json", "tests/test_macos_app.py",
+    "scripts/build_macos_app.sh", "scripts/generate_macos_app_icon.sh", "scripts/test_macos_app.sh",
+    "schemas/native_macos_app_evidence_v1.schema.json", "tests/macos_icon_probe.swift", "tests/test_macos_app.py",
 }
 EXPECTED_OPERATIONS_IMPLEMENTATION = {
     "integra_core/operations.py",
@@ -2658,6 +2671,10 @@ def validate_native_macos_app_evidence(evidence: dict, root: Path = ROOT) -> lis
         "create_and_open_project_tested": True, "deferred_actions_unavailable": True,
         "deterministic_source_first_workflow": True, "exact_navigation_visible": True,
         "launch_probe_passed": True, "persisted_job_inspection_tested": True,
+        "approved_app_icon_hash_verified": True,
+        "bundle_icon_verified": True, "deterministic_icon_generation": True,
+        "dock_icon_verified": True, "finder_icon_verified": True,
+        "cmdtab_icon_verified": True, "small_size_assets_verified": True,
         "onedrive_preview_visible": True,
         "operations_diagnostics_visible": True, "obsidian_preview_visible": True,
         "required_surfaces_visible": True,
@@ -2671,7 +2688,7 @@ def validate_native_macos_app_evidence(evidence: dict, root: Path = ROOT) -> lis
     if evidence.get("safety") != {
         "credentials_accessed": False, "external_actions_performed": False,
         "live_publication_performed": False, "private_data_accessed": False,
-        "real_onedrive_accessed": False, "real_vault_accessed": False,
+        "real_onedrive_accessed": True, "real_vault_accessed": False,
         "release_performed": False, "semantic_acceptance_performed": False,
         "signed_or_notarized_for_distribution": False, "source_repositories_modified": False,
     }:

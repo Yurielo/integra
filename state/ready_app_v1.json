@@ -2,7 +2,7 @@
   "schema_version":"1.0","status":"ACCEPTED","issue":29,"dependencies":["R12"],
   "implementation":[
     {"path":"docs/architecture/READY_APP_V1_PACKAGING.md","sha256":"cc1b73d39d251ad695ec978ddb5ec4f5e5572bd85070085fc52cb4ed52e08ec9"},
-    {"path":"macos/Info.plist","sha256":"a43cd65561c6216967c1eddc2b7e02ad543945a447c7124343bece8e9ddf143f"},
+    {"path":"macos/Info.plist","sha256":"a419740dd9515b629f857004c2d2a58cb7d1078beeca855a0e8b61430971124c"},
     {"path":"macos/Integra.entitlements","sha256":"52d453ca29989982d0bf00e4e8b79aaf01cbc4826f97dd936ae490c2a4e20e6d"},
     {"path":"docs/THIRD_PARTY_NOTICES.md","sha256":"f0c1fe50d4c95d59e2f74acc0191a45b558d2b7bd49e9c6759e0d36050745c30"},
     {"path":"macos/Resources/bridge.py","sha256":"72b9a1baaabd1ca70430a3a45376377b39dbbedb2c300f64b25c4b465a9dbd8a"},
