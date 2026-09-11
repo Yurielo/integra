@@ -72,6 +72,11 @@ class GovernanceValidationTests(unittest.TestCase):
                 encoding="utf-8"
             )
         )
+        cls.media_integration = json.loads(
+            (ROOT / "state" / "media_integration_v1.json").read_text(
+                encoding="utf-8"
+            )
+        )
 
     def test_repository_state_is_valid(self):
         self.assertEqual(VALIDATOR.validate_state(self.state), [])
@@ -625,6 +630,30 @@ class GovernanceValidationTests(unittest.TestCase):
         evidence["source_component"]["commit_sha"] = "0" * 40
         errors = VALIDATOR.validate_knowledge_integration_evidence(evidence, self.baselines)
         self.assertTrue(any("source component" in error for error in errors))
+
+    def test_media_integration_evidence_is_valid(self):
+        self.assertEqual(
+            VALIDATOR.validate_media_integration_evidence(
+                self.media_integration, self.baselines
+            ),
+            [],
+        )
+
+    def test_media_integration_cannot_claim_knowledge_mutation(self):
+        evidence = copy.deepcopy(self.media_integration)
+        evidence["acceptance"]["knowledge_truth_immutable"] = False
+        errors = VALIDATOR.validate_media_integration_evidence(evidence, self.baselines)
+        self.assertTrue(any("acceptance evidence" in error for error in errors))
+
+    def test_media_integration_source_baseline_and_hashes_are_pinned(self):
+        evidence = copy.deepcopy(self.media_integration)
+        evidence["source_component"]["commit_sha"] = "0" * 40
+        errors = VALIDATOR.validate_media_integration_evidence(evidence, self.baselines)
+        self.assertTrue(any("source component" in error for error in errors))
+        evidence = copy.deepcopy(self.media_integration)
+        evidence["implementation"][0]["sha256"] = "0" * 64
+        errors = VALIDATOR.validate_media_integration_evidence(evidence, self.baselines)
+        self.assertTrue(any("implementation hash differs" in error for error in errors))
 
 
 if __name__ == "__main__":

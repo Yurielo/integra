@@ -686,6 +686,19 @@ Integra does not invent a separate identity or classification.
 Expose VideoText media recipes and verified derivative outputs without changing
 knowledge truth.
 
+The accepted v1 contract covers clip extraction, subtitles, translation, TTS,
+speed, blur, watermark, audio enhancement, filler-word mute and media QA. Each
+recipe binds exact source and auxiliary artifacts, locator, component,
+implementation functions, configuration, measured ffprobe identity and
+byte-verified model hashes; pinned code bindings are never mislabeled as an
+availability measurement.
+Rendering lifecycle, resource admission, progress,
+cancellation, recovery, model ownership and child cleanup remain governed by
+Operations & Diagnostics; output registration requires its durable terminal
+success, an exact final execution checkpoint, independent artifact Integrity
+and a content-addressed VideoText functional-QA report whose facts are checked
+again against the exact output bytes before registration.
+
 ### R9C — Cross-navigation
 
 Prove bidirectional UI navigation between knowledge entities, exact source

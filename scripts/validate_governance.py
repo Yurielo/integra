@@ -112,6 +112,10 @@ MULTI_SOURCE_ALIGNMENT_SCHEMA_PATH = ROOT / "schemas" / "multi_source_alignment_
 KNOWLEDGE_INTEGRATION_PATH = ROOT / "state" / "knowledge_integration_v1.json"
 KNOWLEDGE_INTEGRATION_EVIDENCE_SCHEMA_PATH = ROOT / "schemas" / "knowledge_integration_evidence_v1.schema.json"
 KNOWLEDGE_VIEW_SCHEMA_PATH = ROOT / "schemas" / "knowledge_view_v1.schema.json"
+MEDIA_INTEGRATION_PATH = ROOT / "state" / "media_integration_v1.json"
+MEDIA_INTEGRATION_EVIDENCE_SCHEMA_PATH = ROOT / "schemas" / "media_integration_evidence_v1.schema.json"
+MEDIA_RECIPE_SCHEMA_PATH = ROOT / "schemas" / "media_recipe_v1.schema.json"
+MEDIA_DERIVATIVE_SCHEMA_PATH = ROOT / "schemas" / "media_derivative_v1.schema.json"
 EXPECTED_OPERATIONS_IMPLEMENTATION = {
     "integra_core/operations.py",
     "integra_core/operations_fixtures.py",
@@ -206,6 +210,17 @@ EXPECTED_KNOWLEDGE_IMPLEMENTATION = {
     "integra_core/knowledge.py",
     "schemas/knowledge_view_v1.schema.json",
     "tests/test_knowledge.py",
+}
+EXPECTED_MEDIA_IMPLEMENTATION = {
+    "docs/architecture/MEDIA_INTEGRATION_V1.md",
+    "integra_core/media.py",
+    "schemas/media_derivative_v1.schema.json",
+    "schemas/media_capability_report_v1.schema.json",
+    "schemas/media_qa_report_v1.schema.json",
+    "schemas/media_integration_evidence_v1.schema.json",
+    "schemas/media_recipe_v1.schema.json",
+    "tests/fixtures/media_v1/ffprobe_fixture.py",
+    "tests/test_media.py",
 }
 EXPECTED_CORE_ALPHA_REAL_SHA256 = "7233cd2985d65d8616e217385b53935c671dbda69a686849a9864cba4565d47c"
 EXPECTED_CORE_ALPHA_REAL_IMPLEMENTATION = {
@@ -346,6 +361,15 @@ REQUIRED_DOCUMENTS = (
     "state/knowledge_integration_v1.json",
     "integra_core/knowledge.py",
     "tests/test_knowledge.py",
+    "docs/architecture/MEDIA_INTEGRATION_V1.md",
+    "schemas/media_recipe_v1.schema.json",
+    "schemas/media_derivative_v1.schema.json",
+    "schemas/media_capability_report_v1.schema.json",
+    "schemas/media_qa_report_v1.schema.json",
+    "schemas/media_integration_evidence_v1.schema.json",
+    "state/media_integration_v1.json",
+    "integra_core/media.py",
+    "tests/test_media.py",
 )
 
 REQUIRED_MODULES = {
@@ -509,6 +533,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("multi_source_alignment_evidence must pin R8C acceptance")
     if state.get("knowledge_integration_evidence") != "state/knowledge_integration_v1.json":
         errors.append("knowledge_integration_evidence must pin R9A acceptance")
+    if state.get("media_integration_evidence") != "state/media_integration_v1.json":
+        errors.append("media_integration_evidence must pin R9B acceptance")
 
     execution_policy = state.get("execution_policy", {})
     expected_policy = {
@@ -594,6 +620,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("R8C must be ACCEPTED with multi-source alignment evidence")
     if statuses.get("R9A") != "ACCEPTED":
         errors.append("R9A must be ACCEPTED with knowledge integration evidence")
+    if statuses.get("R9B") != "ACCEPTED":
+        errors.append("R9B must be ACCEPTED with media integration evidence")
     for entry in roadmap:
         entry_id = entry.get("id")
         for dependency in entry.get("depends_on", []):
@@ -2166,6 +2194,79 @@ def validate_knowledge_integration_evidence(
     return errors
 
 
+def validate_media_integration_evidence(
+    evidence: dict, baselines: dict, root: Path = ROOT
+) -> list[str]:
+    errors: list[str] = []
+    expected_fields = {
+        "schema_version", "status", "issue", "dependencies", "source_component",
+        "implementation", "acceptance", "safety", "limitations",
+    }
+    if not isinstance(evidence, dict) or set(evidence) != expected_fields:
+        return ["R9B media integration evidence fields must match v1"]
+    if (evidence.get("schema_version"), evidence.get("status"), evidence.get("issue")) != ("1.0", "ACCEPTED", 14):
+        errors.append("R9B evidence must certify Issue #14 as ACCEPTED")
+    if evidence.get("dependencies") != ["R5", "R6", "OPERATIONS_AND_DIAGNOSTICS_V1"]:
+        errors.append("R9B dependency order differs")
+    components = {item["id"]: item for item in baselines["components"]}
+    videotext = components["videotext"]
+    expected_source = {
+        "id": "videotext", "commit_sha": videotext["commit_sha"],
+        "tree_sha": videotext["tree_sha"], "version": videotext["version"],
+    }
+    if evidence.get("source_component") != expected_source:
+        errors.append("R9B source component differs from accepted baseline")
+    paths = []
+    for item in evidence.get("implementation", []):
+        if not isinstance(item, dict) or set(item) != {"path", "sha256"}:
+            errors.append("R9B implementation reference differs")
+            continue
+        paths.append(item["path"])
+        path = root / item["path"]
+        if not path.is_file() or sha256_file(path) != item["sha256"]:
+            errors.append(f"R9B implementation hash differs: {item['path']}")
+    if set(paths) != EXPECTED_MEDIA_IMPLEMENTATION or len(paths) != len(set(paths)):
+        errors.append("R9B implementation inventory must be exact")
+    if evidence.get("acceptance") != {
+        "all_required_capabilities_exposed": True,
+        "artifact_integrity_reverified": True,
+        "cancellation_owned_by_operations": True,
+        "child_process_cleanup_owned_by_operations": True,
+        "component_and_contracts_pinned": True,
+        "configuration_and_models_bound": True,
+        "derivative_output_independently_probed": True,
+        "derivative_output_qa_artifact_bound": True,
+        "durable_exact_execution_checkpoint_required": True,
+        "external_inputs_content_bound": True,
+        "external_input_bytes_reverified": True,
+        "exact_videotext_functions_pinned": True,
+        "published_schemas_closed": True,
+        "knowledge_truth_immutable": True,
+        "model_lifecycle_owned_by_operations": True,
+        "models_remeasured_before_registration": True,
+        "playlist_resource_scheduling_delegated": True,
+        "progress_owned_by_operations": True,
+        "recipe_serialization_deterministic": True,
+        "recovery_owned_by_operations": True,
+        "source_and_locator_bound": True,
+    }:
+        errors.append("R9B acceptance evidence differs")
+    if evidence.get("safety") != {
+        "external_actions_performed": False,
+        "gold_accessed": False,
+        "knowledge_artifacts_modified": False,
+        "protected_data_accessed": False,
+        "semantic_acceptance_performed": False,
+        "source_projects_modified": False,
+        "source_repositories_modified": False,
+    }:
+        errors.append("R9B safety evidence differs")
+    limitations = evidence.get("limitations")
+    if not isinstance(limitations, list) or not limitations or len(limitations) != len(set(limitations)):
+        errors.append("R9B limitations must be a non-empty unique list")
+    return errors
+
+
 def main() -> int:
     state = load_json(STATE_PATH)
     baselines = load_json(BASELINES_PATH)
@@ -2184,6 +2285,7 @@ def main() -> int:
     transcript_topic_studio = load_json(TRANSCRIPT_TOPIC_STUDIO_PATH)
     multi_source_alignment = load_json(MULTI_SOURCE_ALIGNMENT_PATH)
     knowledge_integration = load_json(KNOWLEDGE_INTEGRATION_PATH)
+    media_integration = load_json(MEDIA_INTEGRATION_PATH)
     load_json(SCHEMA_PATH)
     load_json(BASELINES_SCHEMA_PATH)
     load_json(OWNERSHIP_SCHEMA_PATH)
@@ -2210,6 +2312,9 @@ def main() -> int:
     load_json(MULTI_SOURCE_ALIGNMENT_SCHEMA_PATH)
     load_json(KNOWLEDGE_INTEGRATION_EVIDENCE_SCHEMA_PATH)
     load_json(KNOWLEDGE_VIEW_SCHEMA_PATH)
+    load_json(MEDIA_INTEGRATION_EVIDENCE_SCHEMA_PATH)
+    load_json(MEDIA_RECIPE_SCHEMA_PATH)
+    load_json(MEDIA_DERIVATIVE_SCHEMA_PATH)
     load_json(ROOT / "schemas/youtube_playlist_snapshot_v1.schema.json")
     load_json(ROOT / "schemas/youtube_playlist_plan_v1.schema.json")
     load_json(ROOT / "schemas/youtube_playlist_checkpoint_v1.schema.json")
@@ -2233,6 +2338,7 @@ def main() -> int:
         + validate_transcript_topic_studio_evidence(transcript_topic_studio, baselines)
         + validate_multi_source_alignment_evidence(multi_source_alignment, baselines)
         + validate_knowledge_integration_evidence(knowledge_integration, baselines)
+        + validate_media_integration_evidence(media_integration, baselines)
     )
     if errors:
         print("INTEGRA_GOVERNANCE_VALIDATION: FAIL")
@@ -2268,6 +2374,7 @@ def main() -> int:
     print(f"TRANSCRIPT_AND_TOPIC_STUDIO_V1: {transcript_topic_studio['status']}")
     print(f"R8C_MULTI_SOURCE_ALIGNMENT: {multi_source_alignment['status']}")
     print(f"R9A_KNOWLEDGE_INTEGRATION: {knowledge_integration['status']}")
+    print(f"R9B_MEDIA_INTEGRATION: {media_integration['status']}")
     return 0
 
 

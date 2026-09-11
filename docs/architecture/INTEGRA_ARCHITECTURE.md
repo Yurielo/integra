@@ -114,6 +114,15 @@ graph navigation and a mechanical Knowledge Diff, and preserves source
 lifecycle, preferred labels, aliases and ReviewDecisions without creating new
 semantic authority.
 
+R9B adds the derivative-only media boundary documented in
+[`MEDIA_INTEGRATION_V1.md`](MEDIA_INTEGRATION_V1.md). Closed, content-addressed
+recipes map the required Media Studio operations to exact pinned VideoText
+implementation-function hashes and all auxiliary input artifacts. Operations &
+Diagnostics remains the sole lifecycle, resource, progress, recovery, model
+and process-cleanup authority; only a durably successful job with an exact
+final checkpoint, independently verified output and bound VideoText QA artifact
+can create a media derivative record. No recipe can mutate knowledge truth.
+
 ## 2. Authority model
 
 ### Factual state authority

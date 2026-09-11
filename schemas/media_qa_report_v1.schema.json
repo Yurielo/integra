@@ -1,0 +1,307 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://integra.local/schemas/media_qa_report_v1.schema.json",
+  "title": "Integra VideoText Media QA Report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "status",
+    "validator_kind",
+    "validator_implementations",
+    "job_id",
+    "operation_id",
+    "recipe_id",
+    "recipe_sha256",
+    "plan_sha256",
+    "output_artifact_id",
+    "output_kind",
+    "output_sha256",
+    "output_size_bytes",
+    "expected_duration_seconds",
+    "measured_duration_seconds",
+    "streams",
+    "cue_count",
+    "timeline_findings",
+    "probe_payload",
+    "probe_sha256",
+    "report_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "status": {
+      "const": "PASS"
+    },
+    "validator_kind": {
+      "enum": [
+        "VIDEOTEXT_STRICT_VIDEO",
+        "VIDEOTEXT_AUDIO_PROBE",
+        "VIDEOTEXT_SRT_TIMELINE"
+      ]
+    },
+    "validator_implementations": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/implementation"
+      }
+    },
+    "job_id": {
+      "$ref": "#/$defs/urn"
+    },
+    "operation_id": {
+      "$ref": "#/$defs/urn"
+    },
+    "recipe_id": {
+      "$ref": "#/$defs/urn"
+    },
+    "recipe_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "plan_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "output_artifact_id": {
+      "$ref": "#/$defs/urn"
+    },
+    "output_kind": {
+      "enum": [
+        "fragment",
+        "subtitledVideo",
+        "subtitles",
+        "dubbedVideo",
+        "speedAdjustedVideo",
+        "blurredVideo",
+        "watermarkedVideo",
+        "enhancedAudio",
+        "mutedVideo"
+      ]
+    },
+    "output_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "output_size_bytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "expected_duration_seconds": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "exclusiveMinimum": 0
+    },
+    "measured_duration_seconds": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "exclusiveMinimum": 0
+    },
+    "streams": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "audio",
+          "video"
+        ]
+      }
+    },
+    "cue_count": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "timeline_findings": {
+      "const": []
+    },
+    "probe_payload": {
+      "type": "string",
+      "minLength": 1
+    },
+    "probe_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "report_sha256": {
+      "$ref": "#/$defs/sha256"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "urn": {
+      "type": "string",
+      "pattern": "^urn:integra:[a-z][a-z0-9_]{1,31}:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "implementation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "function",
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "function": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "validator_kind": {
+          "const": "VIDEOTEXT_STRICT_VIDEO"
+        },
+        "validator_implementations": {
+          "const": [
+            {
+              "function": "strictValidationReport",
+              "path": "Sources/videotext/Adapters/MediaAdapters.swift",
+              "sha256": "4c3d7fee2777291b297679b28b1727d8e54ed74e6d0172da58e83702570cdca5"
+            }
+          ]
+        },
+        "output_kind": {
+          "enum": [
+            "fragment",
+            "subtitledVideo",
+            "dubbedVideo",
+            "speedAdjustedVideo",
+            "blurredVideo",
+            "watermarkedVideo",
+            "mutedVideo"
+          ]
+        },
+        "expected_duration_seconds": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "measured_duration_seconds": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "streams": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "contains": {
+            "const": "video"
+          },
+          "items": {
+            "enum": [
+              "audio",
+              "video"
+            ]
+          }
+        },
+        "cue_count": {
+          "type": "null"
+        }
+      }
+    },
+    {
+      "properties": {
+        "validator_kind": {
+          "const": "VIDEOTEXT_AUDIO_PROBE"
+        },
+        "validator_implementations": {
+          "const": [
+            {
+              "function": "validate",
+              "path": "Sources/videotext/Adapters/MediaAdapters.swift",
+              "sha256": "4c3d7fee2777291b297679b28b1727d8e54ed74e6d0172da58e83702570cdca5"
+            },
+            {
+              "function": "duration",
+              "path": "Sources/videotext/Adapters/MediaAdapters.swift",
+              "sha256": "4c3d7fee2777291b297679b28b1727d8e54ed74e6d0172da58e83702570cdca5"
+            }
+          ]
+        },
+        "output_kind": {
+          "const": "enhancedAudio"
+        },
+        "expected_duration_seconds": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "measured_duration_seconds": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "streams": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "contains": {
+            "const": "audio"
+          },
+          "items": {
+            "enum": [
+              "audio",
+              "video"
+            ]
+          }
+        },
+        "cue_count": {
+          "type": "null"
+        }
+      }
+    },
+    {
+      "properties": {
+        "validator_kind": {
+          "const": "VIDEOTEXT_SRT_TIMELINE"
+        },
+        "validator_implementations": {
+          "const": [
+            {
+              "function": "parseWithReport",
+              "path": "Sources/videotext/Services/SRTService.swift",
+              "sha256": "417017a6a3becc395e88e2554e8d7c2dca51b09de9743e8c5c0cf81ac9ba6205"
+            },
+            {
+              "function": "validateTimeline",
+              "path": "Sources/videotext/Services/SRTService.swift",
+              "sha256": "417017a6a3becc395e88e2554e8d7c2dca51b09de9743e8c5c0cf81ac9ba6205"
+            }
+          ]
+        },
+        "output_kind": {
+          "const": "subtitles"
+        },
+        "expected_duration_seconds": {
+          "type": "null"
+        },
+        "measured_duration_seconds": {
+          "type": "null"
+        },
+        "streams": {
+          "const": []
+        },
+        "cue_count": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  ]
+}
