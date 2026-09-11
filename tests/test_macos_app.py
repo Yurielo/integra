@@ -1,7 +1,9 @@
 import json
+import hashlib
 from pathlib import Path
 import subprocess
 import platform
+import struct
 import tempfile
 import unittest
 
@@ -13,6 +15,37 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class MacOSApplicationTests(unittest.TestCase):
+    def test_approved_app_icon_assets_are_exact(self):
+        catalog = ROOT / "macos/Assets.xcassets/AppIcon.appiconset"
+        canonical = catalog / "Integra_app_icon.png"
+        self.assertEqual(hashlib.sha256(canonical.read_bytes()).hexdigest(),
+                         "9de0c4871eb80ce057f2d977c00b5b1f8f8f6f2ebdb4003912f8b3e39f654dce")
+        contents = json.loads((catalog / "Contents.json").read_text())
+        expected = {
+            "icon_16x16.png": (16, 16), "icon_16x16@2x.png": (32, 32),
+            "icon_32x32.png": (32, 32), "icon_32x32@2x.png": (64, 64),
+            "icon_128x128.png": (128, 128), "icon_128x128@2x.png": (256, 256),
+            "icon_256x256.png": (256, 256), "icon_256x256@2x.png": (512, 512),
+            "icon_512x512.png": (512, 512), "icon_512x512@2x.png": (1024, 1024),
+        }
+        self.assertEqual({item["filename"] for item in contents["images"]}, set(expected))
+        for filename, dimensions in expected.items():
+            data = (catalog / filename).read_bytes()
+            self.assertEqual(data[:8], b"\x89PNG\r\n\x1a\n")
+            self.assertEqual(struct.unpack(">II", data[16:24]), dimensions)
+    @unittest.skipUnless(platform.system() == "Darwin", "icon generation requires macOS sips and iconutil")
+    def test_app_icon_regeneration_is_byte_reproducible(self):
+        catalog = ROOT / "macos/Assets.xcassets/AppIcon.appiconset"
+        filenames = {item["filename"] for item in json.loads((catalog / "Contents.json").read_text())["images"]}
+        with tempfile.TemporaryDirectory() as directory:
+            generated = Path(directory) / "macos"
+            subprocess.run([str(ROOT / "scripts/generate_macos_app_icon.sh"), str(generated)], check=True)
+            self.assertEqual((generated / "Resources/Integra.icns").read_bytes(),
+                             (ROOT / "macos/Resources/Integra.icns").read_bytes())
+            for filename in filenames:
+                self.assertEqual((generated / "Assets.xcassets/AppIcon.appiconset" / filename).read_bytes(),
+                                 (catalog / filename).read_bytes())
+
     def test_source_first_workflow_contains_no_production_fixture_data(self):
         workflow = json.loads((ROOT / "macos/Resources/source_first_workflow.json").read_text())
         self.assertEqual(workflow["workflow"], "SOURCE_FIRST")
@@ -47,6 +80,8 @@ class MacOSApplicationTests(unittest.TestCase):
                                     capture_output=True, text=True, timeout=60)
             self.assertIn("INTEGRA_MACOS_SELF_TEST: PASS", result.stdout)
             self.assertIn("INTEGRA_MACOS_LAUNCH_TEST: PASS", result.stdout)
+            self.assertIn("INTEGRA_FINDER_ICON: PASS", result.stdout)
+            self.assertIn("INTEGRA_DOCK_CMDTAB_ICON: PASS", result.stdout)
 
     def test_bridge_creates_opens_and_persists_project_and_job(self):
         bridge = ROOT / "macos/Resources/bridge.py"
