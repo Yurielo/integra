@@ -29,7 +29,7 @@
     {"path": "scripts/test_macos_app.sh", "sha256": "aedbcc4487dff18b11d12e6ca644aa1cba674dcceabf6fccafffab61dcd894fc"},
     {"path": "schemas/native_macos_app_evidence_v1.schema.json", "sha256": "1788c8d9cfbc28ea21852daf65d32e7965a05df1d587a461cad5d52627427f47"},
     {"path": "tests/macos_icon_probe.swift", "sha256": "5c1afd0753fda46fd6df0e85055ca1df776f01cab2acb8bde8758e8a1b74a3d6"},
-    {"path": "tests/test_macos_app.py", "sha256": "c439be302ef275a008d2eab4ea8f92a4b30b77ce8f116d85cf24038ccc8f11d6"}
+    {"path": "tests/test_macos_app.py", "sha256": "87b0031f5e0fa4c468fbadc440d37a6decc5226542e7494bce0026a9ea66b69e"}
   ],
   "acceptance": {
     "appkit_native_ui": true,

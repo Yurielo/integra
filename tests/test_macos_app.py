@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class MacOSApplicationTests(unittest.TestCase):
-    def test_approved_app_icon_assets_are_exact_and_reproducible(self):
+    def test_approved_app_icon_assets_are_exact(self):
         catalog = ROOT / "macos/Assets.xcassets/AppIcon.appiconset"
         canonical = catalog / "Integra_app_icon.png"
         self.assertEqual(hashlib.sha256(canonical.read_bytes()).hexdigest(),
@@ -33,12 +33,16 @@ class MacOSApplicationTests(unittest.TestCase):
             data = (catalog / filename).read_bytes()
             self.assertEqual(data[:8], b"\x89PNG\r\n\x1a\n")
             self.assertEqual(struct.unpack(">II", data[16:24]), dimensions)
+    @unittest.skipUnless(platform.system() == "Darwin", "icon generation requires macOS sips and iconutil")
+    def test_app_icon_regeneration_is_byte_reproducible(self):
+        catalog = ROOT / "macos/Assets.xcassets/AppIcon.appiconset"
+        filenames = {item["filename"] for item in json.loads((catalog / "Contents.json").read_text())["images"]}
         with tempfile.TemporaryDirectory() as directory:
             generated = Path(directory) / "macos"
             subprocess.run([str(ROOT / "scripts/generate_macos_app_icon.sh"), str(generated)], check=True)
             self.assertEqual((generated / "Resources/Integra.icns").read_bytes(),
                              (ROOT / "macos/Resources/Integra.icns").read_bytes())
-            for filename in expected:
+            for filename in filenames:
                 self.assertEqual((generated / "Assets.xcassets/AppIcon.appiconset" / filename).read_bytes(),
                                  (catalog / filename).read_bytes())
 
