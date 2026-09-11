@@ -30,6 +30,7 @@
     "obsidian_export_evidence",
     "onedrive_publication_evidence",
     "native_macos_app_evidence",
+    "ready_app_evidence",
     "execution_policy",
     "delivery_target",
     "release_scope",
@@ -107,6 +108,7 @@
     "native_macos_app_evidence": {
       "const": "state/native_macos_app_v1.json"
     },
+    "ready_app_evidence": {"const": "state/ready_app_v1.json"},
     "execution_policy": {
       "type": "object",
       "required": [

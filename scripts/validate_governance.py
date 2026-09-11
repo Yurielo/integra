@@ -129,6 +129,14 @@ ONEDRIVE_PACKAGE_SCHEMA_PATH = ROOT / "schemas" / "onedrive_package_v1.schema.js
 ONEDRIVE_RECEIPT_SCHEMA_PATH = ROOT / "schemas" / "onedrive_publication_receipt_v1.schema.json"
 NATIVE_MACOS_APP_PATH = ROOT / "state" / "native_macos_app_v1.json"
 NATIVE_MACOS_APP_SCHEMA_PATH = ROOT / "schemas" / "native_macos_app_evidence_v1.schema.json"
+READY_APP_PATH = ROOT / "state" / "ready_app_v1.json"
+READY_APP_SCHEMA_PATH = ROOT / "schemas" / "ready_app_v1_evidence.schema.json"
+EXPECTED_READY_APP_IMPLEMENTATION = {
+    "docs/architecture/READY_APP_V1_PACKAGING.md", "macos/Info.plist",
+    "macos/Integra.entitlements", "docs/THIRD_PARTY_NOTICES.md",
+    "macos/Resources/bridge.py", "scripts/integra_backup.py",
+    "scripts/package_ready_app.sh", "tests/test_ready_app.py",
+}
 EXPECTED_OBSIDIAN_IMPLEMENTATION = {
     "docs/architecture/OBSIDIAN_EXPORT_V1.md",
     "integra_core/publishing.py",
@@ -653,6 +661,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("onedrive_publication_evidence must pin Issue #63 acceptance")
     if state.get("native_macos_app_evidence") != "state/native_macos_app_v1.json":
         errors.append("native_macos_app_evidence must pin R12 acceptance")
+    if state.get("ready_app_evidence") != "state/ready_app_v1.json":
+        errors.append("ready_app_evidence must pin R13 acceptance")
 
     execution_policy = state.get("execution_policy", {})
     expected_policy = {
@@ -766,9 +776,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("ONEDRIVE_PUBLICATION_V1 must be ACCEPTED with filesystem publication evidence")
     if statuses.get("R12") != "ACCEPTED":
         errors.append("R12 must be ACCEPTED with native macOS application evidence")
-    for planned_id in ("R13",):
-        if statuses.get(planned_id) != "PLANNED":
-            errors.append(f"{planned_id} must remain PLANNED for READY_APP_V1")
+    if statuses.get("R13") != "ACCEPTED":
+        errors.append("R13 must be ACCEPTED with READY_APP_V1 package evidence")
     if statuses.get("R14") != "HUMAN_GATE":
         errors.append("R14 must remain the READY_APP_V1 HUMAN_GATE")
     for deferred_id in DEFERRED_ROADMAP_IDS:
@@ -2660,6 +2669,25 @@ def validate_native_macos_app_evidence(evidence: dict, root: Path = ROOT) -> lis
         errors.append("R12 limitations must be a non-empty unique list")
     return errors
 
+def validate_ready_app_evidence(evidence: dict, root: Path = ROOT) -> list[str]:
+    errors=[]
+    fields={"schema_version","status","issue","dependencies","implementation","acceptance","safety","limitations"}
+    if not isinstance(evidence,dict) or set(evidence)!=fields: return ["R13 evidence fields must match v1"]
+    if (evidence.get("schema_version"),evidence.get("status"),evidence.get("issue")) != ("1.0","ACCEPTED",29): errors.append("R13 must certify Issue #29")
+    if evidence.get("dependencies") != ["R12"]: errors.append("R13 dependency differs")
+    paths=[]
+    for item in evidence.get("implementation",[]):
+        if not isinstance(item,dict) or set(item)!={"path","sha256"}: errors.append("R13 implementation reference differs"); continue
+        paths.append(item["path"]); path=root/item["path"]
+        if not path.is_file() or sha256_file(path)!=item["sha256"]: errors.append(f"R13 implementation hash differs: {item['path']}")
+    if set(paths)!=EXPECTED_READY_APP_IMPLEMENTATION or len(paths)!=len(set(paths)): errors.append("R13 implementation inventory must be exact")
+    expected_acceptance={"backup_verification":True,"bridge_path_redaction":True,"bundle_identifier_final":True,"dependency_preflight":True,"local_ad_hoc_seal_verified":True,"minimum_macos_declared":True,"reproducible_tree_hash":True,"self_test_passed":True}
+    if evidence.get("acceptance")!=expected_acceptance: errors.append("R13 acceptance differs")
+    expected_safety={"credentials_accessed":False,"developer_id_used":False,"external_actions_performed":False,"notarization_performed":False,"private_data_accessed":False,"public_distribution_performed":False,"real_user_data_used":False}
+    if evidence.get("safety")!=expected_safety: errors.append("R13 safety differs")
+    if not isinstance(evidence.get("limitations"),list) or not evidence["limitations"]: errors.append("R13 limitations required")
+    return errors
+
 
 def main() -> int:
     state = load_json(STATE_PATH)
@@ -2684,6 +2712,7 @@ def main() -> int:
     obsidian_export = load_json(OBSIDIAN_EXPORT_PATH)
     onedrive_publication = load_json(ONEDRIVE_PUBLICATION_PATH)
     native_macos_app = load_json(NATIVE_MACOS_APP_PATH)
+    ready_app = load_json(READY_APP_PATH)
     load_json(SCHEMA_PATH)
     load_json(BASELINES_SCHEMA_PATH)
     load_json(OWNERSHIP_SCHEMA_PATH)
@@ -2722,6 +2751,7 @@ def main() -> int:
     load_json(ONEDRIVE_PACKAGE_SCHEMA_PATH)
     load_json(ONEDRIVE_RECEIPT_SCHEMA_PATH)
     load_json(NATIVE_MACOS_APP_SCHEMA_PATH)
+    load_json(READY_APP_SCHEMA_PATH)
     load_json(ROOT / "schemas/youtube_playlist_snapshot_v1.schema.json")
     load_json(ROOT / "schemas/youtube_playlist_plan_v1.schema.json")
     load_json(ROOT / "schemas/youtube_playlist_checkpoint_v1.schema.json")
@@ -2750,6 +2780,7 @@ def main() -> int:
         + validate_obsidian_export_evidence(obsidian_export)
         + validate_onedrive_publication_evidence(onedrive_publication)
         + validate_native_macos_app_evidence(native_macos_app)
+        + validate_ready_app_evidence(ready_app)
     )
     if errors:
         print("INTEGRA_GOVERNANCE_VALIDATION: FAIL")
@@ -2794,6 +2825,7 @@ def main() -> int:
     print(f"R9C_CROSS_NAVIGATION: {cross_navigation['status']}")
     print(f"ONEDRIVE_PUBLICATION_V1: {onedrive_publication['status']}")
     print(f"R12_NATIVE_MACOS_APP: {native_macos_app['status']}")
+    print(f"R13_READY_APP_PACKAGE: {ready_app['status']}")
     return 0
 
 

@@ -2,7 +2,7 @@
 """Closed local bridge between the AppKit shell and accepted Integra services."""
 from __future__ import annotations
 from datetime import datetime, timedelta, timezone
-import json, os, sys, uuid
+import json, os, re, sys, uuid
 from pathlib import Path
 
 RESOURCES = Path(__file__).resolve().parent
@@ -14,6 +14,10 @@ from integra_core.protocol import canonical_json, content_sha256
 from integra_core.publishing import preview_obsidian_export, publish_obsidian_export, validate_package
 
 OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "package-preview", "package-publish", "obsidian-preview", "onedrive-preview"}
+
+def _safe_error(error):
+    message = str(error).replace(str(Path.home()), "<HOME>")
+    return re.sub(r"/(?:[^\s,:]+/)+[^\s,:]+", "<PATH>", message)[:500]
 
 def _now(): return datetime.now(timezone.utc)
 def _instant(value): return value.isoformat(timespec="seconds").replace("+00:00", "Z")
@@ -148,6 +152,6 @@ def main():
         if operation in {"obsidian-preview", "onedrive-preview"}: envelope.update(result)
         print(json.dumps(envelope, ensure_ascii=False, sort_keys=True)); return 0
     except Exception as error:
-        print(json.dumps({"schema_version":"1.0", "ok":False, "error":str(error)}, sort_keys=True)); return 2
+        print(json.dumps({"schema_version":"1.0", "ok":False, "error":_safe_error(error)}, sort_keys=True)); return 2
 
 if __name__ == "__main__": raise SystemExit(main())

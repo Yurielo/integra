@@ -3,11 +3,11 @@
 <plist version="1.0"><dict>
   <key>CFBundleName</key><string>Integra</string>
   <key>CFBundleDisplayName</key><string>Integra</string>
-  <key>CFBundleIdentifier</key><string>local.integra.reference</string>
+  <key>CFBundleIdentifier</key><string>app.integra.ready</string>
   <key>CFBundleExecutable</key><string>Integra</string>
   <key>CFBundlePackageType</key><string>APPL</string>
-  <key>CFBundleShortVersionString</key><string>0.12.0</string>
-  <key>CFBundleVersion</key><string>12</string>
+  <key>CFBundleShortVersionString</key><string>1.0.0</string>
+  <key>CFBundleVersion</key><string>100</string>
   <key>LSMinimumSystemVersion</key><string>13.0</string>
   <key>NSHighResolutionCapable</key><true/>
   <key>NSPrincipalClass</key><string>NSApplication</string>
