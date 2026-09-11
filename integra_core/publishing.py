@@ -17,6 +17,8 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Callable, Iterator
 
 from .identity import derive_imported_id
+from .cross_navigation import CrossNavigationError, validate_cross_navigation
+from .knowledge import KnowledgeError, validate_knowledge_view
 from .project_lease import LeaseStore
 from .protocol import canonical_json, content_sha256
 
@@ -86,21 +88,16 @@ def validate_source_export(files: dict[str, bytes], manifest: dict[str, Any]) ->
     for field in ("canonical_evidence_artifact_id", "canonical_knowledge_artifact_id"):
         if not isinstance(manifest.get(field), str) or not manifest[field]:
             raise PublishingError(f"source export {field} is invalid")
-    if not isinstance(manifest["coverage"], dict) or not isinstance(manifest["resolver_states"], dict):
+    if (not isinstance(manifest["coverage"], dict) or not manifest["coverage"]
+            or not isinstance(manifest["resolver_states"], dict) or not manifest["resolver_states"]):
         raise PublishingError("source export coverage or resolver states are invalid")
-
-
-def _validate_bound_record(value: dict[str, Any], id_field: str, label: str) -> None:
-    if not isinstance(value, dict) or not isinstance(value.get(id_field), str):
-        raise PublishingError(f"{label} binding is invalid")
-    if value.get("record_sha256") != _record_hash(value):
-        raise PublishingError(f"{label} record hash differs")
 
 
 def build_obsidian_package(
     *, project_id: str, project_slug: str, source_files: dict[str, bytes],
     source_manifest: dict[str, Any], knowledge_view: dict[str, Any],
-    navigation: dict[str, Any], created_at: str,
+    evidence_payload: bytes, source_evidence_payload: bytes, knowledge_payload: bytes,
+    navigation: dict[str, Any], navigation_authority: dict[str, Any], created_at: str,
 ) -> tuple[dict[str, Any], dict[str, bytes]]:
     """Build immutable package bytes; no filesystem write occurs here."""
     validate_source_export(source_files, source_manifest)
@@ -110,8 +107,13 @@ def build_obsidian_package(
         raise PublishingError("created_at must be a UTC timestamp") from error
     if not created_at.endswith("Z") or instant.tzinfo != timezone.utc:
         raise PublishingError("created_at must be a UTC timestamp")
-    _validate_bound_record(knowledge_view, "view_id", "knowledge")
-    _validate_bound_record(navigation, "navigation_id", "navigation")
+    try:
+        validate_knowledge_view(
+            knowledge_view, evidence_payload, source_evidence_payload, knowledge_payload,
+        )
+        validate_cross_navigation(navigation, authority=navigation_authority)
+    except (KnowledgeError, CrossNavigationError, ValueError) as error:
+        raise PublishingError(f"authoritative source validation failed: {error}") from error
     if navigation.get("project_id") != project_id:
         raise PublishingError("navigation project differs")
     knowledge_binding = navigation.get("sources", {}).get("knowledge", {})
@@ -173,7 +175,7 @@ def build_obsidian_package(
 
 
 def preview_obsidian_export(vault: Path, manifest: dict[str, Any], files: dict[str, bytes]) -> dict[str, Any]:
-    vault = Path(vault).resolve(strict=True)
+    vault = _resolve_vault(vault)
     root, version = _targets(vault, manifest)
     collisions = _preflight(vault, root, version, manifest, files)
     return _receipt("DRY_RUN", manifest, root, collisions, False)
@@ -181,32 +183,32 @@ def preview_obsidian_export(vault: Path, manifest: dict[str, Any], files: dict[s
 
 def publish_obsidian_export(
     vault: Path, manifest: dict[str, Any], files: dict[str, bytes], *,
-    lease: dict[str, Any], lease_store: LeaseStore, operation_at: str,
+    lease: dict[str, Any], lease_store: LeaseStore,
+    clock: Callable[[], datetime] | None = None,
     interrupt_after: str | None = None,
 ) -> dict[str, Any]:
-    vault = Path(vault).resolve(strict=True)
+    vault = _resolve_vault(vault)
     root, version = _targets(vault, manifest)
     _ensure_vault(vault)
-    _validate_lease(manifest, lease, lease_store, operation_at)
+    _validate_lease(manifest, lease, lease_store, clock)
     initial_collisions = _preflight(vault, root, version, manifest, files)
     if initial_collisions:
         raise PublishingError("user-owned collision: " + ", ".join(initial_collisions))
-    lock_parent = vault / ".integra-locks"
-    lock_parent.mkdir(mode=0o700, exist_ok=True)
-    _reject_symlink(lock_parent, vault)
-    lock_path = lock_parent / f"{hashlib.sha256(str(root).encode()).hexdigest()}.lock"
+    root.mkdir(parents=True, exist_ok=True)
+    lock_path = root / ".export.lock"
+    if _lexists(lock_path) and lock_path.is_symlink():
+        raise PublishingError("publication lock path is a symlink")
     with _target_lock(lock_path):
         collisions = _preflight(vault, root, version, manifest, files)
         if collisions:
             raise PublishingError("user-owned collision: " + ", ".join(collisions))
-        if version.exists():
+        if _lexists(version):
             _verify_version(version, manifest, files)
             return _receipt("UNCHANGED", manifest, root, [], True)
-        root.mkdir(parents=True, exist_ok=True)
         staging_root = root / ".staging"
         staging_root.mkdir(exist_ok=True)
         staging = staging_root / (manifest["version_sha256"] + ".partial")
-        if staging.exists():
+        if _lexists(staging):
             _recover_staging(staging, manifest, files)
         staging.mkdir(mode=0o700)
         try:
@@ -247,25 +249,32 @@ def publish_obsidian_export(
 
 def recover_obsidian_export(
     vault: Path, manifest: dict[str, Any], files: dict[str, bytes], *,
-    lease: dict[str, Any], lease_store: LeaseStore, operation_at: str,
+    lease: dict[str, Any], lease_store: LeaseStore,
+    clock: Callable[[], datetime] | None = None,
 ) -> dict[str, Any]:
-    vault = Path(vault).resolve(strict=True)
+    vault = _resolve_vault(vault)
     root, version = _targets(vault, manifest)
     _ensure_vault(vault)
-    _validate_lease(manifest, lease, lease_store, operation_at)
-    lock_path = vault / ".integra-locks" / f"{hashlib.sha256(str(root).encode()).hexdigest()}.lock"
-    lock_path.parent.mkdir(mode=0o700, exist_ok=True)
+    _validate_lease(manifest, lease, lease_store, clock)
+    collisions = _preflight(vault, root, version, manifest, files)
+    if collisions:
+        raise PublishingError("user-owned collision: " + ", ".join(collisions))
+    if not root.is_dir():
+        raise PublishingError("recoverable staging package is missing")
+    lock_path = root / ".export.lock"
+    if _lexists(lock_path) and lock_path.is_symlink():
+        raise PublishingError("publication lock path is a symlink")
     with _target_lock(lock_path):
         staging = root / ".staging" / (manifest["version_sha256"] + ".partial")
-        if version.exists():
+        if _lexists(version):
             _verify_version(version, manifest, files)
             return _receipt("UNCHANGED", manifest, root, [], True)
-        if not staging.exists():
+        if not _lexists(staging):
             raise PublishingError("recoverable staging package is missing")
         _recover_staging(staging, manifest, files)
     return publish_obsidian_export(
         vault, manifest, files, lease=lease, lease_store=lease_store,
-        operation_at=operation_at,
+        clock=clock,
     )
 
 
@@ -290,6 +299,18 @@ def _ensure_vault(vault: Path) -> None:
         raise PublishingError("vault must be an existing non-symlink directory")
 
 
+def _resolve_vault(vault: Path) -> Path:
+    candidate = Path(vault)
+    if _lexists(candidate) and candidate.is_symlink():
+        raise PublishingError("vault must not be a symlink")
+    _ensure_vault(candidate)
+    return candidate.resolve(strict=True)
+
+
+def _lexists(path: Path) -> bool:
+    return os.path.lexists(path)
+
+
 def _preflight(vault: Path, root: Path, version: Path, manifest: dict[str, Any], files: dict[str, bytes]) -> list[str]:
     _ensure_vault(vault)
     validate_package(manifest, files)
@@ -300,21 +321,24 @@ def _preflight(vault: Path, root: Path, version: Path, manifest: dict[str, Any],
             raise PublishingError("managed destination contains a symlink")
     collisions: list[str] = []
     if root.exists():
-        allowed = {"versions", ".staging", CURRENT}
+        allowed = {"versions", ".staging", ".export.lock", CURRENT}
         collisions.extend(
             str(item.relative_to(vault)) for item in root.iterdir() if item.name not in allowed
         )
         pointer = root / CURRENT
         for managed_directory in (root / "versions", root / ".staging"):
-            if managed_directory.is_symlink() or (managed_directory.exists() and not managed_directory.is_dir()):
+            if managed_directory.is_symlink() or (_lexists(managed_directory) and not managed_directory.is_dir()):
                 raise PublishingError("managed destination contains an unsafe directory")
-        if pointer.exists():
+        if _lexists(pointer):
             try:
                 value = json.loads(pointer.read_bytes())
                 relative = PurePosixPath(value["relative_path"])
                 if (
                     pointer.is_symlink() or not pointer.is_file()
+                    or set(value) != {"schema_version", "package_id", "version_sha256", "relative_path"}
                     or value.get("schema_version") != "1.0"
+                    or not isinstance(value.get("package_id"), str) or not value["package_id"]
+                    or value.get("version_sha256") != relative.parts[-1]
                     or relative.parts[:1] != ("versions",)
                     or len(relative.parts) != 2
                     or not HEX.fullmatch(relative.parts[1])
@@ -323,9 +347,24 @@ def _preflight(vault: Path, root: Path, version: Path, manifest: dict[str, Any],
                 current_version = root.joinpath(*relative.parts)
                 if not current_version.is_dir() or not (current_version / COMPLETE).is_file():
                     raise ValueError
-            except (OSError, ValueError, KeyError, json.JSONDecodeError):
+                current_manifest = json.loads((current_version / MANIFEST).read_bytes())
+                current_complete = json.loads((current_version / COMPLETE).read_bytes())
+                if (
+                    current_manifest.get("package_id") != value["package_id"]
+                    or current_manifest.get("version_sha256") != value["version_sha256"]
+                    or current_complete.get("package_id") != value["package_id"]
+                    or current_complete.get("version_sha256") != value["version_sha256"]
+                ):
+                    raise ValueError
+                current_files = {
+                    item["path"]: _managed_path(current_version, item["path"]).read_bytes()
+                    for item in current_manifest["files"]
+                }
+                validate_package(current_manifest, current_files)
+                _verify_version(current_version, current_manifest, current_files)
+            except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError, PublishingError):
                 collisions.append(str(pointer.relative_to(vault)))
-    if version.exists():
+    if _lexists(version):
         if version.is_symlink() or not version.is_dir():
             return [str(version.relative_to(vault))]
         try:
@@ -336,8 +375,28 @@ def _preflight(vault: Path, root: Path, version: Path, manifest: dict[str, Any],
 
 
 def validate_package(manifest: dict[str, Any], files: dict[str, bytes]) -> None:
+    fields = {"schema_version", "artifact_type", "package_id", "version_sha256", "project_id",
+              "project_slug", "created_at", "source_manifest_sha256", "knowledge", "navigation",
+              "files", "semantic_authority", "source_artifacts_modified"}
+    if not isinstance(manifest, dict) or set(manifest) != fields:
+        raise PublishingError("package manifest fields differ from v1")
     if manifest.get("artifact_type") != "integra.obsidian_package" or manifest.get("schema_version") != "1.0":
         raise PublishingError("package manifest identity is invalid")
+    if manifest.get("semantic_authority") != "DERIVED_SOURCE_TRUTH_PRESERVED" or manifest.get("source_artifacts_modified") is not False:
+        raise PublishingError("package authority differs")
+    if set(manifest.get("knowledge", {})) != {"view_id", "record_sha256"} or set(manifest.get("navigation", {})) != {"navigation_id", "record_sha256"}:
+        raise PublishingError("package source bindings differ")
+    if not all(HEX.fullmatch(str(manifest.get(field, ""))) for field in ("version_sha256", "source_manifest_sha256")):
+        raise PublishingError("package hash binding is invalid")
+    if not all(HEX.fullmatch(str(binding.get("record_sha256", ""))) for binding in (manifest["knowledge"], manifest["navigation"])):
+        raise PublishingError("package source hash binding is invalid")
+    _safe_slug(manifest["project_slug"])
+    try:
+        created = datetime.fromisoformat(manifest["created_at"].replace("Z", "+00:00"))
+    except (AttributeError, ValueError) as error:
+        raise PublishingError("package creation timestamp is invalid") from error
+    if not manifest["created_at"].endswith("Z") or created.tzinfo != timezone.utc:
+        raise PublishingError("package creation timestamp is invalid")
     expected = {item["path"]: item for item in manifest.get("files", [])}
     if len(expected) != len(manifest.get("files", [])) or set(expected) != set(files):
         raise PublishingError("package file inventory differs")
@@ -357,6 +416,11 @@ def validate_package(manifest: dict[str, Any], files: dict[str, bytes]) -> None:
                 "files": manifest["files"]}
     if manifest["version_sha256"] != content_sha256(identity):
         raise PublishingError("package version identity differs")
+    expected_id = derive_imported_id(
+        "artifact", "integra.obsidian", manifest["project_id"], manifest["version_sha256"]
+    )
+    if manifest["package_id"] != expected_id:
+        raise PublishingError("package derived identity differs")
 
 
 def _managed_path(root: Path, relative: str) -> Path:
@@ -367,11 +431,6 @@ def _managed_path(root: Path, relative: str) -> Path:
         if cursor.is_symlink():
             raise PublishingError(f"managed path is a symlink: {relative}")
     return cursor
-
-
-def _reject_symlink(path: Path, root: Path) -> None:
-    if path.is_symlink() or root.resolve() not in path.resolve(strict=False).parents:
-        raise PublishingError("managed lock path is unsafe")
 
 
 @contextlib.contextmanager
@@ -435,6 +494,11 @@ def _verify_version(root: Path, manifest: dict[str, Any], files: dict[str, bytes
     }
     if any(item.is_symlink() for item in root.rglob("*")) or actual_paths != expected_paths:
         raise PublishingError("immutable version inventory differs")
+    actual_directories = {
+        item.relative_to(root).as_posix() for item in root.rglob("*") if item.is_dir()
+    }
+    if actual_directories != _expected_directories(files):
+        raise PublishingError("immutable version directory inventory differs")
     complete_path = root / COMPLETE
     if not complete_path.is_file() or complete_path.is_symlink():
         raise PublishingError("complete marker is missing")
@@ -451,11 +515,28 @@ def _recover_staging(staging: Path, manifest: dict[str, Any], files: dict[str, b
     # Recovery is fail-closed: only exact expected bytes may be removed/rebuilt.
     expected = set(files) | {MANIFEST, CHECKSUMS, COMPLETE}
     actual = {item.relative_to(staging).as_posix() for item in staging.rglob("*") if item.is_file()}
-    if any(item.is_symlink() for item in staging.rglob("*")) or actual - expected:
+    actual_directories = {
+        item.relative_to(staging).as_posix() for item in staging.rglob("*") if item.is_dir()
+    }
+    if (any(item.is_symlink() for item in staging.rglob("*")) or actual - expected
+            or actual_directories - _expected_directories(files)):
         raise PublishingError("staging contains unowned or unsafe content")
     for relative in actual & set(files):
         if (staging / relative).read_bytes() != files[relative]:
             raise PublishingError("staging content differs from requested package")
+    manifest_bytes = canonical_json(manifest) + b"\n"
+    if MANIFEST in actual and (staging / MANIFEST).read_bytes() != manifest_bytes:
+        raise PublishingError("staging manifest differs from requested package")
+    if CHECKSUMS in actual and (staging / CHECKSUMS).read_bytes() != _checksum_bytes(manifest, manifest_bytes):
+        raise PublishingError("staging checksums differ from requested package")
+    if COMPLETE in actual:
+        expected_complete = canonical_json({
+            "schema_version": "1.0", "package_id": manifest["package_id"],
+            "version_sha256": manifest["version_sha256"],
+            "manifest_sha256": sha256_bytes(manifest_bytes), "state": "COMPLETE",
+        }) + b"\n"
+        if (staging / COMPLETE).read_bytes() != expected_complete:
+            raise PublishingError("staging complete marker differs from requested package")
     shutil.rmtree(staging)
 
 
@@ -465,12 +546,22 @@ def _checksum_bytes(manifest: dict[str, Any], manifest_bytes: bytes) -> bytes:
     return ("\n".join(lines) + "\n").encode()
 
 
+def _expected_directories(files: dict[str, bytes]) -> set[str]:
+    result: set[str] = set()
+    for relative in files:
+        parts = PurePosixPath(relative).parts[:-1]
+        for index in range(1, len(parts) + 1):
+            result.add(PurePosixPath(*parts[:index]).as_posix())
+    return result
+
+
 def _validate_lease(
-    manifest: dict[str, Any], lease: dict[str, Any], store: LeaseStore, operation_at: str,
+    manifest: dict[str, Any], lease: dict[str, Any], store: LeaseStore,
+    clock: Callable[[], datetime] | None,
 ) -> None:
     try:
         current = store.read(manifest["project_id"], manifest["package_id"])
-        instant = datetime.fromisoformat(operation_at.replace("Z", "+00:00"))
+        instant = (clock or (lambda: datetime.now(timezone.utc)))()
         heartbeat = datetime.fromisoformat(lease["heartbeat_at"].replace("Z", "+00:00"))
         expires = datetime.fromisoformat(lease["expires_at"].replace("Z", "+00:00"))
     except (AttributeError, KeyError, TypeError, ValueError) as error:
@@ -483,7 +574,7 @@ def _validate_lease(
         or lease.get("artifact_precondition") != {
             "revision_id": manifest["package_id"], "content_sha256": manifest["version_sha256"]
         }
-        or not operation_at.endswith("Z") or instant.tzinfo != timezone.utc
+        or not isinstance(instant, datetime) or instant.tzinfo is None
         or not (heartbeat <= instant < expires)
     ):
         raise PublishingError("publication lease does not authorize this package")

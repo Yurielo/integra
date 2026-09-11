@@ -4,12 +4,12 @@
   "issue": 16,
   "dependencies": ["R9C"],
   "implementation": [
-    {"path": "docs/architecture/OBSIDIAN_EXPORT_V1.md", "sha256": "f556caff39c9d198f2705d24aa104a6a365370bdc1de518b51790ab917902f15"},
-    {"path": "integra_core/publishing.py", "sha256": "0fab924ef5a09c12aee48892d7adda4c9dce19439313a1eeec8e6dea21ac0ca0"},
+    {"path": "docs/architecture/OBSIDIAN_EXPORT_V1.md", "sha256": "bd73b0090f859b762ecbcbd4cb3d18f45f9aa59eea7963865f1ea122e4fed635"},
+    {"path": "integra_core/publishing.py", "sha256": "3ac65646946ff1d597a98d0a2e845f1a6b29bc4e4ce00ae9c3bfec3e3a6289a4"},
     {"path": "schemas/obsidian_package_v1.schema.json", "sha256": "46b04493dfa2e9090e00ce6a05b2e9ca81f3fc842e82bbcf2a21842cec36c576"},
     {"path": "schemas/obsidian_export_receipt_v1.schema.json", "sha256": "4d3080a59be966ae8d24a6b7d479d7691120aa8fdca0453f1bc3cb00a14f6bb1"},
     {"path": "schemas/obsidian_export_evidence_v1.schema.json", "sha256": "2e0480ba50487ff8c6620199bd59749bdef5fd4317b5b8018ca38fa76734fbd3"},
-    {"path": "tests/test_publishing.py", "sha256": "59ccd06219e45a2f339af6e5429f5588082b7325086885bd022afa4fc84f9128"}
+    {"path": "tests/test_publishing.py", "sha256": "bc9f7d24007b6f9688d36a105ac63e8cd12242857c7127d56baaf6373721b4b7"}
   ],
   "acceptance": {
     "complete_marker_written_last": true,

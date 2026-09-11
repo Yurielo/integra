@@ -11,8 +11,10 @@ external writes, or the deferred general export formats.
 The exporter consumes the exact managed Markdown output already produced by
 the pinned SeminarText `project-obsidian-export` capability and validated at
 the accepted R6 worker boundary. It revalidates the closed source manifest,
-file inventory and every file hash. The output package is additionally bound
-to the exact R9A Knowledge view and R9C cross-navigation record. Canonical
+non-empty coverage/resolver records, file inventory and every file hash. It
+also consumes the complete authoritative R9A and R9C inputs and invokes their
+full validators, which rebuild the records instead of trusting caller hashes.
+The output package is bound to those exact validated records. Canonical
 Evidence and Canonical Knowledge remain read-only source truth; exported notes
 are `MANAGED_GENERATED` derived views.
 
@@ -45,9 +47,11 @@ enumerated as managed and remain user-owned.
 Preview performs all deterministic package and collision checks without
 writing. Every mutating publication or recovery requires the exact active,
 unexpired durable Project Lease for the package and its content precondition.
-Publication additionally uses one nonblocking `fcntl` target lock under
-`.integra-locks`; the filesystem-backed OneDrive publisher must derive the same
-lock name whenever both operations resolve to the same target.
+Publication additionally uses one nonblocking `fcntl` target lock at
+`<vault>/Integra/<project-slug>/.export.lock`; the filesystem-backed OneDrive
+publisher must use the same lock whenever both operations resolve to that
+managed target. The Vault itself, lock, current pointer, staging and version
+ancestors are checked with non-following filesystem operations before use.
 
 ## Atomic publication and recovery
 
@@ -57,10 +61,14 @@ atomic replacement. The manifest and checksum list are verified before
 `COMPLETE.json` is written last. Only then is the staging directory atomically
 renamed to its immutable version and `CURRENT.json` atomically updated.
 
-An exact existing complete version is an idempotent `UNCHANGED` replay.
+An exact existing complete version is an idempotent `UNCHANGED` replay. Runtime
+validation requires the exact package fields, authority flags, hashes and
+derived ID; extra or altered values fail even if other hashes are recomputed.
 Interrupted staging is never current. Recovery accepts only expected files
-whose existing bytes equal the requested package; unknown, changed, or symlink
-content fails closed. A verified partial tree is discarded and rebuilt under
+whose existing bytes equal the requested package and validates any manifest,
+checksum or COMPLETE record already present; unknown files/directories,
+changed records, dangling links, or symlink content fail closed and are not
+erased. A fully verified partial tree is discarded and rebuilt under
 the same lock. Receipts always state `cloud_verified: false`; local Obsidian
 export can never claim OneDrive completion.
 
