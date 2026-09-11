@@ -28,6 +28,7 @@
     "media_integration_evidence",
     "cross_navigation_evidence",
     "obsidian_export_evidence",
+    "onedrive_publication_evidence",
     "execution_policy",
     "delivery_target",
     "release_scope",
@@ -98,6 +99,9 @@
     },
     "obsidian_export_evidence": {
       "const": "state/obsidian_export_v1.json"
+    },
+    "onedrive_publication_evidence": {
+      "const": "state/onedrive_publication_v1.json"
     },
     "execution_policy": {
       "type": "object",

@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "status": "ACCEPTED",
+  "issue": 63,
+  "dependencies": ["R10"],
+  "implementation": [
+    {"path": "docs/architecture/ONEDRIVE_PUBLICATION_V1.md", "sha256": "68660191e36d0faf9517707d596fb3fad8e1f3efa9ddd1002beac2fd391c18e2"},
+    {"path": "integra_core/onedrive.py", "sha256": "fdfae1bdd7855fe8e0584e8eacd4d46604fb126f40131a5d9acd944f29ecafed"},
+    {"path": "schemas/onedrive_package_v1.schema.json", "sha256": "4ad0357a711868162171907dd70f3e82c5e5ee9a705cdbbedfe1b80b94e2be4e"},
+    {"path": "schemas/onedrive_publication_receipt_v1.schema.json", "sha256": "3b3647b0a9f5901388a9a0d05f16818a3808d21fbc239ff9dd5bd5488d8bdd7a"},
+    {"path": "schemas/onedrive_publication_evidence_v1.schema.json", "sha256": "a37d41395d873c34a509d33bdda9a20fd77ed2df6759a6ed354d7f2dff44f81b"},
+    {"path": "tests/test_onedrive.py", "sha256": "2eba3f05f0c079abfcc01cfb0819640bdc8f0e3f3a0e33454bf6c18e02eb9931"}
+  ],
+  "acceptance": {
+    "ambiguous_completion_fails_closed": true,
+    "complete_marker_written_last": true,
+    "conflict_copies_detected": true,
+    "deterministic_package_identity": true,
+    "files_on_demand_detected": true,
+    "immutable_versions": true,
+    "mutual_exclusion_with_obsidian": true,
+    "offline_queueing": true,
+    "outside_sync_staging": true,
+    "physical_size_and_hash_verified": true,
+    "project_lease_required": true,
+    "verified_recovery": true
+  },
+  "safety": {
+    "cloud_publication_verified": false,
+    "credentials_accessed": false,
+    "external_actions_performed": false,
+    "live_account_accessed": false,
+    "microsoft_graph_used": false,
+    "protected_data_accessed": false,
+    "real_sync_root_accessed": false,
+    "semantic_acceptance_performed": false,
+    "source_artifacts_modified": false,
+    "source_repositories_modified": false
+  },
+  "limitations": [
+    "A local filesystem write does not verify OneDrive upload, remote durability, remote identity, or convergence.",
+    "Microsoft Graph, credentials, accounts, private OneDrive content, and a real synchronized directory were not accessed.",
+    "Native application orchestration and user-visible publication controls belong to R12."
+  ]
+}
