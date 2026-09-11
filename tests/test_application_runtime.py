@@ -34,6 +34,9 @@ class ApplicationRuntimeTests(unittest.TestCase):
         self.assertEqual(result["state"],"COMPLETED"); outputs=result["source_results"][0]["outputs"]
         self.assertEqual(result["source_results"][0]["display_name"],"audio.wav")
         self.assertTrue(Path(outputs["transcript"]).is_file()); self.assertTrue(Path(outputs["subtitles"]).is_file())
+        self.assertTrue(outputs["transcript"].endswith(".txt"))
+        self.assertEqual(Path(outputs["transcript"]).name, "transcript.txt")
+        self.assertTrue(Path(outputs["transcript_json"]).is_file())
         artifact=Path(outputs["transcript"]).parent
         self.assertFalse((artifact/"topics.json").exists()); self.assertFalse((artifact/"knowledge.json").exists())
 

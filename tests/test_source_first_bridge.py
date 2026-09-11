@@ -59,7 +59,11 @@ class SourceFirstBridgeTests(unittest.TestCase):
                 self.assertEqual(cancelled["state"],"CANCELLED")
                 self.assertIsNone(cancelled["current_stage"])
                 self.assertEqual(call("jobs",{"project_id":project_id})[-1]["state"],"CANCELLED")
-                self.assertEqual(call("run-status",{"project_id":project_id,"run_id":run_id})["state"],"CANCELLED")
+                for _ in range(100):
+                    status = call("run-status",{"project_id":project_id,"run_id":run_id})
+                    if status["state"] not in {"QUEUED","RUNNING"}: break
+                    time.sleep(.03)
+                self.assertEqual(status["state"],"CANCELLED")
             finally:
                 status=call("run-status",{"project_id":project_id,"run_id":run_id})
                 if status["state"] in {"QUEUED","RUNNING"}:

@@ -185,6 +185,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource,
   }
 
   func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
+  func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+    if let projectID, let runID,
+       let payload = try? bridge.json("run-status", request: ["project_id": projectID, "run_id": runID]),
+       let run = payload["result"] as? [String: Any],
+       ["RUNNING", "QUEUED"].contains(run["state"] as? String ?? "")
+    {
+      _ = try? bridge.json("cancel-run", request: ["project_id": projectID, "run_id": runID])
+    }
+    return .terminateNow
+  }
 
   func applicationWillTerminate(_ notification: Notification) {
     timer?.invalidate()
@@ -297,6 +307,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource,
     value.bezelStyle = .rounded
     value.isEnabled = enabled
     return value
+  }
+  private func stageLabel(_ stage: String) -> String {
+    switch stage {
+    case "media_preparation": return "Подготовка аудио"
+    case "transcript": return "Расшифровка"
+    case "subtitles": return "Субтитры"
+    case "document_analysis": return "Анализ документа"
+    default: return stage
+    }
   }
   private func section(_ value: String) -> NSTextField {
     let label = NSTextField(labelWithString: value)
@@ -512,7 +531,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource,
   private func renderOperations() {
     reset(
       "Выполняется",
-      "Здесь показано только состояние реального backend-задания. Проценты не вычисляются, если backend их не сообщает. Чтобы остановить обработку, нажмите «Отменить». Закрытие Integra завершает приложение, но не отменяет фоновое задание."
+      "Здесь показано только состояние реального backend-задания. Проценты не вычисляются, если backend их не сообщает. Чтобы остановить обработку, нажмите «Отменить». Закрытие приложения также отменяет активную задачу."
     )
     guard let projectID = projectID, let runID = runID else {
       add(NSTextField(labelWithString: "Активной обработки нет"))
@@ -523,10 +542,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource,
         try bridge.json("run-status", request: ["project_id": projectID, "run_id": runID])["result"]
         as? [String: Any] ?? [:]
       let state = run["state"] as? String ?? "UNKNOWN"
+      let progress = run["progress"] as? Int
+      let detail = run["message"] as? String ?? ""
       let done = run["completed_sources"] as? Int ?? 0
       let total = run["total_sources"] as? Int ?? 0
       add(row("Состояние: \(state)", detail: "Готово источников: \(done) из \(total)"))
-      if let stage = run["current_stage"] as? String { add(row("Текущий этап", detail: stage)) }
+      if let progress = progress { add(row("Прогресс", detail: "\(progress)%")) }
+      if !detail.isEmpty { add(row("Подробности", detail: detail)) }
+      if let stage = run["current_stage"] as? String { add(row("Текущий этап", detail: stageLabel(stage))) }
       if state == "RUNNING" || state == "QUEUED" { add(button("Отменить", #selector(cancelRun))) }
       if state == "FAILED" || state == "CANCELLED" { add(button("Повторить", #selector(retryRun))) }
       if state == "COMPLETED" { renderResultRows(run) }
@@ -549,7 +572,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource,
           detail: result["state"] as? String ?? "UNKNOWN"))
       let outputs = result["outputs"] as? [String: Any] ?? [:]
       for (kind, path) in outputs.sorted(by: { $0.key < $1.key }) {
-        let control = button("Открыть: \(kind)", #selector(openOutput(_:)))
+        if kind == "transcript_json" { continue }
+        let title = kind == "transcript" ? "Открыть расшифровку" : "Открыть: \(kind)"
+        let control = button(title, #selector(openOutput(_:)))
         control.toolTip = path as? String
         add(control)
       }
@@ -651,18 +676,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource,
   @objc private func publishOneDrive() { publication(kind: "onedrive") }
   private func publication(kind: String) {
     do {
-      let packagePanel = NSOpenPanel()
-      packagePanel.title = "Выберите проверенный Integra package"
-      packagePanel.canChooseDirectories = true
-      packagePanel.canChooseFiles = false
-      guard packagePanel.runModal() == .OK, let packageURL = packagePanel.url else { return }
+      var package = ""
+      if let p = projectID, let r = runID {
+        let run = try bridge.json("run-status", request: ["project_id": p, "run_id": r])["result"] as? [String: Any] ?? [:]
+        let packageFromResult = ((run["source_results"] as? [[String: Any]])?.first { result in
+          (result["outputs"] as? [String: Any])?["package_dir"] as? String != nil
+        }).flatMap { $0["outputs"] as? [String: Any] }?["package_dir"] as? String
+        package = packageFromResult ?? ""
+      }
+      if package.isEmpty {
+        let packagePanel = NSOpenPanel()
+        packagePanel.title = "Выберите проверенный Integra package"
+        packagePanel.canChooseDirectories = true
+        packagePanel.canChooseFiles = false
+        guard packagePanel.runModal() == .OK, let packageURL = packagePanel.url else { return }
+        package = packageURL.path
+      }
+      let packagePath = URL(fileURLWithPath: package)
+      let manifestPath = packagePath.appendingPathComponent("package.json").path
+      guard FileManager.default.fileExists(atPath: manifestPath) else {
+        status.textColor = .systemRed
+        status.stringValue = "Нужен корректный package с файлом package.json."
+        return
+      }
       let targetPanel = NSOpenPanel()
       targetPanel.title =
         kind == "obsidian" ? "Выберите Obsidian Vault" : "Выберите локальную папку OneDrive"
       targetPanel.canChooseDirectories = true
       targetPanel.canChooseFiles = false
       guard targetPanel.runModal() == .OK, let targetURL = targetPanel.url else { return }
-      let request = ["package_dir": packageURL.path, "target_dir": targetURL.path]
+      let request = ["package_dir": packagePath.path, "target_dir": targetURL.path]
       let preview = try bridge.json("package-preview", request: request)
       let alert = NSAlert()
       alert.messageText = "Подтвердить публикацию?"

@@ -53,9 +53,14 @@ def _copy_document(project_dir:Path,source:dict[str,Any])->Path:
 def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
     path=run_path(project_dir,run_id); record=json.loads(path.read_bytes()); plan=record["plan"]
     jobs_path=project_dir/"jobs.json"
+    def refresh_record():
+        return json.loads(path.read_bytes())
     try:
         record.update(state="RUNNING",started_at=now()); atomic_json(path,record)
         for source_plan,source in zip(plan["source_plans"],plan["sources"]):
+            record = refresh_record()
+            if record.get("state") != "RUNNING":
+                break
             outputs=source_plan["outputs"]
             if not outputs:
                 record["source_results"].append({"source_id":source["source_id"],"display_name":source["display_name"],"state":"SKIPPED","outputs":{}}); record["completed_sources"]+=1; atomic_json(path,record); continue
@@ -81,7 +86,9 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                 if "document_text" in outputs: outputs_map["text"]=str(text_path)
                 record["source_results"].append({"source_id":source["source_id"],"display_name":source["display_name"],"state":"COMPLETED","outputs":outputs_map,"document_properties":{"content_mode":document["content_mode"],"ocr_status":document["ocr"]["status"],"embedded_media_count":len(document["embedded_media"])}})
             record["completed_sources"]+=1; atomic_json(path,record)
-        record.update(state="COMPLETED",current_stage=None,completed_at=now()); atomic_json(path,record)
+        record = refresh_record()
+        final_state = "CANCELLED" if record.get("state") == "CANCELLED" else "COMPLETED"
+        record.update(state=final_state,current_stage=None,completed_at=now()); atomic_json(path,record)
         project_path=project_dir/"project.json"
         if project_path.is_file():
             project=json.loads(project_path.read_bytes()); project["source_count"]=len(plan["sources"]); project["status"]="READY"; atomic_json(project_path,project)
