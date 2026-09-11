@@ -179,6 +179,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource,
       try? "LAUNCHED visible=\(window.isVisible) workflow=source-first title=\(window.title)\n"
         .write(toFile: marker, atomically: true, encoding: .utf8)
       NSApp.terminate(nil)
+    } else if ProcessInfo.processInfo.environment["INTEGRA_CLOSE_PROBE"] != nil {
+      DispatchQueue.main.async { self.window.performClose(nil) }
+    }
+  }
+
+  func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
+
+  func applicationWillTerminate(_ notification: Notification) {
+    timer?.invalidate()
+    if let marker = ProcessInfo.processInfo.environment["INTEGRA_CLOSE_PROBE"] {
+      try? "TERMINATED_AFTER_LAST_WINDOW_CLOSED\n"
+        .write(toFile: marker, atomically: true, encoding: .utf8)
     }
   }
 
@@ -500,7 +512,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource,
   private func renderOperations() {
     reset(
       "Выполняется",
-      "Здесь показано только состояние реального backend-задания. Проценты не вычисляются, если backend их не сообщает."
+      "Здесь показано только состояние реального backend-задания. Проценты не вычисляются, если backend их не сообщает. Чтобы остановить обработку, нажмите «Отменить». Закрытие Integra завершает приложение, но не отменяет фоновое задание."
     )
     guard let projectID = projectID, let runID = runID else {
       add(NSTextField(labelWithString: "Активной обработки нет"))

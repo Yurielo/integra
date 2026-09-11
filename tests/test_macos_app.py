@@ -80,6 +80,7 @@ class MacOSApplicationTests(unittest.TestCase):
                                     capture_output=True, text=True, timeout=60)
             self.assertIn("INTEGRA_MACOS_SELF_TEST: PASS", result.stdout)
             self.assertIn("INTEGRA_MACOS_LAUNCH_TEST: PASS", result.stdout)
+            self.assertIn("INTEGRA_MACOS_CLOSE_TEST: PASS", result.stdout)
             self.assertIn("INTEGRA_FINDER_ICON: PASS", result.stdout)
             self.assertIn("INTEGRA_DOCK_CMDTAB_ICON: PASS", result.stdout)
 
@@ -123,6 +124,8 @@ class MacOSApplicationTests(unittest.TestCase):
         self.assertIn("Выполнить", source)
         self.assertIn("Перетащите файлы сюда", source)
         self.assertIn('bridge.json("recent-runs")', source)
+        self.assertIn("applicationShouldTerminateAfterLastWindowClosed", source)
+        self.assertIn('bridge.json("cancel-run"', source)
         self.assertIn("СЛЕДУЮЩИЕ ДЕЙСТВИЯ", source)
         self.assertIn('object["error"] as? String', source)
         self.assertNotIn("Integra Reference Project", source)
