@@ -497,6 +497,7 @@ READY_APP_PRIORITY_ORDER = [
     "ONEDRIVE_PUBLICATION_V1",
     "R12",
     "R13",
+    "USER_MEDIA_WORKFLOW_V1",
     "R14",
 ]
 
@@ -521,6 +522,7 @@ ACTIVE_CHAIN_ROADMAP_IDS = {
     "ONEDRIVE_PUBLICATION_V1",
     "R12",
     "R13",
+    "USER_MEDIA_WORKFLOW_V1",
     "R14",
 }
 
@@ -546,6 +548,7 @@ EXPECTED_ROADMAP_ISSUES = {
     "ONEDRIVE_PUBLICATION_V1": 63,
     "R12": 28,
     "R13": 29,
+    "USER_MEDIA_WORKFLOW_V1": 72,
     "R14": 30,
     "DEFERRED_CAPABILITIES_V1": 64,
     "R11": 17,
@@ -595,7 +598,8 @@ REQUIRED_ROADMAP_DEPENDENCIES = {
     "ONEDRIVE_PUBLICATION_V1": {"R10"},
     "R12": {"ONEDRIVE_PUBLICATION_V1"},
     "R13": {"R12"},
-    "R14": {"R13"},
+    "USER_MEDIA_WORKFLOW_V1": {"R13"},
+    "R14": {"USER_MEDIA_WORKFLOW_V1"},
 }
 
 
@@ -778,6 +782,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("R12 must be ACCEPTED with native macOS application evidence")
     if statuses.get("R13") != "ACCEPTED":
         errors.append("R13 must be ACCEPTED with READY_APP_V1 package evidence")
+    if statuses.get("USER_MEDIA_WORKFLOW_V1") != "ACCEPTED":
+        errors.append("USER_MEDIA_WORKFLOW_V1 must be ACCEPTED before R14")
     if statuses.get("R14") != "HUMAN_GATE":
         errors.append("R14 must remain the READY_APP_V1 HUMAN_GATE")
     for deferred_id in DEFERRED_ROADMAP_IDS:
