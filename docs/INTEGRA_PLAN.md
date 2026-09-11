@@ -661,6 +661,14 @@ without rewriting component-owned artifacts.
 Link video, transcript, slides, pages, supporting documents, Topics, and Evidence
 without erasing per-source provenance.
 
+The accepted v1 graph is bound to the exact current Projects & Sources registry
+and current source revisions. Each node preserves a source-native locator plus
+an artifact-revision locator; each typed link is content-bound to its endpoint
+and evidence hashes. Forward and reverse navigation deterministically covers
+video-to-transcript/slide, Topic-to-page/slide and Evidence-to-document routes.
+Machine matches remain `PROVISIONAL` or `REVIEW_REQUIRED`, source artifacts are
+never rewritten, and UI cross-navigation remains owned by R9C.
+
 ### R9A — Knowledge Integration
 
 Expose Canonical Evidence/Knowledge, Concepts, Relations, review state, and

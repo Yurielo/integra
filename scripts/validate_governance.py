@@ -48,11 +48,22 @@ from integra_core.transcript_topic_studio import (  # noqa: E402
     dumps_studio,
     loads_studio,
     new_studio,
+    register_artifact,
     register_topic_set,
     register_transcript,
     register_word_timeline,
     validate_studio,
 )
+from integra_core.multi_source_alignment import (  # noqa: E402
+    add_link as add_alignment_link,
+    add_node as add_alignment_node,
+    dumps_alignment,
+    loads_alignment,
+    navigate as navigate_alignment,
+    new_alignment,
+    validate_alignment,
+)
+from integra_core.identity import derive_imported_id  # noqa: E402
 from integra_core.protocol import content_sha256  # noqa: E402
 from scripts.check_agents import load_registry, validate_agent_team  # noqa: E402
 
@@ -95,6 +106,9 @@ PROJECT_SOURCE_REGISTRY_SCHEMA_PATH = ROOT / "schemas" / "project_source_registr
 TRANSCRIPT_TOPIC_STUDIO_PATH = ROOT / "state" / "transcript_topic_studio_v1.json"
 TRANSCRIPT_TOPIC_STUDIO_EVIDENCE_SCHEMA_PATH = ROOT / "schemas" / "transcript_topic_studio_evidence_v1.schema.json"
 TRANSCRIPT_TOPIC_STUDIO_SCHEMA_PATH = ROOT / "schemas" / "transcript_topic_studio_v1.schema.json"
+MULTI_SOURCE_ALIGNMENT_PATH = ROOT / "state" / "multi_source_alignment_v1.json"
+MULTI_SOURCE_ALIGNMENT_EVIDENCE_SCHEMA_PATH = ROOT / "schemas" / "multi_source_alignment_evidence_v1.schema.json"
+MULTI_SOURCE_ALIGNMENT_SCHEMA_PATH = ROOT / "schemas" / "multi_source_alignment_v1.schema.json"
 EXPECTED_OPERATIONS_IMPLEMENTATION = {
     "integra_core/operations.py",
     "integra_core/operations_fixtures.py",
@@ -169,6 +183,13 @@ EXPECTED_TRANSCRIPT_TOPIC_STUDIO_IMPLEMENTATION = {
     "schemas/transcript_topic_studio_v1.schema.json",
     "schemas/transcript_topic_studio_evidence_v1.schema.json",
     "tests/test_transcript_topic_studio.py",
+}
+EXPECTED_MULTI_SOURCE_ALIGNMENT_IMPLEMENTATION = {
+    "docs/architecture/MULTI_SOURCE_ALIGNMENT_V1.md",
+    "integra_core/multi_source_alignment.py",
+    "schemas/multi_source_alignment_v1.schema.json",
+    "schemas/multi_source_alignment_evidence_v1.schema.json",
+    "tests/test_multi_source_alignment.py",
 }
 EXPECTED_CORE_ALPHA_REAL_SHA256 = "7233cd2985d65d8616e217385b53935c671dbda69a686849a9864cba4565d47c"
 EXPECTED_CORE_ALPHA_REAL_IMPLEMENTATION = {
@@ -297,6 +318,12 @@ REQUIRED_DOCUMENTS = (
     "schemas/transcript_topic_studio_evidence_v1.schema.json",
     "state/transcript_topic_studio_v1.json",
     "integra_core/transcript_topic_studio.py",
+    "docs/architecture/MULTI_SOURCE_ALIGNMENT_V1.md",
+    "schemas/multi_source_alignment_v1.schema.json",
+    "schemas/multi_source_alignment_evidence_v1.schema.json",
+    "state/multi_source_alignment_v1.json",
+    "integra_core/multi_source_alignment.py",
+    "tests/test_multi_source_alignment.py",
 )
 
 REQUIRED_MODULES = {
@@ -456,6 +483,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("projects_sources_evidence must pin Issue #47 acceptance")
     if state.get("transcript_topic_studio_evidence") != "state/transcript_topic_studio_v1.json":
         errors.append("transcript_topic_studio_evidence must pin Issue #48 acceptance")
+    if state.get("multi_source_alignment_evidence") != "state/multi_source_alignment_v1.json":
+        errors.append("multi_source_alignment_evidence must pin R8C acceptance")
 
     execution_policy = state.get("execution_policy", {})
     expected_policy = {
@@ -537,6 +566,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("PROJECTS_AND_SOURCES_V1 must be ACCEPTED with registry evidence")
     if statuses.get("TRANSCRIPT_AND_TOPIC_STUDIO_V1") != "ACCEPTED":
         errors.append("TRANSCRIPT_AND_TOPIC_STUDIO_V1 must be ACCEPTED with studio evidence")
+    if statuses.get("R8C") != "ACCEPTED":
+        errors.append("R8C must be ACCEPTED with multi-source alignment evidence")
     for entry in roadmap:
         entry_id = entry.get("id")
         for dependency in entry.get("depends_on", []):
@@ -1766,6 +1797,289 @@ def validate_transcript_topic_studio_evidence(
     return errors
 
 
+def validate_multi_source_alignment_evidence(
+    evidence: dict, baselines: dict, root: Path = ROOT
+) -> list[str]:
+    errors: list[str] = []
+    expected_fields = {
+        "schema_version", "status", "issue", "dependencies", "implementation",
+        "node_kinds", "relations", "locator_types", "acceptance", "safety",
+        "limitations",
+    }
+    if not isinstance(evidence, dict) or set(evidence) != expected_fields:
+        return ["R8C multi-source alignment evidence fields must match v1"]
+    if evidence.get("schema_version") != "1.0" or evidence.get("status") != "ACCEPTED" or evidence.get("issue") != 12:
+        errors.append("R8C evidence must certify Issue #12 as ACCEPTED")
+    if evidence.get("dependencies") != [
+        "R8A", "R8B", "PROJECTS_AND_SOURCES_V1", "TRANSCRIPT_AND_TOPIC_STUDIO_V1"
+    ]:
+        errors.append("R8C dependency order differs")
+    implementation = evidence.get("implementation")
+    paths: list[str] = []
+    if not isinstance(implementation, list):
+        errors.append("R8C implementation inventory must be a list")
+    else:
+        for item in implementation:
+            if not isinstance(item, dict) or set(item) != {"path", "sha256"}:
+                errors.append("R8C implementation reference differs from v1")
+                continue
+            paths.append(item["path"])
+            path = root / item["path"]
+            if not path.is_file():
+                errors.append(f"R8C implementation is missing: {item['path']}")
+            elif sha256_file(path) != item["sha256"]:
+                errors.append(f"R8C implementation hash differs: {item['path']}")
+        if set(paths) != EXPECTED_MULTI_SOURCE_ALIGNMENT_IMPLEMENTATION or len(paths) != len(set(paths)):
+            errors.append("R8C implementation inventory must be exact")
+    if evidence.get("node_kinds") != [
+        "AUDIO", "EVIDENCE", "PAGE", "SLIDE", "SUPPORTING_DOCUMENT",
+        "TOPIC", "TRANSCRIPT", "VIDEO",
+    ]:
+        errors.append("R8C node kind inventory differs")
+    if evidence.get("relations") != [
+        "EVIDENCE_TO_DOCUMENT", "TOPIC_TO_PAGE", "TOPIC_TO_SLIDE",
+        "VIDEO_TO_SLIDE", "VIDEO_TO_TRANSCRIPT",
+    ]:
+        errors.append("R8C relation inventory differs")
+    if evidence.get("locator_types") != [
+        "ARTIFACT_REVISION", "CHARACTER_RANGE", "PAGE_RANGE", "REGION",
+        "SLIDE_RANGE", "TIME_INTERVAL", "WORD_INTERVAL",
+    ]:
+        errors.append("R8C locator inventory differs")
+    expected_acceptance = {
+        "authoritative_registry_required": True,
+        "validated_upstream_records_required": True,
+        "upstream_payloads_not_serialized": True,
+        "origin_component_binding_verified": True,
+        "current_source_revisions_required": True,
+        "source_native_locators_required": True,
+        "artifact_revision_locator_required": True,
+        "node_kind_source_compatible": True,
+        "locator_range_consistency_required": True,
+        "video_transcript_same_revision_required": True,
+        "node_and_link_content_hash_bound": True,
+        "video_to_transcript_navigation": True,
+        "video_to_slide_navigation": True,
+        "topic_to_page_navigation": True,
+        "topic_to_slide_navigation": True,
+        "evidence_to_document_navigation": True,
+        "forward_and_reverse_navigation": True,
+        "deterministic_serialization": True,
+        "confidence_and_conflict_visible": True,
+        "semantic_acceptance_automatic": False,
+    }
+    if evidence.get("acceptance") != expected_acceptance:
+        errors.append("R8C acceptance evidence differs")
+    expected_safety = {
+        "source_artifacts_modified": False,
+        "source_repositories_modified": False,
+        "protected_data_accessed": False,
+        "gold_accessed": False,
+        "network_access_performed": False,
+        "credentials_accessed": False,
+        "external_actions_performed": False,
+    }
+    if evidence.get("safety") != expected_safety:
+        errors.append("R8C safety evidence differs")
+    limitations = evidence.get("limitations")
+    if not isinstance(limitations, list) or len(limitations) < 2 or len(limitations) != len(set(limitations)):
+        errors.append("R8C limitations must contain at least two unique statements")
+
+    try:
+        captured = "2026-09-11T00:00:00Z"
+        registry = new_registry("alignment-governance-fixture", captured)
+        registry, project_id = register_project(
+            registry, project_key="alignment-project", kind="COURSE",
+            title="Alignment fixture", occurred_at=captured,
+        )
+        registry, first_id = register_youtube_video(
+            registry, project_id, video_id="alignment-video-1", title="First",
+            availability="AVAILABLE", captured_at=captured,
+        )
+        registry, second_id = register_youtube_video(
+            registry, project_id, video_id="alignment-video-2", title="Second",
+            availability="AVAILABLE", captured_at=captured,
+        )
+        sources = {item["source_id"]: item for item in registry["sources"]}
+        first_revision = sources[first_id]["revisions"][-1]
+        second_revision = sources[second_id]["revisions"][-1]
+        component_commits = {
+            item["id"]: item["commit_sha"] for item in baselines["components"]
+        }
+        owners = {
+            "media_preparation": ["videotext"], "asr": ["videotext"],
+            "translation": ["videotext"], "word_timeline": ["seminartext"],
+            "topics": ["seminartext"],
+            "review_mechanics": ["seminartext", "videotext"],
+            "quality_validation": ["seminartext", "videotext"],
+        }
+        contracts = {
+            "media_preparation": ["project_schema_v7"],
+            "asr": ["project_schema_v7"],
+            "translation": ["project_schema_v7"],
+            "word_timeline": ["canonical_evidence_v1"],
+            "topics": ["topic_review_workflow_v2"],
+            "review_mechanics": ["topic_review_workflow_v2", "project_schema_v7"],
+            "quality_validation": ["canonical_evidence_v1", "project_schema_v7"],
+        }
+        bindings = []
+        for capability, component_ids in owners.items():
+            bindings.append({
+                "capability": capability,
+                "components": [{
+                    "component_id": component_id,
+                    "commit_sha": component_commits[component_id],
+                    "contract_id": contracts[capability][index],
+                    "model_id": (
+                        "ggml-large-v3.bin" if capability == "asr"
+                        else "gemma3:4b" if capability == "topics" else None
+                    ),
+                    "model_sha256": (
+                        "64d182b440b98d5203c4f9bd541544d84c605196c4f7b845dfa11fb23594d1e2"
+                        if capability == "asr"
+                        else "ed1e8a40017e648c133188919a5a0105ce1916726dbc657fecb5ccb5d717c46d"
+                        if capability == "topics" else None
+                    ),
+                } for index, component_id in enumerate(component_ids)],
+                "config_sha256": "3" * 64,
+                "r5_selection_sha256": "38ec6db0172c6bd61d8515b71c32be0554e311684364758cf87c598723dc20c3",
+            })
+        common_locator = {
+            "type": "ARTIFACT_REVISION", "artifact_id": first_id,
+            "revision_id": first_revision["revision_id"],
+            "content_sha256": first_revision["revision_sha256"],
+        }
+        media_locators = [
+            {"type": "TIME_INTERVAL", "start_seconds": 0.0, "end_seconds": 2.0},
+            common_locator,
+        ]
+        studio = new_studio(
+            registry, project_id=project_id, source_id=first_id,
+            source_revision_id=first_revision["revision_id"], bindings=bindings,
+            created_at=captured,
+        )
+        studio, video_artifact = register_artifact(
+            studio, registry=registry, kind="MEDIA_PREPARATION", native_id="video",
+            content_sha256="1" * 64, created_at=captured,
+            capability="media_preparation", parents=[first_revision["revision_id"]],
+            locators=media_locators, semantic_status="NOT_APPLICABLE",
+        )
+        studio, transcript_artifact = register_transcript(
+            studio, registry=registry, native_id="transcript",
+            content_sha256="2" * 64, created_at=captured, language="ru",
+            word_count=2, confidence=0.95, locators=media_locators,
+        )
+        studio_entities = {item["artifact_id"]: item for item in studio["artifacts"]}
+        component_bindings = studio["component_bindings"]
+
+        def artifact_reference(artifact_id: str, kind: str) -> dict:
+            entity = studio_entities[artifact_id]
+            accepted = component_bindings[entity["capability"]]["components"][0]
+            origin = {
+                "component_id": accepted["component_id"],
+                "repository": f"Yurielo/{accepted['component_id']}",
+                "commit_sha": accepted["commit_sha"], "tree_sha": "b" * 40,
+                "version": "1.0", "contracts": [accepted["contract_id"]],
+                "runtime": {"kind": "python", "version": "3"},
+            }
+            if accepted["model_id"] is not None:
+                origin["models"] = [{
+                    "id": accepted["model_id"],
+                    "identity_sha256": accepted["model_sha256"],
+                }]
+            return {
+                "artifact_id": artifact_id, "kind": kind,
+                "schema_id": "transcript_topic_studio_v1", "schema_version": "1.0",
+                "semantic_status": entity["semantic_status"],
+                "content_sha256": entity["content_sha256"], "size_bytes": 1,
+                "storage_scope": "SOURCE_READ_ONLY", "relative_path": f"studio/{entity['native_id']}.json",
+                "origin": origin,
+                "provenance": {
+                    "parent_artifact_ids": sorted(entity["parent_ids"]),
+                    "operation_id": derive_imported_id(
+                        "operation", "governance.alignment", entity["native_id"],
+                        entity["content_sha256"],
+                    ),
+                    "source_locator": {
+                        "native_id": entity["native_id"], "source_id": first_id,
+                        "source_revision_id": first_revision["revision_id"],
+                        "source_revision_sha256": first_revision["revision_sha256"],
+                        "upstream_record_id": studio["studio_id"],
+                        "upstream_record_sha256": studio["record_sha256"],
+                        "upstream_entity_id": artifact_id,
+                        "locators": entity["locators"],
+                    },
+                },
+            }
+
+        references = [
+            artifact_reference(video_artifact, "VIDEO"),
+            artifact_reference(transcript_artifact, "TRANSCRIPT"),
+        ]
+        upstream_records = [{
+            "contract": "TRANSCRIPT_TOPIC_STUDIO_V1",
+            "record_id": studio["studio_id"],
+            "record_sha256": studio["record_sha256"],
+            "record": studio,
+        }]
+        alignment = new_alignment(
+            registry, project_id=project_id,
+            source_revision_ids=[first_revision["revision_id"], second_revision["revision_id"]],
+            artifact_references=references, upstream_records=upstream_records,
+            created_at=captured,
+        )
+        alignment, video_node = add_alignment_node(
+            alignment, registry=registry, upstream_records=upstream_records,
+            native_id="video", kind="VIDEO",
+            source_id=first_id, source_revision_id=first_revision["revision_id"],
+            artifact_id=video_artifact, artifact_sha256="1" * 64,
+            owner_component="videotext", locators=media_locators,
+            lineage_ids=[first_revision["revision_id"], video_artifact],
+            semantic_status="NOT_APPLICABLE",
+            created_at=captured,
+        )
+        alignment, transcript_node = add_alignment_node(
+            alignment, registry=registry, upstream_records=upstream_records,
+            native_id="transcript", kind="TRANSCRIPT",
+            source_id=first_id, source_revision_id=first_revision["revision_id"],
+            artifact_id=transcript_artifact, artifact_sha256="2" * 64,
+            owner_component="videotext", locators=media_locators,
+            lineage_ids=[first_revision["revision_id"], transcript_artifact],
+            semantic_status="PROVISIONAL",
+            created_at=captured,
+        )
+        alignment, _ = add_alignment_link(
+            alignment, registry=registry, upstream_records=upstream_records,
+            native_id="video-transcript",
+            relation="VIDEO_TO_TRANSCRIPT", from_node_id=video_node,
+            to_node_id=transcript_node, evidence_node_ids=[video_node, transcript_node],
+            confidence=0.95, conflict=False, method="governance_fixture",
+            created_at=captured,
+        )
+        round_trip = loads_alignment(
+            dumps_alignment(alignment, registry, upstream_records), registry,
+            upstream_records,
+        )
+        validate_alignment(round_trip, registry, upstream_records)
+        forward = navigate_alignment(
+            round_trip, registry, upstream_records, video_node
+        )["forward"]
+        reverse = navigate_alignment(
+            round_trip, registry, upstream_records, transcript_node
+        )["reverse"]
+        if (
+            len(forward) != 1 or len(reverse) != 1
+            or forward[0]["node_id"] != transcript_node
+            or reverse[0]["node_id"] != video_node
+            or round_trip["semantic_authority"] != "MACHINE_ALIGNMENT_REQUIRES_HUMAN_DECISION"
+            or round_trip["source_artifacts_modified"] is not False
+        ):
+            errors.append("R8C executable alignment fixture differs")
+    except Exception as error:
+        errors.append(f"R8C executable alignment fixture failed: {error}")
+    return errors
+
+
 def main() -> int:
     state = load_json(STATE_PATH)
     baselines = load_json(BASELINES_PATH)
@@ -1782,6 +2096,7 @@ def main() -> int:
     document_pipeline = load_json(DOCUMENT_PIPELINE_PATH)
     projects_sources = load_json(PROJECTS_SOURCES_PATH)
     transcript_topic_studio = load_json(TRANSCRIPT_TOPIC_STUDIO_PATH)
+    multi_source_alignment = load_json(MULTI_SOURCE_ALIGNMENT_PATH)
     load_json(SCHEMA_PATH)
     load_json(BASELINES_SCHEMA_PATH)
     load_json(OWNERSHIP_SCHEMA_PATH)
@@ -1804,6 +2119,8 @@ def main() -> int:
     load_json(PROJECT_SOURCE_REGISTRY_SCHEMA_PATH)
     load_json(TRANSCRIPT_TOPIC_STUDIO_EVIDENCE_SCHEMA_PATH)
     load_json(TRANSCRIPT_TOPIC_STUDIO_SCHEMA_PATH)
+    load_json(MULTI_SOURCE_ALIGNMENT_EVIDENCE_SCHEMA_PATH)
+    load_json(MULTI_SOURCE_ALIGNMENT_SCHEMA_PATH)
     load_json(ROOT / "schemas/youtube_playlist_snapshot_v1.schema.json")
     load_json(ROOT / "schemas/youtube_playlist_plan_v1.schema.json")
     load_json(ROOT / "schemas/youtube_playlist_checkpoint_v1.schema.json")
@@ -1825,6 +2142,7 @@ def main() -> int:
         + validate_document_pipeline_evidence(document_pipeline)
         + validate_projects_sources_evidence(projects_sources)
         + validate_transcript_topic_studio_evidence(transcript_topic_studio, baselines)
+        + validate_multi_source_alignment_evidence(multi_source_alignment, baselines)
     )
     if errors:
         print("INTEGRA_GOVERNANCE_VALIDATION: FAIL")
@@ -1858,6 +2176,7 @@ def main() -> int:
     print(f"R8B_DOCUMENT_AND_OCR: {document_pipeline['status']}")
     print(f"PROJECTS_AND_SOURCES_V1: {projects_sources['status']}")
     print(f"TRANSCRIPT_AND_TOPIC_STUDIO_V1: {transcript_topic_studio['status']}")
+    print(f"R8C_MULTI_SOURCE_ALIGNMENT: {multi_source_alignment['status']}")
     return 0
 
 

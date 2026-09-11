@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Yurielo/integra/schemas/multi_source_alignment_evidence_v1.schema.json",
+  "title": "Integra R8C acceptance evidence",
+  "type": "object",
+  "required": ["schema_version", "status", "issue", "dependencies", "implementation", "node_kinds", "relations", "locator_types", "acceptance", "safety", "limitations"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "status": {"const": "ACCEPTED"},
+    "issue": {"const": 12},
+    "dependencies": {"const": ["R8A", "R8B", "PROJECTS_AND_SOURCES_V1", "TRANSCRIPT_AND_TOPIC_STUDIO_V1"]},
+    "implementation": {"type": "array", "minItems": 5, "uniqueItems": true, "items": {"type": "object", "required": ["path", "sha256"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}, "additionalProperties": false}},
+    "node_kinds": {"const": ["AUDIO", "EVIDENCE", "PAGE", "SLIDE", "SUPPORTING_DOCUMENT", "TOPIC", "TRANSCRIPT", "VIDEO"]},
+    "relations": {"const": ["EVIDENCE_TO_DOCUMENT", "TOPIC_TO_PAGE", "TOPIC_TO_SLIDE", "VIDEO_TO_SLIDE", "VIDEO_TO_TRANSCRIPT"]},
+    "locator_types": {"const": ["ARTIFACT_REVISION", "CHARACTER_RANGE", "PAGE_RANGE", "REGION", "SLIDE_RANGE", "TIME_INTERVAL", "WORD_INTERVAL"]},
+    "acceptance": {"const": {"authoritative_registry_required": true, "validated_upstream_records_required": true, "upstream_payloads_not_serialized": true, "origin_component_binding_verified": true, "current_source_revisions_required": true, "source_native_locators_required": true, "artifact_revision_locator_required": true, "node_kind_source_compatible": true, "locator_range_consistency_required": true, "video_transcript_same_revision_required": true, "node_and_link_content_hash_bound": true, "video_to_transcript_navigation": true, "video_to_slide_navigation": true, "topic_to_page_navigation": true, "topic_to_slide_navigation": true, "evidence_to_document_navigation": true, "forward_and_reverse_navigation": true, "deterministic_serialization": true, "confidence_and_conflict_visible": true, "semantic_acceptance_automatic": false}},
+    "safety": {"const": {"source_artifacts_modified": false, "source_repositories_modified": false, "protected_data_accessed": false, "gold_accessed": false, "network_access_performed": false, "credentials_accessed": false, "external_actions_performed": false}},
+    "limitations": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+  },
+  "additionalProperties": false
+}

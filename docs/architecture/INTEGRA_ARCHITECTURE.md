@@ -98,6 +98,15 @@ strict hierarchy. Exception packages and lease-bound human decisions are
 separate from immutable source-owned artifacts; cross-source alignment remains
 the R8C boundary.
 
+R8C adds the immutable multi-source graph documented in
+[`MULTI_SOURCE_ALIGNMENT_V1.md`](MULTI_SOURCE_ALIGNMENT_V1.md). It binds every
+node to the exact current Projects & Sources revision, source-native locator,
+artifact hash and lineage, and every typed link to complete endpoint/evidence
+hashes. Deterministic forward and reverse hops cover video-to-slide,
+Topic-to-page/slide and Evidence-to-document navigation. Machine links remain
+`PROVISIONAL` or `REVIEW_REQUIRED`; alignment cannot accept semantics or modify
+source artifacts.
+
 ## 2. Authority model
 
 ### Factual state authority
