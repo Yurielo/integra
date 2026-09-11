@@ -1,0 +1,124 @@
+{
+  "artifact_type": "seminartext.canonical_knowledge_lifecycle_mapping",
+  "schema_version": 1,
+  "knowledge_contract_version": "1.0.0",
+  "dimensions": {
+    "knowledge_lifecycle": "Semantic acceptance and identity lifecycle of a Canonical Knowledge record.",
+    "source_status": "Review state of the source Topic annotation; it does not certify Concept or Relation semantics."
+  },
+  "source_statuses": {
+    "gold_complete": {
+      "observed_in": "analysis/golden_knowledge_slice/golden_knowledge_slice.json",
+      "certifies": [
+        "source_topic_boundary",
+        "source_topic_title",
+        "source_topic_summary",
+        "source_topic_annotation_complete"
+      ],
+      "does_not_certify": [
+        "canonical_knowledge_acceptance",
+        "concept_identity",
+        "concept_label_or_description",
+        "relation_meaning"
+      ],
+      "knowledge_creation_allowed": true,
+      "auto_safe_lifecycles": [
+        "PROVISIONAL"
+      ],
+      "acceptance_gate": "DOMAIN_REVIEW"
+    },
+    "product_review_required": {
+      "observed_in": "analysis/golden_knowledge_slice/golden_knowledge_slice.json",
+      "certifies": [
+        "bounded_manual_source_range",
+        "source_provenance_preserved"
+      ],
+      "does_not_certify": [
+        "source_topic_product_acceptance",
+        "canonical_knowledge_acceptance",
+        "concept_identity",
+        "concept_label_or_description",
+        "relation_meaning"
+      ],
+      "knowledge_creation_allowed": true,
+      "auto_safe_lifecycles": [
+        "PROVISIONAL"
+      ],
+      "acceptance_gate": "DOMAIN_REVIEW"
+    }
+  },
+  "knowledge_lifecycles": {
+    "PROVISIONAL": {
+      "meaning": "Created with preserved provenance; no semantic acceptance decision is implied.",
+      "decision_required": false
+    },
+    "ACCEPTED": {
+      "meaning": "Explicitly accepted as Canonical Knowledge by a human domain reviewer or Product Owner.",
+      "decision_required": true,
+      "required_actions": [
+        "ACCEPT"
+      ],
+      "gate": "DOMAIN_REVIEW"
+    },
+    "REJECTED": {
+      "meaning": "Explicitly rejected without erasing its provenance or history.",
+      "decision_required": true,
+      "required_actions": [
+        "REJECT"
+      ],
+      "gate": "DOMAIN_REVIEW"
+    },
+    "SUPERSEDED": {
+      "meaning": "Replaced through an explicit identity-preserving lineage decision.",
+      "decision_required": true,
+      "required_actions": [
+        "MERGE",
+        "SPLIT"
+      ],
+      "gate": "DOMAIN_REVIEW"
+    }
+  },
+  "actor_policy": {
+    "human_domain_reviewer": {
+      "allowed_actions": [
+        "ACCEPT",
+        "RENAME",
+        "SPLIT",
+        "MERGE",
+        "REJECT",
+        "DEFER"
+      ],
+      "gate": "DOMAIN_REVIEW"
+    },
+    "product_owner": {
+      "allowed_actions": [
+        "ACCEPT",
+        "RENAME",
+        "SPLIT",
+        "MERGE",
+        "REJECT",
+        "DEFER"
+      ],
+      "gate": "DOMAIN_REVIEW"
+    },
+    "system_validator": {
+      "allowed_actions": [
+        "DEFER"
+      ],
+      "constraints": [
+        "target_status_remains_PROVISIONAL",
+        "result_ids_empty"
+      ],
+      "gate": "AUTO"
+    }
+  },
+  "domain_authoring": {
+    "required_for_existing_mapping": false,
+    "required_only_for": "new authoritative semantic content outside this validation contract"
+  },
+  "invariants": {
+    "gold_complete_implicitly_equals_accepted": false,
+    "source_status_preserved": true,
+    "semantic_lifecycle_change_without_review_decision": false
+  }
+}

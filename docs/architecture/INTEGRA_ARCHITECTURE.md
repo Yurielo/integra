@@ -107,6 +107,13 @@ Topic-to-page/slide and Evidence-to-document navigation. Machine links remain
 `PROVISIONAL` or `REVIEW_REQUIRED`; alignment cannot accept semantics or modify
 source artifacts.
 
+R9A adds the read-governed projection in
+[`KNOWLEDGE_INTEGRATION_V1.md`](KNOWLEDGE_INTEGRATION_V1.md). It binds pinned
+SeminarText Canonical Evidence and Knowledge hashes, exposes exact-evidence
+graph navigation and a mechanical Knowledge Diff, and preserves source
+lifecycle, preferred labels, aliases and ReviewDecisions without creating new
+semantic authority.
+
 ## 2. Authority model
 
 ### Factual state authority

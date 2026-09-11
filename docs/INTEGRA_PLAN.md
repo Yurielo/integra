@@ -674,6 +674,13 @@ never rewritten, and UI cross-navigation remains owned by R9C.
 Expose Canonical Evidence/Knowledge, Concepts, Relations, review state, and
 traceable navigation in Integra.
 
+The accepted v1 read projection binds exact SeminarText component and artifact
+hashes, requires every substantive Topic/Concept/Relation claim to resolve to
+Canonical Evidence, preserves preferred labels and source aliases as Terms,
+and exposes deterministic graph and Knowledge Diff views without semantic
+promotion. Practice knowledge remains represented by its source Concept records;
+Integra does not invent a separate identity or classification.
+
 ### R9B — Media Integration
 
 Expose VideoText media recipes and verified derivative outputs without changing

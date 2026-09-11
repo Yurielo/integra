@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Yurielo/integra/schemas/knowledge_integration_evidence_v1.schema.json",
+  "type": "object",
+  "required": ["schema_version", "status", "issue", "dependencies", "source_component", "product_rules_read", "implementation", "acceptance", "safety", "limitations"],
+  "properties": {
+    "schema_version": {"const": "1.0"}, "status": {"const": "ACCEPTED"}, "issue": {"const": 13},
+    "dependencies": {"const": ["R6", "R8C", "TRANSCRIPT_AND_TOPIC_STUDIO_V1"]},
+    "source_component": {"const": {"id": "seminartext", "commit_sha": "a94936cd77cde13561c97c804ece1ac1134e01a6"}},
+    "product_rules_read": {"const": ["PR-001", "PR-002", "PR-003", "PR-004", "PR-005", "PR-006", "PR-007", "PR-012"]},
+    "implementation": {"type": "array", "minItems": 4, "uniqueItems": true, "items": {"type": "object", "required": ["path", "sha256"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}, "additionalProperties": false}},
+    "acceptance": {"type": "object"}, "safety": {"type": "object"},
+    "limitations": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+  },
+  "additionalProperties": false
+}

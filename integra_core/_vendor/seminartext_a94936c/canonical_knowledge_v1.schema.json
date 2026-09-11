@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seminartext.local/schemas/canonical_knowledge_v1.schema.json",
+  "title": "SeminarText Canonical Knowledge Contract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "artifact_type", "artifact_id", "version", "canonical_evidence", "source_evidence", "project", "seminars", "topics", "concepts", "relations", "review_decisions", "relation_type_registry"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "artifact_type": {"const": "seminartext.canonical_knowledge"},
+    "artifact_id": {"$ref": "#/$defs/id"},
+    "version": {"const": 1},
+    "canonical_evidence": {"$ref": "#/$defs/artifact_pointer"},
+    "source_evidence": {"$ref": "#/$defs/artifact_pointer"},
+    "project": {"$ref": "#/$defs/project"},
+    "seminars": {"type": "array", "items": {"$ref": "#/$defs/seminar"}},
+    "topics": {"type": "array", "items": {"$ref": "#/$defs/topic"}},
+    "concepts": {"type": "array", "items": {"$ref": "#/$defs/concept"}},
+    "relations": {"type": "array", "items": {"$ref": "#/$defs/relation"}},
+    "review_decisions": {"type": "array", "items": {"$ref": "#/$defs/review_decision"}},
+    "relation_type_registry": {"type": "array", "items": {"$ref": "#/$defs/relation_type"}}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[a-z][a-z0-9._:-]{2,127}$"},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "status": {"enum": ["PROVISIONAL", "ACCEPTED", "REJECTED", "SUPERSEDED"]},
+    "version": {"type": "integer", "minimum": 1},
+    "provenance": {"type": "object", "additionalProperties": false, "required": ["origin", "source_artifact_id"], "properties": {"origin": {"type": "string", "enum": ["canonical_evidence", "golden_slice", "human_review", "derived"]}, "source_artifact_id": {"$ref": "#/$defs/id"}, "source_status": {"type": "string"}, "notes": {"type": "string"}}},
+    "artifact_pointer": {"type": "object", "additionalProperties": false, "required": ["artifact_id", "schema_version", "sha256", "path"], "properties": {"artifact_id": {"$ref": "#/$defs/id"}, "schema_version": {"type": "string"}, "sha256": {"$ref": "#/$defs/sha256"}, "path": {"type": "string", "pattern": "^(?!/)(?!~)(?![A-Za-z]:[\\\\/])[^\\u0000]+$"}}},
+    "project": {"type": "object", "additionalProperties": false, "required": ["id", "title", "status", "version", "provenance"], "properties": {"id": {"$ref": "#/$defs/id"}, "title": {"type": "string", "minLength": 1}, "status": {"$ref": "#/$defs/status"}, "version": {"$ref": "#/$defs/version"}, "provenance": {"$ref": "#/$defs/provenance"}}},
+    "seminar": {"type": "object", "additionalProperties": false, "required": ["id", "project_id", "title", "status", "version", "provenance", "topic_refs"], "properties": {"id": {"$ref": "#/$defs/id"}, "project_id": {"$ref": "#/$defs/id"}, "title": {"type": "string", "minLength": 1}, "status": {"$ref": "#/$defs/status"}, "version": {"$ref": "#/$defs/version"}, "provenance": {"$ref": "#/$defs/provenance"}, "evidence_refs": {"type": "array", "items": {"$ref": "#/$defs/id"}}, "topic_refs": {"type": "array", "items": {"$ref": "#/$defs/id"}}}},
+    "source_scope": {"type": "object", "additionalProperties": false, "required": ["source_ids", "transcript_revision_ids"], "properties": {"source_ids": {"type": "array", "items": {"$ref": "#/$defs/id"}}, "transcript_revision_ids": {"type": "array", "items": {"$ref": "#/$defs/id"}}, "order_start": {"type": "integer", "minimum": 0}, "order_end": {"type": "integer", "minimum": 0}}},
+    "topic": {"type": "object", "additionalProperties": false, "required": ["id", "seminar_id", "source_scope", "title", "summary", "evidence_refs", "concept_refs", "status", "provenance", "version"], "properties": {"id": {"$ref": "#/$defs/id"}, "seminar_id": {"$ref": "#/$defs/id"}, "source_scope": {"$ref": "#/$defs/source_scope"}, "title": {"type": "string", "minLength": 1}, "summary": {"type": "string", "minLength": 1}, "temporal_scope": {"type": "object", "additionalProperties": false, "properties": {"start_seconds": {"type": "number", "minimum": 0}, "end_seconds": {"type": "number", "exclusiveMinimum": 0}}}, "order_scope": {"type": "object", "additionalProperties": false, "properties": {"sequence": {"type": "integer", "minimum": 0}}}, "evidence_refs": {"type": "array", "items": {"$ref": "#/$defs/id"}}, "concept_refs": {"type": "array", "items": {"$ref": "#/$defs/id"}}, "status": {"$ref": "#/$defs/status"}, "provenance": {"$ref": "#/$defs/provenance"}, "version": {"$ref": "#/$defs/version"}}},
+    "concept": {"type": "object", "additionalProperties": false, "required": ["id", "preferred_label", "aliases", "status", "scope", "description", "provenance", "evidence_refs", "topic_refs", "version", "created_from", "supersedes", "redirects"], "properties": {"id": {"$ref": "#/$defs/id"}, "preferred_label": {"type": "string", "minLength": 1}, "aliases": {"type": "array", "items": {"type": "string"}}, "status": {"$ref": "#/$defs/status"}, "scope": {"type": "string", "minLength": 1}, "description": {"type": "string", "minLength": 1}, "provenance": {"$ref": "#/$defs/provenance"}, "evidence_refs": {"type": "array", "items": {"$ref": "#/$defs/id"}}, "topic_refs": {"type": "array", "items": {"$ref": "#/$defs/id"}}, "version": {"$ref": "#/$defs/version"}, "created_from": {"type": "array", "items": {"$ref": "#/$defs/id"}}, "supersedes": {"type": "array", "items": {"$ref": "#/$defs/id"}}, "redirects": {"type": "array", "items": {"$ref": "#/$defs/id"}}}},
+    "relation_type": {"type": "object", "additionalProperties": false, "required": ["id", "description"], "properties": {"id": {"type": "string", "enum": ["supports", "contradicts", "refines", "depends_on", "associated_with"]}, "description": {"type": "string", "minLength": 1}}},
+    "relation": {"type": "object", "additionalProperties": false, "required": ["id", "source_concept_id", "target_concept_id", "relation_type", "status", "provenance", "evidence_refs", "version"], "properties": {"id": {"$ref": "#/$defs/id"}, "source_concept_id": {"$ref": "#/$defs/id"}, "target_concept_id": {"$ref": "#/$defs/id"}, "relation_type": {"type": "string", "enum": ["supports", "contradicts", "refines", "depends_on", "associated_with"]}, "status": {"$ref": "#/$defs/status"}, "provenance": {"$ref": "#/$defs/provenance"}, "evidence_refs": {"type": "array", "items": {"$ref": "#/$defs/id"}}, "version": {"$ref": "#/$defs/version"}}},
+    "review_decision": {"type": "object", "additionalProperties": false, "required": ["id", "action", "target_ids", "result_ids", "reason", "actor_type", "timestamp", "input_version", "output_version", "provenance"], "properties": {"id": {"$ref": "#/$defs/id"}, "action": {"type": "string", "enum": ["ACCEPT", "RENAME", "SPLIT", "MERGE", "REJECT", "DEFER"]}, "target_ids": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/id"}}, "result_ids": {"type": "array", "items": {"$ref": "#/$defs/id"}}, "reason": {"type": "string", "minLength": 1}, "note": {"type": "string"}, "actor_type": {"type": "string", "enum": ["human_domain_reviewer", "product_owner", "system_validator"]}, "actor_id": {"$ref": "#/$defs/id"}, "timestamp": {"type": "string", "minLength": 1}, "input_version": {"$ref": "#/$defs/version"}, "output_version": {"$ref": "#/$defs/version"}, "provenance": {"$ref": "#/$defs/provenance"}, "source_revision": {"$ref": "#/$defs/id"}, "supersedes": {"type": "array", "items": {"$ref": "#/$defs/id"}}}}
+  }
+}
