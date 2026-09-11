@@ -433,6 +433,10 @@ REQUIRED_DEFERRED_CAPABILITIES = {
     "source_repository_consolidation",
     "source_application_retirement",
     "mobile_web_windows_editions",
+    "multi_user_server_edition",
+    "personalized_adaptive_learning",
+    "unrestricted_rag",
+    "full_autonomous_semantic_authoring",
 }
 
 GATED_NOT_AUTHORIZED = {
@@ -468,6 +472,15 @@ DEFERRED_ROADMAP_IDS = {
     "SOCIAL_TELEGRAM",
     "SOCIAL_WHATSAPP",
     "SOCIAL_TIKTOK",
+    "R15",
+}
+
+ACTIVE_CHAIN_ROADMAP_IDS = {
+    "R10",
+    "ONEDRIVE_PUBLICATION_V1",
+    "R12",
+    "R13",
+    "R14",
 }
 
 EXPECTED_ROADMAP_ISSUES = {
@@ -726,6 +739,14 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
 
     for entry_id, required_dependencies in REQUIRED_ROADMAP_DEPENDENCIES.items():
         actual_dependencies = set(entries_by_id.get(entry_id, {}).get("depends_on", []))
+        if entry_id in ACTIVE_CHAIN_ROADMAP_IDS:
+            if actual_dependencies != required_dependencies:
+                errors.append(
+                    f"{entry_id} dependencies differ from the exact READY_APP_V1 chain: "
+                    f"expected {sorted(required_dependencies)}, "
+                    f"got {sorted(actual_dependencies)}"
+                )
+            continue
         missing_dependencies = required_dependencies - actual_dependencies
         if missing_dependencies:
             errors.append(
@@ -733,8 +754,7 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
                 f"{sorted(missing_dependencies)}"
             )
 
-    active_chain_ids = {"R10", "ONEDRIVE_PUBLICATION_V1", "R12", "R13", "R14"}
-    for entry_id in active_chain_ids:
+    for entry_id in ACTIVE_CHAIN_ROADMAP_IDS:
         deferred_dependencies = set(
             entries_by_id.get(entry_id, {}).get("depends_on", [])
         ) & DEFERRED_ROADMAP_IDS

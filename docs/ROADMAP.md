@@ -48,7 +48,7 @@ not add routine human gates or change stage dependencies.
 | SOCIAL_TELEGRAM | #25 | Later | SOCIAL_FOUNDATION | DEFERRED_TO_LATER_WORK |
 | SOCIAL_WHATSAPP | #26 | Later | SOCIAL_FOUNDATION | DEFERRED_TO_LATER_WORK |
 | SOCIAL_TIKTOK | #27 | Later | SOCIAL_FOUNDATION | DEFERRED_TO_LATER_WORK |
-| R15 optional repository consolidation | #31 | Post-ready | R14 | POST_1_0_DEFERRED |
+| R15 optional repository consolidation | #31 | Later | R14 | DEFERRED_TO_LATER_WORK |
 
 ## READY_APP_V1 sequence
 
@@ -68,7 +68,9 @@ Issue #64 records all unavailable later-work capabilities in machine-readable
 and user-visible form. Marketing, Learning, Assistant, additional Publishing
 Hub formats, the social foundation and all seven social adapters follow R14 and
 cannot block the active chain. Their current Issue numbers remain stable;
-deferral is not completion or standing authority to implement them.
+deferral is not completion or standing authority to implement them. R15 uses
+the same `DEFERRED_TO_LATER_WORK` status and also remains blocked by R14 and its
+separate source-repository authorization boundary.
 
 ## Advancement rule
 

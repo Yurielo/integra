@@ -160,7 +160,7 @@
         },
         "deferred": {
           "type": "array",
-          "minItems": 12,
+          "minItems": 16,
           "uniqueItems": true,
           "items": { "type": "string" }
         },
@@ -183,7 +183,7 @@
           "id": { "type": "string" },
           "issue": { "type": "integer", "minimum": 2 },
           "status": {
-            "enum": ["ACCEPTED", "IN_REVIEW", "PARTIAL", "PLANNED", "DEFERRED_UNTIL_DEPENDENCY", "DEFERRED_TO_LATER_WORK", "HUMAN_GATE", "POST_1_0_DEFERRED"]
+            "enum": ["ACCEPTED", "IN_REVIEW", "PARTIAL", "PLANNED", "DEFERRED_UNTIL_DEPENDENCY", "DEFERRED_TO_LATER_WORK", "HUMAN_GATE"]
           },
           "depends_on": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
         },

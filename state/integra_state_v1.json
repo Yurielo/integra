@@ -88,7 +88,11 @@
       "public_distribution_signing_notarization_and_update_publication",
       "source_repository_consolidation",
       "source_application_retirement",
-      "mobile_web_windows_editions"
+      "mobile_web_windows_editions",
+      "multi_user_server_edition",
+      "personalized_adaptive_learning",
+      "unrestricted_rag",
+      "full_autonomous_semantic_authoring"
     ],
     "gated_not_authorized": [
       "protected_or_private_data",
@@ -136,7 +140,7 @@
     { "id": "SOCIAL_TELEGRAM", "issue": 25, "status": "DEFERRED_TO_LATER_WORK", "depends_on": ["SOCIAL_FOUNDATION"] },
     { "id": "SOCIAL_WHATSAPP", "issue": 26, "status": "DEFERRED_TO_LATER_WORK", "depends_on": ["SOCIAL_FOUNDATION"] },
     { "id": "SOCIAL_TIKTOK", "issue": 27, "status": "DEFERRED_TO_LATER_WORK", "depends_on": ["SOCIAL_FOUNDATION"] },
-    { "id": "R15", "issue": 31, "status": "POST_1_0_DEFERRED", "depends_on": ["R14"] }
+    { "id": "R15", "issue": 31, "status": "DEFERRED_TO_LATER_WORK", "depends_on": ["R14"] }
   ],
   "stop_conditions": [
     "authority_conflict",

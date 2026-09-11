@@ -796,10 +796,11 @@ authority.
 
 ### R15 — Optional Repository Consolidation
 
-After R14, evaluate federated repositories, packages, subtree history import,
-or a monorepo. Consolidation must have a demonstrated maintenance benefit and
-must not break standalone products or history. Source-repository changes and
-source-product retirement remain separately authorized.
+Status: `DEFERRED_TO_LATER_WORK` after R14. Evaluate federated repositories,
+packages, subtree history import, or a monorepo only under a separately
+authorized task. Consolidation must have a demonstrated maintenance benefit
+and must not break standalone products or history. Source-repository changes
+and source-product retirement remain separately authorized.
 
 ## 16. Completion definitions
 

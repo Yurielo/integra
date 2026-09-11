@@ -95,6 +95,25 @@ class GovernanceValidationTests(unittest.TestCase):
             errors,
         )
 
+    def test_deferred_capability_registry_is_exact(self):
+        capabilities = set(self.state["release_scope"]["deferred"])
+        self.assertEqual(capabilities, VALIDATOR.REQUIRED_DEFERRED_CAPABILITIES)
+        self.assertTrue(
+            {
+                "multi_user_server_edition",
+                "personalized_adaptive_learning",
+                "unrestricted_rag",
+                "full_autonomous_semantic_authoring",
+            }.issubset(capabilities)
+        )
+        state = copy.deepcopy(self.state)
+        state["release_scope"]["deferred"].remove("multi_user_server_edition")
+        state["release_scope"]["deferred"].append("unknown_future_capability")
+        self.assertIn(
+            "deferred capabilities differ from the Product Owner registry",
+            VALIDATOR.validate_state(state),
+        )
+
     def test_ready_app_priority_order_is_exact(self):
         state = copy.deepcopy(self.state)
         state["delivery_target"]["priority_order"][1:3] = reversed(
@@ -418,7 +437,10 @@ class GovernanceValidationTests(unittest.TestCase):
         entry["depends_on"].remove("ONEDRIVE_PUBLICATION_V1")
         errors = VALIDATOR.validate_state(state)
         self.assertTrue(
-            any("R12 lacks required dependencies" in error for error in errors)
+            any(
+                "R12 dependencies differ from the exact READY_APP_V1 chain" in error
+                for error in errors
+            )
         )
 
     def test_native_app_cannot_depend_on_deferred_capability(self):
@@ -428,6 +450,18 @@ class GovernanceValidationTests(unittest.TestCase):
         errors = VALIDATOR.validate_state(state)
         self.assertTrue(
             any("R12 must not depend on deferred roadmap items" in error for error in errors)
+        )
+
+    def test_active_chain_rejects_extra_accepted_dependency(self):
+        state = copy.deepcopy(self.state)
+        entry = next(item for item in state["roadmap"] if item["id"] == "R12")
+        entry["depends_on"].append("R9C")
+        errors = VALIDATOR.validate_state(state)
+        self.assertTrue(
+            any(
+                "R12 dependencies differ from the exact READY_APP_V1 chain" in error
+                for error in errors
+            )
         )
 
     def test_deferred_capability_must_follow_r14(self):
@@ -443,6 +477,15 @@ class GovernanceValidationTests(unittest.TestCase):
         deferred["status"] = "PLANNED"
         errors = VALIDATOR.validate_state(state)
         self.assertIn("R11 must remain DEFERRED_TO_LATER_WORK", errors)
+
+    def test_r15_is_deferred_after_r14(self):
+        state = copy.deepcopy(self.state)
+        r15 = next(item for item in state["roadmap"] if item["id"] == "R15")
+        r15["status"] = "POST_1_0_DEFERRED"
+        r15["depends_on"].remove("R14")
+        errors = VALIDATOR.validate_state(state)
+        self.assertIn("R15 must remain DEFERRED_TO_LATER_WORK", errors)
+        self.assertIn("R15 must be dependency-blocked until after R14", errors)
 
     def test_forward_dependency_fails(self):
         state = copy.deepcopy(self.state)
