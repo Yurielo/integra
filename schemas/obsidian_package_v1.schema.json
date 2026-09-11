@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://integra.local/schemas/obsidian_package_v1.schema.json",
+  "title": "Integra managed Obsidian package v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "artifact_type", "package_id", "version_sha256", "project_id", "project_slug", "created_at", "source_manifest_sha256", "knowledge", "navigation", "files", "semantic_authority", "source_artifacts_modified"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "artifact_type": {"const": "integra.obsidian_package"},
+    "package_id": {"type": "string", "minLength": 3},
+    "version_sha256": {"$ref": "#/$defs/sha256"},
+    "project_id": {"type": "string", "minLength": 3},
+    "project_slug": {"type": "string", "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._-]{0,95}$"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "source_manifest_sha256": {"$ref": "#/$defs/sha256"},
+    "knowledge": {"$ref": "#/$defs/binding"},
+    "navigation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["navigation_id", "record_sha256"],
+      "properties": {"navigation_id": {"type": "string", "minLength": 3}, "record_sha256": {"$ref": "#/$defs/sha256"}}
+    },
+    "files": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/file"}},
+    "semantic_authority": {"const": "DERIVED_SOURCE_TRUTH_PRESERVED"},
+    "source_artifacts_modified": {"const": false}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "binding": {"type": "object", "additionalProperties": false, "required": ["view_id", "record_sha256"], "properties": {"view_id": {"type": "string", "minLength": 3}, "record_sha256": {"$ref": "#/$defs/sha256"}}},
+    "file": {"type": "object", "additionalProperties": false, "required": ["path", "size_bytes", "sha256", "ownership_class"], "properties": {"path": {"type": "string", "minLength": 1}, "size_bytes": {"type": "integer", "minimum": 0}, "sha256": {"$ref": "#/$defs/sha256"}, "ownership_class": {"const": "MANAGED_GENERATED"}}}
+  }
+}
