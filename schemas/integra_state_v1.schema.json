@@ -23,6 +23,7 @@
     "document_pipeline_evidence",
     "projects_sources_evidence",
     "transcript_topic_studio_evidence",
+    "multi_source_alignment_evidence",
     "execution_policy",
     "release_scope",
     "roadmap",
@@ -77,6 +78,9 @@
     },
     "transcript_topic_studio_evidence": {
       "const": "state/transcript_topic_studio_v1.json"
+    },
+    "multi_source_alignment_evidence": {
+      "const": "state/multi_source_alignment_v1.json"
     },
     "execution_policy": {
       "type": "object",

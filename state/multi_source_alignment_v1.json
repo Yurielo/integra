@@ -1,0 +1,80 @@
+{
+  "schema_version": "1.0",
+  "status": "ACCEPTED",
+  "issue": 12,
+  "dependencies": [
+    "R8A",
+    "R8B",
+    "PROJECTS_AND_SOURCES_V1",
+    "TRANSCRIPT_AND_TOPIC_STUDIO_V1"
+  ],
+  "implementation": [
+    {"path": "docs/architecture/MULTI_SOURCE_ALIGNMENT_V1.md", "sha256": "a517dffd0ff525e540af6bddd47687537a62317c10205b67154a451a95794bdb"},
+    {"path": "integra_core/multi_source_alignment.py", "sha256": "59cdf2d95e109f61a1a96c7ab35f8b27a0de4a0e2338caef7d8b5cc599853196"},
+    {"path": "schemas/multi_source_alignment_v1.schema.json", "sha256": "c824ffbbced6c25c22fc4f085ecf26e92715f1c6b991e693839e3cf6f7e09284"},
+    {"path": "schemas/multi_source_alignment_evidence_v1.schema.json", "sha256": "c4ee25cf72ad7aaff15778c6c781157717d2d76ac72bb3639fd2735257e6240c"},
+    {"path": "tests/test_multi_source_alignment.py", "sha256": "c2173fe625f7e4a27d4a1c15c890ca1dc1d833c2c2d3ee3d0847eba101a97887"}
+  ],
+  "node_kinds": [
+    "AUDIO",
+    "EVIDENCE",
+    "PAGE",
+    "SLIDE",
+    "SUPPORTING_DOCUMENT",
+    "TOPIC",
+    "TRANSCRIPT",
+    "VIDEO"
+  ],
+  "relations": [
+    "EVIDENCE_TO_DOCUMENT",
+    "TOPIC_TO_PAGE",
+    "TOPIC_TO_SLIDE",
+    "VIDEO_TO_SLIDE",
+    "VIDEO_TO_TRANSCRIPT"
+  ],
+  "locator_types": [
+    "ARTIFACT_REVISION",
+    "CHARACTER_RANGE",
+    "PAGE_RANGE",
+    "REGION",
+    "SLIDE_RANGE",
+    "TIME_INTERVAL",
+    "WORD_INTERVAL"
+  ],
+  "acceptance": {
+    "authoritative_registry_required": true,
+    "validated_upstream_records_required": true,
+    "upstream_payloads_not_serialized": true,
+    "origin_component_binding_verified": true,
+    "current_source_revisions_required": true,
+    "source_native_locators_required": true,
+    "artifact_revision_locator_required": true,
+    "node_kind_source_compatible": true,
+    "locator_range_consistency_required": true,
+    "video_transcript_same_revision_required": true,
+    "node_and_link_content_hash_bound": true,
+    "video_to_transcript_navigation": true,
+    "video_to_slide_navigation": true,
+    "topic_to_page_navigation": true,
+    "topic_to_slide_navigation": true,
+    "evidence_to_document_navigation": true,
+    "forward_and_reverse_navigation": true,
+    "deterministic_serialization": true,
+    "confidence_and_conflict_visible": true,
+    "semantic_acceptance_automatic": false
+  },
+  "safety": {
+    "source_artifacts_modified": false,
+    "source_repositories_modified": false,
+    "protected_data_accessed": false,
+    "gold_accessed": false,
+    "network_access_performed": false,
+    "credentials_accessed": false,
+    "external_actions_performed": false
+  },
+  "limitations": [
+    "V1 validates supplied alignment proposals and does not select or tune a matching model.",
+    "A changed Projects & Sources registry requires an explicit alignment rebuild.",
+    "User-interface cross-navigation remains R9C scope."
+  ]
+}
