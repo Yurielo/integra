@@ -19,8 +19,9 @@ final class Bridge {
     private let resources: URL
     init(resources: URL) { self.resources = resources }
 
-    func call(_ operation: String) throws -> Data {
-        guard ["workflow", "obsidian-preview", "onedrive-preview", "deferred"].contains(operation) else {
+    func call(_ operation: String, request: [String: Any] = [:]) throws -> Data {
+        let allowed = ["workflow", "obsidian-preview", "onedrive-preview", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "package-preview", "package-publish"]
+        guard allowed.contains(operation) else {
             throw BridgeError.failed("Unsupported operation")
         }
         let script = resources.appendingPathComponent("bridge.py")
@@ -29,7 +30,15 @@ final class Bridge {
         process.executableURL = URL(fileURLWithPath: "/usr/bin/python3")
         process.arguments = [script.path, operation]
         process.standardOutput = output; process.standardError = errors
-        try process.run(); process.waitUntilExit()
+        if !request.isEmpty {
+            let input = Pipe(); process.standardInput = input
+            try process.run()
+            input.fileHandleForWriting.write(try JSONSerialization.data(withJSONObject: request))
+            try input.fileHandleForWriting.close()
+        } else {
+            try process.run()
+        }
+        process.waitUntilExit()
         let data = output.fileHandleForReading.readDataToEndOfFile()
         if process.terminationStatus != 0 {
             let detail = String(data: errors.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? "bridge failed"
@@ -42,6 +51,11 @@ final class Bridge {
     func workflow() throws -> Workflow { try JSONDecoder().decode(WorkflowEnvelope.self, from: call("workflow")).workflow }
     func deferred() throws -> DeferredRegistry { try JSONDecoder().decode(DeferredEnvelope.self, from: call("deferred")).registry }
     func preview(_ operation: String) throws -> PreviewEnvelope { try JSONDecoder().decode(PreviewEnvelope.self, from: call(operation)) }
+    func json(_ operation: String, request: [String: Any] = [:]) throws -> [String: Any] {
+        let value = try JSONSerialization.jsonObject(with: call(operation, request: request))
+        guard let object = value as? [String: Any], object["ok"] as? Bool == true else { throw BridgeError.invalidResponse }
+        return object
+    }
 }
 
 @MainActor
@@ -62,7 +76,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource,
         buildWindow()
         window.makeKeyAndOrderFront(nil)
         if let marker = ProcessInfo.processInfo.environment["INTEGRA_LAUNCH_PROBE"] {
-            try? "LAUNCHED\n".write(toFile: marker, atomically: true, encoding: .utf8)
+            let proof = "LAUNCHED visible=\(window.isVisible) sections=\(workflow.sections.count) title=\(window.title)\n"
+            try? proof.write(toFile: marker, atomically: true, encoding: .utf8)
             NSApp.terminate(nil)
         }
     }
@@ -122,18 +137,56 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource,
             text += "\n\n" + registry.features.map { "• \($0) — Later / Unavailable" }.joined(separator: "\n")
         }
         detail.string = text
-        if section.id == "obsidian" { actionButton.title = "Run safe Obsidian preview"; actionButton.isHidden = false; actionButton.isEnabled = true }
-        else if section.id == "onedrive" { actionButton.title = "Run safe OneDrive preview"; actionButton.isHidden = false; actionButton.isEnabled = true }
+        if section.id == "projects" { actionButton.title = "Create or open local project"; actionButton.isHidden = false; actionButton.isEnabled = true }
+        else if section.id == "operations" { actionButton.title = "Run local integrity job"; actionButton.isHidden = false; actionButton.isEnabled = true }
+        else if section.id == "navigation" { actionButton.title = "Follow exact source route"; actionButton.isHidden = false; actionButton.isEnabled = true }
+        else if section.id == "obsidian" { actionButton.title = "Choose package and export target"; actionButton.isHidden = false; actionButton.isEnabled = true }
+        else if section.id == "onedrive" { actionButton.title = "Choose package and OneDrive folder"; actionButton.isHidden = false; actionButton.isEnabled = true }
         else { actionButton.isHidden = true; actionButton.isEnabled = false }
     }
 
     @objc private func runAction() {
         let id = workflow.sections[table.selectedRow].id
-        let operation = id == "obsidian" ? "obsidian-preview" : "onedrive-preview"
         do {
-            let preview = try bridge.preview(operation)
-            detail.string += "\n\nPreview: \(preview.state)\nWrites: \(preview.writes_performed)\nExternal actions: \(preview.external_actions_performed)\nCloud verified: \(preview.cloud_verified)"
+            if id == "projects" { try projectAction(); return }
+            if id == "operations" { try operationAction(); return }
+            if id == "navigation" { detail.string += "\n\nExact route opened:\n\(workflow.navigation.entity)\n→ \(workflow.navigation.source_locator)\n↔ \(workflow.navigation.reverse_route)"; return }
+            try publicationAction(kind: id)
         } catch { detail.string += "\n\nPreview failed safely: \(error)" }
+    }
+
+    private func projectAction() throws {
+        let list = try bridge.json("projects")["result"] as? [[String: Any]] ?? []
+        if let latest = list.last, let projectID = latest["project_id"] as? String {
+            let opened = try bridge.json("open-project", request: ["project_id": projectID])
+            detail.string += "\n\nOpened governed local project:\n\(opened["result"] ?? [:])"
+        } else {
+            let created = try bridge.json("create-project", request: ["name": "Integra Local Project"])
+            detail.string += "\n\nCreated governed local project:\n\(created["result"] ?? [:])"
+        }
+    }
+
+    private func operationAction() throws {
+        var list = try bridge.json("projects")["result"] as? [[String: Any]] ?? []
+        if list.isEmpty { _ = try bridge.json("create-project", request: ["name": "Integra Local Project"]); list = try bridge.json("projects")["result"] as? [[String: Any]] ?? [] }
+        guard let projectID = list.last?["project_id"] as? String else { throw BridgeError.invalidResponse }
+        let job = try bridge.json("start-job", request: ["project_id": projectID])
+        detail.string += "\n\nLocal integrity job completed with persisted result:\n\(job["result"] ?? [:])"
+    }
+
+    private func publicationAction(kind: String) throws {
+        let packagePanel = NSOpenPanel(); packagePanel.title = "Choose a validated Integra package directory"; packagePanel.canChooseDirectories = true; packagePanel.canChooseFiles = false
+        guard packagePanel.runModal() == .OK, let packageURL = packagePanel.url else { return }
+        let targetPanel = NSOpenPanel(); targetPanel.title = kind == "obsidian" ? "Choose Obsidian Vault" : "Choose filesystem-backed OneDrive folder"; targetPanel.canChooseDirectories = true; targetPanel.canChooseFiles = false
+        guard targetPanel.runModal() == .OK, let targetURL = targetPanel.url else { return }
+        let request = ["package_dir": packageURL.path, "target_dir": targetURL.path]
+        let preview = try bridge.json("package-preview", request: request)
+        detail.string += "\n\nVerified preview:\n\(preview["result"] ?? [:])"
+        let alert = NSAlert(); alert.messageText = "Publish this verified package?"; alert.informativeText = "Integra writes only to its managed subtree. OneDrive local publication never means cloud verification."; alert.addButton(withTitle: "Publish"); alert.addButton(withTitle: "Cancel")
+        if alert.runModal() == .alertFirstButtonReturn {
+            let result = try bridge.json("package-publish", request: request)
+            detail.string += "\n\nPublication result:\n\(result["result"] ?? [:])"
+        }
     }
 }
 

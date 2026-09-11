@@ -13,6 +13,7 @@ cp "$repo_root/macos/Info.plist" "$app/Contents/Info.plist"
 cp "$repo_root/macos/Resources/bridge.py" "$app/Contents/Resources/bridge.py"
 cp "$repo_root/macos/Resources/reference_workflow.json" "$app/Contents/Resources/reference_workflow.json"
 cp "$repo_root/macos/Resources/deferred_features.json" "$app/Contents/Resources/deferred_features.json"
+rsync -a --exclude '__pycache__' --exclude '*.pyc' "$repo_root/integra_core/" "$app/Contents/Resources/integra_core/"
 chmod 755 "$app/Contents/MacOS/Integra" "$app/Contents/Resources/bridge.py"
 plutil -lint "$app/Contents/Info.plist" >/dev/null
 echo "$app"

@@ -2633,9 +2633,11 @@ def validate_native_macos_app_evidence(evidence: dict, root: Path = ROOT) -> lis
         errors.append("R12 implementation inventory must be exact")
     if evidence.get("acceptance") != {
         "appkit_native_ui": True, "buildable_without_full_xcode": True,
-        "closed_local_bridge": True, "deferred_actions_unavailable": True,
+        "closed_local_bridge": True, "controlled_local_publication_tested": True,
+        "create_and_open_project_tested": True, "deferred_actions_unavailable": True,
         "deterministic_reference_workflow": True, "exact_navigation_visible": True,
-        "launch_probe_passed": True, "onedrive_preview_visible": True,
+        "launch_probe_passed": True, "persisted_job_inspection_tested": True,
+        "onedrive_preview_visible": True,
         "operations_diagnostics_visible": True, "obsidian_preview_visible": True,
         "required_surfaces_visible": True,
     }:

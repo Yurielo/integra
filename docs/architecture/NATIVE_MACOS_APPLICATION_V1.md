@@ -26,20 +26,25 @@ The application exposes these required surfaces in one navigable sidebar:
 
 The deterministic reference project presents accepted contract truth without
 private input. Knowledge remains `PROVISIONAL`; navigation shows stable entity,
-time-locator, and reverse-route identities. Obsidian and OneDrive controls run
-allowlisted dry-run reference previews that explicitly report no writes, no
-external actions, and `cloud_verified: false`.
+time-locator, and reverse-route identities. The application also creates and
+opens governed local projects, persists local integrity jobs, and imports a
+fully validated publication package chosen by the user. Obsidian and OneDrive
+first run the accepted preview service; a separate confirmation is required
+before the accepted publisher writes its managed subtree. OneDrive receipts
+always retain `cloud_verified: false`.
 
 ## Closed bridge
 
-The native process invokes only `/usr/bin/python3` with the fixed bundled
-`bridge.py` path and one of four allowlisted operations. It does not invoke a
-shell, accept arbitrary paths or commands, access the network, mutate project
-state, or translate unavailable behavior into success. JSON decoding is typed
-and failure remains visible. The bridge packages the deterministic reference
-projection of the accepted Python/domain contracts for UI and launch testing;
-live project orchestration remains subject to the same service leases and
-publication target gates.
+The bundle contains the accepted `integra_core` Python domain services. The
+native process invokes only `/usr/bin/python3` with the fixed bundled
+`bridge.py` path and one of twelve allowlisted operations. Every response is
+canonicalized and hashed by the bundled domain protocol service. It does not invoke a
+shell, accept arbitrary commands, access the network, or translate unavailable
+behavior into success. User-selected paths are accepted only by closed project
+and publication operations and are revalidated by the domain services. Mutable
+project state is confined to Application Support (or an explicit test root).
+Publication still requires a current Project Lease, exact package validation,
+the managed target lock, and the accepted collision/recovery gates.
 
 Deferred capabilities are read from a separate immutable resource. The registry
 has `actions_available: false`; the UI disables and hides the action control on
@@ -48,11 +53,11 @@ that surface and labels every item `Later / Unavailable`.
 ## Build and launch evidence
 
 `scripts/test_macos_app.sh` builds a fresh application in a temporary directory,
-runs the native self-test, validates both publication preview responses, launches
-the AppKit lifecycle, creates the window, records a deterministic launch marker,
-and exits. Python integration tests verify the exact required surface inventory,
-locator visibility, bridge allowlist, publication non-mutation, and deferred
-action boundary.
+runs the native self-test, validates both package-required preview responses,
+launches the AppKit lifecycle, proves that a visible nine-section window was
+created, records the launch evidence, and exits. Python integration tests also
+create/open a persisted local project, run and inspect a persisted integrity
+job, and publish valid Obsidian and OneDrive packages into temporary targets.
 
 The separately generated `build/Integra.app` is an unsigned local development
 artifact and is ignored by Git. R13 owns minimum deployment hardening, bundle
@@ -65,6 +70,7 @@ package evidence, backup/rollback, crash recovery, and update readiness.
   real Vault, real OneDrive sync root, or live external write is used.
 - The R12 bundle is not signed, notarized, distributed, released, or declared a
   production package.
-- The reference workflow proves the usable UI journey and contract boundary;
-  user-selected live project and publication orchestration remains gated and is
-  not simulated as successful.
+- Project and publication integration tests use only temporary directories and
+  generated public fixtures. A user must explicitly choose any real target.
+- The R12 local bundle depends on `/usr/bin/python3`; bundling/removing that
+  host-runtime dependency is an R13 packaging requirement.
