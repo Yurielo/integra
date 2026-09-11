@@ -17,7 +17,9 @@
 | IR-013 | OCR or alignment presented as exact evidence | High | Assurance state and locator validation | Unsupported source-fidelity claim |
 | IR-014 | Human-review burden grows linearly | Medium | Exception clustering, bulk decisions, reusable playbooks | Routine item-by-item gate reappears |
 | IR-015 | Release cannot be restored | Critical | Versioned backup, migration report, update rollback | Failed recovery rehearsal |
-| IR-016 | Licensing or notarization blocks distribution | High | Early inventory; R13 legal/packaging gate | Unresolved license or signing requirement |
+| IR-016 | Licensing or notarization blocks distribution | High | R13 inventory and local-package evidence; signing/notarization remain separately gated | Unresolved license or signing requirement |
+| IR-017 | Deferred feature appears implemented or blocks the ready app | High | Machine-readable deferred registry, unavailable UI state, active-chain dependency validation | Placeholder runs, claims success, or becomes an R12-R14 dependency |
+| IR-018 | Governance and GitHub roadmap diverge after rebaseline | High | Stable Issue mapping, schema/validator checks, post-merge GitHub reconciliation | Mismatched ID, status, dependency, or milestone |
 
 Risks are reviewed at the start and completion of each roadmap stage. A stage
 may add evidence or mitigation, but changing accepted risk ownership or

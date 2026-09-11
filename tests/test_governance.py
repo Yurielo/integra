@@ -86,11 +86,43 @@ class GovernanceValidationTests(unittest.TestCase):
     def test_repository_state_is_valid(self):
         self.assertEqual(VALIDATOR.validate_state(self.state), [])
 
-    def test_missing_social_platform_fails(self):
+    def test_missing_deferred_social_platform_fails(self):
         state = copy.deepcopy(self.state)
-        state["release_scope"]["social_platforms"].remove("tiktok")
+        state["release_scope"]["deferred_social_platforms"].remove("tiktok")
         errors = VALIDATOR.validate_state(state)
-        self.assertTrue(any("missing social platforms" in error for error in errors))
+        self.assertIn(
+            "deferred social platforms differ from the Product Owner registry",
+            errors,
+        )
+
+    def test_deferred_capability_registry_is_exact(self):
+        capabilities = set(self.state["release_scope"]["deferred"])
+        self.assertEqual(capabilities, VALIDATOR.REQUIRED_DEFERRED_CAPABILITIES)
+        self.assertTrue(
+            {
+                "multi_user_server_edition",
+                "personalized_adaptive_learning",
+                "unrestricted_rag",
+                "full_autonomous_semantic_authoring",
+            }.issubset(capabilities)
+        )
+        state = copy.deepcopy(self.state)
+        state["release_scope"]["deferred"].remove("multi_user_server_edition")
+        state["release_scope"]["deferred"].append("unknown_future_capability")
+        self.assertIn(
+            "deferred capabilities differ from the Product Owner registry",
+            VALIDATOR.validate_state(state),
+        )
+
+    def test_ready_app_priority_order_is_exact(self):
+        state = copy.deepcopy(self.state)
+        state["delivery_target"]["priority_order"][1:3] = reversed(
+            state["delivery_target"]["priority_order"][1:3]
+        )
+        self.assertIn(
+            "delivery_target does not match the authorized READY_APP_V1 chain",
+            VALIDATOR.validate_state(state),
+        )
 
     def test_standalone_products_cannot_be_disabled(self):
         state = copy.deepcopy(self.state)
@@ -399,23 +431,61 @@ class GovernanceValidationTests(unittest.TestCase):
             )
         )
 
-    def test_combined_beta_requires_established_module(self):
+    def test_native_app_requires_onedrive_publication(self):
         state = copy.deepcopy(self.state)
         entry = next(item for item in state["roadmap"] if item["id"] == "R12")
-        entry["depends_on"].remove("R10")
+        entry["depends_on"].remove("ONEDRIVE_PUBLICATION_V1")
         errors = VALIDATOR.validate_state(state)
         self.assertTrue(
-            any("R12 lacks required dependencies" in error for error in errors)
+            any(
+                "R12 dependencies differ from the exact READY_APP_V1 chain" in error
+                for error in errors
+            )
         )
 
-    def test_combined_beta_requires_every_social_adapter(self):
+    def test_native_app_cannot_depend_on_deferred_capability(self):
         state = copy.deepcopy(self.state)
         entry = next(item for item in state["roadmap"] if item["id"] == "R12")
-        entry["depends_on"].remove("SOCIAL_FACEBOOK")
+        entry["depends_on"].append("R11")
         errors = VALIDATOR.validate_state(state)
         self.assertTrue(
-            any("R12 lacks required dependencies" in error for error in errors)
+            any("R12 must not depend on deferred roadmap items" in error for error in errors)
         )
+
+    def test_active_chain_rejects_extra_accepted_dependency(self):
+        state = copy.deepcopy(self.state)
+        entry = next(item for item in state["roadmap"] if item["id"] == "R12")
+        entry["depends_on"].append("R9C")
+        errors = VALIDATOR.validate_state(state)
+        self.assertTrue(
+            any(
+                "R12 dependencies differ from the exact READY_APP_V1 chain" in error
+                for error in errors
+            )
+        )
+
+    def test_deferred_capability_must_follow_r14(self):
+        state = copy.deepcopy(self.state)
+        deferred = next(item for item in state["roadmap"] if item["id"] == "R11")
+        deferred["depends_on"].remove("R14")
+        errors = VALIDATOR.validate_state(state)
+        self.assertIn("R11 must be dependency-blocked until after R14", errors)
+
+    def test_deferred_capability_status_is_enforced(self):
+        state = copy.deepcopy(self.state)
+        deferred = next(item for item in state["roadmap"] if item["id"] == "R11")
+        deferred["status"] = "PLANNED"
+        errors = VALIDATOR.validate_state(state)
+        self.assertIn("R11 must remain DEFERRED_TO_LATER_WORK", errors)
+
+    def test_r15_is_deferred_after_r14(self):
+        state = copy.deepcopy(self.state)
+        r15 = next(item for item in state["roadmap"] if item["id"] == "R15")
+        r15["status"] = "POST_1_0_DEFERRED"
+        r15["depends_on"].remove("R14")
+        errors = VALIDATOR.validate_state(state)
+        self.assertIn("R15 must remain DEFERRED_TO_LATER_WORK", errors)
+        self.assertIn("R15 must be dependency-blocked until after R14", errors)
 
     def test_forward_dependency_fails(self):
         state = copy.deepcopy(self.state)

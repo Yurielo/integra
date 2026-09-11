@@ -1,6 +1,6 @@
 # Integra Architecture and Authority Model v1
 
-Status: `R0_ACCEPTED`
+Status: `READY_APP_V1_REBASELINED`
 
 ## 1. Logical architecture
 
@@ -15,16 +15,15 @@ Integra control plane ── Project Registry / Job Queue / Project Lease
   ├── VideoText worker adapter ──── media preparation and recipes
   ├── source adapters ───────────── local files, YouTube, documents, OCR
   ├── review service ────────────── exception packages and ReviewDecision
-  └── Publishing Hub ────────────── files, Obsidian, OneDrive, social APIs
+  └── publication services ──────── managed Obsidian export, filesystem OneDrive
              ↓
       versioned artifact store, manifests, hashes, logs, and recovery points
 ```
 
-The initial worker boundary is a controlled local process with structured
-artifact exchange. A network service and a rewrite of SeminarText in Swift are
-not prerequisites. Concrete UI framework, storage engine, and process transport
-choices remain R3/R4 implementation decisions provided they satisfy the
-versioned contracts and resource limits.
+The worker boundary is a controlled local process with structured artifact
+exchange. A network service and a rewrite of SeminarText in Swift are not
+prerequisites. R12 selects the native UI framework while preserving the
+accepted storage and process contracts and reference-Mac resource limits.
 
 R3 fixes that boundary as the dependency-free local JSONL contract documented
 in [`WORKER_PROTOCOL_V1.md`](WORKER_PROTOCOL_V1.md), with exact component,
@@ -131,6 +130,21 @@ selections and verified clips. Every hop retains the upstream stable ID and
 locator. Missing sources are explicit unavailable targets with no fabricated
 route or fallback.
 
+The Product Owner rebaseline in Issue #62 fixes the active target as
+`READY_APP_V1`. The remaining runtime direction is deliberately linear: R10
+adds the managed one-way Obsidian exporter; `ONEDRIVE_PUBLICATION_V1` (#63)
+adds the filesystem-backed publisher; R12 builds a usable native macOS UI over
+the accepted core and those two services; R13 hardens and packages a
+reproducible local `.app`; R14 is the explicit acceptance gate. The UI also
+reads the deferred-capability registry and renders later work as unavailable,
+never as executable or successful placeholder behavior.
+
+Marketing, Learning, Knowledge Assistant, general additional export formats,
+and social adapters are not dependencies of the ready application. They remain
+architecturally separable consumers of governed evidence and publication
+contracts after R14. Issue #64 records that boundary without granting
+implementation authority.
+
 ## 2. Authority model
 
 ### Factual state authority
@@ -170,7 +184,7 @@ structure and lineage, not semantic truth.
 | ReviewDecision | Governed review contract | apply deterministically |
 | Canonical Evidence and Knowledge | SeminarText | read/reference |
 | Media recipe and artifact | VideoText | read/reference |
-| Publication package and status | Integra Publishing Hub | write/version |
+| Managed publication package and status | Integra publication services | write/version |
 | Managed Obsidian view | Integra exporter | controlled one-way write |
 | OneDrive publication | Integra Publishing adapter | stage/verify/reference |
 
@@ -210,8 +224,9 @@ identity, and monotonic lease generations.
 - Worker responses are validated against pinned contract and component identity.
 - Artifact store writes use staging, checksums, atomic promotion, and recovery.
 - OneDrive and Obsidian share no concurrent writer target.
-- Social platforms are external irreversible-action boundaries using official
-  APIs, protected credentials, preflight, idempotency, and explicit status.
+- Social platforms remain deferred external irreversible-action boundaries;
+  any later implementation must use official APIs, protected credentials,
+  preflight, idempotency, and explicit status.
 - Logs redact credentials, cookies, personal data, and private content by
   default.
 
@@ -228,3 +243,8 @@ Unknown contract versions, component drift, hash mismatch, lease conflict,
 partial cloud sync, ambiguous publication status, missing provenance, or source
 regression are visible failures. Integra does not silently retry irreversible
 operations or report partial artifacts as complete.
+
+Protected/private data, credentials, live external writes, authoritative
+semantic acceptance, Concept merging, destructive migration, signing identity,
+and release authority remain gated. R14 and deferred status do not relax these
+trust boundaries.

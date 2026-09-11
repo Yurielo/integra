@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "product": "Integra",
-  "baseline_date": "2026-09-10",
+  "baseline_date": "2026-09-11",
   "standalone_products_preserved": true,
   "component_baseline_manifest": "state/component_baselines_v1.json",
   "data_ownership_contract": "state/data_ownership_v1.json",
@@ -33,20 +33,41 @@
     "destructive_migration": "EXPLICIT_AUTHORITY_REQUIRED",
     "source_repository_changes": "EXPLICIT_SCOPE_REQUIRED"
   },
+  "delivery_target": {
+    "id": "READY_APP_V1",
+    "authorization_issue": 62,
+    "priority_order": [
+      "R9C",
+      "R10",
+      "ONEDRIVE_PUBLICATION_V1",
+      "R12",
+      "R13",
+      "R14"
+    ],
+    "deferred_status": "DEFERRED_TO_LATER_WORK",
+    "acceptance_gate": "R14"
+  },
   "release_scope": {
+    "target": "READY_APP_V1",
     "required_modules": [
       "projects_and_sources",
       "transcript_and_topic_studio",
       "knowledge_studio",
       "media_studio",
+      "cross_navigation",
+      "operations_and_diagnostics",
+      "compatibility_and_migration",
+      "obsidian_export",
+      "onedrive_publication",
+      "native_macos_application"
+    ],
+    "deferred_modules": [
+      "publishing_hub_additional_formats",
       "marketing_studio_v1",
       "learning_studio_v1",
-      "knowledge_assistant_v1",
-      "publishing_hub",
-      "operations_and_diagnostics",
-      "compatibility_and_migration"
+      "knowledge_assistant_v1"
     ],
-    "social_platforms": [
+    "deferred_social_platforms": [
       "facebook_pages",
       "instagram",
       "threads",
@@ -56,13 +77,32 @@
       "tiktok"
     ],
     "deferred": [
+      "general_docx_pdf_srt_audio_video_export",
+      "live_youtube_api_and_media_download",
+      "local_ocr_engine_and_model_execution",
+      "automatic_multi_source_matching",
+      "representative_full_media_studio_execution",
       "bidirectional_obsidian_sync",
       "microsoft_graph_onedrive",
       "unattended_external_publication",
-      "automatic_semantic_acceptance",
+      "public_distribution_signing_notarization_and_update_publication",
       "source_repository_consolidation",
       "source_application_retirement",
-      "mobile_web_windows_editions"
+      "mobile_web_windows_editions",
+      "multi_user_server_edition",
+      "personalized_adaptive_learning",
+      "unrestricted_rag",
+      "full_autonomous_semantic_authoring"
+    ],
+    "gated_not_authorized": [
+      "protected_or_private_data",
+      "credentials_or_accounts",
+      "live_external_writes",
+      "authoritative_semantic_acceptance",
+      "concept_identity_merging",
+      "destructive_migration",
+      "signing_identity",
+      "release_authority"
     ]
   },
   "roadmap": [
@@ -84,21 +124,23 @@
     { "id": "R9B", "issue": 14, "status": "ACCEPTED", "depends_on": ["R5", "R6", "OPERATIONS_AND_DIAGNOSTICS_V1"] },
     { "id": "R9C", "issue": 15, "status": "ACCEPTED", "depends_on": ["R8C", "R9A", "R9B"] },
     { "id": "R10", "issue": 16, "status": "PLANNED", "depends_on": ["R9C"] },
-    { "id": "R11", "issue": 17, "status": "PLANNED", "depends_on": ["R9A", "R10"] },
-    { "id": "LEARNING_V1", "issue": 18, "status": "PLANNED", "depends_on": ["R9A"] },
-    { "id": "ASSISTANT_V1", "issue": 19, "status": "PLANNED", "depends_on": ["R9A", "R9C"] },
-    { "id": "SOCIAL_FOUNDATION", "issue": 20, "status": "DEFERRED_UNTIL_DEPENDENCY", "depends_on": ["R10"] },
-    { "id": "SOCIAL_FACEBOOK", "issue": 21, "status": "DEFERRED_UNTIL_DEPENDENCY", "depends_on": ["SOCIAL_FOUNDATION"] },
-    { "id": "SOCIAL_INSTAGRAM", "issue": 22, "status": "DEFERRED_UNTIL_DEPENDENCY", "depends_on": ["SOCIAL_FOUNDATION"] },
-    { "id": "SOCIAL_THREADS", "issue": 23, "status": "DEFERRED_UNTIL_DEPENDENCY", "depends_on": ["SOCIAL_FOUNDATION"] },
-    { "id": "SOCIAL_YOUTUBE", "issue": 24, "status": "DEFERRED_UNTIL_DEPENDENCY", "depends_on": ["SOCIAL_FOUNDATION"] },
-    { "id": "SOCIAL_TELEGRAM", "issue": 25, "status": "DEFERRED_UNTIL_DEPENDENCY", "depends_on": ["SOCIAL_FOUNDATION"] },
-    { "id": "SOCIAL_WHATSAPP", "issue": 26, "status": "DEFERRED_UNTIL_DEPENDENCY", "depends_on": ["SOCIAL_FOUNDATION"] },
-    { "id": "SOCIAL_TIKTOK", "issue": 27, "status": "DEFERRED_UNTIL_DEPENDENCY", "depends_on": ["SOCIAL_FOUNDATION"] },
-    { "id": "R12", "issue": 28, "status": "PLANNED", "depends_on": ["OPERATIONS_AND_DIAGNOSTICS_V1", "R7", "PROJECTS_AND_SOURCES_V1", "TRANSCRIPT_AND_TOPIC_STUDIO_V1", "R8C", "R9C", "R10", "R11", "LEARNING_V1", "ASSISTANT_V1", "SOCIAL_FACEBOOK", "SOCIAL_INSTAGRAM", "SOCIAL_THREADS", "SOCIAL_YOUTUBE", "SOCIAL_TELEGRAM", "SOCIAL_WHATSAPP", "SOCIAL_TIKTOK"] },
+    { "id": "ONEDRIVE_PUBLICATION_V1", "issue": 63, "status": "PLANNED", "depends_on": ["R10"] },
+    { "id": "R12", "issue": 28, "status": "PLANNED", "depends_on": ["ONEDRIVE_PUBLICATION_V1"] },
     { "id": "R13", "issue": 29, "status": "PLANNED", "depends_on": ["R12"] },
     { "id": "R14", "issue": 30, "status": "HUMAN_GATE", "depends_on": ["R13"] },
-    { "id": "R15", "issue": 31, "status": "POST_1_0_DEFERRED", "depends_on": ["R14"] }
+    { "id": "DEFERRED_CAPABILITIES_V1", "issue": 64, "status": "DEFERRED_TO_LATER_WORK", "depends_on": ["R14"] },
+    { "id": "R11", "issue": 17, "status": "DEFERRED_TO_LATER_WORK", "depends_on": ["R9A", "R10", "R14"] },
+    { "id": "LEARNING_V1", "issue": 18, "status": "DEFERRED_TO_LATER_WORK", "depends_on": ["R9A", "R14"] },
+    { "id": "ASSISTANT_V1", "issue": 19, "status": "DEFERRED_TO_LATER_WORK", "depends_on": ["R9A", "R9C", "R14"] },
+    { "id": "SOCIAL_FOUNDATION", "issue": 20, "status": "DEFERRED_TO_LATER_WORK", "depends_on": ["R10", "R14"] },
+    { "id": "SOCIAL_FACEBOOK", "issue": 21, "status": "DEFERRED_TO_LATER_WORK", "depends_on": ["SOCIAL_FOUNDATION"] },
+    { "id": "SOCIAL_INSTAGRAM", "issue": 22, "status": "DEFERRED_TO_LATER_WORK", "depends_on": ["SOCIAL_FOUNDATION"] },
+    { "id": "SOCIAL_THREADS", "issue": 23, "status": "DEFERRED_TO_LATER_WORK", "depends_on": ["SOCIAL_FOUNDATION"] },
+    { "id": "SOCIAL_YOUTUBE", "issue": 24, "status": "DEFERRED_TO_LATER_WORK", "depends_on": ["SOCIAL_FOUNDATION"] },
+    { "id": "SOCIAL_TELEGRAM", "issue": 25, "status": "DEFERRED_TO_LATER_WORK", "depends_on": ["SOCIAL_FOUNDATION"] },
+    { "id": "SOCIAL_WHATSAPP", "issue": 26, "status": "DEFERRED_TO_LATER_WORK", "depends_on": ["SOCIAL_FOUNDATION"] },
+    { "id": "SOCIAL_TIKTOK", "issue": 27, "status": "DEFERRED_TO_LATER_WORK", "depends_on": ["SOCIAL_FOUNDATION"] },
+    { "id": "R15", "issue": 31, "status": "DEFERRED_TO_LATER_WORK", "depends_on": ["R14"] }
   ],
   "stop_conditions": [
     "authority_conflict",

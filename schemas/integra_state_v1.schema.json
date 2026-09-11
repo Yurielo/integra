@@ -28,6 +28,7 @@
     "media_integration_evidence",
     "cross_navigation_evidence",
     "execution_policy",
+    "delivery_target",
     "release_scope",
     "roadmap",
     "stop_conditions"
@@ -120,17 +121,38 @@
       },
       "additionalProperties": false
     },
+    "delivery_target": {
+      "type": "object",
+      "required": ["id", "authorization_issue", "priority_order", "deferred_status", "acceptance_gate"],
+      "properties": {
+        "id": { "const": "READY_APP_V1" },
+        "authorization_issue": { "const": 62 },
+        "priority_order": {
+          "const": ["R9C", "R10", "ONEDRIVE_PUBLICATION_V1", "R12", "R13", "R14"]
+        },
+        "deferred_status": { "const": "DEFERRED_TO_LATER_WORK" },
+        "acceptance_gate": { "const": "R14" }
+      },
+      "additionalProperties": false
+    },
     "release_scope": {
       "type": "object",
-      "required": ["required_modules", "social_platforms", "deferred"],
+      "required": ["target", "required_modules", "deferred_modules", "deferred_social_platforms", "deferred", "gated_not_authorized"],
       "properties": {
+        "target": { "const": "READY_APP_V1" },
         "required_modules": {
           "type": "array",
           "minItems": 10,
           "uniqueItems": true,
           "items": { "type": "string" }
         },
-        "social_platforms": {
+        "deferred_modules": {
+          "type": "array",
+          "minItems": 4,
+          "uniqueItems": true,
+          "items": { "type": "string" }
+        },
+        "deferred_social_platforms": {
           "type": "array",
           "minItems": 7,
           "uniqueItems": true,
@@ -138,7 +160,13 @@
         },
         "deferred": {
           "type": "array",
-          "minItems": 1,
+          "minItems": 16,
+          "uniqueItems": true,
+          "items": { "type": "string" }
+        },
+        "gated_not_authorized": {
+          "type": "array",
+          "minItems": 8,
           "uniqueItems": true,
           "items": { "type": "string" }
         }
@@ -147,7 +175,7 @@
     },
     "roadmap": {
       "type": "array",
-      "minItems": 33,
+      "minItems": 35,
       "items": {
         "type": "object",
         "required": ["id", "issue", "status", "depends_on"],
@@ -155,7 +183,7 @@
           "id": { "type": "string" },
           "issue": { "type": "integer", "minimum": 2 },
           "status": {
-            "enum": ["ACCEPTED", "IN_REVIEW", "PARTIAL", "PLANNED", "DEFERRED_UNTIL_DEPENDENCY", "HUMAN_GATE", "POST_1_0_DEFERRED"]
+            "enum": ["ACCEPTED", "IN_REVIEW", "PARTIAL", "PLANNED", "DEFERRED_UNTIL_DEPENDENCY", "DEFERRED_TO_LATER_WORK", "HUMAN_GATE"]
           },
           "depends_on": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
         },

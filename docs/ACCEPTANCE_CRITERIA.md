@@ -10,51 +10,52 @@ Every roadmap Issue must provide:
 - focused tests, full supported tests, governance validation, and diff checks;
 - provenance, cancellation, recovery, and compatibility evidence appropriate
   to the stage;
-- confirmation of source-project, private-data, credential, semantic, and
-  publication impact;
+- confirmation of source-project, private-data, credential, semantic,
+  publication, signing, and release impact;
 - one explicit next authorization boundary.
 
-## Core Merge acceptance
+## Accepted core baseline
 
-- Integra is a separate macOS application using pinned SeminarText and VideoText
-  contracts.
+- Projects & Sources, Transcript & Topic Studio, Knowledge, Media,
+  cross-navigation, Operations & Diagnostics, and copy-on-write compatibility
+  retain their accepted evidence and pass regression checks.
 - A local video traverses transcript, Topics, exception-only review, knowledge
-  artifact, and media clip with exact lineage.
+  artifact, media clip, and exact bidirectional navigation with lineage intact.
 - Existing source projects remain unchanged and openable by their applications.
-- Contract, integration, migration, recovery, real-media, and standalone
-  regression tests pass.
+- Machine semantics remain provisional or review-required until an explicit
+  authorized ReviewDecision.
 
-## Complete integration acceptance
+## READY_APP_V1 acceptance
 
-- Projects & Sources covers the complete Project Registry, history, lifecycle,
-  local audio/video, individual YouTube videos, playlists, and supported
-  document/image sources with stable identity and provenance.
-- Transcript & Topic Studio covers ASR, translation, Canonical Word Timeline,
-  quality findings, Topic levels/hierarchy, and exception-only review packages
-  without automatic semantic acceptance.
-- YouTube playlists resume and preserve collection/per-video provenance.
-- Documents, OCR, and multi-source alignment preserve exact source locators.
-- Knowledge, Media, Learning, Marketing, and Assistant modules link substantive
-  outputs to evidence.
-- Obsidian and OneDrive publication is deterministic, collision-safe, and
-  recoverable.
-- Publishing Hub previews and deterministically exports versioned Markdown,
-  JSON, DOCX, PDF, SRT, audio, and video packages.
-- Publishing Hub and seven social adapters pass contract/policy/capability
-  validation; live external actions remain separately authorized.
-- Operations & Diagnostics proves job lifecycle, progress/ETA, capability
-  checks, resource scheduling, redacted logs, Integrity, recovery, model
-  unloading, and child-process cleanup.
-- Combined Beta passes on the M5/16 GB reference machine.
+- R10 previews and deterministically exports a managed Obsidian subtree with
+  Markdown/JSON metadata, hashes, a manifest, export lock, collision report,
+  exact source links, atomic promotion, and verified rebuild. User-owned notes
+  are never overwritten.
+- `ONEDRIVE_PUBLICATION_V1` stages outside the synchronized target and publishes
+  immutable, checksum-verified versions with `COMPLETE.json` last, offline
+  queueing, Files On-Demand detection, conflict handling, mutual exclusion, and
+  recovery. A local write is never mislabeled as verified cloud publication.
+- R12 produces a native macOS application that builds reproducibly, launches on
+  the reference Mac, and supports a usable journey through Projects/Sources,
+  Transcript/Topics, Knowledge, Media, cross-navigation, Operations, Obsidian,
+  and OneDrive.
+- The application displays the later-work registry as unavailable/deferred;
+  placeholder actions cannot run or report success.
+- R13 records minimum macOS, bundle identity, entitlements boundary,
+  privacy/redaction, dependency and licensing review, reproducible local `.app`
+  packaging, backup, crash recovery, update readiness, and rollback evidence.
+- Focused, full supported, governance, standalone-compatibility, migration,
+  recovery, and reference-Mac application tests pass with no unresolved
+  Critical risk.
+- Known limitations and the exact included/deferred capability lists are
+  explicit and match `state/integra_state_v1.json`.
+- The Product Owner explicitly accepts the exact candidate at R14; tests and
+  merge do not self-authorize product acceptance.
 
-## Integra 1.0 acceptance
+## Retained authorization boundaries
 
-- All required R0 scope has complete evidence and no unresolved Critical risk.
-- Security, privacy, licensing, signing, notarization, update, backup, rollback,
-  and release E2E gates pass.
-- The candidate pins every component and is reproducible from recorded inputs.
-- Known limitations and migration behavior are explicit.
-- SeminarText and VideoText remain available unless the Product Owner makes a
-  separate retirement decision.
-- The Product Owner explicitly accepts the candidate; tests and merge do not
-  self-authorize product acceptance.
+R14 acceptance does not authorize or claim completion of signing,
+notarization, public distribution, live external publication, credentials or
+accounts, protected/private data, authoritative semantic acceptance,
+Concept-identity merging, destructive migration, source-repository changes, or
+source-product retirement. Each remains a separate exact authorization gate.

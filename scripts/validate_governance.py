@@ -390,20 +390,27 @@ REQUIRED_DOCUMENTS = (
     "tests/test_cross_navigation.py",
 )
 
-REQUIRED_MODULES = {
+READY_APP_REQUIRED_MODULES = {
     "projects_and_sources",
     "transcript_and_topic_studio",
     "knowledge_studio",
     "media_studio",
+    "cross_navigation",
+    "operations_and_diagnostics",
+    "compatibility_and_migration",
+    "obsidian_export",
+    "onedrive_publication",
+    "native_macos_application",
+}
+
+DEFERRED_MODULES = {
+    "publishing_hub_additional_formats",
     "marketing_studio_v1",
     "learning_studio_v1",
     "knowledge_assistant_v1",
-    "publishing_hub",
-    "operations_and_diagnostics",
-    "compatibility_and_migration",
 }
 
-REQUIRED_SOCIAL_PLATFORMS = {
+DEFERRED_SOCIAL_PLATFORMS = {
     "facebook_pages",
     "instagram",
     "threads",
@@ -411,6 +418,69 @@ REQUIRED_SOCIAL_PLATFORMS = {
     "telegram",
     "whatsapp_business",
     "tiktok",
+}
+
+REQUIRED_DEFERRED_CAPABILITIES = {
+    "general_docx_pdf_srt_audio_video_export",
+    "live_youtube_api_and_media_download",
+    "local_ocr_engine_and_model_execution",
+    "automatic_multi_source_matching",
+    "representative_full_media_studio_execution",
+    "bidirectional_obsidian_sync",
+    "microsoft_graph_onedrive",
+    "unattended_external_publication",
+    "public_distribution_signing_notarization_and_update_publication",
+    "source_repository_consolidation",
+    "source_application_retirement",
+    "mobile_web_windows_editions",
+    "multi_user_server_edition",
+    "personalized_adaptive_learning",
+    "unrestricted_rag",
+    "full_autonomous_semantic_authoring",
+}
+
+GATED_NOT_AUTHORIZED = {
+    "protected_or_private_data",
+    "credentials_or_accounts",
+    "live_external_writes",
+    "authoritative_semantic_acceptance",
+    "concept_identity_merging",
+    "destructive_migration",
+    "signing_identity",
+    "release_authority",
+}
+
+READY_APP_PRIORITY_ORDER = [
+    "R9C",
+    "R10",
+    "ONEDRIVE_PUBLICATION_V1",
+    "R12",
+    "R13",
+    "R14",
+]
+
+DEFERRED_ROADMAP_IDS = {
+    "DEFERRED_CAPABILITIES_V1",
+    "R11",
+    "LEARNING_V1",
+    "ASSISTANT_V1",
+    "SOCIAL_FOUNDATION",
+    "SOCIAL_FACEBOOK",
+    "SOCIAL_INSTAGRAM",
+    "SOCIAL_THREADS",
+    "SOCIAL_YOUTUBE",
+    "SOCIAL_TELEGRAM",
+    "SOCIAL_WHATSAPP",
+    "SOCIAL_TIKTOK",
+    "R15",
+}
+
+ACTIVE_CHAIN_ROADMAP_IDS = {
+    "R10",
+    "ONEDRIVE_PUBLICATION_V1",
+    "R12",
+    "R13",
+    "R14",
 }
 
 EXPECTED_ROADMAP_ISSUES = {
@@ -432,6 +502,11 @@ EXPECTED_ROADMAP_ISSUES = {
     "R9B": 14,
     "R9C": 15,
     "R10": 16,
+    "ONEDRIVE_PUBLICATION_V1": 63,
+    "R12": 28,
+    "R13": 29,
+    "R14": 30,
+    "DEFERRED_CAPABILITIES_V1": 64,
     "R11": 17,
     "LEARNING_V1": 18,
     "ASSISTANT_V1": 19,
@@ -443,9 +518,6 @@ EXPECTED_ROADMAP_ISSUES = {
     "SOCIAL_TELEGRAM": 25,
     "SOCIAL_WHATSAPP": 26,
     "SOCIAL_TIKTOK": 27,
-    "R12": 28,
-    "R13": 29,
-    "R14": 30,
     "R15": 31,
 }
 
@@ -454,12 +526,12 @@ REQUIRED_MODULE_ROADMAP_IDS = {
     "transcript_and_topic_studio": {"TRANSCRIPT_AND_TOPIC_STUDIO_V1"},
     "knowledge_studio": {"R9A"},
     "media_studio": {"R9B"},
-    "marketing_studio_v1": {"R11"},
-    "learning_studio_v1": {"LEARNING_V1"},
-    "knowledge_assistant_v1": {"ASSISTANT_V1"},
-    "publishing_hub": {"R10"},
+    "cross_navigation": {"R9C"},
     "operations_and_diagnostics": {"OPERATIONS_AND_DIAGNOSTICS_V1"},
     "compatibility_and_migration": {"R7"},
+    "obsidian_export": {"R10"},
+    "onedrive_publication": {"ONEDRIVE_PUBLICATION_V1"},
+    "native_macos_application": {"R12"},
 }
 
 REQUIRED_ROADMAP_DEPENDENCIES = {
@@ -478,25 +550,11 @@ REQUIRED_ROADMAP_DEPENDENCIES = {
     "R9A": {"R6", "R8C", "TRANSCRIPT_AND_TOPIC_STUDIO_V1"},
     "R9B": {"R5", "R6", "OPERATIONS_AND_DIAGNOSTICS_V1"},
     "R9C": {"R8C", "R9A", "R9B"},
-    "R12": {
-        "OPERATIONS_AND_DIAGNOSTICS_V1",
-        "R7",
-        "PROJECTS_AND_SOURCES_V1",
-        "TRANSCRIPT_AND_TOPIC_STUDIO_V1",
-        "R8C",
-        "R9C",
-        "R10",
-        "R11",
-        "LEARNING_V1",
-        "ASSISTANT_V1",
-        "SOCIAL_FACEBOOK",
-        "SOCIAL_INSTAGRAM",
-        "SOCIAL_THREADS",
-        "SOCIAL_YOUTUBE",
-        "SOCIAL_TELEGRAM",
-        "SOCIAL_WHATSAPP",
-        "SOCIAL_TIKTOK",
-    },
+    "R10": {"R9C"},
+    "ONEDRIVE_PUBLICATION_V1": {"R10"},
+    "R12": {"ONEDRIVE_PUBLICATION_V1"},
+    "R13": {"R12"},
+    "R14": {"R13"},
 }
 
 
@@ -572,16 +630,34 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
     if execution_policy != expected_policy:
         errors.append("execution_policy does not match the authorized boundary")
 
-    scope = state.get("release_scope", {})
-    modules = set(scope.get("required_modules", []))
-    missing_modules = REQUIRED_MODULES - modules
-    if missing_modules:
-        errors.append(f"missing required modules: {sorted(missing_modules)}")
+    delivery_target = state.get("delivery_target", {})
+    if delivery_target != {
+        "id": "READY_APP_V1",
+        "authorization_issue": 62,
+        "priority_order": READY_APP_PRIORITY_ORDER,
+        "deferred_status": "DEFERRED_TO_LATER_WORK",
+        "acceptance_gate": "R14",
+    }:
+        errors.append("delivery_target does not match the authorized READY_APP_V1 chain")
 
-    platforms = set(scope.get("social_platforms", []))
-    missing_platforms = REQUIRED_SOCIAL_PLATFORMS - platforms
-    if missing_platforms:
-        errors.append(f"missing social platforms: {sorted(missing_platforms)}")
+    scope = state.get("release_scope", {})
+    if scope.get("target") != "READY_APP_V1":
+        errors.append("release_scope target must be READY_APP_V1")
+    modules = set(scope.get("required_modules", []))
+    if modules != READY_APP_REQUIRED_MODULES:
+        errors.append("required modules differ from READY_APP_V1")
+    deferred_modules = set(scope.get("deferred_modules", []))
+    if deferred_modules != DEFERRED_MODULES:
+        errors.append("deferred modules differ from the Product Owner registry")
+    deferred_platforms = set(scope.get("deferred_social_platforms", []))
+    if deferred_platforms != DEFERRED_SOCIAL_PLATFORMS:
+        errors.append("deferred social platforms differ from the Product Owner registry")
+    deferred_capabilities = set(scope.get("deferred", []))
+    if deferred_capabilities != REQUIRED_DEFERRED_CAPABILITIES:
+        errors.append("deferred capabilities differ from the Product Owner registry")
+    gated_not_authorized = set(scope.get("gated_not_authorized", []))
+    if gated_not_authorized != GATED_NOT_AUTHORIZED:
+        errors.append("retained authorization gates differ from READY_APP_V1")
 
     roadmap = state.get("roadmap")
     if not isinstance(roadmap, list):
@@ -645,6 +721,14 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("R9B must be ACCEPTED with media integration evidence")
     if statuses.get("R9C") != "ACCEPTED":
         errors.append("R9C must be ACCEPTED with cross-navigation evidence")
+    for planned_id in ("R10", "ONEDRIVE_PUBLICATION_V1", "R12", "R13"):
+        if statuses.get(planned_id) != "PLANNED":
+            errors.append(f"{planned_id} must remain PLANNED for READY_APP_V1")
+    if statuses.get("R14") != "HUMAN_GATE":
+        errors.append("R14 must remain the READY_APP_V1 HUMAN_GATE")
+    for deferred_id in DEFERRED_ROADMAP_IDS:
+        if statuses.get(deferred_id) != "DEFERRED_TO_LATER_WORK":
+            errors.append(f"{deferred_id} must remain DEFERRED_TO_LATER_WORK")
     for entry in roadmap:
         entry_id = entry.get("id")
         for dependency in entry.get("depends_on", []):
@@ -655,12 +739,49 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
 
     for entry_id, required_dependencies in REQUIRED_ROADMAP_DEPENDENCIES.items():
         actual_dependencies = set(entries_by_id.get(entry_id, {}).get("depends_on", []))
+        if entry_id in ACTIVE_CHAIN_ROADMAP_IDS:
+            if actual_dependencies != required_dependencies:
+                errors.append(
+                    f"{entry_id} dependencies differ from the exact READY_APP_V1 chain: "
+                    f"expected {sorted(required_dependencies)}, "
+                    f"got {sorted(actual_dependencies)}"
+                )
+            continue
         missing_dependencies = required_dependencies - actual_dependencies
         if missing_dependencies:
             errors.append(
                 f"{entry_id} lacks required dependencies: "
                 f"{sorted(missing_dependencies)}"
             )
+
+    for entry_id in ACTIVE_CHAIN_ROADMAP_IDS:
+        deferred_dependencies = set(
+            entries_by_id.get(entry_id, {}).get("depends_on", [])
+        ) & DEFERRED_ROADMAP_IDS
+        if deferred_dependencies:
+            errors.append(
+                f"{entry_id} must not depend on deferred roadmap items: "
+                f"{sorted(deferred_dependencies)}"
+            )
+
+    def depends_on_r14(entry_id: str, seen: set[str] | None = None) -> bool:
+        if entry_id == "R14":
+            return True
+        seen = set() if seen is None else seen
+        if entry_id in seen:
+            return False
+        seen.add(entry_id)
+        return any(
+            depends_on_r14(dependency, seen.copy())
+            for dependency in entries_by_id.get(entry_id, {}).get("depends_on", [])
+        )
+
+    r14_position = positions.get("R14", len(roadmap))
+    for deferred_id in DEFERRED_ROADMAP_IDS:
+        if positions.get(deferred_id, -1) <= r14_position:
+            errors.append(f"{deferred_id} must appear after R14")
+        if not depends_on_r14(deferred_id):
+            errors.append(f"{deferred_id} must be dependency-blocked until after R14")
 
     if not state.get("stop_conditions") or len(state["stop_conditions"]) < 8:
         errors.append("at least eight fail-closed stop conditions are required")
@@ -2445,8 +2566,13 @@ def main() -> int:
         return 1
     print("INTEGRA_GOVERNANCE_VALIDATION: PASS")
     print(f"ROADMAP_ITEMS: {len(state['roadmap'])}")
+    print(f"DELIVERY_TARGET: {state['delivery_target']['id']}")
     print(f"REQUIRED_MODULES: {len(state['release_scope']['required_modules'])}")
-    print(f"SOCIAL_PLATFORMS: {len(state['release_scope']['social_platforms'])}")
+    print(f"DEFERRED_MODULES: {len(state['release_scope']['deferred_modules'])}")
+    print(
+        "DEFERRED_SOCIAL_PLATFORMS: "
+        f"{len(state['release_scope']['deferred_social_platforms'])}"
+    )
     print("STANDALONE_PRODUCTS_PRESERVED: YES")
     print(f"PINNED_COMPONENTS: {len(baselines['components'])}")
     print(f"R1_ACCEPTANCE: {baselines['r1_acceptance']['status']}")
