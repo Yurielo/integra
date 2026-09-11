@@ -563,21 +563,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource,
       Task { @MainActor in self?.renderOperations() }
     }
   }
-  private func renderResultRows(_ run: [String: Any]) {
-    add(section("ГОТОВЫЕ РЕЗУЛЬТАТЫ"))
-    for result in (run["source_results"] as? [[String: Any]]) ?? [] {
+    private func renderResultRows(_ run: [String: Any]) {
+        add(section("ГОТОВЫЕ РЕЗУЛЬТАТЫ"))
+        for result in (run["source_results"] as? [[String: Any]]) ?? [] {
       add(
         row(
           result["display_name"] as? String ?? "Источник",
           detail: result["state"] as? String ?? "UNKNOWN"))
-      let outputs = result["outputs"] as? [String: Any] ?? [:]
-      for (kind, path) in outputs.sorted(by: { $0.key < $1.key }) {
-        if kind == "transcript_json" { continue }
-        let title = kind == "transcript" ? "Открыть расшифровку" : "Открыть: \(kind)"
-        let control = button(title, #selector(openOutput(_:)))
-        control.toolTip = path as? String
-        add(control)
-      }
+        let outputs = result["outputs"] as? [String: Any] ?? [:]
+        for (kind, path) in outputs.sorted(by: { $0.key < $1.key }) {
+            if kind == "transcript_json" { continue }
+            let title: String
+            switch kind {
+            case "transcript": title = "Открыть расшифровку (TXT)"
+            case "subtitles": title = "Открыть субтитры (SRT)"
+            default: title = "Открыть: \(kind)"
+            }
+            let control = button(title, #selector(openOutput(_:)))
+            control.toolTip = path as? String
+            add(control)
+        }
     }
     add(section("СЛЕДУЮЩИЕ ДЕЙСТВИЯ"))
     for title in [
