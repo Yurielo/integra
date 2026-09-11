@@ -9,12 +9,24 @@ import unittest
 
 from integra_core.publishing import validate_package
 from integra_core.onedrive import validate_onedrive_package
-from integra_core.user_media import import_source
+from integra_core.user_media import import_source, preflight
 
 ROOT=Path(__file__).resolve().parents[1]
 
 
 class UserMediaWorkflowTests(unittest.TestCase):
+    def test_restricted_path_accepts_explicit_safe_tools(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory); executable=root/"tool"; executable.write_text("#!/bin/sh\nexit 0\n"); executable.chmod(0o700)
+            model=root/"model"; model.write_bytes(b"model")
+            overrides={"PATH":"/usr/bin:/bin:/usr/sbin:/sbin","INTEGRA_FFMPEG":str(executable),"INTEGRA_WHISPER_CLI":str(executable),"INTEGRA_WHISPER_MODEL":str(model)}
+            old={key:os.environ.get(key) for key in overrides}
+            try:
+                os.environ.update(overrides); self.assertEqual(preflight()["state"],"READY")
+            finally:
+                for key,value in old.items():
+                    if value is None: os.environ.pop(key,None)
+                    else: os.environ[key]=value
     def test_copy_on_write_import_preserves_source(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory); source=root/"voice.mp3"; source.write_bytes(b"original")

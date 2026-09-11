@@ -45,8 +45,11 @@ final class Bridge {
         process.waitUntilExit()
         let data = output.fileHandleForReading.readDataToEndOfFile()
         if process.terminationStatus != 0 {
-            let detail = String(data: errors.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? "bridge failed"
-            throw BridgeError.failed(detail)
+            if let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let message = object["error"] as? String, !message.isEmpty { throw BridgeError.failed(message) }
+            let stderr = errors.fileHandleForReading.readDataToEndOfFile()
+            let detail = String(data: stderr, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            throw BridgeError.failed(detail.isEmpty ? "Integra service failed without diagnostic output" : detail)
         }
         guard !data.isEmpty else { throw BridgeError.invalidResponse }
         return data
@@ -79,6 +82,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource,
         guard let resources = Bundle.main.resourceURL else { NSApp.terminate(nil); return }
         bridge = Bridge(resources: resources)
         do { workflow = try bridge.workflow() } catch { fatalError("Closed Integra bridge failed: \(error)") }
+        if let projects = try? bridge.json("projects")["result"] as? [[String:Any]], let latest=projects.last {
+            activeProjectID=latest["project_id"] as? String
+        }
         buildWindow()
         window.makeKeyAndOrderFront(nil)
         if let marker = ProcessInfo.processInfo.environment["INTEGRA_LAUNCH_PROBE"] {
@@ -92,7 +98,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource,
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1040, height: 680),
                           styleMask: [.titled, .closable, .miniaturizable, .resizable],
                           backing: .buffered, defer: false)
-        window.title = "Integra — \(workflow.project.name)"
+        window.title = activeProjectID == nil ? "Integra — New local project" : "Integra — Local project"
         window.center(); window.minSize = NSSize(width: 820, height: 520)
 
         let split = NSSplitView(); split.isVertical = true; split.dividerStyle = .thin
@@ -138,6 +144,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource,
         let section = workflow.sections[row]; titleLabel.stringValue = section.title
         statusLabel.stringValue = section.status == "AVAILABLE" ? "AVAILABLE — governed local reference" : "LATER / UNAVAILABLE — read-only"
         var text = section.summary
+        if section.id == "projects" {
+            let projects = (try? bridge.json("projects")["result"] as? [[String:Any]]) ?? []
+            if let latest=projects.last {
+                let name=latest["name"] as? String ?? "Local project"; let count=latest["source_count"] as? Int ?? 0
+                text="Active local project: \(name)\nSources: \(count)\n\nChoose a video or audio file to copy it into Integra and start local transcription."
+                window.title="Integra — \(name)"
+            } else { text="No local project yet. Choose a video or audio file; Integra will create the project automatically." }
+        }
         if section.id == "navigation" { text += "\n\nEntity: \(workflow.navigation.entity)\nLocator: \(workflow.navigation.source_locator)\nReverse: \(workflow.navigation.reverse_route)" }
         if section.id == "deferred", let registry = try? bridge.deferred() {
             text += "\n\n" + registry.features.map { "• \($0) — Later / Unavailable" }.joined(separator: "\n")
