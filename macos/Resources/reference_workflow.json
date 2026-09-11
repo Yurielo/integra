@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "project": {"id": "urn:integra:project:reference", "name": "Integra Reference Project", "source_count": 2},
+  "sections": [
+    {"id": "projects", "title": "Projects & Sources", "status": "AVAILABLE", "summary": "2 governed local reference sources; copy-on-write; no private data."},
+    {"id": "transcript", "title": "Transcript & Topics", "status": "AVAILABLE", "summary": "Canonical Word Timeline with provisional topic drafts and exact time ranges."},
+    {"id": "knowledge", "title": "Knowledge", "status": "AVAILABLE", "summary": "Canonical Knowledge view; machine semantics remain PROVISIONAL."},
+    {"id": "media", "title": "Media", "status": "AVAILABLE", "summary": "Verified reference clip recipe and exact transcript interval."},
+    {"id": "navigation", "title": "Exact Navigation", "status": "AVAILABLE", "summary": "Knowledge ↔ evidence ↔ topic ↔ transcript ↔ media routes retain stable IDs and locators."},
+    {"id": "operations", "title": "Operations & Diagnostics", "status": "AVAILABLE", "summary": "Reference workflow idle; no worker, model, lease, or recovery action is running."},
+    {"id": "obsidian", "title": "Obsidian Export", "status": "AVAILABLE", "summary": "Safe preview only in this reference workflow; cloud verification is always false."},
+    {"id": "onedrive", "title": "OneDrive Publication", "status": "AVAILABLE", "summary": "Filesystem preview only; no account, credentials, Graph, or live sync root."},
+    {"id": "deferred", "title": "Deferred Features", "status": "LATER_UNAVAILABLE", "summary": "Read-only registry. Deferred capabilities have no runnable actions."}
+  ],
+  "navigation": {
+    "entity": "urn:integra:knowledge:reference-topic",
+    "source_locator": "video:reference#t=12.000,24.000",
+    "reverse_route": "urn:integra:media:reference-clip -> urn:integra:evidence:reference-interval"
+  }
+}

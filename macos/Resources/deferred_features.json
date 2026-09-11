@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "status": "DEFERRED_TO_LATER_WORK",
+  "features": [
+    "Additional DOCX/PDF/SRT/audio/video export",
+    "Marketing Studio v1",
+    "Learning Studio v1",
+    "Knowledge Assistant v1",
+    "Social adapters",
+    "Bidirectional Obsidian sync",
+    "Microsoft Graph OneDrive",
+    "Unattended external publication"
+  ],
+  "actions_available": false
+}

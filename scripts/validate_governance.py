@@ -127,6 +127,8 @@ ONEDRIVE_PUBLICATION_PATH = ROOT / "state" / "onedrive_publication_v1.json"
 ONEDRIVE_EVIDENCE_SCHEMA_PATH = ROOT / "schemas" / "onedrive_publication_evidence_v1.schema.json"
 ONEDRIVE_PACKAGE_SCHEMA_PATH = ROOT / "schemas" / "onedrive_package_v1.schema.json"
 ONEDRIVE_RECEIPT_SCHEMA_PATH = ROOT / "schemas" / "onedrive_publication_receipt_v1.schema.json"
+NATIVE_MACOS_APP_PATH = ROOT / "state" / "native_macos_app_v1.json"
+NATIVE_MACOS_APP_SCHEMA_PATH = ROOT / "schemas" / "native_macos_app_evidence_v1.schema.json"
 EXPECTED_OBSIDIAN_IMPLEMENTATION = {
     "docs/architecture/OBSIDIAN_EXPORT_V1.md",
     "integra_core/publishing.py",
@@ -142,6 +144,13 @@ EXPECTED_ONEDRIVE_IMPLEMENTATION = {
     "schemas/onedrive_publication_receipt_v1.schema.json",
     "schemas/onedrive_publication_evidence_v1.schema.json",
     "tests/test_onedrive.py",
+}
+EXPECTED_NATIVE_MACOS_APP_IMPLEMENTATION = {
+    "docs/architecture/NATIVE_MACOS_APPLICATION_V1.md",
+    "macos/IntegraApp.swift", "macos/Info.plist", "macos/Resources/bridge.py",
+    "macos/Resources/reference_workflow.json", "macos/Resources/deferred_features.json",
+    "scripts/build_macos_app.sh", "scripts/test_macos_app.sh",
+    "schemas/native_macos_app_evidence_v1.schema.json", "tests/test_macos_app.py",
 }
 EXPECTED_OPERATIONS_IMPLEMENTATION = {
     "integra_core/operations.py",
@@ -642,6 +651,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("obsidian_export_evidence must pin R10 acceptance")
     if state.get("onedrive_publication_evidence") != "state/onedrive_publication_v1.json":
         errors.append("onedrive_publication_evidence must pin Issue #63 acceptance")
+    if state.get("native_macos_app_evidence") != "state/native_macos_app_v1.json":
+        errors.append("native_macos_app_evidence must pin R12 acceptance")
 
     execution_policy = state.get("execution_policy", {})
     expected_policy = {
@@ -753,7 +764,9 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("R10 must be ACCEPTED with managed Obsidian export evidence")
     if statuses.get("ONEDRIVE_PUBLICATION_V1") != "ACCEPTED":
         errors.append("ONEDRIVE_PUBLICATION_V1 must be ACCEPTED with filesystem publication evidence")
-    for planned_id in ("R12", "R13"):
+    if statuses.get("R12") != "ACCEPTED":
+        errors.append("R12 must be ACCEPTED with native macOS application evidence")
+    for planned_id in ("R13",):
         if statuses.get(planned_id) != "PLANNED":
             errors.append(f"{planned_id} must remain PLANNED for READY_APP_V1")
     if statuses.get("R14") != "HUMAN_GATE":
@@ -2600,6 +2613,52 @@ def validate_onedrive_publication_evidence(evidence: dict, root: Path = ROOT) ->
     return errors
 
 
+def validate_native_macos_app_evidence(evidence: dict, root: Path = ROOT) -> list[str]:
+    errors: list[str] = []
+    expected_fields = {"schema_version", "status", "issue", "dependencies", "implementation", "acceptance", "reference_mac", "safety", "limitations"}
+    if not isinstance(evidence, dict) or set(evidence) != expected_fields:
+        return ["R12 native macOS evidence fields must match v1"]
+    if (evidence.get("schema_version"), evidence.get("status"), evidence.get("issue")) != ("1.0", "ACCEPTED", 28):
+        errors.append("R12 evidence must certify Issue #28 as ACCEPTED")
+    if evidence.get("dependencies") != ["ONEDRIVE_PUBLICATION_V1"]:
+        errors.append("R12 dependency order differs")
+    paths = []
+    for item in evidence.get("implementation", []):
+        if not isinstance(item, dict) or set(item) != {"path", "sha256"}:
+            errors.append("R12 implementation reference differs"); continue
+        paths.append(item["path"]); path = root / item["path"]
+        if not path.is_file() or sha256_file(path) != item["sha256"]:
+            errors.append(f"R12 implementation hash differs: {item['path']}")
+    if set(paths) != EXPECTED_NATIVE_MACOS_APP_IMPLEMENTATION or len(paths) != len(set(paths)):
+        errors.append("R12 implementation inventory must be exact")
+    if evidence.get("acceptance") != {
+        "appkit_native_ui": True, "buildable_without_full_xcode": True,
+        "closed_local_bridge": True, "deferred_actions_unavailable": True,
+        "deterministic_reference_workflow": True, "exact_navigation_visible": True,
+        "launch_probe_passed": True, "onedrive_preview_visible": True,
+        "operations_diagnostics_visible": True, "obsidian_preview_visible": True,
+        "required_surfaces_visible": True,
+    }:
+        errors.append("R12 acceptance evidence differs")
+    if evidence.get("reference_mac") != {
+        "architecture": "arm64", "macos_version": "26.5.2", "swift_version": "6.3.3",
+        "build_result": "PASS", "launch_result": "PASS",
+    }:
+        errors.append("R12 reference Mac evidence differs")
+    if evidence.get("safety") != {
+        "credentials_accessed": False, "external_actions_performed": False,
+        "live_publication_performed": False, "private_data_accessed": False,
+        "real_onedrive_accessed": False, "real_vault_accessed": False,
+        "release_performed": False, "semantic_acceptance_performed": False,
+        "signed_or_notarized_for_distribution": False, "source_repositories_modified": False,
+    }:
+        errors.append("R12 safety evidence differs")
+    limitations = evidence.get("limitations")
+    if not isinstance(limitations, list) or not limitations or len(limitations) != len(set(limitations)):
+        errors.append("R12 limitations must be a non-empty unique list")
+    return errors
+
+
 def main() -> int:
     state = load_json(STATE_PATH)
     baselines = load_json(BASELINES_PATH)
@@ -2622,6 +2681,7 @@ def main() -> int:
     cross_navigation = load_json(CROSS_NAVIGATION_PATH)
     obsidian_export = load_json(OBSIDIAN_EXPORT_PATH)
     onedrive_publication = load_json(ONEDRIVE_PUBLICATION_PATH)
+    native_macos_app = load_json(NATIVE_MACOS_APP_PATH)
     load_json(SCHEMA_PATH)
     load_json(BASELINES_SCHEMA_PATH)
     load_json(OWNERSHIP_SCHEMA_PATH)
@@ -2659,6 +2719,7 @@ def main() -> int:
     load_json(ONEDRIVE_EVIDENCE_SCHEMA_PATH)
     load_json(ONEDRIVE_PACKAGE_SCHEMA_PATH)
     load_json(ONEDRIVE_RECEIPT_SCHEMA_PATH)
+    load_json(NATIVE_MACOS_APP_SCHEMA_PATH)
     load_json(ROOT / "schemas/youtube_playlist_snapshot_v1.schema.json")
     load_json(ROOT / "schemas/youtube_playlist_plan_v1.schema.json")
     load_json(ROOT / "schemas/youtube_playlist_checkpoint_v1.schema.json")
@@ -2686,6 +2747,7 @@ def main() -> int:
         + validate_cross_navigation_evidence(cross_navigation)
         + validate_obsidian_export_evidence(obsidian_export)
         + validate_onedrive_publication_evidence(onedrive_publication)
+        + validate_native_macos_app_evidence(native_macos_app)
     )
     if errors:
         print("INTEGRA_GOVERNANCE_VALIDATION: FAIL")
@@ -2729,6 +2791,7 @@ def main() -> int:
     print(f"R9B_MEDIA_INTEGRATION: {media_integration['status']}")
     print(f"R9C_CROSS_NAVIGATION: {cross_navigation['status']}")
     print(f"ONEDRIVE_PUBLICATION_V1: {onedrive_publication['status']}")
+    print(f"R12_NATIVE_MACOS_APP: {native_macos_app['status']}")
     return 0
 
 

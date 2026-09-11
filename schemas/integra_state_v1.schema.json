@@ -29,6 +29,7 @@
     "cross_navigation_evidence",
     "obsidian_export_evidence",
     "onedrive_publication_evidence",
+    "native_macos_app_evidence",
     "execution_policy",
     "delivery_target",
     "release_scope",
@@ -102,6 +103,9 @@
     },
     "onedrive_publication_evidence": {
       "const": "state/onedrive_publication_v1.json"
+    },
+    "native_macos_app_evidence": {
+      "const": "state/native_macos_app_v1.json"
     },
     "execution_policy": {
       "type": "object",
