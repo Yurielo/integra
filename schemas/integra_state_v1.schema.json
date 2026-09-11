@@ -22,6 +22,7 @@
     "playlist_evidence",
     "document_pipeline_evidence",
     "projects_sources_evidence",
+    "transcript_topic_studio_evidence",
     "execution_policy",
     "release_scope",
     "roadmap",
@@ -73,6 +74,9 @@
     },
     "projects_sources_evidence": {
       "const": "state/projects_sources_v1.json"
+    },
+    "transcript_topic_studio_evidence": {
+      "const": "state/transcript_topic_studio_v1.json"
     },
     "execution_policy": {
       "type": "object",

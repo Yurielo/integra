@@ -649,6 +649,13 @@ remains `PROVISIONAL` or `REVIEW_REQUIRED` until an authorized human decision.
 This stage owns per-source Topic-to-locator binding; cross-source alignment
 remains owned by R8C.
 
+The accepted v1 studio binds every operation to the current Project/Source
+revision and exact R5 component, model, contract and configuration identities.
+It preserves time, word, page, slide, region, character and artifact-revision
+locators, separates original wording from translation, clusters explicit
+exceptions with neighboring evidence, and records lease-bound human decisions
+without rewriting component-owned artifacts.
+
 ### R8C — Multi-source Alignment
 
 Link video, transcript, slides, pages, supporting documents, Topics, and Evidence

@@ -42,6 +42,17 @@ from integra_core.projects_sources import (  # noqa: E402
     register_youtube_video,
     validate_registry,
 )
+from integra_core.transcript_topic_studio import (  # noqa: E402
+    add_quality_finding,
+    build_exception_package,
+    dumps_studio,
+    loads_studio,
+    new_studio,
+    register_topic_set,
+    register_transcript,
+    register_word_timeline,
+    validate_studio,
+)
 from integra_core.protocol import content_sha256  # noqa: E402
 from scripts.check_agents import load_registry, validate_agent_team  # noqa: E402
 
@@ -81,6 +92,9 @@ DOCUMENT_PIPELINE_SCHEMA_PATH = ROOT / "schemas" / "document_pipeline_evidence_v
 PROJECTS_SOURCES_PATH = ROOT / "state" / "projects_sources_v1.json"
 PROJECTS_SOURCES_SCHEMA_PATH = ROOT / "schemas" / "projects_sources_evidence_v1.schema.json"
 PROJECT_SOURCE_REGISTRY_SCHEMA_PATH = ROOT / "schemas" / "project_source_registry_v1.schema.json"
+TRANSCRIPT_TOPIC_STUDIO_PATH = ROOT / "state" / "transcript_topic_studio_v1.json"
+TRANSCRIPT_TOPIC_STUDIO_EVIDENCE_SCHEMA_PATH = ROOT / "schemas" / "transcript_topic_studio_evidence_v1.schema.json"
+TRANSCRIPT_TOPIC_STUDIO_SCHEMA_PATH = ROOT / "schemas" / "transcript_topic_studio_v1.schema.json"
 EXPECTED_OPERATIONS_IMPLEMENTATION = {
     "integra_core/operations.py",
     "integra_core/operations_fixtures.py",
@@ -148,6 +162,13 @@ EXPECTED_PROJECTS_SOURCES_IMPLEMENTATION = {
     "schemas/project_source_registry_v1.schema.json",
     "schemas/projects_sources_evidence_v1.schema.json",
     "tests/test_projects_sources.py",
+}
+EXPECTED_TRANSCRIPT_TOPIC_STUDIO_IMPLEMENTATION = {
+    "docs/architecture/TRANSCRIPT_AND_TOPIC_STUDIO_V1.md",
+    "integra_core/transcript_topic_studio.py",
+    "schemas/transcript_topic_studio_v1.schema.json",
+    "schemas/transcript_topic_studio_evidence_v1.schema.json",
+    "tests/test_transcript_topic_studio.py",
 }
 EXPECTED_CORE_ALPHA_REAL_SHA256 = "7233cd2985d65d8616e217385b53935c671dbda69a686849a9864cba4565d47c"
 EXPECTED_CORE_ALPHA_REAL_IMPLEMENTATION = {
@@ -271,6 +292,11 @@ REQUIRED_DOCUMENTS = (
     "schemas/projects_sources_evidence_v1.schema.json",
     "state/projects_sources_v1.json",
     "integra_core/projects_sources.py",
+    "docs/architecture/TRANSCRIPT_AND_TOPIC_STUDIO_V1.md",
+    "schemas/transcript_topic_studio_v1.schema.json",
+    "schemas/transcript_topic_studio_evidence_v1.schema.json",
+    "state/transcript_topic_studio_v1.json",
+    "integra_core/transcript_topic_studio.py",
 )
 
 REQUIRED_MODULES = {
@@ -428,6 +454,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("document_pipeline_evidence must pin R8B acceptance")
     if state.get("projects_sources_evidence") != "state/projects_sources_v1.json":
         errors.append("projects_sources_evidence must pin Issue #47 acceptance")
+    if state.get("transcript_topic_studio_evidence") != "state/transcript_topic_studio_v1.json":
+        errors.append("transcript_topic_studio_evidence must pin Issue #48 acceptance")
 
     execution_policy = state.get("execution_policy", {})
     expected_policy = {
@@ -507,6 +535,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("R8B must be ACCEPTED with document pipeline evidence")
     if statuses.get("PROJECTS_AND_SOURCES_V1") != "ACCEPTED":
         errors.append("PROJECTS_AND_SOURCES_V1 must be ACCEPTED with registry evidence")
+    if statuses.get("TRANSCRIPT_AND_TOPIC_STUDIO_V1") != "ACCEPTED":
+        errors.append("TRANSCRIPT_AND_TOPIC_STUDIO_V1 must be ACCEPTED with studio evidence")
     for entry in roadmap:
         entry_id = entry.get("id")
         for dependency in entry.get("depends_on", []):
@@ -1544,6 +1574,198 @@ def validate_projects_sources_evidence(
     return errors
 
 
+def validate_transcript_topic_studio_evidence(
+    evidence: dict, baselines: dict, root: Path = ROOT
+) -> list[str]:
+    errors: list[str] = []
+    expected_fields = {
+        "schema_version", "status", "issue", "implementation", "dependencies",
+        "capability_owners", "topic_levels", "locator_types", "acceptance", "safety",
+    }
+    if not isinstance(evidence, dict) or set(evidence) != expected_fields:
+        return ["Transcript & Topic Studio evidence fields must match v1"]
+    if evidence.get("schema_version") != "1.0" or evidence.get("status") != "ACCEPTED" or evidence.get("issue") != 48:
+        errors.append("Transcript & Topic Studio must certify Issue #48 as ACCEPTED")
+    implementation = evidence.get("implementation")
+    if not isinstance(implementation, list):
+        errors.append("Transcript & Topic Studio implementation inventory must be a list")
+    else:
+        paths: list[str] = []
+        for item in implementation:
+            if not isinstance(item, dict) or set(item) != {"path", "sha256"}:
+                errors.append("Transcript & Topic Studio implementation reference differs")
+                continue
+            paths.append(item["path"])
+            path = root / item["path"]
+            if not path.is_file():
+                errors.append(f"Transcript & Topic Studio implementation is missing: {item['path']}")
+            elif sha256_file(path) != item["sha256"]:
+                errors.append(f"Transcript & Topic Studio implementation hash differs: {item['path']}")
+        if set(paths) != EXPECTED_TRANSCRIPT_TOPIC_STUDIO_IMPLEMENTATION or len(paths) != len(set(paths)):
+            errors.append("Transcript & Topic Studio implementation inventory must be exact")
+    if evidence.get("dependencies") != ["R6", "PROJECTS_AND_SOURCES_V1"]:
+        errors.append("Transcript & Topic Studio dependency order differs")
+    expected_owners = {
+        "media_preparation": ["videotext"],
+        "asr": ["videotext"],
+        "translation": ["videotext"],
+        "word_timeline": ["seminartext"],
+        "topics": ["seminartext"],
+        "review_mechanics": ["seminartext", "videotext"],
+        "quality_validation": ["seminartext", "videotext"],
+    }
+    if evidence.get("capability_owners") != expected_owners:
+        errors.append("Transcript & Topic Studio capability owners differ from R5")
+    if evidence.get("topic_levels") != ["DETAILED", "NORMAL", "COARSE"]:
+        errors.append("Transcript & Topic Studio Topic levels differ")
+    if set(evidence.get("locator_types", [])) != {
+        "TIME_INTERVAL", "WORD_INTERVAL", "PAGE_RANGE", "SLIDE_RANGE",
+        "REGION", "CHARACTER_RANGE", "ARTIFACT_REVISION",
+    }:
+        errors.append("Transcript & Topic Studio locator inventory differs")
+    expected_acceptance = {
+        "source_revision_bound": True,
+        "media_preparation_exposed": True,
+        "asr_exposed": True,
+        "translation_lineage_separate": True,
+        "canonical_word_timeline_exposed": True,
+        "quality_findings_visible": True,
+        "three_topic_levels": True,
+        "strict_topic_hierarchy": True,
+        "per_source_locator_binding": True,
+        "exception_clustering_with_neighbors": True,
+        "bulk_review_decision_deterministic": True,
+        "review_decision_lease_enforced": True,
+        "component_model_config_bound": True,
+        "cancellation_and_resume_delegated_to_operations": True,
+        "serialization_deterministic": True,
+    }
+    if evidence.get("acceptance") != expected_acceptance:
+        errors.append("Transcript & Topic Studio acceptance evidence differs")
+    expected_safety = {
+        "machine_semantics_accepted": False,
+        "source_artifacts_modified": False,
+        "source_repositories_modified": False,
+        "cross_source_alignment_performed": False,
+        "protected_data_accessed": False,
+        "gold_accessed": False,
+        "network_access_performed": False,
+        "credentials_accessed": False,
+    }
+    if evidence.get("safety") != expected_safety:
+        errors.append("Transcript & Topic Studio safety boundary differs")
+
+    try:
+        component_commits = {item["id"]: item["commit_sha"] for item in baselines["components"]}
+        owners = expected_owners
+        bindings = []
+        for capability, component_ids in owners.items():
+            contracts = {
+                "media_preparation": ["project_schema_v7"],
+                "asr": ["project_schema_v7"],
+                "translation": ["project_schema_v7"],
+                "word_timeline": ["canonical_evidence_v1"],
+                "topics": ["topic_review_workflow_v2"],
+                "review_mechanics": ["topic_review_workflow_v2", "project_schema_v7"],
+                "quality_validation": ["canonical_evidence_v1", "project_schema_v7"],
+            }[capability]
+            bindings.append({
+                "capability": capability,
+                "components": [
+                    {
+                        "component_id": component_id,
+                        "commit_sha": component_commits[component_id],
+                        "contract_id": contracts[index],
+                        "model_id": (
+                            "ggml-large-v3.bin" if capability == "asr"
+                            else "gemma3:4b" if capability == "topics"
+                            else None
+                        ),
+                        "model_sha256": (
+                            "64d182b440b98d5203c4f9bd541544d84c605196c4f7b845dfa11fb23594d1e2" if capability == "asr"
+                            else "ed1e8a40017e648c133188919a5a0105ce1916726dbc657fecb5ccb5d717c46d" if capability == "topics"
+                            else None
+                        ),
+                    }
+                    for index, component_id in enumerate(component_ids)
+                ],
+                "config_sha256": "3" * 64,
+                "r5_selection_sha256": "38ec6db0172c6bd61d8515b71c32be0554e311684364758cf87c598723dc20c3",
+            })
+        registry = new_registry("studio-governance-fixture", "2026-09-11T00:00:00Z")
+        registry, project_id = register_project(
+            registry, project_key="studio-project", kind="SEMINAR",
+            title="Studio fixture", occurred_at="2026-09-11T00:00:00Z",
+        )
+        registry, source_id = register_youtube_video(
+            registry, project_id, video_id="fixture-video", title="Fixture video",
+            availability="AVAILABLE", captured_at="2026-09-11T00:01:00Z",
+        )
+        source = next(item for item in registry["sources"] if item["source_id"] == source_id)
+        source_revision_id = source["current_revision_id"]
+        source_hash = source["revisions"][-1]["revision_sha256"]
+        studio = new_studio(
+            registry, project_id=project_id, source_id=source_id,
+            source_revision_id=source_revision_id, bindings=bindings,
+            created_at="2026-09-11T00:02:00Z",
+        )
+        locators = [
+            {"type": "TIME_INTERVAL", "start_seconds": 0.0, "end_seconds": 4.0},
+            {"type": "ARTIFACT_REVISION", "artifact_id": source_id, "revision_id": source_revision_id, "content_sha256": source_hash},
+        ]
+        studio, transcript_id = register_transcript(
+            studio, registry=registry, native_id="transcript-r1", content_sha256="4" * 64,
+            created_at="2026-09-11T00:03:00Z", language="ru", word_count=4,
+            confidence=0.7, locators=locators,
+        )
+        words = [
+            {"word_id": f"word:{index:06d}", "sequence": index, "text": text,
+             "start_seconds": float(index), "end_seconds": float(index) + 0.5,
+             "confidence": 0.9}
+            for index, text in enumerate(("one", "two", "three", "four"))
+        ]
+        studio, timeline_id = register_word_timeline(
+            studio, registry=registry, native_id="timeline-r1", content_sha256="5" * 64,
+            created_at="2026-09-11T00:04:00Z", transcript_id=transcript_id,
+            words=words, locators=locators,
+        )
+        studio, _ = add_quality_finding(
+            studio, registry=registry, native_id="low-confidence", created_at="2026-09-11T00:05:00Z",
+            capability="quality_validation", artifact_id=transcript_id,
+            code="LOW_CONFIDENCE", severity="WARN", confidence=0.7,
+            locators=[locators[0]], detail="fixture low confidence",
+        )
+        topic_locators = locators + [{
+            "type": "WORD_INTERVAL", "start_word_id": "word:000000",
+            "end_word_id": "word:000003", "start_sequence": 0, "end_sequence": 3,
+        }]
+        studio, _ = register_topic_set(
+            studio, registry=registry, native_id="topics-normal", content_sha256="6" * 64,
+            created_at="2026-09-11T00:06:00Z", timeline_id=timeline_id,
+            level="NORMAL", topics=[{
+                "native_id": "topic-1", "title": "Fixture Topic", "summary": "Fixture summary",
+                "confidence": 0.6, "conflict": False, "locators": topic_locators,
+                "evidence_refs": ["word:000000", "word:000003"],
+            }],
+        )
+        member_ids = [studio["quality_findings"][0]["finding_id"], studio["topic_sets"][0]["topics"][0]["topic_id"]]
+        studio, _ = build_exception_package(
+            studio, registry=registry, native_id="package-1", created_at="2026-09-11T00:07:00Z",
+            member_ids=member_ids,
+        )
+        round_trip = loads_studio(dumps_studio(studio, registry), registry)
+        validate_studio(round_trip, registry)
+        if (
+            round_trip["semantic_authority"] != "MACHINE_OUTPUT_REQUIRES_HUMAN_DECISION"
+            or round_trip["source_artifacts_modified"] is not False
+            or round_trip["review_packages"][0]["member_ids"] != sorted(member_ids)
+        ):
+            errors.append("Transcript & Topic Studio executable fixture differs")
+    except Exception as error:
+        errors.append(f"Transcript & Topic Studio executable fixture failed: {error}")
+    return errors
+
+
 def main() -> int:
     state = load_json(STATE_PATH)
     baselines = load_json(BASELINES_PATH)
@@ -1559,6 +1781,7 @@ def main() -> int:
     playlist = load_json(PLAYLIST_PATH)
     document_pipeline = load_json(DOCUMENT_PIPELINE_PATH)
     projects_sources = load_json(PROJECTS_SOURCES_PATH)
+    transcript_topic_studio = load_json(TRANSCRIPT_TOPIC_STUDIO_PATH)
     load_json(SCHEMA_PATH)
     load_json(BASELINES_SCHEMA_PATH)
     load_json(OWNERSHIP_SCHEMA_PATH)
@@ -1579,6 +1802,8 @@ def main() -> int:
     load_json(DOCUMENT_PIPELINE_SCHEMA_PATH)
     load_json(PROJECTS_SOURCES_SCHEMA_PATH)
     load_json(PROJECT_SOURCE_REGISTRY_SCHEMA_PATH)
+    load_json(TRANSCRIPT_TOPIC_STUDIO_EVIDENCE_SCHEMA_PATH)
+    load_json(TRANSCRIPT_TOPIC_STUDIO_SCHEMA_PATH)
     load_json(ROOT / "schemas/youtube_playlist_snapshot_v1.schema.json")
     load_json(ROOT / "schemas/youtube_playlist_plan_v1.schema.json")
     load_json(ROOT / "schemas/youtube_playlist_checkpoint_v1.schema.json")
@@ -1599,6 +1824,7 @@ def main() -> int:
         + validate_playlist_evidence(playlist)
         + validate_document_pipeline_evidence(document_pipeline)
         + validate_projects_sources_evidence(projects_sources)
+        + validate_transcript_topic_studio_evidence(transcript_topic_studio, baselines)
     )
     if errors:
         print("INTEGRA_GOVERNANCE_VALIDATION: FAIL")
@@ -1631,6 +1857,7 @@ def main() -> int:
     print(f"R8A_YOUTUBE_PLAYLIST: {playlist['status']}")
     print(f"R8B_DOCUMENT_AND_OCR: {document_pipeline['status']}")
     print(f"PROJECTS_AND_SOURCES_V1: {projects_sources['status']}")
+    print(f"TRANSCRIPT_AND_TOPIC_STUDIO_V1: {transcript_topic_studio['status']}")
     return 0
 
 

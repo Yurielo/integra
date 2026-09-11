@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Yurielo/integra/schemas/transcript_topic_studio_evidence_v1.schema.json",
+  "title": "Integra Transcript and Topic Studio v1 acceptance evidence",
+  "type": "object",
+  "required": ["schema_version", "status", "issue", "implementation", "dependencies", "capability_owners", "topic_levels", "locator_types", "acceptance", "safety"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "status": {"const": "ACCEPTED"},
+    "issue": {"const": 48},
+    "implementation": {"type": "array", "minItems": 5, "uniqueItems": true, "items": {"type": "object", "required": ["path", "sha256"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}, "additionalProperties": false}},
+    "dependencies": {"const": ["R6", "PROJECTS_AND_SOURCES_V1"]},
+    "capability_owners": {"const": {"media_preparation": ["videotext"], "asr": ["videotext"], "translation": ["videotext"], "word_timeline": ["seminartext"], "topics": ["seminartext"], "review_mechanics": ["seminartext", "videotext"], "quality_validation": ["seminartext", "videotext"]}},
+    "topic_levels": {"const": ["DETAILED", "NORMAL", "COARSE"]},
+    "locator_types": {"const": ["TIME_INTERVAL", "WORD_INTERVAL", "PAGE_RANGE", "SLIDE_RANGE", "REGION", "CHARACTER_RANGE", "ARTIFACT_REVISION"]},
+    "acceptance": {"const": {"source_revision_bound": true, "media_preparation_exposed": true, "asr_exposed": true, "translation_lineage_separate": true, "canonical_word_timeline_exposed": true, "quality_findings_visible": true, "three_topic_levels": true, "strict_topic_hierarchy": true, "per_source_locator_binding": true, "exception_clustering_with_neighbors": true, "bulk_review_decision_deterministic": true, "review_decision_lease_enforced": true, "component_model_config_bound": true, "cancellation_and_resume_delegated_to_operations": true, "serialization_deterministic": true}},
+    "safety": {"const": {"machine_semantics_accepted": false, "source_artifacts_modified": false, "source_repositories_modified": false, "cross_source_alignment_performed": false, "protected_data_accessed": false, "gold_accessed": false, "network_access_performed": false, "credentials_accessed": false}}
+  },
+  "additionalProperties": false
+}

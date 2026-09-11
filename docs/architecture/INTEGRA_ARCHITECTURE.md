@@ -89,6 +89,15 @@ history. Local media, standalone YouTube videos, playlists and R8B documents
 share stable source identity, ordered revisions and exact provenance without
 duplicating unchanged sources or acquiring authority over source systems.
 
+Transcript & Topic Studio v1 composes the accepted R5 capability owners through
+the source-scoped contract in
+[`TRANSCRIPT_AND_TOPIC_STUDIO_V1.md`](TRANSCRIPT_AND_TOPIC_STUDIO_V1.md).
+Component/model/config-bound artifacts expose media preparation, ASR,
+translation, Canonical Word Timeline, quality findings, three Topic levels and
+strict hierarchy. Exception packages and lease-bound human decisions are
+separate from immutable source-owned artifacts; cross-source alignment remains
+the R8C boundary.
+
 ## 2. Authority model
 
 ### Factual state authority
