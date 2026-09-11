@@ -123,6 +123,10 @@ OBSIDIAN_EXPORT_PATH = ROOT / "state" / "obsidian_export_v1.json"
 OBSIDIAN_EXPORT_EVIDENCE_SCHEMA_PATH = ROOT / "schemas" / "obsidian_export_evidence_v1.schema.json"
 OBSIDIAN_PACKAGE_SCHEMA_PATH = ROOT / "schemas" / "obsidian_package_v1.schema.json"
 OBSIDIAN_RECEIPT_SCHEMA_PATH = ROOT / "schemas" / "obsidian_export_receipt_v1.schema.json"
+ONEDRIVE_PUBLICATION_PATH = ROOT / "state" / "onedrive_publication_v1.json"
+ONEDRIVE_EVIDENCE_SCHEMA_PATH = ROOT / "schemas" / "onedrive_publication_evidence_v1.schema.json"
+ONEDRIVE_PACKAGE_SCHEMA_PATH = ROOT / "schemas" / "onedrive_package_v1.schema.json"
+ONEDRIVE_RECEIPT_SCHEMA_PATH = ROOT / "schemas" / "onedrive_publication_receipt_v1.schema.json"
 EXPECTED_OBSIDIAN_IMPLEMENTATION = {
     "docs/architecture/OBSIDIAN_EXPORT_V1.md",
     "integra_core/publishing.py",
@@ -130,6 +134,14 @@ EXPECTED_OBSIDIAN_IMPLEMENTATION = {
     "schemas/obsidian_export_receipt_v1.schema.json",
     "schemas/obsidian_export_evidence_v1.schema.json",
     "tests/test_publishing.py",
+}
+EXPECTED_ONEDRIVE_IMPLEMENTATION = {
+    "docs/architecture/ONEDRIVE_PUBLICATION_V1.md",
+    "integra_core/onedrive.py",
+    "schemas/onedrive_package_v1.schema.json",
+    "schemas/onedrive_publication_receipt_v1.schema.json",
+    "schemas/onedrive_publication_evidence_v1.schema.json",
+    "tests/test_onedrive.py",
 }
 EXPECTED_OPERATIONS_IMPLEMENTATION = {
     "integra_core/operations.py",
@@ -628,6 +640,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("cross_navigation_evidence must pin R9C acceptance")
     if state.get("obsidian_export_evidence") != "state/obsidian_export_v1.json":
         errors.append("obsidian_export_evidence must pin R10 acceptance")
+    if state.get("onedrive_publication_evidence") != "state/onedrive_publication_v1.json":
+        errors.append("onedrive_publication_evidence must pin Issue #63 acceptance")
 
     execution_policy = state.get("execution_policy", {})
     expected_policy = {
@@ -737,7 +751,9 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("R9C must be ACCEPTED with cross-navigation evidence")
     if statuses.get("R10") != "ACCEPTED":
         errors.append("R10 must be ACCEPTED with managed Obsidian export evidence")
-    for planned_id in ("ONEDRIVE_PUBLICATION_V1", "R12", "R13"):
+    if statuses.get("ONEDRIVE_PUBLICATION_V1") != "ACCEPTED":
+        errors.append("ONEDRIVE_PUBLICATION_V1 must be ACCEPTED with filesystem publication evidence")
+    for planned_id in ("R12", "R13"):
         if statuses.get(planned_id) != "PLANNED":
             errors.append(f"{planned_id} must remain PLANNED for READY_APP_V1")
     if statuses.get("R14") != "HUMAN_GATE":
@@ -2541,6 +2557,49 @@ def validate_obsidian_export_evidence(evidence: dict, root: Path = ROOT) -> list
     return errors
 
 
+def validate_onedrive_publication_evidence(evidence: dict, root: Path = ROOT) -> list[str]:
+    errors: list[str] = []
+    expected_fields = {"schema_version", "status", "issue", "dependencies", "implementation", "acceptance", "safety", "limitations"}
+    if not isinstance(evidence, dict) or set(evidence) != expected_fields:
+        return ["OneDrive publication evidence fields must match v1"]
+    if (evidence.get("schema_version"), evidence.get("status"), evidence.get("issue")) != ("1.0", "ACCEPTED", 63):
+        errors.append("OneDrive evidence must certify Issue #63 as ACCEPTED")
+    if evidence.get("dependencies") != ["R10"]:
+        errors.append("OneDrive dependency order differs")
+    paths = []
+    for item in evidence.get("implementation", []):
+        if not isinstance(item, dict) or set(item) != {"path", "sha256"}:
+            errors.append("OneDrive implementation reference differs")
+            continue
+        paths.append(item["path"])
+        path = root / item["path"]
+        if not path.is_file() or sha256_file(path) != item["sha256"]:
+            errors.append(f"OneDrive implementation hash differs: {item['path']}")
+    if set(paths) != EXPECTED_ONEDRIVE_IMPLEMENTATION or len(paths) != len(set(paths)):
+        errors.append("OneDrive implementation inventory must be exact")
+    if evidence.get("acceptance") != {
+        "ambiguous_completion_fails_closed": True, "complete_marker_written_last": True,
+        "conflict_copies_detected": True, "deterministic_package_identity": True,
+        "files_on_demand_detected": True, "immutable_versions": True,
+        "mutual_exclusion_with_obsidian": True, "offline_queueing": True,
+        "outside_sync_staging": True, "physical_size_and_hash_verified": True,
+        "project_lease_required": True, "verified_recovery": True,
+    }:
+        errors.append("OneDrive acceptance evidence differs")
+    if evidence.get("safety") != {
+        "cloud_publication_verified": False, "credentials_accessed": False,
+        "external_actions_performed": False, "live_account_accessed": False,
+        "microsoft_graph_used": False, "protected_data_accessed": False,
+        "real_sync_root_accessed": False, "semantic_acceptance_performed": False,
+        "source_artifacts_modified": False, "source_repositories_modified": False,
+    }:
+        errors.append("OneDrive safety evidence differs")
+    limitations = evidence.get("limitations")
+    if not isinstance(limitations, list) or not limitations or len(limitations) != len(set(limitations)):
+        errors.append("OneDrive limitations must be a non-empty unique list")
+    return errors
+
+
 def main() -> int:
     state = load_json(STATE_PATH)
     baselines = load_json(BASELINES_PATH)
@@ -2562,6 +2621,7 @@ def main() -> int:
     media_integration = load_json(MEDIA_INTEGRATION_PATH)
     cross_navigation = load_json(CROSS_NAVIGATION_PATH)
     obsidian_export = load_json(OBSIDIAN_EXPORT_PATH)
+    onedrive_publication = load_json(ONEDRIVE_PUBLICATION_PATH)
     load_json(SCHEMA_PATH)
     load_json(BASELINES_SCHEMA_PATH)
     load_json(OWNERSHIP_SCHEMA_PATH)
@@ -2596,6 +2656,9 @@ def main() -> int:
     load_json(OBSIDIAN_EXPORT_EVIDENCE_SCHEMA_PATH)
     load_json(OBSIDIAN_PACKAGE_SCHEMA_PATH)
     load_json(OBSIDIAN_RECEIPT_SCHEMA_PATH)
+    load_json(ONEDRIVE_EVIDENCE_SCHEMA_PATH)
+    load_json(ONEDRIVE_PACKAGE_SCHEMA_PATH)
+    load_json(ONEDRIVE_RECEIPT_SCHEMA_PATH)
     load_json(ROOT / "schemas/youtube_playlist_snapshot_v1.schema.json")
     load_json(ROOT / "schemas/youtube_playlist_plan_v1.schema.json")
     load_json(ROOT / "schemas/youtube_playlist_checkpoint_v1.schema.json")
@@ -2622,6 +2685,7 @@ def main() -> int:
         + validate_media_integration_evidence(media_integration, baselines)
         + validate_cross_navigation_evidence(cross_navigation)
         + validate_obsidian_export_evidence(obsidian_export)
+        + validate_onedrive_publication_evidence(onedrive_publication)
     )
     if errors:
         print("INTEGRA_GOVERNANCE_VALIDATION: FAIL")
@@ -2664,6 +2728,7 @@ def main() -> int:
     print(f"R9A_KNOWLEDGE_INTEGRATION: {knowledge_integration['status']}")
     print(f"R9B_MEDIA_INTEGRATION: {media_integration['status']}")
     print(f"R9C_CROSS_NAVIGATION: {cross_navigation['status']}")
+    print(f"ONEDRIVE_PUBLICATION_V1: {onedrive_publication['status']}")
     return 0
 
 
