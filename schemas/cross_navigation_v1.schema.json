@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://integra.local/schemas/cross_navigation_v1.schema.json",
+  "title": "Integra exact cross-navigation v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "navigation_id", "project_id", "sources", "created_at", "targets", "routes", "semantic_authority", "source_artifacts_modified", "record_sha256"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "navigation_id": {"$ref": "#/$defs/id"},
+    "project_id": {"$ref": "#/$defs/id"},
+    "sources": {
+      "type": "object", "additionalProperties": false,
+      "required": ["alignment", "knowledge", "media", "mappings"],
+      "properties": {
+        "alignment": {"$ref": "#/$defs/record_binding"},
+        "knowledge": {"$ref": "#/$defs/record_binding"},
+        "media": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/media_binding"}},
+        "mappings": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/source_mapping"}}
+      }
+    },
+    "created_at": {"type": "string", "format": "date-time"},
+    "targets": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/target"}},
+    "routes": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/route"}},
+    "semantic_authority": {"const": "PRESENTATION_ONLY_SOURCE_TRUTH_PRESERVED"},
+    "source_artifacts_modified": {"const": false},
+    "record_sha256": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 3},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "record_binding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["record_id", "record_sha256"],
+      "properties": {"record_id": {"$ref": "#/$defs/id"}, "record_sha256": {"$ref": "#/$defs/sha256"}}
+    },
+    "media_binding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["recipe_id", "recipe_sha256", "derivative_id", "derivative_sha256"],
+      "properties": {
+        "recipe_id": {"$ref": "#/$defs/id"}, "recipe_sha256": {"$ref": "#/$defs/sha256"},
+        "derivative_id": {"$ref": "#/$defs/id"}, "derivative_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "source_mapping": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mapping_id", "kind", "from_source_id", "from_revision_id", "to_source_id", "to_revision_id", "evidence_sha256"],
+      "properties": {
+        "mapping_id": {"$ref": "#/$defs/id"},
+        "kind": {"enum": ["KNOWLEDGE_TO_PROJECT_SOURCE", "MEDIA_TO_ALIGNMENT_SOURCE"]},
+        "from_source_id": {"$ref": "#/$defs/id"},
+        "from_revision_id": {"$ref": "#/$defs/id"},
+        "to_source_id": {"$ref": "#/$defs/id"},
+        "to_revision_id": {"$ref": "#/$defs/id"},
+        "evidence_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "target": {
+      "type": "object", "additionalProperties": false,
+      "required": ["target_id", "kind", "owner", "content_sha256", "source_id", "source_revision_id", "artifact_id", "locators", "semantic_status", "available", "unavailable_reason", "actions", "target_sha256"],
+      "properties": {
+        "target_id": {"$ref": "#/$defs/id"},
+        "kind": {"enum": ["KNOWLEDGE_ENTITY", "EVIDENCE", "TOPIC", "WORD_TIMELINE", "TRANSCRIPT", "VIDEO", "AUDIO", "DOCUMENT", "PAGE", "SLIDE", "MEDIA_SOURCE", "MEDIA_CLIP"]},
+        "owner": {"type": "string", "minLength": 1},
+        "content_sha256": {"$ref": "#/$defs/sha256"},
+        "source_id": {"oneOf": [{"$ref": "#/$defs/id"}, {"type": "null"}]},
+        "source_revision_id": {"oneOf": [{"$ref": "#/$defs/id"}, {"type": "null"}]},
+        "artifact_id": {"oneOf": [{"$ref": "#/$defs/id"}, {"type": "null"}]},
+        "locators": {"type": "array", "items": {"$ref": "#/$defs/locator"}},
+        "semantic_status": {"type": "string", "minLength": 1},
+        "available": {"type": "boolean"},
+        "unavailable_reason": {"type": ["string", "null"]},
+        "actions": {"type": "array", "uniqueItems": true, "items": {"enum": ["OPEN_ENTITY", "SEEK_MEDIA", "SELECT_WORD_RANGE", "OPEN_PAGE", "OPEN_SLIDE", "HIGHLIGHT_REGION", "SELECT_TEXT", "OPEN_REVISION", "OPEN_CLIP"]}},
+        "target_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "route": {
+      "type": "object", "additionalProperties": false,
+      "required": ["route_id", "from_id", "from_sha256", "to_id", "to_sha256", "relation", "semantic_status", "bidirectional", "route_sha256"],
+      "properties": {
+        "route_id": {"$ref": "#/$defs/id"}, "from_id": {"$ref": "#/$defs/id"},
+        "from_sha256": {"$ref": "#/$defs/sha256"}, "to_id": {"$ref": "#/$defs/id"},
+        "to_sha256": {"$ref": "#/$defs/sha256"}, "relation": {"type": "string", "minLength": 1},
+        "semantic_status": {"type": "string", "minLength": 1}, "bidirectional": {"const": true},
+        "route_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "locator": {
+      "oneOf": [
+        {"type": "object", "additionalProperties": false, "required": ["type", "start_seconds", "end_seconds"], "properties": {"type": {"enum": ["TIME_INTERVAL", "time_interval"]}, "start_seconds": {"type": "number", "minimum": 0}, "end_seconds": {"type": "number", "exclusiveMinimum": 0}}},
+        {"type": "object", "additionalProperties": false, "required": ["type", "start_word_id", "end_word_id", "start_sequence", "end_sequence"], "properties": {"type": {"const": "WORD_INTERVAL"}, "start_word_id": {"type": "string", "minLength": 1}, "end_word_id": {"type": "string", "minLength": 1}, "start_sequence": {"type": "integer", "minimum": 0}, "end_sequence": {"type": "integer", "minimum": 0}}},
+        {"type": "object", "additionalProperties": false, "required": ["type", "start_page", "end_page"], "properties": {"type": {"const": "PAGE_RANGE"}, "start_page": {"type": "integer", "minimum": 1}, "end_page": {"type": "integer", "minimum": 1}}},
+        {"type": "object", "additionalProperties": false, "required": ["type", "start_slide", "end_slide"], "properties": {"type": {"const": "SLIDE_RANGE"}, "start_slide": {"type": "integer", "minimum": 1}, "end_slide": {"type": "integer", "minimum": 1}}},
+        {"type": "object", "additionalProperties": false, "required": ["type", "container_type", "container_index", "x", "y", "width", "height"], "properties": {"type": {"const": "REGION"}, "container_type": {"enum": ["PAGE", "SLIDE", "IMAGE"]}, "container_index": {"type": "integer", "minimum": 1}, "x": {"type": "number", "minimum": 0, "maximum": 1}, "y": {"type": "number", "minimum": 0, "maximum": 1}, "width": {"type": "number", "exclusiveMinimum": 0, "maximum": 1}, "height": {"type": "number", "exclusiveMinimum": 0, "maximum": 1}}},
+        {"type": "object", "additionalProperties": false, "required": ["type", "start_char", "end_char"], "properties": {"type": {"const": "CHARACTER_RANGE"}, "start_char": {"type": "integer", "minimum": 0}, "end_char": {"type": "integer", "minimum": 1}}},
+        {"type": "object", "additionalProperties": false, "required": ["type", "artifact_id", "revision_id", "content_sha256"], "properties": {"type": {"const": "ARTIFACT_REVISION"}, "artifact_id": {"$ref": "#/$defs/id"}, "revision_id": {"$ref": "#/$defs/id"}, "content_sha256": {"$ref": "#/$defs/sha256"}}}
+      ]
+    }
+  }
+}

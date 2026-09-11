@@ -26,6 +26,7 @@
     "multi_source_alignment_evidence",
     "knowledge_integration_evidence",
     "media_integration_evidence",
+    "cross_navigation_evidence",
     "execution_policy",
     "release_scope",
     "roadmap",
@@ -89,6 +90,9 @@
     },
     "media_integration_evidence": {
       "const": "state/media_integration_v1.json"
+    },
+    "cross_navigation_evidence": {
+      "const": "state/cross_navigation_v1.json"
     },
     "execution_policy": {
       "type": "object",

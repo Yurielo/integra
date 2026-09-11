@@ -27,7 +27,7 @@ not add routine human gates or change stage dependencies.
 | R8C Multi-source alignment | #12 | M2 | R8A, R8B, PROJECTS_AND_SOURCES_V1, TRANSCRIPT_AND_TOPIC_STUDIO_V1 | ACCEPTED |
 | R9A Knowledge integration | #13 | M3 | R6, R8C, TRANSCRIPT_AND_TOPIC_STUDIO_V1 | ACCEPTED |
 | R9B Media integration | #14 | M3 | R5, R6, OPERATIONS_AND_DIAGNOSTICS_V1 | ACCEPTED |
-| R9C Cross-navigation | #15 | M3 | R8C, R9A, R9B | PLANNED |
+| R9C Cross-navigation | #15 | M3 | R8C, R9A, R9B | ACCEPTED |
 | R10 Publishing, Obsidian, OneDrive | #16 | M4 | R9C | PLANNED |
 | R11 Marketing Studio v1 | #17 | M4 | R9A, R10 | PLANNED |
 | LEARNING_V1 | #18 | M4 | R9A | PLANNED |

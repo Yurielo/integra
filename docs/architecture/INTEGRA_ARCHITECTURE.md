@@ -123,6 +123,14 @@ and process-cleanup authority; only a durably successful job with an exact
 final checkpoint, independently verified output and bound VideoText QA artifact
 can create a media derivative record. No recipe can mutate knowledge truth.
 
+R9C adds the presentation-only integration boundary documented in
+[`CROSS_NAVIGATION_V1.md`](CROSS_NAVIGATION_V1.md). It validates R8C, R9A and
+R9B source records before producing one deterministic bidirectional index over
+Knowledge, Evidence, Topics, Word Timeline, transcript, documents, exact media
+selections and verified clips. Every hop retains the upstream stable ID and
+locator. Missing sources are explicit unavailable targets with no fabricated
+route or fallback.
+
 ## 2. Authority model
 
 ### Factual state authority
