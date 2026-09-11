@@ -3,13 +3,14 @@
   "$id": "https://integra.local/schemas/cross_navigation_evidence_v1.schema.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "status", "issue", "dependencies", "implementation", "surfaces", "acceptance", "safety", "limitations"],
+  "required": ["schema_version", "status", "issue", "corrective_issues", "dependencies", "implementation", "surfaces", "acceptance", "safety", "limitations"],
   "properties": {
     "schema_version": {"const": "1.0"}, "status": {"const": "ACCEPTED"}, "issue": {"const": 15},
+    "corrective_issues": {"const": [61]},
     "dependencies": {"const": ["R8C", "R9A", "R9B"]},
     "implementation": {"type": "array", "minItems": 6, "maxItems": 6, "items": {"$ref": "#/$defs/file"}},
     "surfaces": {"const": ["AUDIO", "DOCUMENT", "EVIDENCE", "KNOWLEDGE_ENTITY", "MEDIA_CLIP", "MEDIA_SOURCE", "PAGE", "SLIDE", "TOPIC", "TRANSCRIPT", "VIDEO", "WORD_TIMELINE"]},
-    "acceptance": {"const": {"validated_r8c_alignment_required": true, "validated_r9a_knowledge_required": true, "registered_r9b_derivative_required": true, "stable_ids_preserved": true, "exact_locators_preserved": true, "source_revision_mappings_required": true, "authoritative_bridge_catalog_required": true, "authoritative_availability_catalog_required": true, "forward_and_reverse_navigation": true, "topic_to_word_timeline": true, "knowledge_to_evidence": true, "media_source_to_clip": true, "document_page_and_slide_actions": true, "unavailable_sources_fail_closed": true, "deterministic_serialization": true, "semantic_promotion_automatic": false}},
+    "acceptance": {"const": {"validated_r8c_alignment_required": true, "validated_r9a_knowledge_required": true, "registered_r9b_derivative_required": true, "stable_ids_preserved": true, "exact_locators_preserved": true, "source_revision_mappings_required": true, "exact_project_source_coverage_required": true, "canonical_project_identity_binding_required": true, "partial_mapping_coverage_rejected": true, "multi_source_aggregate_actions_restricted": true, "authoritative_bridge_catalog_required": true, "authoritative_availability_catalog_required": true, "forward_and_reverse_navigation": true, "topic_to_word_timeline": true, "knowledge_to_evidence": true, "media_source_to_clip": true, "document_page_and_slide_actions": true, "unavailable_sources_fail_closed": true, "deterministic_serialization": true, "semantic_promotion_automatic": false}},
     "safety": {"const": {"source_artifacts_modified": false, "source_repositories_modified": false, "protected_data_accessed": false, "gold_accessed": false, "semantic_authoring_performed": false, "domain_review_performed": false, "external_actions_performed": false}},
     "limitations": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
   },

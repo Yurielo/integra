@@ -57,7 +57,7 @@ def build_cross_navigation(
     targets: dict[str, dict[str, Any]] = {}
     routes: list[dict[str, Any]] = []
     mappings = _source_mappings(
-        alignment, registry, evidence_payload, media_records,
+        alignment, registry, knowledge_view, evidence_payload, media_records,
     )
     sources = {
         "alignment": {"record_id": alignment["alignment_id"], "record_sha256": alignment["record_sha256"]},
@@ -294,14 +294,24 @@ def _index_knowledge(targets: dict[str, dict[str, Any]], routes: list[dict[str, 
         kind = "EVIDENCE" if node["kind"] == "EVIDENCE" else "TOPIC" if node["kind"] == "TOPIC" else "KNOWLEDGE_ENTITY"
         item = evidence.get(node["id"])
         referenced = [evidence[value] for value in records.get(node["id"], {}).get("evidence_refs", [])]
-        locators = [item["locator"]] if item else [value["locator"] for value in referenced]
-        source_ids = sorted({value["source_id"] for value in referenced})
-        revision_ids = sorted({value["transcript_revision_id"] for value in referenced})
-        source_id = item["source_id"] if item else source_ids[0] if len(source_ids) == 1 else None
-        source_revision_id = (
-            item["transcript_revision_id"] if item
-            else revision_ids[0] if len(revision_ids) == 1 else None
+        source_pairs = sorted({
+            (value["source_id"], value["transcript_revision_id"])
+            for value in referenced
+        })
+        exact_pair = (
+            (item["source_id"], item["transcript_revision_id"])
+            if item else source_pairs[0] if len(source_pairs) == 1 else None
         )
+        # Aggregate Knowledge nodes are presentation destinations, not source
+        # destinations.  Combining locators from distinct source revisions
+        # would make seek/open actions ambiguous; exact navigation remains on
+        # each Evidence node connected by the source-truth graph.
+        locators = (
+            [item["locator"]] if item
+            else [value["locator"] for value in referenced] if exact_pair else []
+        )
+        source_id = exact_pair[0] if exact_pair else None
+        source_revision_id = exact_pair[1] if exact_pair else None
         _put_target(targets, node["id"], kind, "integra.knowledge", node["sha256"], locators,
                     node["status"], source_id, source_revision_id, node["id"])
     for edge in view["graph"]["edges"]:
@@ -466,7 +476,8 @@ def _document_locators(record: dict[str, Any], block: dict[str, Any]) -> list[di
 
 
 def _source_mappings(
-    alignment: dict[str, Any], registry: dict[str, Any], evidence_payload: bytes,
+    alignment: dict[str, Any], registry: dict[str, Any],
+    knowledge_view: dict[str, Any], evidence_payload: bytes,
     media_records: list[dict[str, Any]],
 ) -> list[dict[str, str]]:
     try:
@@ -474,75 +485,118 @@ def _source_mappings(
     except (UnicodeDecodeError, json.JSONDecodeError) as error:
         raise CrossNavigationError("Canonical Evidence source mapping is invalid") from error
     alignment_nodes = alignment["nodes"]
+    aligned_sources = {
+        (item["source_id"], item["source_revision_id"])
+        for item in alignment["sources"]
+    }
+    required_knowledge = {
+        (item["source_id"], item["transcript_revision_id"])
+        for item in knowledge_view["evidence"]
+    }
+    canonical_sources = {item["id"]: item for item in canonical["sources"]}
+    canonical_revisions = {item["id"]: item for item in canonical["transcript_revisions"]}
+    registry_projects = [
+        item for item in registry["projects"]
+        if item["project_id"] == alignment["project_id"]
+    ]
+    if len(registry_projects) != 1:
+        raise CrossNavigationError("alignment project lacks one authoritative registry project")
+    expected_canonical_project_id = f"project:{registry_projects[0]['project_key']}"
+    if canonical.get("project", {}).get("id") != expected_canonical_project_id:
+        raise CrossNavigationError("Canonical Evidence project differs from the alignment project")
     result: list[dict[str, str]] = []
-    for source in canonical["sources"]:
-        if not source["id"].startswith("source:"):
-            continue
+    for source_id, revision_id in sorted(required_knowledge):
+        source = canonical_sources.get(source_id)
+        revision = canonical_revisions.get(revision_id)
+        if (
+            source is None or revision is None
+            or revision["source_id"] != source_id
+            or not source_id.startswith("source:")
+        ):
+            raise CrossNavigationError("indexed Knowledge source/revision is not canonical")
         native_id = source["id"].removeprefix("source:")
         matches = [item for item in registry["sources"]
                    if item["origin"].get("native_id") == native_id]
         if len(matches) != 1:
-            continue
+            raise CrossNavigationError("indexed Knowledge source lacks one exact project mapping")
         target = matches[0]
-        current_revision = next(item for item in target["revisions"]
-                                if item["revision_id"] == target["current_revision_id"])
+        if (
+            alignment["project_id"] not in target["project_ids"]
+            or (target["source_id"], target["current_revision_id"]) not in aligned_sources
+        ):
+            raise CrossNavigationError("indexed Knowledge source maps outside the alignment project")
+        current_revision = next(
+            item for item in target["revisions"]
+            if item["revision_id"] == target["current_revision_id"]
+        )
         content_bound = any(
             item["source_id"] == target["source_id"]
+            and item["source_revision_id"] == current_revision["revision_id"]
             and item["kind"] in {"VIDEO", "AUDIO"}
             and item["artifact_sha256"] == source["content_sha256"]
             for item in alignment_nodes
         )
         if not content_bound:
-            continue
-        for revision in canonical["transcript_revisions"]:
-            if revision["source_id"] != source["id"]:
-                continue
-            facts = {
-                "kind": "KNOWLEDGE_TO_PROJECT_SOURCE", "from_source_id": source["id"],
-                "from_revision_id": revision["id"], "source_content_sha256": source["content_sha256"],
-                "to_source_id": target["source_id"],
-                "to_revision_id": current_revision["revision_id"],
-                "to_revision_sha256": current_revision["revision_sha256"],
-                "registry_native_id": native_id,
-            }
-            evidence_hash = content_sha256(facts)
-            result.append({
-                "mapping_id": derive_imported_id(
-                    "evidence", "integra.cross_navigation", source["id"], evidence_hash,
-                ),
-                "kind": facts["kind"], "from_source_id": source["id"],
-                "from_revision_id": revision["id"], "to_source_id": target["source_id"],
-                "to_revision_id": current_revision["revision_id"],
-                "evidence_sha256": evidence_hash,
-            })
-    nodes_by_artifact = {item["artifact_id"]: item for item in alignment_nodes
-                         if item["kind"] in {"VIDEO", "AUDIO"}}
+            raise CrossNavigationError("indexed Knowledge source lacks content-bound alignment")
+        facts = {
+            "kind": "KNOWLEDGE_TO_PROJECT_SOURCE", "from_source_id": source["id"],
+            "from_revision_id": revision["id"], "source_content_sha256": source["content_sha256"],
+            "to_source_id": target["source_id"],
+            "to_revision_id": current_revision["revision_id"],
+            "to_revision_sha256": current_revision["revision_sha256"],
+            "registry_native_id": native_id,
+        }
+        evidence_hash = content_sha256(facts)
+        result.append({
+            "mapping_id": derive_imported_id(
+                "evidence", "integra.cross_navigation", source["id"], evidence_hash,
+            ),
+            "kind": facts["kind"], "from_source_id": source["id"],
+            "from_revision_id": revision["id"], "to_source_id": target["source_id"],
+            "to_revision_id": current_revision["revision_id"],
+            "evidence_sha256": evidence_hash,
+        })
+    media_nodes = [item for item in alignment_nodes if item["kind"] in {"VIDEO", "AUDIO"}]
+    media_mapping_targets: dict[tuple[str, str], tuple[str, str]] = {}
     for item in media_records:
         recipe = item["recipe"]
-        for parent_id in recipe["source"]["provenance"]["parent_artifact_ids"]:
-            node = nodes_by_artifact.get(parent_id)
-            if node is None:
-                continue
-            facts = {
-                "kind": "MEDIA_TO_ALIGNMENT_SOURCE",
-                "from_source_id": recipe["source"]["artifact_id"],
-                "from_revision_id": _media_source_revision_id(recipe),
-                "source_sha256": recipe["source_sha256"],
-                "parent_artifact_id": parent_id,
-                "parent_artifact_sha256": node["artifact_sha256"],
-                "to_source_id": node["source_id"],
-                "to_revision_id": node["source_revision_id"],
-            }
-            evidence_hash = content_sha256(facts)
-            result.append({
-                "mapping_id": derive_imported_id(
-                    "evidence", "integra.cross_navigation", parent_id, evidence_hash,
-                ),
-                "kind": facts["kind"], "from_source_id": facts["from_source_id"],
-                "from_revision_id": facts["from_revision_id"],
-                "to_source_id": facts["to_source_id"], "to_revision_id": facts["to_revision_id"],
-                "evidence_sha256": evidence_hash,
-            })
+        parent_ids = set(recipe["source"]["provenance"]["parent_artifact_ids"])
+        matches = [
+            node for node in media_nodes
+            if node["artifact_id"] in parent_ids
+            and (node["source_id"], node["source_revision_id"]) in aligned_sources
+        ]
+        if len(matches) != 1:
+            raise CrossNavigationError("registered media source lacks one exact alignment mapping")
+        node = matches[0]
+        from_pair = (recipe["source"]["artifact_id"], _media_source_revision_id(recipe))
+        to_pair = (node["source_id"], node["source_revision_id"])
+        previous = media_mapping_targets.get(from_pair)
+        if previous is not None:
+            if previous != to_pair:
+                raise CrossNavigationError("registered media source has conflicting alignment mappings")
+            continue
+        media_mapping_targets[from_pair] = to_pair
+        facts = {
+            "kind": "MEDIA_TO_ALIGNMENT_SOURCE",
+            "from_source_id": from_pair[0],
+            "from_revision_id": from_pair[1],
+            "source_sha256": recipe["source_sha256"],
+            "parent_artifact_id": node["artifact_id"],
+            "parent_artifact_sha256": node["artifact_sha256"],
+            "to_source_id": node["source_id"],
+            "to_revision_id": node["source_revision_id"],
+        }
+        evidence_hash = content_sha256(facts)
+        result.append({
+            "mapping_id": derive_imported_id(
+                "evidence", "integra.cross_navigation", node["artifact_id"], evidence_hash,
+            ),
+            "kind": facts["kind"], "from_source_id": facts["from_source_id"],
+            "from_revision_id": facts["from_revision_id"],
+            "to_source_id": facts["to_source_id"], "to_revision_id": facts["to_revision_id"],
+            "evidence_sha256": evidence_hash,
+        })
     return sorted(result, key=lambda item: (
         item["kind"], item["from_source_id"], item["from_revision_id"], item["to_source_id"],
     ))
@@ -612,6 +666,12 @@ def _validate_target(target: Any) -> None:
         raise CrossNavigationError("available navigation target lacks actions")
     if not target["available"] and (not target["unavailable_reason"] or target["locators"] or target["actions"]):
         raise CrossNavigationError("unavailable navigation target fabricates access")
+    if (
+        target["available"] and target["owner"] == "integra.knowledge"
+        and target["source_id"] is None
+        and (target["locators"] or target["actions"] != ["OPEN_ENTITY"])
+    ):
+        raise CrossNavigationError("aggregate Knowledge target fabricates a source route")
     if target["available"] and target["actions"] != _actions(target["kind"], target["locators"]):
         raise CrossNavigationError("navigation target actions differ from exact locators")
     if target["target_sha256"] != _record_hash(target, "target_sha256"):

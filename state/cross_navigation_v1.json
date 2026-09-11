@@ -2,14 +2,15 @@
   "schema_version": "1.0",
   "status": "ACCEPTED",
   "issue": 15,
+  "corrective_issues": [61],
   "dependencies": ["R8C", "R9A", "R9B"],
   "implementation": [
-    {"path": "docs/architecture/CROSS_NAVIGATION_V1.md", "sha256": "405207c7feea897da30c8d2a2c15ecc97c96421c0bdb3f22ea20a33fde422cdd"},
-    {"path": "integra_core/cross_navigation.py", "sha256": "ccfe144d8816069c00a34139bd5ac0ad43078fb2e2e9aa3b6a46835d34b8c56f"},
-    {"path": "schemas/cross_navigation_evidence_v1.schema.json", "sha256": "344949ff644deaf68cdc6d6513d19276cb592a1ce2ce8fec0972c53ffd3f2645"},
-    {"path": "schemas/cross_navigation_v1.schema.json", "sha256": "ecc04cdfcb8350481d66c94f99d4511ca4664022009161aa97304c6a2867f91f"},
+    {"path": "docs/architecture/CROSS_NAVIGATION_V1.md", "sha256": "077c745f31ae8c6147eb468bae65039aceefe92c33f4db6f0f9842df12427573"},
+    {"path": "integra_core/cross_navigation.py", "sha256": "da1ff93cb7f608dd867cf8ffb09cc9f34724259e8fa936d591fa21ab12c8b237"},
+    {"path": "schemas/cross_navigation_evidence_v1.schema.json", "sha256": "3768eec6d09eecbcf88a80a4eb3f3557caad648ee2ead4da0e98cf75baddba0a"},
+    {"path": "schemas/cross_navigation_v1.schema.json", "sha256": "cc8a038a8d776ac0a5400fcf86744693f3e8f13ce7872e644e214d4508935602"},
     {"path": "tests/fixtures/cross_navigation_v1/ffprobe_fixture.py", "sha256": "1265b8b767e0850e7b6b9057344afb70b211d99acc87d43f46d1ea52fdfa419c"},
-    {"path": "tests/test_cross_navigation.py", "sha256": "b4796e1fd0272af4e4d92765a7b69dc30d0bad05e5a6ac0ffd291523b184a128"}
+    {"path": "tests/test_cross_navigation.py", "sha256": "f977771c080dfe38b05b5fcd91ad59cdf80d64cba41dc03566bf570326a5375d"}
   ],
   "surfaces": [
     "AUDIO", "DOCUMENT", "EVIDENCE", "KNOWLEDGE_ENTITY", "MEDIA_CLIP", "MEDIA_SOURCE",
@@ -22,6 +23,10 @@
     "stable_ids_preserved": true,
     "exact_locators_preserved": true,
     "source_revision_mappings_required": true,
+    "exact_project_source_coverage_required": true,
+    "canonical_project_identity_binding_required": true,
+    "partial_mapping_coverage_rejected": true,
+    "multi_source_aggregate_actions_restricted": true,
     "authoritative_bridge_catalog_required": true,
     "authoritative_availability_catalog_required": true,
     "forward_and_reverse_navigation": true,

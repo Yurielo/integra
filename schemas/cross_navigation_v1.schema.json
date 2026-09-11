@@ -72,7 +72,22 @@
         "unavailable_reason": {"type": ["string", "null"]},
         "actions": {"type": "array", "uniqueItems": true, "items": {"enum": ["OPEN_ENTITY", "SEEK_MEDIA", "SELECT_WORD_RANGE", "OPEN_PAGE", "OPEN_SLIDE", "HIGHLIGHT_REGION", "SELECT_TEXT", "OPEN_REVISION", "OPEN_CLIP"]}},
         "target_sha256": {"$ref": "#/$defs/sha256"}
-      }
+      },
+      "allOf": [{
+        "if": {
+          "properties": {
+            "owner": {"const": "integra.knowledge"},
+            "source_id": {"type": "null"}
+          },
+          "required": ["owner", "source_id"]
+        },
+        "then": {
+          "properties": {
+            "locators": {"maxItems": 0},
+            "actions": {"const": ["OPEN_ENTITY"]}
+          }
+        }
+      }]
     },
     "route": {
       "type": "object", "additionalProperties": false,

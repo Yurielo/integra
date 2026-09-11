@@ -25,6 +25,13 @@ source/revision mappings. A Knowledge-to-project mapping requires the Canonical
 Evidence native source identity plus a content-hash match to the aligned media;
 a media-to-alignment mapping requires the registered recipe source to name the
 aligned artifact as provenance parent. Locator overlap alone is insufficient.
+Every source/revision pair indexed from R9A Evidence and every registered R9B
+media source/revision must resolve to exactly one current R8C source binding in
+the same Project Registry project. Missing, partial, duplicate, stale, or
+cross-project coverage rejects the complete index before any target is exposed.
+The Canonical Evidence project ID is bound to the authoritative Registry
+project as `project:<project_key>`; a matching source alone cannot import a
+Knowledge view from another canonical project.
 
 Every load and navigation call also receives the current authoritative R8C,
 R9A, and R9B inputs, the approved bridge set, and the current unavailable-source
@@ -42,6 +49,12 @@ actions such as seek media, select a word range, open a page or slide, select
 text, highlight a region, and open an artifact revision. Document projections
 retain page/slide, character, optional normalized region, and exact source
 artifact-revision locators. A verified derivative adds `OPEN_CLIP`.
+
+An aggregate Knowledge target backed by more than one source/revision is an
+entity destination only. It has no source identity, locators, seek/open-source
+actions, or inferred common position; its only action is `OPEN_ENTITY`.
+Individual Evidence targets keep their exact source/revision identities and
+locators, and graph edges provide the route from the aggregate to each one.
 
 R8C relations and R9A graph edges are copied as hash-bound bidirectional
 routes. Studio Topic-to-Word-Timeline and source-to-derivative routes are added
@@ -61,6 +74,10 @@ represented without locators, actions, or routes and raises
 `NavigationUnavailableError` with its recorded reason. The UI must show that
 reason and must not guess another source, revision, timestamp, page, slide, or
 clip.
+
+Cross-navigation construction also raises `CrossNavigationError` when even one
+indexed Knowledge or registered media source lacks exact current alignment
+coverage. It never publishes a partially navigable index.
 
 ## Authority and limits
 
