@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0",
+  "issue": 11,
+  "status": "PASS",
+  "implementation": [
+    {"path": "integra_core/documents.py", "sha256": "820b626135e6395e7d5b4a06491e08313b113dab340218957637934b4dad16bb"},
+    {"path": "schemas/document_extraction_v1.schema.json", "sha256": "2e5e3f2623d84f9f2b3f6a94d6489087b8fa0419409c58bf4c2bcf4d1385e1de"},
+    {"path": "schemas/document_pipeline_evidence_v1.schema.json", "sha256": "c83246e3a48da7bacd288e7afba08cb0d1d9682efa2f758abf307f5556eb150b"}
+  ],
+  "fixtures": [
+    {"path": "tests/fixtures/document_v1/cases.json", "sha256": "91ac0b614864a5e08e23c39dab94e915cd8cbbcb15cdd1eb9d06b8d8efaf07b3"}
+  ],
+  "acceptance": {
+    "pdf_supported": true,
+    "pptx_supported": true,
+    "docx_supported": true,
+    "txt_supported": true,
+    "markdown_supported": true,
+    "images_and_scans_supported": true,
+    "page_locators": true,
+    "slide_locators": true,
+    "region_locators": true,
+    "character_locators": true,
+    "embedded_media_extraction": true,
+    "ocr_fallback": true,
+    "source_fidelity": true,
+    "image_heavy_not_plain_text": true,
+    "deterministic_records": true,
+    "semantic_authority_provisional": true,
+    "network_accessed": false,
+    "credentials_accessed": false,
+    "protected_data_accessed": false,
+    "external_actions_performed": false
+  },
+  "limitations": [
+    "The dependency-free PDF reader extracts only unfiltered non-nested literal-string text and routes nested strings or unsupported encodings to explicit OCR_REQUIRED state.",
+    "R8B defines a local OCR adapter boundary but does not select, install, download or invoke an OCR model or external service."
+  ]
+}

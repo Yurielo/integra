@@ -26,6 +26,11 @@ from integra_core.playlist import (  # noqa: E402
     discover_playlist,
     process_playlist,
 )
+from integra_core.documents import (  # noqa: E402
+    extract_document,
+    validate_document_against_source,
+    validate_document_record,
+)
 from integra_core.protocol import content_sha256  # noqa: E402
 from scripts.check_agents import load_registry, validate_agent_team  # noqa: E402
 
@@ -60,6 +65,8 @@ MIGRATION_PATH = ROOT / "state" / "migration_v1.json"
 MIGRATION_SCHEMA_PATH = ROOT / "schemas" / "migration_evidence_v1.schema.json"
 PLAYLIST_PATH = ROOT / "state" / "playlist_v1.json"
 PLAYLIST_SCHEMA_PATH = ROOT / "schemas" / "playlist_evidence_v1.schema.json"
+DOCUMENT_PIPELINE_PATH = ROOT / "state" / "document_pipeline_v1.json"
+DOCUMENT_PIPELINE_SCHEMA_PATH = ROOT / "schemas" / "document_pipeline_evidence_v1.schema.json"
 EXPECTED_OPERATIONS_IMPLEMENTATION = {
     "integra_core/operations.py",
     "integra_core/operations_fixtures.py",
@@ -112,6 +119,14 @@ EXPECTED_PLAYLIST_IMPLEMENTATION = {
 EXPECTED_PLAYLIST_FIXTURES = {
     "tests/fixtures/playlist_v1/snapshot_initial.json",
     "tests/fixtures/playlist_v1/snapshot_refreshed.json",
+}
+EXPECTED_DOCUMENT_IMPLEMENTATION = {
+    "integra_core/documents.py",
+    "schemas/document_extraction_v1.schema.json",
+    "schemas/document_pipeline_evidence_v1.schema.json",
+}
+EXPECTED_DOCUMENT_FIXTURES = {
+    "tests/fixtures/document_v1/cases.json",
 }
 EXPECTED_CORE_ALPHA_REAL_SHA256 = "7233cd2985d65d8616e217385b53935c671dbda69a686849a9864cba4565d47c"
 EXPECTED_CORE_ALPHA_REAL_IMPLEMENTATION = {
@@ -224,6 +239,12 @@ REQUIRED_DOCUMENTS = (
     "schemas/playlist_evidence_v1.schema.json",
     "state/playlist_v1.json",
     "integra_core/playlist.py",
+    "docs/architecture/DOCUMENT_AND_OCR_PIPELINE_V1.md",
+    "schemas/document_extraction_v1.schema.json",
+    "schemas/document_pipeline_evidence_v1.schema.json",
+    "state/document_pipeline_v1.json",
+    "integra_core/documents.py",
+    "tests/fixtures/document_v1/cases.json",
 )
 
 REQUIRED_MODULES = {
@@ -377,6 +398,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("migration_evidence must pin R7 acceptance")
     if state.get("playlist_evidence") != "state/playlist_v1.json":
         errors.append("playlist_evidence must pin R8A acceptance")
+    if state.get("document_pipeline_evidence") != "state/document_pipeline_v1.json":
+        errors.append("document_pipeline_evidence must pin R8B acceptance")
 
     execution_policy = state.get("execution_policy", {})
     expected_policy = {
@@ -452,6 +475,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("R7 must be ACCEPTED with copy-on-write migration evidence")
     if statuses.get("R8A") != "ACCEPTED":
         errors.append("R8A must be ACCEPTED with YouTube playlist evidence")
+    if statuses.get("R8B") != "ACCEPTED":
+        errors.append("R8B must be ACCEPTED with document pipeline evidence")
     for entry in roadmap:
         entry_id = entry.get("id")
         for dependency in entry.get("depends_on", []):
@@ -1227,6 +1252,140 @@ def validate_playlist_evidence(evidence: dict, root: Path = ROOT) -> list[str]:
     return errors
 
 
+def validate_document_pipeline_evidence(evidence: dict, root: Path = ROOT) -> list[str]:
+    errors: list[str] = []
+    expected_top_level = {
+        "schema_version", "issue", "status", "implementation", "fixtures",
+        "acceptance", "limitations",
+    }
+    if not isinstance(evidence, dict) or set(evidence) != expected_top_level:
+        return ["R8B document pipeline evidence fields must match the v1 contract"]
+    if evidence.get("schema_version") != "1.0":
+        errors.append("R8B document pipeline schema_version must be 1.0")
+    if evidence.get("issue") != 11 or evidence.get("status") != "PASS":
+        errors.append("R8B document pipeline evidence must certify Issue #11 as PASS")
+
+    implementation = evidence.get("implementation")
+    if not isinstance(implementation, list):
+        errors.append("R8B implementation inventory must be a list")
+    else:
+        paths = {item.get("path") for item in implementation if isinstance(item, dict)}
+        if paths != EXPECTED_DOCUMENT_IMPLEMENTATION or len(paths) != len(implementation):
+            errors.append("R8B implementation inventory must be exact")
+        for item in implementation:
+            if not isinstance(item, dict) or set(item) != {"path", "sha256"}:
+                errors.append("R8B implementation reference differs from v1")
+                continue
+            path = root / item["path"]
+            if not path.is_file() or sha256_file(path) != item["sha256"]:
+                errors.append(f"R8B implementation hash differs: {item['path']}")
+
+    fixtures = evidence.get("fixtures")
+    if not isinstance(fixtures, list):
+        errors.append("R8B fixture inventory must be a list")
+    else:
+        paths = {item.get("path") for item in fixtures if isinstance(item, dict)}
+        if paths != EXPECTED_DOCUMENT_FIXTURES or len(paths) != len(fixtures):
+            errors.append("R8B fixture inventory must be exact")
+        for item in fixtures:
+            if not isinstance(item, dict) or set(item) != {"path", "sha256"}:
+                errors.append("R8B fixture reference differs from v1")
+                continue
+            path = root / item["path"]
+            if not path.is_file() or sha256_file(path) != item["sha256"]:
+                errors.append(f"R8B fixture hash differs: {item['path']}")
+
+    expected_acceptance = {
+        "pdf_supported": True,
+        "pptx_supported": True,
+        "docx_supported": True,
+        "txt_supported": True,
+        "markdown_supported": True,
+        "images_and_scans_supported": True,
+        "page_locators": True,
+        "slide_locators": True,
+        "region_locators": True,
+        "character_locators": True,
+        "embedded_media_extraction": True,
+        "ocr_fallback": True,
+        "source_fidelity": True,
+        "image_heavy_not_plain_text": True,
+        "deterministic_records": True,
+        "semantic_authority_provisional": True,
+        "network_accessed": False,
+        "credentials_accessed": False,
+        "protected_data_accessed": False,
+        "external_actions_performed": False,
+    }
+    if evidence.get("acceptance") != expected_acceptance:
+        errors.append("R8B acceptance evidence differs from the governed contract")
+    limitations = evidence.get("limitations")
+    if (
+        not isinstance(limitations, list)
+        or len(limitations) < 2
+        or len(limitations) != len(set(limitations))
+    ):
+        errors.append("R8B limitations must contain at least two unique statements")
+
+    try:
+        fixture = load_json(root / "tests/fixtures/document_v1/cases.json")
+        if fixture.get("schema_version") != "1.0" or {
+            item.get("format") for item in fixture.get("cases", [])
+        } != {"PDF", "PPTX", "DOCX", "TXT", "MARKDOWN", "IMAGE"}:
+            errors.append("R8B format fixture inventory is incomplete")
+        with tempfile.TemporaryDirectory() as temporary:
+            temporary_root = Path(temporary)
+            text_path = temporary_root / "fixture.txt"
+            text_path.write_text("Exact source text.", encoding="utf-8")
+            text_record = extract_document(
+                text_path, captured_at=fixture["captured_at"]
+            )
+            scan_path = temporary_root / "fixture.png"
+            scan_path.write_bytes(bytes.fromhex(
+                "89504e470d0a1a0a0000000d49484452000000010000000108000000003a7e9b55"
+                "0000000a49444154789c636000000002000148afa4710000000049454e44ae426082"
+            ))
+
+            def ocr_provider(_request: dict) -> dict:
+                return {
+                    "provider": {
+                        "component_id": "fixture-ocr",
+                        "implementation_sha256": "1" * 64,
+                        "model_id": "fixture-model",
+                        "model_sha256": "2" * 64,
+                    },
+                    "blocks": [{
+                        "unit_kind": "IMAGE",
+                        "unit_index": 1,
+                        "region": {"x": 0, "y": 0, "width": 1, "height": 1},
+                        "text": "OCR region text",
+                        "confidence": 1.0,
+                    }],
+                }
+
+            scan_record = extract_document(
+                scan_path,
+                captured_at=fixture["captured_at"],
+                ocr_provider=ocr_provider,
+            )
+            validate_document_record(text_record)
+            validate_document_against_source(text_record, text_path)
+            validate_document_record(scan_record)
+            validate_document_against_source(scan_record, scan_path)
+        if (
+            text_record["native_extraction"]["blocks"][0]["text"] != "Exact source text."
+            or text_record["content_mode"] != "TEXT"
+            or scan_record["content_mode"] != "SCAN"
+            or scan_record["ocr"]["status"] != "COMPLETE"
+            or scan_record["ocr"]["blocks"][0]["locator"]["region"]
+            != {"x": 0.0, "y": 0.0, "width": 1.0, "height": 1.0}
+        ):
+            errors.append("R8B executable document fixtures are incomplete")
+    except Exception as error:
+        errors.append(f"R8B executable document fixtures failed: {error}")
+    return errors
+
+
 def main() -> int:
     state = load_json(STATE_PATH)
     baselines = load_json(BASELINES_PATH)
@@ -1240,6 +1399,7 @@ def main() -> int:
     operations = load_json(OPERATIONS_PATH)
     migration = load_json(MIGRATION_PATH)
     playlist = load_json(PLAYLIST_PATH)
+    document_pipeline = load_json(DOCUMENT_PIPELINE_PATH)
     load_json(SCHEMA_PATH)
     load_json(BASELINES_SCHEMA_PATH)
     load_json(OWNERSHIP_SCHEMA_PATH)
@@ -1257,10 +1417,12 @@ def main() -> int:
     load_json(OPERATIONS_SCHEMA_PATH)
     load_json(MIGRATION_SCHEMA_PATH)
     load_json(PLAYLIST_SCHEMA_PATH)
+    load_json(DOCUMENT_PIPELINE_SCHEMA_PATH)
     load_json(ROOT / "schemas/youtube_playlist_snapshot_v1.schema.json")
     load_json(ROOT / "schemas/youtube_playlist_plan_v1.schema.json")
     load_json(ROOT / "schemas/youtube_playlist_checkpoint_v1.schema.json")
     load_json(ROOT / "schemas/youtube_playlist_refresh_v1.schema.json")
+    load_json(ROOT / "schemas/document_extraction_v1.schema.json")
     errors = (
         validate_state(state)
         + validate_component_baselines(baselines)
@@ -1274,6 +1436,7 @@ def main() -> int:
         + validate_operations_evidence(operations)
         + validate_migration_evidence(migration, baselines)
         + validate_playlist_evidence(playlist)
+        + validate_document_pipeline_evidence(document_pipeline)
     )
     if errors:
         print("INTEGRA_GOVERNANCE_VALIDATION: FAIL")
@@ -1304,6 +1467,7 @@ def main() -> int:
     print(f"OPERATIONS_AND_DIAGNOSTICS_V1: {operations['status']}")
     print(f"R7_MIGRATION: {migration['status']}")
     print(f"R8A_YOUTUBE_PLAYLIST: {playlist['status']}")
+    print(f"R8B_DOCUMENT_AND_OCR: {document_pipeline['status']}")
     return 0
 
 

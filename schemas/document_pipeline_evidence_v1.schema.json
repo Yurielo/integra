@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://integra.local/schemas/document_pipeline_evidence_v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "issue", "status", "implementation", "fixtures", "acceptance", "limitations"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "issue": {"const": 11},
+    "status": {"const": "PASS"},
+    "implementation": {"type": "array", "minItems": 3},
+    "fixtures": {"type": "array", "minItems": 1},
+    "acceptance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pdf_supported", "pptx_supported", "docx_supported", "txt_supported",
+        "markdown_supported", "images_and_scans_supported", "page_locators",
+        "slide_locators", "region_locators", "character_locators",
+        "embedded_media_extraction", "ocr_fallback", "source_fidelity",
+        "image_heavy_not_plain_text", "deterministic_records",
+        "semantic_authority_provisional", "network_accessed", "credentials_accessed",
+        "protected_data_accessed", "external_actions_performed"
+      ],
+      "properties": {
+        "pdf_supported": {"const": true},
+        "pptx_supported": {"const": true},
+        "docx_supported": {"const": true},
+        "txt_supported": {"const": true},
+        "markdown_supported": {"const": true},
+        "images_and_scans_supported": {"const": true},
+        "page_locators": {"const": true},
+        "slide_locators": {"const": true},
+        "region_locators": {"const": true},
+        "character_locators": {"const": true},
+        "embedded_media_extraction": {"const": true},
+        "ocr_fallback": {"const": true},
+        "source_fidelity": {"const": true},
+        "image_heavy_not_plain_text": {"const": true},
+        "deterministic_records": {"const": true},
+        "semantic_authority_provisional": {"const": true},
+        "network_accessed": {"const": false},
+        "credentials_accessed": {"const": false},
+        "protected_data_accessed": {"const": false},
+        "external_actions_performed": {"const": false}
+      }
+    },
+    "limitations": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+  }
+}

@@ -74,6 +74,14 @@ snapshots, selection, sequential checkpoint/resume, storage estimation,
 refresh diff and per-video provenance are deterministic. Live API access and
 media download remain outside this contract and retain their own authority.
 
+R8B adds the local document extraction boundary documented in
+[`DOCUMENT_AND_OCR_PIPELINE_V1.md`](DOCUMENT_AND_OCR_PIPELINE_V1.md). PDF,
+PPTX, DOCX, text, Markdown, images and scans retain source hashes and exact
+page, slide, region or character locators. Visual or unsupported PDF content
+is explicitly OCR-required and cannot masquerade as complete native text.
+Local OCR binding and embedded-media materialization fail closed and preserve
+provisional machine authority.
+
 ## 2. Authority model
 
 ### Factual state authority
