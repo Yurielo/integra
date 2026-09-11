@@ -1,0 +1,413 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://integra.local/schemas/media_derivative_v1.schema.json",
+  "title": "Integra Verified Media Derivative v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "derivative_id",
+    "recipe_id",
+    "recipe_sha256",
+    "plan_sha256",
+    "source_artifact_id",
+    "source_sha256",
+    "output",
+    "operations_job",
+    "execution_checkpoint",
+    "model_residency",
+    "qa",
+    "completed_at",
+    "semantic_authority",
+    "knowledge_truth_modified",
+    "record_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "derivative_id": {
+      "$ref": "#/$defs/urn"
+    },
+    "recipe_id": {
+      "$ref": "#/$defs/urn"
+    },
+    "recipe_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "plan_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "source_artifact_id": {
+      "$ref": "#/$defs/urn"
+    },
+    "source_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_id",
+        "kind",
+        "schema_id",
+        "schema_version",
+        "semantic_status",
+        "content_sha256",
+        "size_bytes",
+        "storage_scope",
+        "relative_path",
+        "origin",
+        "provenance"
+      ],
+      "properties": {
+        "artifact_id": {
+          "$ref": "#/$defs/urn"
+        },
+        "kind": {
+          "enum": [
+            "fragment",
+            "subtitledVideo",
+            "subtitles",
+            "dubbedVideo",
+            "speedAdjustedVideo",
+            "blurredVideo",
+            "watermarkedVideo",
+            "enhancedAudio",
+            "mutedVideo"
+          ]
+        },
+        "schema_id": {
+          "const": "media_derivative_v1"
+        },
+        "schema_version": {
+          "const": "1.0"
+        },
+        "semantic_status": {
+          "const": "NOT_APPLICABLE"
+        },
+        "content_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "storage_scope": {
+          "const": "INTEGRA_STORE"
+        },
+        "relative_path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//).+$"
+        },
+        "origin": {
+          "const": {
+            "component_id": "videotext",
+            "repository": "Yurielo/videotext",
+            "commit_sha": "2e098d1705b6815628bee1e023f4742718eabf02",
+            "tree_sha": "f5ec484df90e4db655d31b4174434c37f4d1491c",
+            "version": "0.6.4",
+            "contracts": [
+              "project_schema_v7",
+              "project_store_v7",
+              "build_identity_0_6_4"
+            ],
+            "runtime": {
+              "kind": "swift",
+              "version": "6"
+            }
+          }
+        },
+        "provenance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "parent_artifact_ids",
+            "operation_id"
+          ],
+          "properties": {
+            "parent_artifact_ids": {
+              "type": "array",
+              "minItems": 2,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/urn"
+              }
+            },
+            "operation_id": {
+              "$ref": "#/$defs/urn"
+            },
+            "source_locator": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "operations_job": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "job_id",
+        "operation_id",
+        "revision",
+        "state",
+        "job_sha256"
+      ],
+      "properties": {
+        "job_id": {
+          "$ref": "#/$defs/urn"
+        },
+        "operation_id": {
+          "$ref": "#/$defs/urn"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "state": {
+          "const": "SUCCEEDED"
+        },
+        "job_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "execution_checkpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "checkpoint_id",
+        "binding_sha256",
+        "input_hashes",
+        "capability_report_sha256",
+        "config_sha256",
+        "worker_commit_sha"
+      ],
+      "properties": {
+        "checkpoint_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "binding_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "input_hashes": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "$ref": "#/$defs/sha256"
+          }
+        },
+        "capability_report_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "config_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "worker_commit_sha": {
+          "const": "2e098d1705b6815628bee1e023f4742718eabf02"
+        }
+      }
+    },
+    "model_residency": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "model",
+          "state",
+          "residency_sha256"
+        ],
+        "properties": {
+          "model": {
+            "$ref": "#/$defs/model"
+          },
+          "state": {
+            "const": "RELEASED"
+          },
+          "residency_sha256": {
+            "$ref": "#/$defs/sha256"
+          }
+        }
+      }
+    },
+    "qa": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_integrity",
+        "functional_probe",
+        "reference",
+        "report_sha256",
+        "validator_kind",
+        "content_sha256",
+        "size_bytes"
+      ],
+      "properties": {
+        "artifact_integrity": {
+          "const": "PASS"
+        },
+        "functional_probe": {
+          "const": "PASS"
+        },
+        "reference": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "artifact_id",
+            "kind",
+            "schema_id",
+            "schema_version",
+            "semantic_status",
+            "content_sha256",
+            "size_bytes",
+            "storage_scope",
+            "relative_path",
+            "origin",
+            "provenance"
+          ],
+          "properties": {
+            "artifact_id": {
+              "$ref": "#/$defs/urn"
+            },
+            "kind": {
+              "const": "reviewReport"
+            },
+            "schema_id": {
+              "const": "media_qa_report_v1"
+            },
+            "schema_version": {
+              "const": "1.0"
+            },
+            "semantic_status": {
+              "const": "NOT_APPLICABLE"
+            },
+            "content_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "size_bytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "storage_scope": {
+              "const": "INTEGRA_STORE"
+            },
+            "relative_path": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//).+$"
+            },
+            "origin": {
+              "const": {
+                "component_id": "videotext",
+                "repository": "Yurielo/videotext",
+                "commit_sha": "2e098d1705b6815628bee1e023f4742718eabf02",
+                "tree_sha": "f5ec484df90e4db655d31b4174434c37f4d1491c",
+                "version": "0.6.4",
+                "contracts": [
+                  "project_schema_v7",
+                  "project_store_v7",
+                  "build_identity_0_6_4"
+                ],
+                "runtime": {
+                  "kind": "swift",
+                  "version": "6"
+                }
+              }
+            },
+            "provenance": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "parent_artifact_ids",
+                "operation_id"
+              ],
+              "properties": {
+                "parent_artifact_ids": {
+                  "type": "array",
+                  "minItems": 2,
+                  "uniqueItems": true,
+                  "items": {
+                    "$ref": "#/$defs/urn"
+                  }
+                },
+                "operation_id": {
+                  "$ref": "#/$defs/urn"
+                },
+                "source_locator": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "report_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "validator_kind": {
+          "enum": [
+            "VIDEOTEXT_STRICT_VIDEO",
+            "VIDEOTEXT_AUDIO_PROBE",
+            "VIDEOTEXT_SRT_TIMELINE"
+          ]
+        },
+        "content_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "semantic_authority": {
+      "const": "DERIVATIVE_ONLY"
+    },
+    "knowledge_truth_modified": {
+      "const": false
+    },
+    "record_sha256": {
+      "$ref": "#/$defs/sha256"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "urn": {
+      "type": "string",
+      "pattern": "^urn:integra:[a-z][a-z0-9_]{1,31}:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "identity_sha256"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.:-]{1,256}$"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "identity_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    }
+  }
+}

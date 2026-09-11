@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://integra.local/schemas/media_integration_evidence_v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "issue", "dependencies", "source_component", "implementation", "acceptance", "safety", "limitations"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "status": {"const": "ACCEPTED"},
+    "issue": {"const": 14},
+    "dependencies": {"const": ["R5", "R6", "OPERATIONS_AND_DIAGNOSTICS_V1"]},
+    "source_component": {"const": {"id": "videotext", "commit_sha": "2e098d1705b6815628bee1e023f4742718eabf02", "tree_sha": "f5ec484df90e4db655d31b4174434c37f4d1491c", "version": "0.6.4"}},
+    "implementation": {"type": "array", "minItems": 8, "maxItems": 8, "items": {"$ref": "#/$defs/file"}},
+    "acceptance": {"const": {
+      "all_required_capabilities_exposed": true,
+      "artifact_integrity_reverified": true,
+      "cancellation_owned_by_operations": true,
+      "child_process_cleanup_owned_by_operations": true,
+      "component_and_contracts_pinned": true,
+      "configuration_and_models_bound": true,
+      "derivative_output_independently_probed": true,
+      "derivative_output_qa_artifact_bound": true,
+      "durable_exact_execution_checkpoint_required": true,
+      "exact_videotext_functions_pinned": true,
+      "external_input_bytes_reverified": true,
+      "external_inputs_content_bound": true,
+      "knowledge_truth_immutable": true,
+      "model_lifecycle_owned_by_operations": true,
+      "models_remeasured_before_registration": true,
+      "playlist_resource_scheduling_delegated": true,
+      "progress_owned_by_operations": true,
+      "published_schemas_closed": true,
+      "recipe_serialization_deterministic": true,
+      "recovery_owned_by_operations": true,
+      "source_and_locator_bound": true
+    }},
+    "safety": {"const": {
+      "external_actions_performed": false,
+      "gold_accessed": false,
+      "knowledge_artifacts_modified": false,
+      "protected_data_accessed": false,
+      "semantic_acceptance_performed": false,
+      "source_projects_modified": false,
+      "source_repositories_modified": false
+    }},
+    "limitations": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+  },
+  "$defs": {
+    "file": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}}
+  }
+}

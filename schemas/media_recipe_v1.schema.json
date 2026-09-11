@@ -1,0 +1,1779 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://integra.local/schemas/media_recipe_v1.schema.json",
+  "title": "Integra Media Recipe v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "recipe_id",
+    "operation_id",
+    "source",
+    "source_sha256",
+    "source_locator",
+    "component",
+    "contract_binding",
+    "steps",
+    "operations_contract",
+    "created_at",
+    "semantic_authority",
+    "knowledge_truth_mutation",
+    "recipe_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "recipe_id": {
+      "$ref": "#/$defs/urn"
+    },
+    "operation_id": {
+      "$ref": "#/$defs/urn"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_id",
+        "kind",
+        "schema_id",
+        "schema_version",
+        "content_sha256",
+        "size_bytes",
+        "storage_scope",
+        "relative_path",
+        "origin",
+        "provenance"
+      ],
+      "properties": {
+        "artifact_id": {
+          "$ref": "#/$defs/urn"
+        },
+        "kind": {
+          "const": "source_media"
+        },
+        "schema_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schema_version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+$"
+        },
+        "semantic_status": {
+          "enum": [
+            "NOT_APPLICABLE",
+            "PROVISIONAL",
+            "REVIEW_REQUIRED"
+          ]
+        },
+        "content_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "storage_scope": {
+          "const": "SOURCE_READ_ONLY"
+        },
+        "relative_path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//).+$"
+        },
+        "origin": {
+          "$ref": "#/$defs/component"
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        }
+      }
+    },
+    "source_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "source_locator": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "start_seconds",
+            "end_seconds"
+          ],
+          "properties": {
+            "type": {
+              "const": "time_interval"
+            },
+            "start_seconds": {
+              "type": "number",
+              "minimum": 0
+            },
+            "end_seconds": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "topic_id",
+            "start_seconds",
+            "end_seconds"
+          ],
+          "properties": {
+            "type": {
+              "const": "topic"
+            },
+            "topic_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "start_seconds": {
+              "type": "number",
+              "minimum": 0
+            },
+            "end_seconds": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "quote_start",
+            "quote_end",
+            "start_seconds",
+            "end_seconds"
+          ],
+          "properties": {
+            "type": {
+              "const": "quote"
+            },
+            "quote_start": {
+              "type": "string",
+              "minLength": 1
+            },
+            "quote_end": {
+              "type": "string",
+              "minLength": 1
+            },
+            "start_seconds": {
+              "type": "number",
+              "minimum": 0
+            },
+            "end_seconds": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        }
+      ]
+    },
+    "component": {
+      "const": {
+        "component_id": "videotext",
+        "repository": "Yurielo/videotext",
+        "commit_sha": "2e098d1705b6815628bee1e023f4742718eabf02",
+        "tree_sha": "f5ec484df90e4db655d31b4174434c37f4d1491c",
+        "version": "0.6.4",
+        "contracts": [
+          "project_schema_v7",
+          "project_store_v7",
+          "build_identity_0_6_4"
+        ],
+        "runtime": {
+          "kind": "swift",
+          "version": "6"
+        }
+      }
+    },
+    "contract_binding": {
+      "const": {
+        "project_schema_v7": {
+          "path": "Sources/videotext/Core/ArtifactModels.swift",
+          "sha256": "23593caac6481f633c42c438d1d31bed06fa18a2102ad59e0d9984febe29b2af"
+        },
+        "project_store_v7": {
+          "path": "Sources/videotext/Services/ProjectStore.swift",
+          "sha256": "6e05c4bf5ea2aa0e88090ed65e52df79456e10752682e4199ec9bba09107bce1"
+        },
+        "build_identity_0_6_4": {
+          "path": "Sources/videotext/Core/Models.swift",
+          "sha256": "3a296beae82e5c5aa09aed04c1f4e43bd20f57954cc7aa8b47421b46fc96be2a"
+        }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 10,
+      "contains": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "const": "qa"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "minContains": 1,
+      "maxContains": 1,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sequence",
+              "kind",
+              "videotext_operations",
+              "videotext_artifact_kind",
+              "implementations",
+              "inputs",
+              "parameters",
+              "model",
+              "config_sha256"
+            ],
+            "properties": {
+              "sequence": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "kind": {
+                "const": "clip"
+              },
+              "videotext_operations": {
+                "const": [
+                  "cutAccurate"
+                ]
+              },
+              "videotext_artifact_kind": {
+                "const": "fragment"
+              },
+              "implementations": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1,
+                "prefixItems": [
+                  {
+                    "const": {
+                      "function": "cutAccurate",
+                      "path": "Sources/videotext/Adapters/MediaAdapters.swift",
+                      "sha256": "4c3d7fee2777291b297679b28b1727d8e54ed74e6d0172da58e83702570cdca5"
+                    }
+                  }
+                ],
+                "items": false
+              },
+              "inputs": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 0,
+                "prefixItems": [],
+                "items": false
+              },
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "mode"
+                ],
+                "properties": {
+                  "mode": {
+                    "enum": [
+                      "timecode",
+                      "topic",
+                      "quote"
+                    ]
+                  }
+                }
+              },
+              "model": {
+                "type": "null"
+              },
+              "config_sha256": {
+                "$ref": "#/$defs/sha256"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sequence",
+              "kind",
+              "videotext_operations",
+              "videotext_artifact_kind",
+              "implementations",
+              "inputs",
+              "parameters",
+              "model",
+              "config_sha256"
+            ],
+            "properties": {
+              "sequence": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "kind": {
+                "const": "subtitles"
+              },
+              "videotext_operations": {
+                "const": [
+                  "burnSubtitles"
+                ]
+              },
+              "videotext_artifact_kind": {
+                "const": "subtitledVideo"
+              },
+              "implementations": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1,
+                "prefixItems": [
+                  {
+                    "const": {
+                      "function": "burnSubtitles",
+                      "path": "Sources/videotext/Adapters/MediaAdapters.swift",
+                      "sha256": "4c3d7fee2777291b297679b28b1727d8e54ed74e6d0172da58e83702570cdca5"
+                    }
+                  }
+                ],
+                "items": false
+              },
+              "inputs": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1,
+                "prefixItems": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "artifact_id",
+                      "kind",
+                      "schema_id",
+                      "schema_version",
+                      "content_sha256",
+                      "size_bytes",
+                      "storage_scope",
+                      "relative_path",
+                      "origin",
+                      "provenance"
+                    ],
+                    "properties": {
+                      "artifact_id": {
+                        "$ref": "#/$defs/urn"
+                      },
+                      "kind": {
+                        "const": "subtitles"
+                      },
+                      "schema_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "schema_version": {
+                        "type": "string",
+                        "pattern": "^[0-9]+\\.[0-9]+$"
+                      },
+                      "semantic_status": {
+                        "enum": [
+                          "NOT_APPLICABLE",
+                          "PROVISIONAL",
+                          "REVIEW_REQUIRED"
+                        ]
+                      },
+                      "content_sha256": {
+                        "$ref": "#/$defs/sha256"
+                      },
+                      "size_bytes": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "storage_scope": {
+                        "enum": [
+                          "INTEGRA_STORE",
+                          "SOURCE_READ_ONLY"
+                        ]
+                      },
+                      "relative_path": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//).+$"
+                      },
+                      "origin": {
+                        "$ref": "#/$defs/component"
+                      },
+                      "provenance": {
+                        "$ref": "#/$defs/provenance"
+                      }
+                    }
+                  }
+                ],
+                "items": false
+              },
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "language",
+                  "style"
+                ],
+                "properties": {
+                  "language": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "style": {
+                    "$ref": "#/$defs/subtitle_style"
+                  }
+                }
+              },
+              "model": {
+                "type": "null"
+              },
+              "config_sha256": {
+                "$ref": "#/$defs/sha256"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sequence",
+              "kind",
+              "videotext_operations",
+              "videotext_artifact_kind",
+              "implementations",
+              "inputs",
+              "parameters",
+              "model",
+              "config_sha256"
+            ],
+            "properties": {
+              "sequence": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "kind": {
+                "const": "translation"
+              },
+              "videotext_operations": {
+                "const": [
+                  "translate"
+                ]
+              },
+              "videotext_artifact_kind": {
+                "const": "subtitles"
+              },
+              "implementations": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1,
+                "prefixItems": [
+                  {
+                    "const": {
+                      "function": "translate",
+                      "path": "Sources/videotext/Adapters/TranslationAdapter.swift",
+                      "sha256": "83e55d3cb82522cb431ee20617510b0c39f79ae0fa5309daedf5c7ff9911a577"
+                    }
+                  }
+                ],
+                "items": false
+              },
+              "inputs": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1,
+                "prefixItems": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "artifact_id",
+                      "kind",
+                      "schema_id",
+                      "schema_version",
+                      "content_sha256",
+                      "size_bytes",
+                      "storage_scope",
+                      "relative_path",
+                      "origin",
+                      "provenance"
+                    ],
+                    "properties": {
+                      "artifact_id": {
+                        "$ref": "#/$defs/urn"
+                      },
+                      "kind": {
+                        "const": "transcript"
+                      },
+                      "schema_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "schema_version": {
+                        "type": "string",
+                        "pattern": "^[0-9]+\\.[0-9]+$"
+                      },
+                      "semantic_status": {
+                        "enum": [
+                          "NOT_APPLICABLE",
+                          "PROVISIONAL",
+                          "REVIEW_REQUIRED"
+                        ]
+                      },
+                      "content_sha256": {
+                        "$ref": "#/$defs/sha256"
+                      },
+                      "size_bytes": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "storage_scope": {
+                        "enum": [
+                          "INTEGRA_STORE",
+                          "SOURCE_READ_ONLY"
+                        ]
+                      },
+                      "relative_path": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//).+$"
+                      },
+                      "origin": {
+                        "$ref": "#/$defs/component"
+                      },
+                      "provenance": {
+                        "$ref": "#/$defs/provenance"
+                      }
+                    }
+                  }
+                ],
+                "items": false
+              },
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "source_language",
+                  "target_language"
+                ],
+                "properties": {
+                  "source_language": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "target_language": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              "model": {
+                "$ref": "#/$defs/model"
+              },
+              "config_sha256": {
+                "$ref": "#/$defs/sha256"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sequence",
+              "kind",
+              "videotext_operations",
+              "videotext_artifact_kind",
+              "implementations",
+              "inputs",
+              "parameters",
+              "model",
+              "config_sha256"
+            ],
+            "properties": {
+              "sequence": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "kind": {
+                "const": "tts"
+              },
+              "videotext_operations": {
+                "const": [
+                  "synthesize"
+                ]
+              },
+              "videotext_artifact_kind": {
+                "const": "dubbedVideo"
+              },
+              "implementations": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1,
+                "prefixItems": [
+                  {
+                    "const": {
+                      "function": "synthesize",
+                      "path": "Sources/videotext/Adapters/SpeechSynthesisAdapter.swift",
+                      "sha256": "0e7eb600bd619293153d87227a6f0bda8ea506b6cb5f2ac2ead75d08324e2934"
+                    }
+                  }
+                ],
+                "items": false
+              },
+              "inputs": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1,
+                "prefixItems": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "artifact_id",
+                      "kind",
+                      "schema_id",
+                      "schema_version",
+                      "content_sha256",
+                      "size_bytes",
+                      "storage_scope",
+                      "relative_path",
+                      "origin",
+                      "provenance"
+                    ],
+                    "properties": {
+                      "artifact_id": {
+                        "$ref": "#/$defs/urn"
+                      },
+                      "kind": {
+                        "const": "translated_subtitles"
+                      },
+                      "schema_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "schema_version": {
+                        "type": "string",
+                        "pattern": "^[0-9]+\\.[0-9]+$"
+                      },
+                      "semantic_status": {
+                        "enum": [
+                          "NOT_APPLICABLE",
+                          "PROVISIONAL",
+                          "REVIEW_REQUIRED"
+                        ]
+                      },
+                      "content_sha256": {
+                        "$ref": "#/$defs/sha256"
+                      },
+                      "size_bytes": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "storage_scope": {
+                        "enum": [
+                          "INTEGRA_STORE",
+                          "SOURCE_READ_ONLY"
+                        ]
+                      },
+                      "relative_path": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//).+$"
+                      },
+                      "origin": {
+                        "$ref": "#/$defs/component"
+                      },
+                      "provenance": {
+                        "$ref": "#/$defs/provenance"
+                      }
+                    }
+                  }
+                ],
+                "items": false
+              },
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "language",
+                  "voice_id",
+                  "voice_provider_version",
+                  "mix_mode"
+                ],
+                "properties": {
+                  "language": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "voice_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "voice_provider_version": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "mix_mode": {
+                    "enum": [
+                      "replace",
+                      "mixQuietOriginal"
+                    ]
+                  }
+                }
+              },
+              "model": {
+                "$ref": "#/$defs/model"
+              },
+              "config_sha256": {
+                "$ref": "#/$defs/sha256"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sequence",
+              "kind",
+              "videotext_operations",
+              "videotext_artifact_kind",
+              "implementations",
+              "inputs",
+              "parameters",
+              "model",
+              "config_sha256"
+            ],
+            "properties": {
+              "sequence": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "kind": {
+                "const": "speed"
+              },
+              "videotext_operations": {
+                "const": [
+                  "adjustSpeed"
+                ]
+              },
+              "videotext_artifact_kind": {
+                "const": "speedAdjustedVideo"
+              },
+              "implementations": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1,
+                "prefixItems": [
+                  {
+                    "const": {
+                      "function": "adjustSpeed",
+                      "path": "Sources/videotext/Adapters/MediaAdapters.swift",
+                      "sha256": "4c3d7fee2777291b297679b28b1727d8e54ed74e6d0172da58e83702570cdca5"
+                    }
+                  }
+                ],
+                "items": false
+              },
+              "inputs": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 0,
+                "prefixItems": [],
+                "items": false
+              },
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "factor"
+                ],
+                "properties": {
+                  "factor": {
+                    "type": "number",
+                    "minimum": 0.5,
+                    "maximum": 2
+                  }
+                }
+              },
+              "model": {
+                "type": "null"
+              },
+              "config_sha256": {
+                "$ref": "#/$defs/sha256"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sequence",
+              "kind",
+              "videotext_operations",
+              "videotext_artifact_kind",
+              "implementations",
+              "inputs",
+              "parameters",
+              "model",
+              "config_sha256"
+            ],
+            "properties": {
+              "sequence": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "kind": {
+                "const": "blur"
+              },
+              "videotext_operations": {
+                "const": [
+                  "applyStaticBlur"
+                ]
+              },
+              "videotext_artifact_kind": {
+                "const": "blurredVideo"
+              },
+              "implementations": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1,
+                "prefixItems": [
+                  {
+                    "const": {
+                      "function": "applyStaticBlur",
+                      "path": "Sources/videotext/Adapters/MediaAdapters.swift",
+                      "sha256": "4c3d7fee2777291b297679b28b1727d8e54ed74e6d0172da58e83702570cdca5"
+                    }
+                  }
+                ],
+                "items": false
+              },
+              "inputs": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 0,
+                "prefixItems": [],
+                "items": false
+              },
+              "parameters": {
+                "$ref": "#/$defs/blur_params"
+              },
+              "model": {
+                "type": "null"
+              },
+              "config_sha256": {
+                "$ref": "#/$defs/sha256"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sequence",
+              "kind",
+              "videotext_operations",
+              "videotext_artifact_kind",
+              "implementations",
+              "inputs",
+              "parameters",
+              "model",
+              "config_sha256"
+            ],
+            "properties": {
+              "sequence": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "kind": {
+                "const": "watermark"
+              },
+              "videotext_operations": {
+                "const": [
+                  "applyWatermark"
+                ]
+              },
+              "videotext_artifact_kind": {
+                "const": "watermarkedVideo"
+              },
+              "implementations": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1,
+                "prefixItems": [
+                  {
+                    "const": {
+                      "function": "applyWatermark",
+                      "path": "Sources/videotext/Adapters/MediaAdapters.swift",
+                      "sha256": "4c3d7fee2777291b297679b28b1727d8e54ed74e6d0172da58e83702570cdca5"
+                    }
+                  }
+                ],
+                "items": false
+              },
+              "inputs": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1,
+                "prefixItems": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "artifact_id",
+                      "kind",
+                      "schema_id",
+                      "schema_version",
+                      "content_sha256",
+                      "size_bytes",
+                      "storage_scope",
+                      "relative_path",
+                      "origin",
+                      "provenance"
+                    ],
+                    "properties": {
+                      "artifact_id": {
+                        "$ref": "#/$defs/urn"
+                      },
+                      "kind": {
+                        "const": "watermark_image"
+                      },
+                      "schema_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "schema_version": {
+                        "type": "string",
+                        "pattern": "^[0-9]+\\.[0-9]+$"
+                      },
+                      "semantic_status": {
+                        "enum": [
+                          "NOT_APPLICABLE",
+                          "PROVISIONAL",
+                          "REVIEW_REQUIRED"
+                        ]
+                      },
+                      "content_sha256": {
+                        "$ref": "#/$defs/sha256"
+                      },
+                      "size_bytes": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "storage_scope": {
+                        "enum": [
+                          "INTEGRA_STORE",
+                          "SOURCE_READ_ONLY"
+                        ]
+                      },
+                      "relative_path": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//).+$"
+                      },
+                      "origin": {
+                        "$ref": "#/$defs/component"
+                      },
+                      "provenance": {
+                        "$ref": "#/$defs/provenance"
+                      }
+                    }
+                  }
+                ],
+                "items": false
+              },
+              "parameters": {
+                "$ref": "#/$defs/watermark_params"
+              },
+              "model": {
+                "type": "null"
+              },
+              "config_sha256": {
+                "$ref": "#/$defs/sha256"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sequence",
+              "kind",
+              "videotext_operations",
+              "videotext_artifact_kind",
+              "implementations",
+              "inputs",
+              "parameters",
+              "model",
+              "config_sha256"
+            ],
+            "properties": {
+              "sequence": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "kind": {
+                "const": "audio_enhancement"
+              },
+              "videotext_operations": {
+                "const": [
+                  "enhance"
+                ]
+              },
+              "videotext_artifact_kind": {
+                "const": "enhancedAudio"
+              },
+              "implementations": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1,
+                "prefixItems": [
+                  {
+                    "const": {
+                      "function": "enhance",
+                      "path": "Sources/videotext/Adapters/AudioEnhancementAdapter.swift",
+                      "sha256": "ab525fe985a0fa1af8ba9ccf6b94e78b0095b0a240f057e8e381116acbd3d9f6"
+                    }
+                  }
+                ],
+                "items": false
+              },
+              "inputs": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 0,
+                "prefixItems": [],
+                "items": false
+              },
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "profile"
+                ],
+                "properties": {
+                  "profile": {
+                    "enum": [
+                      "light",
+                      "normal",
+                      "strong"
+                    ]
+                  }
+                }
+              },
+              "model": {
+                "$ref": "#/$defs/model"
+              },
+              "config_sha256": {
+                "$ref": "#/$defs/sha256"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sequence",
+              "kind",
+              "videotext_operations",
+              "videotext_artifact_kind",
+              "implementations",
+              "inputs",
+              "parameters",
+              "model",
+              "config_sha256"
+            ],
+            "properties": {
+              "sequence": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "kind": {
+                "const": "filler_mute"
+              },
+              "videotext_operations": {
+                "const": [
+                  "analyze",
+                  "muteAudioIntervals"
+                ]
+              },
+              "videotext_artifact_kind": {
+                "const": "mutedVideo"
+              },
+              "implementations": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "prefixItems": [
+                  {
+                    "const": {
+                      "function": "analyze",
+                      "path": "Sources/videotext/Services/FillerWordService.swift",
+                      "sha256": "b572fb34f0b91062f07f684172267799c9168b687f700c23ea756312a68c229f"
+                    }
+                  },
+                  {
+                    "const": {
+                      "function": "muteAudioIntervals",
+                      "path": "Sources/videotext/Adapters/MediaAdapters.swift",
+                      "sha256": "4c3d7fee2777291b297679b28b1727d8e54ed74e6d0172da58e83702570cdca5"
+                    }
+                  }
+                ],
+                "items": false
+              },
+              "inputs": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "artifact_id",
+                      "kind",
+                      "schema_id",
+                      "schema_version",
+                      "content_sha256",
+                      "size_bytes",
+                      "storage_scope",
+                      "relative_path",
+                      "origin",
+                      "provenance"
+                    ],
+                    "properties": {
+                      "artifact_id": {
+                        "$ref": "#/$defs/urn"
+                      },
+                      "kind": {
+                        "const": "transcript_revision"
+                      },
+                      "schema_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "schema_version": {
+                        "type": "string",
+                        "pattern": "^[0-9]+\\.[0-9]+$"
+                      },
+                      "semantic_status": {
+                        "enum": [
+                          "NOT_APPLICABLE",
+                          "PROVISIONAL",
+                          "REVIEW_REQUIRED"
+                        ]
+                      },
+                      "content_sha256": {
+                        "$ref": "#/$defs/sha256"
+                      },
+                      "size_bytes": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "storage_scope": {
+                        "enum": [
+                          "INTEGRA_STORE",
+                          "SOURCE_READ_ONLY"
+                        ]
+                      },
+                      "relative_path": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//).+$"
+                      },
+                      "origin": {
+                        "$ref": "#/$defs/component"
+                      },
+                      "provenance": {
+                        "$ref": "#/$defs/provenance"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "artifact_id",
+                      "kind",
+                      "schema_id",
+                      "schema_version",
+                      "content_sha256",
+                      "size_bytes",
+                      "storage_scope",
+                      "relative_path",
+                      "origin",
+                      "provenance"
+                    ],
+                    "properties": {
+                      "artifact_id": {
+                        "$ref": "#/$defs/urn"
+                      },
+                      "kind": {
+                        "const": "filler_analysis"
+                      },
+                      "schema_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "schema_version": {
+                        "type": "string",
+                        "pattern": "^[0-9]+\\.[0-9]+$"
+                      },
+                      "semantic_status": {
+                        "enum": [
+                          "NOT_APPLICABLE",
+                          "PROVISIONAL",
+                          "REVIEW_REQUIRED"
+                        ]
+                      },
+                      "content_sha256": {
+                        "$ref": "#/$defs/sha256"
+                      },
+                      "size_bytes": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "storage_scope": {
+                        "enum": [
+                          "INTEGRA_STORE",
+                          "SOURCE_READ_ONLY"
+                        ]
+                      },
+                      "relative_path": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//).+$"
+                      },
+                      "origin": {
+                        "$ref": "#/$defs/component"
+                      },
+                      "provenance": {
+                        "$ref": "#/$defs/provenance"
+                      }
+                    }
+                  }
+                ],
+                "items": false
+              },
+              "parameters": {
+                "$ref": "#/$defs/filler_params"
+              },
+              "model": {
+                "type": "null"
+              },
+              "config_sha256": {
+                "$ref": "#/$defs/sha256"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sequence",
+              "kind",
+              "videotext_operations",
+              "videotext_artifact_kind",
+              "implementations",
+              "inputs",
+              "parameters",
+              "model",
+              "config_sha256"
+            ],
+            "properties": {
+              "sequence": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "kind": {
+                "const": "qa"
+              },
+              "videotext_operations": {
+                "const": [
+                  "strictValidationReport",
+                  "validate",
+                  "duration",
+                  "parseWithReport",
+                  "validateTimeline"
+                ]
+              },
+              "videotext_artifact_kind": {
+                "const": "reviewReport"
+              },
+              "implementations": {
+                "type": "array",
+                "minItems": 5,
+                "maxItems": 5,
+                "prefixItems": [
+                  {
+                    "const": {
+                      "function": "strictValidationReport",
+                      "path": "Sources/videotext/Adapters/MediaAdapters.swift",
+                      "sha256": "4c3d7fee2777291b297679b28b1727d8e54ed74e6d0172da58e83702570cdca5"
+                    }
+                  },
+                  {
+                    "const": {
+                      "function": "validate",
+                      "path": "Sources/videotext/Adapters/MediaAdapters.swift",
+                      "sha256": "4c3d7fee2777291b297679b28b1727d8e54ed74e6d0172da58e83702570cdca5"
+                    }
+                  },
+                  {
+                    "const": {
+                      "function": "duration",
+                      "path": "Sources/videotext/Adapters/MediaAdapters.swift",
+                      "sha256": "4c3d7fee2777291b297679b28b1727d8e54ed74e6d0172da58e83702570cdca5"
+                    }
+                  },
+                  {
+                    "const": {
+                      "function": "parseWithReport",
+                      "path": "Sources/videotext/Services/SRTService.swift",
+                      "sha256": "417017a6a3becc395e88e2554e8d7c2dca51b09de9743e8c5c0cf81ac9ba6205"
+                    }
+                  },
+                  {
+                    "const": {
+                      "function": "validateTimeline",
+                      "path": "Sources/videotext/Services/SRTService.swift",
+                      "sha256": "417017a6a3becc395e88e2554e8d7c2dca51b09de9743e8c5c0cf81ac9ba6205"
+                    }
+                  }
+                ],
+                "items": false
+              },
+              "inputs": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 0,
+                "prefixItems": [],
+                "items": false
+              },
+              "parameters": {
+                "const": {
+                    "checks": [
+                      "content_hash",
+                      "videotext_functional_validation",
+                      "output_kind_contract",
+                      "duration_or_timeline"
+                  ]
+                }
+              },
+              "model": {
+                "type": "null"
+              },
+              "config_sha256": {
+                "$ref": "#/$defs/sha256"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "operations_contract": {
+      "const": {
+        "capability": {
+          "id": "videotext.media_recipe",
+          "version": "1.0"
+        },
+        "job_class": "heavy-media",
+        "workload": "FFMPEG_HEAVY",
+        "resume_scope": "PIPELINE_PREFIX",
+        "progress_owner": "OPERATIONS_AND_DIAGNOSTICS_V1",
+        "cancellation_owner": "OPERATIONS_AND_DIAGNOSTICS_V1",
+        "recovery_owner": "OPERATIONS_AND_DIAGNOSTICS_V1",
+        "model_lifecycle_owner": "OPERATIONS_AND_DIAGNOSTICS_V1",
+        "child_process_cleanup_owner": "OPERATIONS_AND_DIAGNOSTICS_V1"
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "semantic_authority": {
+      "const": "DERIVATIVE_ONLY"
+    },
+    "knowledge_truth_mutation": {
+      "const": "DENIED"
+    },
+    "recipe_sha256": {
+      "$ref": "#/$defs/sha256"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "urn": {
+      "type": "string",
+      "pattern": "^urn:integra:[a-z][a-z0-9_]{1,31}:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "component_id",
+        "repository",
+        "commit_sha",
+        "tree_sha",
+        "version",
+        "contracts",
+        "runtime"
+      ],
+      "properties": {
+        "component_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repository": {
+          "type": "string",
+          "minLength": 1
+        },
+        "commit_sha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "tree_sha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "contracts": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "runtime": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "version"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1
+            },
+            "architecture": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "models": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "identity_sha256"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "identity_sha256": {
+                "$ref": "#/$defs/sha256"
+              }
+            }
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parent_artifact_ids",
+        "operation_id"
+      ],
+      "properties": {
+        "parent_artifact_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/urn"
+          }
+        },
+        "operation_id": {
+          "$ref": "#/$defs/urn"
+        },
+        "source_locator": {
+          "type": "object"
+        }
+      }
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "identity_sha256"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.:-]{1,256}$"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "identity_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "subtitle_style": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text_color_hex",
+        "outline_color_hex",
+        "font_name",
+        "font_size",
+        "outline_width",
+        "position",
+        "background_opacity"
+      ],
+      "properties": {
+        "text_color_hex": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$"
+        },
+        "outline_color_hex": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$"
+        },
+        "font_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "font_size": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 256
+        },
+        "outline_width": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 32
+        },
+        "position": {
+          "enum": [
+            "bottom",
+            "middle",
+            "top"
+          ]
+        },
+        "background_opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "interval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start_seconds",
+        "end_seconds"
+      ],
+      "properties": {
+        "start_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "end_seconds": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "region": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "blur_params": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "region",
+        "intensity",
+        "start_seconds",
+        "end_seconds"
+      ],
+      "properties": {
+        "region": {
+          "$ref": "#/$defs/region"
+        },
+        "intensity": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 100
+        },
+        "start_seconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "end_seconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        }
+      }
+    },
+    "watermark_params": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "relative_width",
+        "margin",
+        "opacity",
+        "start_seconds",
+        "end_seconds"
+      ],
+      "properties": {
+        "position": {
+          "enum": [
+            "topLeft",
+            "topRight",
+            "bottomLeft",
+            "bottomRight",
+            "manual"
+          ]
+        },
+        "relative_width": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 1
+        },
+        "margin": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "start_seconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "end_seconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        }
+      }
+    },
+    "filler_params": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate_ids",
+        "intervals",
+        "fade_seconds"
+      ],
+      "properties": {
+        "candidate_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "intervals": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/interval"
+          }
+        },
+        "fade_seconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    }
+  }
+}

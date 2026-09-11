@@ -20,6 +20,7 @@
   "transcript_topic_studio_evidence": "state/transcript_topic_studio_v1.json",
   "multi_source_alignment_evidence": "state/multi_source_alignment_v1.json",
   "knowledge_integration_evidence": "state/knowledge_integration_v1.json",
+  "media_integration_evidence": "state/media_integration_v1.json",
   "execution_policy": {
     "safe_roadmap_implementation": "STANDING_AUTHORITY_AFTER_DEPENDENCIES",
     "merge": "AUTO_AFTER_FAIL_CLOSED_GATES",
@@ -79,7 +80,7 @@
     { "id": "TRANSCRIPT_AND_TOPIC_STUDIO_V1", "issue": 48, "status": "ACCEPTED", "depends_on": ["R6", "PROJECTS_AND_SOURCES_V1"] },
     { "id": "R8C", "issue": 12, "status": "ACCEPTED", "depends_on": ["R8A", "R8B", "PROJECTS_AND_SOURCES_V1", "TRANSCRIPT_AND_TOPIC_STUDIO_V1"] },
     { "id": "R9A", "issue": 13, "status": "ACCEPTED", "depends_on": ["R6", "R8C", "TRANSCRIPT_AND_TOPIC_STUDIO_V1"] },
-    { "id": "R9B", "issue": 14, "status": "PLANNED", "depends_on": ["R5", "R6", "OPERATIONS_AND_DIAGNOSTICS_V1"] },
+    { "id": "R9B", "issue": 14, "status": "ACCEPTED", "depends_on": ["R5", "R6", "OPERATIONS_AND_DIAGNOSTICS_V1"] },
     { "id": "R9C", "issue": 15, "status": "PLANNED", "depends_on": ["R8C", "R9A", "R9B"] },
     { "id": "R10", "issue": 16, "status": "PLANNED", "depends_on": ["R9C"] },
     { "id": "R11", "issue": 17, "status": "PLANNED", "depends_on": ["R9A", "R10"] },

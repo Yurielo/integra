@@ -26,7 +26,7 @@ not add routine human gates or change stage dependencies.
 | TRANSCRIPT_AND_TOPIC_STUDIO_V1 | #48 | M2 | R6, PROJECTS_AND_SOURCES_V1 | ACCEPTED |
 | R8C Multi-source alignment | #12 | M2 | R8A, R8B, PROJECTS_AND_SOURCES_V1, TRANSCRIPT_AND_TOPIC_STUDIO_V1 | ACCEPTED |
 | R9A Knowledge integration | #13 | M3 | R6, R8C, TRANSCRIPT_AND_TOPIC_STUDIO_V1 | ACCEPTED |
-| R9B Media integration | #14 | M3 | R5, R6, OPERATIONS_AND_DIAGNOSTICS_V1 | PLANNED |
+| R9B Media integration | #14 | M3 | R5, R6, OPERATIONS_AND_DIAGNOSTICS_V1 | ACCEPTED |
 | R9C Cross-navigation | #15 | M3 | R8C, R9A, R9B | PLANNED |
 | R10 Publishing, Obsidian, OneDrive | #16 | M4 | R9C | PLANNED |
 | R11 Marketing Studio v1 | #17 | M4 | R9A, R10 | PLANNED |
@@ -69,3 +69,12 @@ control plane and validated R3 envelopes, binding exact source/model hashes,
 word/topic/clip intervals and parent lineage. It yields an unresolved review
 package, provisional knowledge and a rendered media clip. R6 technical
 acceptance does not promote machine semantics.
+
+R9B binds the complete Media Studio operation set to the pinned VideoText
+commit through deterministic, content-complete recipes. A derivative is
+accepted only from a matching durable Operations `SUCCEEDED` job whose final
+checkpoint binds the exact plan, inputs, output and content-addressed VideoText
+QA artifact. Confined-file Integrity is rechecked independently. Source and
+knowledge truth remain immutable. Model bytes and the local ffprobe identity
+are remeasured at registration; output media/SRT bytes are independently
+inspected so a self-consistent but forged QA payload fails closed.
