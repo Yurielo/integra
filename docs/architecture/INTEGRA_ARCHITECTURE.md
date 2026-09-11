@@ -68,6 +68,12 @@ structure. Migration creates an unactivated Integra-owned copy, validates every
 byte and preserves exact rollback evidence. It never rewrites source projects
 or follows an external VideoText media locator without separate authority.
 
+R8A adds the offline-safe YouTube playlist contract documented in
+[`YOUTUBE_PLAYLIST_PIPELINE_V1.md`](YOUTUBE_PLAYLIST_PIPELINE_V1.md). Provider
+snapshots, selection, sequential checkpoint/resume, storage estimation,
+refresh diff and per-video provenance are deterministic. Live API access and
+media download remain outside this contract and retain their own authority.
+
 ## 2. Authority model
 
 ### Factual state authority

@@ -19,6 +19,7 @@
     "core_alpha_real_evidence",
     "operations_and_diagnostics_evidence",
     "migration_evidence",
+    "playlist_evidence",
     "execution_policy",
     "release_scope",
     "roadmap",
@@ -61,6 +62,9 @@
     },
     "migration_evidence": {
       "const": "state/migration_v1.json"
+    },
+    "playlist_evidence": {
+      "const": "state/playlist_v1.json"
     },
     "execution_policy": {
       "type": "object",

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -19,6 +20,12 @@ from integra_core.core_alpha import ReplayStageWorker  # noqa: E402
 from integra_core.real_media import validate_actual_evidence  # noqa: E402
 from integra_core.operations_fixtures import run_operations_fixtures  # noqa: E402
 from integra_core.migration_fixtures import run_migration_fixtures  # noqa: E402
+from integra_core.playlist import (  # noqa: E402
+    build_playlist_plan,
+    diff_playlist_refresh,
+    discover_playlist,
+    process_playlist,
+)
 from integra_core.protocol import content_sha256  # noqa: E402
 from scripts.check_agents import load_registry, validate_agent_team  # noqa: E402
 
@@ -51,6 +58,8 @@ OPERATIONS_PATH = ROOT / "state" / "operations_and_diagnostics_v1.json"
 OPERATIONS_SCHEMA_PATH = ROOT / "schemas" / "operations_evidence_v1.schema.json"
 MIGRATION_PATH = ROOT / "state" / "migration_v1.json"
 MIGRATION_SCHEMA_PATH = ROOT / "schemas" / "migration_evidence_v1.schema.json"
+PLAYLIST_PATH = ROOT / "state" / "playlist_v1.json"
+PLAYLIST_SCHEMA_PATH = ROOT / "schemas" / "playlist_evidence_v1.schema.json"
 EXPECTED_OPERATIONS_IMPLEMENTATION = {
     "integra_core/operations.py",
     "integra_core/operations_fixtures.py",
@@ -91,6 +100,18 @@ EXPECTED_MIGRATION_FIXTURES = {
     "tests/fixtures/migration_v1/videotext_project/source.mp4",
     "tests/fixtures/migration_v1/videotext_project/Texts/transcript.txt",
     "tests/fixtures/migration_v1/videotext_project/Video/output.mp4",
+}
+EXPECTED_PLAYLIST_IMPLEMENTATION = {
+    "integra_core/playlist.py",
+    "schemas/youtube_playlist_snapshot_v1.schema.json",
+    "schemas/youtube_playlist_plan_v1.schema.json",
+    "schemas/youtube_playlist_checkpoint_v1.schema.json",
+    "schemas/youtube_playlist_refresh_v1.schema.json",
+    "schemas/playlist_evidence_v1.schema.json",
+}
+EXPECTED_PLAYLIST_FIXTURES = {
+    "tests/fixtures/playlist_v1/snapshot_initial.json",
+    "tests/fixtures/playlist_v1/snapshot_refreshed.json",
 }
 EXPECTED_CORE_ALPHA_REAL_SHA256 = "7233cd2985d65d8616e217385b53935c671dbda69a686849a9864cba4565d47c"
 EXPECTED_CORE_ALPHA_REAL_IMPLEMENTATION = {
@@ -195,6 +216,14 @@ REQUIRED_DOCUMENTS = (
     "state/migration_v1.json",
     "integra_core/migration.py",
     "integra_core/migration_fixtures.py",
+    "docs/architecture/YOUTUBE_PLAYLIST_PIPELINE_V1.md",
+    "schemas/youtube_playlist_snapshot_v1.schema.json",
+    "schemas/youtube_playlist_plan_v1.schema.json",
+    "schemas/youtube_playlist_checkpoint_v1.schema.json",
+    "schemas/youtube_playlist_refresh_v1.schema.json",
+    "schemas/playlist_evidence_v1.schema.json",
+    "state/playlist_v1.json",
+    "integra_core/playlist.py",
 )
 
 REQUIRED_MODULES = {
@@ -346,6 +375,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("operations_and_diagnostics_evidence must pin Issue #46 acceptance")
     if state.get("migration_evidence") != "state/migration_v1.json":
         errors.append("migration_evidence must pin R7 acceptance")
+    if state.get("playlist_evidence") != "state/playlist_v1.json":
+        errors.append("playlist_evidence must pin R8A acceptance")
 
     execution_policy = state.get("execution_policy", {})
     expected_policy = {
@@ -419,6 +450,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("OPERATIONS_AND_DIAGNOSTICS_V1 must be ACCEPTED with pinned evidence")
     if statuses.get("R7") != "ACCEPTED":
         errors.append("R7 must be ACCEPTED with copy-on-write migration evidence")
+    if statuses.get("R8A") != "ACCEPTED":
+        errors.append("R8A must be ACCEPTED with YouTube playlist evidence")
     for entry in roadmap:
         entry_id = entry.get("id")
         for dependency in entry.get("depends_on", []):
@@ -1063,6 +1096,137 @@ def validate_migration_evidence(
     return errors
 
 
+def validate_playlist_evidence(evidence: dict, root: Path = ROOT) -> list[str]:
+    errors: list[str] = []
+    expected_top_level = {
+        "schema_version", "issue", "status", "implementation", "fixtures",
+        "acceptance", "limitations",
+    }
+    if not isinstance(evidence, dict) or set(evidence) != expected_top_level:
+        return ["R8A playlist evidence fields must match the v1 contract"]
+    if evidence.get("schema_version") != "1.0":
+        errors.append("R8A playlist evidence schema_version must be 1.0")
+    if evidence.get("issue") != 10 or evidence.get("status") != "PASS":
+        errors.append("R8A playlist evidence must certify Issue #10 as PASS")
+
+    implementation = evidence.get("implementation")
+    if not isinstance(implementation, list):
+        errors.append("R8A implementation inventory must be a list")
+    else:
+        paths = {item.get("path") for item in implementation if isinstance(item, dict)}
+        if paths != EXPECTED_PLAYLIST_IMPLEMENTATION or len(paths) != len(implementation):
+            errors.append("R8A implementation inventory must be exact")
+        for item in implementation:
+            if not isinstance(item, dict) or set(item) != {"path", "sha256"}:
+                errors.append("R8A implementation reference differs from v1")
+                continue
+            path = root / item["path"]
+            if not path.is_file() or sha256_file(path) != item["sha256"]:
+                errors.append(f"R8A implementation hash differs: {item['path']}")
+
+    fixtures = evidence.get("fixtures")
+    if not isinstance(fixtures, list):
+        errors.append("R8A fixture inventory must be a list")
+    else:
+        paths = {item.get("path") for item in fixtures if isinstance(item, dict)}
+        if paths != EXPECTED_PLAYLIST_FIXTURES or len(paths) != len(fixtures):
+            errors.append("R8A fixture inventory must be exact")
+        for item in fixtures:
+            if not isinstance(item, dict) or set(item) != {"path", "sha256"}:
+                errors.append("R8A fixture reference differs from v1")
+                continue
+            path = root / item["path"]
+            if not path.is_file() or sha256_file(path) != item["sha256"]:
+                errors.append(f"R8A fixture hash differs: {item['path']}")
+
+    expected_acceptance = {
+        "offline_contract_only": True,
+        "title_metadata_preserved": True,
+        "subset_selection": True,
+        "plan_identity_binds_execution": True,
+        "sequential_processing": True,
+        "storage_estimation": True,
+        "checkpoint_resume": True,
+        "per_item_checkpoint_emitted": True,
+        "completed_items_not_reprocessed": True,
+        "completed_artifacts_byte_verified": True,
+        "refresh_diff": True,
+        "inaccessible_items_recorded": True,
+        "remote_removal_preserves_local_evidence": True,
+        "per_video_provenance": True,
+        "live_youtube_accessed": False,
+        "credentials_accessed": False,
+        "external_actions_performed": False,
+    }
+    if evidence.get("acceptance") != expected_acceptance:
+        errors.append("R8A acceptance evidence differs from the governed contract")
+    limitations = evidence.get("limitations")
+    if (
+        not isinstance(limitations, list)
+        or len(limitations) < 2
+        or len(limitations) != len(set(limitations))
+    ):
+        errors.append("R8A limitations must contain at least two unique statements")
+
+    try:
+        previous = discover_playlist(load_json(root / "tests/fixtures/playlist_v1/snapshot_initial.json"))
+        current = discover_playlist(load_json(root / "tests/fixtures/playlist_v1/snapshot_refreshed.json"))
+        plan = build_playlist_plan(previous)
+        calls: list[str] = []
+        persisted: list[dict] = []
+        with tempfile.TemporaryDirectory() as temporary:
+            artifact_root = Path(temporary)
+
+            def processor(item: dict) -> dict:
+                calls.append(item["video_id"])
+                relative_path = f"{item['video_id']}.bin"
+                (artifact_root / relative_path).write_bytes(
+                    f"processed:{item['video_id']}".encode("utf-8")
+                )
+                return {"relative_path": relative_path}
+
+            paused = process_playlist(
+                plan,
+                processor,
+                artifact_root=artifact_root,
+                checkpoint_writer=persisted.append,
+                max_new_items=1,
+            )
+            complete = process_playlist(
+                plan,
+                processor,
+                paused,
+                artifact_root=artifact_root,
+                checkpoint_writer=persisted.append,
+            )
+            replayed = process_playlist(
+                plan,
+                processor,
+                complete,
+                artifact_root=artifact_root,
+                checkpoint_writer=persisted.append,
+            )
+            refresh = diff_playlist_refresh(
+                previous, current, complete, artifact_root=artifact_root
+            )
+        if (
+            paused["status"] != "PAUSED"
+            or complete["status"] != "COMPLETE"
+            or replayed != complete
+            or calls != ["video-a", "video-b"]
+            or not persisted
+            or refresh["added_video_ids"] != ["video-d"]
+            or refresh["removed_video_ids"] != ["video-c"]
+            or refresh["reordered_video_ids"] != ["video-a", "video-b"]
+            or refresh["became_inaccessible_video_ids"] != ["video-a"]
+            or refresh["retained_completed_evidence"] != complete["completed"]
+        ):
+            errors.append("R8A executable playlist fixtures are incomplete")
+    except Exception as error:
+        errors.append(f"R8A executable playlist fixtures failed: {error}")
+    return errors
+
+
 def main() -> int:
     state = load_json(STATE_PATH)
     baselines = load_json(BASELINES_PATH)
@@ -1075,6 +1239,7 @@ def main() -> int:
     core_alpha_real = load_json(CORE_ALPHA_REAL_PATH)
     operations = load_json(OPERATIONS_PATH)
     migration = load_json(MIGRATION_PATH)
+    playlist = load_json(PLAYLIST_PATH)
     load_json(SCHEMA_PATH)
     load_json(BASELINES_SCHEMA_PATH)
     load_json(OWNERSHIP_SCHEMA_PATH)
@@ -1091,6 +1256,11 @@ def main() -> int:
     load_json(CORE_ALPHA_REAL_SCHEMA_PATH)
     load_json(OPERATIONS_SCHEMA_PATH)
     load_json(MIGRATION_SCHEMA_PATH)
+    load_json(PLAYLIST_SCHEMA_PATH)
+    load_json(ROOT / "schemas/youtube_playlist_snapshot_v1.schema.json")
+    load_json(ROOT / "schemas/youtube_playlist_plan_v1.schema.json")
+    load_json(ROOT / "schemas/youtube_playlist_checkpoint_v1.schema.json")
+    load_json(ROOT / "schemas/youtube_playlist_refresh_v1.schema.json")
     errors = (
         validate_state(state)
         + validate_component_baselines(baselines)
@@ -1103,6 +1273,7 @@ def main() -> int:
         + validate_core_alpha_real_evidence(core_alpha_real, baselines)
         + validate_operations_evidence(operations)
         + validate_migration_evidence(migration, baselines)
+        + validate_playlist_evidence(playlist)
     )
     if errors:
         print("INTEGRA_GOVERNANCE_VALIDATION: FAIL")
@@ -1132,6 +1303,7 @@ def main() -> int:
     print("R6_ACCEPTANCE: ACCEPTED")
     print(f"OPERATIONS_AND_DIAGNOSTICS_V1: {operations['status']}")
     print(f"R7_MIGRATION: {migration['status']}")
+    print(f"R8A_YOUTUBE_PLAYLIST: {playlist['status']}")
     return 0
 
 

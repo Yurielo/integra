@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://integra.local/schemas/youtube_playlist_checkpoint_v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "run_id", "plan_id", "collection_id", "snapshot_id", "status", "next_index", "completed", "inaccessible", "checkpoint_sha256"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "run_id": {"type": "string", "pattern": "^urn:integra:operation:"},
+    "plan_id": {"type": "string", "pattern": "^urn:integra:operation:"},
+    "collection_id": {"type": "string", "pattern": "^urn:integra:source:"},
+    "snapshot_id": {"type": "string", "pattern": "^urn:integra:artifact:"},
+    "status": {"enum": ["PAUSED", "COMPLETE"]},
+    "next_index": {"type": "integer", "minimum": 0},
+    "completed": {"type": "array", "items": {"$ref": "#/$defs/completed"}},
+    "inaccessible": {"type": "array", "items": {"$ref": "#/$defs/inaccessible"}},
+    "checkpoint_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  },
+  "$defs": {
+    "completed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["video_id", "video_source_id", "artifact_id", "content_sha256", "size_bytes", "relative_path", "snapshot_id", "snapshot_position", "provenance_status", "integrity_status"],
+      "properties": {
+        "video_id": {"type": "string", "minLength": 1},
+        "video_source_id": {"type": "string", "pattern": "^urn:integra:source:"},
+        "artifact_id": {"type": "string", "pattern": "^urn:integra:artifact:"},
+        "content_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "size_bytes": {"type": "integer", "minimum": 0},
+        "relative_path": {"type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//).+$"},
+        "snapshot_id": {"type": "string", "pattern": "^urn:integra:artifact:"},
+        "snapshot_position": {"type": "integer", "minimum": 0},
+        "provenance_status": {"const": "EXACT"},
+        "integrity_status": {"const": "PASS"}
+      }
+    },
+    "inaccessible": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["video_id", "video_source_id", "snapshot_id", "snapshot_position", "reason"],
+      "properties": {
+        "video_id": {"type": "string", "minLength": 1},
+        "video_source_id": {"type": "string", "pattern": "^urn:integra:source:"},
+        "snapshot_id": {"type": "string", "pattern": "^urn:integra:artifact:"},
+        "snapshot_position": {"type": "integer", "minimum": 0},
+        "reason": {"const": "REMOTE_ITEM_INACCESSIBLE"}
+      }
+    }
+  }
+}
