@@ -57,6 +57,11 @@ class GovernanceValidationTests(unittest.TestCase):
         cls.projects_sources = json.loads(
             (ROOT / "state" / "projects_sources_v1.json").read_text(encoding="utf-8")
         )
+        cls.transcript_topic_studio = json.loads(
+            (ROOT / "state" / "transcript_topic_studio_v1.json").read_text(
+                encoding="utf-8"
+            )
+        )
 
     def test_repository_state_is_valid(self):
         self.assertEqual(VALIDATOR.validate_state(self.state), [])
@@ -538,6 +543,38 @@ class GovernanceValidationTests(unittest.TestCase):
         evidence["fixture_manifest"]["sha256"] = "0" * 64
         errors = VALIDATOR.validate_capability_benchmark(evidence, self.baselines)
         self.assertTrue(any("fixture hash" in error for error in errors))
+
+    def test_transcript_topic_studio_evidence_is_valid(self):
+        self.assertEqual(
+            VALIDATOR.validate_transcript_topic_studio_evidence(
+                self.transcript_topic_studio, self.baselines
+            ),
+            [],
+        )
+
+    def test_transcript_topic_studio_cannot_accept_machine_semantics(self):
+        evidence = copy.deepcopy(self.transcript_topic_studio)
+        evidence["safety"]["machine_semantics_accepted"] = True
+        errors = VALIDATOR.validate_transcript_topic_studio_evidence(
+            evidence, self.baselines
+        )
+        self.assertTrue(any("safety boundary" in error for error in errors))
+
+    def test_transcript_topic_studio_capability_owners_are_pinned(self):
+        evidence = copy.deepcopy(self.transcript_topic_studio)
+        evidence["capability_owners"]["topics"] = ["videotext"]
+        errors = VALIDATOR.validate_transcript_topic_studio_evidence(
+            evidence, self.baselines
+        )
+        self.assertTrue(any("capability owners" in error for error in errors))
+
+    def test_transcript_topic_studio_implementation_hash_is_bound(self):
+        evidence = copy.deepcopy(self.transcript_topic_studio)
+        evidence["implementation"][0]["sha256"] = "0" * 64
+        errors = VALIDATOR.validate_transcript_topic_studio_evidence(
+            evidence, self.baselines
+        )
+        self.assertTrue(any("implementation hash differs" in error for error in errors))
 
 
 if __name__ == "__main__":
