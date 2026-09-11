@@ -5,7 +5,6 @@ import hashlib
 import io
 import json
 from pathlib import Path
-import shutil
 import tempfile
 import unittest
 import wave
@@ -31,7 +30,7 @@ NOW = "2026-09-11T00:00:00Z"
 LATER = "2026-09-11T00:01:00Z"
 SOURCE_PAYLOAD = b"synthetic source media"
 SOURCE_SHA = hashlib.sha256(SOURCE_PAYLOAD).hexdigest()
-FFPROBE = Path(shutil.which("ffprobe") or "/missing/ffprobe")
+FFPROBE = Path(__file__).parent / "fixtures" / "media_v1" / "ffprobe_fixture.py"
 OPERATION_ID = derive_imported_id("operation", "integra", "media-v1", "1" * 64)
 JOB_ID = derive_imported_id("job", "integra", "media-v1", "2" * 64)
 RESERVATION_ID = derive_imported_id("reservation", "integra", "media-v1", "3" * 64)

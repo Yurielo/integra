@@ -219,6 +219,7 @@ EXPECTED_MEDIA_IMPLEMENTATION = {
     "schemas/media_qa_report_v1.schema.json",
     "schemas/media_integration_evidence_v1.schema.json",
     "schemas/media_recipe_v1.schema.json",
+    "tests/fixtures/media_v1/ffprobe_fixture.py",
     "tests/test_media.py",
 }
 EXPECTED_CORE_ALPHA_REAL_SHA256 = "7233cd2985d65d8616e217385b53935c671dbda69a686849a9864cba4565d47c"

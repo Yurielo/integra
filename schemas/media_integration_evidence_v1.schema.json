@@ -10,7 +10,7 @@
     "issue": {"const": 14},
     "dependencies": {"const": ["R5", "R6", "OPERATIONS_AND_DIAGNOSTICS_V1"]},
     "source_component": {"const": {"id": "videotext", "commit_sha": "2e098d1705b6815628bee1e023f4742718eabf02", "tree_sha": "f5ec484df90e4db655d31b4174434c37f4d1491c", "version": "0.6.4"}},
-    "implementation": {"type": "array", "minItems": 8, "maxItems": 8, "items": {"$ref": "#/$defs/file"}},
+    "implementation": {"type": "array", "minItems": 9, "maxItems": 9, "items": {"$ref": "#/$defs/file"}},
     "acceptance": {"const": {
       "all_required_capabilities_exposed": true,
       "artifact_integrity_reverified": true,
