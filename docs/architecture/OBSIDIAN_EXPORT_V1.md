@@ -61,7 +61,11 @@ atomic replacement. The manifest and checksum list are verified before
 `COMPLETE.json` is written last. Only then is the staging directory atomically
 renamed to its immutable version and `CURRENT.json` atomically updated.
 
-An exact existing complete version is an idempotent `UNCHANGED` replay. Runtime
+An exact existing complete version is an idempotent `UNCHANGED` replay only
+when `CURRENT.json` already points exactly to it. If promotion completed before
+the pointer write, or another verified version is current, the requested
+version is fully verified under the target lock before `CURRENT.json` is
+created or switched. Runtime
 validation requires the exact package fields, authority flags, hashes and
 derived ID; extra or altered values fail even if other hashes are recomputed.
 Interrupted staging is never current. Recovery accepts only expected files

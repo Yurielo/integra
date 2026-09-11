@@ -204,7 +204,10 @@ def publish_obsidian_export(
             raise PublishingError("user-owned collision: " + ", ".join(collisions))
         if _lexists(version):
             _verify_version(version, manifest, files)
-            return _receipt("UNCHANGED", manifest, root, [], True)
+            if _current_points_to(root, manifest):
+                return _receipt("UNCHANGED", manifest, root, [], True)
+            _atomic_file(root / CURRENT, _pointer_bytes(manifest))
+            return _receipt("EXPORTED", manifest, root, [], False)
         staging_root = root / ".staging"
         staging_root.mkdir(exist_ok=True)
         staging = staging_root / (manifest["version_sha256"] + ".partial")
@@ -234,12 +237,9 @@ def publish_obsidian_export(
             version.parent.mkdir(parents=True, exist_ok=True)
             os.replace(staging, version)
             _fsync_dir(version.parent)
-            pointer = canonical_json({
-                "schema_version": "1.0", "package_id": manifest["package_id"],
-                "version_sha256": manifest["version_sha256"],
-                "relative_path": f"versions/{manifest['version_sha256']}",
-            }) + b"\n"
-            _atomic_file(root / CURRENT, pointer)
+            if interrupt_after == "PROMOTED":
+                raise PublishingError("injected interruption after version promotion")
+            _atomic_file(root / CURRENT, _pointer_bytes(manifest))
             _verify_version(version, manifest, files)
             return _receipt("EXPORTED", manifest, root, [], False)
         except Exception:
@@ -268,7 +268,10 @@ def recover_obsidian_export(
         staging = root / ".staging" / (manifest["version_sha256"] + ".partial")
         if _lexists(version):
             _verify_version(version, manifest, files)
-            return _receipt("UNCHANGED", manifest, root, [], True)
+            if _current_points_to(root, manifest):
+                return _receipt("UNCHANGED", manifest, root, [], True)
+            _atomic_file(root / CURRENT, _pointer_bytes(manifest))
+            return _receipt("EXPORTED", manifest, root, [], False)
         if not _lexists(staging):
             raise PublishingError("recoverable staging package is missing")
         _recover_staging(staging, manifest, files)
@@ -282,6 +285,21 @@ def _receipt(state: str, manifest: dict[str, Any], root: Path, collisions: list[
     return {"schema_version": "1.0", "state": state, "package_id": manifest["package_id"],
             "version_sha256": manifest["version_sha256"], "managed_root": str(root),
             "collisions": collisions, "replay": replay, "cloud_verified": False}
+
+
+def _pointer_bytes(manifest: dict[str, Any]) -> bytes:
+    return canonical_json({
+        "schema_version": "1.0", "package_id": manifest["package_id"],
+        "version_sha256": manifest["version_sha256"],
+        "relative_path": f"versions/{manifest['version_sha256']}",
+    }) + b"\n"
+
+
+def _current_points_to(root: Path, manifest: dict[str, Any]) -> bool:
+    pointer = root / CURRENT
+    if not pointer.is_file() or pointer.is_symlink():
+        return False
+    return pointer.read_bytes() == _pointer_bytes(manifest)
 
 
 def _targets(vault: Path, manifest: dict[str, Any]) -> tuple[Path, Path]:

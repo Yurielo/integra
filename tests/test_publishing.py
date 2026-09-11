@@ -25,7 +25,7 @@ PROJECT = AUTHORITY_CASE.index["project_id"]
 AT = "2026-09-11T10:01:00Z"
 
 
-def fixtures():
+def fixtures(created_at="2026-09-11T10:00:00Z"):
     files = {"00_START_HERE.md": b"# Start\n", "Topics/topic.md": b"# Topic\n"}
     knowledge = copy.deepcopy(AUTHORITY_CASE.view)
     navigation = copy.deepcopy(AUTHORITY_CASE.index)
@@ -49,7 +49,7 @@ def fixtures():
         source_evidence_payload=AUTHORITY_CASE.source_payload,
         knowledge_payload=AUTHORITY_CASE.knowledge_payload,
         navigation_authority=authority,
-        created_at="2026-09-11T10:00:00Z",
+        created_at=created_at,
     )
     return files, source, knowledge, navigation, authority, manifest, packaged
 
@@ -193,6 +193,45 @@ class PublishingTests(unittest.TestCase):
             self.assertFalse((vault / "Integra/course" / CURRENT).exists())
             result = recover_obsidian_export(vault, manifest, files, **auth)
             self.assertEqual(result["state"], "EXPORTED")
+
+    def test_retry_repairs_current_after_version_promotion(self):
+        *_, manifest, files = fixtures()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); vault = root / "vault"; vault.mkdir(); auth = authorization(root, manifest)
+            with self.assertRaisesRegex(PublishingError, "version promotion"):
+                publish_obsidian_export(vault, manifest, files, interrupt_after="PROMOTED", **auth)
+            version = vault / "Integra/course/versions" / manifest["version_sha256"]
+            current = vault / "Integra/course" / CURRENT
+            self.assertTrue((version / COMPLETE).is_file())
+            self.assertFalse(current.exists())
+            result = publish_obsidian_export(vault, manifest, files, **auth)
+            self.assertEqual(result["state"], "EXPORTED")
+            self.assertEqual(json.loads(current.read_bytes())["version_sha256"], manifest["version_sha256"])
+            self.assertEqual(publish_obsidian_export(vault, manifest, files, **auth)["state"], "UNCHANGED")
+
+    def test_existing_noncurrent_version_is_verified_before_current_switch(self):
+        *_, first_manifest, first_files = fixtures()
+        *_, second_manifest, second_files = fixtures("2026-09-11T10:00:01Z")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); vault = root / "vault"; vault.mkdir()
+            first_auth = authorization(root / "first-auth", first_manifest)
+            second_auth = authorization(root / "second-auth", second_manifest)
+            publish_obsidian_export(vault, first_manifest, first_files, **first_auth)
+            publish_obsidian_export(vault, second_manifest, second_files, **second_auth)
+            current = vault / "Integra/course" / CURRENT
+            self.assertEqual(json.loads(current.read_bytes())["version_sha256"], second_manifest["version_sha256"])
+
+            first_version = vault / "Integra/course/versions" / first_manifest["version_sha256"]
+            topic = first_version / "Topics/topic.md"
+            original = topic.read_bytes(); topic.write_bytes(b"tampered")
+            with self.assertRaisesRegex(PublishingError, "collision"):
+                publish_obsidian_export(vault, first_manifest, first_files, **first_auth)
+            self.assertEqual(json.loads(current.read_bytes())["version_sha256"], second_manifest["version_sha256"])
+
+            topic.write_bytes(original)
+            result = publish_obsidian_export(vault, first_manifest, first_files, **first_auth)
+            self.assertEqual(result["state"], "EXPORTED")
+            self.assertEqual(json.loads(current.read_bytes())["version_sha256"], first_manifest["version_sha256"])
 
     def test_recovery_rejects_tampered_or_unknown_staging_without_erasing(self):
         *_, manifest, files = fixtures()
