@@ -28,6 +28,11 @@ The complete product direction includes:
 - search and knowledge-assistant capabilities;
 - governed publishing, diagnostics, recovery, and quality control.
 
+The accepted Projects & Sources v1 foundation now provides the unified project
+registry and stable source/revision lineage for every source family above. It
+reuses the accepted playlist and document contracts and preserves original
+files and applications as read-only source systems.
+
 The Product Owner has authorized safe roadmap implementation after the GitHub
 Issues and milestones were created. A stage may proceed when its dependencies
 and factual preconditions are verified. This standing implementation authority

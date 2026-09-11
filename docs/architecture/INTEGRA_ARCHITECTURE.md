@@ -82,6 +82,13 @@ is explicitly OCR-required and cannot masquerade as complete native text.
 Local OCR binding and embedded-media materialization fail closed and preserve
 provisional machine authority.
 
+Projects & Sources v1 adds the single deterministic registry documented in
+[`PROJECTS_AND_SOURCES_V1.md`](PROJECTS_AND_SOURCES_V1.md). Seminar, course,
+series and event projects retain stable identity, lifecycle and immutable
+history. Local media, standalone YouTube videos, playlists and R8B documents
+share stable source identity, ordered revisions and exact provenance without
+duplicating unchanged sources or acquiring authority over source systems.
+
 ## 2. Authority model
 
 ### Factual state authority

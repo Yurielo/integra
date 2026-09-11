@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0",
+  "status": "ACCEPTED",
+  "issue": 47,
+  "implementation": [
+    {"path": "docs/architecture/PROJECTS_AND_SOURCES_V1.md", "sha256": "20831af85f2a8608ea959d0c3eb0cdfb1e93be297505525739c98fe4863248d4"},
+    {"path": "integra_core/projects_sources.py", "sha256": "f1581466f4e48e91cfe6370a8d406fcc63ef2195111bae73d6941b4e81ce8f20"},
+    {"path": "schemas/project_source_registry_v1.schema.json", "sha256": "59381f24822b13b7dd11deea45357fbaab863ce05178d2178fbee8f95a04ebec"},
+    {"path": "schemas/projects_sources_evidence_v1.schema.json", "sha256": "8a26e2ab9e79a27274e3d094c430d9c0b942301fc6f52b9b79edb824617eae14"},
+    {"path": "tests/test_projects_sources.py", "sha256": "0ff484489ca365eb99cd3e92422ac25259d6b54c56e84dde4f4f50a8a6eb9b0a"}
+  ],
+  "project_kinds": ["SEMINAR", "COURSE", "SERIES", "EVENT"],
+  "source_types": [
+    "LOCAL_VIDEO", "LOCAL_AUDIO", "YOUTUBE_VIDEO", "YOUTUBE_PLAYLIST",
+    "PDF", "PPTX", "DOCX", "TXT", "MARKDOWN", "IMAGE", "SCAN"
+  ],
+  "dependencies": ["R6", "R7", "R8A", "R8B"],
+  "acceptance": {
+    "stable_project_identity": true,
+    "project_lifecycle_history": true,
+    "stable_source_identity": true,
+    "revision_lineage": true,
+    "revision_hash_chain": true,
+    "exact_provenance": true,
+    "container_signatures_validated": true,
+    "reopen_idempotent": true,
+    "refresh_idempotent": true,
+    "individual_youtube_independent": true,
+    "playlist_contract_reused": true,
+    "multi_playlist_membership": true,
+    "document_contract_reused": true,
+    "unavailable_remote_visible": true,
+    "conflicts_fail_closed": true
+  },
+  "safety": {
+    "source_files_modified": false,
+    "source_repositories_modified": false,
+    "network_access_performed": false,
+    "credentials_accessed": false,
+    "protected_data_accessed": false,
+    "semantic_authority": "NOT_APPLICABLE"
+  }
+}

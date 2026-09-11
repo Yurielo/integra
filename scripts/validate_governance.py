@@ -31,6 +31,17 @@ from integra_core.documents import (  # noqa: E402
     validate_document_against_source,
     validate_document_record,
 )
+from integra_core.projects_sources import (  # noqa: E402
+    dumps_registry,
+    loads_registry,
+    new_registry,
+    register_document,
+    register_local_media,
+    register_project,
+    register_youtube_playlist,
+    register_youtube_video,
+    validate_registry,
+)
 from integra_core.protocol import content_sha256  # noqa: E402
 from scripts.check_agents import load_registry, validate_agent_team  # noqa: E402
 
@@ -67,6 +78,9 @@ PLAYLIST_PATH = ROOT / "state" / "playlist_v1.json"
 PLAYLIST_SCHEMA_PATH = ROOT / "schemas" / "playlist_evidence_v1.schema.json"
 DOCUMENT_PIPELINE_PATH = ROOT / "state" / "document_pipeline_v1.json"
 DOCUMENT_PIPELINE_SCHEMA_PATH = ROOT / "schemas" / "document_pipeline_evidence_v1.schema.json"
+PROJECTS_SOURCES_PATH = ROOT / "state" / "projects_sources_v1.json"
+PROJECTS_SOURCES_SCHEMA_PATH = ROOT / "schemas" / "projects_sources_evidence_v1.schema.json"
+PROJECT_SOURCE_REGISTRY_SCHEMA_PATH = ROOT / "schemas" / "project_source_registry_v1.schema.json"
 EXPECTED_OPERATIONS_IMPLEMENTATION = {
     "integra_core/operations.py",
     "integra_core/operations_fixtures.py",
@@ -127,6 +141,13 @@ EXPECTED_DOCUMENT_IMPLEMENTATION = {
 }
 EXPECTED_DOCUMENT_FIXTURES = {
     "tests/fixtures/document_v1/cases.json",
+}
+EXPECTED_PROJECTS_SOURCES_IMPLEMENTATION = {
+    "docs/architecture/PROJECTS_AND_SOURCES_V1.md",
+    "integra_core/projects_sources.py",
+    "schemas/project_source_registry_v1.schema.json",
+    "schemas/projects_sources_evidence_v1.schema.json",
+    "tests/test_projects_sources.py",
 }
 EXPECTED_CORE_ALPHA_REAL_SHA256 = "7233cd2985d65d8616e217385b53935c671dbda69a686849a9864cba4565d47c"
 EXPECTED_CORE_ALPHA_REAL_IMPLEMENTATION = {
@@ -245,6 +266,11 @@ REQUIRED_DOCUMENTS = (
     "state/document_pipeline_v1.json",
     "integra_core/documents.py",
     "tests/fixtures/document_v1/cases.json",
+    "docs/architecture/PROJECTS_AND_SOURCES_V1.md",
+    "schemas/project_source_registry_v1.schema.json",
+    "schemas/projects_sources_evidence_v1.schema.json",
+    "state/projects_sources_v1.json",
+    "integra_core/projects_sources.py",
 )
 
 REQUIRED_MODULES = {
@@ -400,6 +426,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("playlist_evidence must pin R8A acceptance")
     if state.get("document_pipeline_evidence") != "state/document_pipeline_v1.json":
         errors.append("document_pipeline_evidence must pin R8B acceptance")
+    if state.get("projects_sources_evidence") != "state/projects_sources_v1.json":
+        errors.append("projects_sources_evidence must pin Issue #47 acceptance")
 
     execution_policy = state.get("execution_policy", {})
     expected_policy = {
@@ -477,6 +505,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("R8A must be ACCEPTED with YouTube playlist evidence")
     if statuses.get("R8B") != "ACCEPTED":
         errors.append("R8B must be ACCEPTED with document pipeline evidence")
+    if statuses.get("PROJECTS_AND_SOURCES_V1") != "ACCEPTED":
+        errors.append("PROJECTS_AND_SOURCES_V1 must be ACCEPTED with registry evidence")
     for entry in roadmap:
         entry_id = entry.get("id")
         for dependency in entry.get("depends_on", []):
@@ -1386,6 +1416,134 @@ def validate_document_pipeline_evidence(evidence: dict, root: Path = ROOT) -> li
     return errors
 
 
+def validate_projects_sources_evidence(
+    evidence: dict, root: Path = ROOT
+) -> list[str]:
+    errors: list[str] = []
+    expected_fields = {
+        "schema_version", "status", "issue", "implementation", "project_kinds",
+        "source_types", "dependencies", "acceptance", "safety",
+    }
+    if not isinstance(evidence, dict) or set(evidence) != expected_fields:
+        return ["Projects & Sources evidence fields must match the v1 contract"]
+    if evidence.get("schema_version") != "1.0" or evidence.get("status") != "ACCEPTED" or evidence.get("issue") != 47:
+        errors.append("Projects & Sources evidence must certify Issue #47 as ACCEPTED")
+    implementation = evidence.get("implementation")
+    if not isinstance(implementation, list):
+        errors.append("Projects & Sources implementation inventory must be a list")
+    else:
+        paths: list[str] = []
+        for item in implementation:
+            if not isinstance(item, dict) or set(item) != {"path", "sha256"}:
+                errors.append("Projects & Sources implementation reference differs from v1")
+                continue
+            paths.append(item["path"])
+            path = root / item["path"]
+            if not path.is_file():
+                errors.append(f"Projects & Sources implementation is missing: {item['path']}")
+            elif sha256_file(path) != item["sha256"]:
+                errors.append(f"Projects & Sources implementation hash differs: {item['path']}")
+        if set(paths) != EXPECTED_PROJECTS_SOURCES_IMPLEMENTATION or len(paths) != len(set(paths)):
+            errors.append("Projects & Sources implementation inventory must be exact")
+    if set(evidence.get("project_kinds", [])) != {"SEMINAR", "COURSE", "SERIES", "EVENT"}:
+        errors.append("Projects & Sources project kind inventory differs")
+    expected_source_types = {
+        "LOCAL_VIDEO", "LOCAL_AUDIO", "YOUTUBE_VIDEO", "YOUTUBE_PLAYLIST",
+        "PDF", "PPTX", "DOCX", "TXT", "MARKDOWN", "IMAGE", "SCAN",
+    }
+    if set(evidence.get("source_types", [])) != expected_source_types:
+        errors.append("Projects & Sources source type inventory differs")
+    if set(evidence.get("dependencies", [])) != {"R6", "R7", "R8A", "R8B"}:
+        errors.append("Projects & Sources accepted dependencies differ")
+    expected_acceptance = {
+        "stable_project_identity": True,
+        "project_lifecycle_history": True,
+        "stable_source_identity": True,
+        "revision_lineage": True,
+        "revision_hash_chain": True,
+        "exact_provenance": True,
+        "container_signatures_validated": True,
+        "reopen_idempotent": True,
+        "refresh_idempotent": True,
+        "individual_youtube_independent": True,
+        "playlist_contract_reused": True,
+        "multi_playlist_membership": True,
+        "document_contract_reused": True,
+        "unavailable_remote_visible": True,
+        "conflicts_fail_closed": True,
+    }
+    if evidence.get("acceptance") != expected_acceptance:
+        errors.append("Projects & Sources acceptance evidence differs from v1")
+    expected_safety = {
+        "source_files_modified": False,
+        "source_repositories_modified": False,
+        "network_access_performed": False,
+        "credentials_accessed": False,
+        "protected_data_accessed": False,
+        "semantic_authority": "NOT_APPLICABLE",
+    }
+    if evidence.get("safety") != expected_safety:
+        errors.append("Projects & Sources safety evidence differs from v1")
+
+    try:
+        with tempfile.TemporaryDirectory() as directory:
+            fixture_root = Path(directory)
+            captured = "2026-09-11T00:00:00Z"
+            later = "2026-09-11T00:01:00Z"
+            latest = "2026-09-11T00:02:00Z"
+            registry = new_registry("governance-fixture", captured)
+            registry, project_id = register_project(
+                registry, project_key="fixture-seminar", kind="SEMINAR",
+                title="Fixture seminar", occurred_at=captured,
+            )
+            reopened, reopened_id = register_project(
+                loads_registry(dumps_registry(registry)),
+                project_key="fixture-seminar", kind="SEMINAR",
+                title="Fixture seminar", occurred_at=later,
+            )
+            if reopened != registry or reopened_id != project_id:
+                errors.append("Projects & Sources project reopen is not idempotent")
+            audio_path = fixture_root / "fixture.wav"
+            audio_path.write_bytes(b"RIFF\x08\x00\x00\x00WAVEfmt ")
+            source_before = sha256_file(audio_path)
+            registry, _ = register_local_media(
+                registry, project_id, audio_path, captured_at=later
+            )
+            raw_snapshot = load_json(
+                root / "tests/fixtures/playlist_v1/snapshot_initial.json"
+            )
+            discovery = discover_playlist(raw_snapshot)
+            registry, standalone_id = register_youtube_video(
+                registry, project_id, video_id="video-a", title="Fixture lesson A",
+                availability="AVAILABLE", captured_at=later,
+            )
+            registry, playlist_id, video_ids = register_youtube_playlist(
+                registry, project_id, discovery, captured_at=latest
+            )
+            notes_path = fixture_root / "notes.md"
+            notes_path.write_text("# Fixture\n\nSupporting material.", encoding="utf-8")
+            document = extract_document(notes_path, captured_at=latest)
+            registry, document_id = register_document(
+                registry, project_id, document, captured_at=latest
+            )
+            round_trip = loads_registry(dumps_registry(registry))
+            validate_registry(round_trip)
+            if (
+                source_before != sha256_file(audio_path)
+                or standalone_id != discovery["items"][0]["video_source_id"]
+                or playlist_id != discovery["collection_id"]
+                or standalone_id not in video_ids
+                or document_id != document["source"]["source_id"]
+                or len(round_trip["projects"]) != 1
+                or len(round_trip["sources"]) != 6
+                or len({item["source_id"] for item in round_trip["sources"]}) != 6
+            ):
+                errors.append("Projects & Sources executable acceptance fixture differs")
+    except Exception as error:
+        errors.append(f"Projects & Sources executable acceptance fixture failed: {error}")
+    return errors
+
+
 def main() -> int:
     state = load_json(STATE_PATH)
     baselines = load_json(BASELINES_PATH)
@@ -1400,6 +1558,7 @@ def main() -> int:
     migration = load_json(MIGRATION_PATH)
     playlist = load_json(PLAYLIST_PATH)
     document_pipeline = load_json(DOCUMENT_PIPELINE_PATH)
+    projects_sources = load_json(PROJECTS_SOURCES_PATH)
     load_json(SCHEMA_PATH)
     load_json(BASELINES_SCHEMA_PATH)
     load_json(OWNERSHIP_SCHEMA_PATH)
@@ -1418,6 +1577,8 @@ def main() -> int:
     load_json(MIGRATION_SCHEMA_PATH)
     load_json(PLAYLIST_SCHEMA_PATH)
     load_json(DOCUMENT_PIPELINE_SCHEMA_PATH)
+    load_json(PROJECTS_SOURCES_SCHEMA_PATH)
+    load_json(PROJECT_SOURCE_REGISTRY_SCHEMA_PATH)
     load_json(ROOT / "schemas/youtube_playlist_snapshot_v1.schema.json")
     load_json(ROOT / "schemas/youtube_playlist_plan_v1.schema.json")
     load_json(ROOT / "schemas/youtube_playlist_checkpoint_v1.schema.json")
@@ -1437,6 +1598,7 @@ def main() -> int:
         + validate_migration_evidence(migration, baselines)
         + validate_playlist_evidence(playlist)
         + validate_document_pipeline_evidence(document_pipeline)
+        + validate_projects_sources_evidence(projects_sources)
     )
     if errors:
         print("INTEGRA_GOVERNANCE_VALIDATION: FAIL")
@@ -1468,6 +1630,7 @@ def main() -> int:
     print(f"R7_MIGRATION: {migration['status']}")
     print(f"R8A_YOUTUBE_PLAYLIST: {playlist['status']}")
     print(f"R8B_DOCUMENT_AND_OCR: {document_pipeline['status']}")
+    print(f"PROJECTS_AND_SOURCES_V1: {projects_sources['status']}")
     return 0
 
 
