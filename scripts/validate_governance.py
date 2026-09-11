@@ -116,6 +116,9 @@ MEDIA_INTEGRATION_PATH = ROOT / "state" / "media_integration_v1.json"
 MEDIA_INTEGRATION_EVIDENCE_SCHEMA_PATH = ROOT / "schemas" / "media_integration_evidence_v1.schema.json"
 MEDIA_RECIPE_SCHEMA_PATH = ROOT / "schemas" / "media_recipe_v1.schema.json"
 MEDIA_DERIVATIVE_SCHEMA_PATH = ROOT / "schemas" / "media_derivative_v1.schema.json"
+CROSS_NAVIGATION_PATH = ROOT / "state" / "cross_navigation_v1.json"
+CROSS_NAVIGATION_EVIDENCE_SCHEMA_PATH = ROOT / "schemas" / "cross_navigation_evidence_v1.schema.json"
+CROSS_NAVIGATION_SCHEMA_PATH = ROOT / "schemas" / "cross_navigation_v1.schema.json"
 EXPECTED_OPERATIONS_IMPLEMENTATION = {
     "integra_core/operations.py",
     "integra_core/operations_fixtures.py",
@@ -221,6 +224,14 @@ EXPECTED_MEDIA_IMPLEMENTATION = {
     "schemas/media_recipe_v1.schema.json",
     "tests/fixtures/media_v1/ffprobe_fixture.py",
     "tests/test_media.py",
+}
+EXPECTED_CROSS_NAVIGATION_IMPLEMENTATION = {
+    "docs/architecture/CROSS_NAVIGATION_V1.md",
+    "integra_core/cross_navigation.py",
+    "schemas/cross_navigation_v1.schema.json",
+    "schemas/cross_navigation_evidence_v1.schema.json",
+    "tests/fixtures/cross_navigation_v1/ffprobe_fixture.py",
+    "tests/test_cross_navigation.py",
 }
 EXPECTED_CORE_ALPHA_REAL_SHA256 = "7233cd2985d65d8616e217385b53935c671dbda69a686849a9864cba4565d47c"
 EXPECTED_CORE_ALPHA_REAL_IMPLEMENTATION = {
@@ -370,6 +381,13 @@ REQUIRED_DOCUMENTS = (
     "state/media_integration_v1.json",
     "integra_core/media.py",
     "tests/test_media.py",
+    "docs/architecture/CROSS_NAVIGATION_V1.md",
+    "schemas/cross_navigation_v1.schema.json",
+    "schemas/cross_navigation_evidence_v1.schema.json",
+    "state/cross_navigation_v1.json",
+    "integra_core/cross_navigation.py",
+    "tests/fixtures/cross_navigation_v1/ffprobe_fixture.py",
+    "tests/test_cross_navigation.py",
 )
 
 REQUIRED_MODULES = {
@@ -459,6 +477,7 @@ REQUIRED_ROADMAP_DEPENDENCIES = {
     },
     "R9A": {"R6", "R8C", "TRANSCRIPT_AND_TOPIC_STUDIO_V1"},
     "R9B": {"R5", "R6", "OPERATIONS_AND_DIAGNOSTICS_V1"},
+    "R9C": {"R8C", "R9A", "R9B"},
     "R12": {
         "OPERATIONS_AND_DIAGNOSTICS_V1",
         "R7",
@@ -535,6 +554,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("knowledge_integration_evidence must pin R9A acceptance")
     if state.get("media_integration_evidence") != "state/media_integration_v1.json":
         errors.append("media_integration_evidence must pin R9B acceptance")
+    if state.get("cross_navigation_evidence") != "state/cross_navigation_v1.json":
+        errors.append("cross_navigation_evidence must pin R9C acceptance")
 
     execution_policy = state.get("execution_policy", {})
     expected_policy = {
@@ -622,6 +643,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("R9A must be ACCEPTED with knowledge integration evidence")
     if statuses.get("R9B") != "ACCEPTED":
         errors.append("R9B must be ACCEPTED with media integration evidence")
+    if statuses.get("R9C") != "ACCEPTED":
+        errors.append("R9C must be ACCEPTED with cross-navigation evidence")
     for entry in roadmap:
         entry_id = entry.get("id")
         for dependency in entry.get("depends_on", []):
@@ -2267,6 +2290,71 @@ def validate_media_integration_evidence(
     return errors
 
 
+def validate_cross_navigation_evidence(
+    evidence: dict, root: Path = ROOT
+) -> list[str]:
+    errors: list[str] = []
+    expected_fields = {
+        "schema_version", "status", "issue", "dependencies", "implementation",
+        "surfaces", "acceptance", "safety", "limitations",
+    }
+    if not isinstance(evidence, dict) or set(evidence) != expected_fields:
+        return ["R9C cross-navigation evidence fields must match v1"]
+    if (evidence.get("schema_version"), evidence.get("status"), evidence.get("issue")) != ("1.0", "ACCEPTED", 15):
+        errors.append("R9C evidence must certify Issue #15 as ACCEPTED")
+    if evidence.get("dependencies") != ["R8C", "R9A", "R9B"]:
+        errors.append("R9C dependency order differs")
+    paths = []
+    for item in evidence.get("implementation", []):
+        if not isinstance(item, dict) or set(item) != {"path", "sha256"}:
+            errors.append("R9C implementation reference differs")
+            continue
+        paths.append(item["path"])
+        path = root / item["path"]
+        if not path.is_file() or sha256_file(path) != item["sha256"]:
+            errors.append(f"R9C implementation hash differs: {item['path']}")
+    if set(paths) != EXPECTED_CROSS_NAVIGATION_IMPLEMENTATION or len(paths) != len(set(paths)):
+        errors.append("R9C implementation inventory must be exact")
+    if evidence.get("surfaces") != [
+        "AUDIO", "DOCUMENT", "EVIDENCE", "KNOWLEDGE_ENTITY", "MEDIA_CLIP", "MEDIA_SOURCE",
+        "PAGE", "SLIDE", "TOPIC", "TRANSCRIPT", "VIDEO", "WORD_TIMELINE",
+    ]:
+        errors.append("R9C navigation surface inventory differs")
+    if evidence.get("acceptance") != {
+        "validated_r8c_alignment_required": True,
+        "validated_r9a_knowledge_required": True,
+        "registered_r9b_derivative_required": True,
+        "stable_ids_preserved": True,
+        "exact_locators_preserved": True,
+        "source_revision_mappings_required": True,
+        "authoritative_bridge_catalog_required": True,
+        "authoritative_availability_catalog_required": True,
+        "forward_and_reverse_navigation": True,
+        "topic_to_word_timeline": True,
+        "knowledge_to_evidence": True,
+        "media_source_to_clip": True,
+        "document_page_and_slide_actions": True,
+        "unavailable_sources_fail_closed": True,
+        "deterministic_serialization": True,
+        "semantic_promotion_automatic": False,
+    }:
+        errors.append("R9C acceptance evidence differs")
+    if evidence.get("safety") != {
+        "source_artifacts_modified": False,
+        "source_repositories_modified": False,
+        "protected_data_accessed": False,
+        "gold_accessed": False,
+        "semantic_authoring_performed": False,
+        "domain_review_performed": False,
+        "external_actions_performed": False,
+    }:
+        errors.append("R9C safety evidence differs")
+    limitations = evidence.get("limitations")
+    if not isinstance(limitations, list) or not limitations or len(limitations) != len(set(limitations)):
+        errors.append("R9C limitations must be a non-empty unique list")
+    return errors
+
+
 def main() -> int:
     state = load_json(STATE_PATH)
     baselines = load_json(BASELINES_PATH)
@@ -2286,6 +2374,7 @@ def main() -> int:
     multi_source_alignment = load_json(MULTI_SOURCE_ALIGNMENT_PATH)
     knowledge_integration = load_json(KNOWLEDGE_INTEGRATION_PATH)
     media_integration = load_json(MEDIA_INTEGRATION_PATH)
+    cross_navigation = load_json(CROSS_NAVIGATION_PATH)
     load_json(SCHEMA_PATH)
     load_json(BASELINES_SCHEMA_PATH)
     load_json(OWNERSHIP_SCHEMA_PATH)
@@ -2315,6 +2404,8 @@ def main() -> int:
     load_json(MEDIA_INTEGRATION_EVIDENCE_SCHEMA_PATH)
     load_json(MEDIA_RECIPE_SCHEMA_PATH)
     load_json(MEDIA_DERIVATIVE_SCHEMA_PATH)
+    load_json(CROSS_NAVIGATION_EVIDENCE_SCHEMA_PATH)
+    load_json(CROSS_NAVIGATION_SCHEMA_PATH)
     load_json(ROOT / "schemas/youtube_playlist_snapshot_v1.schema.json")
     load_json(ROOT / "schemas/youtube_playlist_plan_v1.schema.json")
     load_json(ROOT / "schemas/youtube_playlist_checkpoint_v1.schema.json")
@@ -2339,6 +2430,7 @@ def main() -> int:
         + validate_multi_source_alignment_evidence(multi_source_alignment, baselines)
         + validate_knowledge_integration_evidence(knowledge_integration, baselines)
         + validate_media_integration_evidence(media_integration, baselines)
+        + validate_cross_navigation_evidence(cross_navigation)
     )
     if errors:
         print("INTEGRA_GOVERNANCE_VALIDATION: FAIL")
@@ -2375,6 +2467,7 @@ def main() -> int:
     print(f"R8C_MULTI_SOURCE_ALIGNMENT: {multi_source_alignment['status']}")
     print(f"R9A_KNOWLEDGE_INTEGRATION: {knowledge_integration['status']}")
     print(f"R9B_MEDIA_INTEGRATION: {media_integration['status']}")
+    print(f"R9C_CROSS_NAVIGATION: {cross_navigation['status']}")
     return 0
 
 

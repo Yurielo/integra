@@ -77,6 +77,11 @@ class GovernanceValidationTests(unittest.TestCase):
                 encoding="utf-8"
             )
         )
+        cls.cross_navigation = json.loads(
+            (ROOT / "state" / "cross_navigation_v1.json").read_text(
+                encoding="utf-8"
+            )
+        )
 
     def test_repository_state_is_valid(self):
         self.assertEqual(VALIDATOR.validate_state(self.state), [])
@@ -653,6 +658,23 @@ class GovernanceValidationTests(unittest.TestCase):
         evidence = copy.deepcopy(self.media_integration)
         evidence["implementation"][0]["sha256"] = "0" * 64
         errors = VALIDATOR.validate_media_integration_evidence(evidence, self.baselines)
+        self.assertTrue(any("implementation hash differs" in error for error in errors))
+
+    def test_cross_navigation_evidence_is_valid(self):
+        self.assertEqual(
+            VALIDATOR.validate_cross_navigation_evidence(self.cross_navigation), []
+        )
+
+    def test_cross_navigation_cannot_claim_semantic_promotion(self):
+        evidence = copy.deepcopy(self.cross_navigation)
+        evidence["acceptance"]["semantic_promotion_automatic"] = True
+        errors = VALIDATOR.validate_cross_navigation_evidence(evidence)
+        self.assertTrue(any("acceptance evidence" in error for error in errors))
+
+    def test_cross_navigation_implementation_hashes_are_pinned(self):
+        evidence = copy.deepcopy(self.cross_navigation)
+        evidence["implementation"][0]["sha256"] = "0" * 64
+        errors = VALIDATOR.validate_cross_navigation_evidence(evidence)
         self.assertTrue(any("implementation hash differs" in error for error in errors))
 
 

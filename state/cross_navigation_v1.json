@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0",
+  "status": "ACCEPTED",
+  "issue": 15,
+  "dependencies": ["R8C", "R9A", "R9B"],
+  "implementation": [
+    {"path": "docs/architecture/CROSS_NAVIGATION_V1.md", "sha256": "405207c7feea897da30c8d2a2c15ecc97c96421c0bdb3f22ea20a33fde422cdd"},
+    {"path": "integra_core/cross_navigation.py", "sha256": "ccfe144d8816069c00a34139bd5ac0ad43078fb2e2e9aa3b6a46835d34b8c56f"},
+    {"path": "schemas/cross_navigation_evidence_v1.schema.json", "sha256": "344949ff644deaf68cdc6d6513d19276cb592a1ce2ce8fec0972c53ffd3f2645"},
+    {"path": "schemas/cross_navigation_v1.schema.json", "sha256": "ecc04cdfcb8350481d66c94f99d4511ca4664022009161aa97304c6a2867f91f"},
+    {"path": "tests/fixtures/cross_navigation_v1/ffprobe_fixture.py", "sha256": "1265b8b767e0850e7b6b9057344afb70b211d99acc87d43f46d1ea52fdfa419c"},
+    {"path": "tests/test_cross_navigation.py", "sha256": "b4796e1fd0272af4e4d92765a7b69dc30d0bad05e5a6ac0ffd291523b184a128"}
+  ],
+  "surfaces": [
+    "AUDIO", "DOCUMENT", "EVIDENCE", "KNOWLEDGE_ENTITY", "MEDIA_CLIP", "MEDIA_SOURCE",
+    "PAGE", "SLIDE", "TOPIC", "TRANSCRIPT", "VIDEO", "WORD_TIMELINE"
+  ],
+  "acceptance": {
+    "validated_r8c_alignment_required": true,
+    "validated_r9a_knowledge_required": true,
+    "registered_r9b_derivative_required": true,
+    "stable_ids_preserved": true,
+    "exact_locators_preserved": true,
+    "source_revision_mappings_required": true,
+    "authoritative_bridge_catalog_required": true,
+    "authoritative_availability_catalog_required": true,
+    "forward_and_reverse_navigation": true,
+    "topic_to_word_timeline": true,
+    "knowledge_to_evidence": true,
+    "media_source_to_clip": true,
+    "document_page_and_slide_actions": true,
+    "unavailable_sources_fail_closed": true,
+    "deterministic_serialization": true,
+    "semantic_promotion_automatic": false
+  },
+  "safety": {
+    "source_artifacts_modified": false,
+    "source_repositories_modified": false,
+    "protected_data_accessed": false,
+    "gold_accessed": false,
+    "semantic_authoring_performed": false,
+    "domain_review_performed": false,
+    "external_actions_performed": false
+  },
+  "limitations": [
+    "R9C supplies the validated navigation domain service and JSON contract; native macOS view composition remains a combined-product stage.",
+    "Cross-component bridges require caller-supplied endpoint IDs and compatible exact source locators from validated records.",
+    "Unavailable external sources remain explicit non-navigable targets until their exact revision becomes available."
+  ]
+}

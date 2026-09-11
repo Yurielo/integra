@@ -704,6 +704,15 @@ again against the exact output bytes before registration.
 Prove bidirectional UI navigation between knowledge entities, exact source
 locators, Topic ranges, and media clips.
 
+The accepted v1 navigation service composes validated R8C alignment, R9A
+Knowledge, and registered R9B derivatives into a deterministic, content-bound
+presentation index. It covers Knowledge entities, Evidence, Topics, Word
+Timeline, transcripts, documents, pages, slides, media selections and clips;
+preserves both endpoint IDs and exact locators on round trips; and exposes
+locator-specific UI actions. Unknown and unavailable sources fail clearly and
+cannot acquire guessed locators or routes. The service does not promote
+semantics or modify upstream artifacts.
+
 ### R10 — Obsidian and OneDrive Publishing
 
 Implement versioned package preview; deterministic Markdown, JSON, DOCX, PDF,
