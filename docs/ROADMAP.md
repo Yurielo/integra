@@ -34,7 +34,7 @@ not add routine human gates or change stage dependencies.
 | R10 deterministic one-way Obsidian export | #16 | M4 | R9C | ACCEPTED |
 | ONEDRIVE_PUBLICATION_V1 | #63 | M4 | R10 | ACCEPTED |
 | R12 usable native macOS application | #28 | M6 | ONEDRIVE_PUBLICATION_V1 | ACCEPTED |
-| R13 hardening and reproducible local `.app` package | #29 | M7 | R12 | PLANNED |
+| R13 hardening and reproducible local `.app` package | #29 | M7 | R12 | ACCEPTED |
 | R14 Product Owner READY_APP_V1 acceptance | #30 | M7 | R13 | HUMAN_GATE |
 | DEFERRED_CAPABILITIES_V1 registry | #64 | Later | R14 | DEFERRED_TO_LATER_WORK |
 | R11 Marketing Studio v1 | #17 | Later | R9A, R10, R14 | DEFERRED_TO_LATER_WORK |
