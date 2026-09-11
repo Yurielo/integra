@@ -12,7 +12,7 @@ python3 "$app/Contents/Resources/bridge.py" onedrive-preview | python3 -c 'impor
 
 marker="$test_root/launched.txt"
 INTEGRA_LAUNCH_PROBE="$marker" "$app/Contents/MacOS/Integra"
-grep -q '^LAUNCHED visible=true sections=9 title=Integra' "$marker"
+grep -q '^LAUNCHED visible=true workflow=source-first title=Integra' "$marker"
 test -z "$(find "$app" -type l -print -quit)"
 test -f "$app/Contents/Resources/integra_core/publishing.py"
 echo "INTEGRA_MACOS_LAUNCH_TEST: PASS"

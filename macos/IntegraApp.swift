@@ -1,260 +1,706 @@
 import AppKit
-import AVKit
 import Foundation
 
-struct Section: Codable { let id: String; let title: String; let status: String; let summary: String }
-struct Project: Codable { let id: String; let name: String; let source_count: Int }
-struct Navigation: Codable { let entity: String; let source_locator: String; let reverse_route: String }
-struct Workflow: Codable { let schema_version: String; let project: Project; let sections: [Section]; let navigation: Navigation }
-struct WorkflowEnvelope: Codable { let schema_version: String; let ok: Bool; let operation: String; let workflow: Workflow }
-struct DeferredRegistry: Codable { let schema_version: String; let status: String; let features: [String]; let actions_available: Bool }
-struct DeferredEnvelope: Codable { let schema_version: String; let ok: Bool; let operation: String; let registry: DeferredRegistry }
-struct PreviewEnvelope: Codable {
-    let schema_version: String; let ok: Bool; let operation: String; let state: String
-    let target: String; let writes_performed: Bool; let external_actions_performed: Bool; let cloud_verified: Bool
+enum BridgeError: Error, LocalizedError {
+  case missingResource
+  case failed(String)
+  case invalidResponse
+  var errorDescription: String? {
+    switch self {
+    case .missingResource: return "В приложении отсутствует локальный сервис."
+    case .failed(let value): return value
+    case .invalidResponse: return "Локальный сервис вернул некорректный ответ."
+    }
+  }
 }
 
-enum BridgeError: Error { case missingResource, failed(String), invalidResponse }
-
-final class Bridge {
-    private let resources: URL
-    init(resources: URL) { self.resources = resources }
-
-    func call(_ operation: String, request: [String: Any] = [:]) throws -> Data {
-        let allowed = ["workflow", "obsidian-preview", "onedrive-preview", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "import-media", "media-preflight", "project-view", "package-preview", "package-publish"]
-        guard allowed.contains(operation) else {
-            throw BridgeError.failed("Unsupported operation")
-        }
-        let script = resources.appendingPathComponent("bridge.py")
-        guard FileManager.default.fileExists(atPath: script.path) else { throw BridgeError.missingResource }
-        let process = Process(); let output = Pipe(); let errors = Pipe()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/python3")
-        process.arguments = [script.path, operation]
-        var environment = ProcessInfo.processInfo.environment
-        environment["PYTHONDONTWRITEBYTECODE"] = "1"
-        process.environment = environment
-        process.standardOutput = output; process.standardError = errors
-        if !request.isEmpty {
-            let input = Pipe(); process.standardInput = input
-            try process.run()
-            input.fileHandleForWriting.write(try JSONSerialization.data(withJSONObject: request))
-            try input.fileHandleForWriting.close()
-        } else {
-            try process.run()
-        }
-        process.waitUntilExit()
-        let data = output.fileHandleForReading.readDataToEndOfFile()
-        if process.terminationStatus != 0 {
-            if let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let message = object["error"] as? String, !message.isEmpty { throw BridgeError.failed(message) }
-            let stderr = errors.fileHandleForReading.readDataToEndOfFile()
-            let detail = String(data: stderr, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            throw BridgeError.failed(detail.isEmpty ? "Integra service failed without diagnostic output" : detail)
-        }
-        guard !data.isEmpty else { throw BridgeError.invalidResponse }
-        return data
+final class Bridge: @unchecked Sendable {
+  private let resources: URL
+  init(resources: URL) { self.resources = resources }
+  func call(_ operation: String, request: [String: Any] = [:]) throws -> Data {
+    let allowed = [
+      "workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job",
+      "cancel-job", "resume-job", "import-media", "media-preflight", "project-view",
+      "detect-sources", "capability-registry", "build-plan", "execute-plan", "run-status",
+      "recent-runs", "cancel-run", "retry-run", "package-preview", "package-publish",
+      "obsidian-preview",
+      "onedrive-preview",
+    ]
+    guard allowed.contains(operation) else { throw BridgeError.failed("Unsupported operation") }
+    let script = resources.appendingPathComponent("bridge.py")
+    guard FileManager.default.fileExists(atPath: script.path) else {
+      throw BridgeError.missingResource
     }
-
-    func workflow() throws -> Workflow { try JSONDecoder().decode(WorkflowEnvelope.self, from: call("workflow")).workflow }
-    func deferred() throws -> DeferredRegistry { try JSONDecoder().decode(DeferredEnvelope.self, from: call("deferred")).registry }
-    func preview(_ operation: String) throws -> PreviewEnvelope { try JSONDecoder().decode(PreviewEnvelope.self, from: call(operation)) }
-    func json(_ operation: String, request: [String: Any] = [:]) throws -> [String: Any] {
-        let value = try JSONSerialization.jsonObject(with: call(operation, request: request))
-        guard let object = value as? [String: Any], object["ok"] as? Bool == true else { throw BridgeError.invalidResponse }
-        return object
+    let process = Process()
+    let output = Pipe()
+    let errors = Pipe()
+    let input = Pipe()
+    process.executableURL = URL(fileURLWithPath: "/usr/bin/python3")
+    process.arguments = [script.path, operation]
+    var environment = ProcessInfo.processInfo.environment
+    environment["PYTHONDONTWRITEBYTECODE"] = "1"
+    process.environment = environment
+    process.standardOutput = output
+    process.standardError = errors
+    process.standardInput = input
+    try process.run()
+    input.fileHandleForWriting.write(try JSONSerialization.data(withJSONObject: request))
+    try input.fileHandleForWriting.close()
+    process.waitUntilExit()
+    let data = output.fileHandleForReading.readDataToEndOfFile()
+    if process.terminationStatus != 0 {
+      if let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+        let message = object["error"] as? String, !message.isEmpty
+      {
+        throw BridgeError.failed(message)
+      }
+      let stderr =
+        String(data: errors.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)?
+        .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+      throw BridgeError.failed(
+        stderr.isEmpty ? "Integra service failed without diagnostic output" : stderr)
     }
+    guard !data.isEmpty else { throw BridgeError.invalidResponse }
+    return data
+  }
+  func json(_ operation: String, request: [String: Any] = [:]) throws -> [String: Any] {
+    guard
+      let object = try JSONSerialization.jsonObject(with: call(operation, request: request))
+        as? [String: Any], object["ok"] as? Bool == true
+    else { throw BridgeError.invalidResponse }
+    return object
+  }
+}
+
+final class DropBox: NSBox {
+  var receive: (([String]) -> Void)?
+  override init(frame frameRect: NSRect) {
+    super.init(frame: frameRect)
+    boxType = .custom
+    cornerRadius = 10
+    borderWidth = 1
+    borderColor = .separatorColor
+    title = "Перетащите файлы сюда"
+    titlePosition = .atTop
+    let label = NSTextField(labelWithString: "Перетащите файлы сюда")
+    label.font = .systemFont(ofSize: 15, weight: .medium)
+    label.textColor = .secondaryLabelColor
+    label.translatesAutoresizingMaskIntoConstraints = false
+    addSubview(label)
+    NSLayoutConstraint.activate([
+      label.centerXAnchor.constraint(equalTo: centerXAnchor),
+      label.centerYAnchor.constraint(equalTo: centerYAnchor),
+    ])
+    registerForDraggedTypes([.fileURL])
+  }
+  required init?(coder: NSCoder) { fatalError() }
+  override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation { .copy }
+  override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+    let options: [NSPasteboard.ReadingOptionKey: Any] = [.urlReadingFileURLsOnly: true]
+    guard
+      let urls = sender.draggingPasteboard.readObjects(forClasses: [NSURL.self], options: options)
+        as? [URL], !urls.isEmpty
+    else { return false }
+    receive?(urls.map(\.path))
+    return true
+  }
+}
+
+final class FlippedStackView: NSStackView {
+  override var isFlipped: Bool { true }
+}
+
+struct SidebarItem {
+  let title: String
+  let id: String
+  let header: Bool
+  let enabled: Bool
 }
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource, NSTableViewDelegate {
-    private var window: NSWindow!
-    private let table = NSTableView()
-    private let titleLabel = NSTextField(labelWithString: "")
-    private let statusLabel = NSTextField(labelWithString: "")
-    private let detail = NSTextView()
-    private let actionButton = NSButton(title: "", target: nil, action: nil)
-    private var workflow: Workflow!
-    private var bridge: Bridge!
-    private var activeProjectID: String?
-    private var playerWindow: NSWindow?
+final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource, NSTableViewDelegate
+{
+  private var window: NSWindow!, bridge: Bridge!
+  private let sidebar = NSTableView(), content = FlippedStackView(),
+    status = NSTextField(labelWithString: "")
+  private var sources = [[String: Any]](), capabilities = [[String: Any]](),
+    selected = Set<String>(), plan: [String: Any]?
+  private var projectID: String?, runID: String?, timer: Timer?
+  private let items: [SidebarItem] = [
+    .init(title: "INTEGRA", id: "", header: true, enabled: false),
+    .init(title: "＋ Новая обработка", id: "new", header: false, enabled: true),
+    .init(title: "БИБЛИОТЕКА", id: "", header: true, enabled: false),
+    .init(title: "Исходники", id: "sources", header: false, enabled: true),
+    .init(title: "Проекты", id: "projects", header: false, enabled: true),
+    .init(title: "Обработанные материалы", id: "materials", header: false, enabled: true),
+    .init(title: "РАБОТА", id: "", header: true, enabled: false),
+    .init(title: "Выполняется", id: "operations", header: false, enabled: true),
+    .init(title: "Требует проверки — В разработке", id: "review", header: false, enabled: false),
+    .init(title: "ЗНАНИЯ", id: "", header: true, enabled: false),
+    .init(title: "База знаний — В разработке", id: "knowledge", header: false, enabled: false),
+    .init(title: "Поиск — В разработке", id: "search", header: false, enabled: false),
+    .init(title: "СОЗДАТЬ", id: "", header: true, enabled: false),
+    .init(title: "Видео и клипы — В разработке", id: "clips", header: false, enabled: false),
+    .init(title: "Учебные материалы — В разработке", id: "learning", header: false, enabled: false),
+    .init(title: "Маркетинг — В разработке", id: "marketing", header: false, enabled: false),
+    .init(title: "ПУБЛИКАЦИЯ", id: "", header: true, enabled: false),
+    .init(title: "Готово", id: "ready", header: false, enabled: true),
+    .init(title: "История", id: "history", header: false, enabled: true),
+    .init(title: "SYSTEM", id: "", header: true, enabled: false),
+    .init(title: "Диагностика", id: "diagnostics", header: false, enabled: true),
+    .init(title: "Настройки — В разработке", id: "settings", header: false, enabled: false),
+  ]
 
-    func applicationDidFinishLaunching(_ notification: Notification) {
-        guard let resources = Bundle.main.resourceURL else { NSApp.terminate(nil); return }
-        bridge = Bridge(resources: resources)
-        do { workflow = try bridge.workflow() } catch { fatalError("Closed Integra bridge failed: \(error)") }
-        if let projects = try? bridge.json("projects")["result"] as? [[String:Any]], let latest=projects.last {
-            activeProjectID=latest["project_id"] as? String
+  func applicationDidFinishLaunching(_ notification: Notification) {
+    if CommandLine.arguments.contains("--ui-probe-dark") {
+      NSApp.appearance = NSAppearance(named: .darkAqua)
+    }
+    guard let resources = Bundle.main.resourceURL else {
+      NSApp.terminate(nil)
+      return
+    }
+    bridge = Bridge(resources: resources)
+    if let recent = try? bridge.json("recent-runs")["result"] as? [[String: Any]],
+      let latest = recent.first, let project = latest["project"] as? [String: Any],
+      let run = latest["run"] as? [String: Any]
+    {
+      projectID = project["project_id"] as? String
+      runID = run["run_id"] as? String
+    }
+    buildWindow()
+    renderNew()
+    window.makeKeyAndOrderFront(nil)
+    if let index = CommandLine.arguments.firstIndex(of: "--ui-probe-source"),
+      CommandLine.arguments.indices.contains(index + 1)
+    {
+      detect([CommandLine.arguments[index + 1]])
+    }
+    if let marker = ProcessInfo.processInfo.environment["INTEGRA_LAUNCH_PROBE"] {
+      try? "LAUNCHED visible=\(window.isVisible) workflow=source-first title=\(window.title)\n"
+        .write(toFile: marker, atomically: true, encoding: .utf8)
+      NSApp.terminate(nil)
+    }
+  }
+
+  private func buildWindow() {
+    window = NSWindow(
+      contentRect: NSRect(x: 0, y: 0, width: 1320, height: 760),
+      styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
+      backing: .buffered, defer: false)
+    window.title = "Integra — Новая обработка"
+    window.minSize = NSSize(width: 1080, height: 620)
+    window.center()
+    window.toolbar = NSToolbar(identifier: "IntegraToolbar")
+    let split = NSSplitView()
+    split.isVertical = true
+    split.dividerStyle = .thin
+    let sideScroll = NSScrollView()
+    sideScroll.hasVerticalScroller = true
+    sideScroll.documentView = sidebar
+    let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("sidebar"))
+    column.width = 360
+    sidebar.addTableColumn(column)
+    sidebar.headerView = nil
+    sidebar.delegate = self
+    sidebar.dataSource = self
+    sidebar.rowHeight = 31
+    sidebar.backgroundColor = .windowBackgroundColor
+    let contentScroll = NSScrollView()
+    contentScroll.hasVerticalScroller = true
+    contentScroll.drawsBackground = true
+    contentScroll.backgroundColor = .windowBackgroundColor
+    content.orientation = .vertical
+    content.alignment = .leading
+    content.spacing = 14
+    content.edgeInsets = NSEdgeInsets(top: 34, left: 38, bottom: 36, right: 38)
+    content.translatesAutoresizingMaskIntoConstraints = false
+    contentScroll.documentView = content
+    NSLayoutConstraint.activate([
+      content.widthAnchor.constraint(equalTo: contentScroll.contentView.widthAnchor),
+      content.leadingAnchor.constraint(equalTo: contentScroll.contentView.leadingAnchor),
+      content.topAnchor.constraint(equalTo: contentScroll.contentView.topAnchor),
+    ])
+    split.addArrangedSubview(sideScroll)
+    split.addArrangedSubview(contentScroll)
+    sideScroll.widthAnchor.constraint(equalToConstant: 370).isActive = true
+    window.contentView = split
+    sidebar.selectRowIndexes(IndexSet(integer: 1), byExtendingSelection: false)
+  }
+
+  func numberOfRows(in tableView: NSTableView) -> Int { items.count }
+  func tableView(_ tableView: NSTableView, shouldSelectRow row: Int) -> Bool { items[row].enabled }
+  func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView?
+  {
+    let item = items[row]
+    let label = NSTextField(labelWithString: item.title)
+    label.font =
+      item.header
+      ? .systemFont(ofSize: 11, weight: .bold) : .systemFont(ofSize: 14, weight: .medium)
+    label.textColor =
+      item.header ? .secondaryLabelColor : (item.enabled ? .labelColor : .tertiaryLabelColor)
+    return label
+  }
+  func tableViewSelectionDidChange(_ notification: Notification) {
+    let row = sidebar.selectedRow
+    if row < 0 { return }
+    switch items[row].id {
+    case "new": renderNew()
+    case "projects", "sources": renderProjects()
+    case "history": renderHistory()
+    case "operations": renderOperations()
+    case "materials", "ready": renderOutputs()
+    case "diagnostics": renderDiagnostics()
+    default: break
+    }
+  }
+
+  private func reset(_ title: String, _ subtitle: String) {
+    timer?.invalidate()
+    timer = nil
+    content.arrangedSubviews.forEach {
+      content.removeArrangedSubview($0)
+      $0.removeFromSuperview()
+    }
+    let heading = NSTextField(labelWithString: title)
+    heading.font = .systemFont(ofSize: 30, weight: .bold)
+    add(heading)
+    let explanation = NSTextField(wrappingLabelWithString: subtitle)
+    explanation.font = .systemFont(ofSize: 14)
+    explanation.textColor = .secondaryLabelColor
+    explanation.maximumNumberOfLines = 0
+    add(explanation)
+    status.stringValue = ""
+    status.textColor = .systemRed
+    status.maximumNumberOfLines = 0
+    add(status)
+  }
+  private func add(_ view: NSView) {
+    view.translatesAutoresizingMaskIntoConstraints = false
+    content.addArrangedSubview(view)
+    view.widthAnchor.constraint(lessThanOrEqualTo: content.widthAnchor, constant: -76).isActive =
+      true
+  }
+  private func button(_ title: String, _ action: Selector, enabled: Bool = true) -> NSButton {
+    let value = NSButton(title: title, target: self, action: action)
+    value.bezelStyle = .rounded
+    value.isEnabled = enabled
+    return value
+  }
+  private func section(_ value: String) -> NSTextField {
+    let label = NSTextField(labelWithString: value)
+    label.font = .systemFont(ofSize: 12, weight: .bold)
+    label.textColor = .secondaryLabelColor
+    return label
+  }
+  private func row(_ title: String, detail: String) -> NSView {
+    let stack = NSStackView()
+    stack.orientation = .vertical
+    stack.alignment = .leading
+    stack.spacing = 2
+    let first = NSTextField(labelWithString: title)
+    first.font = .systemFont(ofSize: 14, weight: .medium)
+    let second = NSTextField(labelWithString: detail)
+    second.font = .systemFont(ofSize: 12)
+    second.textColor = .secondaryLabelColor
+    stack.addArrangedSubview(first)
+    stack.addArrangedSubview(second)
+    return stack
+  }
+
+  private func renderNew() {
+    reset(
+      "Новая обработка",
+      "Сначала добавьте источник. Integra определит тип, покажет только применимые результаты и сам рассчитает технические зависимости."
+    )
+    let actions = NSStackView()
+    actions.orientation = .horizontal
+    actions.spacing = 10
+    actions.addArrangedSubview(button("Видео или аудио с Mac", #selector(chooseMedia)))
+    actions.addArrangedSubview(button("Документ с Mac", #selector(chooseDocument)))
+    actions.addArrangedSubview(button("Несколько файлов", #selector(chooseMultiple)))
+    actions.addArrangedSubview(button("YouTube", #selector(addYouTube)))
+    add(actions)
+    let drop = DropBox(frame: NSRect(x: 0, y: 0, width: 760, height: 92))
+    drop.receive = { [weak self] values in self?.detect(values) }
+    add(drop)
+    drop.heightAnchor.constraint(equalToConstant: 92).isActive = true
+    if sources.isEmpty {
+      let empty = NSTextField(labelWithString: "Источники ещё не добавлены")
+      empty.textColor = .secondaryLabelColor
+      add(empty)
+      return
+    }
+    add(section("ИСТОЧНИКИ"))
+    for source in sources {
+      add(
+        row(
+          "\(source["display_name"] ?? "Источник")", detail: "\(source["source_type"] ?? "UNKNOWN")"
+        ))
+    }
+    add(section("ЧТО НУЖНО ПОЛУЧИТЬ?"))
+    var category = ""
+    for cap in capabilities {
+      let next = cap["category"] as? String ?? ""
+      if next != category {
+        category = next
+        let label = NSTextField(labelWithString: category)
+        label.font = .systemFont(ofSize: 14, weight: .semibold)
+        add(label)
+      }
+      let available =
+        (cap["implementation_state"] as? String == "IMPLEMENTED"
+          && cap["runtime_available"] as? Bool == true)
+      let id = cap["id"] as? String ?? ""
+      let suffix = available ? "" : " — \(cap["ui_state"] ?? "В разработке")"
+      let check = NSButton(
+        checkboxWithTitle: "\(cap["title"] ?? id)\(suffix)", target: self,
+        action: #selector(toggleCapability(_:)))
+      check.identifier = NSUserInterfaceItemIdentifier(id)
+      check.isEnabled = available
+      check.state = selected.contains(id) ? .on : .off
+      add(check)
+    }
+    if let plan = plan {
+      add(section("ПЛАН ВЫПОЛНЕНИЯ"))
+      for (index, stage) in ((plan["stages"] as? [[String: Any]]) ?? []).enumerated() {
+        add(
+          row(
+            "\(index+1). \(stage["title"] ?? "Этап")",
+            detail: stage["technical"] as? Bool == true
+              ? "автоматическая зависимость" : "выбранный результат"))
+      }
+    }
+    let execute = button("Выполнить", #selector(execute), enabled: plan != nil)
+    execute.keyEquivalent = "\r"
+    add(execute)
+    saveSnapshotIfRequested()
+  }
+
+  private func saveSnapshotIfRequested() {
+    guard let path = ProcessInfo.processInfo.environment["INTEGRA_UI_SNAPSHOT"],
+      let view = window.contentView
+    else { return }
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+      guard let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return }
+      view.cacheDisplay(in: view.bounds, to: bitmap)
+      if let data = bitmap.representation(using: .png, properties: [:]) {
+        try? data.write(to: URL(fileURLWithPath: path), options: .atomic)
+      }
+    }
+  }
+
+  @objc private func chooseMedia() { chooseFiles(multiple: false) }
+  @objc private func chooseDocument() { chooseFiles(multiple: false) }
+  @objc private func chooseMultiple() { chooseFiles(multiple: true) }
+  private func chooseFiles(multiple: Bool) {
+    let panel = NSOpenPanel()
+    panel.title = multiple ? "Выберите несколько источников" : "Выберите источник"
+    panel.canChooseFiles = true
+    panel.canChooseDirectories = false
+    panel.allowsMultipleSelection = multiple
+    guard panel.runModal() == .OK else { return }
+    detect(panel.urls.map(\.path))
+  }
+  @objc private func addYouTube() {
+    let alert = NSAlert()
+    alert.messageText = "YouTube"
+    alert.informativeText =
+      "Введите одну или несколько ссылок, каждую с новой строки. Тип ссылки будет определён, но загрузка пока помечена «В разработке»."
+    let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 420, height: 72))
+    field.placeholderString = "https://youtube.com/watch?v=…"
+    alert.accessoryView = field
+    alert.addButton(withTitle: "Добавить")
+    alert.addButton(withTitle: "Отмена")
+    if alert.runModal() == .alertFirstButtonReturn {
+      detect(field.stringValue.split(whereSeparator: \.isNewline).map(String.init))
+    }
+  }
+  private func detect(_ inputs: [String]) {
+    status.textColor = .secondaryLabelColor
+    status.stringValue = "Определяю тип и реальные возможности…"
+    let bridge = self.bridge!
+    DispatchQueue.global(qos: .userInitiated).async {
+      do {
+        let detected =
+          try bridge.json("detect-sources", request: ["inputs": inputs])["result"]
+          as? [[String: Any]] ?? []
+        let caps =
+          try bridge.json("capability-registry", request: ["sources": detected])["result"]
+          as? [[String: Any]] ?? []
+        DispatchQueue.main.async {
+          self.sources = detected
+          self.capabilities = caps
+          if let index = CommandLine.arguments.firstIndex(of: "--ui-probe-output"),
+            CommandLine.arguments.indices.contains(index + 1)
+          {
+            self.selected = Set(
+              CommandLine.arguments[index + 1].split(separator: ",").map(String.init))
+            self.plan =
+              try? self.bridge.json(
+                "build-plan",
+                request: ["sources": detected, "selected_outputs": Array(self.selected).sorted()]
+              )["result"] as? [String: Any]
+          } else {
+            self.selected = []
+            self.plan = nil
+          }
+          self.renderNew()
         }
-        buildWindow()
-        window.makeKeyAndOrderFront(nil)
-        if let marker = ProcessInfo.processInfo.environment["INTEGRA_LAUNCH_PROBE"] {
-            let proof = "LAUNCHED visible=\(window.isVisible) sections=\(workflow.sections.count) title=\(window.title)\n"
-            try? proof.write(toFile: marker, atomically: true, encoding: .utf8)
-            NSApp.terminate(nil)
+      } catch {
+        DispatchQueue.main.async {
+          self.status.textColor = .systemRed
+          self.status.stringValue = error.localizedDescription
         }
+      }
     }
-
-    private func buildWindow() {
-        window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1040, height: 680),
-                          styleMask: [.titled, .closable, .miniaturizable, .resizable],
-                          backing: .buffered, defer: false)
-        window.title = activeProjectID == nil ? "Integra — New local project" : "Integra — Local project"
-        window.center(); window.minSize = NSSize(width: 820, height: 520)
-
-        let split = NSSplitView(); split.isVertical = true; split.dividerStyle = .thin
-        split.translatesAutoresizingMaskIntoConstraints = false
-        let sidebar = NSScrollView(); sidebar.hasVerticalScroller = true; sidebar.documentView = table
-        sidebar.translatesAutoresizingMaskIntoConstraints = false
-        let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("section")); column.width = 270
-        table.addTableColumn(column); table.headerView = nil; table.delegate = self; table.dataSource = self
-        table.rowHeight = 38; table.allowsEmptySelection = false
-
-        let content = NSView(); content.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.font = .systemFont(ofSize: 27, weight: .bold); titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        statusLabel.font = .systemFont(ofSize: 13, weight: .semibold); statusLabel.textColor = .secondaryLabelColor
-        statusLabel.translatesAutoresizingMaskIntoConstraints = false
-        detail.isEditable = false; detail.drawsBackground = false; detail.font = .systemFont(ofSize: 15)
-        detail.textContainerInset = NSSize(width: 2, height: 8)
-        let detailScroll = NSScrollView(); detailScroll.documentView = detail; detailScroll.hasVerticalScroller = true
-        detailScroll.translatesAutoresizingMaskIntoConstraints = false
-        actionButton.target = self; actionButton.action = #selector(runAction); actionButton.bezelStyle = .rounded
-        actionButton.translatesAutoresizingMaskIntoConstraints = false
-        content.addSubview(titleLabel); content.addSubview(statusLabel); content.addSubview(detailScroll); content.addSubview(actionButton)
-        NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: content.topAnchor, constant: 34), titleLabel.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 34), titleLabel.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -34),
-            statusLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8), statusLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
-            actionButton.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 18), actionButton.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
-            detailScroll.topAnchor.constraint(equalTo: actionButton.bottomAnchor, constant: 18), detailScroll.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor), detailScroll.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -34), detailScroll.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -28)
-        ])
-        split.addArrangedSubview(sidebar); split.addArrangedSubview(content)
-        sidebar.widthAnchor.constraint(equalToConstant: 280).isActive = true
-        window.contentView = split
-        table.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false); render(0)
+  }
+  @objc private func toggleCapability(_ sender: NSButton) {
+    guard let id = sender.identifier?.rawValue else { return }
+    if sender.state == .on { selected.insert(id) } else { selected.remove(id) }
+    do {
+      plan =
+        selected.isEmpty
+        ? nil
+        : try bridge.json(
+          "build-plan", request: ["sources": sources, "selected_outputs": Array(selected).sorted()])[
+            "result"] as? [String: Any]
+      renderNew()
+    } catch {
+      plan = nil
+      status.stringValue = error.localizedDescription
     }
-
-    func numberOfRows(in tableView: NSTableView) -> Int { workflow.sections.count }
-    func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
-        let field = NSTextField(labelWithString: workflow.sections[row].title)
-        field.font = .systemFont(ofSize: 14, weight: .medium); field.lineBreakMode = .byTruncatingTail
-        return field
-    }
-    func tableViewSelectionDidChange(_ notification: Notification) { if table.selectedRow >= 0 { render(table.selectedRow) } }
-
-    private func render(_ row: Int) {
-        let section = workflow.sections[row]; titleLabel.stringValue = section.title
-        statusLabel.stringValue = section.status == "AVAILABLE" ? "AVAILABLE — governed local reference" : "LATER / UNAVAILABLE — read-only"
-        var text = section.summary
-        if section.id == "projects" {
-            let projects = (try? bridge.json("projects")["result"] as? [[String:Any]]) ?? []
-            if let latest=projects.last {
-                let name=latest["name"] as? String ?? "Local project"; let count=latest["source_count"] as? Int ?? 0
-                text="Active local project: \(name)\nSources: \(count)\n\nChoose a video or audio file to copy it into Integra and start local transcription."
-                window.title="Integra — \(name)"
-            } else { text="No local project yet. Choose a video or audio file; Integra will create the project automatically." }
+  }
+  @objc private func execute() {
+    guard let plan = plan else { return }
+    status.textColor = .secondaryLabelColor
+    status.stringValue = "Создаю проект и ставлю реальную обработку в очередь…"
+    let bridge = self.bridge!
+    let name = sources.first?["display_name"] as? String ?? "Новая обработка"
+    DispatchQueue.global(qos: .userInitiated).async {
+      do {
+        let result =
+          try bridge.json("execute-plan", request: ["plan": plan, "name": name])["result"]
+          as? [String: Any]
+        let project = result?["project"] as? [String: Any]
+        let run = result?["run"] as? [String: Any]
+        DispatchQueue.main.async {
+          self.projectID = project?["project_id"] as? String
+          self.runID = run?["run_id"] as? String
+          self.renderOperations()
         }
-        if section.id == "navigation" { text += "\n\nEntity: \(workflow.navigation.entity)\nLocator: \(workflow.navigation.source_locator)\nReverse: \(workflow.navigation.reverse_route)" }
-        if section.id == "deferred", let registry = try? bridge.deferred() {
-            text += "\n\n" + registry.features.map { "• \($0) — Later / Unavailable" }.joined(separator: "\n")
+      } catch {
+        DispatchQueue.main.async {
+          self.status.textColor = .systemRed
+          self.status.stringValue = error.localizedDescription
         }
-        detail.string = text
-        if section.id == "projects" { actionButton.title = "Choose video or audio"; actionButton.isHidden = false; actionButton.isEnabled = true }
-        else if section.id == "operations" { actionButton.title = "Run local integrity job"; actionButton.isHidden = false; actionButton.isEnabled = true }
-        else if ["transcript", "knowledge", "media"].contains(section.id) { actionButton.title = "Refresh project result"; actionButton.isHidden = false; actionButton.isEnabled = true }
-        else if section.id == "navigation" { actionButton.title = "Open first exact media interval"; actionButton.isHidden = false; actionButton.isEnabled = true }
-        else if section.id == "obsidian" { actionButton.title = "Choose package and export target"; actionButton.isHidden = false; actionButton.isEnabled = true }
-        else if section.id == "onedrive" { actionButton.title = "Choose package and OneDrive folder"; actionButton.isHidden = false; actionButton.isEnabled = true }
-        else { actionButton.isHidden = true; actionButton.isEnabled = false }
+      }
     }
+  }
 
-    @objc private func runAction() {
-        let id = workflow.sections[table.selectedRow].id
-        do {
-            if id == "projects" { try projectAction(); return }
-            if id == "operations" { try operationAction(); return }
-            if ["transcript", "knowledge", "media", "navigation"].contains(id) { try projectView(section: id); return }
-            try publicationAction(kind: id)
-        } catch { detail.string += "\n\nPreview failed safely: \(error)" }
+  private func renderOperations() {
+    reset(
+      "Выполняется",
+      "Здесь показано только состояние реального backend-задания. Проценты не вычисляются, если backend их не сообщает."
+    )
+    guard let projectID = projectID, let runID = runID else {
+      add(NSTextField(labelWithString: "Активной обработки нет"))
+      return
     }
-
-    private func projectAction() throws {
-        let list = try bridge.json("projects")["result"] as? [[String: Any]] ?? []
-        if let latest = list.last, let projectID = latest["project_id"] as? String { activeProjectID = projectID }
-        else { let created = try bridge.json("create-project", request: ["name": "Integra Local Project"]); activeProjectID = (created["result"] as? [String:Any])?["project_id"] as? String }
-        guard let projectID=activeProjectID else { throw BridgeError.invalidResponse }
-        _ = try bridge.json("media-preflight")
-        let panel=NSOpenPanel(); panel.title="Choose video or audio for local transcription"; panel.canChooseFiles=true; panel.canChooseDirectories=false
-        guard panel.runModal() == .OK, let url=panel.url else { return }
-        let job=try bridge.json("import-media",request:["project_id":projectID,"source_path":url.path])
-        detail.string += "\n\nSource copied into Integra storage. Local transcription started:\n\(job["result"] ?? [:])\n\nOpen Transcript & Topics and press Refresh."
+    do {
+      let run =
+        try bridge.json("run-status", request: ["project_id": projectID, "run_id": runID])["result"]
+        as? [String: Any] ?? [:]
+      let state = run["state"] as? String ?? "UNKNOWN"
+      let done = run["completed_sources"] as? Int ?? 0
+      let total = run["total_sources"] as? Int ?? 0
+      add(row("Состояние: \(state)", detail: "Готово источников: \(done) из \(total)"))
+      if let stage = run["current_stage"] as? String { add(row("Текущий этап", detail: stage)) }
+      if state == "RUNNING" || state == "QUEUED" { add(button("Отменить", #selector(cancelRun))) }
+      if state == "FAILED" || state == "CANCELLED" { add(button("Повторить", #selector(retryRun))) }
+      if state == "COMPLETED" { renderResultRows(run) }
+      if let error = run["error"] as? String { status.stringValue = error }
+      if ["RUNNING", "QUEUED"].contains(state) { startPolling() }
+    } catch { status.stringValue = error.localizedDescription }
+  }
+  private func startPolling() {
+    timer?.invalidate()
+    timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+      Task { @MainActor in self?.renderOperations() }
     }
-
-    private func operationAction() throws {
-        var list = try bridge.json("projects")["result"] as? [[String: Any]] ?? []
-        if list.isEmpty { _ = try bridge.json("create-project", request: ["name": "Integra Local Project"]); list = try bridge.json("projects")["result"] as? [[String: Any]] ?? [] }
-        guard let projectID = list.last?["project_id"] as? String else { throw BridgeError.invalidResponse }
-        activeProjectID=projectID
-        let jobs=try bridge.json("jobs",request:["project_id":projectID])["result"] as? [[String:Any]] ?? []
-        if let current=jobs.last, current["kind"] as? String == "LOCAL_MEDIA_TRANSCRIPTION", let state=current["state"] as? String, let jobID=current["job_id"] as? String {
-            if ["RUNNING","QUEUED"].contains(state) { let result=try bridge.json("cancel-job",request:["project_id":projectID,"job_id":jobID]); detail.string += "\n\nTranscription cancelled safely:\n\(result["result"] ?? [:])"; return }
-            if ["CANCELLED","FAILED"].contains(state) { let result=try bridge.json("resume-job",request:["project_id":projectID,"job_id":jobID]); detail.string += "\n\nTranscription resumed from owned source:\n\(result["result"] ?? [:])"; return }
+  }
+  private func renderResultRows(_ run: [String: Any]) {
+    add(section("ГОТОВЫЕ РЕЗУЛЬТАТЫ"))
+    for result in (run["source_results"] as? [[String: Any]]) ?? [] {
+      add(
+        row(
+          result["display_name"] as? String ?? "Источник",
+          detail: result["state"] as? String ?? "UNKNOWN"))
+      let outputs = result["outputs"] as? [String: Any] ?? [:]
+      for (kind, path) in outputs.sorted(by: { $0.key < $1.key }) {
+        let control = button("Открыть: \(kind)", #selector(openOutput(_:)))
+        control.toolTip = path as? String
+        add(control)
+      }
+    }
+    add(section("СЛЕДУЮЩИЕ ДЕЙСТВИЯ"))
+    for title in [
+      "Темы и таймкоды", "База знаний", "Создать клипы", "Учебные материалы",
+      "Маркетинговые материалы", "Подготовить публикацию",
+    ] {
+      add(button("\(title) — В разработке", #selector(unavailableAction), enabled: false))
+    }
+  }
+  @objc private func unavailableAction() {}
+  @objc private func openOutput(_ sender: NSButton) {
+    if let path = sender.toolTip { NSWorkspace.shared.open(URL(fileURLWithPath: path)) }
+  }
+  @objc private func cancelRun() {
+    guard let p = projectID, let r = runID else { return }
+    do {
+      _ = try bridge.json("cancel-run", request: ["project_id": p, "run_id": r])
+      renderOperations()
+    } catch { status.stringValue = error.localizedDescription }
+  }
+  @objc private func retryRun() {
+    guard let p = projectID, let r = runID else { return }
+    do {
+      let value =
+        try bridge.json("retry-run", request: ["project_id": p, "run_id": r])["result"]
+        as? [String: Any]
+      runID = value?["run_id"] as? String
+      renderOperations()
+    } catch { status.stringValue = error.localizedDescription }
+  }
+  private func renderProjects() {
+    reset("Проекты", "Реальные локальные проекты Integra.")
+    do {
+      let projects = try bridge.json("projects")["result"] as? [[String: Any]] ?? []
+      if projects.isEmpty { add(NSTextField(labelWithString: "Проектов пока нет")) }
+      for project in projects {
+        add(
+          row(
+            project["name"] as? String ?? "Проект",
+            detail: "Источников: \(project["source_count"] ?? 0) · \(project["status"] ?? "")"))
+      }
+    } catch { status.stringValue = error.localizedDescription }
+  }
+  private func renderHistory() {
+    reset("История", "Сохранённые реальные обработки. Выберите запись, чтобы открыть её состояние и результаты.")
+    do {
+      let items = try bridge.json("recent-runs")["result"] as? [[String: Any]] ?? []
+      if items.isEmpty { add(NSTextField(labelWithString: "Обработок пока нет")) }
+      for item in items {
+        let project = item["project"] as? [String: Any] ?? [:]
+        let run = item["run"] as? [String: Any] ?? [:]
+        guard let projectID = project["project_id"] as? String,
+          let runID = run["run_id"] as? String
+        else { continue }
+        let control = button(
+          "\(project["name"] ?? "Проект") — \(run["state"] ?? "UNKNOWN")",
+          #selector(openRecentRun(_:)))
+        control.toolTip = "\(projectID)\n\(runID)"
+        add(control)
+      }
+    } catch { status.stringValue = error.localizedDescription }
+  }
+  @objc private func openRecentRun(_ sender: NSButton) {
+    let identifiers = sender.toolTip?.split(separator: "\n", maxSplits: 1).map(String.init) ?? []
+    guard identifiers.count == 2 else { return }
+    projectID = identifiers[0]
+    runID = identifiers[1]
+    do {
+      let run = try bridge.json(
+        "run-status", request: ["project_id": identifiers[0], "run_id": identifiers[1]])["result"]
+        as? [String: Any] ?? [:]
+      if run["state"] as? String == "COMPLETED" { renderOutputs() } else { renderOperations() }
+    } catch { status.stringValue = error.localizedDescription }
+  }
+  private func renderOutputs() {
+    reset("Обработанные материалы", "Конкретные артефакты текущей обработки.")
+    if let p = projectID, let r = runID {
+      do {
+        let run =
+          try bridge.json("run-status", request: ["project_id": p, "run_id": r])["result"]
+          as? [String: Any] ?? [:]
+        if run["state"] as? String == "COMPLETED" {
+          renderResultRows(run)
+        } else {
+          add(NSTextField(labelWithString: "Текущая обработка ещё не завершена"))
         }
-        let job = try bridge.json("start-job", request: ["project_id": projectID])
-        detail.string += "\n\nLocal integrity job completed with persisted result:\n\(job["result"] ?? [:])"
+      } catch { status.stringValue = error.localizedDescription }
+    } else {
+      add(NSTextField(labelWithString: "Готовых материалов в текущей сессии нет"))
     }
-
-    private func projectView(section: String) throws {
-        if activeProjectID == nil { activeProjectID = ((try bridge.json("projects")["result"] as? [[String:Any]])?.last)?["project_id"] as? String }
-        guard let projectID=activeProjectID else { throw BridgeError.failed("Create a project and choose media first") }
-        let envelope=try bridge.json("project-view",request:["project_id":projectID]); guard let view=envelope["result"] as? [String:Any] else { throw BridgeError.invalidResponse }
-        if let job=view["job"] as? [String:Any], job["state"] as? String != "COMPLETED" { detail.string="Job: \(job["state"] ?? "UNKNOWN") — \(job["progress"] ?? 0)%\n\(job["message"] ?? "")"; return }
-        let key = section == "media" ? "transcript" : section
-        let value = view[key] ?? view["job"] ?? [:]
-        let data=try JSONSerialization.data(withJSONObject:value,options:[.prettyPrinted,.sortedKeys]); detail.string=String(data:data,encoding:.utf8) ?? ""
-        if section == "navigation", let job=view["job"] as? [String:Any], let source=job["owned_path"] as? String,
-           let navigation=view["navigation"] as? [String:Any], let route=(navigation["routes"] as? [[String:Any]])?.first,
-           let locator=route["locator"] as? String { openMedia(path:source,locator:locator) }
+    add(section("ПУБЛИКАЦИЯ ПРОВЕРЕННОГО PACKAGE"))
+    add(button("Экспортировать в Obsidian", #selector(publishObsidian)))
+    add(button("Опубликовать в папку OneDrive", #selector(publishOneDrive)))
+  }
+  @objc private func publishObsidian() { publication(kind: "obsidian") }
+  @objc private func publishOneDrive() { publication(kind: "onedrive") }
+  private func publication(kind: String) {
+    do {
+      let packagePanel = NSOpenPanel()
+      packagePanel.title = "Выберите проверенный Integra package"
+      packagePanel.canChooseDirectories = true
+      packagePanel.canChooseFiles = false
+      guard packagePanel.runModal() == .OK, let packageURL = packagePanel.url else { return }
+      let targetPanel = NSOpenPanel()
+      targetPanel.title =
+        kind == "obsidian" ? "Выберите Obsidian Vault" : "Выберите локальную папку OneDrive"
+      targetPanel.canChooseDirectories = true
+      targetPanel.canChooseFiles = false
+      guard targetPanel.runModal() == .OK, let targetURL = targetPanel.url else { return }
+      let request = ["package_dir": packageURL.path, "target_dir": targetURL.path]
+      let preview = try bridge.json("package-preview", request: request)
+      let alert = NSAlert()
+      alert.messageText = "Подтвердить публикацию?"
+      alert.informativeText =
+        "Preview проверен: \(preview["result"] ?? [:]). OneDrive publication is local and never claims cloud verification."
+      alert.addButton(withTitle: "Опубликовать")
+      alert.addButton(withTitle: "Отмена")
+      if alert.runModal() == .alertFirstButtonReturn {
+        let result = try bridge.json("package-publish", request: request)
+        status.textColor = .labelColor
+        status.stringValue = "Результат: \(result["result"] ?? [:])"
+      }
+    } catch {
+      status.textColor = .systemRed
+      status.stringValue = error.localizedDescription
     }
-
-    private func openMedia(path: String, locator: String) {
-        let pattern="#t=([0-9.]+),([0-9.]+)"; guard let regex=try? NSRegularExpression(pattern:pattern), let match=regex.firstMatch(in:locator,range:NSRange(locator.startIndex...,in:locator)),
-              let startRange=Range(match.range(at:1),in:locator), let seconds=Double(locator[startRange]) else { return }
-        let player=AVPlayer(url:URL(fileURLWithPath:path)); let view=AVPlayerView(frame:NSRect(x:0,y:0,width:760,height:460)); view.player=player; view.controlsStyle = .floating
-        let window=NSWindow(contentRect:view.frame,styleMask:[.titled,.closable,.resizable],backing:.buffered,defer:false); window.title="Integra — exact source interval"; window.contentView=view; window.center(); window.makeKeyAndOrderFront(nil)
-        player.seek(to:CMTime(seconds:seconds,preferredTimescale:1000),toleranceBefore:.zero,toleranceAfter:.zero); player.play(); playerWindow=window
-    }
-
-    private func publicationAction(kind: String) throws {
-        if activeProjectID == nil { activeProjectID = ((try bridge.json("projects")["result"] as? [[String:Any]])?.last)?["project_id"] as? String }
-        guard let projectID=activeProjectID, let view=(try bridge.json("project-view",request:["project_id":projectID])["result"] as? [String:Any]), let job=view["job"] as? [String:Any], var packagePath=job["package_dir"] as? String else { throw BridgeError.failed("Complete media transcription first") }
-        if kind == "onedrive" { let pointer=URL(fileURLWithPath:packagePath).appendingPathComponent("onedrive_package.json"); let data=try Data(contentsOf:pointer); packagePath=(try JSONSerialization.jsonObject(with:data) as? [String:Any])?["package_dir"] as? String ?? packagePath }
-        let packageURL=URL(fileURLWithPath:packagePath)
-        let targetPanel = NSOpenPanel(); targetPanel.title = kind == "obsidian" ? "Choose Obsidian Vault" : "Choose filesystem-backed OneDrive folder"; targetPanel.canChooseDirectories = true; targetPanel.canChooseFiles = false
-        guard targetPanel.runModal() == .OK, let targetURL = targetPanel.url else { return }
-        let request = ["package_dir": packageURL.path, "target_dir": targetURL.path]
-        let preview = try bridge.json("package-preview", request: request)
-        detail.string += "\n\nVerified preview:\n\(preview["result"] ?? [:])"
-        let alert = NSAlert(); alert.messageText = "Publish this verified package?"; alert.informativeText = "Integra writes only to its managed subtree. OneDrive local publication never means cloud verification."; alert.addButton(withTitle: "Publish"); alert.addButton(withTitle: "Cancel")
-        if alert.runModal() == .alertFirstButtonReturn {
-            let result = try bridge.json("package-publish", request: request)
-            detail.string += "\n\nPublication result:\n\(result["result"] ?? [:])"
-        }
-    }
+  }
+  private func renderDiagnostics() {
+    reset("Диагностика", "Проверка реального локального runtime.")
+    do {
+      let value = try bridge.json("media-preflight")["result"] as? [String: Any] ?? [:]
+      add(
+        row(
+          "Локальная расшифровка доступна",
+          detail: "Whisper model SHA-256: \(value["model_sha256"] ?? "")"))
+    } catch { status.stringValue = error.localizedDescription }
+  }
 }
 
 @main
 struct IntegraApplication {
-    @MainActor static func main() {
-        if CommandLine.arguments.contains("--self-test") {
-            guard let resources = Bundle.main.resourceURL else { exit(2) }
-            do {
-                let bridge = Bridge(resources: resources); let workflow = try bridge.workflow(); let deferred = try bridge.deferred()
-                guard workflow.sections.count == 9, deferred.actions_available == false,
-                      workflow.sections.last?.status == "LATER_UNAVAILABLE" else { exit(3) }
-                print("INTEGRA_MACOS_SELF_TEST: PASS"); exit(0)
-            } catch { print("INTEGRA_MACOS_SELF_TEST: FAIL \(error)"); exit(4) }
-        }
-        let app = NSApplication.shared
-        let delegate = AppDelegate(); app.delegate = delegate
-        app.setActivationPolicy(.regular); app.activate(ignoringOtherApps: true); app.run()
+  @MainActor static func main() {
+    if CommandLine.arguments.contains("--self-test") {
+      guard let resources = Bundle.main.resourceURL else { exit(2) }
+      do {
+        let bridge = Bridge(resources: resources)
+        let registry = try bridge.json("capability-registry", request: ["sources": []])
+        guard registry["ok"] as? Bool == true else { exit(3) }
+        print("INTEGRA_MACOS_SELF_TEST: PASS")
+        exit(0)
+      } catch {
+        print("INTEGRA_MACOS_SELF_TEST: FAIL \(error)")
+        exit(4)
+      }
     }
+    let app = NSApplication.shared
+    let delegate = AppDelegate()
+    app.delegate = delegate
+    app.setActivationPolicy(.regular)
+    app.activate(ignoringOtherApps: true)
+    app.run()
+  }
 }

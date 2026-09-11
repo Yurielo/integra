@@ -79,11 +79,12 @@ def _tools() -> tuple[str, str, str]:
     return ffmpeg, whisper, str(model_path.resolve(strict=True))
 
 
-def preflight() -> dict[str, Any]:
+def preflight(*, hash_model: bool = True) -> dict[str, Any]:
     ffmpeg, whisper, model = _tools()
-    return {"state":"READY", "ffmpeg":ffmpeg, "whisper_cli":whisper,
-            "model":model, "model_sha256":hashlib.sha256(Path(model).read_bytes()).hexdigest(),
-            "supported_extensions":sorted(SUPPORTED)}
+    result={"state":"READY", "ffmpeg":ffmpeg, "whisper_cli":whisper,
+            "model":model, "supported_extensions":sorted(SUPPORTED)}
+    if hash_model: result["model_sha256"]=hashlib.sha256(Path(model).read_bytes()).hexdigest()
+    return result
 
 
 def _parse_srt(value: str, source_id: str) -> list[dict[str, Any]]:
@@ -139,16 +140,25 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
         subprocess.run([whisper, "-m", model, "-f", str(wav), "-l", "auto", "-osrt", "-of", str(output), "-np"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
         segments = _parse_srt((output.with_suffix(".srt")).read_text(errors="replace"), job["source_id"])
         if not segments: raise ValueError("transcription produced no timed speech segments")
-        checkpoint("RUNNING", 80, "Building provisional Topics and Knowledge")
-        topics = _provisional_topics(segments, job["source_id"])
+        requested=job.get("requested_outputs")
+        legacy_semantics=requested is None
+        checkpoint("RUNNING", 80, "Saving timed transcript and subtitles" if not legacy_semantics else "Building provisional Topics and Knowledge")
         transcript = {"schema_version":"1.0", "source_id":job["source_id"], "assurance":"MACHINE_TRANSCRIPT_UNREVIEWED",
                       "model_sha256":hashlib.sha256(Path(model).read_bytes()).hexdigest(), "segments":segments}
+        atomic_json(work / "transcript.json", transcript)
+        subtitles=output.with_suffix(".srt")
+        job["outputs"]={"transcript":str(work/"transcript.json"),"subtitles":str(subtitles)}
+        if not legacy_semantics:
+            job.update(state="COMPLETED",progress=100,message="Requested real outputs are ready",completed_at=now(),
+                       artifact_dir=str(work),transcript_segments=len(segments))
+            atomic_json(jobs_path,jobs); return job
+        topics = _provisional_topics(segments, job["source_id"])
         knowledge = {"schema_version":"1.0", "source_id":job["source_id"], "semantic_authority":"PROVISIONAL",
                      "review_state":"REVIEW_REQUIRED", "concepts":[{"knowledge_id":topic["topic_id"].replace(":topic:",":knowledge:"),
                      "label":topic["label"], "status":"REVIEW_REQUIRED", "topic_id":topic["topic_id"], "locator":topic["locator"]} for topic in topics]}
         navigation = {"schema_version":"1.0", "source_id":job["source_id"], "routes":[{"topic_id":topic["topic_id"],
                       "knowledge_id":knowledge["concepts"][i]["knowledge_id"], "segment_ids":topic["evidence_segment_ids"], "locator":topic["locator"]} for i,topic in enumerate(topics)]}
-        for name, value in (("transcript.json",transcript),("topics.json",topics),("knowledge.json",knowledge),("navigation.json",navigation)):
+        for name, value in (("topics.json",topics),("knowledge.json",knowledge),("navigation.json",navigation)):
             atomic_json(work / name, value)
         package = build_project_package(project_dir, job, transcript, topics, knowledge, navigation)
         job.update(state="COMPLETED", progress=100, message="Ready for review and publication preview", completed_at=now(),

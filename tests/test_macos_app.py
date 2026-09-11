@@ -13,22 +13,21 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class MacOSApplicationTests(unittest.TestCase):
-    def test_reference_workflow_exposes_required_surfaces(self):
-        workflow = json.loads((ROOT / "macos/Resources/reference_workflow.json").read_text())
-        self.assertEqual([item["id"] for item in workflow["sections"]], [
-            "projects", "transcript", "knowledge", "media", "navigation",
-            "operations", "obsidian", "onedrive", "deferred",
-        ])
-        self.assertEqual(workflow["sections"][-1]["status"], "LATER_UNAVAILABLE")
-        self.assertIn("#t=", workflow["navigation"]["source_locator"])
+    def test_source_first_workflow_contains_no_production_fixture_data(self):
+        workflow = json.loads((ROOT / "macos/Resources/source_first_workflow.json").read_text())
+        self.assertEqual(workflow["workflow"], "SOURCE_FIRST")
+        self.assertEqual(workflow["default_screen"], "Новая обработка")
+        self.assertEqual(workflow["unimplemented_label"], "В разработке")
+        self.assertFalse(workflow["component_selection_visible_to_user"])
+        self.assertFalse(workflow["production_fixture_data"])
 
     def test_deferred_registry_has_no_actions(self):
         registry = json.loads((ROOT / "macos/Resources/deferred_features.json").read_text())
         self.assertFalse(registry["actions_available"])
         self.assertEqual(registry["status"], "DEFERRED_TO_LATER_WORK")
         source = (ROOT / "macos/IntegraApp.swift").read_text()
-        self.assertIn('section.id == "deferred"', source)
-        self.assertIn("actionButton.isEnabled = false", source)
+        self.assertIn("— В разработке", source)
+        self.assertIn("enabled:false", source.replace(" ", ""))
 
     def test_closed_bridge_rejects_unknown_and_previews_without_writes(self):
         bridge = ROOT / "macos/Resources/bridge.py"
@@ -80,14 +79,18 @@ class MacOSApplicationTests(unittest.TestCase):
             )
             self.assertEqual(len(json.loads(jobs.stdout)["result"]), 1)
 
-    def test_native_source_exposes_real_project_job_and_package_actions(self):
+    def test_native_source_exposes_source_first_real_actions(self):
         source = (ROOT / "macos/IntegraApp.swift").read_text()
-        for operation in ("create-project", "open-project", "start-job", "package-preview", "package-publish"):
+        for operation in ("detect-sources", "capability-registry", "build-plan", "execute-plan", "run-status", "package-preview", "package-publish"):
             self.assertIn(operation, source)
         self.assertIn("NSOpenPanel", source)
-        self.assertIn("Publish this verified package?", source)
+        self.assertIn("ЧТО НУЖНО ПОЛУЧИТЬ?", source)
+        self.assertIn("Выполнить", source)
+        self.assertIn("Перетащите файлы сюда", source)
+        self.assertIn('bridge.json("recent-runs")', source)
+        self.assertIn("СЛЕДУЮЩИЕ ДЕЙСТВИЯ", source)
         self.assertIn('object["error"] as? String', source)
-        self.assertIn('Integra — New local project', source)
+        self.assertNotIn("Integra Reference Project", source)
 
     def test_bridge_previews_and_publishes_validated_obsidian_package(self):
         *_, manifest, files = fixtures()

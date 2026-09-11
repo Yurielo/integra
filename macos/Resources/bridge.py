@@ -13,8 +13,10 @@ from integra_core.project_lease import LeaseStore
 from integra_core.protocol import canonical_json, content_sha256
 from integra_core.publishing import preview_obsidian_export, publish_obsidian_export, validate_package
 from integra_core.user_media import import_source, preflight, run_job
+from integra_core.capabilities import build_plan, capability_registry, detect_source
+from integra_core.application_runtime import execute_run, prepare_run, read_run, run_path
 
-OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "import-media", "media-preflight", "process-media-job", "project-view", "package-preview", "package-publish", "obsidian-preview", "onedrive-preview"}
+OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "import-media", "media-preflight", "process-media-job", "project-view", "detect-sources", "capability-registry", "build-plan", "execute-plan", "process-plan", "run-status", "recent-runs", "cancel-run", "retry-run", "package-preview", "package-publish", "obsidian-preview", "onedrive-preview"}
 
 def _safe_error(error):
     message = str(error).replace(str(Path.home()), "<HOME>")
@@ -84,6 +86,48 @@ def _spawn_media(root, project_id, job_id):
                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=environment, start_new_session=True)
     process.stdin.write(request); process.stdin.close()
     return process.pid
+
+def _spawn_plan(root, project_id, run_id):
+    environment=dict(os.environ); environment["INTEGRA_APP_DATA_ROOT"]=str(root); environment["PYTHONDONTWRITEBYTECODE"]="1"
+    request=json.dumps({"project_id":project_id,"run_id":run_id}).encode()
+    process=subprocess.Popen([sys.executable,str(Path(__file__).resolve()),"process-plan"],stdin=subprocess.PIPE,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,env=environment,start_new_session=True)
+    process.stdin.write(request); process.stdin.close()
+    path=run_path(_project_dir(root,project_id),run_id); record=json.loads(path.read_bytes()); record["worker_pid"]=process.pid; _atomic_json(path,record)
+    return record
+
+def _execute_plan(root,request):
+    plan=request.get("plan"); name=request.get("name") or "Новая обработка"
+    project=_create(root,{"name":name}); project_dir=_project_dir(root,project["project_id"])
+    run=prepare_run(project_dir,plan); return {"project":project,"run":_spawn_plan(root,project["project_id"],run["run_id"])}
+
+def _run_action(root,request,action):
+    project_id=request.get("project_id"); project_dir=_project_dir(root,_project(root,project_id)["project_id"]); record=read_run(project_dir,request.get("run_id"))
+    if action=="status": return record
+    if action=="cancel":
+        if record["state"] not in {"QUEUED","RUNNING"}: raise ValueError("run cannot be cancelled from current state")
+        pid=record.get("worker_pid")
+        if isinstance(pid,int):
+            try: os.killpg(pid,signal.SIGTERM)
+            except ProcessLookupError: pass
+        jobs_path=project_dir/"jobs.json"
+        if jobs_path.is_file() and not jobs_path.is_symlink():
+            jobs_record=json.loads(jobs_path.read_bytes()); changed=False
+            for job in jobs_record.get("jobs",[]):
+                if job.get("run_id")==record["run_id"] and job.get("state") in {"QUEUED","RUNNING"}:
+                    job.update(state="CANCELLED",message="Cancelled with source-first run",updated_at=_instant(_now())); changed=True
+            if changed: _atomic_json(jobs_path,jobs_record)
+        record.update(state="CANCELLED",cancelled_at=_instant(_now()),current_stage=None); _atomic_json(run_path(project_dir,record["run_id"]),record); return record
+    if record["state"] not in {"FAILED","CANCELLED"}: raise ValueError("run cannot be retried from current state")
+    new=prepare_run(project_dir,record["plan"]); return _spawn_plan(root,project_id,new["run_id"])
+
+def _recent_runs(root):
+    result=[]
+    for project in _projects(root):
+        directory=_project_dir(root,project["project_id"])/"runs"
+        if not directory.is_dir() or directory.is_symlink(): continue
+        for path in directory.glob("*.json"):
+            if path.is_file() and not path.is_symlink(): result.append({"project":project,"run":json.loads(path.read_bytes())})
+    return sorted(result,key=lambda item:item["run"].get("created_at",""),reverse=True)
 
 def _import_media(root, request):
     project = _project(root, request.get("project_id")); project_dir = _project_dir(root, project["project_id"])
@@ -171,8 +215,8 @@ def _publication(root, request, publish):
 def main():
     try:
         if len(sys.argv) != 2 or sys.argv[1] not in OPERATIONS: raise ValueError("unsupported bridge operation")
-        operation = sys.argv[1]; request = _request(); root = _root(); workflow = json.loads((RESOURCES/"reference_workflow.json").read_text())
-        if operation == "workflow": result = workflow
+        operation = sys.argv[1]; request = _request(); root = _root()
+        if operation == "workflow": result = json.loads((RESOURCES/"source_first_workflow.json").read_text())
         elif operation == "deferred": result = json.loads((RESOURCES/"deferred_features.json").read_text())
         elif operation in {"obsidian-preview", "onedrive-preview"}:
             result = {"state":"DRY_RUN_REQUIRES_PACKAGE", "target":"Obsidian managed Vault subtree" if operation == "obsidian-preview" else "filesystem-backed OneDrive target", "writes_performed":False, "external_actions_performed":False, "cloud_verified":False}
@@ -187,6 +231,15 @@ def main():
         elif operation == "import-media": result = _import_media(root, request)
         elif operation == "process-media-job": result = run_job(_project_dir(root, request.get("project_id")), request.get("job_id"))
         elif operation == "project-view": result = _project_view(root, request.get("project_id"))
+        elif operation == "detect-sources": result = [detect_source(value) for value in request.get("inputs", [])]
+        elif operation == "capability-registry": result = capability_registry(request.get("sources", []))
+        elif operation == "build-plan": result = build_plan(request.get("sources", []), request.get("selected_outputs", []))
+        elif operation == "execute-plan": result = _execute_plan(root, request)
+        elif operation == "process-plan": result = execute_run(_project_dir(root, request.get("project_id")), request.get("run_id"))
+        elif operation == "run-status": result = _run_action(root, request, "status")
+        elif operation == "recent-runs": result = _recent_runs(root)
+        elif operation == "cancel-run": result = _run_action(root, request, "cancel")
+        elif operation == "retry-run": result = _run_action(root, request, "retry")
         elif operation == "package-preview": result = _publication(root, request, False)
         else: result = _publication(root, request, True)
         result_hash = content_sha256(result)
