@@ -35,7 +35,8 @@ not add routine human gates or change stage dependencies.
 | ONEDRIVE_PUBLICATION_V1 | #63 | M4 | R10 | ACCEPTED |
 | R12 usable native macOS application | #28 | M6 | ONEDRIVE_PUBLICATION_V1 | ACCEPTED |
 | R13 hardening and reproducible local `.app` package | #29 | M7 | R12 | ACCEPTED |
-| R14 Product Owner READY_APP_V1 acceptance | #30 | M7 | R13 | HUMAN_GATE |
+| USER_MEDIA_WORKFLOW_V1 | #72 | M7 | R13 | ACCEPTED |
+| R14 Product Owner READY_APP_V1 acceptance | #30 | M7 | USER_MEDIA_WORKFLOW_V1 | HUMAN_GATE |
 | DEFERRED_CAPABILITIES_V1 registry | #64 | Later | R14 | DEFERRED_TO_LATER_WORK |
 | R11 Marketing Studio v1 | #17 | Later | R9A, R10, R14 | DEFERRED_TO_LATER_WORK |
 | LEARNING_V1 | #18 | Later | R9A, R14 | DEFERRED_TO_LATER_WORK |
@@ -56,7 +57,8 @@ R10 owns only deterministic one-way Obsidian export. Issue #63 then owns the
 filesystem-backed OneDrive publication contract. R12 must build and test a
 usable native macOS application over the accepted core plus both publication
 paths. R13 hardens that application and produces a reproducible local `.app`
-package. R14 is the explicit Product Owner acceptance gate.
+package. Corrective Issue #72 adds the missing raw audio/video-to-publication
+journey. R14 is the explicit Product Owner acceptance gate.
 
 Signing identity, notarization, public distribution, live external writes,
 credentials, protected data, authoritative semantics, destructive migration,

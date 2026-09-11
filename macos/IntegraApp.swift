@@ -1,4 +1,5 @@
 import AppKit
+import AVKit
 import Foundation
 
 struct Section: Codable { let id: String; let title: String; let status: String; let summary: String }
@@ -20,7 +21,7 @@ final class Bridge {
     init(resources: URL) { self.resources = resources }
 
     func call(_ operation: String, request: [String: Any] = [:]) throws -> Data {
-        let allowed = ["workflow", "obsidian-preview", "onedrive-preview", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "package-preview", "package-publish"]
+        let allowed = ["workflow", "obsidian-preview", "onedrive-preview", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "import-media", "media-preflight", "project-view", "package-preview", "package-publish"]
         guard allowed.contains(operation) else {
             throw BridgeError.failed("Unsupported operation")
         }
@@ -71,6 +72,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource,
     private let actionButton = NSButton(title: "", target: nil, action: nil)
     private var workflow: Workflow!
     private var bridge: Bridge!
+    private var activeProjectID: String?
+    private var playerWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard let resources = Bundle.main.resourceURL else { NSApp.terminate(nil); return }
@@ -140,9 +143,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource,
             text += "\n\n" + registry.features.map { "• \($0) — Later / Unavailable" }.joined(separator: "\n")
         }
         detail.string = text
-        if section.id == "projects" { actionButton.title = "Create or open local project"; actionButton.isHidden = false; actionButton.isEnabled = true }
+        if section.id == "projects" { actionButton.title = "Choose video or audio"; actionButton.isHidden = false; actionButton.isEnabled = true }
         else if section.id == "operations" { actionButton.title = "Run local integrity job"; actionButton.isHidden = false; actionButton.isEnabled = true }
-        else if section.id == "navigation" { actionButton.title = "Follow exact source route"; actionButton.isHidden = false; actionButton.isEnabled = true }
+        else if ["transcript", "knowledge", "media"].contains(section.id) { actionButton.title = "Refresh project result"; actionButton.isHidden = false; actionButton.isEnabled = true }
+        else if section.id == "navigation" { actionButton.title = "Open first exact media interval"; actionButton.isHidden = false; actionButton.isEnabled = true }
         else if section.id == "obsidian" { actionButton.title = "Choose package and export target"; actionButton.isHidden = false; actionButton.isEnabled = true }
         else if section.id == "onedrive" { actionButton.title = "Choose package and OneDrive folder"; actionButton.isHidden = false; actionButton.isEnabled = true }
         else { actionButton.isHidden = true; actionButton.isEnabled = false }
@@ -153,33 +157,63 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource,
         do {
             if id == "projects" { try projectAction(); return }
             if id == "operations" { try operationAction(); return }
-            if id == "navigation" { detail.string += "\n\nExact route opened:\n\(workflow.navigation.entity)\n→ \(workflow.navigation.source_locator)\n↔ \(workflow.navigation.reverse_route)"; return }
+            if ["transcript", "knowledge", "media", "navigation"].contains(id) { try projectView(section: id); return }
             try publicationAction(kind: id)
         } catch { detail.string += "\n\nPreview failed safely: \(error)" }
     }
 
     private func projectAction() throws {
         let list = try bridge.json("projects")["result"] as? [[String: Any]] ?? []
-        if let latest = list.last, let projectID = latest["project_id"] as? String {
-            let opened = try bridge.json("open-project", request: ["project_id": projectID])
-            detail.string += "\n\nOpened governed local project:\n\(opened["result"] ?? [:])"
-        } else {
-            let created = try bridge.json("create-project", request: ["name": "Integra Local Project"])
-            detail.string += "\n\nCreated governed local project:\n\(created["result"] ?? [:])"
-        }
+        if let latest = list.last, let projectID = latest["project_id"] as? String { activeProjectID = projectID }
+        else { let created = try bridge.json("create-project", request: ["name": "Integra Local Project"]); activeProjectID = (created["result"] as? [String:Any])?["project_id"] as? String }
+        guard let projectID=activeProjectID else { throw BridgeError.invalidResponse }
+        _ = try bridge.json("media-preflight")
+        let panel=NSOpenPanel(); panel.title="Choose video or audio for local transcription"; panel.canChooseFiles=true; panel.canChooseDirectories=false
+        guard panel.runModal() == .OK, let url=panel.url else { return }
+        let job=try bridge.json("import-media",request:["project_id":projectID,"source_path":url.path])
+        detail.string += "\n\nSource copied into Integra storage. Local transcription started:\n\(job["result"] ?? [:])\n\nOpen Transcript & Topics and press Refresh."
     }
 
     private func operationAction() throws {
         var list = try bridge.json("projects")["result"] as? [[String: Any]] ?? []
         if list.isEmpty { _ = try bridge.json("create-project", request: ["name": "Integra Local Project"]); list = try bridge.json("projects")["result"] as? [[String: Any]] ?? [] }
         guard let projectID = list.last?["project_id"] as? String else { throw BridgeError.invalidResponse }
+        activeProjectID=projectID
+        let jobs=try bridge.json("jobs",request:["project_id":projectID])["result"] as? [[String:Any]] ?? []
+        if let current=jobs.last, current["kind"] as? String == "LOCAL_MEDIA_TRANSCRIPTION", let state=current["state"] as? String, let jobID=current["job_id"] as? String {
+            if ["RUNNING","QUEUED"].contains(state) { let result=try bridge.json("cancel-job",request:["project_id":projectID,"job_id":jobID]); detail.string += "\n\nTranscription cancelled safely:\n\(result["result"] ?? [:])"; return }
+            if ["CANCELLED","FAILED"].contains(state) { let result=try bridge.json("resume-job",request:["project_id":projectID,"job_id":jobID]); detail.string += "\n\nTranscription resumed from owned source:\n\(result["result"] ?? [:])"; return }
+        }
         let job = try bridge.json("start-job", request: ["project_id": projectID])
         detail.string += "\n\nLocal integrity job completed with persisted result:\n\(job["result"] ?? [:])"
     }
 
+    private func projectView(section: String) throws {
+        if activeProjectID == nil { activeProjectID = ((try bridge.json("projects")["result"] as? [[String:Any]])?.last)?["project_id"] as? String }
+        guard let projectID=activeProjectID else { throw BridgeError.failed("Create a project and choose media first") }
+        let envelope=try bridge.json("project-view",request:["project_id":projectID]); guard let view=envelope["result"] as? [String:Any] else { throw BridgeError.invalidResponse }
+        if let job=view["job"] as? [String:Any], job["state"] as? String != "COMPLETED" { detail.string="Job: \(job["state"] ?? "UNKNOWN") — \(job["progress"] ?? 0)%\n\(job["message"] ?? "")"; return }
+        let key = section == "media" ? "transcript" : section
+        let value = view[key] ?? view["job"] ?? [:]
+        let data=try JSONSerialization.data(withJSONObject:value,options:[.prettyPrinted,.sortedKeys]); detail.string=String(data:data,encoding:.utf8) ?? ""
+        if section == "navigation", let job=view["job"] as? [String:Any], let source=job["owned_path"] as? String,
+           let navigation=view["navigation"] as? [String:Any], let route=(navigation["routes"] as? [[String:Any]])?.first,
+           let locator=route["locator"] as? String { openMedia(path:source,locator:locator) }
+    }
+
+    private func openMedia(path: String, locator: String) {
+        let pattern="#t=([0-9.]+),([0-9.]+)"; guard let regex=try? NSRegularExpression(pattern:pattern), let match=regex.firstMatch(in:locator,range:NSRange(locator.startIndex...,in:locator)),
+              let startRange=Range(match.range(at:1),in:locator), let seconds=Double(locator[startRange]) else { return }
+        let player=AVPlayer(url:URL(fileURLWithPath:path)); let view=AVPlayerView(frame:NSRect(x:0,y:0,width:760,height:460)); view.player=player; view.controlsStyle = .floating
+        let window=NSWindow(contentRect:view.frame,styleMask:[.titled,.closable,.resizable],backing:.buffered,defer:false); window.title="Integra — exact source interval"; window.contentView=view; window.center(); window.makeKeyAndOrderFront(nil)
+        player.seek(to:CMTime(seconds:seconds,preferredTimescale:1000),toleranceBefore:.zero,toleranceAfter:.zero); player.play(); playerWindow=window
+    }
+
     private func publicationAction(kind: String) throws {
-        let packagePanel = NSOpenPanel(); packagePanel.title = "Choose a validated Integra package directory"; packagePanel.canChooseDirectories = true; packagePanel.canChooseFiles = false
-        guard packagePanel.runModal() == .OK, let packageURL = packagePanel.url else { return }
+        if activeProjectID == nil { activeProjectID = ((try bridge.json("projects")["result"] as? [[String:Any]])?.last)?["project_id"] as? String }
+        guard let projectID=activeProjectID, let view=(try bridge.json("project-view",request:["project_id":projectID])["result"] as? [String:Any]), let job=view["job"] as? [String:Any], var packagePath=job["package_dir"] as? String else { throw BridgeError.failed("Complete media transcription first") }
+        if kind == "onedrive" { let pointer=URL(fileURLWithPath:packagePath).appendingPathComponent("onedrive_package.json"); let data=try Data(contentsOf:pointer); packagePath=(try JSONSerialization.jsonObject(with:data) as? [String:Any])?["package_dir"] as? String ?? packagePath }
+        let packageURL=URL(fileURLWithPath:packagePath)
         let targetPanel = NSOpenPanel(); targetPanel.title = kind == "obsidian" ? "Choose Obsidian Vault" : "Choose filesystem-backed OneDrive folder"; targetPanel.canChooseDirectories = true; targetPanel.canChooseFiles = false
         guard targetPanel.runModal() == .OK, let targetURL = targetPanel.url else { return }
         let request = ["package_dir": packageURL.path, "target_dir": targetURL.path]

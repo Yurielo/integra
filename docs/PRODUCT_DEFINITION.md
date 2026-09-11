@@ -24,7 +24,7 @@ word, page, slide, region, or artifact revision.
 ## 2. Required READY_APP_V1 scope
 
 The active delivery chain is `R9C -> R10 -> ONEDRIVE_PUBLICATION_V1 -> R12 ->
-R13 -> R14`. R9C and its prerequisites are accepted. The remaining stages must
+R13 -> USER_MEDIA_WORKFLOW_V1 -> R14`. R9C and its prerequisites are accepted. The remaining stages must
 deliver all of the following:
 
 1. **Accepted core:** Projects & Sources, Transcript & Topic Studio, Knowledge

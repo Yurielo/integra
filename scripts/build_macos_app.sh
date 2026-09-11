@@ -7,7 +7,7 @@ app="$output_root/Integra.app"
 
 rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
-xcrun swiftc -parse-as-library -O -framework AppKit \
+xcrun swiftc -parse-as-library -O -framework AppKit -framework AVKit -framework AVFoundation \
   "$repo_root/macos/IntegraApp.swift" -o "$app/Contents/MacOS/Integra"
 cp "$repo_root/macos/Info.plist" "$app/Contents/Info.plist"
 cp "$repo_root/macos/Resources/bridge.py" "$app/Contents/Resources/bridge.py"

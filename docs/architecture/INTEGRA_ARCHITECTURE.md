@@ -143,7 +143,9 @@ The Product Owner rebaseline in Issue #62 fixes the active target as
 adds the managed one-way Obsidian exporter; `ONEDRIVE_PUBLICATION_V1` (#63)
 adds the filesystem-backed publisher; R12 builds a usable native macOS UI over
 the accepted core and those two services; R13 hardens and packages a
-reproducible local `.app`; R14 is the explicit acceptance gate. The UI also
+reproducible local `.app`; USER_MEDIA_WORKFLOW_V1 adds copy-on-write raw local
+audio/video ingestion, transcription, provisional review-required semantic
+views, exact navigation, and package creation; R14 is the explicit acceptance gate. The UI also
 reads the deferred-capability registry and renders later work as unavailable,
 never as executable or successful placeholder behavior.
 

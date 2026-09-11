@@ -2,7 +2,7 @@
 """Closed local bridge between the AppKit shell and accepted Integra services."""
 from __future__ import annotations
 from datetime import datetime, timedelta, timezone
-import json, os, re, sys, uuid
+import json, os, re, signal, subprocess, sys, uuid
 from pathlib import Path
 
 RESOURCES = Path(__file__).resolve().parent
@@ -12,8 +12,9 @@ from integra_core.onedrive import preview_onedrive_publication, publish_onedrive
 from integra_core.project_lease import LeaseStore
 from integra_core.protocol import canonical_json, content_sha256
 from integra_core.publishing import preview_obsidian_export, publish_obsidian_export, validate_package
+from integra_core.user_media import import_source, preflight, run_job
 
-OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "package-preview", "package-publish", "obsidian-preview", "onedrive-preview"}
+OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "import-media", "media-preflight", "process-media-job", "project-view", "package-preview", "package-publish", "obsidian-preview", "onedrive-preview"}
 
 def _safe_error(error):
     message = str(error).replace(str(Path.home()), "<HOME>")
@@ -76,6 +77,36 @@ def _jobs_path(root, project_id):
 
 def _jobs(root, project_id): return json.loads(_jobs_path(root, project_id).read_bytes())["jobs"]
 
+def _spawn_media(root, project_id, job_id):
+    environment = dict(os.environ); environment["INTEGRA_APP_DATA_ROOT"] = str(root); environment["PYTHONDONTWRITEBYTECODE"] = "1"
+    request = json.dumps({"project_id":project_id,"job_id":job_id}).encode()
+    process = subprocess.Popen([sys.executable, str(Path(__file__).resolve()), "process-media-job"], stdin=subprocess.PIPE,
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=environment, start_new_session=True)
+    process.stdin.write(request); process.stdin.close()
+    return process.pid
+
+def _import_media(root, request):
+    project = _project(root, request.get("project_id")); project_dir = _project_dir(root, project["project_id"])
+    source = import_source(project_dir, Path(request.get("source_path", "")))
+    jobs_path = _jobs_path(root, project["project_id"]); jobs = _jobs(root, project["project_id"])
+    job = {"job_id":f"urn:integra:job:{uuid.uuid4()}","kind":"LOCAL_MEDIA_TRANSCRIPTION","state":"QUEUED","progress":0,
+           "message":"Queued","created_at":_instant(_now()),"source_id":source["source_id"],"source_sha256":source["content_sha256"],"owned_path":source["owned_path"]}
+    jobs.append(job); _atomic_json(jobs_path,{"schema_version":"1.0","jobs":jobs})
+    project["source_count"] = project.get("source_count",0)+1; project["status"]="PROCESSING"; _atomic_json(project_dir/"project.json",project)
+    job["worker_pid"] = _spawn_media(root, project["project_id"], job["job_id"])
+    current = json.loads(jobs_path.read_bytes()); current_job=next(item for item in current["jobs"] if item["job_id"]==job["job_id"])
+    current_job["worker_pid"]=job["worker_pid"]; _atomic_json(jobs_path,current); return current_job
+
+def _project_view(root, project_id):
+    project_dir = _project_dir(root, _project(root, project_id)["project_id"]); jobs = _jobs(root, project_id)
+    latest = next((item for item in reversed(jobs) if item.get("kind")=="LOCAL_MEDIA_TRANSCRIPTION"), None)
+    result={"project":_project(root,project_id),"job":latest}
+    if latest and latest.get("artifact_dir"):
+        artifact=Path(latest["artifact_dir"])
+        for key,name in (("transcript","transcript.json"),("topics","topics.json"),("knowledge","knowledge.json"),("navigation","navigation.json")):
+            if (artifact/name).is_file(): result[key]=json.loads((artifact/name).read_bytes())
+    return result
+
 def _job(root, request, action):
     project_id = request.get("project_id"); path = _jobs_path(root, project_id); jobs = _jobs(root, project_id)
     if action == "start":
@@ -86,7 +117,16 @@ def _job(root, request, action):
         if item is None: raise ValueError("job does not exist")
         allowed = {"cancel":{"RUNNING","QUEUED"}, "resume":{"CANCELLED","FAILED"}}
         if item["state"] not in allowed[action]: raise ValueError(f"job cannot {action} from {item['state']}")
-        item["state"] = "CANCELLED" if action == "cancel" else "QUEUED"; item["updated_at"] = _instant(_now())
+        if action == "cancel":
+            pid=item.get("worker_pid")
+            if isinstance(pid,int):
+                try: os.killpg(pid, signal.SIGTERM)
+                except ProcessLookupError: pass
+            item["state"]="CANCELLED"; item["message"]="Cancelled by user"
+        else:
+            item["state"]="QUEUED"; item["message"]="Queued for fail-closed restart"
+            item["worker_pid"]=_spawn_media(root,project_id,item["job_id"])
+        item["updated_at"] = _instant(_now())
     _atomic_json(path, {"schema_version":"1.0", "jobs":jobs}); return item
 
 def _package(path_value):
@@ -143,6 +183,10 @@ def main():
         elif operation == "start-job": result = _job(root, request, "start")
         elif operation == "cancel-job": result = _job(root, request, "cancel")
         elif operation == "resume-job": result = _job(root, request, "resume")
+        elif operation == "media-preflight": result = preflight()
+        elif operation == "import-media": result = _import_media(root, request)
+        elif operation == "process-media-job": result = run_job(_project_dir(root, request.get("project_id")), request.get("job_id"))
+        elif operation == "project-view": result = _project_view(root, request.get("project_id"))
         elif operation == "package-preview": result = _publication(root, request, False)
         else: result = _publication(root, request, True)
         result_hash = content_sha256(result)
