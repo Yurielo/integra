@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://integra.local/schemas/playlist_evidence_v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "issue", "status", "implementation", "fixtures", "acceptance", "limitations"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "issue": {"const": 10},
+    "status": {"const": "PASS"},
+    "implementation": {"type": "array", "minItems": 6, "items": {"$ref": "#/$defs/file"}},
+    "fixtures": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/file"}},
+    "acceptance": {
+      "type": "object", "additionalProperties": {"type": "boolean"},
+      "required": ["offline_contract_only", "title_metadata_preserved", "subset_selection", "plan_identity_binds_execution", "sequential_processing", "storage_estimation", "checkpoint_resume", "per_item_checkpoint_emitted", "completed_items_not_reprocessed", "completed_artifacts_byte_verified", "refresh_diff", "inaccessible_items_recorded", "remote_removal_preserves_local_evidence", "per_video_provenance", "live_youtube_accessed", "credentials_accessed", "external_actions_performed"]
+    },
+    "limitations": {"type": "array", "minItems": 2, "items": {"type": "string", "minLength": 1}}
+  },
+  "$defs": {
+    "file": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    }
+  }
+}

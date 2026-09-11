@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://integra.local/schemas/youtube_playlist_refresh_v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "refresh_id", "refresh_sha256", "collection_id",
+    "previous_snapshot_id", "previous_snapshot_sha256",
+    "current_snapshot_id", "current_snapshot_sha256",
+    "added_video_ids", "removed_video_ids",
+    "reordered_video_ids", "became_inaccessible_video_ids",
+    "restored_video_ids", "retained_completed_evidence"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "refresh_id": { "type": "string", "pattern": "^urn:integra:artifact:" },
+    "refresh_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "collection_id": { "type": "string", "pattern": "^urn:integra:source:" },
+    "previous_snapshot_id": { "type": "string", "pattern": "^urn:integra:artifact:" },
+    "previous_snapshot_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "current_snapshot_id": { "type": "string", "pattern": "^urn:integra:artifact:" },
+    "current_snapshot_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "added_video_ids": { "$ref": "#/$defs/video_ids" },
+    "removed_video_ids": { "$ref": "#/$defs/video_ids" },
+    "reordered_video_ids": { "$ref": "#/$defs/video_ids" },
+    "became_inaccessible_video_ids": { "$ref": "#/$defs/video_ids" },
+    "restored_video_ids": { "$ref": "#/$defs/video_ids" },
+    "retained_completed_evidence": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/completed" }
+    }
+  },
+  "$defs": {
+    "video_ids": {
+      "type": "array", "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "completed": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "video_id", "video_source_id", "artifact_id", "content_sha256",
+        "size_bytes", "relative_path", "snapshot_id", "snapshot_position",
+        "provenance_status", "integrity_status"
+      ],
+      "properties": {
+        "video_id": { "type": "string", "minLength": 1 },
+        "video_source_id": { "type": "string", "pattern": "^urn:integra:source:" },
+        "artifact_id": { "type": "string", "pattern": "^urn:integra:artifact:" },
+        "content_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "size_bytes": { "type": "integer", "minimum": 0 },
+        "relative_path": { "type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//).+$" },
+        "snapshot_id": { "type": "string", "pattern": "^urn:integra:artifact:" },
+        "snapshot_position": { "type": "integer", "minimum": 0 },
+        "provenance_status": { "const": "EXACT" },
+        "integrity_status": { "const": "PASS" }
+      }
+    }
+  }
+}

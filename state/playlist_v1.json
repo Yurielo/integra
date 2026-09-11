@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0",
+  "issue": 10,
+  "status": "PASS",
+  "implementation": [
+    {"path": "integra_core/playlist.py", "sha256": "7d7bc5da3c0c01492ad38141ec7362dd59911729e55773f21cb1af3aebe91b9c"},
+    {"path": "schemas/youtube_playlist_snapshot_v1.schema.json", "sha256": "3dbfc78ed3baa1c35a2dcca452629b53ba1db891ea83c630833d2615197602ee"},
+    {"path": "schemas/youtube_playlist_plan_v1.schema.json", "sha256": "91e593444e8b64548a467982eefcc442f0261d9600ab41c5990dd033a45b8f4f"},
+    {"path": "schemas/youtube_playlist_checkpoint_v1.schema.json", "sha256": "40894793761ab54bb5dfe299594543781a8400f895d9c62cbb219f30fd0a6fa7"},
+    {"path": "schemas/youtube_playlist_refresh_v1.schema.json", "sha256": "bca618e9bb468b1ea42a4b7b3fe7e9cc06b1aeb3d876944d7b4fc0e11a09f575"},
+    {"path": "schemas/playlist_evidence_v1.schema.json", "sha256": "b3d2dc5a0fc3e42b04efb0ac42a6b2f464f7912aa7bb0b3458683a97bf2628d9"}
+  ],
+  "fixtures": [
+    {"path": "tests/fixtures/playlist_v1/snapshot_initial.json", "sha256": "81de951c4de9fe62c86fb653d2e7cd22edf17e9296b3c4ed387c3283a334b739"},
+    {"path": "tests/fixtures/playlist_v1/snapshot_refreshed.json", "sha256": "552433b4ab65491c84285f71d29ee03dc6f591b93c3621c8f5dadc73b5e5e109"}
+  ],
+  "acceptance": {
+    "offline_contract_only": true,
+    "title_metadata_preserved": true,
+    "subset_selection": true,
+    "plan_identity_binds_execution": true,
+    "sequential_processing": true,
+    "storage_estimation": true,
+    "checkpoint_resume": true,
+    "per_item_checkpoint_emitted": true,
+    "completed_items_not_reprocessed": true,
+    "completed_artifacts_byte_verified": true,
+    "refresh_diff": true,
+    "inaccessible_items_recorded": true,
+    "remote_removal_preserves_local_evidence": true,
+    "per_video_provenance": true,
+    "live_youtube_accessed": false,
+    "credentials_accessed": false,
+    "external_actions_performed": false
+  },
+  "limitations": [
+    "R8A validates sanitized adapter snapshots and does not contact YouTube or download media.",
+    "Live official-adapter execution, media download and registration of real project artifacts remain gated by Projects & Sources v1 and exact account/capability authority."
+  ]
+}

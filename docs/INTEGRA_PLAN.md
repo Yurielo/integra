@@ -609,6 +609,13 @@ by a hashed locator and not accessed by R7.
 Implement collection discovery, selection, sequential processing, refresh,
 resume, provenance, and storage estimation.
 
+The accepted v1 boundary consumes an already-fetched official-adapter metadata
+snapshot without network access. It provides stable collection/video identity,
+exact title/order metadata, subset plans, explicit disk estimates, durable
+per-item sequential checkpoint/resume that skips only byte-verified
+completions, inaccessible-item evidence, refresh diffs and retained per-video
+provenance when remote membership changes.
+
 ### R8B — Document and OCR Pipeline
 
 Implement and validate supported document types, structure, locators, OCR

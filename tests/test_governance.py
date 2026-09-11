@@ -48,6 +48,9 @@ class GovernanceValidationTests(unittest.TestCase):
                 encoding="utf-8"
             )
         )
+        cls.playlist = json.loads(
+            (ROOT / "state" / "playlist_v1.json").read_text(encoding="utf-8")
+        )
 
     def test_repository_state_is_valid(self):
         self.assertEqual(VALIDATOR.validate_state(self.state), [])
@@ -218,6 +221,39 @@ class GovernanceValidationTests(unittest.TestCase):
         self.assertIn(
             "Operations evidence must not access protected data",
             VALIDATOR.validate_operations_evidence(evidence),
+        )
+
+    def test_playlist_evidence_is_pinned_and_valid(self):
+        self.assertEqual(VALIDATOR.validate_playlist_evidence(self.playlist), [])
+        state = copy.deepcopy(self.state)
+        state["playlist_evidence"] = "state/other.json"
+        self.assertIn(
+            "playlist_evidence must pin R8A acceptance",
+            VALIDATOR.validate_state(state),
+        )
+
+    def test_playlist_implementation_and_fixtures_are_hash_bound(self):
+        evidence = copy.deepcopy(self.playlist)
+        evidence["implementation"][0]["sha256"] = "0" * 64
+        self.assertTrue(
+            any(
+                "R8A implementation hash differs" in error
+                for error in VALIDATOR.validate_playlist_evidence(evidence)
+            )
+        )
+        evidence = copy.deepcopy(self.playlist)
+        evidence["fixtures"].pop()
+        self.assertIn(
+            "R8A fixture inventory must be exact",
+            VALIDATOR.validate_playlist_evidence(evidence),
+        )
+
+    def test_playlist_evidence_cannot_expand_external_scope(self):
+        evidence = copy.deepcopy(self.playlist)
+        evidence["acceptance"]["external_actions_performed"] = True
+        self.assertIn(
+            "R8A acceptance evidence differs from the governed contract",
+            VALIDATOR.validate_playlist_evidence(evidence),
         )
 
     def test_unknown_dependency_fails(self):

@@ -1,0 +1,11 @@
+{
+  "fetched_at": "2026-09-11T01:00:00Z",
+  "items": [
+    {"availability": "AVAILABLE", "duration_seconds": 180, "estimated_download_bytes": 2000, "position": 0, "title": "Fixture lesson B", "video_id": "video-b"},
+    {"availability": "INACCESSIBLE", "duration_seconds": 120, "estimated_download_bytes": 1000, "position": 1, "title": "Fixture lesson A", "video_id": "video-a"},
+    {"availability": "AVAILABLE", "duration_seconds": 240, "estimated_download_bytes": 3000, "position": 2, "title": "Fixture lesson D", "video_id": "video-d"}
+  ],
+  "playlist_native_id": "PL-INTEGRA-FIXTURE",
+  "provider": "youtube",
+  "schema_version": "1.0"
+}
