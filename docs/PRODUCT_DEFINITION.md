@@ -1,104 +1,107 @@
 # Integra Product Definition v1
 
-Status: `R0_ACCEPTED`
+Status: `READY_APP_V1_REBASELINED`
 
-Authority: Product Owner authorization to implement the approved Integra plan
+Authority: Product Owner authorization in GitHub Issue #62
 
-Baseline date: 2026-09-09
+Baseline date: 2026-09-11
 
 ## 1. Product outcome
 
 Integra is a separate native macOS product that provides one governed workflow
-from heterogeneous source material to traceable knowledge, media, learning,
-marketing, and publication outputs. It integrates accepted, pinned SeminarText
-and VideoText capabilities without requiring either source application to stop
+from heterogeneous source material to traceable knowledge, media, and safe
+local publication outputs. It integrates accepted, pinned SeminarText and
+VideoText capabilities without requiring either source application to stop
 working.
 
-The primary user outcome is:
+The `READY_APP_V1` outcome is:
 
-`source → transcript/document evidence → Topics → exception-only review → canonical knowledge → derived media/learning/marketing output → governed publication`
+`source -> transcript/document evidence -> Topics -> exception-only review -> canonical knowledge/media -> cross-navigation -> Obsidian export -> OneDrive publication -> usable macOS application`
 
 Every substantive result retains an exact route back to its source interval,
 word, page, slide, region, or artifact revision.
 
-## 2. Required Integra 1.0 scope
+## 2. Required READY_APP_V1 scope
 
-Integra 1.0 requires all of the following product capabilities:
+The active delivery chain is `R9C -> R10 -> ONEDRIVE_PUBLICATION_V1 -> R12 ->
+R13 -> R14`. R9C and its prerequisites are accepted. The remaining stages must
+deliver all of the following:
 
-1. **Projects & Sources:** local media, individual YouTube videos, playlists,
-   supported documents, presentations, images, scans, source identity, hashes,
-   lifecycle, and provenance.
-2. **Transcript & Topic Studio:** media preparation, ASR, translation, Word
-   Timeline, Topic sets and hierarchy, quality findings, and exception-only
-   review packages.
-3. **Knowledge Studio:** Canonical Evidence, Concepts, Practices, Terms,
-   Relations, Canonical Knowledge, graph views, Knowledge Diff, and exact
-   source navigation.
-4. **Media Studio:** clips, subtitles, translation, TTS, speed, blur,
-   watermark, audio enhancement, filler-word mute, deterministic recipes, and
-   media QA.
-5. **Marketing Studio v1:** evidence-backed drafts, Marketing Passport,
-   channel packages, shared rules, and versioned project playbooks for
-   “Лунные практики” and “Человек. Инструкция по применению”.
-6. **Learning Studio v1:** notes, summaries, methodology, FAQ, exercises,
-   tests, prerequisites, difficulty, and evidence-linked learning routes.
-7. **Knowledge Assistant v1:** search and evidence-cited answers across
-   projects, sources, Topics, knowledge entities, and media.
-8. **Publishing Hub:** versioned packages, preview, manifests, checksums,
-   collision handling, recovery, Markdown/JSON/DOCX/PDF/SRT/media export,
-   deterministic one-way Obsidian export, and filesystem-backed OneDrive
-   publication.
-9. **Social adapters:** official-API adapters for Facebook Pages, Instagram,
-   Threads, YouTube, Telegram, WhatsApp Business, and TikTok after Publishing
-   Hub is complete. Adapter code, capability checks, dry-run/contract evidence,
-   and safe manual fallback are 1.0 scope. Live account connection, platform
-   approval, or real publication requires separately applicable authorization.
-10. **Operations & Diagnostics:** jobs, progress, cancellation, resume,
-    resource scheduling, capability checks, structured logs, Integrity,
-    recovery, component identities, and reference-Mac operation.
-11. **Compatibility & Migration:** pinned source components, read-only
-    discovery, copy-on-write migration, rollback, and combined regression
-    testing while both standalone applications remain usable.
+1. **Accepted core:** Projects & Sources, Transcript & Topic Studio, Knowledge
+   Studio, Media Studio, cross-navigation, Operations & Diagnostics, and
+   compatibility/copy-on-write migration remain required and regression-safe.
+2. **Obsidian export (R10):** deterministic one-way export of managed
+   Markdown/JSON metadata with preview, staging, manifest, hashes, export lock,
+   collision protection, exact source links, atomic promotion, and rebuild.
+3. **OneDrive publication (#63):** filesystem-backed staged publication with
+   immutable versions, manifests, checksums, `COMPLETE.json` written last,
+   offline queueing, Files On-Demand checks, conflict detection, mutual
+   exclusion, and verified recovery.
+4. **Native macOS application (R12):** a buildable, launchable, usable native
+   application exposing the accepted core, Obsidian export, OneDrive
+   publication, Operations & Diagnostics, and a read-only Deferred Features
+   registry. Unavailable features cannot present runnable or successful
+   placeholder actions.
+5. **Hardening and local package (R13):** minimum macOS and bundle identity,
+   entitlements boundary, privacy/redaction, dependency and licensing review,
+   reproducible local `.app` package, backup, crash recovery, update readiness,
+   and rollback evidence.
+6. **Product Owner acceptance (R14):** explicit acceptance of the exact
+   `READY_APP_V1` candidate, included capability list, deferred registry, known
+   limitations, compatibility, migration, and release boundary.
 
-## 3. Explicitly outside Integra 1.0
+## 3. Deferred to later work
 
-- destructive or in-place conversion of source projects;
-- retirement of SeminarText or VideoText;
-- physical Git-repository consolidation;
-- bidirectional Obsidian synchronization;
-- Microsoft Graph OneDrive integration;
-- unattended external publication without an accepted standing policy;
-- automatic semantic acceptance or automatic Concept-identity merging;
-- full autonomous semantic authoring;
-- personalized adaptive learning and unrestricted RAG over unreviewed data;
-- mobile, web, Windows, or multi-user server editions;
-- access to private projects, governed datasets, Gold, accounts, or
-  credentials without exact authorization.
+The following capabilities are deliberately visible in the ready application
+but are not required for `READY_APP_V1` and cannot block R12-R14:
 
-## 4. Product invariants
+- Publishing Hub formats beyond the managed Obsidian Markdown/JSON metadata
+  and OneDrive package contracts, including general standalone DOCX, PDF, SRT,
+  audio, and video export;
+- Marketing Studio v1 and its project playbooks;
+- Learning Studio v1;
+- Knowledge Assistant v1;
+- Social Adapter Foundation and adapters for Facebook Pages, Instagram,
+  Threads, YouTube, Telegram, WhatsApp Business, and TikTok;
+- live YouTube API/media download, a bound local OCR engine, automatic
+  multi-source matching, and representative full Media Studio execution;
+- bidirectional Obsidian synchronization and Microsoft Graph OneDrive;
+- unattended or live external publication;
+- public distribution, signing, notarization, and update publication;
+- source-repository consolidation or source-application retirement;
+- mobile, web, Windows, multi-user server, personalized adaptive learning,
+  unrestricted RAG, and full autonomous semantic authoring.
+
+Issue #64 owns the durable `DEFERRED_TO_LATER_WORK` registry. Deferred work may
+be planned only after R14 unless the Product Owner explicitly rebaselines the
+roadmap again. Deferral is not implementation, acceptance, or authorization.
+
+## 4. Product invariants and retained gates
 
 - Machine semantic output remains `PROVISIONAL` or `REVIEW_REQUIRED` until an
   explicit authorized ReviewDecision.
 - Original source wording and provenance are preserved through normalization.
-- Derived marketing, learning, media, and Obsidian views cannot silently alter
-  Canonical Evidence or Canonical Knowledge.
+- Derived media, export, and future marketing/learning views cannot silently
+  alter Canonical Evidence or Canonical Knowledge.
 - One bulk decision may cover an explicitly enumerated validated package.
-- Human review is reserved for genuine semantic, authority, privacy,
-  publication, destructive, or unresolved ambiguity gates.
-- Source applications and projects remain independently usable through 1.0.
-- External publication is a separate, auditable operation from content
-  generation.
+- Source applications and projects remain independently usable through R14.
+- External publication is a separate, auditable operation from generation.
+- Protected or private data, credentials/accounts, live external writes,
+  authoritative semantic acceptance, Concept-identity merging, destructive
+  migration, signing identity, and release authority remain explicitly gated.
+  Neither R14 acceptance nor deferred status grants those authorities.
 
 ## 5. Success measures
 
-- One local video completes the Core Alpha path with exact provenance.
-- Playlist, document, and multi-source pipelines resume safely and preserve
-  source-specific locators.
-- Knowledge, media, learning, and marketing outputs round-trip to evidence.
-- Obsidian and OneDrive publishing survives interruption and detects conflict.
-- Social adapters fail closed on capability, permission, or policy drift.
-- The M5/16 GB reference Mac completes Combined Beta without uncontrolled
-  resource contention or leaked child processes.
-- SeminarText and VideoText standalone test matrices do not regress.
-- The release candidate is signed, notarized, reproducible, recoverable, and
-   explicitly accepted by the Product Owner.
+- The accepted core and its exact provenance continue to pass their governed
+  evidence and regression checks.
+- Obsidian export and filesystem-backed OneDrive publication survive
+  interruption, preserve user-owned content, and detect conflict.
+- A reproducible native macOS application builds, launches, and supports the
+  complete `READY_APP_V1` user journey on the reference Mac.
+- Deferred capabilities are visible as later/unavailable and cannot be mistaken
+  for implemented behavior.
+- SeminarText and VideoText standalone compatibility remains intact.
+- The Product Owner explicitly accepts the exact candidate at R14. Signing,
+  notarization, public distribution, live external actions, and source-product
+  retirement remain separate authorization boundaries.

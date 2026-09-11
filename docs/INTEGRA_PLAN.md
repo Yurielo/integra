@@ -1,10 +1,11 @@
 # Integra Integration Plan
 
-Version: 1.0 (consolidates audited planning revision v5)
-Status: APPROVED BASELINE — SAFE ROADMAP IMPLEMENTATION AUTHORIZED
+Version: 1.1 (`READY_APP_V1` Product Owner rebaseline)
+Status: APPROVED READY-APP BASELINE — SAFE ACTIVE-CHAIN IMPLEMENTATION AUTHORIZED
 Product name: Integra
 Recorded: 2026-09-09
 Implementation authorization recorded: 2026-09-10
+Ready-app rebaseline recorded: 2026-09-11 in GitHub Issue #62
 
 ## 1. Purpose
 
@@ -13,7 +14,7 @@ SeminarText knowledge/evidence workflows and VideoText media-production
 workflows while preserving both source applications as independently working
 products until Integra has passed final acceptance.
 
-The complete product direction includes:
+The long-term product direction includes:
 
 - project and source management;
 - local video and audio processing;
@@ -27,6 +28,19 @@ The complete product direction includes:
 - Obsidian and OneDrive integration;
 - search and knowledge-assistant capabilities;
 - governed publishing, diagnostics, recovery, and quality control.
+
+The current delivery target is narrower than that long-term direction. The
+Product Owner has fixed `READY_APP_V1` as the active chain:
+
+`R9C -> R10 Obsidian -> ONEDRIVE_PUBLICATION_V1 -> R12 native macOS app -> R13 hardening/local package -> R14 acceptance`
+
+Marketing, Learning, Knowledge Assistant, additional Publishing Hub formats,
+the social foundation and all social adapters, plus every other unimplemented
+capability recorded in machine state are `DEFERRED_TO_LATER_WORK` after R14.
+They must remain visible as unavailable/later work in the ready application and
+cannot block the active chain. This rebaseline does not authorize private data,
+credentials, live external actions, authoritative semantics, destructive
+migration, signing/notarization, public release, or source-product changes.
 
 The accepted Projects & Sources v1 foundation now provides the unified project
 registry and stable source/revision lineage for every source family above. It
@@ -127,32 +141,35 @@ of SeminarText and VideoText with:
 - provenance, diagnostics, cancellation, and recovery;
 - preservation of both standalone applications.
 
-### 3.2 Mandatory Integration Extensions
+### 3.2 READY_APP_V1 integration extensions
 
-The complete integration release must additionally support:
+The ready application must additionally support:
 
 - individual YouTube videos and YouTube playlists;
 - document and presentation processing;
 - multi-source alignment;
 - safe one-way Obsidian export;
 - safe filesystem-backed OneDrive publication and recovery;
-- migration of existing SeminarText and VideoText projects without data loss.
+- migration of existing SeminarText and VideoText projects without data loss;
+- a buildable, launchable, usable native macOS UI over the accepted core;
+- a reproducible hardened local `.app` package and explicit R14 acceptance.
 
-### 3.3 Product modules
+### 3.3 Deferred long-term modules
 
-R0 fixed the following modules as required Integra 1.0 scope:
+Issue #62 rebaselines the following previously required modules to later work:
 
 - Marketing Studio with initial project playbooks for “Лунные практики” and
   “Человек. Инструкция по применению”;
 - Learning Studio;
 - Knowledge Assistant;
-- the Publishing Hub and seven social-adapter implementations defined in the
-  Product Definition.
+- additional Publishing Hub formats and the seven social-adapter
+  implementations defined in the Product Definition.
 
-They remain outside the bounded Core Merge but are mandatory before Combined
-Beta and Integra 1.0 acceptance. Full RAG, automatic external social
-publishing, Microsoft Graph, bidirectional Obsidian sync, and personalized
-learning remain outside Core Merge unless separately adopted.
+They are not dependencies of R12-R14. Issue #64 owns the durable deferred
+registry after R14. Full RAG, automatic external social publishing, Microsoft
+Graph, bidirectional Obsidian sync, personalized learning, and all other
+unimplemented capabilities listed in machine state are also later work unless
+the Product Owner explicitly rebaselines the roadmap.
 
 ## 4. Target user-facing modules
 
@@ -192,6 +209,8 @@ learning remain outside Core Merge unless separately adopted.
 
 ### 4.5 Marketing Studio
 
+Status for `READY_APP_V1`: `DEFERRED_TO_LATER_WORK` after R14.
+
 - evidence-backed meaning foundation and Marketing Passport;
 - WhatsApp, Telegram, Instagram, Stories, Threads, and YouTube packages;
 - image prompts and visual packages;
@@ -200,11 +219,15 @@ learning remain outside Core Merge unless separately adopted.
 
 ### 4.6 Learning Studio
 
+Status for `READY_APP_V1`: `DEFERRED_TO_LATER_WORK` after R14.
+
 - summaries, course notes, methodological material, FAQ, exercises, tests,
   prerequisites, difficulty levels, and learning routes;
 - every substantive output remains linked to exact evidence.
 
 ### 4.7 Knowledge Assistant
+
+Status for `READY_APP_V1`: `DEFERRED_TO_LATER_WORK` after R14.
 
 - evidence-cited search and answers across projects, sources, Topics,
   knowledge entities, media artifacts, and clips;
@@ -213,9 +236,12 @@ learning remain outside Core Merge unless separately adopted.
 
 ### 4.8 Publishing Hub
 
-- Obsidian, OneDrive, Markdown, JSON, DOCX, PDF, SRT, audio, and video outputs;
+- the active scope is the managed Markdown/JSON metadata needed for one-way
+  Obsidian export plus filesystem-backed OneDrive packages;
 - versions, manifests, checksums, publication queues, recovery, and collision
-  handling.
+  handling are required;
+- general standalone DOCX, PDF, SRT, audio, and video export is
+  `DEFERRED_TO_LATER_WORK`.
 
 ### 4.9 Operations & Diagnostics
 
@@ -347,7 +373,7 @@ milestones so that one incomplete source class does not obscure another.
 
 ### 9.1 Obsidian
 
-The first complete integration requires deterministic one-way export:
+`READY_APP_V1` requires deterministic one-way export:
 
 - Canonical Knowledge remains authoritative;
 - generated files live in a managed subtree;
@@ -432,7 +458,7 @@ The reference development and acceptance machine is currently:
 - 512 GB internal SSD.
 
 This is a reference profile, not a permanent minimum system requirement. The
-first release must use capability detection and a Resource Scheduler.
+ready application must use capability detection and a Resource Scheduler.
 
 ### 12.1 Resource Scheduler
 
@@ -478,8 +504,9 @@ Mandatory properties:
 - no deletion or rewriting of the source project;
 - rollback and continued use of the original application.
 
-Combined Beta must test SeminarText standalone, VideoText standalone, and
-Integra together. Any regression in a source product blocks promotion.
+R12 and R13 must test SeminarText standalone, VideoText standalone, and the
+native Integra application together. Any regression in a source product blocks
+READY_APP_V1 acceptance.
 
 ## 14. Test and release architecture
 
@@ -713,91 +740,99 @@ locator-specific UI actions. Unknown and unavailable sources fail clearly and
 cannot acquire guessed locators or routes. The service does not promote
 semantics or modify upstream artifacts.
 
-### R10 — Obsidian and OneDrive Publishing
+### R10 — Deterministic One-way Obsidian Export
 
-Implement versioned package preview; deterministic Markdown, JSON, DOCX, PDF,
-SRT, audio, and video export; the bounded one-way Obsidian export;
-filesystem-backed OneDrive publication; collision safety; queueing; integrity
-verification; and recovery.
+Implement a managed subtree with preview, staged Markdown/JSON metadata,
+manifest, hashes, export lock, collision report, exact source links, atomic
+promotion, and deterministic rebuild. User-owned notes may never be
+overwritten. Tests use a controlled local vault. Bidirectional sync, a real
+user vault, OneDrive, credentials, and external publication are out of scope.
 
-### R11 — Marketing Studio v1
+### ONEDRIVE_PUBLICATION_V1 — Filesystem-backed Publication (#63)
 
-As fixed by R0, implement the shared Marketing Engine and the two initial
-versioned Project Playbooks with evidence-backed draft generation, QA, bulk
-review, and a single publication-package gate.
+After R10, implement staging outside the synchronized target; immutable
+versions; `publish_manifest.json`; `checksums.sha256`; `COMPLETE.json` written
+last; offline queueing; Files On-Demand placeholder detection; physical-size
+and hash verification; conflict copies; mutual exclusion with Obsidian export;
+and verified recovery. Tests use a controlled local sync fixture. Microsoft
+Graph, credentials, protected data, and a live OneDrive account are out of
+scope.
 
-### Learning Studio v1
+### R12 — Usable Native macOS Application
 
-Implement evidence-linked notes, summaries, methodology, FAQ, exercises,
-tests, prerequisites, difficulty levels, and learning routes.
+Build a reproducible, launchable native application over the accepted R0-R9C
+core, R10, and `ONEDRIVE_PUBLICATION_V1`. Its UI exposes Projects & Sources,
+Transcript & Topics, Knowledge, Media, cross-navigation, Operations &
+Diagnostics, Obsidian export, and OneDrive publication. A read-only Deferred
+Features registry marks later work unavailable; no placeholder action can run
+or claim success. Verify the complete usable journey and accessible failure and
+provisional states on the reference Mac.
 
-### Knowledge Assistant v1
+### R13 — Hardening and Reproducible Local Package
 
-Implement evidence-cited search and answers across projects, sources, Topics,
-knowledge entities, media artifacts, and clips with exact round-trip navigation.
+Fix and verify the minimum macOS version, bundle identifier, entitlements
+boundary, privacy and redaction behavior, dependency/model/codec licensing,
+reproducible local `.app` package, backup, crash recovery, update readiness,
+and rollback. Signing identity, notarization, public distribution, live update
+publication, and release remain separate explicit gates.
 
-### Social Adapter Foundation and Seven Platform Adapters
+### R14 — READY_APP_V1 Product Owner Acceptance
 
-After R10, implement the shared official-API contract and deterministic dry-run
-evidence, then the Facebook Pages, Instagram, Threads, YouTube, Telegram,
-WhatsApp Business, and TikTok adapters. Credentials, live account connection,
-and external publication remain separately authorized human gates.
+The Product Owner accepts or rejects the exact candidate, included capability
+list, deferred registry, known limitations, migration behavior, source-product
+compatibility, and retained release boundary. R14 does not complete deferred
+features or authorize signing, public distribution, live external actions,
+credentials, private data, semantic acceptance, destructive migration, or
+source-product retirement.
 
-### R12 — Combined Beta on the Reference Mac
+### DEFERRED_CAPABILITIES_V1 — Later-work Registry (#64)
 
-Run standalone and combined test matrices on the M5/16 GB reference machine,
-including resource scheduling, playlist resume, document processing, migration,
-Obsidian, OneDrive, every required studio, Knowledge Assistant, social-adapter
-dry runs, recovery, and absence of leaked child processes.
-
-### R13 — Security, Packaging, and Release E2E
-
-Complete security/privacy checks, signing, notarization, dependency/license
-review, immutable candidate creation, real-media E2E, rollback, and release
-evidence.
-
-### R14 — Integra 1.0 Acceptance
-
-Accept only the R0-defined 1.0 scope after all required functional, compatibility,
-resource, migration, publishing, and release gates pass. The original
-applications remain available until a separate retirement decision.
+After R14, retain one governed registry for Marketing Studio, Learning Studio,
+Knowledge Assistant, additional Publishing Hub formats, the Social Adapter
+Foundation and all seven platform adapters, and every other unimplemented
+capability enumerated in `state/integra_state_v1.json`. Existing Issue numbers
+remain stable. Deferred status is neither completion nor implementation
+authority.
 
 ### R15 — Optional Repository Consolidation
 
-After 1.0, evaluate federated repositories, packages, subtree history import, or
-a monorepo. Consolidation must have a demonstrated maintenance benefit and must
-not break standalone products or history.
+After R14, evaluate federated repositories, packages, subtree history import,
+or a monorepo. Consolidation must have a demonstrated maintenance benefit and
+must not break standalone products or history. Source-repository changes and
+source-product retirement remain separately authorized.
 
 ## 16. Completion definitions
 
-### Core Merge complete
+### Accepted core baseline complete
 
-- Integra runs as a separate macOS application;
-- accepted pinned SeminarText and VideoText components are integrated;
+- the Integra control plane integrates accepted pinned SeminarText and
+  VideoText components;
 - local video traverses transcript, Topic, review, knowledge, and media paths;
 - provenance and component identity are preserved;
 - existing projects and standalone applications remain usable;
 - contract, integration, migration, recovery, and real-media tests pass.
 
-### Complete Integration Release
+### READY_APP_V1 complete
 
-In addition to Core Merge:
+In addition to the accepted core:
 
-- YouTube playlists work with resume and source provenance;
-- supported documents and multi-source alignment work;
-- Projects & Sources and Transcript & Topic Studio meet their complete 1.0
-  contracts;
-- one-way Obsidian export is deterministic and safe;
-- OneDrive publication and recovery are verified;
-- every required functional module and social-adapter contract is complete;
-- Operations & Diagnostics meets its job, resource, Integrity, recovery, and
-  process-cleanup contract;
-- the reference-Mac beta and release gates pass.
+- one-way Obsidian export is deterministic, collision-safe, and protects
+  user-owned notes;
+- filesystem-backed OneDrive publication and recovery are verified without
+  claiming live cloud state;
+- the native macOS application builds, launches, and completes the required
+  user journey on the reference Mac;
+- Operations & Diagnostics remains the sole job/resource/Integrity/recovery
+  control plane;
+- the reproducible local `.app` package passes privacy, licensing, backup,
+  crash-recovery, rollback, and compatibility checks;
+- the UI and machine state present every later-work capability as deferred and
+  unavailable rather than implemented;
+- the Product Owner has explicitly accepted the exact candidate at R14.
 
-### Integra 1.0 complete
-
-The Product Owner has accepted the exact R0-defined scope, release candidate,
-known limitations, migration behavior, and continued standalone-product policy.
+Signing, notarization, public distribution, live external actions, credentials,
+private data, semantic authority, destructive migration, and source-product
+retirement are not implied by `READY_APP_V1` completion.
 
 ## 17. Stop conditions
 
@@ -816,12 +851,16 @@ Stop and request the appropriate authority when there is:
 
 ## 18. Current implementation boundary
 
-The current implementation stage is
-[Issue #8](https://github.com/Yurielo/integra/issues/8),
-`INTEGRA-R6 — Implement Core Alpha vertical slice`, with status `ACCEPTED`
-after repeatable real local-video execution through the governed control plane.
+The accepted implementation boundary is R9C
+([Issue #15](https://github.com/Yurielo/integra/issues/15)), including all
+accepted prerequisites and the bidirectional cross-navigation presentation
+index. The next active implementation stage is R10
+([Issue #16](https://github.com/Yurielo/integra/issues/16)), bounded to
+deterministic one-way Obsidian export. It is followed by Issue #63, R12, R13,
+and the R14 human acceptance gate.
 
-The Product Owner instruction of 2026-09-10 authorizes safe implementation
-along this roadmap after dependency checks. It does not bypass the protected
-authorization boundaries listed in the Purpose, Development Workflow, or
-machine-readable state.
+The Product Owner instructions of 2026-09-10 and Issue #62 authorize safe
+implementation along the active `READY_APP_V1` chain after dependency checks.
+They do not authorize deferred features or bypass the protected authorization
+boundaries listed in the Purpose, Development Workflow, or machine-readable
+state.
