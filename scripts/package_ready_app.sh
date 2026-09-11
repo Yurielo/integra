@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
-output_root="${1:-$repo_root/build/READY_APP_V1}"
+output_root="${1:-${HOME:?}/Applications/Integra-READY_APP_V1}"
 python_bin=/usr/bin/python3
 test -x "$python_bin"
 "$python_bin" -c 'import json,hashlib,pathlib,sqlite3,uuid'
@@ -11,5 +11,6 @@ cp "$repo_root/docs/THIRD_PARTY_NOTICES.md" "$app/Contents/Resources/THIRD_PARTY
 xattr -cr "$app"
 codesign --force --sign - --entitlements "$repo_root/macos/Integra.entitlements" "$app"
 codesign --verify --deep --strict "$app"
-"$app/Contents/MacOS/Integra" --self-test
+PYTHONDONTWRITEBYTECODE=1 "$app/Contents/MacOS/Integra" --self-test
+codesign --verify --deep --strict "$app"
 echo "$app"

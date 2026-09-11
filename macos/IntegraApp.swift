@@ -29,6 +29,9 @@ final class Bridge {
         let process = Process(); let output = Pipe(); let errors = Pipe()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/python3")
         process.arguments = [script.path, operation]
+        var environment = ProcessInfo.processInfo.environment
+        environment["PYTHONDONTWRITEBYTECODE"] = "1"
+        process.environment = environment
         process.standardOutput = output; process.standardError = errors
         if !request.isEmpty {
             let input = Pipe(); process.standardInput = input

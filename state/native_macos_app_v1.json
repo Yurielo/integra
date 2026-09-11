@@ -5,7 +5,7 @@
   "dependencies": ["ONEDRIVE_PUBLICATION_V1"],
   "implementation": [
     {"path": "docs/architecture/NATIVE_MACOS_APPLICATION_V1.md", "sha256": "a6b901aa039191839c64a969b577ab35697fc89e3d48e1f6c50040c69cccc8c9"},
-    {"path": "macos/IntegraApp.swift", "sha256": "dadeaa5ad83bbc2032c46c60c01db3fe5b25e120df1462f4bcfb7f434b7a1a7c"},
+    {"path": "macos/IntegraApp.swift", "sha256": "2eec91732994fc3d9ceebdcbb650098953c2b3b2a384d4c3ee34e93b5f0ed3cd"},
     {"path": "macos/Info.plist", "sha256": "a43cd65561c6216967c1eddc2b7e02ad543945a447c7124343bece8e9ddf143f"},
     {"path": "macos/Resources/bridge.py", "sha256": "c41c64d09c31835f45f457ef90d2d86bad1e60f8e6dd0d37125aa4d25330235d"},
     {"path": "macos/Resources/reference_workflow.json", "sha256": "815d92b18d6cbd3e643d03d2942e293caa3f051e32f23b0000ad742a80951af5"},

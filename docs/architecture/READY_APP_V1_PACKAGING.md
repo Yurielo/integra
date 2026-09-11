@@ -5,7 +5,10 @@ Status: `ACCEPTED`; Issue `#29`; dependency: accepted R12.
 `scripts/package_ready_app.sh` performs the fail-closed reference-Mac preflight,
 builds `Integra.app`, embeds dependency notices and the declared entitlement,
 applies an ad-hoc local code seal, verifies that seal, and runs the native
-self-test. Two independent package runs must have identical file-tree hashes.
+self-test. The default local destination is
+`~/Applications/Integra-READY_APP_V1/Integra.app`, outside synced project
+storage where File Provider metadata can invalidate an ad-hoc seal. Two
+independent package runs must have identical file-tree hashes.
 
 The candidate identifier is `app.integra.ready`, version `1.0.0` (build 100),
 with minimum macOS 13. It is a local candidate, not a Developer-ID-signed or
