@@ -308,10 +308,8 @@ def _verify_partial(version: Path, stage: Path, manifest: dict[str, Any], files:
     if version.is_symlink() or not version.is_dir():
         raise PublishingError("OneDrive partial version is unsafe")
     expected = set(files) | {MANIFEST, CHECKSUMS, COMPLETE}
-    actual_files = {item.relative_to(version).as_posix() for item in version.rglob("*") if item.is_file()}
-    actual_dirs = {item.relative_to(version).as_posix() for item in version.rglob("*") if item.is_dir()}
-    if (any(item.is_symlink() for item in version.rglob("*")) or actual_files - expected
-            or actual_dirs - _expected_directories(files)):
+    actual_files, actual_dirs = _inventory(version)
+    if actual_files - expected or actual_dirs - _expected_directories(files):
         raise PublishingError("OneDrive partial version contains unknown content")
     for name in actual_files:
         target_file = version / name
@@ -342,9 +340,8 @@ def _verify_version(root: Path, manifest: dict[str, Any], files: dict[str, bytes
                     placeholder: Callable[[Path], bool]) -> None:
     _verify_payload(root, manifest, files, placeholder)
     expected = set(files) | {MANIFEST, CHECKSUMS, COMPLETE}
-    actual = {item.relative_to(root).as_posix() for item in root.rglob("*") if item.is_file()}
-    directories = {item.relative_to(root).as_posix() for item in root.rglob("*") if item.is_dir()}
-    if any(item.is_symlink() for item in root.rglob("*")) or actual != expected or directories != _expected_directories(files):
+    actual, directories = _inventory(root)
+    if actual != expected or directories != _expected_directories(files):
         raise PublishingError("OneDrive immutable version inventory differs")
     complete = root / COMPLETE
     if placeholder(complete) or complete.read_bytes() != _complete(manifest):
@@ -503,17 +500,43 @@ def _workspace(workspace: Path, sync_root: Path) -> Path:
 
 def _is_placeholder(path: Path) -> bool:
     metadata = path.lstat()
-    offline = getattr(stat, "UF_OFFLINE", 0)
-    if offline and metadata.st_flags & offline:
-        return True
+    flags = getattr(metadata, "st_flags", 0)
+    for flag_name in ("SF_DATALESS", "UF_OFFLINE"):
+        flag = getattr(stat, flag_name, 0)
+        if flag and flags & flag:
+            return True
+    listxattr = getattr(os, "listxattr", None)
+    if listxattr is None:
+        return False
     try:
-        for name in os.listxattr(path, follow_symlinks=False):
+        if listxattr in os.supports_follow_symlinks:
+            names = listxattr(path, follow_symlinks=False)
+        else:
+            if path.is_symlink():
+                return True
+            names = listxattr(path)
+        for name in names:
             lowered = name.lower()
             if "placeholder" in lowered or "dataless" in lowered:
                 return True
-    except (AttributeError, OSError):
+    except OSError:
         pass
     return False
+
+
+def _inventory(root: Path) -> tuple[set[str], set[str]]:
+    files: set[str] = set()
+    directories: set[str] = set()
+    for item in root.rglob("*"):
+        relative = item.relative_to(root).as_posix()
+        mode = item.lstat().st_mode
+        if stat.S_ISREG(mode):
+            files.add(relative)
+        elif stat.S_ISDIR(mode):
+            directories.add(relative)
+        else:
+            raise PublishingError(f"OneDrive inventory contains a special filesystem object: {relative}")
+    return files, directories
 
 
 def _utc(value: Any) -> datetime:

@@ -4,12 +4,12 @@
   "issue": 63,
   "dependencies": ["R10"],
   "implementation": [
-    {"path": "docs/architecture/ONEDRIVE_PUBLICATION_V1.md", "sha256": "68660191e36d0faf9517707d596fb3fad8e1f3efa9ddd1002beac2fd391c18e2"},
-    {"path": "integra_core/onedrive.py", "sha256": "fdfae1bdd7855fe8e0584e8eacd4d46604fb126f40131a5d9acd944f29ecafed"},
+    {"path": "docs/architecture/ONEDRIVE_PUBLICATION_V1.md", "sha256": "95930a072134e6a31d13c8e9d9b4230bb994f2a3943aa97495d7146aa240799b"},
+    {"path": "integra_core/onedrive.py", "sha256": "4682455b8314483098c63e31a851783ad9485111660595ad8fe1b2d23959251d"},
     {"path": "schemas/onedrive_package_v1.schema.json", "sha256": "4ad0357a711868162171907dd70f3e82c5e5ee9a705cdbbedfe1b80b94e2be4e"},
     {"path": "schemas/onedrive_publication_receipt_v1.schema.json", "sha256": "3b3647b0a9f5901388a9a0d05f16818a3808d21fbc239ff9dd5bd5488d8bdd7a"},
     {"path": "schemas/onedrive_publication_evidence_v1.schema.json", "sha256": "a37d41395d873c34a509d33bdda9a20fd77ed2df6759a6ed354d7f2dff44f81b"},
-    {"path": "tests/test_onedrive.py", "sha256": "2eba3f05f0c079abfcc01cfb0819640bdc8f0e3f3a0e33454bf6c18e02eb9931"}
+    {"path": "tests/test_onedrive.py", "sha256": "99811e0b9155a439df7f5dc2ee39e97a3e9f2b1b96647260345ba014aa5cd370"}
   ],
   "acceptance": {
     "ambiguous_completion_fails_closed": true,

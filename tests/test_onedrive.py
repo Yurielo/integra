@@ -1,13 +1,16 @@
 import copy
 import json
+import os
+import stat
 from datetime import datetime, timezone
 from pathlib import Path
 import tempfile
+from types import SimpleNamespace
 import unittest
 
 from integra_core.onedrive import (
     build_onedrive_package, preview_onedrive_publication, publish_onedrive_package,
-    recover_onedrive_publication, validate_onedrive_package,
+    recover_onedrive_publication, validate_onedrive_package, _is_placeholder,
 )
 from integra_core.project_lease import LeaseStore
 from integra_core.publishing import COMPLETE, CURRENT, MANIFEST, PublishingError, _target_lock
@@ -125,6 +128,14 @@ class OneDrivePublicationTests(unittest.TestCase):
                 publish_onedrive_package(sync, workspace, manifest, files, **auth)
             self.assertEqual(conflict.read_text(), "remote")
 
+    @unittest.skipUnless(hasattr(stat, "SF_DATALESS"), "macOS SF_DATALESS is unavailable")
+    def test_native_macos_dataless_flag_is_a_placeholder(self):
+        class DatalessPath:
+            def lstat(self):
+                return SimpleNamespace(st_flags=stat.SF_DATALESS)
+
+        self.assertTrue(_is_placeholder(DatalessPath()))
+
     def test_shared_lock_blocks_onedrive_for_overlapping_obsidian_target(self):
         manifest, files = package()
         with tempfile.TemporaryDirectory() as directory:
@@ -188,6 +199,28 @@ class OneDrivePublicationTests(unittest.TestCase):
             with self.assertRaisesRegex(PublishingError, "collision"):
                 publish_onedrive_package(sync, workspace, manifest, files, **auth)
             self.assertEqual(changed.read_bytes(), b"remote-corruption")
+
+    def test_fifo_is_rejected_in_complete_and_partial_versions(self):
+        manifest, files = package()
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory); workspace = base / "workspace"; workspace.mkdir(); sync = base / "sync"; sync.mkdir()
+            auth = authorization(base / "auth", manifest)
+            publish_onedrive_package(sync, workspace, manifest, files, **auth)
+            version = sync / "Integra/course/versions" / manifest["version_sha256"]
+            fifo = version / "unexpected.fifo"; os.mkfifo(fifo)
+            with self.assertRaisesRegex(PublishingError, "collision"):
+                publish_onedrive_package(sync, workspace, manifest, files, **auth)
+            self.assertTrue(fifo.exists())
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory); workspace = base / "workspace"; workspace.mkdir(); sync = base / "sync"; sync.mkdir()
+            auth = authorization(base / "auth", manifest)
+            with self.assertRaises(PublishingError):
+                publish_onedrive_package(sync, workspace, manifest, files, interrupt_after="FILES", **auth)
+            version = sync / "Integra/course/versions" / manifest["version_sha256"]
+            fifo = version / "unexpected.fifo"; os.mkfifo(fifo)
+            with self.assertRaisesRegex(PublishingError, "special filesystem object"):
+                recover_onedrive_publication(sync, workspace, manifest, files, **auth)
+            self.assertTrue(fifo.exists())
 
 
 if __name__ == "__main__":

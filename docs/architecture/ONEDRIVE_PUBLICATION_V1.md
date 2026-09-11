@@ -59,16 +59,18 @@ verified stage and removes only the exact matching queue record.
 
 Recovery accepts only an incomplete destination whose present bytes exactly
 match the verified outside-sync stage. Unknown paths, conflict-copy names,
-symlinks, placeholders, changed bytes, invalid current pointers, hash/size
+symlinks, FIFOs or other special filesystem nodes, placeholders, changed bytes, invalid current pointers, hash/size
 mismatch, or an ambiguous completion marker are preserved and reported as
 failures. A complete version missing `CURRENT.json` is verified before the
 pointer is repaired.
 
 ## Files On-Demand and conflict truth
 
-The default filesystem probe treats operating-system offline flags and
-placeholder/dataless extended attributes as non-materialized. Tests inject a
-deterministic probe against temporary local files. Conflict filenames containing
+The default filesystem probe explicitly treats macOS `stat.SF_DATALESS` and,
+where available, portable `stat.UF_OFFLINE` flags as non-materialized. It uses
+the platform's non-following extended-attribute API when available and otherwise
+checks only an already proven non-symlink path. Tests cover the native macOS flag
+and inject a deterministic probe against temporary local files. Conflict filenames containing
 `conflicted copy`, `conflict copy`, `conflicted version`, or `conflict version`
 are rejected anywhere in the managed subtree.
 
