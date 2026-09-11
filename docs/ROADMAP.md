@@ -31,7 +31,7 @@ not add routine human gates or change stage dependencies.
 | R9A Knowledge integration | #13 | M3 | R6, R8C, TRANSCRIPT_AND_TOPIC_STUDIO_V1 | ACCEPTED |
 | R9B Media integration | #14 | M3 | R5, R6, OPERATIONS_AND_DIAGNOSTICS_V1 | ACCEPTED |
 | R9C Cross-navigation | #15 | M3 | R8C, R9A, R9B | ACCEPTED |
-| R10 deterministic one-way Obsidian export | #16 | M4 | R9C | PLANNED |
+| R10 deterministic one-way Obsidian export | #16 | M4 | R9C | ACCEPTED |
 | ONEDRIVE_PUBLICATION_V1 | #63 | M4 | R10 | PLANNED |
 | R12 usable native macOS application | #28 | M6 | ONEDRIVE_PUBLICATION_V1 | PLANNED |
 | R13 hardening and reproducible local `.app` package | #29 | M7 | R12 | PLANNED |

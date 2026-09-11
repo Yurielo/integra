@@ -130,6 +130,14 @@ selections and verified clips. Every hop retains the upstream stable ID and
 locator. Missing sources are explicit unavailable targets with no fabricated
 route or fallback.
 
+R10 adds the deterministic one-way Obsidian boundary documented in
+[`OBSIDIAN_EXPORT_V1.md`](OBSIDIAN_EXPORT_V1.md). It revalidates the accepted
+R6 SeminarText managed-view bytes, binds them to exact R9A Knowledge and R9C
+navigation records, and promotes only complete immutable versions inside an
+Integra-owned Vault subtree. Preview, collision protection, a shared target
+lock, staging, hashes, `COMPLETE.json`-last and fail-closed recovery protect
+user-owned notes. A local export never claims OneDrive or cloud verification.
+
 The Product Owner rebaseline in Issue #62 fixes the active target as
 `READY_APP_V1`. The remaining runtime direction is deliberately linear: R10
 adds the managed one-way Obsidian exporter; `ONEDRIVE_PUBLICATION_V1` (#63)

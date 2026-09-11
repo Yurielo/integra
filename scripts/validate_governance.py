@@ -119,6 +119,18 @@ MEDIA_DERIVATIVE_SCHEMA_PATH = ROOT / "schemas" / "media_derivative_v1.schema.js
 CROSS_NAVIGATION_PATH = ROOT / "state" / "cross_navigation_v1.json"
 CROSS_NAVIGATION_EVIDENCE_SCHEMA_PATH = ROOT / "schemas" / "cross_navigation_evidence_v1.schema.json"
 CROSS_NAVIGATION_SCHEMA_PATH = ROOT / "schemas" / "cross_navigation_v1.schema.json"
+OBSIDIAN_EXPORT_PATH = ROOT / "state" / "obsidian_export_v1.json"
+OBSIDIAN_EXPORT_EVIDENCE_SCHEMA_PATH = ROOT / "schemas" / "obsidian_export_evidence_v1.schema.json"
+OBSIDIAN_PACKAGE_SCHEMA_PATH = ROOT / "schemas" / "obsidian_package_v1.schema.json"
+OBSIDIAN_RECEIPT_SCHEMA_PATH = ROOT / "schemas" / "obsidian_export_receipt_v1.schema.json"
+EXPECTED_OBSIDIAN_IMPLEMENTATION = {
+    "docs/architecture/OBSIDIAN_EXPORT_V1.md",
+    "integra_core/publishing.py",
+    "schemas/obsidian_package_v1.schema.json",
+    "schemas/obsidian_export_receipt_v1.schema.json",
+    "schemas/obsidian_export_evidence_v1.schema.json",
+    "tests/test_publishing.py",
+}
 EXPECTED_OPERATIONS_IMPLEMENTATION = {
     "integra_core/operations.py",
     "integra_core/operations_fixtures.py",
@@ -614,6 +626,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("media_integration_evidence must pin R9B acceptance")
     if state.get("cross_navigation_evidence") != "state/cross_navigation_v1.json":
         errors.append("cross_navigation_evidence must pin R9C acceptance")
+    if state.get("obsidian_export_evidence") != "state/obsidian_export_v1.json":
+        errors.append("obsidian_export_evidence must pin R10 acceptance")
 
     execution_policy = state.get("execution_policy", {})
     expected_policy = {
@@ -721,7 +735,9 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("R9B must be ACCEPTED with media integration evidence")
     if statuses.get("R9C") != "ACCEPTED":
         errors.append("R9C must be ACCEPTED with cross-navigation evidence")
-    for planned_id in ("R10", "ONEDRIVE_PUBLICATION_V1", "R12", "R13"):
+    if statuses.get("R10") != "ACCEPTED":
+        errors.append("R10 must be ACCEPTED with managed Obsidian export evidence")
+    for planned_id in ("ONEDRIVE_PUBLICATION_V1", "R12", "R13"):
         if statuses.get(planned_id) != "PLANNED":
             errors.append(f"{planned_id} must remain PLANNED for READY_APP_V1")
     if statuses.get("R14") != "HUMAN_GATE":
@@ -2482,6 +2498,49 @@ def validate_cross_navigation_evidence(
     return errors
 
 
+def validate_obsidian_export_evidence(evidence: dict, root: Path = ROOT) -> list[str]:
+    errors: list[str] = []
+    expected_fields = {"schema_version", "status", "issue", "dependencies", "implementation", "acceptance", "safety", "limitations"}
+    if not isinstance(evidence, dict) or set(evidence) != expected_fields:
+        return ["R10 Obsidian export evidence fields must match v1"]
+    if (evidence.get("schema_version"), evidence.get("status"), evidence.get("issue")) != ("1.0", "ACCEPTED", 16):
+        errors.append("R10 evidence must certify Issue #16 as ACCEPTED")
+    if evidence.get("dependencies") != ["R9C"]:
+        errors.append("R10 dependency order differs")
+    paths = []
+    for item in evidence.get("implementation", []):
+        if not isinstance(item, dict) or set(item) != {"path", "sha256"}:
+            errors.append("R10 implementation reference differs")
+            continue
+        paths.append(item["path"])
+        path = root / item["path"]
+        if not path.is_file() or sha256_file(path) != item["sha256"]:
+            errors.append(f"R10 implementation hash differs: {item['path']}")
+    if set(paths) != EXPECTED_OBSIDIAN_IMPLEMENTATION or len(paths) != len(set(paths)):
+        errors.append("R10 implementation inventory must be exact")
+    if evidence.get("acceptance") != {
+        "complete_marker_written_last": True, "deterministic_package_identity": True,
+        "exact_r9a_r9c_bindings": True, "immutable_version_promotion": True,
+        "interruption_recovery": True, "managed_markdown_and_json": True,
+        "preview_writes_nothing": True, "r6_source_export_revalidated": True,
+        "project_lease_required": True,
+        "shared_nonblocking_target_lock": True, "size_and_hash_verification": True,
+        "symlink_and_traversal_rejected": True, "user_owned_collisions_fail_closed": True,
+    }:
+        errors.append("R10 acceptance evidence differs")
+    if evidence.get("safety") != {
+        "cloud_publication_performed": False, "external_actions_performed": False,
+        "protected_data_accessed": False, "real_user_vault_accessed": False,
+        "semantic_acceptance_performed": False, "source_artifacts_modified": False,
+        "source_repositories_modified": False,
+    }:
+        errors.append("R10 safety evidence differs")
+    limitations = evidence.get("limitations")
+    if not isinstance(limitations, list) or not limitations or len(limitations) != len(set(limitations)):
+        errors.append("R10 limitations must be a non-empty unique list")
+    return errors
+
+
 def main() -> int:
     state = load_json(STATE_PATH)
     baselines = load_json(BASELINES_PATH)
@@ -2502,6 +2561,7 @@ def main() -> int:
     knowledge_integration = load_json(KNOWLEDGE_INTEGRATION_PATH)
     media_integration = load_json(MEDIA_INTEGRATION_PATH)
     cross_navigation = load_json(CROSS_NAVIGATION_PATH)
+    obsidian_export = load_json(OBSIDIAN_EXPORT_PATH)
     load_json(SCHEMA_PATH)
     load_json(BASELINES_SCHEMA_PATH)
     load_json(OWNERSHIP_SCHEMA_PATH)
@@ -2533,6 +2593,9 @@ def main() -> int:
     load_json(MEDIA_DERIVATIVE_SCHEMA_PATH)
     load_json(CROSS_NAVIGATION_EVIDENCE_SCHEMA_PATH)
     load_json(CROSS_NAVIGATION_SCHEMA_PATH)
+    load_json(OBSIDIAN_EXPORT_EVIDENCE_SCHEMA_PATH)
+    load_json(OBSIDIAN_PACKAGE_SCHEMA_PATH)
+    load_json(OBSIDIAN_RECEIPT_SCHEMA_PATH)
     load_json(ROOT / "schemas/youtube_playlist_snapshot_v1.schema.json")
     load_json(ROOT / "schemas/youtube_playlist_plan_v1.schema.json")
     load_json(ROOT / "schemas/youtube_playlist_checkpoint_v1.schema.json")
@@ -2558,6 +2621,7 @@ def main() -> int:
         + validate_knowledge_integration_evidence(knowledge_integration, baselines)
         + validate_media_integration_evidence(media_integration, baselines)
         + validate_cross_navigation_evidence(cross_navigation)
+        + validate_obsidian_export_evidence(obsidian_export)
     )
     if errors:
         print("INTEGRA_GOVERNANCE_VALIDATION: FAIL")

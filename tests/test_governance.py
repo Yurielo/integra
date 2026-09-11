@@ -82,9 +82,23 @@ class GovernanceValidationTests(unittest.TestCase):
                 encoding="utf-8"
             )
         )
+        cls.obsidian_export = json.loads(
+            (ROOT / "state" / "obsidian_export_v1.json").read_text(encoding="utf-8")
+        )
 
     def test_repository_state_is_valid(self):
         self.assertEqual(VALIDATOR.validate_state(self.state), [])
+
+    def test_obsidian_export_evidence_is_valid(self):
+        self.assertEqual(
+            VALIDATOR.validate_obsidian_export_evidence(self.obsidian_export), []
+        )
+
+    def test_obsidian_export_cannot_claim_external_or_user_vault_access(self):
+        evidence = copy.deepcopy(self.obsidian_export)
+        evidence["safety"]["real_user_vault_accessed"] = True
+        errors = VALIDATOR.validate_obsidian_export_evidence(evidence)
+        self.assertIn("R10 safety evidence differs", errors)
 
     def test_missing_deferred_social_platform_fails(self):
         state = copy.deepcopy(self.state)

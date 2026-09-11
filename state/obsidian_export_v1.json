@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0",
+  "status": "ACCEPTED",
+  "issue": 16,
+  "dependencies": ["R9C"],
+  "implementation": [
+    {"path": "docs/architecture/OBSIDIAN_EXPORT_V1.md", "sha256": "59eebd91b8ab6821cb008059b9b70111885e80fe9f0ba87d00879dbadfdcd71f"},
+    {"path": "integra_core/publishing.py", "sha256": "a591964c9cb3d5fd1d49de74223896859ee61af6d5567479a902ec440fae12a7"},
+    {"path": "schemas/obsidian_package_v1.schema.json", "sha256": "46b04493dfa2e9090e00ce6a05b2e9ca81f3fc842e82bbcf2a21842cec36c576"},
+    {"path": "schemas/obsidian_export_receipt_v1.schema.json", "sha256": "4d3080a59be966ae8d24a6b7d479d7691120aa8fdca0453f1bc3cb00a14f6bb1"},
+    {"path": "schemas/obsidian_export_evidence_v1.schema.json", "sha256": "2e0480ba50487ff8c6620199bd59749bdef5fd4317b5b8018ca38fa76734fbd3"},
+    {"path": "tests/test_publishing.py", "sha256": "587496280344f6b8bcd21c13dea8890ce3f9fe33019a954796de3e54066378a7"}
+  ],
+  "acceptance": {
+    "complete_marker_written_last": true,
+    "deterministic_package_identity": true,
+    "exact_r9a_r9c_bindings": true,
+    "immutable_version_promotion": true,
+    "interruption_recovery": true,
+    "managed_markdown_and_json": true,
+    "preview_writes_nothing": true,
+    "project_lease_required": true,
+    "r6_source_export_revalidated": true,
+    "shared_nonblocking_target_lock": true,
+    "size_and_hash_verification": true,
+    "symlink_and_traversal_rejected": true,
+    "user_owned_collisions_fail_closed": true
+  },
+  "safety": {
+    "cloud_publication_performed": false,
+    "external_actions_performed": false,
+    "protected_data_accessed": false,
+    "real_user_vault_accessed": false,
+    "semantic_acceptance_performed": false,
+    "source_artifacts_modified": false,
+    "source_repositories_modified": false
+  },
+  "limitations": [
+    "R10 accepts the already validated pinned SeminarText managed-view bytes; native UI orchestration belongs to R12.",
+    "Filesystem-backed OneDrive publication, offline queueing and Files On-Demand verification belong to Issue #63.",
+    "No real user Vault or external synchronized directory was accessed by acceptance tests."
+  ]
+}

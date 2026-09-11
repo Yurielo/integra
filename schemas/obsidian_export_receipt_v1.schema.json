@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://integra.local/schemas/obsidian_export_receipt_v1.schema.json",
+  "title": "Integra managed Obsidian export receipt v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "state", "package_id", "version_sha256", "managed_root", "collisions", "replay", "cloud_verified"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "state": {"enum": ["DRY_RUN", "EXPORTED", "UNCHANGED"]},
+    "package_id": {"type": "string", "minLength": 3},
+    "version_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "managed_root": {"type": "string", "minLength": 1},
+    "collisions": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "replay": {"type": "boolean"},
+    "cloud_verified": {"const": false}
+  }
+}

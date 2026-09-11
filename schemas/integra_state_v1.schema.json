@@ -27,6 +27,7 @@
     "knowledge_integration_evidence",
     "media_integration_evidence",
     "cross_navigation_evidence",
+    "obsidian_export_evidence",
     "execution_policy",
     "delivery_target",
     "release_scope",
@@ -94,6 +95,9 @@
     },
     "cross_navigation_evidence": {
       "const": "state/cross_navigation_v1.json"
+    },
+    "obsidian_export_evidence": {
+      "const": "state/obsidian_export_v1.json"
     },
     "execution_policy": {
       "type": "object",
