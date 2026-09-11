@@ -5,12 +5,12 @@
   "corrective_issues": [61],
   "dependencies": ["R8C", "R9A", "R9B"],
   "implementation": [
-    {"path": "docs/architecture/CROSS_NAVIGATION_V1.md", "sha256": "a08de57f85b6eb7b28a754409b171d4ac4471b3bc6b0df433efb86070b9f9a56"},
-    {"path": "integra_core/cross_navigation.py", "sha256": "3fbbdc3999192994cb335a2e08c0a1edafae594b7db26047f8083ea7950e2b77"},
-    {"path": "schemas/cross_navigation_evidence_v1.schema.json", "sha256": "b13453688119f2e6bf7351913e70794e493874bc87018fd3b10c941df9f0d09f"},
+    {"path": "docs/architecture/CROSS_NAVIGATION_V1.md", "sha256": "077c745f31ae8c6147eb468bae65039aceefe92c33f4db6f0f9842df12427573"},
+    {"path": "integra_core/cross_navigation.py", "sha256": "da1ff93cb7f608dd867cf8ffb09cc9f34724259e8fa936d591fa21ab12c8b237"},
+    {"path": "schemas/cross_navigation_evidence_v1.schema.json", "sha256": "3768eec6d09eecbcf88a80a4eb3f3557caad648ee2ead4da0e98cf75baddba0a"},
     {"path": "schemas/cross_navigation_v1.schema.json", "sha256": "cc8a038a8d776ac0a5400fcf86744693f3e8f13ce7872e644e214d4508935602"},
     {"path": "tests/fixtures/cross_navigation_v1/ffprobe_fixture.py", "sha256": "1265b8b767e0850e7b6b9057344afb70b211d99acc87d43f46d1ea52fdfa419c"},
-    {"path": "tests/test_cross_navigation.py", "sha256": "120e527a76ae0bf4862dc743fcf82ce80d57e8642362e8bb576eca3a4e1432b2"}
+    {"path": "tests/test_cross_navigation.py", "sha256": "f977771c080dfe38b05b5fcd91ad59cdf80d64cba41dc03566bf570326a5375d"}
   ],
   "surfaces": [
     "AUDIO", "DOCUMENT", "EVIDENCE", "KNOWLEDGE_ENTITY", "MEDIA_CLIP", "MEDIA_SOURCE",
@@ -24,6 +24,7 @@
     "exact_locators_preserved": true,
     "source_revision_mappings_required": true,
     "exact_project_source_coverage_required": true,
+    "canonical_project_identity_binding_required": true,
     "partial_mapping_coverage_rejected": true,
     "multi_source_aggregate_actions_restricted": true,
     "authoritative_bridge_catalog_required": true,

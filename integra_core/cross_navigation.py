@@ -495,6 +495,15 @@ def _source_mappings(
     }
     canonical_sources = {item["id"]: item for item in canonical["sources"]}
     canonical_revisions = {item["id"]: item for item in canonical["transcript_revisions"]}
+    registry_projects = [
+        item for item in registry["projects"]
+        if item["project_id"] == alignment["project_id"]
+    ]
+    if len(registry_projects) != 1:
+        raise CrossNavigationError("alignment project lacks one authoritative registry project")
+    expected_canonical_project_id = f"project:{registry_projects[0]['project_key']}"
+    if canonical.get("project", {}).get("id") != expected_canonical_project_id:
+        raise CrossNavigationError("Canonical Evidence project differs from the alignment project")
     result: list[dict[str, str]] = []
     for source_id, revision_id in sorted(required_knowledge):
         source = canonical_sources.get(source_id)

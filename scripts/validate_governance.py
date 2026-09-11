@@ -2330,6 +2330,7 @@ def validate_cross_navigation_evidence(
         "exact_locators_preserved": True,
         "source_revision_mappings_required": True,
         "exact_project_source_coverage_required": True,
+        "canonical_project_identity_binding_required": True,
         "partial_mapping_coverage_rejected": True,
         "multi_source_aggregate_actions_restricted": True,
         "authoritative_bridge_catalog_required": True,

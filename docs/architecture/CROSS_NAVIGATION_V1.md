@@ -29,6 +29,9 @@ Every source/revision pair indexed from R9A Evidence and every registered R9B
 media source/revision must resolve to exactly one current R8C source binding in
 the same Project Registry project. Missing, partial, duplicate, stale, or
 cross-project coverage rejects the complete index before any target is exposed.
+The Canonical Evidence project ID is bound to the authoritative Registry
+project as `project:<project_key>`; a matching source alone cannot import a
+Knowledge view from another canonical project.
 
 Every load and navigation call also receives the current authoritative R8C,
 R9A, and R9B inputs, the approved bridge set, and the current unavailable-source

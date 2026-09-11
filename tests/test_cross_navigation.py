@@ -44,9 +44,12 @@ def _replace_source_id(value, old: str, new: str):
     return new if value == old else value
 
 
-def _knowledge_view(source_id: str = "source:video-1") -> tuple[dict, bytes, bytes, bytes]:
+def _knowledge_view(
+    source_id: str = "source:video-1", project_id: str = "project:course",
+) -> tuple[dict, bytes, bytes, bytes]:
     evidence = KNOWLEDGE._evidence()
     evidence = _replace_source_id(evidence, "source:video-1", source_id)
+    evidence = _replace_source_id(evidence, "project:course", project_id)
     evidence_payload = KNOWLEDGE.json.dumps(
         evidence, ensure_ascii=False, sort_keys=True, separators=(",", ":")
     ).encode()
@@ -243,6 +246,21 @@ class CrossNavigationTests(unittest.TestCase):
         }
         with self.assertRaisesRegex(
             CrossNavigationError, "lacks one exact project mapping"
+        ):
+            build_cross_navigation(**authority, created_at=NOW)
+
+    def test_canonical_evidence_project_must_match_alignment_project(self) -> None:
+        view, evidence, source, knowledge = _knowledge_view(project_id="project:outside")
+        authority = {
+            **self.authority,
+            "knowledge_view": view,
+            "evidence_payload": evidence,
+            "source_evidence_payload": source,
+            "knowledge_payload": knowledge,
+            "bridges": [],
+        }
+        with self.assertRaisesRegex(
+            CrossNavigationError, "Canonical Evidence project differs"
         ):
             build_cross_navigation(**authority, created_at=NOW)
 
