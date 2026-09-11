@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Yurielo/integra/schemas/projects_sources_evidence_v1.schema.json",
+  "title": "Integra Projects and Sources v1 acceptance evidence",
+  "type": "object",
+  "required": ["schema_version", "status", "issue", "implementation", "project_kinds", "source_types", "dependencies", "acceptance", "safety"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "status": {"const": "ACCEPTED"},
+    "issue": {"const": 47},
+    "implementation": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        },
+        "additionalProperties": false
+      }
+    },
+    "project_kinds": {"type": "array", "minItems": 4, "uniqueItems": true, "items": {"enum": ["SEMINAR", "COURSE", "SERIES", "EVENT"]}},
+    "source_types": {"type": "array", "minItems": 11, "uniqueItems": true, "items": {"type": "string"}},
+    "dependencies": {"type": "array", "minItems": 4, "uniqueItems": true, "items": {"type": "string"}},
+    "acceptance": {
+      "type": "object",
+      "required": ["stable_project_identity", "project_lifecycle_history", "stable_source_identity", "revision_lineage", "revision_hash_chain", "exact_provenance", "container_signatures_validated", "reopen_idempotent", "refresh_idempotent", "individual_youtube_independent", "playlist_contract_reused", "multi_playlist_membership", "document_contract_reused", "unavailable_remote_visible", "conflicts_fail_closed"],
+      "additionalProperties": {"const": true}
+    },
+    "safety": {
+      "type": "object",
+      "required": ["source_files_modified", "source_repositories_modified", "network_access_performed", "credentials_accessed", "protected_data_accessed", "semantic_authority"],
+      "properties": {
+        "source_files_modified": {"const": false},
+        "source_repositories_modified": {"const": false},
+        "network_access_performed": {"const": false},
+        "credentials_accessed": {"const": false},
+        "protected_data_accessed": {"const": false},
+        "semantic_authority": {"const": "NOT_APPLICABLE"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

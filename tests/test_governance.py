@@ -54,6 +54,9 @@ class GovernanceValidationTests(unittest.TestCase):
         cls.document_pipeline = json.loads(
             (ROOT / "state" / "document_pipeline_v1.json").read_text(encoding="utf-8")
         )
+        cls.projects_sources = json.loads(
+            (ROOT / "state" / "projects_sources_v1.json").read_text(encoding="utf-8")
+        )
 
     def test_repository_state_is_valid(self):
         self.assertEqual(VALIDATOR.validate_state(self.state), [])
@@ -292,6 +295,35 @@ class GovernanceValidationTests(unittest.TestCase):
         self.assertIn(
             "R8B acceptance evidence differs from the governed contract",
             VALIDATOR.validate_document_pipeline_evidence(evidence),
+        )
+
+    def test_projects_sources_evidence_is_pinned_and_valid(self):
+        self.assertEqual(
+            VALIDATOR.validate_projects_sources_evidence(self.projects_sources), []
+        )
+        state = copy.deepcopy(self.state)
+        state["projects_sources_evidence"] = "state/other.json"
+        self.assertIn(
+            "projects_sources_evidence must pin Issue #47 acceptance",
+            VALIDATOR.validate_state(state),
+        )
+
+    def test_projects_sources_implementation_is_hash_bound(self):
+        evidence = copy.deepcopy(self.projects_sources)
+        evidence["implementation"][0]["sha256"] = "0" * 64
+        self.assertTrue(
+            any(
+                "Projects & Sources implementation hash differs" in error
+                for error in VALIDATOR.validate_projects_sources_evidence(evidence)
+            )
+        )
+
+    def test_projects_sources_evidence_cannot_expand_scope(self):
+        evidence = copy.deepcopy(self.projects_sources)
+        evidence["safety"]["network_access_performed"] = True
+        self.assertIn(
+            "Projects & Sources safety evidence differs from v1",
+            VALIDATOR.validate_projects_sources_evidence(evidence),
         )
 
     def test_unknown_dependency_fails(self):
