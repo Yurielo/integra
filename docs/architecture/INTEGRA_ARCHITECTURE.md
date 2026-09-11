@@ -149,6 +149,13 @@ views, exact navigation, and package creation; R14 is the explicit acceptance ga
 reads the deferred-capability registry and renders later work as unavailable,
 never as executable or successful placeholder behavior.
 
+SOURCE_FIRST_UI_V1 (#76) inserts a centralized Capability Registry, dependency
+planner and persisted application runtime between the AppKit presentation and
+domain contracts. The UI never selects source components directly and cannot
+promote a capability merely because a source repository contains similarly
+named code. Details and repository-truth limitations are defined in
+[`SOURCE_FIRST_UI_V1.md`](SOURCE_FIRST_UI_V1.md).
+
 Marketing, Learning, Knowledge Assistant, general additional export formats,
 and social adapters are not dependencies of the ready application. They remain
 architecturally separable consumers of governed evidence and publication

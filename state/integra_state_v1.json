@@ -47,6 +47,7 @@
       "R12",
       "R13",
       "USER_MEDIA_WORKFLOW_V1",
+      "SOURCE_FIRST_UI_V1",
       "R14"
     ],
     "deferred_status": "DEFERRED_TO_LATER_WORK",
@@ -133,7 +134,8 @@
     { "id": "R12", "issue": 28, "status": "ACCEPTED", "depends_on": ["ONEDRIVE_PUBLICATION_V1"] },
     { "id": "R13", "issue": 29, "status": "ACCEPTED", "depends_on": ["R12"] },
     { "id": "USER_MEDIA_WORKFLOW_V1", "issue": 72, "status": "ACCEPTED", "depends_on": ["R13"] },
-    { "id": "R14", "issue": 30, "status": "HUMAN_GATE", "depends_on": ["USER_MEDIA_WORKFLOW_V1"] },
+    { "id": "SOURCE_FIRST_UI_V1", "issue": 76, "status": "ACCEPTED", "depends_on": ["USER_MEDIA_WORKFLOW_V1"] },
+    { "id": "R14", "issue": 30, "status": "HUMAN_GATE", "depends_on": ["SOURCE_FIRST_UI_V1"] },
     { "id": "DEFERRED_CAPABILITIES_V1", "issue": 64, "status": "DEFERRED_TO_LATER_WORK", "depends_on": ["R14"] },
     { "id": "R11", "issue": 17, "status": "DEFERRED_TO_LATER_WORK", "depends_on": ["R9A", "R10", "R14"] },
     { "id": "LEARNING_V1", "issue": 18, "status": "DEFERRED_TO_LATER_WORK", "depends_on": ["R9A", "R14"] },

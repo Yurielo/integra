@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "workflow": "SOURCE_FIRST",
+  "default_screen": "Новая обработка",
+  "sequence": [
+    "SOURCE_SELECTION",
+    "CAPABILITY_DETECTION",
+    "OUTPUT_SELECTION",
+    "DEPENDENCY_RESOLUTION",
+    "PLAN_REVIEW",
+    "EXECUTION",
+    "CONCRETE_OUTPUTS"
+  ],
+  "unimplemented_label": "В разработке",
+  "component_selection_visible_to_user": false,
+  "production_fixture_data": false
+}

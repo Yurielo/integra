@@ -156,7 +156,7 @@ EXPECTED_ONEDRIVE_IMPLEMENTATION = {
 EXPECTED_NATIVE_MACOS_APP_IMPLEMENTATION = {
     "docs/architecture/NATIVE_MACOS_APPLICATION_V1.md",
     "macos/IntegraApp.swift", "macos/Info.plist", "macos/Resources/bridge.py",
-    "macos/Resources/reference_workflow.json", "macos/Resources/deferred_features.json",
+    "macos/Resources/source_first_workflow.json", "macos/Resources/deferred_features.json",
     "scripts/build_macos_app.sh", "scripts/test_macos_app.sh",
     "schemas/native_macos_app_evidence_v1.schema.json", "tests/test_macos_app.py",
 }
@@ -498,6 +498,7 @@ READY_APP_PRIORITY_ORDER = [
     "R12",
     "R13",
     "USER_MEDIA_WORKFLOW_V1",
+    "SOURCE_FIRST_UI_V1",
     "R14",
 ]
 
@@ -523,6 +524,7 @@ ACTIVE_CHAIN_ROADMAP_IDS = {
     "R12",
     "R13",
     "USER_MEDIA_WORKFLOW_V1",
+    "SOURCE_FIRST_UI_V1",
     "R14",
 }
 
@@ -549,6 +551,7 @@ EXPECTED_ROADMAP_ISSUES = {
     "R12": 28,
     "R13": 29,
     "USER_MEDIA_WORKFLOW_V1": 72,
+    "SOURCE_FIRST_UI_V1": 76,
     "R14": 30,
     "DEFERRED_CAPABILITIES_V1": 64,
     "R11": 17,
@@ -599,7 +602,8 @@ REQUIRED_ROADMAP_DEPENDENCIES = {
     "R12": {"ONEDRIVE_PUBLICATION_V1"},
     "R13": {"R12"},
     "USER_MEDIA_WORKFLOW_V1": {"R13"},
-    "R14": {"USER_MEDIA_WORKFLOW_V1"},
+    "SOURCE_FIRST_UI_V1": {"USER_MEDIA_WORKFLOW_V1"},
+    "R14": {"SOURCE_FIRST_UI_V1"},
 }
 
 
@@ -784,6 +788,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("R13 must be ACCEPTED with READY_APP_V1 package evidence")
     if statuses.get("USER_MEDIA_WORKFLOW_V1") != "ACCEPTED":
         errors.append("USER_MEDIA_WORKFLOW_V1 must be ACCEPTED before R14")
+    if statuses.get("SOURCE_FIRST_UI_V1") != "ACCEPTED":
+        errors.append("SOURCE_FIRST_UI_V1 must be ACCEPTED before R14")
     if statuses.get("R14") != "HUMAN_GATE":
         errors.append("R14 must remain the READY_APP_V1 HUMAN_GATE")
     for deferred_id in DEFERRED_ROADMAP_IDS:
@@ -2650,7 +2656,7 @@ def validate_native_macos_app_evidence(evidence: dict, root: Path = ROOT) -> lis
         "appkit_native_ui": True, "buildable_without_full_xcode": True,
         "closed_local_bridge": True, "controlled_local_publication_tested": True,
         "create_and_open_project_tested": True, "deferred_actions_unavailable": True,
-        "deterministic_reference_workflow": True, "exact_navigation_visible": True,
+        "deterministic_source_first_workflow": True, "exact_navigation_visible": True,
         "launch_probe_passed": True, "persisted_job_inspection_tested": True,
         "onedrive_preview_visible": True,
         "operations_diagnostics_visible": True, "obsidian_preview_visible": True,

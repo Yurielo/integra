@@ -24,7 +24,7 @@ word, page, slide, region, or artifact revision.
 ## 2. Required READY_APP_V1 scope
 
 The active delivery chain is `R9C -> R10 -> ONEDRIVE_PUBLICATION_V1 -> R12 ->
-R13 -> USER_MEDIA_WORKFLOW_V1 -> R14`. R9C and its prerequisites are accepted. The remaining stages must
+R13 -> USER_MEDIA_WORKFLOW_V1 -> SOURCE_FIRST_UI_V1 -> R14`. R9C and its prerequisites are accepted. The remaining stages must
 deliver all of the following:
 
 1. **Accepted core:** Projects & Sources, Transcript & Topic Studio, Knowledge
@@ -46,7 +46,10 @@ deliver all of the following:
    entitlements boundary, privacy/redaction, dependency and licensing review,
    reproducible local `.app` package, backup, crash recovery, update readiness,
    and rollback evidence.
-6. **Product Owner acceptance (R14):** explicit acceptance of the exact
+6. **Source-first UI (#76):** capability-driven source selection, output
+   selection, automatic dependency planning, real background execution,
+   concrete results, and exact `В разработке` states for unavailable work.
+7. **Product Owner acceptance (R14):** explicit acceptance of the exact
    `READY_APP_V1` candidate, included capability list, deferred registry, known
    limitations, compatibility, migration, and release boundary.
 
