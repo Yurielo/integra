@@ -33,7 +33,7 @@ not add routine human gates or change stage dependencies.
 | R9C Cross-navigation | #15 | M3 | R8C, R9A, R9B | ACCEPTED |
 | R10 deterministic one-way Obsidian export | #16 | M4 | R9C | ACCEPTED |
 | ONEDRIVE_PUBLICATION_V1 | #63 | M4 | R10 | ACCEPTED |
-| R12 usable native macOS application | #28 | M6 | ONEDRIVE_PUBLICATION_V1 | PLANNED |
+| R12 usable native macOS application | #28 | M6 | ONEDRIVE_PUBLICATION_V1 | ACCEPTED |
 | R13 hardening and reproducible local `.app` package | #29 | M7 | R12 | PLANNED |
 | R14 Product Owner READY_APP_V1 acceptance | #30 | M7 | R13 | HUMAN_GATE |
 | DEFERRED_CAPABILITIES_V1 registry | #64 | Later | R14 | DEFERRED_TO_LATER_WORK |

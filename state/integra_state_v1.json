@@ -24,6 +24,7 @@
   "cross_navigation_evidence": "state/cross_navigation_v1.json",
   "obsidian_export_evidence": "state/obsidian_export_v1.json",
   "onedrive_publication_evidence": "state/onedrive_publication_v1.json",
+  "native_macos_app_evidence": "state/native_macos_app_v1.json",
   "execution_policy": {
     "safe_roadmap_implementation": "STANDING_AUTHORITY_AFTER_DEPENDENCIES",
     "merge": "AUTO_AFTER_FAIL_CLOSED_GATES",
@@ -127,7 +128,7 @@
     { "id": "R9C", "issue": 15, "status": "ACCEPTED", "depends_on": ["R8C", "R9A", "R9B"] },
     { "id": "R10", "issue": 16, "status": "ACCEPTED", "depends_on": ["R9C"] },
     { "id": "ONEDRIVE_PUBLICATION_V1", "issue": 63, "status": "ACCEPTED", "depends_on": ["R10"] },
-    { "id": "R12", "issue": 28, "status": "PLANNED", "depends_on": ["ONEDRIVE_PUBLICATION_V1"] },
+    { "id": "R12", "issue": 28, "status": "ACCEPTED", "depends_on": ["ONEDRIVE_PUBLICATION_V1"] },
     { "id": "R13", "issue": 29, "status": "PLANNED", "depends_on": ["R12"] },
     { "id": "R14", "issue": 30, "status": "HUMAN_GATE", "depends_on": ["R13"] },
     { "id": "DEFERRED_CAPABILITIES_V1", "issue": 64, "status": "DEFERRED_TO_LATER_WORK", "depends_on": ["R14"] },
