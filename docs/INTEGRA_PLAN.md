@@ -621,6 +621,13 @@ provenance when remote membership changes.
 Implement and validate supported document types, structure, locators, OCR
 fallback, and source fidelity.
 
+The accepted v1 boundary directly preserves UTF-8 TXT/Markdown, DOCX paragraph
+structure and media, PPTX slides/notes/media, and supported PDF page text and
+image streams. Every result is source-hash bound with page, slide, region or
+character locators. Images, scans, image-heavy PDFs and unsupported PDF text
+encodings remain explicitly OCR-required unless a validated local OCR adapter
+supplies region evidence; they are never reported as ordinary complete text.
+
 ### Projects & Sources v1
 
 Complete the Project Registry, project history and lifecycle, local audio,

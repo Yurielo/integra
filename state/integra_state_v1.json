@@ -15,6 +15,7 @@
   "operations_and_diagnostics_evidence": "state/operations_and_diagnostics_v1.json",
   "migration_evidence": "state/migration_v1.json",
   "playlist_evidence": "state/playlist_v1.json",
+  "document_pipeline_evidence": "state/document_pipeline_v1.json",
   "execution_policy": {
     "safe_roadmap_implementation": "STANDING_AUTHORITY_AFTER_DEPENDENCIES",
     "merge": "AUTO_AFTER_FAIL_CLOSED_GATES",
@@ -69,7 +70,7 @@
     { "id": "OPERATIONS_AND_DIAGNOSTICS_V1", "issue": 46, "status": "ACCEPTED", "depends_on": ["R6"] },
     { "id": "R7", "issue": 9, "status": "ACCEPTED", "depends_on": ["R6", "OPERATIONS_AND_DIAGNOSTICS_V1"] },
     { "id": "R8A", "issue": 10, "status": "ACCEPTED", "depends_on": ["R3", "R6", "OPERATIONS_AND_DIAGNOSTICS_V1"] },
-    { "id": "R8B", "issue": 11, "status": "PLANNED", "depends_on": ["R3", "R6", "OPERATIONS_AND_DIAGNOSTICS_V1"] },
+    { "id": "R8B", "issue": 11, "status": "ACCEPTED", "depends_on": ["R3", "R6", "OPERATIONS_AND_DIAGNOSTICS_V1"] },
     { "id": "PROJECTS_AND_SOURCES_V1", "issue": 47, "status": "PLANNED", "depends_on": ["R6", "R7", "R8A", "R8B"] },
     { "id": "TRANSCRIPT_AND_TOPIC_STUDIO_V1", "issue": 48, "status": "PLANNED", "depends_on": ["R6", "PROJECTS_AND_SOURCES_V1"] },
     { "id": "R8C", "issue": 12, "status": "PLANNED", "depends_on": ["R8A", "R8B", "PROJECTS_AND_SOURCES_V1", "TRANSCRIPT_AND_TOPIC_STUDIO_V1"] },

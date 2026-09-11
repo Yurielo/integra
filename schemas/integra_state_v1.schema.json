@@ -20,6 +20,7 @@
     "operations_and_diagnostics_evidence",
     "migration_evidence",
     "playlist_evidence",
+    "document_pipeline_evidence",
     "execution_policy",
     "release_scope",
     "roadmap",
@@ -65,6 +66,9 @@
     },
     "playlist_evidence": {
       "const": "state/playlist_v1.json"
+    },
+    "document_pipeline_evidence": {
+      "const": "state/document_pipeline_v1.json"
     },
     "execution_policy": {
       "type": "object",

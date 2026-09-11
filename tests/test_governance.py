@@ -51,6 +51,9 @@ class GovernanceValidationTests(unittest.TestCase):
         cls.playlist = json.loads(
             (ROOT / "state" / "playlist_v1.json").read_text(encoding="utf-8")
         )
+        cls.document_pipeline = json.loads(
+            (ROOT / "state" / "document_pipeline_v1.json").read_text(encoding="utf-8")
+        )
 
     def test_repository_state_is_valid(self):
         self.assertEqual(VALIDATOR.validate_state(self.state), [])
@@ -254,6 +257,41 @@ class GovernanceValidationTests(unittest.TestCase):
         self.assertIn(
             "R8A acceptance evidence differs from the governed contract",
             VALIDATOR.validate_playlist_evidence(evidence),
+        )
+
+    def test_document_pipeline_evidence_is_pinned_and_valid(self):
+        self.assertEqual(
+            VALIDATOR.validate_document_pipeline_evidence(self.document_pipeline), []
+        )
+        state = copy.deepcopy(self.state)
+        state["document_pipeline_evidence"] = "state/other.json"
+        self.assertIn(
+            "document_pipeline_evidence must pin R8B acceptance",
+            VALIDATOR.validate_state(state),
+        )
+
+    def test_document_pipeline_implementation_and_fixtures_are_hash_bound(self):
+        evidence = copy.deepcopy(self.document_pipeline)
+        evidence["implementation"][0]["sha256"] = "0" * 64
+        self.assertTrue(
+            any(
+                "R8B implementation hash differs" in error
+                for error in VALIDATOR.validate_document_pipeline_evidence(evidence)
+            )
+        )
+        evidence = copy.deepcopy(self.document_pipeline)
+        evidence["fixtures"].clear()
+        self.assertIn(
+            "R8B fixture inventory must be exact",
+            VALIDATOR.validate_document_pipeline_evidence(evidence),
+        )
+
+    def test_document_pipeline_evidence_cannot_expand_protected_scope(self):
+        evidence = copy.deepcopy(self.document_pipeline)
+        evidence["acceptance"]["protected_data_accessed"] = True
+        self.assertIn(
+            "R8B acceptance evidence differs from the governed contract",
+            VALIDATOR.validate_document_pipeline_evidence(evidence),
         )
 
     def test_unknown_dependency_fails(self):

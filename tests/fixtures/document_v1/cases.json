@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "captured_at": "2026-09-11T00:00:00Z",
+  "cases": [
+    {"name": "notes.txt", "format": "TXT", "expected_text": "Exact source text."},
+    {"name": "guide.md", "format": "MARKDOWN", "expected_text": "# Guide\n\nEvidence-linked notes."},
+    {"name": "handout.docx", "format": "DOCX", "expected_text": "First paragraph"},
+    {"name": "slides.pptx", "format": "PPTX", "expected_text": "Slide one"},
+    {"name": "paper.pdf", "format": "PDF", "expected_text": "PDF page text"},
+    {"name": "scan.png", "format": "IMAGE", "expected_text": "OCR region text"}
+  ]
+}
