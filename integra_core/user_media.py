@@ -7,7 +7,9 @@ import os
 import re
 import shutil
 import subprocess
+import signal
 import uuid
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
@@ -51,6 +53,43 @@ def _is_run_cancelled(project_dir: Path, run_id: str | None) -> bool:
     except Exception:
         return False
     return record.get("state") == "CANCELLED"
+
+
+def _run_with_cancellation(
+    command: list[str],
+    project_dir: Path,
+    run_id: str | None,
+    *,
+    check: bool = True,
+) -> None:
+    process = subprocess.Popen(
+        command,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+    )
+    try:
+        while True:
+            if _is_run_cancelled(project_dir, run_id):
+                try:
+                    os.killpg(process.pid, signal.SIGTERM)
+                except ProcessLookupError:
+                    pass
+                raise _RunCancelled()
+            code = process.poll()
+            if code is None:
+                time.sleep(0.1)
+                continue
+            if code != 0 and check:
+                raise subprocess.CalledProcessError(returncode=code, cmd=command)
+            return
+    finally:
+        if process.poll() is None:
+            try:
+                os.killpg(process.pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+            process.wait(timeout=1)
 
 
 def _report_run_progress(
@@ -184,10 +223,20 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
         ffmpeg, whisper, model = _tools(); source = Path(job["owned_path"])
         work = project_dir / "artifacts" / job_id.removeprefix("urn:integra:job:"); work.mkdir(parents=True, exist_ok=True)
         wav = work / "audio.wav"
-        subprocess.run([ffmpeg, "-nostdin", "-y", "-i", str(source), "-ar", "16000", "-ac", "1", "-c:a", "pcm_s16le", str(wav)], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        _run_with_cancellation(
+            [ffmpeg, "-nostdin", "-y", "-i", str(source), "-ar", "16000", "-ac", "1", "-c:a", "pcm_s16le", str(wav)],
+            project_dir,
+            job.get("run_id"),
+            check=True,
+        )
         checkpoint("RUNNING", 25, "Transcribing locally", run_stage="transcript")
         output = work / "transcript"
-        subprocess.run([whisper, "-m", model, "-f", str(wav), "-l", "auto", "-osrt", "-of", str(output), "-np"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        _run_with_cancellation(
+            [whisper, "-m", model, "-f", str(wav), "-l", "auto", "-osrt", "-of", str(output), "-np"],
+            project_dir,
+            job.get("run_id"),
+            check=True,
+        )
         segments = _parse_srt((output.with_suffix(".srt")).read_text(errors="replace"), job["source_id"])
         if not segments: raise ValueError("transcription produced no timed speech segments")
         requested=job.get("requested_outputs")
