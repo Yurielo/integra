@@ -24,6 +24,7 @@
     "projects_sources_evidence",
     "transcript_topic_studio_evidence",
     "multi_source_alignment_evidence",
+    "knowledge_integration_evidence",
     "execution_policy",
     "release_scope",
     "roadmap",
@@ -81,6 +82,9 @@
     },
     "multi_source_alignment_evidence": {
       "const": "state/multi_source_alignment_v1.json"
+    },
+    "knowledge_integration_evidence": {
+      "const": "state/knowledge_integration_v1.json"
     },
     "execution_policy": {
       "type": "object",

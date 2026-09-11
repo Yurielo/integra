@@ -67,6 +67,11 @@ class GovernanceValidationTests(unittest.TestCase):
                 encoding="utf-8"
             )
         )
+        cls.knowledge_integration = json.loads(
+            (ROOT / "state" / "knowledge_integration_v1.json").read_text(
+                encoding="utf-8"
+            )
+        )
 
     def test_repository_state_is_valid(self):
         self.assertEqual(VALIDATOR.validate_state(self.state), [])
@@ -600,6 +605,26 @@ class GovernanceValidationTests(unittest.TestCase):
         evidence["implementation"][0]["sha256"] = "0" * 64
         errors = VALIDATOR.validate_multi_source_alignment_evidence(evidence, self.baselines)
         self.assertTrue(any("implementation hash differs" in error for error in errors))
+
+    def test_knowledge_integration_evidence_is_valid(self):
+        self.assertEqual(
+            VALIDATOR.validate_knowledge_integration_evidence(
+                self.knowledge_integration, self.baselines
+            ),
+            [],
+        )
+
+    def test_knowledge_integration_cannot_claim_machine_acceptance(self):
+        evidence = copy.deepcopy(self.knowledge_integration)
+        evidence["acceptance"]["machine_semantic_acceptance"] = True
+        errors = VALIDATOR.validate_knowledge_integration_evidence(evidence, self.baselines)
+        self.assertTrue(any("acceptance evidence" in error for error in errors))
+
+    def test_knowledge_integration_source_baseline_is_pinned(self):
+        evidence = copy.deepcopy(self.knowledge_integration)
+        evidence["source_component"]["commit_sha"] = "0" * 40
+        errors = VALIDATOR.validate_knowledge_integration_evidence(evidence, self.baselines)
+        self.assertTrue(any("source component" in error for error in errors))
 
 
 if __name__ == "__main__":

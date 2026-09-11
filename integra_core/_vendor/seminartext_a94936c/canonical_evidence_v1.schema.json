@@ -1,0 +1,296 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seminartext.local/schemas/canonical-evidence-v1.schema.json",
+  "title": "SeminarText Canonical Evidence Bundle v1",
+  "description": "Canonical machine-readable evidence contract. Cross-record invariants are enforced by validate_canonical_evidence_v1.py.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_type",
+    "artifact_id",
+    "project",
+    "sources",
+    "transcript_revisions",
+    "cues",
+    "alignment_runs",
+    "words",
+    "benchmark_segments",
+    "topics",
+    "evidence_refs"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "artifact_type": {"const": "seminartext.canonical_evidence"},
+    "artifact_id": {"$ref": "#/$defs/id"},
+    "project": {"$ref": "#/$defs/project"},
+    "sources": {"type": "array", "items": {"$ref": "#/$defs/source"}},
+    "transcript_revisions": {"type": "array", "items": {"$ref": "#/$defs/transcriptRevision"}},
+    "cues": {"type": "array", "items": {"$ref": "#/$defs/cue"}},
+    "alignment_runs": {"type": "array", "items": {"$ref": "#/$defs/alignmentRun"}},
+    "words": {"type": "array", "items": {"$ref": "#/$defs/word"}},
+    "benchmark_segments": {"type": "array", "items": {"$ref": "#/$defs/benchmarkSegment"}},
+    "topics": {"type": "array", "items": {"$ref": "#/$defs/topic"}},
+    "evidence_refs": {"type": "array", "items": {"$ref": "#/$defs/evidenceRef"}}
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9._:-]{2,127}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "lifecycle": {
+      "enum": ["draft", "active", "verified", "superseded", "invalidated", "archived"]
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "lifecycle_status"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "title": {"type": "string", "minLength": 1},
+        "lifecycle_status": {"$ref": "#/$defs/lifecycle"}
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "project_id", "sequence", "kind", "title", "content_sha256", "duration_seconds", "lifecycle_status"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "project_id": {"$ref": "#/$defs/id"},
+        "sequence": {"type": "integer", "minimum": 0},
+        "kind": {"enum": ["video", "audio", "pdf", "pptx", "docx", "text", "image", "other"]},
+        "title": {"type": "string", "minLength": 1},
+        "content_sha256": {"$ref": "#/$defs/sha256"},
+        "duration_seconds": {"type": ["number", "null"], "minimum": 0},
+        "lifecycle_status": {"$ref": "#/$defs/lifecycle"}
+      }
+    },
+    "transcriptRevision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "source_id", "revision_number", "revision_kind", "parent_revision_id", "canonical_text", "text_sha256", "authority", "lifecycle_status"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "source_id": {"$ref": "#/$defs/id"},
+        "revision_number": {"type": "integer", "minimum": 1},
+        "revision_kind": {"enum": ["asr", "verified", "corrected"]},
+        "parent_revision_id": {"anyOf": [{"$ref": "#/$defs/id"}, {"type": "null"}]},
+        "canonical_text": {"type": "string"},
+        "text_sha256": {"$ref": "#/$defs/sha256"},
+        "authority": {"enum": ["candidate", "authoritative", "superseded"]},
+        "lifecycle_status": {"$ref": "#/$defs/lifecycle"},
+        "transcript_provenance": {"$ref": "#/$defs/transcriptProvenance"}
+      }
+    },
+    "verificationRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["char_start", "char_end"],
+      "properties": {
+        "char_start": {"type": "integer", "minimum": 0},
+        "char_end": {"type": "integer", "minimum": 1}
+      }
+    },
+    "transcriptProvenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin", "method", "verification_state", "verification_ranges", "reviewer"],
+      "properties": {
+        "origin": {"enum": ["machine_generated", "human_verified", "human_corrected"]},
+        "method": {"type": "string", "minLength": 1},
+        "verification_state": {"enum": ["machine_unverified", "selectively_verified", "fully_human_verified"]},
+        "verification_ranges": {"type": "array", "items": {"$ref": "#/$defs/verificationRange"}},
+        "reviewer": {"type": ["string", "null"], "minLength": 1}
+      }
+    },
+    "timeLocator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "start_seconds", "end_seconds"],
+      "properties": {
+        "type": {"const": "time_interval"},
+        "start_seconds": {"type": "number", "minimum": 0},
+        "end_seconds": {"type": "number", "minimum": 0}
+      }
+    },
+    "pdfLocator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "page_start", "page_end"],
+      "properties": {
+        "type": {"const": "pdf_page_range"},
+        "page_start": {"type": "integer", "minimum": 1},
+        "page_end": {"type": "integer", "minimum": 1}
+      }
+    },
+    "slideLocator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "slide_start", "slide_end"],
+      "properties": {
+        "type": {"const": "pptx_slide_range"},
+        "slide_start": {"type": "integer", "minimum": 1},
+        "slide_end": {"type": "integer", "minimum": 1}
+      }
+    },
+    "charLocator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "char_start", "char_end"],
+      "properties": {
+        "type": {"const": "text_char_range"},
+        "char_start": {"type": "integer", "minimum": 0},
+        "char_end": {"type": "integer", "minimum": 1}
+      }
+    },
+    "imageLocator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "x", "y", "width", "height", "coordinate_space"],
+      "properties": {
+        "type": {"const": "image_region"},
+        "x": {"type": "number", "minimum": 0},
+        "y": {"type": "number", "minimum": 0},
+        "width": {"type": "number", "exclusiveMinimum": 0},
+        "height": {"type": "number", "exclusiveMinimum": 0},
+        "coordinate_space": {"const": "normalized_0_1"}
+      }
+    },
+    "locator": {
+      "oneOf": [
+        {"$ref": "#/$defs/timeLocator"},
+        {"$ref": "#/$defs/pdfLocator"},
+        {"$ref": "#/$defs/slideLocator"},
+        {"$ref": "#/$defs/charLocator"},
+        {"$ref": "#/$defs/imageLocator"}
+      ]
+    },
+    "cue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "transcript_revision_id", "sequence", "char_start", "char_end", "text", "source_locator", "lifecycle_status"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "transcript_revision_id": {"$ref": "#/$defs/id"},
+        "sequence": {"type": "integer", "minimum": 0},
+        "char_start": {"type": "integer", "minimum": 0},
+        "char_end": {"type": "integer", "minimum": 1},
+        "text": {"type": "string", "minLength": 1},
+        "source_locator": {"anyOf": [{"$ref": "#/$defs/locator"}, {"type": "null"}]},
+        "lifecycle_status": {"$ref": "#/$defs/lifecycle"}
+      }
+    },
+    "alignmentRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "source_id", "source_content_sha256", "transcript_revision_id", "transcript_text_sha256", "aligner", "aligner_version", "model", "model_revision", "model_sha256", "config_sha256", "status"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "source_id": {"$ref": "#/$defs/id"},
+        "source_content_sha256": {"$ref": "#/$defs/sha256"},
+        "transcript_revision_id": {"$ref": "#/$defs/id"},
+        "transcript_text_sha256": {"$ref": "#/$defs/sha256"},
+        "aligner": {"type": "string", "minLength": 1},
+        "aligner_version": {"type": "string", "minLength": 1},
+        "model": {"type": "string", "minLength": 1},
+        "model_revision": {"type": "string", "minLength": 1},
+        "model_sha256": {"$ref": "#/$defs/sha256"},
+        "config_sha256": {"$ref": "#/$defs/sha256"},
+        "status": {"enum": ["valid", "superseded", "stale"]}
+      }
+    },
+    "timingProvenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "alignment_run_id", "method"],
+      "properties": {
+        "kind": {"enum": ["source_exact", "forced_alignment", "derived_estimate", "unavailable"]},
+        "alignment_run_id": {"anyOf": [{"$ref": "#/$defs/id"}, {"type": "null"}]},
+        "method": {"type": ["string", "null"]}
+      }
+    },
+    "word": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "source_id", "transcript_revision_id", "sequence", "char_start", "char_end", "text", "normalized_text", "source_cue_ids", "start_seconds", "end_seconds", "alignment_status", "confidence", "speaker_id", "timing_provenance", "qa_flags", "lifecycle_status"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "source_id": {"$ref": "#/$defs/id"},
+        "transcript_revision_id": {"$ref": "#/$defs/id"},
+        "sequence": {"type": "integer", "minimum": 0},
+        "char_start": {"type": "integer", "minimum": 0},
+        "char_end": {"type": "integer", "minimum": 1},
+        "text": {"type": "string", "minLength": 1},
+        "normalized_text": {"type": ["string", "null"]},
+        "source_cue_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+        "start_seconds": {"type": ["number", "null"], "minimum": 0},
+        "end_seconds": {"type": ["number", "null"], "minimum": 0},
+        "alignment_status": {"enum": ["source_timed", "aligned", "estimated", "unaligned"]},
+        "confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "speaker_id": {"anyOf": [{"$ref": "#/$defs/id"}, {"type": "null"}]},
+        "timing_provenance": {"$ref": "#/$defs/timingProvenance"},
+        "qa_flags": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "lifecycle_status": {"$ref": "#/$defs/lifecycle"}
+      }
+    },
+    "benchmarkSegment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "transcript_revision_id", "sequence", "word_start_id", "word_end_id", "word_count", "lifecycle_status"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "transcript_revision_id": {"$ref": "#/$defs/id"},
+        "sequence": {"type": "integer", "minimum": 0},
+        "word_start_id": {"$ref": "#/$defs/id"},
+        "word_end_id": {"$ref": "#/$defs/id"},
+        "word_count": {"type": "integer", "minimum": 1},
+        "lifecycle_status": {"$ref": "#/$defs/lifecycle"}
+      }
+    },
+    "topic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "transcript_revision_id", "topic_set_id", "sequence", "title", "benchmark_segment_ids", "word_start_id", "word_end_id", "origin", "lifecycle_status"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "transcript_revision_id": {"$ref": "#/$defs/id"},
+        "topic_set_id": {"$ref": "#/$defs/id"},
+        "sequence": {"type": "integer", "minimum": 0},
+        "title": {"type": "string", "minLength": 1},
+        "benchmark_segment_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+        "word_start_id": {"$ref": "#/$defs/id"},
+        "word_end_id": {"$ref": "#/$defs/id"},
+        "origin": {"enum": ["gold", "verified_manual", "semi_automatic", "automatic_draft"]},
+        "lifecycle_status": {"$ref": "#/$defs/lifecycle"}
+      }
+    },
+    "evidenceTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entity_type", "entity_id"],
+      "properties": {
+        "entity_type": {"enum": ["source", "transcript_revision", "cue", "word", "benchmark_segment", "topic"]},
+        "entity_id": {"$ref": "#/$defs/id"}
+      }
+    },
+    "evidenceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "project_id", "source_id", "transcript_revision_id", "target", "locator", "lifecycle_status"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "project_id": {"$ref": "#/$defs/id"},
+        "source_id": {"$ref": "#/$defs/id"},
+        "transcript_revision_id": {"anyOf": [{"$ref": "#/$defs/id"}, {"type": "null"}]},
+        "target": {"$ref": "#/$defs/evidenceTarget"},
+        "locator": {"$ref": "#/$defs/locator"},
+        "lifecycle_status": {"$ref": "#/$defs/lifecycle"}
+      }
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0",
+  "status": "ACCEPTED",
+  "issue": 13,
+  "dependencies": ["R6", "R8C", "TRANSCRIPT_AND_TOPIC_STUDIO_V1"],
+  "source_component": {"id": "seminartext", "commit_sha": "a94936cd77cde13561c97c804ece1ac1134e01a6"},
+  "product_rules_read": ["PR-001", "PR-002", "PR-003", "PR-004", "PR-005", "PR-006", "PR-007", "PR-012"],
+  "implementation": [
+    {"path": "docs/architecture/KNOWLEDGE_INTEGRATION_V1.md", "sha256": "f09fd7a3a2a36989f4e839c2323d27f45c3775f3e232b40b78f45bc02bd781d8"},
+    {"path": "integra_core/_vendor/__init__.py", "sha256": "6f5de79cc2fb72081143bbd3ee4e14542ccaa7be3267122f36287396dd4b1872"},
+    {"path": "integra_core/_vendor/seminartext_a94936c/__init__.py", "sha256": "2e0edb03146623b5edf0067ab46af8576424e06f089a03d0764bcef2c7517334"},
+    {"path": "integra_core/_vendor/seminartext_a94936c/canonical_evidence_v1.schema.json", "sha256": "08bab4381ba435a059a1b58ea5dbedadd57112a18421ea7ef84a10ddb52d44b8"},
+    {"path": "integra_core/_vendor/seminartext_a94936c/canonical_knowledge_lifecycle_v1.json", "sha256": "c9133fe6ff630dd44475f40d37d731f407ce2f79d1d15613454a1d5c179099bc"},
+    {"path": "integra_core/_vendor/seminartext_a94936c/canonical_knowledge_v1.schema.json", "sha256": "33691770411b4e5fc4e923920619396f7281bcd655202f8f56ddba99b844111b"},
+    {"path": "integra_core/_vendor/seminartext_a94936c/validate_canonical_evidence_v1.py", "sha256": "889e6cdf3dc2dd7504f76923c04e2d8d1eceabdb828d0c110ddc1059b107860e"},
+    {"path": "integra_core/_vendor/seminartext_a94936c/validate_canonical_knowledge_v1.py", "sha256": "14869b0d77bed839758afb0455cffcfcba4173495554eddd9159a02309f1c095"},
+    {"path": "integra_core/knowledge.py", "sha256": "c4a94f533b44ca13fcc365aadbd7bd6a47bb656329c4b6b0144a7ff98850e9ea"},
+    {"path": "schemas/knowledge_view_v1.schema.json", "sha256": "393fd94482c4832217a6591d3c7497433be53d3674b43b7f373f92859751f488"},
+    {"path": "tests/test_knowledge.py", "sha256": "de594d402593589ed499f6aa45b4745d1a22eba847b205c31f7f132b5863e894"}
+  ],
+  "acceptance": {
+    "canonical_evidence_read_only": true,
+    "canonical_knowledge_read_only": true,
+    "substantive_claims_require_exact_evidence": true,
+    "concepts_and_relations_exposed": true,
+    "terms_preserve_labels_and_aliases": true,
+    "practice_knowledge_preserved_as_source_concepts": true,
+    "review_state_preserved": true,
+    "machine_semantic_acceptance": false,
+    "pinned_source_contracts_validated": true,
+    "transcript_assurance_exposed": true,
+    "public_reads_require_source_truth": true,
+    "knowledge_graph_deterministic": true,
+    "knowledge_diff_semantic_interpretation": false
+  },
+  "safety": {
+    "source_repositories_modified": false,
+    "source_artifacts_modified": false,
+    "protected_data_accessed": false,
+    "gold_accessed": false,
+    "semantic_authoring_performed": false,
+    "domain_review_performed": false
+  },
+  "limitations": [
+    "Practice knowledge remains represented by source Concept records because Canonical Knowledge v1 defines no separate Practice identity.",
+    "User-interface rendering and cross-media navigation remain R9C scope."
+  ]
+}
