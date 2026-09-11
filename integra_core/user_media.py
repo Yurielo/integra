@@ -54,9 +54,23 @@ def import_source(project_dir: Path, source: Path) -> dict[str, Any]:
     return record
 
 
+def _executable(env_name: str, command: str) -> str | None:
+    configured = os.environ.get(env_name)
+    candidates = [configured] if configured else []
+    discovered = shutil.which(command)
+    if discovered: candidates.append(discovered)
+    candidates.extend(f"{prefix}/{command}" for prefix in ("/opt/homebrew/bin", "/usr/local/bin"))
+    for value in candidates:
+        if not value: continue
+        try: path = Path(value).expanduser().resolve(strict=True)
+        except OSError: continue
+        if path.is_file() and os.access(path, os.X_OK): return str(path)
+    return None
+
+
 def _tools() -> tuple[str, str, str]:
-    ffmpeg = os.environ.get("INTEGRA_FFMPEG") or shutil.which("ffmpeg")
-    whisper = os.environ.get("INTEGRA_WHISPER_CLI") or shutil.which("whisper-cli")
+    ffmpeg = _executable("INTEGRA_FFMPEG", "ffmpeg")
+    whisper = _executable("INTEGRA_WHISPER_CLI", "whisper-cli")
     model = os.environ.get("INTEGRA_WHISPER_MODEL") or str(Path.home() / "whisper-models/ggml-large-v3.bin")
     if not ffmpeg: raise ValueError("ffmpeg is not installed")
     if not whisper: raise ValueError("whisper-cli is not installed")

@@ -86,6 +86,8 @@ class MacOSApplicationTests(unittest.TestCase):
             self.assertIn(operation, source)
         self.assertIn("NSOpenPanel", source)
         self.assertIn("Publish this verified package?", source)
+        self.assertIn('object["error"] as? String', source)
+        self.assertIn('Integra — New local project', source)
 
     def test_bridge_previews_and_publishes_validated_obsidian_package(self):
         *_, manifest, files = fixtures()
