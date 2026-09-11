@@ -2670,6 +2670,7 @@ def validate_native_macos_app_evidence(evidence: dict, root: Path = ROOT) -> lis
         "closed_local_bridge": True, "controlled_local_publication_tested": True,
         "create_and_open_project_tested": True, "deferred_actions_unavailable": True,
         "deterministic_source_first_workflow": True, "exact_navigation_visible": True,
+        "last_window_close_terminates_app": True,
         "launch_probe_passed": True, "persisted_job_inspection_tested": True,
         "approved_app_icon_hash_verified": True,
         "bundle_icon_verified": True, "deterministic_icon_generation": True,
