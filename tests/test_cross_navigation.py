@@ -10,7 +10,7 @@ import unittest
 
 from integra_core.cross_navigation import (
     CrossNavigationError, NavigationUnavailableError, build_cross_navigation,
-    _add_bridges, _document_locators, _record_hash, dumps_cross_navigation,
+    _add_bridges, _document_locators, _index_knowledge, _record_hash, dumps_cross_navigation,
     loads_cross_navigation, media_source_target_id, navigate,
 )
 from integra_core.identity import derive_imported_id
@@ -36,8 +36,17 @@ KNOWLEDGE = _fixture_module("test_knowledge")
 MEDIA = _fixture_module("test_media")
 
 
-def _knowledge_view() -> tuple[dict, bytes, bytes, bytes]:
+def _replace_source_id(value, old: str, new: str):
+    if isinstance(value, dict):
+        return {key: _replace_source_id(item, old, new) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_replace_source_id(item, old, new) for item in value]
+    return new if value == old else value
+
+
+def _knowledge_view(source_id: str = "source:video-1") -> tuple[dict, bytes, bytes, bytes]:
     evidence = KNOWLEDGE._evidence()
+    evidence = _replace_source_id(evidence, "source:video-1", source_id)
     evidence_payload = KNOWLEDGE.json.dumps(
         evidence, ensure_ascii=False, sort_keys=True, separators=(",", ":")
     ).encode()
@@ -50,6 +59,7 @@ def _knowledge_view() -> tuple[dict, bytes, bytes, bytes]:
         evidence, hashlib.sha256(evidence_payload).hexdigest(), source,
         hashlib.sha256(source_payload).hexdigest(),
     )
+    knowledge = _replace_source_id(knowledge, "source:video-1", source_id)
     knowledge_payload = KNOWLEDGE.json.dumps(
         knowledge, ensure_ascii=False, sort_keys=True, separators=(",", ":")
     ).encode()
@@ -220,6 +230,82 @@ class CrossNavigationTests(unittest.TestCase):
             {item["kind"] for item in self.index["sources"]["mappings"]},
             {"KNOWLEDGE_TO_PROJECT_SOURCE", "MEDIA_TO_ALIGNMENT_SOURCE"},
         )
+
+    def test_cross_project_knowledge_source_fails_before_indexing(self) -> None:
+        view, evidence, source, knowledge = _knowledge_view("source:outside-project")
+        authority = {
+            **self.authority,
+            "knowledge_view": view,
+            "evidence_payload": evidence,
+            "source_evidence_payload": source,
+            "knowledge_payload": knowledge,
+            "bridges": [],
+        }
+        with self.assertRaisesRegex(
+            CrossNavigationError, "lacks one exact project mapping"
+        ):
+            build_cross_navigation(**authority, created_at=NOW)
+
+    def test_partial_media_mapping_coverage_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            unmatched = _media_record(
+                Path(temporary),
+                "urn:integra:artifact:00000000-0000-5000-8000-000000000000",
+            )
+            authority = {
+                **self.authority,
+                "media_records": [self.media, unmatched],
+                "bridges": [],
+            }
+            with self.assertRaisesRegex(
+                CrossNavigationError, "registered media source lacks one exact alignment mapping"
+            ):
+                build_cross_navigation(**authority, created_at=NOW)
+
+    def test_multi_source_knowledge_aggregate_exposes_only_entity_action(self) -> None:
+        evidence = [
+            {
+                "id": "evidence:one", "source_id": "source:one",
+                "transcript_revision_id": "revision:one",
+                "locator": {"type": "time_interval", "start_seconds": 1.0, "end_seconds": 2.0},
+            },
+            {
+                "id": "evidence:two", "source_id": "source:two",
+                "transcript_revision_id": "revision:two",
+                "locator": {"type": "time_interval", "start_seconds": 3.0, "end_seconds": 4.0},
+            },
+        ]
+        view = {
+            "evidence": evidence,
+            "records": {
+                "seminars": [], "topics": [],
+                "concepts": [{
+                    "id": "concept:aggregate",
+                    "evidence_refs": ["evidence:one", "evidence:two"],
+                }],
+                "relations": [], "review_decisions": [],
+            },
+            "graph": {
+                "nodes": [
+                    {"id": "concept:aggregate", "kind": "CONCEPT", "sha256": "1" * 64,
+                     "status": "PROVISIONAL"},
+                    {"id": "evidence:one", "kind": "EVIDENCE", "sha256": "2" * 64,
+                     "status": "PROVISIONAL"},
+                    {"id": "evidence:two", "kind": "EVIDENCE", "sha256": "3" * 64,
+                     "status": "PROVISIONAL"},
+                ],
+                "edges": [],
+            },
+        }
+        targets: dict[str, dict] = {}
+        _index_knowledge(targets, [], view)
+        aggregate = targets["concept:aggregate"]
+        self.assertEqual(aggregate["actions"], ["OPEN_ENTITY"])
+        self.assertEqual(aggregate["locators"], [])
+        self.assertIsNone(aggregate["source_id"])
+        self.assertIsNone(aggregate["source_revision_id"])
+        self.assertIn("SEEK_MEDIA", targets["evidence:one"]["actions"])
+        self.assertEqual(targets["evidence:one"]["source_id"], "source:one")
 
     def test_resigned_semantic_promotion_fails_against_authority(self) -> None:
         forged = copy.deepcopy(self.index)

@@ -2295,13 +2295,15 @@ def validate_cross_navigation_evidence(
 ) -> list[str]:
     errors: list[str] = []
     expected_fields = {
-        "schema_version", "status", "issue", "dependencies", "implementation",
+        "schema_version", "status", "issue", "corrective_issues", "dependencies", "implementation",
         "surfaces", "acceptance", "safety", "limitations",
     }
     if not isinstance(evidence, dict) or set(evidence) != expected_fields:
         return ["R9C cross-navigation evidence fields must match v1"]
     if (evidence.get("schema_version"), evidence.get("status"), evidence.get("issue")) != ("1.0", "ACCEPTED", 15):
         errors.append("R9C evidence must certify Issue #15 as ACCEPTED")
+    if evidence.get("corrective_issues") != [61]:
+        errors.append("R9C corrective Issue inventory differs")
     if evidence.get("dependencies") != ["R8C", "R9A", "R9B"]:
         errors.append("R9C dependency order differs")
     paths = []
@@ -2327,6 +2329,9 @@ def validate_cross_navigation_evidence(
         "stable_ids_preserved": True,
         "exact_locators_preserved": True,
         "source_revision_mappings_required": True,
+        "exact_project_source_coverage_required": True,
+        "partial_mapping_coverage_rejected": True,
+        "multi_source_aggregate_actions_restricted": True,
         "authoritative_bridge_catalog_required": True,
         "authoritative_availability_catalog_required": True,
         "forward_and_reverse_navigation": True,
