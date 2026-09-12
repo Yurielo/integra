@@ -76,7 +76,7 @@
   },
   "limitations": [
     "The approved source contains fine text that is naturally unreadable at 16 pixels; it remains unaltered, while its shape and color identity remain visible at small sizes.",
-    "Source-first semantic outputs, OCR, general VideoText operations, live YouTube ingest, and generated publication packages remain disabled and visibly labelled В разработке until accepted production adapters exist.",
+    "Source-first semantic outputs are implemented and publication package artifacts are generated for supported document/media runs; OCR, general VideoText operations, live YouTube ingest, and non-core social adapters remain disabled and visibly labelled В разработке until accepted production adapters exist.",
     "The local bundle currently depends on /usr/bin/python3; R13 owns a self-contained runtime or a proven deployment preflight.",
     "The local arm64 development executable receives only the linker-required ad-hoc code seal; no signing identity, notarization, distribution, or release was used.",
     "R13 owns hardening, final bundle identity and deployment target, entitlements, licensing, reproducible package evidence, backup and rollback, crash recovery, and update readiness."
