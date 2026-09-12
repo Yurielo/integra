@@ -146,6 +146,35 @@ class SourceFirstBridgeTests(unittest.TestCase):
             self.assertEqual(navigation["segments"][0]["start_seconds"],0.0)
             self.assertEqual(navigation["segments"][0]["text"],"Hello Integra")
 
+    def test_source_first_audio_enhancement_uses_only_ffmpeg_and_returns_owned_output(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory); source=root/"voice.wav"; source.write_bytes(b"audio")
+            ffmpeg=root/"ffmpeg"; ffmpeg.write_text("#!/bin/sh\nsrc=''\nprevious=''\nfor arg in \"$@\"; do [ \"$previous\" = '-i' ] && src=$arg; previous=$arg; output=$arg; done\ncp \"$src\" \"$output\"\n")
+            ffmpeg.chmod(ffmpeg.stat().st_mode | 0o111)
+            environment={**os.environ,"INTEGRA_APP_DATA_ROOT":str(root/"data"),"INTEGRA_FFMPEG":str(ffmpeg)}
+            environment.pop("INTEGRA_WHISPER_CLI",None); environment.pop("INTEGRA_WHISPER_MODEL",None)
+            bridge=ROOT/"macos/Resources/bridge.py"
+            def call(operation,request):
+                result=subprocess.run(["python3",str(bridge),operation],input=json.dumps(request),capture_output=True,text=True,env=environment,timeout=5)
+                self.assertEqual(result.returncode,0,result.stdout+result.stderr); return json.loads(result.stdout)["result"]
+            sources=call("detect-sources",{"inputs":[str(source)]})
+            registry={item["id"]:item for item in call("capability-registry",{"sources":sources})}
+            self.assertTrue(registry["enhance_audio"]["runtime_available"])
+            plan=call("build-plan",{"sources":sources,"selected_outputs":["enhance_audio"]})
+            self.assertEqual([item["id"] for item in plan["stages"]],["media_preparation","enhance_audio"])
+            execution=call("execute-plan",{"plan":plan,"name":"Source-first audio enhancement test"})
+            project_id=execution["project"]["project_id"]; run_id=execution["run"]["run_id"]
+            for _ in range(100):
+                status=call("run-status",{"project_id":project_id,"run_id":run_id})
+                if status["state"] in {"COMPLETED","FAILED"}: break
+                time.sleep(.03)
+            self.assertEqual(status["state"],"COMPLETED",status)
+            outputs=status["source_results"][0]["outputs"]
+            self.assertEqual(Path(outputs["enhanced_audio"]).read_bytes(),b"audio")
+            record=json.loads(Path(outputs["audio_enhancement_record"]).read_bytes())
+            self.assertEqual(record["source_sha256"],sources[0]["properties"]["content_sha256"])
+            self.assertNotIn("transcript",outputs)
+
     def test_cancel_run_stops_real_worker_group_and_persists_cancelled_state(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory); source=root/"recording.wav"; source.write_bytes(b"real-input")

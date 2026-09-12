@@ -55,6 +55,27 @@ class ApplicationRuntimeTests(unittest.TestCase):
         self.assertTrue(Path(outputs["burned_video"]).is_file())
         self.assertEqual(Path(outputs["burned_video"]).read_bytes(),b"video")
 
+    def test_enhances_audio_without_requiring_transcription_runtime(self):
+        source_path=self.root/"audio.wav"; source_path.write_bytes(b"audio")
+        ffmpeg=self.root/"ffmpeg"; ffmpeg.write_text("#!/bin/sh\nsrc=''\nprev=''\nfor arg in \"$@\"; do [ \"$prev\" = '-i' ] && src=$arg; prev=$arg; out=$arg; done\ncp \"$src\" \"$out\"\n")
+        ffmpeg.chmod(ffmpeg.stat().st_mode|stat.S_IXUSR)
+        old={key:os.environ.get(key) for key in ("INTEGRA_FFMPEG","INTEGRA_WHISPER_CLI","INTEGRA_WHISPER_MODEL")}
+        try:
+            os.environ["INTEGRA_FFMPEG"]=str(ffmpeg)
+            os.environ.pop("INTEGRA_WHISPER_CLI",None); os.environ.pop("INTEGRA_WHISPER_MODEL",None)
+            plan=build_plan([detect_source(str(source_path))],["enhance_audio"])
+            run=prepare_run(self.project,plan); result=execute_run(self.project,run["run_id"])
+        finally:
+            for key,value in old.items():
+                if value is None: os.environ.pop(key,None)
+                else: os.environ[key]=value
+        self.assertEqual(result["state"],"COMPLETED")
+        outputs=result["source_results"][0]["outputs"]
+        self.assertEqual(Path(outputs["enhanced_audio"]).read_bytes(),b"audio")
+        record=json.loads(Path(outputs["audio_enhancement_record"]).read_bytes())
+        self.assertEqual(record["engine"],"ffmpeg")
+        self.assertNotIn("transcript",outputs)
+
     def test_executes_native_document_extraction(self):
         source_path=self.root/"notes.md"; source_path.write_text("# Heading\nActual document text")
         source=detect_source(str(source_path)); plan=build_plan([source],["document_text","document_structure"])

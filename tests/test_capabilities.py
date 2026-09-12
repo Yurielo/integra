@@ -82,5 +82,23 @@ class CapabilityRegistryTests(unittest.TestCase):
         self.assertTrue(registry["burn_subtitles"]["runtime_available"])
         self.assertEqual(registry["burn_subtitles"]["component"],"integra.local_media_adapter")
 
+    def test_audio_enhancement_requires_only_the_owned_ffmpeg_runtime(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory); source_path=root/"talk.wav"; source_path.write_bytes(b"audio")
+            ffmpeg=root/"ffmpeg"; ffmpeg.write_text("#!/bin/sh\nexit 0\n"); ffmpeg.chmod(ffmpeg.stat().st_mode|stat.S_IXUSR)
+            old={key:os.environ.get(key) for key in ("INTEGRA_FFMPEG","INTEGRA_WHISPER_CLI","INTEGRA_WHISPER_MODEL")}
+            try:
+                os.environ["INTEGRA_FFMPEG"]=str(ffmpeg)
+                os.environ.pop("INTEGRA_WHISPER_CLI",None); os.environ.pop("INTEGRA_WHISPER_MODEL",None)
+                registry={item["id"]:item for item in capability_registry([detect_source(str(source_path))])}
+                plan=build_plan([detect_source(str(source_path))],["enhance_audio"])
+            finally:
+                for key,value in old.items():
+                    if value is None: os.environ.pop(key,None)
+                    else: os.environ[key]=value
+        self.assertTrue(registry["enhance_audio"]["runtime_available"])
+        self.assertEqual(registry["enhance_audio"]["component"],"integra.local_media_adapter")
+        self.assertEqual([stage["id"] for stage in plan["stages"]],["media_preparation","enhance_audio"])
+
 
 if __name__=="__main__": unittest.main()

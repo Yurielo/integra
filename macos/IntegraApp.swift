@@ -325,6 +325,7 @@ struct SidebarItem {
     case "media_preparation": return "Подготовка аудио"
     case "transcript": return "Расшифровка"
     case "subtitles": return "Субтитры"
+    case "audio_enhancement": return "Улучшение звука"
     case "document_analysis": return "Анализ документа"
     default: return stage
     }
@@ -593,6 +594,8 @@ struct SidebarItem {
         case "transcript": title = "Открыть расшифровку (TXT)"
         case "subtitles": title = "Открыть субтитры (SRT)"
         case "burned_video": title = "Открыть видео со встроенными субтитрами"
+        case "enhanced_audio": title = "Открыть улучшенный звук (M4A)"
+        case "audio_enhancement_record": title = "Открыть сведения об улучшении звука (JSON)"
         case "text": title = "Открыть текстовый документ (TXT)"
         case "document_record": title = "Открыть контракт документа (JSON)"
         case "document_structure": title = "Открыть структуру документа (JSON)"
