@@ -35,7 +35,10 @@ class CapabilityRegistryTests(unittest.TestCase):
                     else: os.environ[key]=value
         self.assertTrue(registry["transcript"]["runtime_available"])
         self.assertTrue(registry["subtitles"]["runtime_available"])
-        for identifier in ("topics","translation","review","evidence","knowledge","clips"):
+        self.assertEqual(registry["topics"]["implementation_state"], "IMPLEMENTED")
+        self.assertFalse(registry["topics"]["runtime_available"])
+        self.assertEqual(registry["topics"]["ui_state"], "Недоступно: SeminarText runtime is not configured")
+        for identifier in ("translation","review","evidence","knowledge","clips"):
             self.assertEqual(registry[identifier]["ui_state"],"В разработке")
             self.assertFalse(registry[identifier]["runtime_available"])
 

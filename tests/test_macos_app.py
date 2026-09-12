@@ -135,6 +135,11 @@ class MacOSApplicationTests(unittest.TestCase):
         self.assertIn('object["error"] as? String', source)
         self.assertNotIn("Integra Reference Project", source)
 
+    def test_macos_build_packages_seminartext_topics_worker(self):
+        build = (ROOT / "scripts/build_macos_app.sh").read_text()
+        self.assertIn('workers/seminartext_topics_worker.py', build)
+        self.assertIn('Resources/workers', build)
+
     def test_bridge_previews_and_publishes_validated_obsidian_package(self):
         *_, manifest, files = fixtures()
         bridge = ROOT / "macos/Resources/bridge.py"

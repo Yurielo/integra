@@ -5,6 +5,7 @@ from pathlib import Path
 import stat
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from integra_core.application_runtime import execute_run, prepare_run, read_run
 from integra_core.capabilities import build_plan, detect_source
@@ -40,6 +41,35 @@ class ApplicationRuntimeTests(unittest.TestCase):
         self.assertTrue(Path(outputs["transcript_json"]).is_file())
         artifact=Path(outputs["transcript"]).parent
         self.assertFalse((artifact/"topics.json").exists()); self.assertFalse((artifact/"knowledge.json").exists())
+
+    def test_executes_selected_topics_as_review_required_seminartext_drafts(self):
+        source_path=self.root/"audio.wav"; source_path.write_bytes(b"audio")
+        overrides=self.media_environment(); old={key:os.environ.get(key) for key in overrides}
+
+        def topic_drafts(subtitles, output):
+            self.assertTrue(subtitles.is_file())
+            output.write_text(json.dumps({"component":"seminartext", "topics":[{"semantic_status":"REVIEW_REQUIRED"}]}))
+            return json.loads(output.read_text())
+
+        try:
+            os.environ.update(overrides)
+            with patch("integra_core.capabilities.seminartext_preflight", return_value={"state":"READY"}), \
+                 patch("integra_core.user_media.generate_topics", side_effect=topic_drafts) as generated:
+                plan=build_plan([detect_source(str(source_path))],["topics"])
+                self.assertEqual([stage["id"] for stage in plan["stages"]], ["media_preparation", "transcript", "topics"])
+                run=prepare_run(self.project,plan); result=execute_run(self.project,run["run_id"])
+        finally:
+            for key,value in old.items():
+                if value is None: os.environ.pop(key,None)
+                else: os.environ[key]=value
+        self.assertEqual(result["state"],"COMPLETED")
+        outputs=result["source_results"][0]["outputs"]
+        self.assertTrue(Path(outputs["transcript"]).is_file())
+        self.assertTrue(Path(outputs["subtitles"]).is_file())
+        self.assertTrue(Path(outputs["topics"]).is_file())
+        generated.assert_called_once()
+        self.assertEqual(json.loads(Path(outputs["topics"]).read_text())["topics"][0]["semantic_status"], "REVIEW_REQUIRED")
+        self.assertNotIn("knowledge", outputs)
 
     def test_burns_generated_subtitles_into_local_video(self):
         source_path=self.root/"video.mp4"; source_path.write_bytes(b"video")
