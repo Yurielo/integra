@@ -186,12 +186,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource,
 
   func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
   func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-    if let projectID, let runID,
-       let payload = try? bridge.json("run-status", request: ["project_id": projectID, "run_id": runID]),
-       let run = payload["result"] as? [String: Any],
-       ["RUNNING", "QUEUED"].contains(run["state"] as? String ?? "")
-    {
-      _ = try? bridge.json("cancel-run", request: ["project_id": projectID, "run_id": runID])
+    Task {
+      if let projectID, let runID {
+        _ = try? bridge.json("cancel-run", request: ["project_id": projectID, "run_id": runID])
+      }
+      if let recent = try? bridge.json("recent-runs")["result"] as? [[String: Any]] {
+        for item in recent {
+          guard let project = item["project"] as? [String: Any], let run = item["run"] as? [String: Any],
+                ["RUNNING", "QUEUED"].contains(run["state"] as? String ?? ""),
+                let projectID = project["project_id"] as? String,
+                let runID = run["run_id"] as? String
+          else { continue }
+          _ = try? bridge.json("cancel-run", request: ["project_id": projectID, "run_id": runID])
+        }
+      }
     }
     return .terminateNow
   }
