@@ -59,6 +59,36 @@ class SourceFirstBridgeTests(unittest.TestCase):
             self.assertEqual(status["state"],"COMPLETED",status)
             self.assertTrue(Path(status["source_results"][0]["outputs"]["discover_images"]).is_file())
 
+    def test_bridge_materializes_verified_embedded_images(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory); source=root/"illustrated.docx"
+            png=bytes.fromhex("89504e470d0a1a0a0000000d49484452000000010000000108000000003a7e9b55"
+                              "0000000a49444154789c636000000002000148afa4710000000049454e44ae426082")
+            with zipfile.ZipFile(source,"w") as container:
+                container.writestr("word/document.xml",
+                                   b'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                                   b'<w:body><w:p><w:r><w:t>Image test</w:t></w:r></w:p></w:body></w:document>')
+                container.writestr("word/media/image1.png",png)
+            environment={**os.environ,"INTEGRA_APP_DATA_ROOT":str(root/"data")}; bridge=ROOT/"macos/Resources/bridge.py"
+            def call(operation,request):
+                result=subprocess.run(["python3",str(bridge),operation],input=json.dumps(request),capture_output=True,text=True,env=environment)
+                self.assertEqual(result.returncode,0,result.stdout+result.stderr); return json.loads(result.stdout)["result"]
+            sources=call("detect-sources",{"inputs":[str(source)]})
+            registry={item["id"]:item for item in call("capability-registry",{"sources":sources})}
+            self.assertTrue(registry["extract_images"]["runtime_available"])
+            plan=call("build-plan",{"sources":sources,"selected_outputs":["extract_images"]})
+            execution=call("execute-plan",{"plan":plan,"name":"Docx image extraction test"})
+            project=execution["project"]; run=execution["run"]
+            for _ in range(100):
+                status=call("run-status",{"project_id":project["project_id"],"run_id":run["run_id"]})
+                if status["state"] in {"COMPLETED","FAILED"}: break
+                time.sleep(.03)
+            self.assertEqual(status["state"],"COMPLETED",status)
+            outputs=status["source_results"][0]["outputs"]
+            manifest=json.loads(Path(outputs["embedded_images_manifest"]).read_bytes())
+            image=Path(outputs["embedded_images_directory"])/manifest["embedded_media"][0]["relative_path"]
+            self.assertEqual(image.read_bytes(),png)
+
     def test_source_first_media_builds_publication_package(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory); source=root/"voice.wav"; source.write_bytes(b"audio")

@@ -101,7 +101,7 @@ def capability_registry(sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
         _capability("document_structure","Сохранить структуру страниц","Структура",{"PDF","DOCX","PPTX","TXT","MARKDOWN","IMAGE"},"integra.document_adapter",True,["document_analysis"],available=documents),
         _capability("discover_images","Определить встроенные изображения","Основная обработка",{"PDF","DOCX","PPTX"},"integra.document_adapter",True,["document_analysis"],available=documents),
         _capability("ocr","OCR / извлечение текста","Основная обработка",{"PDF","IMAGE"},"booktext",False,["document_analysis"]),
-        _capability("extract_images","Извлечь изображения","Основная обработка",{"PDF","DOCX","PPTX"},"integra.document_adapter",False,["discover_images"]),
+        _capability("extract_images","Извлечь изображения","Основная обработка",{"PDF","DOCX","PPTX"},"integra.document_adapter",True,["discover_images"],available=documents),
         _capability("document_outline","Главы, разделы и оглавление","Структура",{"PDF","DOCX","PPTX","TXT","MARKDOWN"},"booktext",False,["document_text"]),
         _capability("learning","Учебные материалы","Материалы",set(),"integra.learning",False,["knowledge"]),
         _capability("marketing","Маркетинговые материалы","Материалы",set(),"integra.marketing",False,["knowledge"]),

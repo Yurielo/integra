@@ -70,6 +70,26 @@ class ApplicationRuntimeTests(unittest.TestCase):
         discover=json.loads(Path(outputs["discover_images"]).read_bytes())
         self.assertIn("embedded_media",discover)
 
+    def test_materializes_embedded_images_through_the_application_runtime(self):
+        png=bytes.fromhex(
+            "89504e470d0a1a0a0000000d49484452000000010000000108000000003a7e9b55"
+            "0000000a49444154789c636000000002000148afa4710000000049454e44ae426082"
+        )
+        source_path=self.root/"illustrated.docx"
+        with zipfile.ZipFile(source_path,"w") as container:
+            container.writestr("word/document.xml",
+                               b'<?xml version="1.0" encoding="UTF-8"?>'
+                               b'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                               b'<w:body><w:p><w:r><w:t>Illustrated document</w:t></w:r></w:p></w:body></w:document>')
+            container.writestr("word/media/image1.png",png)
+        source=detect_source(str(source_path)); plan=build_plan([source],["extract_images"])
+        run=prepare_run(self.project,plan); result=execute_run(self.project,run["run_id"])
+        self.assertEqual(result["state"],"COMPLETED"); outputs=result["source_results"][0]["outputs"]
+        manifest=json.loads(Path(outputs["embedded_images_manifest"]).read_bytes())
+        self.assertEqual(manifest["embedded_media_count"],1)
+        image_path=Path(outputs["embedded_images_directory"])/manifest["embedded_media"][0]["relative_path"]
+        self.assertEqual(image_path.read_bytes(),png)
+
     def test_rejects_tampered_plan(self):
         source_path=self.root/"notes.md"; source_path.write_text("text")
         plan=build_plan([detect_source(str(source_path))],["document_text"]); plan["selected_outputs"]=["knowledge"]
