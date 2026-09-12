@@ -5,6 +5,9 @@ Swift/AppKit launcher. It invokes Apple-provided `/usr/bin/python3` only after
 packaging preflight proves that the interpreter and required standard-library
 modules are available.
 
-No model weights, codecs, FFmpeg binaries, SeminarText source, VideoText source,
-Microsoft SDK, or cloud credential is bundled. Pinned external products remain
-separate executables and are not redistributed by this local candidate.
+No model weights, codecs, FFmpeg binaries, VideoText source, Microsoft SDK, or
+cloud credential is bundled. The personal-use local candidate includes only the
+exact pinned, standard-library SeminarText Topic Engine module required for
+local Topic drafts. It is copied into the `.app` at build time only after the
+source commit and module SHA-256 are verified. This is not a public
+redistribution or release artifact.
