@@ -41,6 +41,20 @@ class ApplicationRuntimeTests(unittest.TestCase):
         artifact=Path(outputs["transcript"]).parent
         self.assertFalse((artifact/"topics.json").exists()); self.assertFalse((artifact/"knowledge.json").exists())
 
+    def test_burns_generated_subtitles_into_local_video(self):
+        source_path=self.root/"video.mp4"; source_path.write_bytes(b"video")
+        overrides=self.media_environment(); old={key:os.environ.get(key) for key in overrides}
+        try:
+            os.environ.update(overrides); plan=build_plan([detect_source(str(source_path))],["burn_subtitles"])
+            run=prepare_run(self.project,plan); result=execute_run(self.project,run["run_id"])
+        finally:
+            for key,value in old.items():
+                if value is None: os.environ.pop(key,None)
+                else: os.environ[key]=value
+        outputs=result["source_results"][0]["outputs"]
+        self.assertTrue(Path(outputs["burned_video"]).is_file())
+        self.assertEqual(Path(outputs["burned_video"]).read_bytes(),b"video")
+
     def test_executes_native_document_extraction(self):
         source_path=self.root/"notes.md"; source_path.write_text("# Heading\nActual document text")
         source=detect_source(str(source_path)); plan=build_plan([source],["document_text","document_structure"])

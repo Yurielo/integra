@@ -69,5 +69,18 @@ class CapabilityRegistryTests(unittest.TestCase):
         plan=build_plan([source],["extract_images"])
         self.assertEqual([stage["id"] for stage in plan["stages"]],["document_analysis","discover_images","extract_images"])
 
+    def test_video_subtitle_burning_uses_the_real_local_runtime(self):
+        source={"source_id":"s","display_name":"video.mp4","input":"/video.mp4","source_type":"LOCAL_VIDEO","kind":"MEDIA","properties":{}}
+        with tempfile.TemporaryDirectory() as directory:
+            overrides=self.media_runtime(Path(directory)); old={key:os.environ.get(key) for key in overrides}
+            try:
+                os.environ.update(overrides); registry={item["id"]:item for item in capability_registry([source])}
+            finally:
+                for key,value in old.items():
+                    if value is None: os.environ.pop(key,None)
+                    else: os.environ[key]=value
+        self.assertTrue(registry["burn_subtitles"]["runtime_available"])
+        self.assertEqual(registry["burn_subtitles"]["component"],"integra.local_media_adapter")
+
 
 if __name__=="__main__": unittest.main()

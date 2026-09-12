@@ -592,6 +592,7 @@ struct SidebarItem {
         switch kind {
         case "transcript": title = "Открыть расшифровку (TXT)"
         case "subtitles": title = "Открыть субтитры (SRT)"
+        case "burned_video": title = "Открыть видео со встроенными субтитрами"
         case "text": title = "Открыть текстовый документ (TXT)"
         case "document_record": title = "Открыть контракт документа (JSON)"
         case "document_structure": title = "Открыть структуру документа (JSON)"

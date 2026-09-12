@@ -193,6 +193,14 @@ def _parse_srt(value: str, source_id: str) -> list[dict[str, Any]]:
     return segments
 
 
+def _subtitle_filter(path: Path) -> str:
+    """Escape an owned SRT path for ffmpeg's subtitles filter syntax."""
+    value = str(path.resolve(strict=True))
+    for token in ("\\", "'", ":", ",", "[", "]"):
+        value = value.replace(token, "\\" + token)
+    return "subtitles=filename='" + value + "':charenc=UTF-8"
+
+
 def _provisional_topics(segments: list[dict[str, Any]], source_id: str) -> list[dict[str, Any]]:
     result = []
     for offset in range(0, len(segments), 6):
@@ -250,6 +258,17 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
         atomic_json(work / "transcript.json", transcript)
         subtitles=output.with_suffix(".srt")
         job["outputs"]={"transcript":str(transcript_txt),"transcript_json":str(work/"transcript.json"),"subtitles":str(subtitles)}
+        if requested and "burn_subtitles" in requested:
+            checkpoint("RUNNING", 90, "Burning subtitles into video", run_stage="burn_subtitles")
+            burned = work / "subtitled.mp4"
+            _run_with_cancellation(
+                [ffmpeg, "-nostdin", "-y", "-i", str(source), "-vf", _subtitle_filter(subtitles),
+                 "-map", "0:v:0", "-map", "0:a?", "-c:v", "libx264", "-c:a", "aac", str(burned)],
+                project_dir, job.get("run_id"), check=True,
+            )
+            if burned.is_symlink() or not burned.is_file() or burned.stat().st_size == 0:
+                raise ValueError("subtitle rendering produced no video output")
+            job["outputs"]["burned_video"] = str(burned)
         def build_semantic_artifacts() -> dict[str, list[dict[str, Any]]]:
             return {"topics": [topic for topic in _provisional_topics(segments, job["source_id"])]}
         if not legacy_semantics:
