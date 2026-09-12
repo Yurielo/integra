@@ -117,9 +117,9 @@ struct SidebarItem {
   let enabled: Bool
 }
 
-@MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource, NSTableViewDelegate
-{
+  @MainActor
+  final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource, NSTableViewDelegate
+  {
   private var window: NSWindow!, bridge: Bridge!
   private let sidebar = NSTableView(), content = FlippedStackView(),
     status = NSTextField(labelWithString: "")
@@ -539,7 +539,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource,
   private func renderOperations() {
     reset(
       "Выполняется",
-      "Здесь показано только состояние реального backend-задания. Проценты не вычисляются, если backend их не сообщает. Чтобы остановить обработку, нажмите «Отменить». Закрытие приложения также отменяет активную задачу."
+      "Здесь показано реальное состояние backend-задания. Чтобы остановить обработку, нажмите «Отменить». Закрытие окна/приложения также отменяет активную задачу."
     )
     guard let projectID = projectID, let runID = runID else {
       add(NSTextField(labelWithString: "Активной обработки нет"))
@@ -558,7 +558,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource,
       if let progress = progress { add(row("Прогресс", detail: "\(progress)%")) }
       if !detail.isEmpty { add(row("Подробности", detail: detail)) }
       if let stage = run["current_stage"] as? String { add(row("Текущий этап", detail: stageLabel(stage))) }
-      if state == "RUNNING" || state == "QUEUED" { add(button("Отменить", #selector(cancelRun))) }
+      if state == "RUNNING" || state == "QUEUED" {
+        let stopButton = button("Отменить", #selector(cancelRun))
+        stopButton.toolTip = "Немедленно остановить текущую обработку и сохранить текущий результат."
+        add(stopButton)
+      }
       if state == "FAILED" || state == "CANCELLED" { add(button("Повторить", #selector(retryRun))) }
       if state == "COMPLETED" { renderResultRows(run) }
       if let error = run["error"] as? String { status.stringValue = error }
@@ -580,7 +584,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource,
           detail: result["state"] as? String ?? "UNKNOWN"))
       let outputs = result["outputs"] as? [String: Any] ?? [:]
       for (kind, path) in outputs.sorted(by: { $0.key < $1.key }) {
-        if kind == "transcript_json" { continue }
         let title: String
         switch kind {
         case "transcript": title = "Открыть расшифровку (TXT)"
@@ -589,6 +592,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource,
         case "document_record": title = "Открыть контракт документа (JSON)"
         case "document_structure": title = "Открыть структуру документа (JSON)"
         case "discover_images": title = "Открыть встроенные изображения (JSON)"
+        case "transcript_json":
+          title = "Открыть сырую расшифровку (JSON)"
         case "package_dir": title = "Открыть управляемый package (для публикации)"
         case "package_id": title = "Открыть package id (metadata)"
         default: title = "Открыть: \(kind)"
