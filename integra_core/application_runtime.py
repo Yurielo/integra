@@ -132,7 +132,7 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                     raise ValueError("document source changed after plan creation")
                 atomic_json(artifact_dir/"document.json",document)
                 blocks=document["native_extraction"]["blocks"]+document["ocr"]["blocks"]
-                text_path=artifact_dir/"text.md"; text_path.write_text("\n\n".join(item["text"] for item in blocks)+"\n",encoding="utf-8")
+                text_path=artifact_dir/"text.txt"; text_path.write_text("\n\n".join(item["text"] for item in blocks)+"\n",encoding="utf-8")
                 outputs_map={"document_record":str(artifact_dir/"document.json")}
                 if "document_structure" in outputs: outputs_map["document_structure"] = _write_document_structure(document, artifact_dir)
                 if "discover_images" in outputs: outputs_map["discover_images"] = _write_discovered_images(document, artifact_dir)

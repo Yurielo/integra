@@ -48,6 +48,7 @@ class ApplicationRuntimeTests(unittest.TestCase):
         self.assertEqual(result["state"],"COMPLETED"); outputs=result["source_results"][0]["outputs"]
         self.assertEqual(result["source_results"][0]["display_name"],"notes.md")
         self.assertIn("Actual document text",Path(outputs["text"]).read_text())
+        self.assertTrue(str(outputs["text"]).endswith(".txt"))
         self.assertTrue(Path(outputs["document_structure"]).is_file())
         structure=json.loads(Path(outputs["document_structure"]).read_bytes())
         self.assertGreaterEqual(structure["entry_count"],1)
