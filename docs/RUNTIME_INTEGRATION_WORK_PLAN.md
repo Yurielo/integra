@@ -46,11 +46,13 @@ read-only закреплённый SeminarText runtime.
 4. Показать темы как `REVIEW_REQUIRED`, а не как принятые знания.
 5. Добавить cancellation/retry, synthetic end-to-end smoke и macOS UI smoke.
 
-**Текущая граница:** PR #104 реализовал callable Topics path, а PR #107
+**Текущая граница:** PR #104 реализовал callable Topics path, а PR #108
 пакует точный модуль Topic Engine в personal-use `.app` после проверки commit
-и SHA-256. Он не требует source checkout во время запуска. Word Timeline
-остаётся отдельной незавершённой задачей: cue-level SRT не является word-level
-alignment.
+и SHA-256. PR #109 добавляет самостоятельный Word Timeline runtime: WhisperX
+3.8.6 запускается только для forced alignment уже созданного SRT, а точная
+русская модель закреплена revision и SHA-256. Он не требует source checkout во
+время запуска и никогда не подменяет отсутствующее выравнивание выдуманными
+таймкодами.
 
 **После выполнения:** включить «Темы и таймкоды»; Review/Evidence/Knowledge
 остаются отдельным этапом до реального authoring/review пути.

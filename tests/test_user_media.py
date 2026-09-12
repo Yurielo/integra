@@ -7,8 +7,6 @@ import tempfile
 import time
 import unittest
 
-from integra_core.publishing import validate_package
-from integra_core.onedrive import validate_onedrive_package
 from integra_core.user_media import import_source, preflight
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -35,7 +33,7 @@ class UserMediaWorkflowTests(unittest.TestCase):
             self.assertEqual(Path(record["owned_path"]).read_bytes(),b"original")
             self.assertFalse(record["source_modified"])
 
-    def test_bridge_runs_media_job_and_builds_both_packages(self):
+    def test_bridge_runs_media_job_without_creating_semantic_fakes(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory); tools=root/"tools"; tools.mkdir(); model=root/"model.bin"; model.write_bytes(b"model")
             ffmpeg=tools/"ffmpeg"; ffmpeg.write_text("#!/bin/sh\nsrc=''\nprev=''\nfor arg in \"$@\"; do [ \"$prev\" = '-i' ] && src=$arg; prev=$arg; out=$arg; done\ncp \"$src\" \"$out\"\n")
@@ -55,11 +53,10 @@ class UserMediaWorkflowTests(unittest.TestCase):
                 time.sleep(.05)
             self.assertEqual(view["job"]["state"],"COMPLETED",view["job"])
             self.assertEqual(view["transcript"]["assurance"],"MACHINE_TRANSCRIPT_UNREVIEWED")
-            self.assertEqual(view["topics"][0]["status"],"REVIEW_REQUIRED")
-            package=Path(view["job"]["package_dir"]); manifest=json.loads((package/"package.json").read_bytes())
-            files={item["path"]:(package/"files"/item["path"]).read_bytes() for item in manifest["files"]}; validate_package(manifest,files)
-            one=Path(json.loads((package/"onedrive_package.json").read_bytes())["package_dir"]); one_manifest=json.loads((one/"package.json").read_bytes())
-            one_files={item["path"]:(one/"files"/item["path"]).read_bytes() for item in one_manifest["files"]}; validate_onedrive_package(one_manifest,one_files)
+            self.assertNotIn("topics", view)
+            self.assertNotIn("package_dir", view["job"])
+            self.assertTrue(Path(view["job"]["outputs"]["transcript"]).is_file())
+            self.assertTrue(Path(view["job"]["outputs"]["subtitles"]).is_file())
 
 
 if __name__ == "__main__": unittest.main()

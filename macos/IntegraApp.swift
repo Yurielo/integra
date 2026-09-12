@@ -325,6 +325,7 @@ struct SidebarItem {
     case "media_preparation": return "Подготовка аудио"
     case "transcript": return "Расшифровка"
     case "subtitles": return "Субтитры"
+    case "word_timeline": return "Word Timeline"
     case "topics": return "Темы и таймкоды"
     case "audio_enhancement": return "Улучшение звука"
     case "document_analysis": return "Анализ документа"
@@ -594,6 +595,7 @@ struct SidebarItem {
         switch kind {
         case "transcript": title = "Открыть расшифровку (TXT)"
         case "subtitles": title = "Открыть субтитры (SRT)"
+        case "word_timeline": title = "Открыть Word Timeline (JSON)"
         case "topics": title = "Открыть черновики тем SeminarText (JSON)"
         case "burned_video": title = "Открыть видео со встроенными субтитрами"
         case "clips_manifest": title = "Открыть список созданных клипов (JSON)"

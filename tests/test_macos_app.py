@@ -84,6 +84,7 @@ class MacOSApplicationTests(unittest.TestCase):
             self.assertIn("INTEGRA_FINDER_ICON: PASS", result.stdout)
             self.assertIn("INTEGRA_DOCK_CMDTAB_ICON: PASS", result.stdout)
             self.assertIn("INTEGRA_BUNDLED_SEMINARTEXT_PREFLIGHT: PASS", result.stdout)
+            self.assertIn("INTEGRA_BUNDLED_WORD_TIMELINE_PREFLIGHT: PASS", result.stdout)
 
     def test_bridge_creates_opens_and_persists_project_and_job(self):
         bridge = ROOT / "macos/Resources/bridge.py"

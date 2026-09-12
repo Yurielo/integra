@@ -35,6 +35,11 @@ chmod 755 "$fake_ollama"
   PATH="$test_root:$PATH" PYTHONPATH="$app/Contents/Resources" python3 -c 'from integra_core.seminartext_runtime import preflight; value=preflight(); assert value["origin"] == "BUNDLED_PERSONAL_RUNTIME"; assert value["commit_sha"] == "a94936cd77cde13561c97c804ece1ac1134e01a6"'
 )
 echo "INTEGRA_BUNDLED_SEMINARTEXT_PREFLIGHT: PASS"
+(
+  cd "$test_root"
+  PYTHONPATH="$app/Contents/Resources" /opt/homebrew/opt/python@3.13/bin/python3.13 -c 'from integra_core.word_timeline_runtime import preflight; value=preflight(); assert value["capability"] == "word_timeline"'
+)
+echo "INTEGRA_BUNDLED_WORD_TIMELINE_PREFLIGHT: PASS"
 python3 "$app/Contents/Resources/bridge.py" obsidian-preview | python3 -c 'import json,sys; x=json.load(sys.stdin); assert x["state"] == "DRY_RUN_REQUIRES_PACKAGE" and x["writes_performed"] is False and x["external_actions_performed"] is False and x["cloud_verified"] is False and len(x["domain_contract_sha256"]) == 64'
 python3 "$app/Contents/Resources/bridge.py" onedrive-preview | python3 -c 'import json,sys; x=json.load(sys.stdin); assert x["writes_performed"] is False and x["cloud_verified"] is False'
 

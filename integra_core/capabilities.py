@@ -11,6 +11,7 @@ from .documents import FORMAT_BY_SUFFIX, DocumentError, extract_document
 from .protocol import content_sha256
 from .user_media import SUPPORTED as MEDIA_EXTENSIONS, ffmpeg_preflight, preflight
 from .seminartext_runtime import preflight as seminartext_preflight
+from .word_timeline_runtime import preflight as word_timeline_preflight
 
 VIDEO = {".m4v", ".mkv", ".mov", ".mp4", ".webm"}
 AUDIO = MEDIA_EXTENSIONS - VIDEO
@@ -79,7 +80,7 @@ def capability_registry(sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
     types={item["source_type"] for item in sources}; media=bool(types & {"LOCAL_VIDEO","LOCAL_AUDIO"})
     documents=bool(types & set(value[0] for value in FORMAT_BY_SUFFIX.values()))
     youtube=bool(types & {"YOUTUBE_VIDEO","YOUTUBE_PLAYLIST"})
-    runtime={}; media_ready=False; media_reason=""; enhancement_ready=False; enhancement_reason=""; topics_ready=False; topics_reason=""
+    runtime={}; media_ready=False; media_reason=""; enhancement_ready=False; enhancement_reason=""; topics_ready=False; topics_reason=""; timeline_ready=False; timeline_reason=""
     if media:
         try: runtime=preflight(hash_model=False); media_ready=True
         except ValueError as error: media_reason=str(error)
@@ -87,11 +88,14 @@ def capability_registry(sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
         except ValueError as error: enhancement_reason=str(error)
         try: seminartext_preflight(); topics_ready=True
         except ValueError as error: topics_reason=str(error)
+        try: word_timeline_preflight(); timeline_ready=True
+        except ValueError as error: timeline_reason=str(error)
     native_docs=documents and all(item.get("properties",{}).get("ocr_status")!="REQUIRED" for item in sources if item["kind"]=="DOCUMENT")
     caps = [
         _capability("transcript","Расшифровка","Основная обработка",{"LOCAL_VIDEO","LOCAL_AUDIO"},"integra.local_media_adapter",True,["media_preparation"],available=media and media_ready,reason=media_reason),
         _capability("subtitles","Субтитры (SRT)","Основная обработка",{"LOCAL_VIDEO","LOCAL_AUDIO"},"integra.local_media_adapter",True,["transcript"],available=media and media_ready,reason=media_reason),
-        _capability("topics","Темы и таймкоды","Основная обработка",{"LOCAL_VIDEO","LOCAL_AUDIO"},"seminartext",True,["transcript"],available=media and topics_ready,reason=topics_reason),
+        _capability("word_timeline","Word Timeline","Основная обработка",{"LOCAL_VIDEO","LOCAL_AUDIO"},"seminartext",True,["transcript"],available=media and timeline_ready,reason=timeline_reason),
+        _capability("topics","Темы и таймкоды","Основная обработка",{"LOCAL_VIDEO","LOCAL_AUDIO"},"seminartext",True,["word_timeline"],available=media and topics_ready and timeline_ready,reason=topics_reason or timeline_reason),
         _capability("translation","Перевод","Основная обработка",{"LOCAL_VIDEO","LOCAL_AUDIO"},"videotext",False,["transcript"]),
         _capability("review","Проверка / Review","Смысловая обработка",{"LOCAL_VIDEO","LOCAL_AUDIO","PDF","DOCX","PPTX","TXT","MARKDOWN","IMAGE"},"seminartext",False,["topics"]),
         _capability("evidence","Evidence","Смысловая обработка",{"LOCAL_VIDEO","LOCAL_AUDIO","PDF","DOCX","PPTX","TXT","MARKDOWN","IMAGE"},"seminartext",False,["review"]),

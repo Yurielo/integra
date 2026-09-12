@@ -6,3 +6,5 @@ __pycache__/
 build/
 dist/
 .runtime-components/
+.runtime-models/
+.runtime-word-alignment/

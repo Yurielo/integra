@@ -19,6 +19,7 @@ from .onedrive import build_onedrive_package
 from .protocol import canonical_json, content_sha256
 from .publishing import sha256_bytes, validate_package
 from .seminartext_runtime import generate_topics
+from .word_timeline_runtime import generate_word_timeline
 
 
 class _RunCancelled(Exception):
@@ -33,7 +34,10 @@ def now() -> str:
 
 def atomic_json(path: Path, value: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(path.name + ".tmp")
+    # The bridge and its worker can update the same record concurrently.  A
+    # per-write name keeps one writer from replacing another writer's staging
+    # file before either atomic rename occurs.
+    temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
     temporary.write_bytes(canonical_json(value) + b"\n")
     os.replace(temporary, path)
 
@@ -260,7 +264,7 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
             atomic_json(work / "audio_enhancement.json", enhancement_record)
             outputs["enhanced_audio"] = str(enhanced)
             outputs["audio_enhancement_record"] = str(work / "audio_enhancement.json")
-        needs_transcript = legacy_semantics or bool(requested_outputs & {"transcript", "subtitles", "burn_subtitles", "topics"})
+        needs_transcript = legacy_semantics or bool(requested_outputs & {"transcript", "subtitles", "burn_subtitles", "word_timeline", "topics"})
         if not needs_transcript:
             job["outputs"] = outputs
             job.update(state="COMPLETED", progress=100, message="Requested enhanced audio is ready",
@@ -295,6 +299,11 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
         subtitles=output.with_suffix(".srt")
         outputs.update({"transcript":str(transcript_txt),"transcript_json":str(work/"transcript.json"),"subtitles":str(subtitles)})
         job["outputs"] = outputs
+        if requested and requested_outputs & {"word_timeline", "topics"}:
+            checkpoint("RUNNING", 85, "Aligning transcript words with WhisperX", run_stage="word_timeline")
+            timeline_path = work / "word_timeline.json"
+            generate_word_timeline(wav, subtitles, timeline_path)
+            job["outputs"]["word_timeline"] = str(timeline_path)
         if requested and "topics" in requested:
             checkpoint("RUNNING", 88, "Generating topic drafts with SeminarText", run_stage="topics")
             topics_path = work / "topics.json"
@@ -313,33 +322,12 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
             if burned.is_symlink() or not burned.is_file() or burned.stat().st_size == 0:
                 raise ValueError("subtitle rendering produced no video output")
             job["outputs"]["burned_video"] = str(burned)
-        def build_semantic_artifacts() -> dict[str, list[dict[str, Any]]]:
-            return {"topics": [topic for topic in _provisional_topics(segments, job["source_id"])]}
-        if not legacy_semantics:
-            topics = build_semantic_artifacts()["topics"]
-            knowledge = {"schema_version":"1.0", "source_id":job["source_id"], "semantic_authority":"PROVISIONAL",
-                        "review_state":"REVIEW_REQUIRED", "concepts":[{"knowledge_id":topic["topic_id"].replace(":topic:",":knowledge:"),
-                        "label":topic["label"], "status":"REVIEW_REQUIRED", "topic_id":topic["topic_id"], "locator":topic["locator"]} for topic in topics]}
-            navigation = {"schema_version":"1.0", "source_id":job["source_id"], "routes":[{"topic_id":topic["topic_id"],
-                         "knowledge_id":knowledge["concepts"][i]["knowledge_id"], "segment_ids":topic["evidence_segment_ids"], "locator":topic["locator"]} for i,topic in enumerate(topics)]}
-            package = None
-            if (project_dir / "project.json").is_file():
-                package = build_project_package(project_dir, job, transcript, topics, knowledge, navigation)
-                job["outputs"]["package_dir"] = str(package)
-            job.update(state="COMPLETED",progress=100,message="Requested real outputs are ready",completed_at=now(),
-                       artifact_dir=str(work), package_dir=str(package) if package else None, transcript_segments=len(segments))
-            atomic_json(jobs_path,jobs); return job
-        topics = build_semantic_artifacts()["topics"]
-        knowledge = {"schema_version":"1.0", "source_id":job["source_id"], "semantic_authority":"PROVISIONAL",
-                     "review_state":"REVIEW_REQUIRED", "concepts":[{"knowledge_id":topic["topic_id"].replace(":topic:",":knowledge:"),
-                     "label":topic["label"], "status":"REVIEW_REQUIRED", "topic_id":topic["topic_id"], "locator":topic["locator"]} for topic in topics]}
-        navigation = {"schema_version":"1.0", "source_id":job["source_id"], "routes":[{"topic_id":topic["topic_id"],
-                      "knowledge_id":knowledge["concepts"][i]["knowledge_id"], "segment_ids":topic["evidence_segment_ids"], "locator":topic["locator"]} for i,topic in enumerate(topics)]}
-        for name, value in (("topics.json",topics),("knowledge.json",knowledge),("navigation.json",navigation)):
-            atomic_json(work / name, value)
-        package = build_project_package(project_dir, job, transcript, topics, knowledge, navigation)
-        job.update(state="COMPLETED", progress=100, message="Ready for review and publication preview", completed_at=now(),
-                   artifact_dir=str(work), package_dir=str(package), transcript_segments=len(segments), provisional_topics=len(topics))
+        # A transcript, a rendered subtitle file, or a Word Timeline is not a
+        # semantic result.  Do not manufacture Topics, Knowledge, navigation,
+        # or a publication package from heuristic grouping.  Those outputs are
+        # emitted only by their explicitly selected real runtime paths above.
+        job.update(state="COMPLETED", progress=100, message="Requested real outputs are ready", completed_at=now(),
+                   artifact_dir=str(work), transcript_segments=len(segments))
         atomic_json(jobs_path, jobs); return job
     except Exception as error:
         if isinstance(error, _RunCancelled) or _is_run_cancelled(project_dir, job.get("run_id")):

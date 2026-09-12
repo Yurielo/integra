@@ -7,8 +7,6 @@ import subprocess
 import tempfile
 import time
 import unittest
-from integra_core.publishing import validate_package
-from integra_core.onedrive import validate_onedrive_package
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -89,7 +87,7 @@ class SourceFirstBridgeTests(unittest.TestCase):
             image=Path(outputs["embedded_images_directory"])/manifest["embedded_media"][0]["relative_path"]
             self.assertEqual(image.read_bytes(),png)
 
-    def test_source_first_media_builds_publication_package(self):
+    def test_source_first_media_returns_only_selected_real_artifacts(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory); source=root/"voice.wav"; source.write_bytes(b"audio")
             ffmpeg=root/"ffmpeg"; ffmpeg.write_text("#!/usr/bin/env python3\n"
@@ -126,25 +124,11 @@ class SourceFirstBridgeTests(unittest.TestCase):
                 time.sleep(.03)
             self.assertEqual(status["state"],"COMPLETED",status)
             outputs=status["source_results"][0]["outputs"]
-            package=Path(outputs["package_dir"])
-            self.assertTrue((package / "package.json").is_file())
-            manifest=json.loads((package/"package.json").read_text(encoding="utf-8"))
-            files={}
-            for item in manifest["files"]:
-                payload=(package/"files"/item["path"]).read_bytes()
-                files[item["path"]]=payload
-            validate_package(manifest,files)
-            onedrive_root=Path(json.loads((package/"onedrive_package.json").read_text(encoding="utf-8"))["package_dir"])
-            self.assertTrue((onedrive_root/"package.json").is_file())
-            one_manifest=json.loads((onedrive_root/"package.json").read_text(encoding="utf-8"))
-            one_files={}
-            for item in one_manifest["files"]:
-                one_files[item["path"]]=(onedrive_root/"files"/item["path"]).read_bytes()
-            validate_onedrive_package(one_manifest,one_files)
+            self.assertTrue(Path(outputs["transcript"]).is_file())
+            self.assertTrue(Path(outputs["subtitles"]).is_file())
+            self.assertNotIn("package_dir", outputs)
             packages=call("available-packages",{})
-            selected=next(item for item in packages if item["run_id"]==run_id)
-            self.assertEqual(selected["package_dir"],str(package))
-            self.assertEqual(selected["source_name"],"voice.wav")
+            self.assertFalse(any(item["run_id"] == run_id for item in packages))
             navigation=call("media-navigation",{"project_id":project_id,"run_id":run_id,"source_id":sources[0]["source_id"]})
             self.assertEqual(Path(navigation["media_path"]).read_bytes(),source.read_bytes())
             self.assertEqual(navigation["segments"][0]["start_seconds"],0.0)
@@ -208,10 +192,10 @@ class SourceFirstBridgeTests(unittest.TestCase):
             try:
                 # The spawned bridge starts a fresh Python interpreter and imports
                 # the complete local runtime.  On a cold CI runner that startup can
-                # legitimately exceed the previous three-second window, even though
+                # legitimately exceed the previous ten-second window, even though
                 # the worker is healthy.  Keep the assertion about the real RUNNING
-                # state, but give the process a bounded ten-second startup budget.
-                for _ in range(100):
+                # state, but give the process a bounded thirty-second startup budget.
+                for _ in range(300):
                     jobs=call("jobs",{"project_id":project_id})
                     if jobs and jobs[-1]["state"] == "RUNNING": break
                     time.sleep(.1)
