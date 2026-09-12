@@ -60,5 +60,14 @@ class CapabilityRegistryTests(unittest.TestCase):
         self.assertEqual(registry["ocr"]["component"],"booktext")
         self.assertEqual(registry["ocr"]["ui_state"],"В разработке")
 
+    def test_registry_exposes_verified_embedded_image_materialization(self):
+        source={"source_id":"s","display_name":"slides.pptx","input":"/slides.pptx","source_type":"PPTX","kind":"DOCUMENT",
+                "properties":{"ocr_status":"NOT_REQUIRED","content_mode":"MIXED"}}
+        registry={item["id"]:item for item in capability_registry([source])}
+        self.assertTrue(registry["extract_images"]["runtime_available"])
+        self.assertEqual(registry["extract_images"]["implementation_state"],"IMPLEMENTED")
+        plan=build_plan([source],["extract_images"])
+        self.assertEqual([stage["id"] for stage in plan["stages"]],["document_analysis","discover_images","extract_images"])
+
 
 if __name__=="__main__": unittest.main()
