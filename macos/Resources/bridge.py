@@ -12,11 +12,11 @@ from integra_core.onedrive import preview_onedrive_publication, publish_onedrive
 from integra_core.project_lease import LeaseStore
 from integra_core.protocol import canonical_json, content_sha256
 from integra_core.publishing import preview_obsidian_export, publish_obsidian_export, validate_package
-from integra_core.user_media import import_source, preflight, run_job
+from integra_core.user_media import _parse_srt, import_source, preflight, run_job
 from integra_core.capabilities import build_plan, capability_registry, detect_source
 from integra_core.application_runtime import execute_run, prepare_run, read_run, run_path
 
-OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "import-media", "media-preflight", "process-media-job", "project-view", "detect-sources", "capability-registry", "build-plan", "execute-plan", "process-plan", "run-status", "recent-runs", "cancel-run", "retry-run", "package-preview", "package-publish", "obsidian-preview", "onedrive-preview"}
+OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "import-media", "media-preflight", "process-media-job", "project-view", "detect-sources", "capability-registry", "build-plan", "execute-plan", "process-plan", "run-status", "recent-runs", "cancel-run", "retry-run", "media-navigation", "package-preview", "package-publish", "obsidian-preview", "onedrive-preview"}
 
 def _safe_error(error):
     message = str(error).replace(str(Path.home()), "<HOME>")
@@ -129,6 +129,27 @@ def _recent_runs(root):
             if path.is_file() and not path.is_symlink(): result.append({"project":project,"run":json.loads(path.read_bytes())})
     return sorted(result,key=lambda item:item["run"].get("created_at",""),reverse=True)
 
+def _media_navigation(root, request):
+    """Return only persisted, owned media and its exact SRT cue timings."""
+    project_id = request.get("project_id"); source_id = request.get("source_id")
+    if not isinstance(source_id, str) or not source_id: raise ValueError("source ID is required")
+    project_dir = _project_dir(root, _project(root, project_id)["project_id"])
+    run = read_run(project_dir, request.get("run_id"))
+    result = next((item for item in run.get("source_results", []) if item.get("source_id") == source_id), None)
+    if not isinstance(result, dict) or result.get("state") != "COMPLETED": raise ValueError("completed source result is unavailable")
+    job_id = result.get("job_id")
+    job = next((item for item in _jobs(root, project_id) if item.get("job_id") == job_id), None)
+    if not isinstance(job, dict) or job.get("source_id") != source_id: raise ValueError("owned media job is unavailable")
+    outputs = result.get("outputs")
+    if not isinstance(outputs, dict) or not isinstance(outputs.get("subtitles"), str): raise ValueError("timed subtitles are unavailable")
+    media = Path(job.get("owned_path", "")); subtitles = Path(outputs["subtitles"])
+    if media.is_symlink() or subtitles.is_symlink() or not media.is_file() or not subtitles.is_file():
+        raise ValueError("owned media or subtitles are unavailable")
+    media = media.resolve(strict=True); subtitles = subtitles.resolve(strict=True)
+    segments = _parse_srt(subtitles.read_text(encoding="utf-8", errors="replace"), source_id)
+    if not segments: raise ValueError("timed subtitles contain no navigable speech")
+    return {"source_id":source_id,"media_path":str(media),"subtitles_path":str(subtitles),"segments":segments}
+
 def _import_media(root, request):
     project = _project(root, request.get("project_id")); project_dir = _project_dir(root, project["project_id"])
     source = import_source(project_dir, Path(request.get("source_path", "")))
@@ -238,6 +259,7 @@ def main():
         elif operation == "process-plan": result = execute_run(_project_dir(root, request.get("project_id")), request.get("run_id"))
         elif operation == "run-status": result = _run_action(root, request, "status")
         elif operation == "recent-runs": result = _recent_runs(root)
+        elif operation == "media-navigation": result = _media_navigation(root, request)
         elif operation == "cancel-run": result = _run_action(root, request, "cancel")
         elif operation == "retry-run": result = _run_action(root, request, "retry")
         elif operation == "package-preview": result = _publication(root, request, False)

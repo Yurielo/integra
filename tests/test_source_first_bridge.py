@@ -141,6 +141,10 @@ class SourceFirstBridgeTests(unittest.TestCase):
             for item in one_manifest["files"]:
                 one_files[item["path"]]=(onedrive_root/"files"/item["path"]).read_bytes()
             validate_onedrive_package(one_manifest,one_files)
+            navigation=call("media-navigation",{"project_id":project_id,"run_id":run_id,"source_id":sources[0]["source_id"]})
+            self.assertEqual(Path(navigation["media_path"]).read_bytes(),source.read_bytes())
+            self.assertEqual(navigation["segments"][0]["start_seconds"],0.0)
+            self.assertEqual(navigation["segments"][0]["text"],"Hello Integra")
 
     def test_cancel_run_stops_real_worker_group_and_persists_cancelled_state(self):
         with tempfile.TemporaryDirectory() as directory:

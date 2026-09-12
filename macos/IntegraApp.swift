@@ -1,4 +1,6 @@
 import AppKit
+import AVFoundation
+import AVKit
 import Foundation
 
 enum BridgeError: Error, LocalizedError {
@@ -22,7 +24,7 @@ final class Bridge: @unchecked Sendable {
       "workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job",
       "cancel-job", "resume-job", "import-media", "media-preflight", "project-view",
       "detect-sources", "capability-registry", "build-plan", "execute-plan", "run-status",
-      "recent-runs", "cancel-run", "retry-run", "package-preview", "package-publish",
+      "recent-runs", "cancel-run", "retry-run", "media-navigation", "package-preview", "package-publish",
       "obsidian-preview",
       "onedrive-preview",
     ]
@@ -126,6 +128,7 @@ struct SidebarItem {
   private var sources = [[String: Any]](), capabilities = [[String: Any]](),
     selected = Set<String>(), plan: [String: Any]?
   private var projectID: String?, runID: String?, timer: Timer?
+  private var mediaPlayer: AVPlayer?, mediaWindow: NSWindow?
   private let items: [SidebarItem] = [
     .init(title: "INTEGRA", id: "", header: true, enabled: false),
     .init(title: "＋ Новая обработка", id: "new", header: false, enabled: true),
@@ -605,6 +608,13 @@ struct SidebarItem {
         control.toolTip = path as? String
         add(control)
       }
+      if outputs["subtitles"] as? String != nil,
+        let projectID = projectID, let runID = runID, let sourceID = result["source_id"] as? String
+      {
+        let control = button("Открыть видео/аудио с расшифровкой", #selector(showMediaNavigation(_:)))
+        control.toolTip = "\(projectID)\n\(runID)\n\(sourceID)"
+        add(control)
+      }
     }
     add(section("СЛЕДУЮЩИЕ ДЕЙСТВИЯ"))
     for title in [
@@ -617,6 +627,65 @@ struct SidebarItem {
   @objc private func unavailableAction() {}
   @objc private func openOutput(_ sender: NSButton) {
     if let path = sender.toolTip { NSWorkspace.shared.open(URL(fileURLWithPath: path)) }
+  }
+  @objc private func showMediaNavigation(_ sender: NSButton) {
+    let identifiers = sender.toolTip?.split(separator: "\n", maxSplits: 2).map(String.init) ?? []
+    guard identifiers.count == 3 else { return }
+    do {
+      let navigation = try bridge.json(
+        "media-navigation", request: ["project_id": identifiers[0], "run_id": identifiers[1], "source_id": identifiers[2]])["result"]
+        as? [String: Any] ?? [:]
+      guard let path = navigation["media_path"] as? String,
+        let segments = navigation["segments"] as? [[String: Any]]
+      else { throw BridgeError.invalidResponse }
+      renderMediaNavigation(path: path, segments: segments)
+    } catch { status.stringValue = error.localizedDescription }
+  }
+  private func renderMediaNavigation(path: String, segments: [[String: Any]]) {
+    let player = AVPlayer(url: URL(fileURLWithPath: path))
+    let playerView = AVPlayerView()
+    playerView.player = player
+    let window = NSWindow(
+      contentRect: NSRect(x: 0, y: 0, width: 1040, height: 760),
+      styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
+    window.title = "Integra — расшифровка и таймкоды"
+    let stack = FlippedStackView()
+    stack.orientation = .vertical
+    stack.alignment = .leading
+    stack.spacing = 8
+    stack.edgeInsets = NSEdgeInsets(top: 18, left: 22, bottom: 22, right: 22)
+    let scroll = NSScrollView()
+    scroll.hasVerticalScroller = true
+    scroll.documentView = stack
+    stack.translatesAutoresizingMaskIntoConstraints = false
+    stack.widthAnchor.constraint(equalTo: scroll.contentView.widthAnchor, constant: -44).isActive = true
+    playerView.translatesAutoresizingMaskIntoConstraints = false
+    playerView.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
+    playerView.heightAnchor.constraint(equalToConstant: 420).isActive = true
+    stack.addArrangedSubview(playerView)
+    let heading = NSTextField(labelWithString: "Расшифровка с реальными таймкодами SRT")
+    heading.font = .systemFont(ofSize: 17, weight: .semibold)
+    stack.addArrangedSubview(heading)
+    for segment in segments {
+      guard let start = segment["start_seconds"] as? Double, let text = segment["text"] as? String else { continue }
+      let cue = button("[\(clock(start))] \(text)", #selector(seekTranscriptCue(_:)))
+      cue.alignment = .left
+      cue.toolTip = String(start)
+      stack.addArrangedSubview(cue)
+    }
+    window.contentView = scroll
+    mediaPlayer = player
+    mediaWindow = window
+    window.center()
+    window.makeKeyAndOrderFront(nil)
+  }
+  private func clock(_ seconds: Double) -> String {
+    String(format: "%02d:%02d", Int(seconds) / 60, Int(seconds) % 60)
+  }
+  @objc private func seekTranscriptCue(_ sender: NSButton) {
+    guard let value = sender.toolTip.flatMap(Double.init) else { return }
+    mediaPlayer?.seek(to: CMTime(seconds: value, preferredTimescale: 600))
+    mediaPlayer?.play()
   }
   @objc private func cancelRun() {
     guard let p = projectID, let r = runID else { return }
