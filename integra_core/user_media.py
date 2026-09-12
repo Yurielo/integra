@@ -20,6 +20,7 @@ from .protocol import canonical_json, content_sha256
 from .publishing import sha256_bytes, validate_package
 from .seminartext_runtime import generate_topics
 from .word_timeline_runtime import generate_word_timeline
+from .videotext_runtime import translate as translate_videotext
 
 
 class _RunCancelled(Exception):
@@ -264,7 +265,7 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
             atomic_json(work / "audio_enhancement.json", enhancement_record)
             outputs["enhanced_audio"] = str(enhanced)
             outputs["audio_enhancement_record"] = str(work / "audio_enhancement.json")
-        needs_transcript = legacy_semantics or bool(requested_outputs & {"transcript", "subtitles", "burn_subtitles", "word_timeline", "topics"})
+        needs_transcript = legacy_semantics or bool(requested_outputs & {"transcript", "subtitles", "burn_subtitles", "word_timeline", "topics", "translation"})
         if not needs_transcript:
             job["outputs"] = outputs
             job.update(state="COMPLETED", progress=100, message="Requested enhanced audio is ready",
@@ -299,6 +300,11 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
         subtitles=output.with_suffix(".srt")
         outputs.update({"transcript":str(transcript_txt),"transcript_json":str(work/"transcript.json"),"subtitles":str(subtitles)})
         job["outputs"] = outputs
+        if requested and "translation" in requested_outputs:
+            checkpoint("RUNNING", 84, "Translating subtitles with VideoText", run_stage="translation")
+            translation_path = work / "translation.json"
+            translate_videotext(subtitles, translation_path)
+            job["outputs"]["translation"] = str(translation_path)
         if requested and requested_outputs & {"word_timeline", "topics"}:
             checkpoint("RUNNING", 85, "Aligning transcript words with WhisperX", run_stage="word_timeline")
             timeline_path = work / "word_timeline.json"

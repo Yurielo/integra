@@ -38,7 +38,10 @@ class CapabilityRegistryTests(unittest.TestCase):
         self.assertEqual(registry["topics"]["implementation_state"], "IMPLEMENTED")
         self.assertFalse(registry["topics"]["runtime_available"])
         self.assertEqual(registry["topics"]["ui_state"], "Недоступно: SeminarText runtime is not configured")
-        for identifier in ("translation","review","evidence","knowledge","clips"):
+        self.assertEqual(registry["translation"]["implementation_state"], "IMPLEMENTED")
+        self.assertFalse(registry["translation"]["runtime_available"])
+        self.assertTrue(registry["translation"]["ui_state"].startswith("Недоступно:"))
+        for identifier in ("review","evidence","knowledge","clips"):
             self.assertEqual(registry[identifier]["ui_state"],"В разработке")
             self.assertFalse(registry[identifier]["runtime_available"])
 
