@@ -17,9 +17,9 @@ but cannot be presented as working UI capabilities.
 
 | Order | Status | Delivery item | Definition of done |
 | ---: | --- | --- | --- |
-| 1 | READY | Audio enhancement | A source-first local-media output invokes the owned ffmpeg runtime, produces an explicit enhanced audio artifact, exposes it in macOS results, and has runtime/bridge/build evidence. |
-| 2 | READY | Time-range media clips | A user selects exact start/end times from persisted SRT cues; Integra renders an owned clip with ffmpeg, records source/time provenance, and exposes the file. |
-| 3 | READY | Multiple-result publication selection | macOS publication view lets the user select a concrete verified package from any completed persisted run, then preserves the existing preview-before-write and collision protections. |
+| 1 | COMPLETED | Audio enhancement | PR #94, commit `d4ea88a`: source-first local-media output invokes owned ffmpeg, creates an explicit M4A artifact and source-hash record, and is exposed in macOS results with runtime/bridge/build evidence. |
+| 2 | COMPLETED | Time-range media clips | PR #96, commit `d04c2f3`: exact persisted SRT cue range renders an owned ffmpeg clip, persists source/time provenance, and is exposed from macOS media navigation. |
+| 3 | COMPLETED | Multiple-result publication selection | PR #98, commit `692cac5`: macOS lists only revalidated packages from completed persisted runs and requires explicit selection before the existing preview-before-write and collision protections. |
 | 4 | BLOCKED | SeminarText Word Timeline and Topic runtime | Requires a packaged, version-pinned SeminarText runtime plus an accepted arbitrary-user-source adapter; no current macOS runtime path exists. |
 | 5 | BLOCKED | VideoText general media runtime | Requires a packaged, version-pinned VideoText adapter for arbitrary user media; certification workers alone are insufficient. |
 | 6 | BLOCKED | BookText OCR runtime | Requires a pinned BookText identity, versioned Integra adapter, local runtime binding, and OCR smoke evidence. |
