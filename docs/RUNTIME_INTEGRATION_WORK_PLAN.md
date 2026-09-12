@@ -46,11 +46,11 @@ read-only закреплённый SeminarText runtime.
 4. Показать темы как `REVIEW_REQUIRED`, а не как принятые знания.
 5. Добавить cancellation/retry, synthetic end-to-end smoke и macOS UI smoke.
 
-**Текущая граница:** PR #104 уже реализовал callable conditional Topics path
-и bundle worker, но это не self-contained runtime: source SeminarText не
-перераспределяется текущим пакетом, а лицензия на такую поставку не доказана.
-Word Timeline также остаётся отдельной незавершённой задачей: cue-level SRT
-не является word-level alignment.
+**Текущая граница:** PR #104 реализовал callable Topics path, а PR #107
+пакует точный модуль Topic Engine в personal-use `.app` после проверки commit
+и SHA-256. Он не требует source checkout во время запуска. Word Timeline
+остаётся отдельной незавершённой задачей: cue-level SRT не является word-level
+alignment.
 
 **После выполнения:** включить «Темы и таймкоды»; Review/Evidence/Knowledge
 остаются отдельным этапом до реального authoring/review пути.

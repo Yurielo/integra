@@ -27,6 +27,14 @@ test "$finder_width" -ge 512
 test "$running_width" -ge 512
 
 "$app/Contents/MacOS/Integra" --self-test
+fake_ollama="$test_root/ollama"
+printf '#!/bin/sh\nprintf "NAME ID SIZE MODIFIED\\ngemma3:4b id size now\\n"\n' > "$fake_ollama"
+chmod 755 "$fake_ollama"
+(
+  cd "$test_root"
+  PATH="$test_root:$PATH" PYTHONPATH="$app/Contents/Resources" python3 -c 'from integra_core.seminartext_runtime import preflight; value=preflight(); assert value["origin"] == "BUNDLED_PERSONAL_RUNTIME"; assert value["commit_sha"] == "a94936cd77cde13561c97c804ece1ac1134e01a6"'
+)
+echo "INTEGRA_BUNDLED_SEMINARTEXT_PREFLIGHT: PASS"
 python3 "$app/Contents/Resources/bridge.py" obsidian-preview | python3 -c 'import json,sys; x=json.load(sys.stdin); assert x["state"] == "DRY_RUN_REQUIRES_PACKAGE" and x["writes_performed"] is False and x["external_actions_performed"] is False and x["cloud_verified"] is False and len(x["domain_contract_sha256"]) == 64'
 python3 "$app/Contents/Resources/bridge.py" onedrive-preview | python3 -c 'import json,sys; x=json.load(sys.stdin); assert x["writes_performed"] is False and x["cloud_verified"] is False'
 
@@ -41,4 +49,5 @@ echo "INTEGRA_MACOS_CLOSE_TEST: PASS"
 
 test -z "$(find "$app" -type l -print -quit)"
 test -f "$app/Contents/Resources/integra_core/publishing.py"
+test -f "$app/Contents/Resources/runtime/seminartext/runtime.json"
 echo "INTEGRA_MACOS_LAUNCH_TEST: PASS"

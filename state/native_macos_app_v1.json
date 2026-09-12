@@ -88,7 +88,7 @@
     },
     {
       "path": "scripts/build_macos_app.sh",
-      "sha256": "476d4a58485bc28c2a4d38ff12884cfe8f7c23850d606c4c497c288e549890d4"
+      "sha256": "ac3de32f1be5f6d0c88db51e8bc32070a96ef1cd782af0d5efeaa0c2bca9a539"
     },
     {
       "path": "scripts/generate_macos_app_icon.sh",
@@ -96,7 +96,7 @@
     },
     {
       "path": "scripts/test_macos_app.sh",
-      "sha256": "25ed5225bdcc03abf6aa327e61e1ab643a62d521064e6a4acea3a11fb862a2f4"
+      "sha256": "748c50cc95b583f4242ba25c4c8d0b752cba929be25544da780d7211eb701552"
     },
     {
       "path": "schemas/native_macos_app_evidence_v1.schema.json",
@@ -108,7 +108,7 @@
     },
     {
       "path": "tests/test_macos_app.py",
-      "sha256": "199a98244a11e274db204bf1a46a4eb7b8903b3f939fec25d9bdd443c8e698f5"
+      "sha256": "1947c8030b55b4df79ae16979f273ed10f64fcdfc3402749110036dbde901440"
     }
   ],
   "acceptance": {

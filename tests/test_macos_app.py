@@ -83,6 +83,7 @@ class MacOSApplicationTests(unittest.TestCase):
             self.assertIn("INTEGRA_MACOS_CLOSE_TEST: PASS", result.stdout)
             self.assertIn("INTEGRA_FINDER_ICON: PASS", result.stdout)
             self.assertIn("INTEGRA_DOCK_CMDTAB_ICON: PASS", result.stdout)
+            self.assertIn("INTEGRA_BUNDLED_SEMINARTEXT_PREFLIGHT: PASS", result.stdout)
 
     def test_bridge_creates_opens_and_persists_project_and_job(self):
         bridge = ROOT / "macos/Resources/bridge.py"
@@ -139,6 +140,8 @@ class MacOSApplicationTests(unittest.TestCase):
         build = (ROOT / "scripts/build_macos_app.sh").read_text()
         self.assertIn('workers/seminartext_topics_worker.py', build)
         self.assertIn('Resources/workers', build)
+        self.assertIn('runtime/seminartext', build)
+        self.assertIn('seminartext_topics.py', build)
 
     def test_bridge_previews_and_publishes_validated_obsidian_package(self):
         *_, manifest, files = fixtures()
