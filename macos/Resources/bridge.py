@@ -12,11 +12,11 @@ from integra_core.onedrive import preview_onedrive_publication, publish_onedrive
 from integra_core.project_lease import LeaseStore
 from integra_core.protocol import canonical_json, content_sha256
 from integra_core.publishing import preview_obsidian_export, publish_obsidian_export, validate_package
-from integra_core.user_media import _parse_srt, import_source, preflight, run_job
+from integra_core.user_media import _parse_srt, ffmpeg_preflight, import_source, preflight, run_job
 from integra_core.capabilities import build_plan, capability_registry, detect_source
 from integra_core.application_runtime import execute_run, prepare_run, read_run, run_path
 
-OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "import-media", "media-preflight", "process-media-job", "project-view", "detect-sources", "capability-registry", "build-plan", "execute-plan", "process-plan", "run-status", "recent-runs", "cancel-run", "retry-run", "media-navigation", "package-preview", "package-publish", "obsidian-preview", "onedrive-preview"}
+OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "import-media", "media-preflight", "process-media-job", "project-view", "detect-sources", "capability-registry", "build-plan", "execute-plan", "process-plan", "run-status", "recent-runs", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "package-preview", "package-publish", "obsidian-preview", "onedrive-preview"}
 
 def _safe_error(error):
     message = str(error).replace(str(Path.home()), "<HOME>")
@@ -150,6 +150,33 @@ def _media_navigation(root, request):
     if not segments: raise ValueError("timed subtitles contain no navigable speech")
     return {"source_id":source_id,"media_path":str(media),"subtitles_path":str(subtitles),"segments":segments}
 
+def _create_media_clip(root, request):
+    """Render one owned local clip bounded by persisted SRT cue edges."""
+    navigation = _media_navigation(root, request)
+    try: start = float(request.get("start_seconds")); end = float(request.get("end_seconds"))
+    except (TypeError, ValueError) as error: raise ValueError("clip boundaries must be numeric") from error
+    if not (start >= 0 and end > start): raise ValueError("clip end must follow its start")
+    starts = {item["start_seconds"] for item in navigation["segments"]}
+    ends = {item["end_seconds"] for item in navigation["segments"]}
+    if start not in starts or end not in ends: raise ValueError("clip boundaries must match persisted SRT cues")
+    project_id=request.get("project_id"); run_id=request.get("run_id"); source_id=request.get("source_id")
+    project_dir=_project_dir(root,_project(root,project_id)["project_id"])
+    run=read_run(project_dir,run_id)
+    result=next((item for item in run.get("source_results",[]) if item.get("source_id")==source_id),None)
+    if not isinstance(result,dict) or result.get("state")!="COMPLETED": raise ValueError("completed source result is unavailable")
+    directory=project_dir/"artifacts"/"clips"/str(uuid.UUID(run_id.removeprefix("urn:integra:run:")))
+    directory.mkdir(parents=True,exist_ok=True)
+    clip=directory/f"clip_{int(start*1000):010d}_{int(end*1000):010d}.mp4"
+    ffmpeg=ffmpeg_preflight()["ffmpeg"]
+    completed=subprocess.run([ffmpeg,"-nostdin","-y","-ss",f"{start:.3f}","-to",f"{end:.3f}","-i",navigation["media_path"],"-map","0:v?","-map","0:a?","-c:v","libx264","-c:a","aac",str(clip)],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+    if completed.returncode != 0 or clip.is_symlink() or not clip.is_file() or clip.stat().st_size == 0: raise ValueError("clip rendering produced no media output")
+    manifest=directory/"clips.json"; current={"schema_version":"1.0","source_id":source_id,"source_path":navigation["media_path"],"subtitles_path":navigation["subtitles_path"],"clips":[]}
+    if manifest.is_file() and not manifest.is_symlink(): current=json.loads(manifest.read_bytes())
+    record={"path":str(clip),"start_seconds":start,"end_seconds":end,"locator":f"media:{source_id}#t={start:.3f},{end:.3f}"}
+    current["clips"]=[item for item in current.get("clips",[]) if item.get("path")!=str(clip)]+[record]; _atomic_json(manifest,current)
+    outputs=result.setdefault("outputs",{}); outputs["clips_manifest"]=str(manifest); outputs[f"clip_{int(start*1000)}_{int(end*1000)}"]=str(clip); _atomic_json(run_path(project_dir,run_id),run)
+    return record | {"manifest":str(manifest)}
+
 def _import_media(root, request):
     project = _project(root, request.get("project_id")); project_dir = _project_dir(root, project["project_id"])
     source = import_source(project_dir, Path(request.get("source_path", "")))
@@ -260,6 +287,7 @@ def main():
         elif operation == "run-status": result = _run_action(root, request, "status")
         elif operation == "recent-runs": result = _recent_runs(root)
         elif operation == "media-navigation": result = _media_navigation(root, request)
+        elif operation == "create-media-clip": result = _create_media_clip(root, request)
         elif operation == "cancel-run": result = _run_action(root, request, "cancel")
         elif operation == "retry-run": result = _run_action(root, request, "retry")
         elif operation == "package-preview": result = _publication(root, request, False)
