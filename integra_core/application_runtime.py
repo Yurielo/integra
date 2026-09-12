@@ -50,12 +50,68 @@ def _copy_document(project_dir:Path,source:dict[str,Any])->Path:
     return target
 
 
+def _write_document_structure(document: dict[str, Any], artifact_dir: Path) -> str:
+    entries = []
+    for item in document["native_extraction"]["blocks"] + document["ocr"]["blocks"]:
+        locator = item["locator"]
+        entries.append({
+            "block_id": item["block_id"],
+            "unit_kind": locator["unit_kind"],
+            "unit_index": locator["unit_index"],
+            "text": item["text"],
+            "extraction_method": item["extraction_method"],
+            "character_start": locator["character_start"],
+            "character_end": locator["character_end"],
+        })
+    structure_path = artifact_dir / "document_structure.json"
+    structure = {
+        "schema_version": "1.0",
+        "source_id": document["source"]["source_id"],
+        "document_id": document["document_id"],
+        "format": document["source"]["format"],
+        "page_or_slide_count": document["page_or_slide_count"],
+        "content_mode": document["content_mode"],
+        "entry_count": len(entries),
+        "entries": entries,
+    }
+    structure_path.write_text(json.dumps(structure, ensure_ascii=False, indent=2), encoding="utf-8")
+    return str(structure_path)
+
+
+def _write_discovered_images(document: dict[str, Any], artifact_dir: Path) -> str:
+    manifest_path = artifact_dir / "discover_images.json"
+    manifest = {
+        "schema_version": "1.0",
+        "source_id": document["source"]["source_id"],
+        "document_id": document["document_id"],
+        "embedded_media_count": len(document["embedded_media"]),
+        "embedded_media": [
+            {
+                "media_id": item["media_id"],
+                "part_path": item["part_path"],
+                "media_type": item["media_type"],
+                "sha256": item["sha256"],
+                "size_bytes": item["size_bytes"],
+                "parent_locator": item["parent_locator"],
+            }
+            for item in document["embedded_media"]
+        ],
+    }
+    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+    return str(manifest_path)
+
+
 def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
     path=run_path(project_dir,run_id); record=json.loads(path.read_bytes()); plan=record["plan"]
     jobs_path=project_dir/"jobs.json"
+    def refresh_record():
+        return json.loads(path.read_bytes())
     try:
         record.update(state="RUNNING",started_at=now()); atomic_json(path,record)
         for source_plan,source in zip(plan["source_plans"],plan["sources"]):
+            record = refresh_record()
+            if record.get("state") != "RUNNING":
+                break
             outputs=source_plan["outputs"]
             if not outputs:
                 record["source_results"].append({"source_id":source["source_id"],"display_name":source["display_name"],"state":"SKIPPED","outputs":{}}); record["completed_sources"]+=1; atomic_json(path,record); continue
@@ -76,12 +132,16 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                     raise ValueError("document source changed after plan creation")
                 atomic_json(artifact_dir/"document.json",document)
                 blocks=document["native_extraction"]["blocks"]+document["ocr"]["blocks"]
-                text_path=artifact_dir/"text.md"; text_path.write_text("\n\n".join(item["text"] for item in blocks)+"\n",encoding="utf-8")
+                text_path=artifact_dir/"text.txt"; text_path.write_text("\n\n".join(item["text"] for item in blocks)+"\n",encoding="utf-8")
                 outputs_map={"document_record":str(artifact_dir/"document.json")}
+                if "document_structure" in outputs: outputs_map["document_structure"] = _write_document_structure(document, artifact_dir)
+                if "discover_images" in outputs: outputs_map["discover_images"] = _write_discovered_images(document, artifact_dir)
                 if "document_text" in outputs: outputs_map["text"]=str(text_path)
                 record["source_results"].append({"source_id":source["source_id"],"display_name":source["display_name"],"state":"COMPLETED","outputs":outputs_map,"document_properties":{"content_mode":document["content_mode"],"ocr_status":document["ocr"]["status"],"embedded_media_count":len(document["embedded_media"])}})
             record["completed_sources"]+=1; atomic_json(path,record)
-        record.update(state="COMPLETED",current_stage=None,completed_at=now()); atomic_json(path,record)
+        record = refresh_record()
+        final_state = "CANCELLED" if record.get("state") == "CANCELLED" else "COMPLETED"
+        record.update(state=final_state,current_stage=None,completed_at=now()); atomic_json(path,record)
         project_path=project_dir/"project.json"
         if project_path.is_file():
             project=json.loads(project_path.read_bytes()); project["source_count"]=len(plan["sources"]); project["status"]="READY"; atomic_json(project_path,project)

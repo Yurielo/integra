@@ -7,15 +7,21 @@ import os
 import re
 import shutil
 import subprocess
+import signal
 import uuid
+import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from .identity import derive_imported_id
 from .onedrive import build_onedrive_package
 from .protocol import canonical_json, content_sha256
 from .publishing import sha256_bytes, validate_package
+
+
+class _RunCancelled(Exception):
+    """Internal control-signal for user cancellation."""
 
 SUPPORTED = {".aac", ".aif", ".aiff", ".flac", ".m4a", ".m4v", ".mkv", ".mov", ".mp3", ".mp4", ".ogg", ".wav", ".webm"}
 
@@ -29,6 +35,86 @@ def atomic_json(path: Path, value: Any) -> None:
     temporary = path.with_name(path.name + ".tmp")
     temporary.write_bytes(canonical_json(value) + b"\n")
     os.replace(temporary, path)
+
+
+def _run_path(project_dir: Path, run_id: str) -> Path:
+    token = str(uuid.UUID(run_id.removeprefix("urn:integra:run:")))
+    path = project_dir / "runs" / f"{token}.json"
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("run record is not available")
+    return path
+
+
+def _is_run_cancelled(project_dir: Path, run_id: str | None) -> bool:
+    if not run_id:
+        return False
+    try:
+        record = json.loads(_run_path(project_dir, run_id).read_bytes())
+    except Exception:
+        return False
+    return record.get("state") == "CANCELLED"
+
+
+def _run_with_cancellation(
+    command: list[str],
+    project_dir: Path,
+    run_id: str | None,
+    *,
+    check: bool = True,
+) -> None:
+    process = subprocess.Popen(
+        command,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+    )
+    try:
+        while True:
+            if _is_run_cancelled(project_dir, run_id):
+                try:
+                    os.killpg(process.pid, signal.SIGTERM)
+                except ProcessLookupError:
+                    pass
+                raise _RunCancelled()
+            code = process.poll()
+            if code is None:
+                time.sleep(0.1)
+                continue
+            if code != 0 and check:
+                raise subprocess.CalledProcessError(returncode=code, cmd=command)
+            return
+    finally:
+        if process.poll() is None:
+            try:
+                os.killpg(process.pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+            process.wait(timeout=1)
+
+
+def _report_run_progress(
+    project_dir: Path,
+    run_id: str | None,
+    stage: str | None,
+    progress: int,
+    message: str,
+) -> None:
+    if not run_id:
+        return
+    try:
+        path = _run_path(project_dir, run_id)
+        record = json.loads(path.read_bytes())
+    except Exception:
+        return
+    if record.get("state") not in {"QUEUED", "RUNNING"}:
+        return
+    record["state"] = "RUNNING"
+    if stage is not None:
+        record["current_stage"] = stage
+    record["progress"] = progress
+    record["message"] = message
+    record["updated_at"] = now()
+    atomic_json(path, record)
 
 
 def import_source(project_dir: Path, source: Path) -> dict[str, Any]:
@@ -126,33 +212,61 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
     jobs_path = project_dir / "jobs.json"
     jobs = json.loads(jobs_path.read_bytes())
     job = next(item for item in jobs["jobs"] if item["job_id"] == job_id)
-    def checkpoint(state: str, progress: int, message: str) -> None:
+    def checkpoint(state: str, progress: int, message: str, *, run_stage: Optional[str] = None) -> None:
         job.update(state=state, progress=progress, message=message, updated_at=now(), worker_pid=os.getpid())
         atomic_json(jobs_path, jobs)
+        _report_run_progress(project_dir, job.get("run_id"), run_stage, progress, message)
+        if _is_run_cancelled(project_dir, job.get("run_id")):
+            raise _RunCancelled()
     try:
-        checkpoint("RUNNING", 5, "Preparing audio")
+        checkpoint("RUNNING", 5, "Preparing audio", run_stage="media_preparation")
         ffmpeg, whisper, model = _tools(); source = Path(job["owned_path"])
         work = project_dir / "artifacts" / job_id.removeprefix("urn:integra:job:"); work.mkdir(parents=True, exist_ok=True)
         wav = work / "audio.wav"
-        subprocess.run([ffmpeg, "-nostdin", "-y", "-i", str(source), "-ar", "16000", "-ac", "1", "-c:a", "pcm_s16le", str(wav)], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-        checkpoint("RUNNING", 25, "Transcribing locally")
+        _run_with_cancellation(
+            [ffmpeg, "-nostdin", "-y", "-i", str(source), "-ar", "16000", "-ac", "1", "-c:a", "pcm_s16le", str(wav)],
+            project_dir,
+            job.get("run_id"),
+            check=True,
+        )
+        checkpoint("RUNNING", 25, "Transcribing locally", run_stage="transcript")
         output = work / "transcript"
-        subprocess.run([whisper, "-m", model, "-f", str(wav), "-l", "auto", "-osrt", "-of", str(output), "-np"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        _run_with_cancellation(
+            [whisper, "-m", model, "-f", str(wav), "-l", "auto", "-osrt", "-of", str(output), "-np"],
+            project_dir,
+            job.get("run_id"),
+            check=True,
+        )
         segments = _parse_srt((output.with_suffix(".srt")).read_text(errors="replace"), job["source_id"])
         if not segments: raise ValueError("transcription produced no timed speech segments")
         requested=job.get("requested_outputs")
         legacy_semantics=requested is None
-        checkpoint("RUNNING", 80, "Saving timed transcript and subtitles" if not legacy_semantics else "Building provisional Topics and Knowledge")
+        checkpoint("RUNNING", 80, "Saving timed transcript and subtitles", run_stage="subtitles")
         transcript = {"schema_version":"1.0", "source_id":job["source_id"], "assurance":"MACHINE_TRANSCRIPT_UNREVIEWED",
                       "model_sha256":hashlib.sha256(Path(model).read_bytes()).hexdigest(), "segments":segments}
+        transcript_text = "\n".join(segment["text"] for segment in segments)
+        transcript_txt = work / "transcript.txt"
+        transcript_txt.write_text((transcript_text + "\n") if transcript_text else "", encoding="utf-8")
         atomic_json(work / "transcript.json", transcript)
         subtitles=output.with_suffix(".srt")
-        job["outputs"]={"transcript":str(work/"transcript.json"),"subtitles":str(subtitles)}
+        job["outputs"]={"transcript":str(transcript_txt),"transcript_json":str(work/"transcript.json"),"subtitles":str(subtitles)}
+        def build_semantic_artifacts() -> dict[str, list[dict[str, Any]]]:
+            return {"topics": [topic for topic in _provisional_topics(segments, job["source_id"])]}
         if not legacy_semantics:
+            topics = build_semantic_artifacts()["topics"]
+            knowledge = {"schema_version":"1.0", "source_id":job["source_id"], "semantic_authority":"PROVISIONAL",
+                        "review_state":"REVIEW_REQUIRED", "concepts":[{"knowledge_id":topic["topic_id"].replace(":topic:",":knowledge:"),
+                        "label":topic["label"], "status":"REVIEW_REQUIRED", "topic_id":topic["topic_id"], "locator":topic["locator"]} for topic in topics]}
+            navigation = {"schema_version":"1.0", "source_id":job["source_id"], "routes":[{"topic_id":topic["topic_id"],
+                         "knowledge_id":knowledge["concepts"][i]["knowledge_id"], "segment_ids":topic["evidence_segment_ids"], "locator":topic["locator"]} for i,topic in enumerate(topics)]}
+            package = None
+            if (project_dir / "project.json").is_file():
+                package = build_project_package(project_dir, job, transcript, topics, knowledge, navigation)
+                job["outputs"]["package_dir"] = str(package)
             job.update(state="COMPLETED",progress=100,message="Requested real outputs are ready",completed_at=now(),
-                       artifact_dir=str(work),transcript_segments=len(segments))
+                       artifact_dir=str(work), package_dir=str(package) if package else None, transcript_segments=len(segments))
             atomic_json(jobs_path,jobs); return job
-        topics = _provisional_topics(segments, job["source_id"])
+        topics = build_semantic_artifacts()["topics"]
         knowledge = {"schema_version":"1.0", "source_id":job["source_id"], "semantic_authority":"PROVISIONAL",
                      "review_state":"REVIEW_REQUIRED", "concepts":[{"knowledge_id":topic["topic_id"].replace(":topic:",":knowledge:"),
                      "label":topic["label"], "status":"REVIEW_REQUIRED", "topic_id":topic["topic_id"], "locator":topic["locator"]} for topic in topics]}
@@ -165,6 +279,10 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
                    artifact_dir=str(work), package_dir=str(package), transcript_segments=len(segments), provisional_topics=len(topics))
         atomic_json(jobs_path, jobs); return job
     except Exception as error:
+        if isinstance(error, _RunCancelled) or _is_run_cancelled(project_dir, job.get("run_id")):
+            job.update(state="CANCELLED", message="Cancelled by user", updated_at=now())
+            atomic_json(jobs_path, jobs)
+            return job
         job.update(state="FAILED", message=str(error)[:300], updated_at=now())
         atomic_json(jobs_path, jobs); raise
 
