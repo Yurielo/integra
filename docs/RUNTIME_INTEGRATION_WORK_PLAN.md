@@ -1,6 +1,6 @@
 # План доведения Integra до реальных интеграций
 
-Статус: `DRAFT — требует rebaseline после R14`.
+Статус: `REBASELINED after PR #104; package and Word Timeline gaps remain`.
 
 Этот план не меняет текущую правду приложения: пока у функции нет
 упакованного runtime, callable пути из macOS и smoke-проверки, в UI она
@@ -14,6 +14,10 @@
 - проекты, история, переход от SRT к медиа;
 - выбор проверенного package, Obsidian и файловая публикация OneDrive с
   preview-before-write.
+- условные SeminarText drafts тем: для Integra-owned SRT вызывается
+  закреплённый read-only Topic Engine; результат всегда `REVIEW_REQUIRED`.
+  Функция становится доступна только когда внешний закреплённый runtime и
+  локальная модель прошли preflight.
 
 ## Этап 0 — общая основа runtime
 
@@ -41,6 +45,12 @@ read-only закреплённый SeminarText runtime.
 3. Добавить planner dependencies: `transcript → word_timeline → topics`.
 4. Показать темы как `REVIEW_REQUIRED`, а не как принятые знания.
 5. Добавить cancellation/retry, synthetic end-to-end smoke и macOS UI smoke.
+
+**Текущая граница:** PR #104 уже реализовал callable conditional Topics path
+и bundle worker, но это не self-contained runtime: source SeminarText не
+перераспределяется текущим пакетом, а лицензия на такую поставку не доказана.
+Word Timeline также остаётся отдельной незавершённой задачей: cue-level SRT
+не является word-level alignment.
 
 **После выполнения:** включить «Темы и таймкоды»; Review/Evidence/Knowledge
 остаются отдельным этапом до реального authoring/review пути.

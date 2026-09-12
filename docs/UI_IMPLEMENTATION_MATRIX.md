@@ -1,6 +1,6 @@
 # UI Implementation Matrix — Issue #76
 
-Verified against Integra `main` at `9db46df0ab162f892092745dafda4c0530853549`,
+Verified against Integra `main` at `9689c4c`,
 SeminarText at pinned clean commit `a94936cd77cde13561c97c804ece1ac1134e01a6`,
 VideoText at pinned commit `2e098d1705b6815628bee1e023f4742718eabf02`,
 and BookText remote `main` at `46396649214275eb18054b670a842bace02d02e1`.
@@ -18,8 +18,8 @@ without an Integra runtime path is not called working.
 | Local video/audio | Navigate timed transcript to owned source media | Integra macOS UI + closed bridge | persisted source-first run resolves the owned source file and parses its generated SRT | `media-navigation` → AppKit/AVPlayer cue seek | bridge end-to-end test; macOS build/smoke | Работает |
 | Local video/audio | Improve audio | Integra local media adapter | owned `ffmpeg` subprocess writes an AAC/M4A artifact with deterministic loudness-normalization parameters and an exact source-hash record | source-first `execute-plan` → `process-plan` → `application_runtime.execute_run` → `user_media.run_job` | capability and application-runtime tests; macOS build/smoke | Работает when ffmpeg preflight passes; otherwise disabled with reason |
 | Local video/audio with generated SRT | Create a selected time-range clip | Integra local media adapter + closed macOS bridge | owned `ffmpeg` renders MP4 only from exact persisted SRT cue boundaries; source, subtitles, locator, and clip list are persisted | `media-navigation` → user chooses a displayed SRT range → `create-media-clip` | bridge end-to-end test; macOS build/smoke | Работает when ffmpeg preflight passes; thematic VideoText clips remain В разработке |
-| Local video/audio | Word Timeline | SeminarText | contract and source implementation exist | no production user-app dispatch path | SeminarText tests and Integra contract tests only | В разработке |
-| Local video/audio | Topics and timecodes | SeminarText | pinned Topic worker exists; current user runtime instead uses non-authoritative deterministic grouping | no SeminarText user-app dispatch path | R6 certification worker evidence only | В разработке |
+| Local video/audio | Word Timeline | SeminarText | contract and source implementation exist | no production user-app dispatch path; the local ASR path currently produces cue-level SRT, not word-level alignment | SeminarText tests and Integra contract tests only | В разработке |
+| Local video/audio with generated SRT | Topics and timecodes | SeminarText | pinned Topic Engine function composition is invoked by `integra_core.seminartext_runtime.generate_topics`; it accepts only `REVIEW_REQUIRED` drafts | source-first `execute-plan` → `application_runtime.execute_run` → `user_media.run_job` → `generate_topics` → packaged `seminartext_topics_worker.py` → pinned read-only SeminarText checkout | real local Russian-SRT/`gemma3:4b` smoke; application-runtime dispatch test; runtime contract tests; macOS bundle worker test | Работает only when the pinned local runtime and model pass preflight; otherwise disabled with the factual missing-runtime reason |
 | Local video/audio | Review / Evidence / Canonical Knowledge | SeminarText | versioned contracts and validators exist | no end-to-end user-app authoring/review dispatch | contract tests; no user runtime smoke | В разработке |
 | Local video/audio | Translation | VideoText / SeminarText fallback | VideoText production adapter exists in pinned source | no packaged Integra runtime path | component benchmark/probes only | В разработке |
 | Local video | Burn subtitles, clips, social variants | VideoText | several component implementations exist; only subtitle burning has an Integra runtime | source-first `burn_subtitles` → owned local ffmpeg adapter | application-runtime and macOS smoke tests for subtitle burning; component probes for remaining VideoText features | Clips and social variants — В разработке |
@@ -46,9 +46,10 @@ without an Integra runtime path is not called working.
 2. The current user media path does not call the accepted VideoText component;
    it calls a real local ffmpeg/Whisper adapter. The UI identifies the real
    runtime and leaves VideoText-only outputs disabled.
-3. The existing user-media topic grouping is not equivalent to the pinned
-   SeminarText Topic Engine. The new source-first UI does not expose it as a
-   completed Topics or Knowledge capability.
+3. The legacy user-media deterministic grouping is not equivalent to the
+   pinned SeminarText Topic Engine and is not used for selected source-first
+   Topics. The available integration persists only SeminarText-produced
+   `REVIEW_REQUIRED` drafts; it does not create or accept Knowledge.
 4. Live YouTube discovery/download and playlist ingest are explicitly deferred
    in accepted product truth. The UI represents the entry point but cannot
    execute it and labels it `В разработке`.
