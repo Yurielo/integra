@@ -166,10 +166,15 @@ class SourceFirstBridgeTests(unittest.TestCase):
             execution=call("execute-plan",{"plan":plan,"name":"Cancellation test"})
             project_id=execution["project"]["project_id"]; run_id=execution["run"]["run_id"]
             try:
+                # The spawned bridge starts a fresh Python interpreter and imports
+                # the complete local runtime.  On a cold CI runner that startup can
+                # legitimately exceed the previous three-second window, even though
+                # the worker is healthy.  Keep the assertion about the real RUNNING
+                # state, but give the process a bounded ten-second startup budget.
                 for _ in range(100):
                     jobs=call("jobs",{"project_id":project_id})
                     if jobs and jobs[-1]["state"] == "RUNNING": break
-                    time.sleep(.03)
+                    time.sleep(.1)
                 self.assertTrue(jobs and jobs[-1]["state"] == "RUNNING",jobs)
                 cancelled=call("cancel-run",{"project_id":project_id,"run_id":run_id})
                 self.assertEqual(cancelled["state"],"CANCELLED")
