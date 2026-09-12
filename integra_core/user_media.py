@@ -155,14 +155,21 @@ def _executable(env_name: str, command: str) -> str | None:
 
 
 def _tools() -> tuple[str, str, str]:
-    ffmpeg = _executable("INTEGRA_FFMPEG", "ffmpeg")
+    ffmpeg = ffmpeg_preflight()["ffmpeg"]
     whisper = _executable("INTEGRA_WHISPER_CLI", "whisper-cli")
     model = os.environ.get("INTEGRA_WHISPER_MODEL") or str(Path.home() / "whisper-models/ggml-large-v3.bin")
-    if not ffmpeg: raise ValueError("ffmpeg is not installed")
     if not whisper: raise ValueError("whisper-cli is not installed")
     model_path = Path(model)
     if model_path.is_symlink() or not model_path.is_file(): raise ValueError("Whisper model is missing; set INTEGRA_WHISPER_MODEL")
     return ffmpeg, whisper, str(model_path.resolve(strict=True))
+
+
+def ffmpeg_preflight() -> dict[str, str]:
+    """Verify the standalone local ffmpeg dependency used by owned media jobs."""
+    ffmpeg = _executable("INTEGRA_FFMPEG", "ffmpeg")
+    if not ffmpeg:
+        raise ValueError("ffmpeg is not installed")
+    return {"state": "READY", "ffmpeg": ffmpeg}
 
 
 def preflight(*, hash_model: bool = True) -> dict[str, Any]:
@@ -227,9 +234,39 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
         if _is_run_cancelled(project_dir, job.get("run_id")):
             raise _RunCancelled()
     try:
+        requested=job.get("requested_outputs")
+        legacy_semantics=requested is None
+        requested_outputs=set(requested or {"transcript", "subtitles"})
         checkpoint("RUNNING", 5, "Preparing audio", run_stage="media_preparation")
-        ffmpeg, whisper, model = _tools(); source = Path(job["owned_path"])
+        ffmpeg=ffmpeg_preflight()["ffmpeg"]; source = Path(job["owned_path"])
         work = project_dir / "artifacts" / job_id.removeprefix("urn:integra:job:"); work.mkdir(parents=True, exist_ok=True)
+        outputs: dict[str, str] = {}
+        if "enhance_audio" in requested_outputs:
+            checkpoint("RUNNING", 15, "Enhancing audio locally", run_stage="audio_enhancement")
+            enhanced = work / "enhanced_audio.m4a"
+            _run_with_cancellation(
+                [ffmpeg, "-nostdin", "-y", "-i", str(source), "-vn",
+                 "-af", "loudnorm=I=-16:TP=-1.5:LRA=11", "-c:a", "aac", "-b:a", "192k", str(enhanced)],
+                project_dir, job.get("run_id"), check=True,
+            )
+            if enhanced.is_symlink() or not enhanced.is_file() or enhanced.stat().st_size == 0:
+                raise ValueError("audio enhancement produced no audio output")
+            enhancement_record = {
+                "schema_version": "1.0", "source_id": job["source_id"],
+                "source_sha256": job["source_sha256"], "engine": "ffmpeg",
+                "filter": "loudnorm=I=-16:TP=-1.5:LRA=11", "output": str(enhanced),
+            }
+            atomic_json(work / "audio_enhancement.json", enhancement_record)
+            outputs["enhanced_audio"] = str(enhanced)
+            outputs["audio_enhancement_record"] = str(work / "audio_enhancement.json")
+        needs_transcript = legacy_semantics or bool(requested_outputs & {"transcript", "subtitles", "burn_subtitles"})
+        if not needs_transcript:
+            job["outputs"] = outputs
+            job.update(state="COMPLETED", progress=100, message="Requested enhanced audio is ready",
+                       completed_at=now(), artifact_dir=str(work))
+            atomic_json(jobs_path, jobs)
+            return job
+        _, whisper, model = _tools()
         wav = work / "audio.wav"
         _run_with_cancellation(
             [ffmpeg, "-nostdin", "-y", "-i", str(source), "-ar", "16000", "-ac", "1", "-c:a", "pcm_s16le", str(wav)],
@@ -247,8 +284,6 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
         )
         segments = _parse_srt((output.with_suffix(".srt")).read_text(errors="replace"), job["source_id"])
         if not segments: raise ValueError("transcription produced no timed speech segments")
-        requested=job.get("requested_outputs")
-        legacy_semantics=requested is None
         checkpoint("RUNNING", 80, "Saving timed transcript and subtitles", run_stage="subtitles")
         transcript = {"schema_version":"1.0", "source_id":job["source_id"], "assurance":"MACHINE_TRANSCRIPT_UNREVIEWED",
                       "model_sha256":hashlib.sha256(Path(model).read_bytes()).hexdigest(), "segments":segments}
@@ -257,7 +292,8 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
         transcript_txt.write_text((transcript_text + "\n") if transcript_text else "", encoding="utf-8")
         atomic_json(work / "transcript.json", transcript)
         subtitles=output.with_suffix(".srt")
-        job["outputs"]={"transcript":str(transcript_txt),"transcript_json":str(work/"transcript.json"),"subtitles":str(subtitles)}
+        outputs.update({"transcript":str(transcript_txt),"transcript_json":str(work/"transcript.json"),"subtitles":str(subtitles)})
+        job["outputs"] = outputs
         if requested and "burn_subtitles" in requested:
             checkpoint("RUNNING", 90, "Burning subtitles into video", run_stage="burn_subtitles")
             burned = work / "subtitled.mp4"

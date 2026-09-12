@@ -9,7 +9,7 @@ from typing import Any
 
 from .documents import FORMAT_BY_SUFFIX, DocumentError, extract_document
 from .protocol import content_sha256
-from .user_media import SUPPORTED as MEDIA_EXTENSIONS, preflight
+from .user_media import SUPPORTED as MEDIA_EXTENSIONS, ffmpeg_preflight, preflight
 
 VIDEO = {".m4v", ".mkv", ".mov", ".mp4", ".webm"}
 AUDIO = MEDIA_EXTENSIONS - VIDEO
@@ -78,10 +78,12 @@ def capability_registry(sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
     types={item["source_type"] for item in sources}; media=bool(types & {"LOCAL_VIDEO","LOCAL_AUDIO"})
     documents=bool(types & set(value[0] for value in FORMAT_BY_SUFFIX.values()))
     youtube=bool(types & {"YOUTUBE_VIDEO","YOUTUBE_PLAYLIST"})
-    runtime={}; media_ready=False; media_reason=""
+    runtime={}; media_ready=False; media_reason=""; enhancement_ready=False; enhancement_reason=""
     if media:
         try: runtime=preflight(hash_model=False); media_ready=True
         except ValueError as error: media_reason=str(error)
+        try: ffmpeg_preflight(); enhancement_ready=True
+        except ValueError as error: enhancement_reason=str(error)
     native_docs=documents and all(item.get("properties",{}).get("ocr_status")!="REQUIRED" for item in sources if item["kind"]=="DOCUMENT")
     caps = [
         _capability("transcript","Расшифровка","Основная обработка",{"LOCAL_VIDEO","LOCAL_AUDIO"},"integra.local_media_adapter",True,["media_preparation"],available=media and media_ready,reason=media_reason),
@@ -95,7 +97,7 @@ def capability_registry(sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
         _capability("detailed_notes","Подробный конспект","Смысловая обработка",{"LOCAL_VIDEO","LOCAL_AUDIO","PDF","DOCX","PPTX","TXT","MARKDOWN","IMAGE"},"seminartext",False,["evidence"]),
         _capability("burn_subtitles","Встроить субтитры","Видео / медиа",{"LOCAL_VIDEO"},"integra.local_media_adapter",True,["subtitles"],available=media and media_ready,reason=media_reason),
         _capability("clips","Создать тематические клипы","Видео / медиа",{"LOCAL_VIDEO"},"videotext",False,["topics"]),
-        _capability("enhance_audio","Улучшить звук","Видео / медиа",{"LOCAL_VIDEO","LOCAL_AUDIO"},"videotext",False,[]),
+        _capability("enhance_audio","Улучшить звук","Видео / медиа",{"LOCAL_VIDEO","LOCAL_AUDIO"},"integra.local_media_adapter",True,["media_preparation"],available=media and enhancement_ready,reason=enhancement_reason),
         _capability("social_versions","Версии для соцсетей","Видео / медиа",{"LOCAL_VIDEO"},"videotext",False,["clips"]),
         _capability("document_text","Извлечь текст","Основная обработка",{"PDF","DOCX","PPTX","TXT","MARKDOWN"},"integra.document_adapter",True,["document_analysis"],available=native_docs,reason="требуется OCR BookText" if documents and not native_docs else ""),
         _capability("document_structure","Сохранить структуру страниц","Структура",{"PDF","DOCX","PPTX","TXT","MARKDOWN","IMAGE"},"integra.document_adapter",True,["document_analysis"],available=documents),
