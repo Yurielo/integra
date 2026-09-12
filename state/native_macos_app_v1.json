@@ -6,7 +6,7 @@
   "implementation": [
     {"path": "docs/architecture/NATIVE_MACOS_APPLICATION_V1.md", "sha256": "a6b901aa039191839c64a969b577ab35697fc89e3d48e1f6c50040c69cccc8c9"},
     {"path": "docs/architecture/MACOS_APP_ICON.md", "sha256": "b9a2eef2623981703883d2bcaec3b261c5f83b291342abc3c972f901c6c2ed80"},
-    {"path": "macos/IntegraApp.swift", "sha256": "24dbe7d6a9eb405d669d1420664695247d0ca0ee48af389c4770baceb2ed31c2"},
+    {"path": "macos/IntegraApp.swift", "sha256": "d6f59e4ee13107dcb101513bebf58f2b997af28e88b79b8a0d9f0ef01fd683bf"},
     {"path": "macos/Info.plist", "sha256": "a419740dd9515b629f857004c2d2a58cb7d1078beeca855a0e8b61430971124c"},
     {"path": "macos/Resources/bridge.py", "sha256": "72b9a1baaabd1ca70430a3a45376377b39dbbedb2c300f64b25c4b465a9dbd8a"},
     {"path": "macos/Resources/Integra.icns", "sha256": "7c7781be71254c8757134368e1d0fff5b9266f9e189376d963dc0b69e42fbbee"},
