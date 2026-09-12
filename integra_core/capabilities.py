@@ -93,7 +93,7 @@ def capability_registry(sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
         _capability("knowledge","База знаний","Смысловая обработка",{"LOCAL_VIDEO","LOCAL_AUDIO","PDF","DOCX","PPTX","TXT","MARKDOWN","IMAGE"},"seminartext",False,["evidence"]),
         _capability("summary","Краткое содержание","Смысловая обработка",{"LOCAL_VIDEO","LOCAL_AUDIO","PDF","DOCX","PPTX","TXT","MARKDOWN","IMAGE"},"seminartext",False,["evidence"]),
         _capability("detailed_notes","Подробный конспект","Смысловая обработка",{"LOCAL_VIDEO","LOCAL_AUDIO","PDF","DOCX","PPTX","TXT","MARKDOWN","IMAGE"},"seminartext",False,["evidence"]),
-        _capability("burn_subtitles","Встроить субтитры","Видео / медиа",{"LOCAL_VIDEO"},"videotext",False,["subtitles"]),
+        _capability("burn_subtitles","Встроить субтитры","Видео / медиа",{"LOCAL_VIDEO"},"integra.local_media_adapter",True,["subtitles"],available=media and media_ready,reason=media_reason),
         _capability("clips","Создать тематические клипы","Видео / медиа",{"LOCAL_VIDEO"},"videotext",False,["topics"]),
         _capability("enhance_audio","Улучшить звук","Видео / медиа",{"LOCAL_VIDEO","LOCAL_AUDIO"},"videotext",False,[]),
         _capability("social_versions","Версии для соцсетей","Видео / медиа",{"LOCAL_VIDEO"},"videotext",False,["clips"]),
