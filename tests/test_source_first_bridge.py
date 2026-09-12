@@ -141,6 +141,10 @@ class SourceFirstBridgeTests(unittest.TestCase):
             for item in one_manifest["files"]:
                 one_files[item["path"]]=(onedrive_root/"files"/item["path"]).read_bytes()
             validate_onedrive_package(one_manifest,one_files)
+            packages=call("available-packages",{})
+            selected=next(item for item in packages if item["run_id"]==run_id)
+            self.assertEqual(selected["package_dir"],str(package))
+            self.assertEqual(selected["source_name"],"voice.wav")
             navigation=call("media-navigation",{"project_id":project_id,"run_id":run_id,"source_id":sources[0]["source_id"]})
             self.assertEqual(Path(navigation["media_path"]).read_bytes(),source.read_bytes())
             self.assertEqual(navigation["segments"][0]["start_seconds"],0.0)

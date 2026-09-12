@@ -16,7 +16,7 @@ from integra_core.user_media import _parse_srt, ffmpeg_preflight, import_source,
 from integra_core.capabilities import build_plan, capability_registry, detect_source
 from integra_core.application_runtime import execute_run, prepare_run, read_run, run_path
 
-OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "import-media", "media-preflight", "process-media-job", "project-view", "detect-sources", "capability-registry", "build-plan", "execute-plan", "process-plan", "run-status", "recent-runs", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "package-preview", "package-publish", "obsidian-preview", "onedrive-preview"}
+OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "import-media", "media-preflight", "process-media-job", "project-view", "detect-sources", "capability-registry", "build-plan", "execute-plan", "process-plan", "run-status", "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "package-preview", "package-publish", "obsidian-preview", "onedrive-preview"}
 
 def _safe_error(error):
     message = str(error).replace(str(Path.home()), "<HOME>")
@@ -128,6 +128,21 @@ def _recent_runs(root):
         for path in directory.glob("*.json"):
             if path.is_file() and not path.is_symlink(): result.append({"project":project,"run":json.loads(path.read_bytes())})
     return sorted(result,key=lambda item:item["run"].get("created_at",""),reverse=True)
+
+def _available_packages(root):
+    """Return only package artifacts that still validate from persisted completed runs."""
+    available=[]
+    for item in _recent_runs(root):
+        project=item["project"]; run=item["run"]
+        if run.get("state")!="COMPLETED": continue
+        for result in run.get("source_results",[]):
+            outputs=result.get("outputs",{}) if isinstance(result,dict) else {}
+            path=outputs.get("package_dir") if isinstance(outputs,dict) else None
+            if not isinstance(path,str): continue
+            try: manifest,_=_package(path)
+            except Exception: continue
+            available.append({"project_id":project["project_id"],"project_name":project["name"],"run_id":run["run_id"],"source_id":result.get("source_id"),"source_name":result.get("display_name"),"package_dir":path,"package_id":manifest["package_id"],"artifact_type":manifest["artifact_type"]})
+    return available
 
 def _media_navigation(root, request):
     """Return only persisted, owned media and its exact SRT cue timings."""
@@ -286,6 +301,7 @@ def main():
         elif operation == "process-plan": result = execute_run(_project_dir(root, request.get("project_id")), request.get("run_id"))
         elif operation == "run-status": result = _run_action(root, request, "status")
         elif operation == "recent-runs": result = _recent_runs(root)
+        elif operation == "available-packages": result = _available_packages(root)
         elif operation == "media-navigation": result = _media_navigation(root, request)
         elif operation == "create-media-clip": result = _create_media_clip(root, request)
         elif operation == "cancel-run": result = _run_action(root, request, "cancel")

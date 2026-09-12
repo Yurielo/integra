@@ -35,6 +35,7 @@ without an Integra runtime path is not called working.
 | Collection | Cross-source alignment/common knowledge/summary/glossary | Integra + SeminarText | accepted contracts exist but no production authoring path from arbitrary user sources | none | contract tests only | В разработке |
 | Completed validated package | Obsidian managed export | Integra | `publishing.preview_obsidian_export` / `publish_obsidian_export` | `package-preview` / `package-publish` | publication integration tests | Работает |
 | Completed validated package | Filesystem-backed OneDrive publication | Integra | `onedrive.preview_onedrive_publication` / `publish_onedrive_package` | `package-preview` / `package-publish` | OneDrive integration tests | Работает; never claims cloud verification |
+| Completed persisted run | Select package for publication | Integra macOS UI + closed bridge | bridge revalidates only persisted completed-run package outputs before the app presents a concrete project/source/package selector | `available-packages` → selected `package-preview` / `package-publish` | bridge end-to-end test; macOS build/smoke | Работает; no automatic “first result” selection |
 | Any | Learning, Marketing, social publishing | future services | not implemented | none | none | В разработке |
 
 ## Repository-truth conflicts retained

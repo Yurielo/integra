@@ -24,7 +24,7 @@ final class Bridge: @unchecked Sendable {
       "workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job",
       "cancel-job", "resume-job", "import-media", "media-preflight", "project-view",
       "detect-sources", "capability-registry", "build-plan", "execute-plan", "run-status",
-      "recent-runs", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "package-preview", "package-publish",
+      "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "package-preview", "package-publish",
       "obsidian-preview",
       "onedrive-preview",
     ]
@@ -848,22 +848,15 @@ struct SidebarItem {
   @objc private func publishOneDrive() { publication(kind: "onedrive") }
   private func publication(kind: String) {
     do {
-      var package = ""
-      if let p = projectID, let r = runID {
-        let run = try bridge.json("run-status", request: ["project_id": p, "run_id": r])["result"] as? [String: Any] ?? [:]
-        let packageFromResult = ((run["source_results"] as? [[String: Any]])?.first { result in
-          (result["outputs"] as? [String: Any])?["package_dir"] as? String != nil
-        }).flatMap { $0["outputs"] as? [String: Any] }?["package_dir"] as? String
-        package = packageFromResult ?? ""
-      }
-      if package.isEmpty {
-        let packagePanel = NSOpenPanel()
-        packagePanel.title = "Выберите проверенный Integra package"
-        packagePanel.canChooseDirectories = true
-        packagePanel.canChooseFiles = false
-        guard packagePanel.runModal() == .OK, let packageURL = packagePanel.url else { return }
-        package = packageURL.path
-      }
+      let packages = try bridge.json("available-packages")["result"] as? [[String: Any]] ?? []
+      guard !packages.isEmpty else { status.textColor = .systemRed; status.stringValue = "Нет проверенных package в завершённых обработках Integra."; return }
+      let chooser = NSAlert()
+      chooser.messageText = "Выберите готовый package"
+      chooser.informativeText = "Показаны только package, которые Integra заново проверила в сохранённых завершённых запусках."
+      let list = NSPopUpButton(frame: NSRect(x: 0, y: 0, width: 560, height: 28), pullsDown: false)
+      for item in packages { list.addItem(withTitle: "\(item["project_name"] ?? "Проект") · \(item["source_name"] ?? "Источник") · \(item["package_id"] ?? "package")") }
+      chooser.accessoryView = list; chooser.addButton(withTitle: "Выбрать"); chooser.addButton(withTitle: "Отмена")
+      guard chooser.runModal() == .alertFirstButtonReturn, packages.indices.contains(list.indexOfSelectedItem), let package = packages[list.indexOfSelectedItem]["package_dir"] as? String else { return }
       let packagePath = URL(fileURLWithPath: package)
       let manifestPath = packagePath.appendingPathComponent("package.json").path
       guard FileManager.default.fileExists(atPath: manifestPath) else {
