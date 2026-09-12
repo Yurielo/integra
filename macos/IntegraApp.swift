@@ -275,7 +275,8 @@ struct SidebarItem {
     if row < 0 { return }
     switch items[row].id {
     case "new": renderNew()
-    case "projects", "sources": renderProjects()
+    case "projects": renderProjects()
+    case "sources": renderSources()
     case "history": renderHistory()
     case "operations": renderOperations()
     case "materials", "ready": renderOutputs()
@@ -635,16 +636,68 @@ struct SidebarItem {
     } catch { status.stringValue = error.localizedDescription }
   }
   private func renderProjects() {
-    reset("Проекты", "Реальные локальные проекты Integra.")
+    reset("Проекты", "Реальные локальные проекты Integra. Откройте проект, чтобы увидеть сохранённые источники и обработки.")
     do {
       let projects = try bridge.json("projects")["result"] as? [[String: Any]] ?? []
       if projects.isEmpty { add(NSTextField(labelWithString: "Проектов пока нет")) }
       for project in projects {
-        add(
-          row(
-            project["name"] as? String ?? "Проект",
-            detail: "Источников: \(project["source_count"] ?? 0) · \(project["status"] ?? "")"))
+        guard let projectID = project["project_id"] as? String else { continue }
+        let control = button(
+          project["name"] as? String ?? "Проект", #selector(openProject(_:)))
+        control.toolTip = projectID
+        add(control)
+        add(row("Источников: \(project["source_count"] ?? 0)", detail: "Статус: \(project["status"] ?? "")"))
       }
+    } catch { status.stringValue = error.localizedDescription }
+  }
+  @objc private func openProject(_ sender: NSButton) {
+    guard let identifier = sender.toolTip else { return }
+    do {
+      let project = try bridge.json("open-project", request: ["project_id": identifier])["result"]
+        as? [String: Any] ?? [:]
+      renderProject(project)
+    } catch { status.stringValue = error.localizedDescription }
+  }
+  private func renderProject(_ project: [String: Any]) {
+    let projectID = project["project_id"] as? String ?? ""
+    reset(
+      project["name"] as? String ?? "Проект",
+      "Сохранённые обработки и исходники этого проекта. Все записи взяты из реального журнала запусков Integra.")
+    do {
+      let items = try bridge.json("recent-runs")["result"] as? [[String: Any]] ?? []
+      let runs = items.filter { (($0["project"] as? [String: Any])?["project_id"] as? String) == projectID }
+      if runs.isEmpty { add(NSTextField(labelWithString: "В проекте пока нет запусков")) }
+      for item in runs {
+        let run = item["run"] as? [String: Any] ?? [:]
+        guard let runID = run["run_id"] as? String else { continue }
+        let control = button("Открыть обработку — \(run["state"] ?? "UNKNOWN")", #selector(openRecentRun(_:)))
+        control.toolTip = "\(projectID)\n\(runID)"
+        add(control)
+        for source in ((run["plan"] as? [String: Any])?["sources"] as? [[String: Any]]) ?? [] {
+          add(row(source["display_name"] as? String ?? "Источник", detail: source["source_type"] as? String ?? "UNKNOWN"))
+        }
+      }
+    } catch { status.stringValue = error.localizedDescription }
+  }
+  private func renderSources() {
+    reset("Исходники", "Все сохранённые локальные источники из реальных обработок Integra. Выберите источник, чтобы открыть его результат.")
+    do {
+      let items = try bridge.json("recent-runs")["result"] as? [[String: Any]] ?? []
+      var seen = Set<String>(), count = 0
+      for item in items {
+        let project = item["project"] as? [String: Any] ?? [:]
+        let run = item["run"] as? [String: Any] ?? [:]
+        guard let projectID = project["project_id"] as? String, let runID = run["run_id"] as? String else { continue }
+        for source in ((run["plan"] as? [String: Any])?["sources"] as? [[String: Any]]) ?? [] {
+          guard let sourceID = source["source_id"] as? String, seen.insert(sourceID).inserted else { continue }
+          let control = button(source["display_name"] as? String ?? "Источник", #selector(openRecentRun(_:)))
+          control.toolTip = "\(projectID)\n\(runID)"
+          add(control)
+          add(row(source["source_type"] as? String ?? "UNKNOWN", detail: project["name"] as? String ?? "Проект Integra"))
+          count += 1
+        }
+      }
+      if count == 0 { add(NSTextField(labelWithString: "Сохранённых исходников пока нет")) }
     } catch { status.stringValue = error.localizedDescription }
   }
   private func renderHistory() {
