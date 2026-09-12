@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from .capabilities import build_plan
-from .documents import extract_document
+from .documents import extract_document, materialize_embedded_media
 from .user_media import atomic_json, import_source, now, run_job
 
 
@@ -101,6 +101,31 @@ def _write_discovered_images(document: dict[str, Any], artifact_dir: Path) -> st
     return str(manifest_path)
 
 
+def _materialize_embedded_images(
+    document: dict[str, Any], source_path: Path, artifact_dir: Path
+) -> tuple[str, str]:
+    """Create an Integra-owned, hash-verified copy of embedded media bytes."""
+
+    # The document contract rejects symlinked ancestors.  Temporary and
+    # Application Support roots may be reached through a system symlink, so
+    # pass the canonical artifact location rather than its display path.
+    directory = artifact_dir.resolve(strict=True) / "embedded_media"
+    written = materialize_embedded_media(document, source_path, directory)
+    manifest_path = artifact_dir / "embedded_media.json"
+    atomic_json(
+        manifest_path,
+        {
+            "schema_version": "1.0",
+            "source_id": document["source"]["source_id"],
+            "document_id": document["document_id"],
+            "directory": str(directory),
+            "embedded_media_count": len(written),
+            "embedded_media": written,
+        },
+    )
+    return str(directory), str(manifest_path)
+
+
 def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
     path=run_path(project_dir,run_id); record=json.loads(path.read_bytes()); plan=record["plan"]
     jobs_path=project_dir/"jobs.json"
@@ -136,6 +161,10 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                 outputs_map={"document_record":str(artifact_dir/"document.json")}
                 if "document_structure" in outputs: outputs_map["document_structure"] = _write_document_structure(document, artifact_dir)
                 if "discover_images" in outputs: outputs_map["discover_images"] = _write_discovered_images(document, artifact_dir)
+                if "extract_images" in outputs:
+                    directory, manifest = _materialize_embedded_images(document, owned, artifact_dir)
+                    outputs_map["embedded_images_directory"] = directory
+                    outputs_map["embedded_images_manifest"] = manifest
                 if "document_text" in outputs: outputs_map["text"]=str(text_path)
                 record["source_results"].append({"source_id":source["source_id"],"display_name":source["display_name"],"state":"COMPLETED","outputs":outputs_map,"document_properties":{"content_mode":document["content_mode"],"ocr_status":document["ocr"]["status"],"embedded_media_count":len(document["embedded_media"])}})
             record["completed_sources"]+=1; atomic_json(path,record)

@@ -592,6 +592,8 @@ struct SidebarItem {
         case "document_record": title = "Открыть контракт документа (JSON)"
         case "document_structure": title = "Открыть структуру документа (JSON)"
         case "discover_images": title = "Открыть встроенные изображения (JSON)"
+        case "embedded_images_directory": title = "Открыть извлечённые изображения"
+        case "embedded_images_manifest": title = "Открыть манифест извлечённых изображений (JSON)"
         case "transcript_json":
           title = "Открыть сырую расшифровку (JSON)"
         case "package_dir": title = "Открыть управляемый package (для публикации)"
