@@ -18,6 +18,7 @@ from .identity import derive_imported_id
 from .onedrive import build_onedrive_package
 from .protocol import canonical_json, content_sha256
 from .publishing import sha256_bytes, validate_package
+from .seminartext_runtime import generate_topics
 
 
 class _RunCancelled(Exception):
@@ -259,7 +260,7 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
             atomic_json(work / "audio_enhancement.json", enhancement_record)
             outputs["enhanced_audio"] = str(enhanced)
             outputs["audio_enhancement_record"] = str(work / "audio_enhancement.json")
-        needs_transcript = legacy_semantics or bool(requested_outputs & {"transcript", "subtitles", "burn_subtitles"})
+        needs_transcript = legacy_semantics or bool(requested_outputs & {"transcript", "subtitles", "burn_subtitles", "topics"})
         if not needs_transcript:
             job["outputs"] = outputs
             job.update(state="COMPLETED", progress=100, message="Requested enhanced audio is ready",
@@ -294,6 +295,13 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
         subtitles=output.with_suffix(".srt")
         outputs.update({"transcript":str(transcript_txt),"transcript_json":str(work/"transcript.json"),"subtitles":str(subtitles)})
         job["outputs"] = outputs
+        if requested and "topics" in requested:
+            checkpoint("RUNNING", 88, "Generating topic drafts with SeminarText", run_stage="topics")
+            topics_path = work / "topics.json"
+            generate_topics(subtitles, topics_path)
+            job["outputs"]["topics"] = str(topics_path)
+            job.update(state="COMPLETED",progress=100,message="Requested real outputs are ready",completed_at=now(),artifact_dir=str(work),transcript_segments=len(segments))
+            atomic_json(jobs_path,jobs); return job
         if requested and "burn_subtitles" in requested:
             checkpoint("RUNNING", 90, "Burning subtitles into video", run_stage="burn_subtitles")
             burned = work / "subtitled.mp4"

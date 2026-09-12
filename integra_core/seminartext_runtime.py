@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import os
+import json
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -38,3 +40,30 @@ def preflight() -> dict[str, Any]:
     if model not in {line.split()[0] for line in models.splitlines()[1:] if line.split()}:
         raise ValueError("SeminarText topic model is unavailable")
     return {"state":"READY","component":"seminartext","commit_sha":commit,"checkout":str(checkout.resolve(strict=True)),"entrypoint":str(entrypoint.resolve(strict=True)),"model":model}
+
+
+def generate_topics(subtitles: Path, output: Path) -> dict[str, Any]:
+    """Invoke the pinned Topic Engine and accept only its validated draft output."""
+    runtime = preflight()
+    if subtitles.is_symlink() or not subtitles.is_file():
+        raise ValueError("timed subtitles are unavailable")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    worker = Path(__file__).resolve().parents[1] / "workers" / "seminartext_topics_worker.py"
+    if worker.is_symlink() or not worker.is_file():
+        raise ValueError("SeminarText Topic Engine worker is missing")
+    completed = subprocess.run(
+        [sys.executable, str(worker), "--checkout", runtime["checkout"], "--srt", str(subtitles),
+         "--model", runtime["model"], "--output", str(output)],
+        capture_output=True, text=True, timeout=900,
+    )
+    if completed.returncode != 0 or output.is_symlink() or not output.is_file():
+        raise ValueError("SeminarText Topic Engine did not produce a validated output")
+    result = json.loads(output.read_bytes())
+    topics = result.get("topics") if isinstance(result, dict) else None
+    if result.get("component") != "seminartext" or not isinstance(topics, list) or not topics:
+        raise ValueError("SeminarText Topic Engine output is invalid")
+    if any(item.get("semantic_status") != "REVIEW_REQUIRED" for item in topics if isinstance(item, dict)):
+        raise ValueError("SeminarText Topic Engine output has invalid semantic status")
+    result["runtime"] = {"commit_sha": runtime["commit_sha"], "model": runtime["model"]}
+    output.write_text(json.dumps(result, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    return result
