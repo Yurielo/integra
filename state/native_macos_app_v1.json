@@ -16,7 +16,7 @@
     },
     {
       "path": "macos/IntegraApp.swift",
-      "sha256": "0b44b74a9fced75c0b9167f77a0cdbe8953f3aa67479b5128b3f3d118abc5fa3"
+      "sha256": "02734607e9a9317027b20d64f51a78cd053c2b8077632489830575687fd7b69d"
     },
     {
       "path": "macos/Info.plist",
@@ -24,7 +24,7 @@
     },
     {
       "path": "macos/Resources/bridge.py",
-      "sha256": "da37b512fdadb9b4e6fef71a52cea8fb86d54424c31915ce07c6f20ee9c695fa"
+      "sha256": "b4d6fd110b6122bf9cb4d0ec8fc537eeadc714d40706b2e2c1f0207c73d745d9"
     },
     {
       "path": "macos/Resources/Integra.icns",
@@ -108,7 +108,7 @@
     },
     {
       "path": "tests/test_macos_app.py",
-      "sha256": "8255e162419963c812739c74883cc84dab7224ab577789b2b13fa125dab73175"
+      "sha256": "75d5231b123176f2b0ac38cdc98f8ef53ee9ce77c0c5eb9b9386faba4667226e"
     }
   ],
   "acceptance": {

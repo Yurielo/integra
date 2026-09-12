@@ -22,7 +22,7 @@ final class Bridge: @unchecked Sendable {
   func call(_ operation: String, request: [String: Any] = [:]) throws -> Data {
     let allowed = [
       "workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job",
-      "cancel-job", "resume-job", "import-media", "media-preflight", "project-view",
+      "cancel-job", "resume-job", "import-media", "media-preflight", "seminartext-preflight", "project-view",
       "detect-sources", "capability-registry", "build-plan", "execute-plan", "run-status",
       "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "package-preview", "package-publish",
       "obsidian-preview",
@@ -897,6 +897,12 @@ struct SidebarItem {
           "Локальная расшифровка доступна",
           detail: "Whisper model SHA-256: \(value["model_sha256"] ?? "")"))
     } catch { status.stringValue = error.localizedDescription }
+    do {
+      let value = try bridge.json("seminartext-preflight")["result"] as? [String: Any] ?? [:]
+      add(row("SeminarText Topics runtime", detail: "Pinned commit: \(value["commit_sha"] ?? "") · model: \(value["model"] ?? "")"))
+    } catch {
+      add(row("SeminarText Topics runtime — В разработке", detail: error.localizedDescription))
+    }
   }
 }
 

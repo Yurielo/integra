@@ -117,7 +117,7 @@ class MacOSApplicationTests(unittest.TestCase):
 
     def test_native_source_exposes_source_first_real_actions(self):
         source = (ROOT / "macos/IntegraApp.swift").read_text()
-        for operation in ("detect-sources", "capability-registry", "build-plan", "execute-plan", "run-status", "media-navigation", "package-preview", "package-publish"):
+        for operation in ("detect-sources", "capability-registry", "build-plan", "execute-plan", "run-status", "media-navigation", "seminartext-preflight", "package-preview", "package-publish"):
             self.assertIn(operation, source)
         self.assertIn("NSOpenPanel", source)
         self.assertIn("ЧТО НУЖНО ПОЛУЧИТЬ?", source)
