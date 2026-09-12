@@ -7,6 +7,8 @@ import subprocess
 import tempfile
 import time
 import unittest
+from integra_core.publishing import validate_package
+from integra_core.onedrive import validate_onedrive_package
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -56,6 +58,59 @@ class SourceFirstBridgeTests(unittest.TestCase):
                 time.sleep(.03)
             self.assertEqual(status["state"],"COMPLETED",status)
             self.assertTrue(Path(status["source_results"][0]["outputs"]["discover_images"]).is_file())
+
+    def test_source_first_media_builds_publication_package(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory); source=root/"voice.wav"; source.write_bytes(b"audio")
+            ffmpeg=root/"ffmpeg"; ffmpeg.write_text("#!/usr/bin/env python3\n"
+                              "import sys, shutil\n"
+                              "args = sys.argv[1:]\n"
+                              "index = args.index('-i') + 1\n"
+                              "input_path = args[index]\n"
+                              "output_path = args[-1]\n"
+                              "shutil.copyfile(input_path, output_path)\n")
+            ffmpeg.chmod(ffmpeg.stat().st_mode | 0o111)
+            whisper=root/"whisper-cli"; whisper.write_text("#!/usr/bin/env python3\n"
+                              "import sys\n"
+                              "args = sys.argv[1:]\n"
+                              "index = args.index('-of') + 1\n"
+                              "output_path = args[index]\n"
+                              "with open(f'{output_path}.srt','w',encoding='utf-8') as stream:\n"
+                              "    stream.write('1\\n00:00:00,000 --> 00:00:01,250\\nHello Integra\\n')\n")
+            whisper.chmod(whisper.stat().st_mode | 0o111)
+            model=root/"model.bin"; model.write_bytes(b"model")
+            environment={**os.environ,"INTEGRA_APP_DATA_ROOT":str(root/"data"),
+                         "INTEGRA_FFMPEG":str(ffmpeg),"INTEGRA_WHISPER_CLI":str(whisper),
+                         "INTEGRA_WHISPER_MODEL":str(model)}
+            bridge=ROOT/"macos/Resources/bridge.py"
+            def call(operation,request):
+                result=subprocess.run(["python3",str(bridge),operation],input=json.dumps(request),capture_output=True,text=True,env=environment,timeout=5)
+                self.assertEqual(result.returncode,0,result.stdout+result.stderr); return json.loads(result.stdout)["result"]
+            sources=call("detect-sources",{"inputs":[str(source)]})
+            plan=call("build-plan",{"sources":sources,"selected_outputs":["transcript","subtitles"]})
+            execution=call("execute-plan",{"plan":plan,"name":"Source-first media package test"})
+            project_id=execution["project"]["project_id"]; run_id=execution["run"]["run_id"]
+            for _ in range(200):
+                status=call("run-status",{"project_id":project_id,"run_id":run_id})
+                if status["state"] in {"COMPLETED","FAILED"}: break
+                time.sleep(.03)
+            self.assertEqual(status["state"],"COMPLETED",status)
+            outputs=status["source_results"][0]["outputs"]
+            package=Path(outputs["package_dir"])
+            self.assertTrue((package / "package.json").is_file())
+            manifest=json.loads((package/"package.json").read_text(encoding="utf-8"))
+            files={}
+            for item in manifest["files"]:
+                payload=(package/"files"/item["path"]).read_bytes()
+                files[item["path"]]=payload
+            validate_package(manifest,files)
+            onedrive_root=Path(json.loads((package/"onedrive_package.json").read_text(encoding="utf-8"))["package_dir"])
+            self.assertTrue((onedrive_root/"package.json").is_file())
+            one_manifest=json.loads((onedrive_root/"package.json").read_text(encoding="utf-8"))
+            one_files={}
+            for item in one_manifest["files"]:
+                one_files[item["path"]]=(onedrive_root/"files"/item["path"]).read_bytes()
+            validate_onedrive_package(one_manifest,one_files)
 
     def test_cancel_run_stops_real_worker_group_and_persists_cancelled_state(self):
         with tempfile.TemporaryDirectory() as directory:

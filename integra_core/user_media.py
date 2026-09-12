@@ -250,8 +250,10 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
         atomic_json(work / "transcript.json", transcript)
         subtitles=output.with_suffix(".srt")
         job["outputs"]={"transcript":str(transcript_txt),"transcript_json":str(work/"transcript.json"),"subtitles":str(subtitles)}
+        def build_semantic_artifacts() -> dict[str, list[dict[str, Any]]]:
+            return {"topics": [topic for topic in _provisional_topics(segments, job["source_id"])]}
         if not legacy_semantics:
-            topics = _provisional_topics(segments, job["source_id"])
+            topics = build_semantic_artifacts()["topics"]
             knowledge = {"schema_version":"1.0", "source_id":job["source_id"], "semantic_authority":"PROVISIONAL",
                         "review_state":"REVIEW_REQUIRED", "concepts":[{"knowledge_id":topic["topic_id"].replace(":topic:",":knowledge:"),
                         "label":topic["label"], "status":"REVIEW_REQUIRED", "topic_id":topic["topic_id"], "locator":topic["locator"]} for topic in topics]}
@@ -264,7 +266,7 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
             job.update(state="COMPLETED",progress=100,message="Requested real outputs are ready",completed_at=now(),
                        artifact_dir=str(work), package_dir=str(package) if package else None, transcript_segments=len(segments))
             atomic_json(jobs_path,jobs); return job
-        topics = _provisional_topics(segments, job["source_id"])
+        topics = build_semantic_artifacts()["topics"]
         knowledge = {"schema_version":"1.0", "source_id":job["source_id"], "semantic_authority":"PROVISIONAL",
                      "review_state":"REVIEW_REQUIRED", "concepts":[{"knowledge_id":topic["topic_id"].replace(":topic:",":knowledge:"),
                      "label":topic["label"], "status":"REVIEW_REQUIRED", "topic_id":topic["topic_id"], "locator":topic["locator"]} for topic in topics]}
