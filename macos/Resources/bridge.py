@@ -15,8 +15,9 @@ from integra_core.publishing import preview_obsidian_export, publish_obsidian_ex
 from integra_core.user_media import _parse_srt, ffmpeg_preflight, import_source, preflight, run_job
 from integra_core.capabilities import build_plan, capability_registry, detect_source
 from integra_core.application_runtime import execute_run, prepare_run, read_run, run_path
+from integra_core.seminartext_runtime import preflight as seminartext_preflight
 
-OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "import-media", "media-preflight", "process-media-job", "project-view", "detect-sources", "capability-registry", "build-plan", "execute-plan", "process-plan", "run-status", "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "package-preview", "package-publish", "obsidian-preview", "onedrive-preview"}
+OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "import-media", "media-preflight", "seminartext-preflight", "process-media-job", "project-view", "detect-sources", "capability-registry", "build-plan", "execute-plan", "process-plan", "run-status", "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "package-preview", "package-publish", "obsidian-preview", "onedrive-preview"}
 
 def _safe_error(error):
     message = str(error).replace(str(Path.home()), "<HOME>")
@@ -291,6 +292,7 @@ def main():
         elif operation == "cancel-job": result = _job(root, request, "cancel")
         elif operation == "resume-job": result = _job(root, request, "resume")
         elif operation == "media-preflight": result = preflight()
+        elif operation == "seminartext-preflight": result = seminartext_preflight()
         elif operation == "import-media": result = _import_media(root, request)
         elif operation == "process-media-job": result = run_job(_project_dir(root, request.get("project_id")), request.get("job_id"))
         elif operation == "project-view": result = _project_view(root, request.get("project_id"))
