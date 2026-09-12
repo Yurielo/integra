@@ -46,6 +46,10 @@ class ApplicationRuntimeTests(unittest.TestCase):
         source_path=self.root/"audio.wav"; source_path.write_bytes(b"audio")
         overrides=self.media_environment(); old={key:os.environ.get(key) for key in overrides}
 
+        def timeline_drafts(_audio, _subtitles, output):
+            output.write_text(json.dumps({"capability":"word_timeline", "words":[{"alignment_status":"ALIGNED"}]}))
+            return json.loads(output.read_text())
+
         def topic_drafts(subtitles, output):
             self.assertTrue(subtitles.is_file())
             output.write_text(json.dumps({"component":"seminartext", "topics":[{"semantic_status":"REVIEW_REQUIRED"}]}))
@@ -54,9 +58,11 @@ class ApplicationRuntimeTests(unittest.TestCase):
         try:
             os.environ.update(overrides)
             with patch("integra_core.capabilities.seminartext_preflight", return_value={"state":"READY"}), \
+                 patch("integra_core.capabilities.word_timeline_preflight", return_value={"state":"READY"}), \
+                 patch("integra_core.user_media.generate_word_timeline", side_effect=timeline_drafts) as generated_timeline, \
                  patch("integra_core.user_media.generate_topics", side_effect=topic_drafts) as generated:
                 plan=build_plan([detect_source(str(source_path))],["topics"])
-                self.assertEqual([stage["id"] for stage in plan["stages"]], ["media_preparation", "transcript", "topics"])
+                self.assertEqual([stage["id"] for stage in plan["stages"]], ["media_preparation", "transcript", "word_timeline", "topics"])
                 run=prepare_run(self.project,plan); result=execute_run(self.project,run["run_id"])
         finally:
             for key,value in old.items():
@@ -66,7 +72,9 @@ class ApplicationRuntimeTests(unittest.TestCase):
         outputs=result["source_results"][0]["outputs"]
         self.assertTrue(Path(outputs["transcript"]).is_file())
         self.assertTrue(Path(outputs["subtitles"]).is_file())
+        self.assertTrue(Path(outputs["word_timeline"]).is_file())
         self.assertTrue(Path(outputs["topics"]).is_file())
+        generated_timeline.assert_called_once()
         generated.assert_called_once()
         self.assertEqual(json.loads(Path(outputs["topics"]).read_text())["topics"][0]["semantic_status"], "REVIEW_REQUIRED")
         self.assertNotIn("knowledge", outputs)

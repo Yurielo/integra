@@ -42,7 +42,9 @@ def _request():
 
 def _atomic_json(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
-    temp = path.with_name(path.name + ".tmp")
+    # A plan worker can persist progress while the bridge records its PID or a
+    # cancellation request.  Each writer needs its own staging filename.
+    temp = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
     temp.write_bytes(canonical_json(value) + b"\n")
     os.replace(temp, path)
 
