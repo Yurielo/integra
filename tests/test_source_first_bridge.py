@@ -145,6 +145,13 @@ class SourceFirstBridgeTests(unittest.TestCase):
             self.assertEqual(Path(navigation["media_path"]).read_bytes(),source.read_bytes())
             self.assertEqual(navigation["segments"][0]["start_seconds"],0.0)
             self.assertEqual(navigation["segments"][0]["text"],"Hello Integra")
+            clip=call("create-media-clip",{"project_id":project_id,"run_id":run_id,"source_id":sources[0]["source_id"],"start_seconds":0.0,"end_seconds":1.25})
+            self.assertEqual(Path(clip["path"]).read_bytes(),source.read_bytes())
+            self.assertEqual(clip["locator"],f"media:{sources[0]['source_id']}#t=0.000,1.250")
+            refreshed=call("run-status",{"project_id":project_id,"run_id":run_id})
+            self.assertTrue(Path(refreshed["source_results"][0]["outputs"]["clips_manifest"]).is_file())
+            bad=subprocess.run(["python3",str(bridge),"create-media-clip"],input=json.dumps({"project_id":project_id,"run_id":run_id,"source_id":sources[0]["source_id"],"start_seconds":0.1,"end_seconds":1.25}),capture_output=True,text=True,env=environment,timeout=5)
+            self.assertEqual(bad.returncode,2)
 
     def test_source_first_audio_enhancement_uses_only_ffmpeg_and_returns_owned_output(self):
         with tempfile.TemporaryDirectory() as directory:

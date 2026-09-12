@@ -24,7 +24,7 @@ final class Bridge: @unchecked Sendable {
       "workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job",
       "cancel-job", "resume-job", "import-media", "media-preflight", "project-view",
       "detect-sources", "capability-registry", "build-plan", "execute-plan", "run-status",
-      "recent-runs", "cancel-run", "retry-run", "media-navigation", "package-preview", "package-publish",
+      "recent-runs", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "package-preview", "package-publish",
       "obsidian-preview",
       "onedrive-preview",
     ]
@@ -594,6 +594,7 @@ struct SidebarItem {
         case "transcript": title = "Открыть расшифровку (TXT)"
         case "subtitles": title = "Открыть субтитры (SRT)"
         case "burned_video": title = "Открыть видео со встроенными субтитрами"
+        case "clips_manifest": title = "Открыть список созданных клипов (JSON)"
         case "enhanced_audio": title = "Открыть улучшенный звук (M4A)"
         case "audio_enhancement_record": title = "Открыть сведения об улучшении звука (JSON)"
         case "text": title = "Открыть текстовый документ (TXT)"
@@ -642,10 +643,10 @@ struct SidebarItem {
       guard let path = navigation["media_path"] as? String,
         let segments = navigation["segments"] as? [[String: Any]]
       else { throw BridgeError.invalidResponse }
-      renderMediaNavigation(path: path, segments: segments)
+      renderMediaNavigation(path: path, segments: segments, projectID: identifiers[0], runID: identifiers[1], sourceID: identifiers[2])
     } catch { status.stringValue = error.localizedDescription }
   }
-  private func renderMediaNavigation(path: String, segments: [[String: Any]]) {
+  private func renderMediaNavigation(path: String, segments: [[String: Any]], projectID: String, runID: String, sourceID: String) {
     let player = AVPlayer(url: URL(fileURLWithPath: path))
     let playerView = AVPlayerView()
     playerView.player = player
@@ -671,11 +672,14 @@ struct SidebarItem {
     heading.font = .systemFont(ofSize: 17, weight: .semibold)
     stack.addArrangedSubview(heading)
     for segment in segments {
-      guard let start = segment["start_seconds"] as? Double, let text = segment["text"] as? String else { continue }
+      guard let start = segment["start_seconds"] as? Double, let end = segment["end_seconds"] as? Double, let text = segment["text"] as? String else { continue }
       let cue = button("[\(clock(start))] \(text)", #selector(seekTranscriptCue(_:)))
       cue.alignment = .left
       cue.toolTip = String(start)
       stack.addArrangedSubview(cue)
+      let clip = button("Создать клип \(clock(start))–\(clock(end))", #selector(createSRTClip(_:)))
+      clip.toolTip = "\(projectID)\n\(runID)\n\(sourceID)\n\(start)\n\(end)"
+      stack.addArrangedSubview(clip)
     }
     window.contentView = scroll
     mediaPlayer = player
@@ -690,6 +694,22 @@ struct SidebarItem {
     guard let value = sender.toolTip.flatMap(Double.init) else { return }
     mediaPlayer?.seek(to: CMTime(seconds: value, preferredTimescale: 600))
     mediaPlayer?.play()
+  }
+  @objc private func createSRTClip(_ sender: NSButton) {
+    let values = sender.toolTip?.split(separator: "\n", maxSplits: 4).map(String.init) ?? []
+    guard values.count == 5, let start = Double(values[3]), let end = Double(values[4]) else { return }
+    sender.isEnabled = false
+    sender.title = "Создаю локальный клип…"
+    let bridge = self.bridge!
+    DispatchQueue.global(qos: .userInitiated).async {
+      do {
+        let result = try bridge.json("create-media-clip", request: ["project_id": values[0], "run_id": values[1], "source_id": values[2], "start_seconds": start, "end_seconds": end])["result"] as? [String: Any]
+        guard let path = result?["path"] as? String else { throw BridgeError.invalidResponse }
+        DispatchQueue.main.async { NSWorkspace.shared.open(URL(fileURLWithPath: path)); sender.title = "Клип создан — открыть"; sender.isEnabled = true }
+      } catch {
+        DispatchQueue.main.async { sender.title = "Не удалось создать клип"; sender.isEnabled = false; self.status.stringValue = error.localizedDescription }
+      }
+    }
   }
   @objc private func cancelRun() {
     guard let p = projectID, let r = runID else { return }
