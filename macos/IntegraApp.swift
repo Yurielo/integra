@@ -330,6 +330,7 @@ struct SidebarItem {
     case "topics": return "Темы и таймкоды"
     case "audio_enhancement": return "Улучшение звука"
     case "document_analysis": return "Анализ документа"
+    case "ocr": return "OCR BookText / Surya"
     default: return stage
     }
   }
@@ -609,6 +610,16 @@ struct SidebarItem {
         case "discover_images": title = "Открыть встроенные изображения (JSON)"
         case "embedded_images_directory": title = "Открыть извлечённые изображения"
         case "embedded_images_manifest": title = "Открыть манифест извлечённых изображений (JSON)"
+        case "booktext_text": title = "Открыть OCR-текст BookText (TXT)"
+        case "booktext_markdown": title = "Открыть OCR-документ BookText (Markdown)"
+        case "booktext_record": title = "Открыть OCR-результат BookText (JSON)"
+        case "booktext_manifest": title = "Открыть манифест Integra / BookText (JSON)"
+        case "booktext_review": title = "Открыть очередь проверки OCR (TXT)"
+        case "booktext_review_json": title = "Открыть очередь проверки OCR (JSON)"
+        case "booktext_searchable_pdf": title = "Открыть поисковый PDF BookText"
+        case "booktext_pages": title = "Открыть обработанные страницы BookText"
+        case "booktext_surya_raw": title = "Открыть исходный вывод Surya OCR"
+        case "booktext_vision_qa": title = "Открыть Apple Vision QA"
         case "transcript_json":
           title = "Открыть сырую расшифровку (JSON)"
         case "package_dir": title = "Открыть управляемый package (для публикации)"

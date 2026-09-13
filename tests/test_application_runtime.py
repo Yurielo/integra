@@ -163,6 +163,36 @@ class ApplicationRuntimeTests(unittest.TestCase):
         image_path=Path(outputs["embedded_images_directory"])/manifest["embedded_media"][0]["relative_path"]
         self.assertEqual(image_path.read_bytes(),png)
 
+    def test_executes_booktext_ocr_for_a_scanned_image_without_inventing_text(self):
+        png=bytes.fromhex(
+            "89504e470d0a1a0a0000000d49484452000000010000000108000000003a7e9b55"
+            "0000000a49444154789c636000000002000148afa4710000000049454e44ae426082"
+        )
+        source_path=self.root/"scan.png"; source_path.write_bytes(png)
+        result_dir=self.root/"booktext-result"; result_dir.mkdir()
+        (result_dir/"book_clean.txt").write_text("Actual OCR text\n")
+        (result_dir/"book.md").write_text("# Actual OCR text\n")
+        actual={"component":"booktext","commit_sha":"46396649214275eb18054b670a842bace02d02e1",
+                "entrypoint_sha256":"a"*64,"runtime":{"model_sha256":"b"*64},
+                "blocks":[{"unit_index":1,"text":"Actual OCR text","confidence":0.75}]}
+        with patch("integra_core.capabilities.booktext_preflight",return_value={"state":"READY"}), \
+             patch("integra_core.application_runtime.run_booktext_ocr") as invoked:
+            def materialize(_source, destination):
+                import shutil
+                shutil.copytree(result_dir,destination)
+                return actual
+            invoked.side_effect=materialize
+            source=detect_source(str(source_path)); plan=build_plan([source],["document_text"])
+            run=prepare_run(self.project,plan); completed=execute_run(self.project,run["run_id"])
+        outputs=completed["source_results"][0]["outputs"]
+        self.assertEqual(Path(outputs["text"]).read_text(),"Actual OCR text\n")
+        self.assertEqual(Path(outputs["booktext_text"]).read_text(),"Actual OCR text\n")
+        record=json.loads(Path(outputs["document_record"]).read_bytes())
+        self.assertEqual(record["ocr"]["status"],"COMPLETE")
+        self.assertEqual(record["ocr"]["blocks"][0]["text"],"Actual OCR text")
+        self.assertNotIn("knowledge",outputs)
+        invoked.assert_called_once()
+
     def test_rejects_tampered_plan(self):
         source_path=self.root/"notes.md"; source_path.write_text("text")
         plan=build_plan([detect_source(str(source_path))],["document_text"]); plan["selected_outputs"]=["knowledge"]

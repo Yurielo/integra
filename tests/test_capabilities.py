@@ -3,6 +3,7 @@ from pathlib import Path
 import stat
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from integra_core.capabilities import build_plan, capability_registry, detect_source
 
@@ -58,13 +59,24 @@ class CapabilityRegistryTests(unittest.TestCase):
                     if value is None: os.environ.pop(key,None)
                     else: os.environ[key]=value
 
-    def test_scanned_document_requires_unimplemented_booktext_ocr(self):
+    def test_scanned_document_requires_verified_booktext_runtime(self):
         source={"source_id":"s","display_name":"scan.pdf","input":"/scan.pdf","source_type":"PDF","kind":"DOCUMENT",
                 "properties":{"ocr_status":"REQUIRED","content_mode":"IMAGE_HEAVY"}}
         registry={item["id"]:item for item in capability_registry([source])}
         self.assertFalse(registry["document_text"]["runtime_available"])
         self.assertEqual(registry["ocr"]["component"],"booktext")
-        self.assertEqual(registry["ocr"]["ui_state"],"В разработке")
+        self.assertEqual(registry["ocr"]["implementation_state"],"IMPLEMENTED")
+        self.assertTrue(registry["ocr"]["ui_state"].startswith("Недоступно:"))
+
+    def test_scanned_document_exposes_real_ocr_only_after_booktext_preflight(self):
+        source={"source_id":"s","display_name":"scan.png","input":"/scan.png","source_type":"IMAGE","kind":"DOCUMENT",
+                "properties":{"ocr_status":"REQUIRED","content_mode":"SCAN"}}
+        with patch("integra_core.capabilities.booktext_preflight", return_value={"state":"READY"}):
+            registry={item["id"]:item for item in capability_registry([source])}
+            plan=build_plan([source],["document_text"])
+        self.assertTrue(registry["ocr"]["runtime_available"])
+        self.assertTrue(registry["document_text"]["runtime_available"])
+        self.assertEqual([stage["id"] for stage in plan["stages"]],["document_analysis","ocr","document_text"])
 
     def test_registry_exposes_verified_embedded_image_materialization(self):
         source={"source_id":"s","display_name":"slides.pptx","input":"/slides.pptx","source_type":"PPTX","kind":"DOCUMENT",

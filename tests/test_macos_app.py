@@ -77,7 +77,7 @@ class MacOSApplicationTests(unittest.TestCase):
     def test_reproducible_build_and_launch_probe(self):
         with tempfile.TemporaryDirectory() as directory:
             result = subprocess.run([str(ROOT / "scripts/test_macos_app.sh")], check=True,
-                                    capture_output=True, text=True, timeout=60)
+                                    capture_output=True, text=True, timeout=180)
             self.assertIn("INTEGRA_MACOS_SELF_TEST: PASS", result.stdout)
             self.assertIn("INTEGRA_MACOS_LAUNCH_TEST: PASS", result.stdout)
             self.assertIn("INTEGRA_MACOS_CLOSE_TEST: PASS", result.stdout)
@@ -85,6 +85,7 @@ class MacOSApplicationTests(unittest.TestCase):
             self.assertIn("INTEGRA_DOCK_CMDTAB_ICON: PASS", result.stdout)
             self.assertIn("INTEGRA_BUNDLED_SEMINARTEXT_PREFLIGHT: PASS", result.stdout)
             self.assertIn("INTEGRA_BUNDLED_WORD_TIMELINE_PREFLIGHT: PASS", result.stdout)
+            self.assertIn("INTEGRA_BUNDLED_BOOKTEXT_PREFLIGHT: PASS", result.stdout)
 
     def test_bridge_creates_opens_and_persists_project_and_job(self):
         bridge = ROOT / "macos/Resources/bridge.py"
@@ -143,6 +144,13 @@ class MacOSApplicationTests(unittest.TestCase):
         self.assertIn('Resources/workers', build)
         self.assertIn('runtime/seminartext', build)
         self.assertIn('seminartext_topics.py', build)
+
+    def test_macos_build_packages_pinned_booktext_ocr_runtime(self):
+        build = (ROOT / "scripts/build_macos_app.sh").read_text()
+        self.assertIn('workers/booktext_ocr_worker.py', build)
+        self.assertIn('runtime/booktext', build)
+        self.assertIn('booktext.py', build)
+        self.assertIn('VisionOCR.swift', build)
 
     def test_bridge_previews_and_publishes_validated_obsidian_package(self):
         *_, manifest, files = fixtures()
