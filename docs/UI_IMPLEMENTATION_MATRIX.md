@@ -1,6 +1,6 @@
 # UI Implementation Matrix — Issue #76
 
-Verified against Integra `main` at `9689c4c`,
+Verified against Integra through Issue #117,
 SeminarText at pinned clean commit `a94936cd77cde13561c97c804ece1ac1134e01a6`,
 VideoText at pinned commit `2e098d1705b6815628bee1e023f4742718eabf02`,
 and BookText remote `main` at `46396649214275eb18054b670a842bace02d02e1`.
@@ -29,8 +29,9 @@ without an Integra runtime path is not called working.
 | DOCX / PPTX / PDF | Discover embedded media | Integra document adapter | extraction record contains hashed embedded-media metadata | Python API only; bridge path added by #76 | `test_documents.py` | Работает |
 | DOCX / PPTX / PDF | Materialize extracted images | Integra document adapter | source-hash-verified `materialize_embedded_media` | source-first `execute-plan` → `application_runtime.execute_run` → `materialize_embedded_media`; app opens the new Integra-owned output directory and manifest | runtime, bridge and macOS build/smoke tests | Работает |
 | Documents | Structure, chapters, TOC, topics, summary, terms, concepts, practices, Evidence, Knowledge, FAQ, tests | BookText / SeminarText / future Integra services | no complete production path in Integra | none | none end-to-end | В разработке |
-| YouTube URL(s) / playlist | URL classification | Integra | deterministic URL shape classification added by #76 | capability service | planner tests | Работает (classification only) |
-| YouTube URL(s) / playlist | Remote discovery/download/ingest | future YouTube adapter | offline playlist contracts exist; live API/download explicitly deferred | none | offline contract tests only | В разработке |
+| YouTube URL(s) / playlist | URL classification | Integra | deterministic URL shape classification added by #76 | capability service | planner tests | Работает |
+| Individual YouTube video | Remote download and handoff to selected media outputs | Integra local YouTube adapter | user-initiated local `yt-dlp` download into Integra-owned project storage; persisted URL, local runtime version and SHA-256 are then passed to the existing media runtime | source-first `execute-plan` → `application_runtime.execute_run` → `youtube_runtime.download_video` → `user_media.run_job` | adapter, planner, application-runtime and bridge end-to-end tests; real local `yt-dlp` public-video smoke | Работает when local `yt-dlp` and the selected downstream runtime pass preflight; otherwise disabled with reason |
+| YouTube playlist | Remote discovery/download/ingest | future YouTube playlist adapter | offline playlist contracts exist; no live playlist runtime is connected | none | offline contract tests only | В разработке |
 | Multiple local files | Detection, per-source capability and plan | Integra application service | centralized registry/planner added by #76 | capability/plan bridge | application-service tests | Работает |
 | Collection | Cross-source alignment/common knowledge/summary/glossary | Integra + SeminarText | accepted contracts exist but no production authoring path from arbitrary user sources | none | contract tests only | В разработке |
 | Completed validated package | Obsidian managed export | Integra | `publishing.preview_obsidian_export` / `publish_obsidian_export` | `package-preview` / `package-publish` | publication integration tests | Работает |
@@ -40,9 +41,9 @@ without an Integra runtime path is not called working.
 
 ## Repository-truth conflicts retained
 
-1. Issue #76 describes Integra as integrating BookText, but accepted Integra
-   component state currently pins only SeminarText and VideoText. BookText is
-   therefore not executable from production UI in this Issue.
+1. BookText OCR is connected to the production UI only through the bundled
+   local Surya/Apple Vision runtime. Higher-level BookText semantic workflows
+   still have no Integra production authoring path.
 2. The current user media path does not call the accepted VideoText component;
    it calls a real local ffmpeg/Whisper adapter. The UI identifies the real
    runtime and leaves VideoText-only outputs disabled.
@@ -50,6 +51,6 @@ without an Integra runtime path is not called working.
    pinned SeminarText Topic Engine and is not used for selected source-first
    Topics. The available integration persists only SeminarText-produced
    `REVIEW_REQUIRED` drafts; it does not create or accept Knowledge.
-4. Live YouTube discovery/download and playlist ingest are explicitly deferred
-   in accepted product truth. The UI represents the entry point but cannot
-   execute it and labels it `В разработке`.
+4. Live individual-video ingest is a local, user-initiated `yt-dlp` runtime;
+   it does not discover or process playlists. Playlist ingest remains
+   `В разработке`.

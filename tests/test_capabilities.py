@@ -59,6 +59,26 @@ class CapabilityRegistryTests(unittest.TestCase):
                     if value is None: os.environ.pop(key,None)
                     else: os.environ[key]=value
 
+    def test_youtube_video_uses_a_real_ingest_stage_but_playlist_remains_deferred(self):
+        video=detect_source("https://www.youtube.com/watch?v=real-video")
+        playlist=detect_source("https://www.youtube.com/playlist?list=PL1")
+        with tempfile.TemporaryDirectory() as directory:
+            overrides=self.media_runtime(Path(directory)); old={key:os.environ.get(key) for key in overrides}
+            try:
+                os.environ.update(overrides)
+                with patch("integra_core.capabilities.youtube_preflight",return_value={"state":"READY"}):
+                    registry={item["id"]:item for item in capability_registry([video])}
+                    plan=build_plan([video],["subtitles"])
+                    deferred={item["id"]:item for item in capability_registry([playlist])}
+            finally:
+                for key,value in old.items():
+                    if value is None: os.environ.pop(key,None)
+                    else: os.environ[key]=value
+        self.assertTrue(registry["youtube_ingest"]["runtime_available"])
+        self.assertEqual(registry["youtube_ingest"]["implementation_state"],"IMPLEMENTED")
+        self.assertEqual([item["id"] for item in plan["stages"]],["youtube_ingest","media_preparation","transcript","subtitles"])
+        self.assertEqual(deferred["youtube_playlist_ingest"]["ui_state"],"В разработке")
+
     def test_scanned_document_requires_verified_booktext_runtime(self):
         source={"source_id":"s","display_name":"scan.pdf","input":"/scan.pdf","source_type":"PDF","kind":"DOCUMENT",
                 "properties":{"ocr_status":"REQUIRED","content_mode":"IMAGE_HEAVY"}}

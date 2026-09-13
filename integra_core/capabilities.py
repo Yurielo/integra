@@ -14,6 +14,7 @@ from .seminartext_runtime import preflight as seminartext_preflight
 from .word_timeline_runtime import preflight as word_timeline_preflight
 from .videotext_runtime import preflight as videotext_preflight
 from .booktext_runtime import preflight as booktext_preflight
+from .youtube_runtime import preflight as youtube_preflight
 
 VIDEO = {".m4v", ".mkv", ".mov", ".mp4", ".webm"}
 AUDIO = MEDIA_EXTENSIONS - VIDEO
@@ -54,7 +55,7 @@ def detect_source(value: str) -> dict[str, Any]:
         source_type = "YOUTUBE_PLAYLIST" if PLAYLIST.search(value) else "YOUTUBE_VIDEO"
         return {"source_id":f"url:{content_sha256({'url':value})}", "display_name":value,
                 "input":value, "source_type":source_type, "kind":"URL",
-                "properties":{"remote_ingest_supported":False}}
+                "properties":{"remote_ingest_supported":source_type == "YOUTUBE_VIDEO"}}
     path = Path(value)
     if path.is_symlink() or not path.is_file(): raise ValueError("source must be a regular local file")
     path = path.resolve(strict=True); suffix = path.suffix.lower()
@@ -80,10 +81,11 @@ def detect_source(value: str) -> dict[str, Any]:
 
 def capability_registry(sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
     types={item["source_type"] for item in sources}; media=bool(types & {"LOCAL_VIDEO","LOCAL_AUDIO"})
+    youtube_video="YOUTUBE_VIDEO" in types
     documents=bool(types & set(value[0] for value in FORMAT_BY_SUFFIX.values()))
     youtube=bool(types & {"YOUTUBE_VIDEO","YOUTUBE_PLAYLIST"})
-    runtime={}; media_ready=False; media_reason=""; enhancement_ready=False; enhancement_reason=""; topics_ready=False; topics_reason=""; timeline_ready=False; timeline_reason=""; translation_ready=False; translation_reason=""; ocr_ready=False; ocr_reason=""
-    if media:
+    runtime={}; media_ready=False; media_reason=""; enhancement_ready=False; enhancement_reason=""; topics_ready=False; topics_reason=""; timeline_ready=False; timeline_reason=""; translation_ready=False; translation_reason=""; ocr_ready=False; ocr_reason=""; youtube_ready=False; youtube_reason=""
+    if media or youtube_video:
         try: runtime=preflight(hash_model=False); media_ready=True
         except ValueError as error: media_reason=str(error)
         try: ffmpeg_preflight(); enhancement_ready=True
@@ -94,16 +96,19 @@ def capability_registry(sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
         except ValueError as error: timeline_reason=str(error)
         try: videotext_preflight(); translation_ready=True
         except ValueError as error: translation_reason=str(error)
+    if youtube_video:
+        try: youtube_preflight(); youtube_ready=True
+        except ValueError as error: youtube_reason=str(error)
     if documents:
         try: booktext_preflight(); ocr_ready=True
         except ValueError as error: ocr_reason=str(error)
     native_docs=documents and all(item.get("properties",{}).get("ocr_status")!="REQUIRED" for item in sources if item["kind"]=="DOCUMENT")
     caps = [
-        _capability("transcript","Расшифровка","Основная обработка",{"LOCAL_VIDEO","LOCAL_AUDIO"},"integra.local_media_adapter",True,["media_preparation"],available=media and media_ready,reason=media_reason),
-        _capability("subtitles","Субтитры (SRT)","Основная обработка",{"LOCAL_VIDEO","LOCAL_AUDIO"},"integra.local_media_adapter",True,["transcript"],available=media and media_ready,reason=media_reason),
-        _capability("word_timeline","Word Timeline","Основная обработка",{"LOCAL_VIDEO","LOCAL_AUDIO"},"seminartext",True,["transcript"],available=media and timeline_ready,reason=timeline_reason),
-        _capability("topics","Темы и таймкоды","Основная обработка",{"LOCAL_VIDEO","LOCAL_AUDIO"},"seminartext",True,["word_timeline"],available=media and topics_ready and timeline_ready,reason=topics_reason or timeline_reason),
-        _capability("translation","Перевод","Основная обработка",{"LOCAL_VIDEO","LOCAL_AUDIO"},"videotext",True,["transcript"],available=media and translation_ready,reason=translation_reason),
+        _capability("transcript","Расшифровка","Основная обработка",{"LOCAL_VIDEO","LOCAL_AUDIO","YOUTUBE_VIDEO"},"integra.local_media_adapter",True,["youtube_ingest","media_preparation"] if youtube_video and not media else ["media_preparation"],available=(media or youtube_video) and media_ready and (not youtube_video or youtube_ready),reason=youtube_reason or media_reason),
+        _capability("subtitles","Субтитры (SRT)","Основная обработка",{"LOCAL_VIDEO","LOCAL_AUDIO","YOUTUBE_VIDEO"},"integra.local_media_adapter",True,["transcript"],available=(media or youtube_video) and media_ready and (not youtube_video or youtube_ready),reason=youtube_reason or media_reason),
+        _capability("word_timeline","Word Timeline","Основная обработка",{"LOCAL_VIDEO","LOCAL_AUDIO","YOUTUBE_VIDEO"},"seminartext",True,["transcript"],available=(media or youtube_video) and timeline_ready and (not youtube_video or youtube_ready),reason=youtube_reason or timeline_reason),
+        _capability("topics","Темы и таймкоды","Основная обработка",{"LOCAL_VIDEO","LOCAL_AUDIO","YOUTUBE_VIDEO"},"seminartext",True,["word_timeline"],available=(media or youtube_video) and topics_ready and timeline_ready and (not youtube_video or youtube_ready),reason=youtube_reason or topics_reason or timeline_reason),
+        _capability("translation","Перевод","Основная обработка",{"LOCAL_VIDEO","LOCAL_AUDIO","YOUTUBE_VIDEO"},"videotext",True,["transcript"],available=(media or youtube_video) and translation_ready and (not youtube_video or youtube_ready),reason=youtube_reason or translation_reason),
         _capability("review","Проверка / Review","Смысловая обработка",{"LOCAL_VIDEO","LOCAL_AUDIO","PDF","DOCX","PPTX","TXT","MARKDOWN","IMAGE"},"seminartext",False,["topics"]),
         _capability("evidence","Evidence","Смысловая обработка",{"LOCAL_VIDEO","LOCAL_AUDIO","PDF","DOCX","PPTX","TXT","MARKDOWN","IMAGE"},"seminartext",False,["review"]),
         _capability("knowledge","База знаний","Смысловая обработка",{"LOCAL_VIDEO","LOCAL_AUDIO","PDF","DOCX","PPTX","TXT","MARKDOWN","IMAGE"},"seminartext",False,["evidence"]),
@@ -122,13 +127,14 @@ def capability_registry(sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
         _capability("learning","Учебные материалы","Материалы",set(),"integra.learning",False,["knowledge"]),
         _capability("marketing","Маркетинговые материалы","Материалы",set(),"integra.marketing",False,["knowledge"]),
         _capability("publication_package","Подготовка публикации","Материалы",set(),"integra.publishing",False,["evidence"]),
-        _capability("youtube_ingest","Загрузить YouTube","Основная обработка",{"YOUTUBE_VIDEO","YOUTUBE_PLAYLIST"},"integra.youtube_adapter",False,[]),
+        _capability("youtube_ingest","Загрузить видео из YouTube","Основная обработка",{"YOUTUBE_VIDEO"},"integra.youtube_adapter",True,[],available=youtube_video and youtube_ready,reason=youtube_reason),
+        _capability("youtube_playlist_ingest","Загрузить плейлист YouTube","Основная обработка",{"YOUTUBE_PLAYLIST"},"integra.youtube_adapter",False,[]),
         _capability("collection_alignment","Сопоставить источники коллекции","Коллекция",set(),"integra.alignment",False,["topics"]),
     ]
     result=[]
     for cap in caps:
         applies=(not cap["source_types"]) or bool(types & set(cap["source_types"]))
-        if applies and (not youtube or cap["id"]=="youtube_ingest" or len(types)>1): result.append(cap)
+        if applies and (not youtube or cap["id"] in {"youtube_ingest", "youtube_playlist_ingest"} or (youtube_video and "YOUTUBE_VIDEO" in cap["source_types"]) or len(types)>1): result.append(cap)
     if media_ready:
         for cap in result:
             if cap["id"] in {"transcript","subtitles"}: cap["runtime"]={"engine":"whisper-cli","model":"verified at execution"}

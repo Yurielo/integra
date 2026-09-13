@@ -13,6 +13,7 @@ from .capabilities import build_plan
 from .documents import extract_document, materialize_embedded_media
 from .booktext_runtime import run_ocr as run_booktext_ocr
 from .user_media import atomic_json, import_source, now, run_job
+from .youtube_runtime import download_video
 
 
 def _runs(project_dir: Path) -> Path:
@@ -184,6 +185,22 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                 jobs=json.loads(jobs_path.read_bytes())
                 jobs["jobs"].append(job); atomic_json(jobs_path,jobs); result=run_job(project_dir,job["job_id"])
                 record["source_results"].append({"source_id":source["source_id"],"display_name":source["display_name"],"state":result["state"],"outputs":result.get("outputs",{}),"job_id":job["job_id"]})
+            elif source["kind"] == "URL":
+                record["current_stage"] = "youtube_ingest"; record["message"] = "Downloading selected YouTube video"; atomic_json(path, record)
+                downloaded = download_video(project_dir, source, run_id=run_id)
+                downloaded_outputs = {
+                    "downloaded_media": downloaded["downloaded_path"],
+                    "youtube_source_record": downloaded["record_path"],
+                }
+                downstream = [item for item in outputs if item != "youtube_ingest"]
+                if not downstream:
+                    record["source_results"].append({"source_id": source["source_id"], "display_name": source["display_name"], "state": "COMPLETED", "outputs": downloaded_outputs})
+                else:
+                    record["current_stage"] = "media_preparation"; atomic_json(path, record)
+                    job = {"job_id": f"urn:integra:job:{uuid.uuid4()}", "kind": "YOUTUBE_MEDIA_TRANSCRIPTION", "state": "QUEUED", "progress": 0, "message": "Queued after YouTube download", "created_at": now(), "source_id": source["source_id"], "source_sha256": downloaded["content_sha256"], "owned_path": downloaded["downloaded_path"], "requested_outputs": downstream, "run_id": run_id, "youtube_source_record": downloaded["record_path"]}
+                    jobs = json.loads(jobs_path.read_bytes())
+                    jobs["jobs"].append(job); atomic_json(jobs_path, jobs); result = run_job(project_dir, job["job_id"])
+                    record["source_results"].append({"source_id": source["source_id"], "display_name": source["display_name"], "state": result["state"], "outputs": downloaded_outputs | result.get("outputs", {}), "job_id": job["job_id"]})
             elif source["kind"]=="DOCUMENT":
                 record["current_stage"]="document_analysis"; atomic_json(path,record); owned=_copy_document(project_dir,source)
                 artifact_dir=project_dir/"artifacts"/uuid.uuid4().hex; artifact_dir.mkdir(parents=True)
