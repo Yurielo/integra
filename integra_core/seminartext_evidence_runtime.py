@@ -1,9 +1,10 @@
 """Controlled adapter for SeminarText's canonical Evidence Foundation.
 
-The adapter deliberately has two phases.  Preparing a review creates only an
-Integra-owned request bound to exact media, transcript and word-timeline bytes.
-It cannot create Canonical Evidence.  Applying a review requires an explicit
-human acknowledgement and then invokes the pinned SeminarText component.
+Preparing a human review creates only an Integra-owned request bound to exact
+media, transcript and word-timeline bytes. Applying it requires an explicit
+human acknowledgement. The separate machine path invokes the same pinned
+component with candidate authority and machine_unverified assurance (PR-012);
+it never records a human decision or accepts semantic content.
 """
 from __future__ import annotations
 
@@ -15,6 +16,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -290,6 +292,114 @@ def apply_human_transcript_review(project_dir: Path, *, source_id: str, **argume
             return _apply_human_transcript_review(root, source_id=source_id, **arguments)
         finally:
             fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
+
+
+def _validate_machine_assurance(bundle: Path) -> None:
+    revisions = json.loads(bundle.read_text(encoding="utf-8")).get("transcript_revisions", [])
+    if len(revisions) != 1 or revisions[0].get("authority") != "candidate":
+        raise ValueError("machine Evidence must retain unverified candidate assurance")
+    provenance = revisions[0].get("transcript_provenance", {})
+    if (provenance.get("verification_state") != "machine_unverified"
+            or provenance.get("origin") != "machine_generated" or provenance.get("reviewer") is not None
+            or provenance.get("verification_ranges") != []):
+        raise ValueError("machine Evidence must retain unverified candidate assurance")
+
+
+def create_machine_evidence(project_dir: Path, *, source_id: str, media_path: str,
+                            transcript_path: str, word_timeline_path: str) -> dict[str, Any]:
+    """Import machine evidence through SeminarText PR-012 without a review claim.
+
+    This creates a candidate transcript revision, never a human ReviewDecision
+    or accepted knowledge. Human-confirmed revisions use the separate API above.
+    """
+    root = Path(project_dir).resolve(strict=True)
+    if not isinstance(source_id, str) or not source_id.strip():
+        raise ValueError("source identifier is required")
+    paths = {name: _inside(Path(value), root, name) for name, value in (
+        ("media", media_path), ("transcript", transcript_path), ("word_timeline", word_timeline_path))}
+    transcript_bytes = paths["transcript"].read_bytes()
+    timeline_bytes = paths["word_timeline"].read_bytes()
+    if not transcript_bytes.decode("utf-8").strip():
+        raise ValueError("transcript is empty")
+    alignment = _alignment(json.loads(timeline_bytes))
+    identity = {"source_id": source_id, "component_commit": PINNED_COMMIT,
+                "media_sha256": _sha256(paths["media"]),
+                "transcript_sha256": hashlib.sha256(transcript_bytes).hexdigest(),
+                "word_timeline_sha256": hashlib.sha256(timeline_bytes).hexdigest()}
+    runtime, origin = _runtime_root()
+    token = hashlib.sha256(source_id.encode("utf-8")).hexdigest()[:24]
+    directory = root / "evidence" / "machine" / token
+    for parent in reversed((directory, *directory.parents)):
+        if parent == root or root not in parent.parents:
+            continue
+        if parent.is_symlink():
+            raise ValueError("machine Evidence directory must not contain symlinks")
+        parent.mkdir(exist_ok=True)
+    target = directory / content_sha256(identity)
+    if target.is_symlink():
+        raise ValueError("machine Evidence target must not be a symlink")
+    lock = os.open(directory / "create.lock", os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(lock, "a") as stream:
+        try:
+            fcntl.flock(stream.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as error:
+            raise ValueError("machine Evidence creation is already running for this source") from error
+        if not target.exists():
+            with tempfile.TemporaryDirectory(prefix=".machine-", dir=directory) as temporary:
+                stage = Path(temporary)
+                component = stage / ("source_" + token)
+                media = component / "source" / ("original" + paths["media"].suffix.lower())
+                media.parent.mkdir(parents=True)
+                text = component / "input" / "transcript.txt"
+                text.parent.mkdir()
+                shutil.copyfile(paths["media"], media)
+                text.write_bytes(transcript_bytes)
+                alignment_path = component / "input" / "alignment.json"
+                alignment_path.write_bytes(canonical_json(alignment) + b"\n")
+                (component / "sources.json").write_bytes(canonical_json({"schema_version": 1,
+                    "videos": [{"source_id": "source_" + token, "order": 1, "type": "local",
+                        "file": media.relative_to(component).as_posix(), "title": source_id,
+                        "duration_seconds": max(word["end"] for word in alignment["words"])}],
+                    "documents": []}) + b"\n")
+                (component / "seminar.yaml").write_text("title: Integra machine evidence\nlanguage: ru\n", encoding="utf-8")
+                if (_sha256(media) != identity["media_sha256"] or _sha256(text) != identity["transcript_sha256"]
+                        or any(_sha256(path) != identity[name + "_sha256"] for name, path in paths.items())):
+                    raise ValueError("machine Evidence inputs changed while copying")
+                promoted = _invoke(runtime, "promote-transcript", str(component), "--source-id", "source_" + token,
+                    "--text-file", str(text), "--state", "review_required", "--verification-state", "machine_unverified",
+                    "--generation-method", "integra_machine_transcript_import")
+                aligned = _invoke(runtime, "align", str(component), "--source-id", "source_" + token,
+                    "--revision-id", promoted["revision_id"], "--media", str(media), "--alignment-json", str(alignment_path))
+                checked = _invoke(runtime, "evidence-check", str(component), "--cross-record-only", "--json")
+                if checked.get("status") != "PASS":
+                    raise ValueError("SeminarText machine Evidence validation failed")
+                bundle = component / "evidence" / "canonical_bundle.json"
+                _validate_machine_assurance(bundle)
+                result = {"schema_version": "1.0", "artifact_type": "integra.machine_evidence_result",
+                    "status": "EVIDENCE_CREATED", "decision": "MACHINE_EVIDENCE_UNVERIFIED",
+                    "verification_state": "machine_unverified", "automatic_acceptance": False,
+                    "reviewer_id": None, "input_identity": identity,
+                    "seminartext": {"commit_sha": PINNED_COMMIT, "origin": origin,
+                        "transcript_revision_id": promoted["revision_id"], "alignment_run_id": aligned["alignment_run_id"],
+                        "canonical_evidence_path": str(target / bundle.relative_to(stage)),
+                        "canonical_evidence_sha256": _sha256(bundle)}}
+                result["result_sha256"] = content_sha256(result)
+                (stage / "result.json").write_bytes(canonical_json(result) + b"\n")
+                if any(_sha256(path) != identity[name + "_sha256"] for name, path in paths.items()):
+                    raise ValueError("machine Evidence inputs changed during processing")
+                os.rename(stage, target)
+        result_path = _inside(target / "result.json", root, "machine Evidence result")
+        result = json.loads(result_path.read_text(encoding="utf-8"))
+        if (result.get("input_identity") != identity or result.get("result_sha256") != content_sha256(
+                {key: value for key, value in result.items() if key != "result_sha256"})):
+            raise ValueError("persisted machine Evidence result changed")
+        bundle = _inside(Path(result["seminartext"]["canonical_evidence_path"]), target, "machine Evidence bundle")
+        if _sha256(bundle) != result["seminartext"]["canonical_evidence_sha256"]:
+            raise ValueError("persisted machine Evidence bundle changed")
+        _validate_machine_assurance(bundle)
+        if any(_sha256(path) != identity[name + "_sha256"] for name, path in paths.items()):
+            raise ValueError("machine Evidence inputs changed during processing")
+        return result | {"evidence_result_path": str(result_path)}
 
 
 def prepare_topic_review_input(project_dir: Path, *, source_id: str, canonical_evidence_path: str,

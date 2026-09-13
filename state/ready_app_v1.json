@@ -5,7 +5,7 @@
     {"path":"macos/Info.plist","sha256":"a419740dd9515b629f857004c2d2a58cb7d1078beeca855a0e8b61430971124c"},
     {"path":"macos/Integra.entitlements","sha256":"52d453ca29989982d0bf00e4e8b79aaf01cbc4826f97dd936ae490c2a4e20e6d"},
     {"path":"docs/THIRD_PARTY_NOTICES.md","sha256":"0c722e01a9a6b638ddd40e7b1ae104379f462557a4ce11854787c16f196a2bee"},
-    {"path":"macos/Resources/bridge.py","sha256":"be6b4b7cfa9db067ef4b79f7478eb40f700a6017061d689a717f063188636b40"},
+    {"path":"macos/Resources/bridge.py","sha256":"7ab361d039be2059234691d59fa8282b6064cb131e9dc3d31d9445875e848182"},
     {"path":"scripts/integra_backup.py","sha256":"b73eec585d15a519f5212c4ad8361ec52b7269b646aba819efd596cf32202f18"},
     {"path":"scripts/package_ready_app.sh","sha256":"8d2b6460fb7d2a33c12ab9ae36153647133537cb2d09bbfa105f012bea21d48c"},
     {"path":"tests/test_ready_app.py","sha256":"fe56fef87b3fc51d92881243c740c9d071f8e7852397847a9c66b3919f839c3b"}

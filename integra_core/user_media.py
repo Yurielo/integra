@@ -22,6 +22,7 @@ from .seminartext_runtime import generate_topics
 from .word_timeline_runtime import generate_word_timeline
 from .videotext_runtime import translate as translate_videotext
 from . import seminartext_asr_runtime as asr
+from . import videotext_media_runtime as videotext_media
 
 
 class _RunCancelled(Exception):
@@ -249,6 +250,17 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
         ffmpeg=ffmpeg_preflight()["ffmpeg"]; source = Path(job["owned_path"])
         work = project_dir / "artifacts" / job_id.removeprefix("urn:integra:job:"); work.mkdir(parents=True, exist_ok=True)
         outputs: dict[str, str] = {}
+        for capability, operation, filename in (("audio_analysis", "audio_analysis", "audio_analysis.json"),
+                                                 ("speed_video", "speed", "speed_1_25.mp4")):
+            if capability in requested_outputs:
+                checkpoint("RUNNING", 10, "VideoText: " + capability, run_stage=capability)
+                target = work / (uuid.uuid4().hex + "_" + filename)
+                options = {"speed_factor": 1.25} if operation == "speed" else {}
+                evidence = videotext_media.process(source, target, operation,
+                    cancelled=lambda: _is_run_cancelled(project_dir, job.get("run_id")), **options)
+                atomic_json(work / (capability + "_provenance.json"), evidence)
+                outputs[capability] = str(target)
+                outputs[capability + "_record"] = str(work / (capability + "_provenance.json"))
         if "enhance_audio" in requested_outputs:
             checkpoint("RUNNING", 15, "Enhancing audio locally", run_stage="audio_enhancement")
             enhanced = work / "enhanced_audio.m4a"
@@ -270,7 +282,7 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
         needs_transcript = legacy_semantics or bool(requested_outputs & {"transcript", "subtitles", "burn_subtitles", "word_timeline", "topics", "translation"})
         if not needs_transcript:
             job["outputs"] = outputs
-            job.update(state="COMPLETED", progress=100, message="Requested enhanced audio is ready",
+            job.update(state="COMPLETED", progress=100, message="Requested media outputs are ready",
                        completed_at=now(), artifact_dir=str(work))
             atomic_json(jobs_path, jobs)
             return job
@@ -313,16 +325,13 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
             topics_path = work / "topics.json"
             generate_topics(subtitles, topics_path)
             job["outputs"]["topics"] = str(topics_path)
-            job.update(state="COMPLETED",progress=100,message="Requested real outputs are ready",completed_at=now(),artifact_dir=str(work),transcript_segments=len(segments))
-            atomic_json(jobs_path,jobs); return job
         if requested and "burn_subtitles" in requested:
             checkpoint("RUNNING", 90, "Burning subtitles into video", run_stage="burn_subtitles")
-            burned = work / "subtitled.mp4"
-            _run_with_cancellation(
-                [ffmpeg, "-nostdin", "-y", "-i", str(source), "-vf", _subtitle_filter(subtitles),
-                 "-map", "0:v:0", "-map", "0:a?", "-c:v", "libx264", "-c:a", "aac", str(burned)],
-                project_dir, job.get("run_id"), check=True,
-            )
+            burned = work / (uuid.uuid4().hex + "_subtitled.mp4")
+            evidence = videotext_media.burn(source, subtitles, burned,
+                cancelled=lambda: _is_run_cancelled(project_dir, job.get("run_id")))
+            atomic_json(work / "burn_subtitles_provenance.json", evidence)
+            job["outputs"]["burn_subtitles_record"] = str(work / "burn_subtitles_provenance.json")
             if burned.is_symlink() or not burned.is_file() or burned.stat().st_size == 0:
                 raise ValueError("subtitle rendering produced no video output")
             job["outputs"]["burned_video"] = str(burned)
@@ -334,7 +343,7 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
                    artifact_dir=str(work), transcript_segments=len(segments))
         atomic_json(jobs_path, jobs); return job
     except Exception as error:
-        if isinstance(error, (_RunCancelled, asr.ASRCancelled)) or _is_run_cancelled(project_dir, job.get("run_id")):
+        if isinstance(error, (_RunCancelled, asr.ASRCancelled, videotext_media.MediaCancelled)) or _is_run_cancelled(project_dir, job.get("run_id")):
             job.update(state="CANCELLED", message="Cancelled by user", updated_at=now())
             atomic_json(jobs_path, jobs)
             return job

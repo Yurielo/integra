@@ -9,6 +9,7 @@ import tempfile
 import time
 import unittest
 from tests.asr_tools import media_environment, TRANSCRIPT, require_asr_runtime
+from tests.test_videotext_media_runtime import real_media_fixture
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -121,14 +122,21 @@ class SourceFirstBridgeTests(unittest.TestCase):
             self.assertEqual(image.read_bytes(),png)
 
     def test_source_first_media_returns_only_selected_real_artifacts(self):
+        self._media_artifacts_and_clip("voice.wav")
+
+    def test_source_first_video_clip_uses_real_videotext(self):
+        self._media_artifacts_and_clip("video.mp4")
+
+    def _media_artifacts_and_clip(self, name):
         with tempfile.TemporaryDirectory() as directory:
-            root=Path(directory); source=root/"voice.wav"; source.write_bytes(b"audio")
+            root=Path(directory); source=root/name; actual_ffmpeg=real_media_fixture(source)
             overrides=media_environment(root)
+            overrides["INTEGRA_FFMPEG"]=actual_ffmpeg
             environment={**os.environ,"INTEGRA_APP_DATA_ROOT":str(root/"data"),
                          **overrides}
             bridge=ROOT/"macos/Resources/bridge.py"
             def call(operation,request):
-                result=subprocess.run(["python3",str(bridge),operation],input=json.dumps(request),capture_output=True,text=True,env=environment,timeout=5)
+                result=subprocess.run(["python3",str(bridge),operation],input=json.dumps(request),capture_output=True,text=True,env=environment,timeout=30)
                 self.assertEqual(result.returncode,0,result.stdout+result.stderr); return json.loads(result.stdout)["result"]
             sources=call("detect-sources",{"inputs":[str(source)]})
             plan=call("build-plan",{"sources":sources,"selected_outputs":["transcript","subtitles"]})
@@ -150,7 +158,8 @@ class SourceFirstBridgeTests(unittest.TestCase):
             self.assertEqual(navigation["segments"][0]["start_seconds"],0.0)
             self.assertEqual(navigation["segments"][0]["text"],TRANSCRIPT)
             clip=call("create-media-clip",{"project_id":project_id,"run_id":run_id,"source_id":sources[0]["source_id"],"start_seconds":0.0,"end_seconds":1.25})
-            self.assertEqual(Path(clip["path"]).read_bytes(),source.read_bytes())
+            self.assertGreater(Path(clip["path"]).stat().st_size,100)
+            self.assertNotEqual(Path(clip["path"]).read_bytes(),source.read_bytes())
             self.assertEqual(clip["locator"],f"media:{sources[0]['source_id']}#t=0.000,1.250")
             refreshed=call("run-status",{"project_id":project_id,"run_id":run_id})
             self.assertTrue(Path(refreshed["source_results"][0]["outputs"]["clips_manifest"]).is_file())

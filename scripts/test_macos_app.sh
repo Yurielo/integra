@@ -57,6 +57,8 @@ INTEGRA_CLOSE_PROBE="$close_marker" "$app/Contents/MacOS/Integra"
 grep -q '^TERMINATED_AFTER_LAST_WINDOW_CLOSED$' "$close_marker"
 echo "INTEGRA_MACOS_CLOSE_TEST: PASS"
 
+python3 "$repo_root/tests/native_workflow_probe.py" "$app" "$test_root/native-workflow"
+
 test -z "$(find "$app" -type l -print -quit)"
 test -f "$app/Contents/Resources/integra_core/publishing.py"
 test -f "$app/Contents/Resources/runtime/seminartext/runtime.json"

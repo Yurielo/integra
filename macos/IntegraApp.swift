@@ -28,7 +28,7 @@ final class Bridge: @unchecked Sendable {
       "obsidian-preview", "transcript-text",
       "onedrive-preview",
       "prepare-transcript-review", "apply-transcript-review", "prepare-topic-review",
-      "prepare-knowledge-review", "apply-knowledge-review",
+      "prepare-knowledge-review", "apply-knowledge-review", "create-machine-evidence",
     ]
     guard allowed.contains(operation) else { throw BridgeError.failed("Unsupported operation") }
     let script = resources.appendingPathComponent("bridge.py")
@@ -390,6 +390,12 @@ struct SidebarItem {
           "\(source["display_name"] ?? "Источник")", detail: "\(source["source_type"] ?? "UNKNOWN")"
         ))
     }
+    if sources.contains(where: { $0["source_type"] as? String == "PDF" }) {
+      add(button("Страницы OCR BookText…", #selector(configureOCRPages)))
+      if let source = sources.first(where: { $0["source_type"] as? String == "PDF" }) {
+        add(row("Выбор страниц OCR", detail: "Включить: \(source["booktext_pages"] as? String ?? "все") · исключить: \(source["booktext_exclude_pages"] as? String ?? "нет"). Нумерация оригинала сохраняется."))
+      }
+    }
     add(section("ЧТО НУЖНО ПОЛУЧИТЬ?"))
     var category = ""
     for cap in capabilities {
@@ -445,6 +451,27 @@ struct SidebarItem {
   @objc private func chooseMedia() { chooseFiles(multiple: false) }
   @objc private func chooseDocument() { chooseFiles(multiple: false) }
   @objc private func chooseMultiple() { chooseFiles(multiple: true) }
+  @objc private func configureOCRPages() {
+    let alert = NSAlert()
+    alert.messageText = "Страницы для OCR"
+    alert.informativeText = "Для всех выбранных PDF. Формат: 1-3,5. Пустое поле — все страницы. Это выбор OCR, не удаление страниц оригинала."
+    let fields = NSStackView(); fields.orientation = .vertical
+    let include = NSTextField(frame: NSRect(x: 0, y: 0, width: 360, height: 24))
+    include.placeholderString = "Включить страницы, например 1-3,5"
+    let exclude = NSTextField(frame: NSRect(x: 0, y: 0, width: 360, height: 24))
+    exclude.placeholderString = "Исключить страницы, например 2"
+    fields.addArrangedSubview(include); fields.addArrangedSubview(exclude)
+    alert.accessoryView = fields
+    alert.addButton(withTitle: "Применить"); alert.addButton(withTitle: "Отмена")
+    guard alert.runModal() == .alertFirstButtonReturn else { return }
+    for index in sources.indices where sources[index]["source_type"] as? String == "PDF" {
+      sources[index]["booktext_pages"] = include.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+      sources[index]["booktext_exclude_pages"] = exclude.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    plan = nil
+    selected = []
+    renderNew()
+  }
   private func chooseFiles(multiple: Bool) {
     let panel = NSOpenPanel()
     panel.title = multiple ? "Выберите несколько источников" : "Выберите источник"
@@ -498,6 +525,7 @@ struct SidebarItem {
             self.plan = nil
           }
           self.renderNew()
+          self.runNativeSmokeIfRequested()
         }
       } catch {
         DispatchQueue.main.async {
@@ -545,6 +573,56 @@ struct SidebarItem {
         DispatchQueue.main.async {
           self.status.textColor = .systemRed
           self.status.stringValue = error.localizedDescription
+        }
+      }
+    }
+  }
+
+  // Opt-in acceptance probe. It drives the same native action and backend as
+  // the button, only with caller-owned fixtures in an isolated application root.
+  // No semantic decisions, account access or publication are permitted here.
+  private func runNativeSmokeIfRequested() {
+    guard let directory = ProcessInfo.processInfo.environment["INTEGRA_NATIVE_SMOKE_DIR"],
+      let dataRoot = ProcessInfo.processInfo.environment["INTEGRA_APP_DATA_ROOT"],
+      dataRoot == directory + "/app-data", plan != nil,
+      !selected.isEmpty, selected.isSubset(of: ["speed_video", "audio_analysis", "document_text"]),
+      sources.allSatisfy({ ($0["input"] as? String)?.hasPrefix(directory + "/") == true })
+    else { return }
+    func capture(_ name: String) {
+      guard let view = window.contentView else { return }
+      view.layoutSubtreeIfNeeded()
+      guard let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return }
+      view.cacheDisplay(in: view.bounds, to: bitmap)
+      try? bitmap.representation(using: .png, properties: [:])?.write(
+        to: URL(fileURLWithPath: directory).appendingPathComponent(name))
+    }
+    func actionButton(_ view: NSView) -> NSButton? {
+      if let button = view as? NSButton, button.action == #selector(execute), button.isEnabled { return button }
+      for child in view.subviews { if let button = actionButton(child) { return button } }
+      return nil
+    }
+    capture("plan.png")
+    guard let view = window.contentView, let button = actionButton(view) else { return }
+    button.performClick(nil)
+    let deadline = Date().addingTimeInterval(180)
+    Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] probe in
+      Task { @MainActor in
+        guard let self else { probe.invalidate(); return }
+        if let projectID = self.projectID, let runID = self.runID,
+          let run = try? self.bridge.json("run-status", request: ["project_id": projectID, "run_id": runID])["result"] as? [String: Any],
+          ["COMPLETED", "FAILED", "CANCELLED"].contains(run["state"] as? String ?? "")
+        {
+          probe.invalidate()
+          self.renderOperations()
+          capture("results.png")
+          try? JSONSerialization.data(withJSONObject: run, options: [.prettyPrinted, .sortedKeys]).write(
+            to: URL(fileURLWithPath: directory).appendingPathComponent("native-run.json"))
+          NSApp.terminate(nil)
+        } else if Date() > deadline {
+          probe.invalidate()
+          try? "Native smoke timed out; not a successful execution\n".write(
+            toFile: directory + "/failure.txt", atomically: true, encoding: .utf8)
+          NSApp.terminate(nil)
         }
       }
     }
@@ -646,6 +724,10 @@ struct SidebarItem {
         case "booktext_pages": title = "Открыть обработанные страницы BookText"
         case "booktext_surya_raw": title = "Открыть исходный вывод Surya OCR"
         case "booktext_vision_qa": title = "Открыть Apple Vision QA"
+        case "selected_ocr_pages": title = "Открыть выбранные OCR-страницы с исходной нумерацией"
+        case "audio_analysis": title = "Открыть анализ звука VideoText"
+        case "speed_video": title = "Открыть видео 1,25×"
+        case "machine_evidence_record": title = "Открыть происхождение машинного Evidence"
         case "transcript_json":
           title = "Открыть сырую расшифровку (JSON)"
         case "package_dir": title = "Открыть управляемый package (для публикации)"
@@ -677,13 +759,21 @@ struct SidebarItem {
         control.toolTip = "\(projectID)\n\(runID)\n\(sourceID)"
         add(control)
       }
-      if outputs["canonical_evidence"] == nil, outputs["transcript"] as? String != nil, outputs["word_timeline"] as? String != nil,
+      if outputs["transcript"] as? String != nil, outputs["word_timeline"] as? String != nil,
         let projectID = projectID, let runID = runID, let sourceID = result["source_id"] as? String
       {
-        let control = button("Проверить TXT и создать Evidence", #selector(showTranscriptReview(_:)))
+        let hasEvidenceDependents = ["topic_review_drafts", "topic_review_package", "topic_review_decisions",
+          "reviewed_topics", "canonical_knowledge", "package_dir"].contains { outputs[$0] != nil }
+        let control = button(hasEvidenceDependents ? "Повторная проверка TXT — нужен новый запуск" : "Проверить TXT и создать Evidence",
+          #selector(showTranscriptReview(_:)), enabled: !hasEvidenceDependents)
         control.toolTip = "\(projectID)\n\(runID)\n\(sourceID)"
         add(control)
-        add(row("Canonical Evidence", detail: "Нужна ваша проверка полного TXT — автоматически не создаётся"))
+        if outputs["canonical_evidence"] == nil {
+          let machine = button("Продолжить с машинным текстом → Evidence", #selector(createMachineEvidence(_:)))
+          machine.toolTip = "\(projectID)\n\(runID)\n\(sourceID)"
+          add(machine)
+        }
+        add(row("Canonical Evidence", detail: "Полная проверка TXT необязательна. Машинный текст остаётся непроверенным; принятие тем — отдельное явное решение."))
       }
       if outputs["reviewed_topics"] == nil, outputs["canonical_knowledge"] == nil, outputs["canonical_evidence"] as? String != nil, outputs["topics"] as? String != nil,
         let projectID = projectID, let runID = runID, let sourceID = result["source_id"] as? String
@@ -716,6 +806,20 @@ struct SidebarItem {
     }
   }
   @objc private func unavailableAction() {}
+  @objc private func createMachineEvidence(_ sender: NSButton) {
+    let ids = sender.toolTip?.split(separator: "\n", maxSplits: 2).map(String.init) ?? []
+    guard ids.count == 3 else { return }
+    sender.isEnabled = false
+    let bridge = self.bridge!
+    DispatchQueue.global(qos: .userInitiated).async {
+      do {
+        _ = try bridge.json("create-machine-evidence", request: ["project_id": ids[0], "run_id": ids[1], "source_id": ids[2]])
+        DispatchQueue.main.async { self.renderOutputs() }
+      } catch {
+        DispatchQueue.main.async { sender.isEnabled = true; self.status.stringValue = error.localizedDescription }
+      }
+    }
+  }
   @objc private func buildReviewedPackage(_ sender: NSButton) {
     let identifiers = sender.toolTip?.split(separator: "\n", maxSplits: 2).map(String.init) ?? []
     guard identifiers.count == 3 else { return }
@@ -857,7 +961,7 @@ struct SidebarItem {
     guard let requestHash = prepared["request_sha256"] as? String else { return }
     NSSound.beep()
     let alert = NSAlert()
-    alert.messageText = "Проверка расшифровки нужна перед созданием Evidence"
+    alert.messageText = "Необязательная полная проверка расшифровки"
     alert.informativeText = "Откройте и проверьте весь TXT. Подтверждение создаст Canonical Evidence через закреплённый SeminarText и будет привязано к точным хэшам источника, TXT и Word Timeline. Это действие не выполняется автоматически."
     let accessory = NSStackView()
     accessory.orientation = .vertical; accessory.alignment = .leading; accessory.spacing = 8

@@ -5,6 +5,10 @@ struct IntegraVideoTextTranslationWorker {
     static func main() async {
         do {
             let arguments = Array(CommandLine.arguments.dropFirst())
+            if arguments.count == 2, arguments[0] == "--media-request" {
+                try await IntegraVideoTextMediaWorker.run(requestPath: arguments[1])
+                return
+            }
             if arguments.contains("--subtitle-request") {
                 guard arguments.count == 2, arguments[0] == "--subtitle-request" else {
                     throw WorkerError.invalidArguments
