@@ -492,6 +492,12 @@ class GovernanceValidationTests(unittest.TestCase):
         errors = VALIDATOR.validate_state(state)
         self.assertIn("R11 must remain DEFERRED_TO_LATER_WORK", errors)
 
+    def test_r14_acceptance_cannot_regress_to_human_gate(self):
+        state = copy.deepcopy(self.state)
+        next(item for item in state["roadmap"] if item["id"] == "R14")["status"] = "HUMAN_GATE"
+        errors = VALIDATOR.validate_state(state)
+        self.assertIn("R14 must be ACCEPTED after the Product Owner decision", errors)
+
     def test_r15_is_deferred_after_r14(self):
         state = copy.deepcopy(self.state)
         r15 = next(item for item in state["roadmap"] if item["id"] == "R15")

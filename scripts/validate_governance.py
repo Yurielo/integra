@@ -803,8 +803,8 @@ def validate_state(state: dict, root: Path = ROOT) -> list[str]:
         errors.append("USER_MEDIA_WORKFLOW_V1 must be ACCEPTED before R14")
     if statuses.get("SOURCE_FIRST_UI_V1") != "ACCEPTED":
         errors.append("SOURCE_FIRST_UI_V1 must be ACCEPTED before R14")
-    if statuses.get("R14") != "HUMAN_GATE":
-        errors.append("R14 must remain the READY_APP_V1 HUMAN_GATE")
+    if statuses.get("R14") != "ACCEPTED":
+        errors.append("R14 must be ACCEPTED after the Product Owner decision")
     for deferred_id in DEFERRED_ROADMAP_IDS:
         if statuses.get(deferred_id) != "DEFERRED_TO_LATER_WORK":
             errors.append(f"{deferred_id} must remain DEFERRED_TO_LATER_WORK")
