@@ -41,8 +41,10 @@ repetitions and replace terminology, so it is NOT silently substituted into
 Evidence or word alignment. No transcript is labelled human-verified.
 
 The source CLI's merged SRT omits numeric cue identifiers. The adapter retains
-that original and adds sequential cue numbers in a separate interoperable SRT,
-without changing wording or timing. Downstream media uses this normalized file.
+that original and supplies cue identifiers to the pinned VideoText SRTService.
+VideoText parses, validates and writes the separate interoperable SRT; Integra
+checks text and millisecond timing round-trip before accepting it. Downstream
+media uses this normalized file. See VIDEOTEXT_SUBTITLE_RUNTIME_V1.md.
 
 Upstream can return exit 0 while reporting suspicious chunks. Integra must
 treat that as a failed quality check, retain the report and provenance, and

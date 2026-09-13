@@ -88,7 +88,7 @@
     },
     {
       "path": "scripts/build_macos_app.sh",
-      "sha256": "24b8b85e61272fb592911b1fe6d8706510059407603b43d88faf2a856e48d497"
+      "sha256": "64930072234e4fff2fef85ab2181aee35e594e1893bf6bf42e20aade8a9d3c3b"
     },
     {
       "path": "scripts/generate_macos_app_icon.sh",
