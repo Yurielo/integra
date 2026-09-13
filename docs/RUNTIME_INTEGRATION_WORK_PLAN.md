@@ -89,9 +89,15 @@ read-only закреплённый SeminarText runtime.
 
 ## Этап 5 — YouTube и последующие студии
 
-Это отдельные решения Product Owner после R14:
+После R14 в Integra подключён отдельный local runtime для выбранного
+пользователем одиночного YouTube-видео: `yt-dlp` сохраняет медиа в проекте, а
+затем оно проходит тот же source-first media pipeline. Это не даёт права
+использовать аккаунт, публиковать что-либо или обрабатывать плейлисты.
 
-- live YouTube ingest требует политики источников и network runtime;
+Отдельными решениями остаются:
+
+- live playlist discovery/download требует отдельного runtime и политики
+  источников;
 - Marketing, Learning, Assistant и social требуют отдельных production
   adapters и не могут быть открыты общей заглушкой.
 

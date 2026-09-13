@@ -453,7 +453,7 @@ struct SidebarItem {
     let alert = NSAlert()
     alert.messageText = "YouTube"
     alert.informativeText =
-      "Введите одну или несколько ссылок, каждую с новой строки. Тип ссылки будет определён, но загрузка пока помечена «В разработке»."
+      "Введите одну или несколько ссылок, каждую с новой строки. Одиночное видео будет загружено в проект и обработано выбранными результатами. Плейлисты пока помечены «В разработке»."
     let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 420, height: 72))
     field.placeholderString = "https://youtube.com/watch?v=…"
     alert.accessoryView = field
@@ -599,6 +599,8 @@ struct SidebarItem {
         case "subtitles": title = "Открыть субтитры (SRT)"
         case "word_timeline": title = "Открыть Word Timeline (JSON)"
         case "translation": title = "Открыть перевод VideoText (JSON)"
+        case "downloaded_media": title = "Открыть загруженное видео/аудио YouTube"
+        case "youtube_source_record": title = "Открыть сведения о загрузке YouTube (JSON)"
         case "topics": title = "Открыть черновики тем SeminarText (JSON)"
         case "burned_video": title = "Открыть видео со встроенными субтитрами"
         case "clips_manifest": title = "Открыть список созданных клипов (JSON)"

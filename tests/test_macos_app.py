@@ -123,6 +123,8 @@ class MacOSApplicationTests(unittest.TestCase):
         for operation in ("detect-sources", "capability-registry", "build-plan", "execute-plan", "run-status", "media-navigation", "seminartext-preflight", "package-preview", "package-publish"):
             self.assertIn(operation, source)
         self.assertIn("NSOpenPanel", source)
+        self.assertIn("Одиночное видео будет загружено в проект", source)
+        self.assertIn("Плейлисты пока помечены «В разработке»", source)
         self.assertIn("ЧТО НУЖНО ПОЛУЧИТЬ?", source)
         self.assertIn("Выполнить", source)
         self.assertIn("Перетащите файлы сюда", source)

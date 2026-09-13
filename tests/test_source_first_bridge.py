@@ -12,6 +12,37 @@ ROOT=Path(__file__).resolve().parents[1]
 
 
 class SourceFirstBridgeTests(unittest.TestCase):
+    def test_bridge_downloads_selected_youtube_video_to_real_project_artifact(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory)
+            downloader=root/"yt-dlp"
+            downloader.write_text("#!/bin/sh\n"
+                                  "if [ \"$1\" = \"--version\" ]; then echo 2026.01.01; exit 0; fi\n"
+                                  "previous=''\n"
+                                  "for arg in \"$@\"; do [ \"$previous\" = \"--output\" ] && output=$arg; previous=$arg; done\n"
+                                  "target=$(printf '%s' \"$output\" | sed 's/%(ext)s/mp3/')\n"
+                                  "printf 'remote-media' > \"$target\"\n")
+            downloader.chmod(downloader.stat().st_mode | 0o111)
+            environment={**os.environ,"INTEGRA_APP_DATA_ROOT":str(root/"data"),"INTEGRA_YTDLP":str(downloader)}
+            bridge=ROOT/"macos/Resources/bridge.py"
+            def call(operation,request):
+                result=subprocess.run(["python3",str(bridge),operation],input=json.dumps(request),capture_output=True,text=True,env=environment,timeout=5)
+                self.assertEqual(result.returncode,0,result.stdout+result.stderr); return json.loads(result.stdout)["result"]
+            sources=call("detect-sources",{"inputs":["https://www.youtube.com/watch?v=real-video"]})
+            registry={item["id"]:item for item in call("capability-registry",{"sources":sources})}
+            self.assertTrue(registry["youtube_ingest"]["runtime_available"])
+            plan=call("build-plan",{"sources":sources,"selected_outputs":["youtube_ingest"]})
+            execution=call("execute-plan",{"plan":plan,"name":"YouTube bridge test"})
+            project_id=execution["project"]["project_id"]; run_id=execution["run"]["run_id"]
+            for _ in range(100):
+                status=call("run-status",{"project_id":project_id,"run_id":run_id})
+                if status["state"] in {"COMPLETED","FAILED"}: break
+                time.sleep(.03)
+            self.assertEqual(status["state"],"COMPLETED",status)
+            outputs=status["source_results"][0]["outputs"]
+            self.assertEqual(Path(outputs["downloaded_media"]).read_bytes(),b"remote-media")
+            self.assertEqual(json.loads(Path(outputs["youtube_source_record"]).read_bytes())["source_url"],sources[0]["input"])
+
     def test_detect_plan_execute_and_status_use_real_artifacts(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory); source=root/"notes.md"; source.write_text("# Real source\nBody")

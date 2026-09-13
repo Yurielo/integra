@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 import zipfile
@@ -24,6 +25,35 @@ class ApplicationRuntimeTests(unittest.TestCase):
         for item in (ffmpeg,whisper): item.chmod(item.stat().st_mode|stat.S_IXUSR)
         model=self.root/"model"; model.write_bytes(b"model")
         return {"INTEGRA_FFMPEG":str(ffmpeg),"INTEGRA_WHISPER_CLI":str(whisper),"INTEGRA_WHISPER_MODEL":str(model)}
+
+    def youtube_downloader(self):
+        downloader=self.root/"yt-dlp"
+        downloader.write_text("#!/bin/sh\n"
+                              "if [ \"$1\" = \"--version\" ]; then echo 2026.01.01; exit 0; fi\n"
+                              "previous=''\n"
+                              "for arg in \"$@\"; do [ \"$previous\" = \"--output\" ] && output=$arg; previous=$arg; done\n"
+                              "target=$(printf '%s' \"$output\" | sed 's/%(ext)s/mp3/')\n"
+                              "printf 'downloaded-media' > \"$target\"\n")
+        downloader.chmod(downloader.stat().st_mode|stat.S_IXUSR)
+        return str(downloader)
+
+    def test_downloads_selected_youtube_video_into_owned_project_storage(self):
+        old=os.environ.get("INTEGRA_YTDLP")
+        try:
+            os.environ["INTEGRA_YTDLP"]=self.youtube_downloader()
+            source=detect_source("https://www.youtube.com/watch?v=real-video")
+            plan=build_plan([source],["youtube_ingest"])
+            self.assertEqual([stage["id"] for stage in plan["stages"]],["youtube_ingest"])
+            run=prepare_run(self.project,plan); result=execute_run(self.project,run["run_id"])
+        finally:
+            if old is None: os.environ.pop("INTEGRA_YTDLP",None)
+            else: os.environ["INTEGRA_YTDLP"]=old
+        self.assertEqual(result["state"],"COMPLETED")
+        outputs=result["source_results"][0]["outputs"]
+        self.assertEqual(Path(outputs["downloaded_media"]).read_bytes(),b"downloaded-media")
+        record=json.loads(Path(outputs["youtube_source_record"]).read_bytes())
+        self.assertEqual(record["source_url"],source["input"])
+        self.assertEqual(record["content_sha256"],hashlib.sha256(b"downloaded-media").hexdigest())
 
     def test_executes_selected_real_media_outputs_without_semantic_fakes(self):
         source_path=self.root/"audio.wav"; source_path.write_bytes(b"audio"); overrides=self.media_environment(); old={key:os.environ.get(key) for key in overrides}
