@@ -39,6 +39,14 @@ accepted ownership boundary. The exact replay evidence, retained fallbacks, and
 limitations are recorded in `state/capability_benchmark_v1.json`. These choices
 do not claim semantic superiority and do not authorize semantic acceptance.
 
+Issue #125 follows the subsequent explicit Product Owner instruction to use
+SeminarText transcription in native user-media processing. That runtime now
+invokes the exact pinned SeminarText CLI for chunking, VAD, recognition and
+quality retries through `SEMINARTEXT_ASR_RUNTIME_V1.md`. R5's benchmark remains
+historical evidence; it does not describe the replaced whole-recording native
+Whisper invocation. Cleaned text stays derivative and quality failures block
+downstream processing without granting semantic authority.
+
 R6 composes those selected ownership roles into the bounded
 `INTEGRA_CORE_ALPHA_V1` control-plane path. Dependency-free `CONTRACT_REPLAY`
 proves Project Lease enforcement, atomic checkpoints, cancellation and

@@ -21,6 +21,7 @@ from .publishing import sha256_bytes, validate_package
 from .seminartext_runtime import generate_topics
 from .word_timeline_runtime import generate_word_timeline
 from .videotext_runtime import translate as translate_videotext
+from . import seminartext_asr_runtime as asr
 
 
 class _RunCancelled(Exception):
@@ -180,8 +181,9 @@ def ffmpeg_preflight() -> dict[str, str]:
 
 def preflight(*, hash_model: bool = True) -> dict[str, Any]:
     ffmpeg, whisper, model = _tools()
+    asr_runtime = asr.preflight(Path(ffmpeg), Path(whisper), Path(model))
     result={"state":"READY", "ffmpeg":ffmpeg, "whisper_cli":whisper,
-            "model":model, "supported_extensions":sorted(SUPPORTED)}
+            "model":model, "supported_extensions":sorted(SUPPORTED), "asr_runtime":asr_runtime}
     if hash_model: result["model_sha256"]=hashlib.sha256(Path(model).read_bytes()).hexdigest()
     return result
 
@@ -273,32 +275,25 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
             atomic_json(jobs_path, jobs)
             return job
         _, whisper, model = _tools()
-        wav = work / "audio.wav"
-        _run_with_cancellation(
-            [ffmpeg, "-nostdin", "-y", "-i", str(source), "-ar", "16000", "-ac", "1", "-c:a", "pcm_s16le", str(wav)],
-            project_dir,
-            job.get("run_id"),
-            check=True,
-        )
-        checkpoint("RUNNING", 25, "Transcribing locally", run_stage="transcript")
-        output = work / "transcript"
-        _run_with_cancellation(
-            [whisper, "-m", model, "-f", str(wav), "-l", "auto", "-osrt", "-of", str(output), "-np"],
-            project_dir,
-            job.get("run_id"),
-            check=True,
-        )
-        segments = _parse_srt((output.with_suffix(".srt")).read_text(errors="replace"), job["source_id"])
+        checkpoint("RUNNING", 25, "Распознавание SeminarText: фрагменты, VAD и проверка качества", run_stage="transcript")
+        recognized = asr.transcribe(source, work, ffmpeg=Path(ffmpeg), whisper=Path(whisper), model=Path(model),
+            cancelled=lambda: _is_run_cancelled(project_dir, job.get("run_id")),
+            progress=lambda message: checkpoint("RUNNING", 25, message, run_stage="transcript"))
+        subtitles = Path(recognized["srt"])
+        segments = _parse_srt(subtitles.read_text(encoding="utf-8"), job["source_id"])
         if not segments: raise ValueError("transcription produced no timed speech segments")
         checkpoint("RUNNING", 80, "Saving timed transcript and subtitles", run_stage="subtitles")
         transcript = {"schema_version":"1.0", "source_id":job["source_id"], "assurance":"MACHINE_TRANSCRIPT_UNREVIEWED",
-                      "model_sha256":hashlib.sha256(Path(model).read_bytes()).hexdigest(), "segments":segments}
+                      "model_sha256":hashlib.sha256(Path(model).read_bytes()).hexdigest(), "segments":segments,
+                      "asr_provenance": recognized["provenance"]}
         transcript_text = "\n".join(segment["text"] for segment in segments)
         transcript_txt = work / "transcript.txt"
         transcript_txt.write_text((transcript_text + "\n") if transcript_text else "", encoding="utf-8")
         atomic_json(work / "transcript.json", transcript)
-        subtitles=output.with_suffix(".srt")
         outputs.update({"transcript":str(transcript_txt),"transcript_json":str(work/"transcript.json"),"subtitles":str(subtitles)})
+        outputs.update({"transcript_cleaned":recognized["cleaned_txt"],
+                        "transcript_quality_report":recognized["review_txt"],
+                        "transcript_asr_record":recognized["record"]})
         job["outputs"] = outputs
         if requested and "translation" in requested_outputs:
             checkpoint("RUNNING", 84, "Translating subtitles with VideoText", run_stage="translation")
@@ -307,6 +302,9 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
             job["outputs"]["translation"] = str(translation_path)
         if requested and requested_outputs & {"word_timeline", "topics"}:
             checkpoint("RUNNING", 85, "Aligning transcript words with WhisperX", run_stage="word_timeline")
+            wav = work / "audio.wav"
+            _run_with_cancellation([ffmpeg, "-nostdin", "-y", "-i", str(source), "-vn", "-ar", "16000",
+                                    "-ac", "1", "-c:a", "pcm_s16le", str(wav)], project_dir, job.get("run_id"))
             timeline_path = work / "word_timeline.json"
             generate_word_timeline(wav, subtitles, timeline_path)
             job["outputs"]["word_timeline"] = str(timeline_path)
@@ -336,10 +334,13 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
                    artifact_dir=str(work), transcript_segments=len(segments))
         atomic_json(jobs_path, jobs); return job
     except Exception as error:
-        if isinstance(error, _RunCancelled) or _is_run_cancelled(project_dir, job.get("run_id")):
+        if isinstance(error, (_RunCancelled, asr.ASRCancelled)) or _is_run_cancelled(project_dir, job.get("run_id")):
             job.update(state="CANCELLED", message="Cancelled by user", updated_at=now())
             atomic_json(jobs_path, jobs)
             return job
+        if isinstance(error, asr.ASRQualityError):
+            job["outputs"] = {"transcript_quality_report":error.artifacts["review_txt"],
+                              "transcript_asr_record":error.artifacts["record"]}
         job.update(state="FAILED", message=str(error)[:300], updated_at=now())
         atomic_json(jobs_path, jobs); raise
 

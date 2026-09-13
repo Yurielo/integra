@@ -238,6 +238,10 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                 if "document_text" in outputs:
                     outputs_map["text"] = outputs_map.get("booktext_text", str(text_path))
                 record["source_results"].append({"source_id":source["source_id"],"display_name":source["display_name"],"state":"COMPLETED","outputs":outputs_map,"document_properties":{"content_mode":document["content_mode"],"ocr_status":document["ocr"]["status"],"embedded_media_count":len(document["embedded_media"])}})
+            if any(item.get("state") == "CANCELLED" for item in record["source_results"]):
+                record.update(state="CANCELLED", current_stage=None, cancelled_at=now())
+                atomic_json(path, record)
+                return record
             record["completed_sources"]+=1; atomic_json(path,record)
         record = refresh_record()
         final_state = "CANCELLED" if record.get("state") == "CANCELLED" else "COMPLETED"
@@ -250,4 +254,11 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
         latest = refresh_record()
         if latest.get("state") == "CANCELLED":
             return latest
+        # Failed ASR quality is inspectable but never a successful transcript.
+        from .seminartext_asr_runtime import ASRQualityError
+        if isinstance(error, ASRQualityError):
+            latest["source_results"].append({"source_id":source["source_id"],
+                "display_name":source["display_name"], "state":"FAILED",
+                "outputs":{"transcript_quality_report":error.artifacts["review_txt"],
+                           "transcript_asr_record":error.artifacts["record"]}})
         latest.update(state="FAILED",error=str(error)[:500],failed_at=now()); atomic_json(path,latest); raise
