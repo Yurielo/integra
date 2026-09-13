@@ -8,12 +8,14 @@ import time
 import unittest
 
 from integra_core.user_media import import_source, preflight
+from tests.asr_tools import media_environment, require_asr_runtime
 
 ROOT=Path(__file__).resolve().parents[1]
 
 
 class UserMediaWorkflowTests(unittest.TestCase):
     def test_restricted_path_accepts_explicit_safe_tools(self):
+        require_asr_runtime()
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory); executable=root/"tool"; executable.write_text("#!/bin/sh\nexit 0\n"); executable.chmod(0o700)
             model=root/"model"; model.write_bytes(b"model")
@@ -35,12 +37,10 @@ class UserMediaWorkflowTests(unittest.TestCase):
 
     def test_bridge_runs_media_job_without_creating_semantic_fakes(self):
         with tempfile.TemporaryDirectory() as directory:
-            root=Path(directory); tools=root/"tools"; tools.mkdir(); model=root/"model.bin"; model.write_bytes(b"model")
-            ffmpeg=tools/"ffmpeg"; ffmpeg.write_text("#!/bin/sh\nsrc=''\nprev=''\nfor arg in \"$@\"; do [ \"$prev\" = '-i' ] && src=$arg; prev=$arg; out=$arg; done\ncp \"$src\" \"$out\"\n")
-            whisper=tools/"whisper-cli"; whisper.write_text("#!/bin/sh\nout=''\nwhile [ $# -gt 0 ]; do [ \"$1\" = '-of' ] && { shift; out=$1; }; shift; done\nprintf '1\\n00:00:00,000 --> 00:00:01,250\\nHello Integra\\n' > \"$out.srt\"\n")
-            for path in (ffmpeg,whisper): path.chmod(path.stat().st_mode|stat.S_IXUSR)
+            root=Path(directory); tools=root/"tools"; tools.mkdir()
+            overrides=media_environment(tools)
             source=root/"voice.wav"; source.write_bytes(b"audio")
-            environment={**os.environ,"INTEGRA_APP_DATA_ROOT":str(root/"data"),"INTEGRA_FFMPEG":str(ffmpeg),"INTEGRA_WHISPER_CLI":str(whisper),"INTEGRA_WHISPER_MODEL":str(model)}
+            environment={**os.environ,"INTEGRA_APP_DATA_ROOT":str(root/"data"),**overrides}
             bridge=ROOT/"macos/Resources/bridge.py"
             def call(operation,request):
                 result=subprocess.run(["python3",str(bridge),operation],input=json.dumps(request),capture_output=True,text=True,env=environment)

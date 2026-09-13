@@ -10,9 +10,24 @@ from integra_core.capabilities import build_plan, capability_registry, detect_so
 
 class CapabilityRegistryTests(unittest.TestCase):
     def media_runtime(self, root: Path):
+        # Planner unit tests model a verified adapter boundary; real pinned CLI
+        # execution is covered separately by test_seminartext_asr_runtime.
+        verified_asr = patch("integra_core.user_media.asr.preflight", return_value={"state":"READY"})
+        verified_asr.start()
+        self.addCleanup(verified_asr.stop)
         tool=root/"tool"; tool.write_text("#!/bin/sh\nexit 0\n"); tool.chmod(tool.stat().st_mode|stat.S_IXUSR)
         model=root/"model"; model.write_bytes(b"model")
         return {"INTEGRA_FFMPEG":str(tool),"INTEGRA_WHISPER_CLI":str(tool),"INTEGRA_WHISPER_MODEL":str(model)}
+
+    def test_missing_asr_runtime_disables_transcription_even_when_tools_exist(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "talk.wav"; source.write_bytes(b"audio")
+            with patch.dict(os.environ, self.media_runtime(root)), patch(
+                "integra_core.user_media.asr.preflight", side_effect=ValueError("ASR runtime unavailable")):
+                registry = {item["id"]:item for item in capability_registry([detect_source(str(source))])}
+            self.assertFalse(registry["transcript"]["runtime_available"])
+            self.assertIn("ASR runtime unavailable", registry["transcript"]["ui_state"])
 
     def test_source_detection_distinguishes_media_documents_and_youtube(self):
         with tempfile.TemporaryDirectory() as directory:

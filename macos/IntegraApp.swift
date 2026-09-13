@@ -579,6 +579,7 @@ struct SidebarItem {
       }
       if state == "FAILED" || state == "CANCELLED" { add(button("Повторить", #selector(retryRun))) }
       if state == "COMPLETED" { renderResultRows(run) }
+      if state == "FAILED" { renderFailedASRReports(run) }
       if let error = run["error"] as? String { status.stringValue = error }
       if ["RUNNING", "QUEUED"].contains(state) { startPolling() }
     } catch { status.stringValue = error.localizedDescription }
@@ -601,6 +602,9 @@ struct SidebarItem {
         let title: String
         switch kind {
         case "transcript": title = "Открыть расшифровку (TXT)"
+        case "transcript_cleaned": title = "Открыть очищенный текст SeminarText (производная версия)"
+        case "transcript_quality_report": title = "Открыть отчёт проверки расшифровки"
+        case "transcript_asr_record": title = "Открыть сведения о распознавании SeminarText"
         case "canonical_evidence": title = "Открыть Canonical Evidence SeminarText (JSON)"
         case "transcript_review_result": title = "Открыть подтверждение проверки TXT (JSON)"
         case "topic_review_drafts": title = "Открыть входные данные проверки тем SeminarText (JSON)"
@@ -696,6 +700,19 @@ struct SidebarItem {
       "Маркетинговые материалы", "Другие форматы публикации",
     ] {
       add(button("\(title) — В разработке", #selector(unavailableAction), enabled: false))
+    }
+  }
+  private func renderFailedASRReports(_ run: [String: Any]) {
+    for result in (run["source_results"] as? [[String: Any]]) ?? [] {
+      guard result["state"] as? String == "FAILED",
+        let outputs = result["outputs"] as? [String: Any],
+        let report = outputs["transcript_quality_report"] as? String else { continue }
+      add(section("РАСШИФРОВКА НЕ ПРОШЛА ПРОВЕРКУ КАЧЕСТВА"))
+      add(row(result["display_name"] as? String ?? "Источник",
+              detail: "Подозрительные фрагменты сохранены для проверки. Темы и знания из них не создавались."))
+      let control = button("Открыть отчёт проверки расшифровки", #selector(openOutput(_:)))
+      control.toolTip = report
+      add(control)
     }
   }
   @objc private func unavailableAction() {}
@@ -1093,6 +1110,9 @@ struct SidebarItem {
           as? [String: Any] ?? [:]
         if run["state"] as? String == "COMPLETED" {
           renderResultRows(run)
+        } else if run["state"] as? String == "FAILED" {
+          add(NSTextField(labelWithString: "Обработка завершилась ошибкой"))
+          renderFailedASRReports(run)
         } else {
           add(NSTextField(labelWithString: "Текущая обработка ещё не завершена"))
         }

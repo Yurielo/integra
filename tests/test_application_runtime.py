@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 from integra_core.application_runtime import execute_run, prepare_run, read_run
 from integra_core.capabilities import build_plan, detect_source
+from tests.asr_tools import media_environment
 
 
 class ApplicationRuntimeTests(unittest.TestCase):
@@ -20,11 +21,7 @@ class ApplicationRuntimeTests(unittest.TestCase):
     def tearDown(self): self.directory.cleanup()
 
     def media_environment(self):
-        ffmpeg=self.root/"ffmpeg"; ffmpeg.write_text("#!/bin/sh\nsrc=''\nprev=''\nfor arg in \"$@\"; do [ \"$prev\" = '-i' ] && src=$arg; prev=$arg; out=$arg; done\ncp \"$src\" \"$out\"\n")
-        whisper=self.root/"whisper"; whisper.write_text("#!/bin/sh\nout=''\nwhile [ $# -gt 0 ]; do [ \"$1\" = '-of' ] && { shift; out=$1; }; shift; done\nprintf '1\\n00:00:00,000 --> 00:00:01,000\\nReal result\\n' > \"$out.srt\"\n")
-        for item in (ffmpeg,whisper): item.chmod(item.stat().st_mode|stat.S_IXUSR)
-        model=self.root/"model"; model.write_bytes(b"model")
-        return {"INTEGRA_FFMPEG":str(ffmpeg),"INTEGRA_WHISPER_CLI":str(whisper),"INTEGRA_WHISPER_MODEL":str(model)}
+        return media_environment(self.root)
 
     def youtube_downloader(self):
         downloader=self.root/"yt-dlp"
@@ -262,6 +259,46 @@ class ApplicationRuntimeTests(unittest.TestCase):
         source_path=self.root/"notes.md"; source_path.write_text("text")
         plan=build_plan([detect_source(str(source_path))],["document_text"]); plan["selected_outputs"]=["knowledge"]
         with self.assertRaises(ValueError): prepare_run(self.project,plan)
+
+    def test_suspicious_asr_fails_run_and_never_invokes_semantic_stages(self):
+        from integra_core.seminartext_asr_runtime import ASRQualityError
+        source_path=self.root/"audio.wav"; source_path.write_bytes(b"audio")
+        with patch("tests.asr_tools.require_asr_runtime"):
+            overrides=self.media_environment()
+        report=self.project/"quality.txt"; report.write_text("Suspicious chunk requires audio review")
+        record=self.project/"asr.json"; record.write_text('{"suspicious_chunks":1}')
+        error=ASRQualityError("Suspicious ASR", {"review_txt":str(report), "record":str(record)})
+        with patch.dict(os.environ, overrides), \
+             patch("integra_core.user_media.asr.preflight",return_value={"state":"READY"}), \
+             patch("integra_core.capabilities.seminartext_preflight",return_value={"state":"READY"}), \
+             patch("integra_core.capabilities.word_timeline_preflight",return_value={"state":"READY"}), \
+             patch("integra_core.user_media.asr.transcribe",side_effect=error), \
+             patch("integra_core.user_media.generate_word_timeline") as alignment, \
+             patch("integra_core.user_media.generate_topics") as topics:
+            plan=build_plan([detect_source(str(source_path))],["topics"])
+            run=prepare_run(self.project,plan)
+            with self.assertRaises(ASRQualityError): execute_run(self.project,run["run_id"])
+        alignment.assert_not_called(); topics.assert_not_called()
+        persisted=read_run(self.project,run["run_id"])
+        self.assertEqual(persisted["state"],"FAILED")
+        outputs=persisted["source_results"][0]["outputs"]
+        self.assertEqual(outputs,{"transcript_quality_report":str(report),"transcript_asr_record":str(record)})
+        self.assertNotIn("transcript",outputs)
+
+    def test_cancelled_media_result_never_promotes_run_to_completed(self):
+        source=self.root/"audio.wav"; source.write_bytes(b"audio")
+        with patch("tests.asr_tools.require_asr_runtime"):
+            overrides=self.media_environment()
+        with patch.dict(os.environ,overrides), \
+             patch("integra_core.user_media.asr.preflight",return_value={"state":"READY"}), \
+             patch("integra_core.application_runtime.run_job",return_value={"state":"CANCELLED"}):
+            plan=build_plan([detect_source(str(source))],["transcript"])
+            run=prepare_run(self.project,plan)
+            result=execute_run(self.project,run["run_id"])
+        self.assertEqual(result["state"],"CANCELLED")
+        self.assertEqual(read_run(self.project,run["run_id"])["state"],"CANCELLED")
+        self.assertEqual(result["completed_sources"],0)
+        self.assertIsNone(result["current_stage"])
 
     def test_fails_closed_when_source_changes_after_plan_creation(self):
         source_path=self.root/"notes.md"; source_path.write_text("first")

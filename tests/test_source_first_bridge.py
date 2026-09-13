@@ -4,9 +4,11 @@ import zipfile
 from pathlib import Path
 import stat
 import subprocess
+import sys
 import tempfile
 import time
 import unittest
+from tests.asr_tools import media_environment, TRANSCRIPT, require_asr_runtime
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -121,26 +123,9 @@ class SourceFirstBridgeTests(unittest.TestCase):
     def test_source_first_media_returns_only_selected_real_artifacts(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory); source=root/"voice.wav"; source.write_bytes(b"audio")
-            ffmpeg=root/"ffmpeg"; ffmpeg.write_text("#!/usr/bin/env python3\n"
-                              "import sys, shutil\n"
-                              "args = sys.argv[1:]\n"
-                              "index = args.index('-i') + 1\n"
-                              "input_path = args[index]\n"
-                              "output_path = args[-1]\n"
-                              "shutil.copyfile(input_path, output_path)\n")
-            ffmpeg.chmod(ffmpeg.stat().st_mode | 0o111)
-            whisper=root/"whisper-cli"; whisper.write_text("#!/usr/bin/env python3\n"
-                              "import sys\n"
-                              "args = sys.argv[1:]\n"
-                              "index = args.index('-of') + 1\n"
-                              "output_path = args[index]\n"
-                              "with open(f'{output_path}.srt','w',encoding='utf-8') as stream:\n"
-                              "    stream.write('1\\n00:00:00,000 --> 00:00:01,250\\nHello Integra\\n')\n")
-            whisper.chmod(whisper.stat().st_mode | 0o111)
-            model=root/"model.bin"; model.write_bytes(b"model")
+            overrides=media_environment(root)
             environment={**os.environ,"INTEGRA_APP_DATA_ROOT":str(root/"data"),
-                         "INTEGRA_FFMPEG":str(ffmpeg),"INTEGRA_WHISPER_CLI":str(whisper),
-                         "INTEGRA_WHISPER_MODEL":str(model)}
+                         **overrides}
             bridge=ROOT/"macos/Resources/bridge.py"
             def call(operation,request):
                 result=subprocess.run(["python3",str(bridge),operation],input=json.dumps(request),capture_output=True,text=True,env=environment,timeout=5)
@@ -163,7 +148,7 @@ class SourceFirstBridgeTests(unittest.TestCase):
             navigation=call("media-navigation",{"project_id":project_id,"run_id":run_id,"source_id":sources[0]["source_id"]})
             self.assertEqual(Path(navigation["media_path"]).read_bytes(),source.read_bytes())
             self.assertEqual(navigation["segments"][0]["start_seconds"],0.0)
-            self.assertEqual(navigation["segments"][0]["text"],"Hello Integra")
+            self.assertEqual(navigation["segments"][0]["text"],TRANSCRIPT)
             clip=call("create-media-clip",{"project_id":project_id,"run_id":run_id,"source_id":sources[0]["source_id"],"start_seconds":0.0,"end_seconds":1.25})
             self.assertEqual(Path(clip["path"]).read_bytes(),source.read_bytes())
             self.assertEqual(clip["locator"],f"media:{sources[0]['source_id']}#t=0.000,1.250")
@@ -202,14 +187,16 @@ class SourceFirstBridgeTests(unittest.TestCase):
             self.assertNotIn("transcript",outputs)
 
     def test_cancel_run_stops_real_worker_group_and_persists_cancelled_state(self):
+        require_asr_runtime()
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory); source=root/"recording.wav"; source.write_bytes(b"real-input")
-            ffmpeg=root/"ffmpeg"; ffmpeg.write_text("#!/bin/sh\nsleep 30\n"); ffmpeg.chmod(0o755)
-            whisper=root/"whisper-cli"; whisper.write_text("#!/bin/sh\nexit 1\n"); whisper.chmod(0o755)
-            model=root/"model.bin"; model.write_bytes(b"model")
+            overrides=media_environment(root)
+            child_pid=root/"asr-child.pid"
+            child_code="import os, signal, time; from pathlib import Path; signal.signal(signal.SIGTERM, signal.SIG_IGN); Path("+repr(str(child_pid))+").write_text(str(os.getpid())); time.sleep(30)"
+            whisper=Path(overrides["INTEGRA_WHISPER_CLI"])
+            whisper.write_text(f"#!{sys.executable}\nimport subprocess, sys, time\nsubprocess.Popen([sys.executable, '-c', {child_code!r}])\ntime.sleep(30)\n")
             environment={**os.environ,"INTEGRA_APP_DATA_ROOT":str(root/"data"),
-                         "INTEGRA_FFMPEG":str(ffmpeg),"INTEGRA_WHISPER_CLI":str(whisper),
-                         "INTEGRA_WHISPER_MODEL":str(model)}
+                         **overrides}
             bridge=ROOT/"macos/Resources/bridge.py"
             def call(operation,request):
                 result=subprocess.run(["python3",str(bridge),operation],input=json.dumps(request),
@@ -231,6 +218,12 @@ class SourceFirstBridgeTests(unittest.TestCase):
                     if jobs and jobs[-1]["state"] == "RUNNING": break
                     time.sleep(.1)
                 self.assertTrue(jobs and jobs[-1]["state"] == "RUNNING",jobs)
+                # Reach the actual nested SeminarText -> Whisper child session,
+                # not merely the outer application's RUNNING checkpoint.
+                deadline=time.monotonic()+10
+                while not child_pid.is_file() and time.monotonic()<deadline: time.sleep(.05)
+                self.assertTrue(child_pid.is_file(),"Whisper descendant was not launched")
+                pid=int(child_pid.read_text())
                 cancelled=call("cancel-run",{"project_id":project_id,"run_id":run_id})
                 self.assertEqual(cancelled["state"],"CANCELLED")
                 self.assertIsNone(cancelled["current_stage"])
@@ -240,6 +233,12 @@ class SourceFirstBridgeTests(unittest.TestCase):
                     if status["state"] not in {"QUEUED","RUNNING"}: break
                     time.sleep(.03)
                 self.assertEqual(status["state"],"CANCELLED")
+                deadline=time.monotonic()+8
+                while time.monotonic()<deadline:
+                    process_state=subprocess.run(["ps","-p",str(pid),"-o","stat="],capture_output=True,text=True).stdout.strip()
+                    if not process_state or process_state.startswith("Z"): break
+                    time.sleep(.05)
+                self.assertTrue(not process_state or process_state.startswith("Z"),"Cancelled ASR left a live descendant")
             finally:
                 status=call("run-status",{"project_id":project_id,"run_id":run_id})
                 if status["state"] in {"QUEUED","RUNNING"}:
