@@ -16,7 +16,7 @@
     },
     {
       "path": "macos/IntegraApp.swift",
-      "sha256": "fcfdb39ae72841f6af4af41b591990bb1b956f17708da72e67fa2909bf8bba20"
+      "sha256": "4fa4c2c4573fc8e0eabb224ce6ae449257aef34301e22946bf6346cd754ed13e"
     },
     {
       "path": "macos/Info.plist",
@@ -24,7 +24,7 @@
     },
     {
       "path": "macos/Resources/bridge.py",
-      "sha256": "de266acf8c5797a976e2a43a73e06d110effc4158dbb8305948e59f932c4a656"
+      "sha256": "08064ca6418b03d345e9660529d2e4fcd02266e884155eb7cf9934bcfe2ebd62"
     },
     {
       "path": "macos/Resources/Integra.icns",
@@ -88,7 +88,7 @@
     },
     {
       "path": "scripts/build_macos_app.sh",
-      "sha256": "3b3caf254002941b14c9a20faa353071717e60e4f10ebfe10841f77862edd6c0"
+      "sha256": "7dbcc0b0bb3c9dcb804d37c7bbb411332ab363b1d2deaf4a57b19ff98bfe1013"
     },
     {
       "path": "scripts/generate_macos_app_icon.sh",

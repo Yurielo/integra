@@ -331,7 +331,7 @@ def _lexists(path: Path) -> bool:
 
 def _preflight(vault: Path, root: Path, version: Path, manifest: dict[str, Any], files: dict[str, bytes]) -> list[str]:
     _ensure_vault(vault)
-    validate_package(manifest, files)
+    validate_managed_package(manifest, files)
     cursor = vault
     for part in root.relative_to(vault).parts:
         cursor = cursor / part
@@ -378,7 +378,7 @@ def _preflight(vault: Path, root: Path, version: Path, manifest: dict[str, Any],
                     item["path"]: _managed_path(current_version, item["path"]).read_bytes()
                     for item in current_manifest["files"]
                 }
-                validate_package(current_manifest, current_files)
+                validate_managed_package(current_manifest, current_files)
                 _verify_version(current_version, current_manifest, current_files)
             except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError, PublishingError):
                 collisions.append(str(pointer.relative_to(vault)))
@@ -390,6 +390,15 @@ def _preflight(vault: Path, root: Path, version: Path, manifest: dict[str, Any],
         except PublishingError:
             collisions.append(str(version.relative_to(vault)))
     return sorted(set(collisions))
+
+
+def validate_managed_package(manifest: dict[str, Any], files: dict[str, bytes]) -> None:
+    """Dispatch exact versioned payload contracts without weakening legacy R10."""
+    if isinstance(manifest, dict) and manifest.get("artifact_type") == "integra.reviewed_result_package":
+        from .reviewed_result_package import validate_reviewed_result_package
+        validate_reviewed_result_package(manifest, files)
+    else:
+        validate_package(manifest, files)
 
 
 def validate_package(manifest: dict[str, Any], files: dict[str, bytes]) -> None:

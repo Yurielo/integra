@@ -1,0 +1,409 @@
+"""Explicit topic decisions through the pinned SeminarText review/knowledge tools.
+
+Preparation has no semantic authority. Each topic must receive an explicit
+accept/reject choice against the displayed immutable package before compilation.
+All component writes are confined to a private Integra-owned snapshot.
+"""
+from __future__ import annotations
+
+from contextlib import contextmanager
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+
+from .protocol import canonical_json, content_sha256
+from .seminartext_evidence_runtime import (
+    _inside, _now, _review_root, _runtime_root, _sha256, prepare_topic_review_input,
+)
+
+
+RUNTIME_FILES = {
+    "seminartext_modules/human_review_workflow.py": "7187819a19360fe023c9ddcc3a723ca638a1b1b74769c02c41829cd344da72dc",
+    "seminartext_modules/project_knowledge_bridge.py": "39bc3191cbfa07e32b9a2526ede428289fd020e93f9bd13539321ebb39165a5f",
+    "schemas/validate_canonical_knowledge_v1.py": "14869b0d77bed839758afb0455cffcfcba4173495554eddd9159a02309f1c095",
+    "schemas/canonical_knowledge_v1.schema.json": "33691770411b4e5fc4e923920619396f7281bcd655202f8f56ddba99b844111b",
+    "schemas/canonical_knowledge_lifecycle_v1.json": "c9133fe6ff630dd44475f40d37d731f407ce2f79d1d15613454a1d5c179099bc",
+    "schemas/topic_review_workflow_v1.schema.json": "c4ad9201ee217d5d311397cea6daef8d6e6bc75c88e9c7d3ec0d129190bacec1",
+    "schemas/topic_review_workflow_v2.schema.json": "7dede105b8339f46c100c8bed07ad93ace01811e8c26d3a27d204cd6692012b0",
+    "schemas/project_knowledge_input_v1.schema.json": "bd9a77e8f99f7a53de8daf9c4c697b049f4f28b10ee6b2e3e00fbd85584cb58b",
+}
+REVIEW_TOOL = "seminartext_modules/human_review_workflow.py"
+KNOWLEDGE_TOOL = "seminartext_modules/project_knowledge_bridge.py"
+
+
+def _environment():
+    env = dict(os.environ)
+    bundled = Path(__file__).resolve().parents[1] / "runtime/review-python/site-packages"
+    if bundled.is_dir():
+        env["PYTHONPATH"] = str(bundled) + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
+    return env
+
+
+def _python():
+    executable = os.environ.get("INTEGRA_REVIEW_PYTHON") or shutil.which("python3.14")
+    if not executable and sys.version_info[:2] == (3, 14):
+        executable = sys.executable
+    if not executable:
+        executable = next((path for path in ("/opt/homebrew/bin/python3.14", "/usr/local/bin/python3.14")
+                           if Path(path).is_file() and os.access(path, os.X_OK)), None)
+    if not executable:
+        raise ValueError("Topic review requires Python 3.14")
+    result = subprocess.run([executable, "-c", "import sys; print('%d.%d' % sys.version_info[:2])"],
+                            capture_output=True, text=True, timeout=10)
+    if result.returncode or result.stdout.strip() != "3.14":
+        raise ValueError("Topic review requires Python 3.14")
+    return executable
+
+
+def preflight():
+    runtime, origin = _runtime_root()
+    for relative, expected in RUNTIME_FILES.items():
+        path = _inside(runtime / relative, runtime, "SeminarText review runtime")
+        if _sha256(path) != expected:
+            raise ValueError(f"SeminarText review runtime differs from the pin: {relative}")
+    check = subprocess.run([_python(), "-c", "from jsonschema import Draft202012Validator"],
+                           env=_environment(), capture_output=True, text=True, timeout=15)
+    if check.returncode:
+        raise ValueError("Topic review requires the bundled jsonschema runtime")
+    return {"state": "READY", "runtime": str(runtime), "origin": origin}
+
+
+def _invoke(runtime, tool, *arguments):
+    result = subprocess.run([_python(), str(Path(runtime) / tool), *map(str, arguments)],
+                            env=_environment(), capture_output=True, text=True, timeout=120)
+    if result.returncode:
+        raise ValueError((result.stderr or result.stdout or "SeminarText review failed").strip()[:1000])
+    value = json.loads(result.stdout)
+    if not isinstance(value, dict):
+        raise ValueError("SeminarText returned an invalid result")
+    return value
+
+
+def _write(path, value):
+    path.write_bytes(canonical_json(value) + b"\n")
+
+
+@contextmanager
+def _locked(root, source_id):
+    directory = _review_root(root, source_id) / "topic-review"
+    current = root
+    for part in directory.relative_to(root).parts:
+        current = current / part
+        if current.is_symlink():
+            raise ValueError("topic review directory is unsafe")
+        current.mkdir(exist_ok=True)
+    descriptor = os.open(directory / "review.lock", os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(descriptor, "a") as stream:
+        try:
+            fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as error:
+            raise ValueError("topic review is already running for this source") from error
+        try:
+            yield directory
+        finally:
+            fcntl.flock(stream, fcntl.LOCK_UN)
+
+
+def _presentation(package_path):
+    package = json.loads(package_path.read_text(encoding="utf-8"))
+    binding = json.loads((package_path.parent.parent / "binding.json").read_text())
+    mode = _bound_mode(binding, package, package_path.parent.parent / "project/evidence/canonical_bundle.json")
+    return {"status": "REVIEW_REQUIRED", "automatic_acceptance": False,
+            "review_mode": mode,
+            "package_path": str(package_path), "package_sha256": _sha256(package_path),
+            "topics": [{"id": item["id"], "title": item["proposed_title"],
+                        "summary": item["proposed_summary"], "quote": item["quote"],
+                        "start_seconds": item["locator"]["start_seconds"],
+                        "end_seconds": item["locator"]["end_seconds"]} for item in package["topics"]]}
+
+
+def _review_mode(package, evidence):
+    """Select a real compatible component path without changing source ranges."""
+    words = {item["id"]: item for item in evidence["words"]}
+    for topic in package["topics"]:
+        first = words[topic["word_start_id"]]["sequence"]
+        last = words[topic["word_end_id"]]["sequence"]
+        segments = sorted((item for item in evidence["benchmark_segments"]
+            if item["transcript_revision_id"] == topic["transcript_revision_id"]
+            and words[item["word_start_id"]]["sequence"] >= first
+            and words[item["word_end_id"]]["sequence"] <= last), key=lambda item: item["sequence"])
+        if not segments or segments[0]["word_start_id"] != topic["word_start_id"] or segments[-1]["word_end_id"] != topic["word_end_id"]:
+            return "EXACT_FRAGMENTS_V2"
+    return "CANONICAL_KNOWLEDGE_V1"
+
+
+def _bound_mode(binding, package, snapshot_path):
+    """Recover pre-V2 metadata only when unchanged evidence proves the V1 path."""
+    if snapshot_path.is_symlink() or _sha256(snapshot_path) != binding["evidence_sha256"]:
+        raise ValueError("Evidence snapshot changed")
+    mode = _review_mode(package, json.loads(snapshot_path.read_text()))
+    recorded = binding.get("review_mode")
+    if "review_mode" not in binding and mode == "CANONICAL_KNOWLEDGE_V1":
+        return mode
+    if recorded != mode:
+        raise ValueError("persisted review mode differs from the Evidence contract")
+    return mode
+
+
+def prepare_topic_review(project_dir, *, source_id, canonical_evidence_path, topics_path):
+    runtime = preflight()["runtime"]
+    root = Path(project_dir).resolve(strict=True)
+    evidence = _inside(Path(canonical_evidence_path), root, "Canonical Evidence")
+    topics = _inside(Path(topics_path), root, "topic drafts")
+    with _locked(root, source_id) as directory:
+        binding = {"source_id": source_id, "evidence_path": str(evidence), "evidence_sha256": _sha256(evidence),
+                   "topics_path": str(topics), "topics_sha256": _sha256(topics)}
+        drafts = prepare_topic_review_input(root, source_id=source_id,
+                                           canonical_evidence_path=str(evidence), topics_path=str(topics))
+        with tempfile.TemporaryDirectory(prefix=".prepare-", dir=directory) as temporary:
+            stage = Path(temporary)
+            component = stage / "project"
+            (component / "evidence").mkdir(parents=True)
+            shutil.copyfile(evidence, component / "evidence/canonical_bundle.json")
+            if _sha256(component / "evidence/canonical_bundle.json") != binding["evidence_sha256"]:
+                raise ValueError("Canonical Evidence changed during preparation")
+            _invoke(runtime, REVIEW_TOOL, "prepare", component, "--drafts", drafts["topic_drafts_path"], "--output", stage / "review")
+            package_path = stage / "review/review_package.json"
+            snapshot = json.loads((component / "evidence/canonical_bundle.json").read_text())
+            binding["review_mode"] = _review_mode(json.loads(package_path.read_text()), snapshot)
+            if binding["review_mode"] == "EXACT_FRAGMENTS_V2":
+                timeline = _inside(evidence.parent / "word_timeline.json", root, "component Word Timeline")
+                timeline_bytes = timeline.read_bytes()
+                timeline_record = json.loads(timeline_bytes)
+                if timeline_record.get("words") != snapshot["words"]:
+                    raise ValueError("component Word Timeline differs from Canonical Evidence")
+                binding.update(timeline_path=str(timeline), timeline_sha256=hashlib.sha256(timeline_bytes).hexdigest())
+                (component / "evidence/word_timeline.json").write_bytes(timeline_bytes)
+            if _sha256(topics) != binding["topics_sha256"] or _sha256(evidence) != binding["evidence_sha256"]:
+                raise ValueError("review inputs changed during preparation")
+            digest = _sha256(package_path)
+            target = directory / digest
+            binding["package_sha256"] = digest
+            _write(stage / "binding.json", binding)
+            if target.exists():
+                prior = _inside(target / "review/review_package.json", root, "review package")
+                prior_binding = json.loads(_inside(target / "binding.json", root, "review binding").read_text())
+                prior_binding["review_mode"] = _bound_mode(prior_binding, json.loads(prior.read_text()),
+                    _inside(target / "project/evidence/canonical_bundle.json", root, "Evidence snapshot"))
+                if _sha256(prior) != digest or prior_binding != binding:
+                    raise ValueError("topic review package collision")
+            else:
+                os.rename(stage, target)
+                # TemporaryDirectory cleanup is harmless after atomic promotion.
+            return _presentation(target / "review/review_package.json")
+
+
+def _choices(package, reviewer_id, decisions):
+    if not isinstance(reviewer_id, str) or re.fullmatch(r"[a-z][a-z0-9._:-]{2,127}", reviewer_id) is None:
+        raise ValueError("reviewer identifier must be a stable lowercase identifier")
+    if not isinstance(decisions, list) or not decisions:
+        raise ValueError("explicit accept/reject decisions are required")
+    by_id = {item["id"]: item for item in package["topics"]}
+    choices = {}
+    for item in decisions:
+        if not isinstance(item, dict) or set(item) != {"topic_id", "action", "reason"}:
+            raise ValueError("each decision requires topic_id, action and reason")
+        topic_id = item["topic_id"]
+        if not isinstance(topic_id, str) or topic_id not in by_id or topic_id in choices:
+            raise ValueError("unknown or duplicate topic decision")
+        if item["action"] not in ("ACCEPT", "REJECT") or not isinstance(item["reason"], str) or not item["reason"].strip():
+            raise ValueError("an explicit ACCEPT/REJECT action and reason are required")
+        choices[topic_id] = dict(item)
+    if set(choices) != set(by_id):
+        raise ValueError("every topic requires an explicit decision")
+    return [choices[key] for key in sorted(choices)]
+
+
+def _apply_fragments_v2(root, package_dir, runtime, source_id, package_path, package,
+                        package_sha256, reviewer_id, choices):
+    """Apply explicit fragment inclusion/exclusion; this does not compile Canonical Knowledge."""
+    key = content_sha256({"package": package_sha256, "reviewer": reviewer_id, "choices": choices,
+                          "boundaries_acknowledged": True, "review_mode": "EXACT_FRAGMENTS_V2"})
+    decision_path = package_dir / "decisions.json"
+    previous = None
+    if decision_path.exists():
+        previous = json.loads(_inside(decision_path, root, "persisted fragment decisions").read_text())
+        if previous.get("artifact_id") != "review_decisions_" + key:
+            raise ValueError("this package already has different persisted decisions")
+    by_id = {topic["id"]: topic for topic in package["topics"]}
+    records = []
+    for number, choice in enumerate(choices):
+        topic = by_id[choice["topic_id"]]
+        token = hashlib.sha256(topic["id"].encode()).hexdigest()
+        fragment_id = "fragment_" + token
+        records.append({
+            "id": "decision_" + token,
+            "operations": ["ACCEPT" if choice["action"] == "ACCEPT" else "EXCLUDE"],
+            "target_ids": [topic["id"]],
+            "expected_topics": [{"topic_id": topic["id"], "topic_sha256": topic["topic_sha256"]}],
+            "source_fragments": [{"id": fragment_id, "source_topic_id": topic["id"],
+                "source_id": topic["source_id"], "transcript_revision_id": topic["transcript_revision_id"],
+                "word_start_id": topic["word_start_id"], "word_end_id": topic["word_end_id"],
+                "evidence_refs": topic["evidence_refs"]}],
+            "results": [{"id": "reviewed_fragment_" + token,
+                "disposition": "SEMANTIC_KNOWLEDGE" if choice["action"] == "ACCEPT" else "NON_SEMANTIC_EXCLUDED",
+                "title": topic["proposed_title"], "summary": topic["proposed_summary"],
+                "sequence": topic["sequence"], "fragment_refs": [fragment_id], "evidence_refs": topic["evidence_refs"]}],
+            "reason": choice["reason"],
+            "timestamp": previous["decisions"][number]["timestamp"] if previous else _now(),
+        })
+    ledger = {"schema_version": "2.0.0", "artifact_type": "seminartext.topic_review_decisions",
+              "artifact_id": "review_decisions_" + key, "review_package_id": package["artifact_id"],
+              "review_package_sha256": package_sha256,
+              "reviewer": {"actor_type": "human_domain_reviewer", "actor_id": reviewer_id},
+              "boundary_authority": "PRODUCT_OWNER_DOMAIN_REVIEW", "decisions": records,
+              "limitations": ["The reviewer explicitly confirmed inclusion/exclusion and the complete displayed word boundaries. No Canonical Knowledge compilation is performed."]}
+    if previous is not None and previous != ledger:
+        raise ValueError("persisted fragment decisions changed")
+    if previous is None:
+        temporary = package_dir / "decisions.tmp"
+        _write(temporary, ledger)
+        os.replace(temporary, decision_path)
+    result_dir = package_dir / "result"
+    if not result_dir.exists():
+        with tempfile.TemporaryDirectory(prefix=".apply-", dir=package_dir) as temporary:
+            stage = Path(temporary)
+            component = stage / "project"
+            shutil.copytree(package_dir / "project", component)
+            output = stage / "reviewed_topics.json"
+            applied = _invoke(runtime, REVIEW_TOOL, "apply-v2", component, "--package", package_path,
+                              "--decisions", decision_path, "--output", output)
+            if applied.get("status") != "PASS" or applied.get("output_sha256") != _sha256(output):
+                raise ValueError("SeminarText exact fragment review did not pass")
+            reviewed = json.loads(output.read_text())
+            if reviewed.get("artifact_type") != "seminartext.human_review_result" or reviewed.get("application_status") != "APPLIED":
+                raise ValueError("SeminarText exact fragment review returned an invalid contract")
+            lineage = {item["id"]: item for item in reviewed["fragment_lineage"]}
+            markdown = ["# Проверенные фрагменты", "", "Результат проверки точных фрагментов; Canonical Knowledge не создавался.", ""]
+            for disposition, label in (("semantic_knowledge", "Включён в знания"), ("non_semantic_excluded", "Исключён из знаний")):
+                for item in reviewed[disposition]:
+                    quote = " ".join(lineage[ref]["quote"] for ref in item["fragment_refs"])
+                    markdown.extend(["## " + item["title"], "", "Решение: " + label, "", item["summary"], "",
+                        f"Источник: {source_id}; {item['locator']['start_seconds']}–{item['locator']['end_seconds']} с.", "",
+                        "> " + quote.replace("\n", "\n> "), ""])
+            (stage / "reviewed_topics.md").write_text("\n".join(markdown), encoding="utf-8")
+            result = {"status": "REVIEWED_TOPICS_CREATED", "review_mode": "EXACT_FRAGMENTS_V2",
+                      "package_sha256": package_sha256, "decisions_sha256": _sha256(decision_path),
+                      "accepted": len(reviewed["semantic_knowledge"]), "rejected": len(reviewed["non_semantic_excluded"]),
+                      "automatic_acceptance": False, "reviewed_topics_sha256": _sha256(output),
+                      "reviewed_topics_markdown_sha256": _sha256(stage / "reviewed_topics.md")}
+            _write(stage / "result.json", result)
+            os.rename(stage, result_dir)
+    result = json.loads(_inside(result_dir / "result.json", root, "fragment review result").read_text())
+    if result["decisions_sha256"] != _sha256(decision_path) or result.get("status") != "REVIEWED_TOPICS_CREATED":
+        raise ValueError("persisted fragment review result changed")
+    for key, filename in (("reviewed_topics", "reviewed_topics.json"), ("reviewed_topics_markdown", "reviewed_topics.md")):
+        path = _inside(result_dir / filename, root, key)
+        if _sha256(path) != result[key + "_sha256"]:
+            raise ValueError("reviewed fragment artifact changed")
+        result[key + "_path"] = str(path)
+    return result | {"decisions_path": str(decision_path), "review_result_path": str(result_dir / "result.json")}
+
+
+def apply_topic_review(project_dir, *, source_id, expected_package_sha256, reviewer_id, decisions, boundaries_acknowledged=False):
+    runtime = preflight()["runtime"]
+    root = Path(project_dir).resolve(strict=True)
+    if not isinstance(expected_package_sha256, str) or re.fullmatch(r"[0-9a-f]{64}", expected_package_sha256) is None:
+        raise ValueError("the displayed review package hash is required")
+    with _locked(root, source_id) as directory:
+        package_dir = directory / expected_package_sha256
+        package_path = _inside(package_dir / "review/review_package.json", root, "review package")
+        if _sha256(package_path) != expected_package_sha256:
+            raise ValueError("review package changed")
+        binding = json.loads(_inside(package_dir / "binding.json", root, "review binding").read_text())
+        if binding["source_id"] != source_id or binding["package_sha256"] != expected_package_sha256:
+            raise ValueError("review package belongs to another source")
+        for name in ("evidence", "topics"):
+            current = _inside(Path(binding[name + "_path"]), root, name)
+            if _sha256(current) != binding[name + "_sha256"]:
+                raise ValueError(f"{name} changed after review preparation")
+        package = json.loads(package_path.read_text())
+        choices = _choices(package, reviewer_id, decisions)
+        snapshot_path = _inside(package_dir / "project/evidence/canonical_bundle.json", root, "Evidence snapshot")
+        if _sha256(snapshot_path) != binding["evidence_sha256"]:
+            raise ValueError("Evidence snapshot changed")
+        mode = _bound_mode(binding, package, snapshot_path)
+        if mode == "EXACT_FRAGMENTS_V2":
+            if boundaries_acknowledged is not True:
+                raise ValueError("explicit confirmation of the displayed exact boundaries is required")
+            for timeline in (Path(binding["timeline_path"]), package_dir / "project/evidence/word_timeline.json"):
+                if _sha256(_inside(timeline, root, "Word Timeline")) != binding["timeline_sha256"]:
+                    raise ValueError("Word Timeline changed after review preparation")
+            return _apply_fragments_v2(root, package_dir, runtime, source_id, package_path, package,
+                                       expected_package_sha256, reviewer_id, choices)
+        decision_key = content_sha256({"package": expected_package_sha256, "reviewer": reviewer_id, "choices": choices})
+        decision_path = package_dir / "decisions.json"
+        if decision_path.exists():
+            ledger = json.loads(_inside(decision_path, root, "persisted decisions").read_text())
+            persisted_choices = [{"topic_id": item["target_ids"][0], "action": item["action"], "reason": item["reason"]} for item in ledger["decisions"]]
+            if (ledger["artifact_id"] != "review_decisions_" + decision_key
+                    or ledger["reviewer"] != {"actor_type": "human_domain_reviewer", "actor_id": reviewer_id}
+                    or persisted_choices != choices):
+                raise ValueError("this package already has different persisted decisions")
+        else:
+            by_id = {item["id"]: item for item in package["topics"]}
+            ledger = {"schema_version": "1.0.0", "artifact_type": "seminartext.topic_review_decisions",
+                      "artifact_id": "review_decisions_" + decision_key, "review_package_id": package["artifact_id"],
+                      "review_package_sha256": expected_package_sha256,
+                      "reviewer": {"actor_type": "human_domain_reviewer", "actor_id": reviewer_id},
+                      "decisions": [{"id": "decision_" + hashlib.sha256(item["topic_id"].encode()).hexdigest(),
+                                     "action": item["action"], "target_ids": [item["topic_id"]],
+                                     "result_topics": [], "reason": item["reason"], "timestamp": _now(),
+                                     "expected_topics": [{"topic_id": item["topic_id"], "topic_sha256": by_id[item["topic_id"]]["topic_sha256"]}],
+                                     "new_title": None, "new_summary": None} for item in choices]}
+            temporary = package_dir / "decisions.tmp"
+            _write(temporary, ledger)
+            os.replace(temporary, decision_path)
+        result_dir = package_dir / "result"
+        if not result_dir.exists():
+            with tempfile.TemporaryDirectory(prefix=".apply-", dir=package_dir) as temporary:
+                stage = Path(temporary)
+                component = stage / "project"
+                shutil.copytree(package_dir / "project", component)
+                output = stage / "reviewed_topics.json"
+                applied = _invoke(runtime, REVIEW_TOOL, "apply", component, "--package", package_path,
+                                  "--decisions", decision_path, "--output", output)
+                if applied.get("status") != "PASS":
+                    raise ValueError("SeminarText topic review did not pass")
+                compiled = _invoke(runtime, KNOWLEDGE_TOOL, component, "--knowledge-input", output,
+                                   "--destination", stage / "derived-view")
+                if compiled.get("status") != "EXPORTED":
+                    raise ValueError("SeminarText knowledge compilation did not pass")
+                knowledge = json.loads((component / "knowledge/canonical_knowledge.json").read_text())
+                markdown = ["# Проверенные темы", ""]
+                package_topics = {topic["id"]: topic for topic in package["topics"]}
+                for topic in knowledge["topics"]:
+                    origin = package_topics[topic["id"]]
+                    markdown.extend(["## " + topic["title"], "", "Статус: " + topic["status"], "", topic["summary"], "",
+                                     f"Источник: {source_id}; {origin['locator']['start_seconds']}–{origin['locator']['end_seconds']} с.", "",
+                                     "> " + origin["quote"].replace("\n", "\n> "), ""])
+                (stage / "knowledge.md").write_text("\n".join(markdown), encoding="utf-8")
+                result = {"status": "KNOWLEDGE_CREATED", "package_sha256": expected_package_sha256,
+                          "decisions_sha256": _sha256(decision_path), "accepted": applied["ACCEPTED"],
+                          "rejected": applied["REJECTED"], "automatic_acceptance": False,
+                          "canonical_knowledge_sha256": _sha256(component / "knowledge/canonical_knowledge.json"),
+                          "knowledge_markdown_sha256": _sha256(stage / "knowledge.md"),
+                          "source_evidence_sha256": _sha256(component / "knowledge/source_evidence.json")}
+                _write(stage / "result.json", result)
+                os.rename(stage, result_dir)
+        result = json.loads(_inside(result_dir / "result.json", root, "review result").read_text())
+        if result["decisions_sha256"] != _sha256(decision_path):
+            raise ValueError("persisted decisions changed")
+        for key in ("canonical_knowledge", "source_evidence"):
+            path = _inside(result_dir / "project/knowledge" / (key + ".json"), root, key)
+            if _sha256(path) != result[key + "_sha256"]:
+                raise ValueError("reviewed knowledge artifact changed")
+            result[key + "_path"] = str(path)
+        markdown = _inside(result_dir / "knowledge.md", root, "knowledge Markdown")
+        if _sha256(markdown) != result["knowledge_markdown_sha256"]:
+            raise ValueError("knowledge Markdown changed")
+        result["knowledge_markdown_path"] = str(markdown)
+        return result | {"decisions_path": str(decision_path), "review_result_path": str(result_dir / "result.json")}

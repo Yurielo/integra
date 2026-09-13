@@ -5,7 +5,7 @@
   "dependencies": ["R10"],
   "implementation": [
     {"path": "docs/architecture/ONEDRIVE_PUBLICATION_V1.md", "sha256": "95930a072134e6a31d13c8e9d9b4230bb994f2a3943aa97495d7146aa240799b"},
-    {"path": "integra_core/onedrive.py", "sha256": "4682455b8314483098c63e31a851783ad9485111660595ad8fe1b2d23959251d"},
+    {"path": "integra_core/onedrive.py", "sha256": "dbadc4c1e6be2ff73a0bb1989d85e97f0678c540b8840513617766463971e040"},
     {"path": "schemas/onedrive_package_v1.schema.json", "sha256": "4ad0357a711868162171907dd70f3e82c5e5ee9a705cdbbedfe1b80b94e2be4e"},
     {"path": "schemas/onedrive_publication_receipt_v1.schema.json", "sha256": "3b3647b0a9f5901388a9a0d05f16818a3808d21fbc239ff9dd5bd5488d8bdd7a"},
     {"path": "schemas/onedrive_publication_evidence_v1.schema.json", "sha256": "a37d41395d873c34a509d33bdda9a20fd77ed2df6759a6ed354d7f2dff44f81b"},

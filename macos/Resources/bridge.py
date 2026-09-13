@@ -2,22 +2,25 @@
 """Closed local bridge between the AppKit shell and accepted Integra services."""
 from __future__ import annotations
 from datetime import datetime, timedelta, timezone
-import json, os, re, signal, subprocess, sys, uuid
+import fcntl, json, os, re, signal, subprocess, sys, tempfile, uuid
 from pathlib import Path
 
 RESOURCES = Path(__file__).resolve().parent
 sys.path.insert(0, str(RESOURCES))
 sys.path.insert(1, str(RESOURCES.parents[1]))
-from integra_core.onedrive import preview_onedrive_publication, publish_onedrive_package, validate_onedrive_package
+from integra_core.onedrive import build_onedrive_package, preview_onedrive_publication, publish_onedrive_package, validate_onedrive_package
 from integra_core.project_lease import LeaseStore
 from integra_core.protocol import canonical_json, content_sha256
-from integra_core.publishing import preview_obsidian_export, publish_obsidian_export, validate_package
+from integra_core.publishing import preview_obsidian_export, publish_obsidian_export, validate_managed_package
 from integra_core.user_media import _parse_srt, ffmpeg_preflight, import_source, preflight, run_job
 from integra_core.capabilities import build_plan, capability_registry, detect_source
 from integra_core.application_runtime import execute_run, prepare_run, read_run, run_path
 from integra_core.seminartext_runtime import preflight as seminartext_preflight
+from integra_core.seminartext_evidence_runtime import prepare_transcript_review, apply_human_transcript_review, prepare_topic_review_input
 
-OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "import-media", "media-preflight", "seminartext-preflight", "process-media-job", "project-view", "detect-sources", "capability-registry", "build-plan", "execute-plan", "process-plan", "run-status", "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "package-preview", "package-publish", "obsidian-preview", "onedrive-preview"}
+OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "import-media", "media-preflight", "seminartext-preflight", "process-media-job", "project-view", "detect-sources", "capability-registry", "build-plan", "execute-plan", "process-plan", "run-status", "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "prepare-transcript-review", "apply-transcript-review", "prepare-topic-review", "package-preview", "package-publish", "obsidian-preview", "onedrive-preview"}
+
+OPERATIONS.add("build-reviewed-package")
 
 def _safe_error(error):
     message = str(error).replace(str(Path.home()), "<HOME>")
@@ -168,6 +171,105 @@ def _media_navigation(root, request):
     if not segments: raise ValueError("timed subtitles contain no navigable speech")
     return {"source_id":source_id,"media_path":str(media),"subtitles_path":str(subtitles),"segments":segments}
 
+def _review_inputs(root, request):
+    project_id=request.get("project_id"); source_id=request.get("source_id")
+    if not isinstance(source_id,str) or not source_id: raise ValueError("source ID is required")
+    project_dir=_project_dir(root,_project(root,project_id)["project_id"])
+    run=read_run(project_dir,request.get("run_id"))
+    result=next((item for item in run.get("source_results",[]) if item.get("source_id")==source_id),None)
+    if not isinstance(result,dict) or result.get("state")!="COMPLETED": raise ValueError("completed source result is unavailable")
+    outputs=result.get("outputs")
+    if not isinstance(outputs,dict): raise ValueError("source outputs are unavailable")
+    job=next((item for item in _jobs(root,project_id) if item.get("job_id")==result.get("job_id")),None)
+    if not isinstance(job,dict) or job.get("source_id")!=source_id: raise ValueError("owned media job is unavailable")
+    for key in ("transcript","word_timeline"):
+        if not isinstance(outputs.get(key),str): raise ValueError("Transcript review requires the real TXT transcript and Word Timeline")
+    return {"project_dir":project_dir,"source_id":source_id,"media_path":job.get("owned_path"),"transcript_path":outputs["transcript"],"word_timeline_path":outputs["word_timeline"]}
+
+def _prepare_transcript_review(root, request):
+    values=_review_inputs(root,request)
+    return prepare_transcript_review(**values)
+
+def _record_review_outputs(project_dir, run_id, source_id, updates):
+    destination = run_path(project_dir, run_id)
+    descriptor = os.open(destination.with_suffix(".review.lock"), os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(descriptor, "a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        run = read_run(project_dir, run_id)
+        source = next((item for item in run.get("source_results", []) if item.get("source_id") == source_id), None)
+        if not isinstance(source, dict) or source.get("state") != "COMPLETED":
+            raise ValueError("completed source result is unavailable")
+        source.setdefault("outputs", {}).update(updates)
+        _atomic_json(destination, run)
+
+def _apply_transcript_review(root, request):
+    values=_review_inputs(root,request)
+    reviewer_id=request.get("reviewer_id")
+    acknowledged=request.get("acknowledged")
+    if not isinstance(reviewer_id,str) or not isinstance(acknowledged,bool): raise ValueError("reviewer confirmation is required")
+    result=apply_human_transcript_review(**values,reviewer_id=reviewer_id,acknowledged=acknowledged,expected_request_sha256=request.get("expected_request_sha256", ""))
+    project_id=request.get("project_id"); run_id=request.get("run_id")
+    run=read_run(values["project_dir"],run_id)
+    source_result=next((item for item in run.get("source_results",[]) if item.get("source_id")==values["source_id"]),None)
+    if not isinstance(source_result,dict): raise ValueError("completed source result is unavailable")
+    outputs=source_result.setdefault("outputs",{})
+    outputs["canonical_evidence"]=result["seminartext"]["canonical_evidence_path"]
+    outputs["transcript_review_result"]=result["review_result_path"]
+    _record_review_outputs(values["project_dir"],run_id,values["source_id"],
+        {key: outputs[key] for key in ("canonical_evidence", "transcript_review_result")})
+    return result
+
+def _prepare_topic_review(root, request):
+    values=_review_inputs(root,request); run_id=request.get("run_id")
+    run=read_run(values["project_dir"],run_id)
+    source_result=next((item for item in run.get("source_results",[]) if item.get("source_id")==values["source_id"]),None)
+    outputs=source_result.get("outputs") if isinstance(source_result,dict) else None
+    if not isinstance(outputs,dict) or not isinstance(outputs.get("canonical_evidence"),str) or not isinstance(outputs.get("topics"),str):
+        raise ValueError("Topic review requires human-confirmed Canonical Evidence and real SeminarText topic drafts")
+    result=prepare_topic_review_input(values["project_dir"],source_id=values["source_id"],canonical_evidence_path=outputs["canonical_evidence"],topics_path=outputs["topics"])
+    outputs["topic_review_drafts"]=result["topic_drafts_path"]
+    _record_review_outputs(values["project_dir"],run_id,values["source_id"],
+        {"topic_review_drafts": result["topic_drafts_path"]})
+    return result
+
+def _knowledge_review(root, request, apply=False):
+    from integra_core.seminartext_topic_review_runtime import prepare_topic_review, apply_topic_review
+    values = _review_inputs(root, request)
+    run = read_run(values["project_dir"], request.get("run_id"))
+    source = next(item for item in run["source_results"] if item.get("source_id") == values["source_id"])
+    outputs = source["outputs"]
+    if apply:
+        result = apply_topic_review(values["project_dir"], source_id=values["source_id"],
+            expected_package_sha256=request.get("expected_package_sha256"),
+            reviewer_id=request.get("reviewer_id"), decisions=request.get("decisions"),
+            boundaries_acknowledged=request.get("boundaries_acknowledged", False))
+        if result["status"] == "REVIEWED_TOPICS_CREATED":
+            outputs["reviewed_topics"] = result["reviewed_topics_path"]
+            outputs["reviewed_topics_markdown"] = result["reviewed_topics_markdown_path"]
+            keys = ("reviewed_topics", "reviewed_topics_markdown", "topic_review_decisions")
+        else:
+            outputs["canonical_knowledge"] = result["canonical_knowledge_path"]
+            outputs["knowledge_markdown"] = result["knowledge_markdown_path"]
+            keys = ("canonical_knowledge", "knowledge_markdown", "topic_review_decisions")
+        outputs["topic_review_decisions"] = result["decisions_path"]
+    else:
+        if not isinstance(outputs.get("canonical_evidence"), str) or not isinstance(outputs.get("topics"), str):
+            raise ValueError("reviewed Evidence and real topics are required")
+        result = prepare_topic_review(values["project_dir"], source_id=values["source_id"],
+            canonical_evidence_path=outputs["canonical_evidence"], topics_path=outputs["topics"])
+        from integra_core.seminartext_evidence_runtime import _inside, _sha256
+        media = _inside(Path(values["media_path"]), values["project_dir"], "review media")
+        evidence = json.loads(Path(outputs["canonical_evidence"]).read_text(encoding="utf-8"))
+        if _sha256(media) not in {item.get("content_sha256") for item in evidence.get("sources", [])}:
+            raise ValueError("source media changed since Evidence was confirmed")
+        result["media_path"] = str(media)
+        outputs["topic_review_package"] = result["package_path"]
+        keys = ("topic_review_package",)
+    _record_review_outputs(values["project_dir"], request.get("run_id"), values["source_id"], {key: outputs[key] for key in keys})
+    return result
+
+OPERATIONS.update({"prepare-knowledge-review", "apply-knowledge-review"})
+
 def _create_media_clip(root, request):
     """Render one owned local clip bounded by persisted SRT cue edges."""
     navigation = _media_navigation(root, request)
@@ -192,7 +294,8 @@ def _create_media_clip(root, request):
     if manifest.is_file() and not manifest.is_symlink(): current=json.loads(manifest.read_bytes())
     record={"path":str(clip),"start_seconds":start,"end_seconds":end,"locator":f"media:{source_id}#t={start:.3f},{end:.3f}"}
     current["clips"]=[item for item in current.get("clips",[]) if item.get("path")!=str(clip)]+[record]; _atomic_json(manifest,current)
-    outputs=result.setdefault("outputs",{}); outputs["clips_manifest"]=str(manifest); outputs[f"clip_{int(start*1000)}_{int(end*1000)}"]=str(clip); _atomic_json(run_path(project_dir,run_id),run)
+    _record_review_outputs(project_dir,run_id,source_id,
+        {"clips_manifest":str(manifest), f"clip_{int(start*1000)}_{int(end*1000)}":str(clip)})
     return record | {"manifest":str(manifest)}
 
 def _import_media(root, request):
@@ -239,6 +342,46 @@ def _job(root, request, action):
         item["updated_at"] = _instant(_now())
     _atomic_json(path, {"schema_version":"1.0", "jobs":jobs}); return item
 
+def _build_reviewed_package(root, request):
+    from integra_core.reviewed_result_package import build_reviewed_result_package
+    values = _review_inputs(root, request)
+    project = values["project_dir"]
+    run = read_run(project, request["run_id"])
+    outputs = next(item["outputs"] for item in run["source_results"] if item["source_id"] == values["source_id"])
+    decisions = outputs.get("topic_review_decisions")
+    if not isinstance(decisions, str):
+        raise ValueError("explicit persisted topic decisions are required before packaging")
+    manifest, files = build_reviewed_result_package(project_dir=project, source_id=values["source_id"],
+        decisions_path=decisions, project_id=request["project_id"],
+        project_slug=request["project_id"].removeprefix("urn:integra:project:"))
+    exports = project / "reviewed-exports"
+    if exports.is_symlink(): raise ValueError("export directory must not be a symlink")
+    exports.mkdir(exist_ok=True)
+    target = exports / manifest["version_sha256"]
+    descriptor = os.open(exports / ".package.lock", os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+    try:
+        fcntl.flock(descriptor, fcntl.LOCK_EX)
+        if target.exists() or target.is_symlink():
+            previous, previous_files = _package(str(target))
+            if previous != manifest or previous_files != files:
+                raise ValueError("existing reviewed export differs")
+        else:
+            with tempfile.TemporaryDirectory(prefix=".package-", dir=exports) as temporary:
+                stage = Path(temporary)
+                for name, payload in files.items():
+                    destination = stage / "files" / name
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    destination.write_bytes(payload)
+                (stage / "package.json").write_bytes(canonical_json(manifest) + b"\n")
+                _package(str(stage))
+                os.rename(stage, target)
+    finally:
+        os.close(descriptor)
+    _record_review_outputs(project, request["run_id"], values["source_id"], {"package_dir": str(target)})
+    return {"status": "PACKAGE_CREATED", "package_dir": str(target), "package_id": manifest["package_id"],
+            "result_kind": manifest["result_kind"], "published": False}
+
+
 def _package(path_value):
     path = Path(path_value)
     if path.is_symlink() or not path.is_dir(): raise ValueError("package directory is unsafe or missing")
@@ -249,7 +392,7 @@ def _package(path_value):
         relative = item.get("path"); candidate = files_root / relative
         if candidate.is_symlink() or not candidate.is_file() or not candidate.resolve().is_relative_to(files_root): raise ValueError("package file is unsafe or missing")
         files[relative] = candidate.read_bytes()
-    if manifest.get("artifact_type") == "integra.obsidian_package": validate_package(manifest, files)
+    if manifest.get("artifact_type") in {"integra.obsidian_package", "integra.reviewed_result_package"}: validate_managed_package(manifest, files)
     elif manifest.get("artifact_type") == "integra.onedrive_package": validate_onedrive_package(manifest, files)
     else: raise ValueError("unsupported package type")
     return manifest, files
@@ -261,10 +404,17 @@ def _lease(root, manifest, component):
 
 def _publication(root, request, publish):
     manifest, files = _package(request.get("package_dir", "")); target = Path(request.get("target_dir", ""))
+    destination = request.get("publication_target")
+    if destination not in {None, "obsidian", "onedrive"}:
+        raise ValueError("unsupported publication target")
+    if destination == "obsidian" and manifest["artifact_type"] == "integra.onedrive_package":
+        raise ValueError("select an Obsidian or reviewed-result source package")
+    if destination == "onedrive" and manifest["artifact_type"] != "integra.onedrive_package":
+        manifest, files = build_onedrive_package(manifest, files, created_at=manifest["created_at"])
     workspace_value = request.get("workspace_dir")
     workspace = Path(workspace_value) if workspace_value else root / "publication-workspace"
     if not workspace_value: workspace.mkdir(parents=True, exist_ok=True)
-    if manifest["artifact_type"] == "integra.obsidian_package":
+    if manifest["artifact_type"] in {"integra.obsidian_package", "integra.reviewed_result_package"}:
         receipt = preview_obsidian_export(target, manifest, files)
         if publish:
             lease, store = _lease(root, manifest, "integra.obsidian_exporter")
@@ -308,8 +458,14 @@ def main():
         elif operation == "available-packages": result = _available_packages(root)
         elif operation == "media-navigation": result = _media_navigation(root, request)
         elif operation == "create-media-clip": result = _create_media_clip(root, request)
+        elif operation == "prepare-transcript-review": result = _prepare_transcript_review(root, request)
+        elif operation == "apply-transcript-review": result = _apply_transcript_review(root, request)
+        elif operation == "prepare-topic-review": result = _prepare_topic_review(root, request)
+        elif operation == "prepare-knowledge-review": result = _knowledge_review(root, request)
+        elif operation == "apply-knowledge-review": result = _knowledge_review(root, request, True)
         elif operation == "cancel-run": result = _run_action(root, request, "cancel")
         elif operation == "retry-run": result = _run_action(root, request, "retry")
+        elif operation == "build-reviewed-package": result = _build_reviewed_package(root, request)
         elif operation == "package-preview": result = _publication(root, request, False)
         else: result = _publication(root, request, True)
         result_hash = content_sha256(result)
