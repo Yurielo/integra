@@ -60,6 +60,7 @@ echo "INTEGRA_MACOS_CLOSE_TEST: PASS"
 python3 "$repo_root/tests/native_workflow_probe.py" "$app" "$test_root/native-workflow"
 python3 "$repo_root/tests/native_shutdown_probe.py" "$app" "$test_root/native-shutdown"
 python3 "$repo_root/tests/native_asr_retry_probe.py" "$app" "$test_root/native-asr-retry"
+python3 "$repo_root/tests/native_operations_probe.py" "$app" "$test_root/native-operations"
 
 test -z "$(find "$app" -type l -print -quit)"
 test -f "$app/Contents/Resources/integra_core/publishing.py"

@@ -178,7 +178,7 @@ class MacOSApplicationTests(unittest.TestCase):
         self.assertIn("renderProject(project)", source)
         self.assertIn("renderSources()", source)
         self.assertIn("applicationShouldTerminateAfterLastWindowClosed", source)
-        self.assertIn('bridge.json("cancel-run"', source)
+        self.assertIn('service.json("cancel-run"', source)
         self.assertIn("СЛЕДУЮЩИЕ ДЕЙСТВИЯ", source)
         self.assertIn("AVPlayerView", source)
         self.assertIn("seekTranscriptCue", source)

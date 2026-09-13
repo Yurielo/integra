@@ -137,6 +137,14 @@ struct SidebarItem {
   private var reviewPlayer: AVPlayer?
   private var terminationPending = false
   private var retryPending = false
+  private var cancelPending = false
+  private var operationsVisible = false
+  private var navigationGeneration = 0
+  private var operationsRequestID: UUID?
+  private var operationsSnapshot: Data?
+  private var operationsError = ""
+  private var completedOperationsPolls = 0
+  private let operationsQueue = DispatchQueue(label: "Integra.operations-read", qos: .userInitiated)
   private let serviceQueue = DispatchQueue(label: "Integra.native-services", qos: .userInitiated)
   private let items: [SidebarItem] = [
     .init(title: "INTEGRA", id: "", header: true, enabled: false),
@@ -179,6 +187,7 @@ struct SidebarItem {
       projectID = project["project_id"] as? String
       runID = run["run_id"] as? String
     }
+    buildMenu()
     buildWindow()
     renderNew()
     window.makeKeyAndOrderFront(nil)
@@ -194,8 +203,12 @@ struct SidebarItem {
     } else if ProcessInfo.processInfo.environment["INTEGRA_CLOSE_PROBE"] != nil {
       DispatchQueue.main.async { self.window.performClose(nil) }
     } else if ProcessInfo.processInfo.environment["INTEGRA_QUIT_PROBE"] != nil {
-      DispatchQueue.main.async { NSApp.terminate(nil) }
+      DispatchQueue.main.async {
+        guard let event = NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [.command], timestamp: 0, windowNumber: self.window.windowNumber, context: nil, characters: "q", charactersIgnoringModifiers: "q", isARepeat: false, keyCode: 12) else { return }
+        _ = NSApp.mainMenu?.performKeyEquivalent(with: event)
+      }
     }
+    runOperationsProbeIfRequested()
   }
 
   func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
@@ -231,7 +244,8 @@ struct SidebarItem {
             self.window.makeKeyAndOrderFront(nil)
             self.status.textColor = .systemRed
             self.status.stringValue = "Не удалось безопасно остановить обработку: \(message). Приложение осталось открытым."
-            if self.runID != nil { self.startPolling() }
+            self.operationsError = self.status.stringValue
+            if self.operationsVisible { self.startPolling() }
             if let marker = ProcessInfo.processInfo.environment["INTEGRA_SHUTDOWN_FAILURE_PROBE"] {
               try? self.status.stringValue.write(toFile: marker, atomically: true, encoding: .utf8)
             }
@@ -251,6 +265,25 @@ struct SidebarItem {
     if let marker = ProcessInfo.processInfo.environment["INTEGRA_QUIT_PROBE"] {
       try? "TERMINATED_AFTER_CONFIRMED_SHUTDOWN\n".write(toFile: marker, atomically: true, encoding: .utf8)
     }
+  }
+
+  private func buildMenu() {
+    let menu = NSMenu()
+    let appItem = NSMenuItem()
+    let appMenu = NSMenu(title: "Integra")
+    let quit = NSMenuItem(title: "Завершить Integra", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+    quit.target = NSApp
+    appMenu.addItem(quit)
+    appItem.submenu = appMenu
+    menu.addItem(appItem)
+    let editItem = NSMenuItem()
+    let editMenu = NSMenu(title: "Правка")
+    for (title, action, key) in [("Вырезать", "cut:", "x"), ("Копировать", "copy:", "c"), ("Вставить", "paste:", "v"), ("Выделить всё", "selectAll:", "a")] {
+      editMenu.addItem(NSMenuItem(title: title, action: NSSelectorFromString(action), keyEquivalent: key))
+    }
+    editItem.submenu = editMenu
+    menu.addItem(editItem)
+    NSApp.mainMenu = menu
   }
 
   private func buildWindow() {
@@ -328,9 +361,15 @@ struct SidebarItem {
     }
   }
 
-  private func reset(_ title: String, _ subtitle: String) {
-    timer?.invalidate()
-    timer = nil
+  private func reset(_ title: String, _ subtitle: String, preservingOperations: Bool = false) {
+    if !preservingOperations {
+      navigationGeneration += 1
+      operationsVisible = false
+      operationsSnapshot = nil
+      operationsError = ""
+      timer?.invalidate()
+      timer = nil
+    }
     content.arrangedSubviews.forEach {
       content.removeArrangedSubview($0)
       $0.removeFromSuperview()
@@ -652,7 +691,7 @@ struct SidebarItem {
           ["COMPLETED", "FAILED", "CANCELLED"].contains(run["state"] as? String ?? "")
         {
           if retryProbe && run["state"] as? String == "FAILED" && retriedRun == nil {
-            self.renderOperations()
+            self.renderOperationsSnapshot(run)
             capture("before-retry.png")
             try? JSONSerialization.data(withJSONObject: run, options: [.prettyPrinted, .sortedKeys]).write(
               to: URL(fileURLWithPath: directory).appendingPathComponent("failed-run.json"))
@@ -664,7 +703,7 @@ struct SidebarItem {
           }
           if retriedRun == runID && Date() < deadline { return }
           probe.invalidate()
-          self.renderOperations()
+          self.renderOperationsSnapshot(run)
           capture("results.png")
           try? JSONSerialization.data(withJSONObject: run, options: [.prettyPrinted, .sortedKeys]).write(
             to: URL(fileURLWithPath: directory).appendingPathComponent("native-run.json"))
@@ -679,44 +718,147 @@ struct SidebarItem {
     }
   }
 
+  // Isolated native acceptance: real reads/actions, with a bounded read-queue
+  // gate to exercise a late response without modifying backend state.
+  private func runOperationsProbeIfRequested() {
+    guard let directory = ProcessInfo.processInfo.environment["INTEGRA_NATIVE_OPERATIONS_PROBE"],
+      ProcessInfo.processInfo.environment["INTEGRA_APP_DATA_ROOT"] == directory + "/app-data",
+      projectID != nil, runID != nil else { return }
+    renderOperations()
+    let deadline = Date().addingTimeInterval(60)
+    var phase = 0
+    var identities = [ObjectIdentifier]()
+    var previousPoll = 0
+    var stable = 0
+    var navigationPreserved = false
+    Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] probe in
+      Task { @MainActor in
+        guard let self else { probe.invalidate(); return }
+        if Date() > deadline {
+          probe.invalidate()
+          try? "Operations probe timed out".write(toFile: directory + "/failure.txt", atomically: true, encoding: .utf8)
+          NSApp.terminate(nil)
+          return
+        }
+        if phase == 0, self.completedOperationsPolls > previousPoll {
+          previousPoll = self.completedOperationsPolls
+          let current = self.content.arrangedSubviews.map(ObjectIdentifier.init)
+          if current == identities { stable += 1 } else { stable = 0 }
+          identities = current
+          if stable >= 2, self.operationsRequestID == nil {
+            let gate = DispatchSemaphore(value: 0)
+            self.operationsQueue.async { _ = gate.wait(timeout: .now() + 5) }
+            self.pollOperations()
+            self.renderNew()
+            identities = self.content.arrangedSubviews.map(ObjectIdentifier.init)
+            gate.signal()
+            phase = 1
+          }
+        } else if phase == 1, self.operationsRequestID == nil {
+          navigationPreserved = !self.operationsVisible && identities == self.content.arrangedSubviews.map(ObjectIdentifier.init)
+          self.renderOperations()
+          phase = 2
+        } else if phase == 2 {
+          if let cancel = self.content.arrangedSubviews.compactMap({ $0 as? NSButton }).first(where: { $0.action == #selector(self.cancelRun) && $0.isEnabled }) {
+            cancel.performClick(nil)
+            self.cancelRun() // duplicate dispatch must be guarded while pending
+            phase = 3
+          }
+        } else if phase == 3, !self.cancelPending, self.operationsRequestID == nil,
+          let snapshot = self.operationsSnapshot,
+          let run = try? JSONSerialization.jsonObject(with: snapshot) as? [String: Any],
+          run["state"] as? String == "CANCELLED" {
+          probe.invalidate()
+          if let view = self.window.contentView {
+            view.layoutSubtreeIfNeeded()
+            if let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds) {
+              view.cacheDisplay(in: view.bounds, to: bitmap)
+              try? bitmap.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: directory + "/operations.png"))
+            }
+          }
+          let evidence: [String: Any] = ["unchanged_view_checks": stable, "navigation_preserved": navigationPreserved, "cancelled": true, "terminal_state": "CANCELLED"]
+          try? JSONSerialization.data(withJSONObject: evidence, options: [.prettyPrinted, .sortedKeys]).write(to: URL(fileURLWithPath: directory + "/ops-probe.json"))
+          NSApp.terminate(nil)
+        }
+      }
+    }
+  }
+
   private func renderOperations() {
     reset(
       "Выполняется",
       "Здесь показано реальное состояние backend-задания. Чтобы остановить обработку, нажмите «Отменить». Закрытие окна/приложения также отменяет активную задачу."
     )
-    guard let projectID = projectID, let runID = runID else {
+    guard projectID != nil, runID != nil else {
       add(NSTextField(labelWithString: "Активной обработки нет"))
       return
     }
-    do {
-      let run =
-        try bridge.json("run-status", request: ["project_id": projectID, "run_id": runID])["result"]
-        as? [String: Any] ?? [:]
+    operationsVisible = true
+    pollOperations()
+    startPolling()
+  }
+  private func pollOperations() {
+    guard operationsVisible, !terminationPending, operationsRequestID == nil,
+      let p = projectID, let r = runID else { return }
+    let generation = navigationGeneration
+    let requestID = UUID()
+    operationsRequestID = requestID
+    let service = bridge!
+    operationsQueue.async {
+      do {
+        guard let run = try service.json("run-status", request: ["project_id": p, "run_id": r])["result"] as? [String: Any] else { throw BridgeError.invalidResponse }
+        guard let state = run["state"] as? String, ["QUEUED", "RUNNING", "COMPLETED", "FAILED", "CANCELLED"].contains(state) else { throw BridgeError.invalidResponse }
+        DispatchQueue.main.async {
+          guard self.operationsRequestID == requestID else { return }
+          self.operationsRequestID = nil
+          guard self.operationsVisible, !self.terminationPending, self.navigationGeneration == generation, self.projectID == p, self.runID == r else { return }
+          self.completedOperationsPolls += 1
+          let keys = ["state", "message", "completed_sources", "total_sources", "current_stage", "source_results", "error"]
+          var displayed = run.filter { keys.contains($0.key) }
+          displayed["cancel_pending"] = self.cancelPending
+          displayed["retry_pending"] = self.retryPending
+          let signature = try? JSONSerialization.data(withJSONObject: displayed, options: [.sortedKeys])
+          if signature == nil || signature != self.operationsSnapshot {
+            self.operationsSnapshot = signature
+            self.renderOperationsSnapshot(run)
+          }
+          self.status.stringValue = self.operationsError.isEmpty ? (run["error"] as? String ?? "") : self.operationsError
+        }
+      } catch {
+        DispatchQueue.main.async {
+          guard self.operationsRequestID == requestID else { return }
+          self.operationsRequestID = nil
+          guard self.operationsVisible, !self.terminationPending, self.navigationGeneration == generation, self.projectID == p, self.runID == r else { return }
+          self.status.stringValue = "Не удалось обновить состояние: \(error.localizedDescription)"
+        }
+      }
+    }
+  }
+  private func renderOperationsSnapshot(_ run: [String: Any]) {
+      reset("Обработка", "Состояние задания и сохранённые результаты", preservingOperations: true)
       let state = run["state"] as? String ?? "UNKNOWN"
-      let progress = run["progress"] as? Int
       let detail = run["message"] as? String ?? ""
       let done = run["completed_sources"] as? Int ?? 0
       let total = run["total_sources"] as? Int ?? 0
-      add(row("Состояние: \(state)", detail: "Готово источников: \(done) из \(total)"))
-      if let progress = progress { add(row("Прогресс", detail: "\(progress)%")) }
-      if !detail.isEmpty { add(row("Подробности", detail: detail)) }
-      if let stage = run["current_stage"] as? String { add(row("Текущий этап", detail: stageLabel(stage))) }
+      let names = ["QUEUED": "В очереди", "RUNNING": "Выполняется", "COMPLETED": "Готово", "FAILED": "Ошибка", "CANCELLED": "Отменено"]
+      add(row("Состояние: \(names[state] ?? state)", detail: "Готово источников: \(done) из \(total)"))
       if state == "RUNNING" || state == "QUEUED" {
-        let stopButton = button("Отменить", #selector(cancelRun))
-        stopButton.toolTip = "Немедленно остановить текущую обработку и сохранить текущий результат."
+        if !detail.isEmpty { add(row("Подробности", detail: detail)) }
+        if let stage = run["current_stage"] as? String { add(row("Текущий этап", detail: stageLabel(stage))) }
+        let stopButton = button(cancelPending ? "Останавливаю…" : "Отменить", #selector(cancelRun), enabled: !cancelPending)
+        stopButton.toolTip = "Запросить остановку и дождаться подтверждения. Уже сохранённые результаты останутся в проекте."
         add(stopButton)
       }
-      if state == "FAILED" || state == "CANCELLED" { add(button("Повторить", #selector(retryRun))) }
+      if state == "FAILED" || state == "CANCELLED" { add(button("Повторить", #selector(retryRun), enabled: !retryPending)) }
       if state == "COMPLETED" { renderResultRows(run) }
       if state == "FAILED" { renderFailedASRReports(run) }
       if let error = run["error"] as? String { status.stringValue = error }
-      if ["RUNNING", "QUEUED"].contains(state) { startPolling() }
-    } catch { status.stringValue = error.localizedDescription }
+      if ["COMPLETED", "FAILED", "CANCELLED"].contains(state) { timer?.invalidate(); timer = nil }
   }
   private func startPolling() {
     timer?.invalidate()
     timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-      Task { @MainActor in self?.renderOperations() }
+      Task { @MainActor in self?.pollOperations() }
     }
   }
   private func renderResultRows(_ run: [String: Any]) {
@@ -1147,29 +1289,56 @@ struct SidebarItem {
     }
   }
   @objc private func cancelRun() {
-    guard let p = projectID, let r = runID else { return }
-    do {
-      _ = try bridge.json("cancel-run", request: ["project_id": p, "run_id": r])
-      renderOperations()
-    } catch { status.stringValue = error.localizedDescription }
+    guard !cancelPending, !terminationPending, let p = projectID, let r = runID else { return }
+    cancelPending = true
+    for case let control as NSButton in content.arrangedSubviews where control.action == #selector(cancelRun) {
+      control.isEnabled = false
+      control.title = "Останавливаю…"
+    }
+    let generation = navigationGeneration
+    operationsError = "Останавливаю обработку…"
+    status.stringValue = operationsError
+    let service = bridge!
+    serviceQueue.async {
+      var failure = ""
+      do { _ = try service.json("cancel-run", request: ["project_id": p, "run_id": r]) }
+      catch { failure = error.localizedDescription }
+      let message = failure
+      DispatchQueue.main.async {
+        self.cancelPending = false
+        guard self.operationsVisible, !self.terminationPending, self.navigationGeneration == generation, self.projectID == p, self.runID == r else { return }
+        self.operationsError = message
+        self.operationsSnapshot = nil
+        self.status.stringValue = message
+        self.pollOperations()
+      }
+    }
   }
   @objc private func retryRun() {
     guard !terminationPending else { return }
     guard !retryPending else { return }
     guard let p = projectID, let r = runID else { return }
     retryPending = true
+    let generation = navigationGeneration
     let service = bridge!
-    status.stringValue = "Подготавливаю повтор; сохранённая расшифровка будет проверена перед использованием…"
+    operationsError = "Подготавливаю повтор; сохранённая расшифровка будет проверена перед использованием…"
+    status.stringValue = operationsError
     serviceQueue.async {
       do {
         let value = try service.json("retry-run", request: ["project_id": p, "run_id": r])["result"] as? [String: Any]
         DispatchQueue.main.async {
           self.retryPending = false
+          guard self.operationsVisible, !self.terminationPending, self.navigationGeneration == generation, self.projectID == p, self.runID == r else { return }
           self.runID = value?["run_id"] as? String
           self.renderOperations()
         }
       } catch {
-        DispatchQueue.main.async { self.retryPending = false; self.status.stringValue = error.localizedDescription }
+        DispatchQueue.main.async {
+          self.retryPending = false
+          guard self.operationsVisible, !self.terminationPending, self.navigationGeneration == generation, self.projectID == p, self.runID == r else { return }
+          self.operationsError = error.localizedDescription
+          self.status.stringValue = self.operationsError
+        }
       }
     }
   }
