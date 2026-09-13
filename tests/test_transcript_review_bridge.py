@@ -56,6 +56,13 @@ class TranscriptReviewBridgeTests(unittest.TestCase):
 
     @unittest.skipUnless((ROOT / ".runtime-components/seminartext-pinned/.git").exists() or os.environ.get("INTEGRA_TEST_BRIDGE"), "requires pinned or bundled SeminarText runtime")
     def test_bridge_requires_explicit_review_then_persists_canonical_evidence_output(self):
+        self._exercise_real_review(partial=False)
+
+    @unittest.skipUnless((ROOT / ".runtime-components/seminartext-pinned/.git").exists() or os.environ.get("INTEGRA_TEST_BRIDGE"), "requires pinned or bundled SeminarText runtime")
+    def test_bridge_preserves_arbitrary_review_as_fragments_not_canonical_knowledge(self):
+        self._exercise_real_review(partial=True)
+
+    def _exercise_real_review(self, partial):
         with tempfile.TemporaryDirectory() as directory:
             app_data = Path(directory) / "app-data"
             project_uuid = uuid.uuid4(); project_id = f"urn:integra:project:{project_uuid}"
@@ -103,16 +110,22 @@ class TranscriptReviewBridgeTests(unittest.TestCase):
             topic_file = artifact / "topics.json"
             topic_file.write_text(json.dumps({"component": "seminartext", "topics": [{
                 "title": "Проверочная тема", "summary": "Синтетическая проверка", "semantic_status": "REVIEW_REQUIRED",
-                "start_seconds": 0.1, "end_seconds": 0.75}]}), encoding="utf-8")
+                "start_seconds": 0.1, "end_seconds": 0.3 if partial else 0.75}]}), encoding="utf-8")
             outputs["topics"] = str(topic_file)
             (project / "runs" / f"{run_id.removeprefix('urn:integra:run:')}.json").write_text(json.dumps(persisted))
             environment["PYTHONPATH"] = str(ROOT / ".runtime-components/review-python")
             package = invoke("prepare-knowledge-review", request)
             self.assertEqual(package["status"], "REVIEW_REQUIRED")
+            self.assertEqual(package["media_path"], str(media.resolve()))
             knowledge = invoke("apply-knowledge-review", request | {"expected_package_sha256": package["package_sha256"],
+                "boundaries_acknowledged": partial,
                 "reviewer_id": "synthetic-test-reviewer", "decisions": [{"topic_id": item["id"], "action": "ACCEPT", "reason": "Explicit synthetic test decision"} for item in package["topics"]]})
-            self.assertEqual(knowledge["status"], "KNOWLEDGE_CREATED")
-            self.assertTrue(Path(knowledge["canonical_knowledge_path"]).is_file())
+            self.assertEqual(knowledge["status"], "REVIEWED_TOPICS_CREATED" if partial else "KNOWLEDGE_CREATED")
+            self.assertTrue(Path(knowledge["reviewed_topics_path" if partial else "canonical_knowledge_path"]).is_file())
+            if partial:
+                self.assertNotIn("canonical_knowledge_path", knowledge)
+                final_run = json.loads((project / "runs" / f"{run_id.removeprefix('urn:integra:run:')}.json").read_text())
+                self.assertNotIn("canonical_knowledge", final_run["source_results"][0]["outputs"])
 
 
 if __name__ == "__main__":

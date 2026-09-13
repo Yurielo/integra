@@ -13,6 +13,7 @@ FILES = {
     "schemas/canonical_knowledge_v1.schema.json": "33691770411b4e5fc4e923920619396f7281bcd655202f8f56ddba99b844111b",
     "schemas/canonical_knowledge_lifecycle_v1.json": "c9133fe6ff630dd44475f40d37d731f407ce2f79d1d15613454a1d5c179099bc",
     "schemas/topic_review_workflow_v1.schema.json": "c4ad9201ee217d5d311397cea6daef8d6e6bc75c88e9c7d3ec0d129190bacec1",
+    "schemas/topic_review_workflow_v2.schema.json": "7dede105b8339f46c100c8bed07ad93ace01811e8c26d3a27d204cd6692012b0",
     "schemas/project_knowledge_input_v1.schema.json": "bd9a77e8f99f7a53de8daf9c4c697b049f4f28b10ee6b2e3e00fbd85584cb58b",
     "schemas/canonical_evidence_v1.schema.json": "08bab4381ba435a059a1b58ea5dbedadd57112a18421ea7ef84a10ddb52d44b8",
 }

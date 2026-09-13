@@ -9,11 +9,17 @@
    bytes invalidate that confirmation and require another review.
 3. Choose **Подготовить темы к проверке**. Integra binds real drafts to exact
    words in the confirmed Evidence and asks the pinned component to validate
-   a review package. Incompatible boundaries are rejected before decisions.
+   a review package. Topics with arbitrary word boundaries use the pinned V2
+   exact-fragment workflow; whole-segment topics can use the canonical compiler.
 4. Read the topic title, summary and exact quotation. Choose **Принять** or
    **Отклонить** for every topic; no choice is preselected. Enter a lowercase
    reviewer identifier. Only the explicit save action persists decisions and
-   invokes SeminarText's knowledge compiler.
+   invokes SeminarText's knowledge compiler. In exact-fragment mode, explicitly
+   choose **Включить фрагмент в знания** or **Исключить фрагмент из знаний** and
+   confirm the displayed boundaries. This produces the actual V2 reviewed
+   fragment artifact, not Canonical Knowledge.
+   **Прослушать цитату** plays the exact displayed interval of the verified
+   source inside the review window and stops at its end.
 5. Open the resulting knowledge and decision artifacts from the source results.
 
 No original SeminarText project is modified. Integra uses an owned source copy
@@ -28,7 +34,8 @@ persisted decisions cannot be silently rewritten by another decision.
 | Owned media + TXT + Word Timeline | Human-confirmed Evidence | Integra adapter → pinned SeminarText Evidence Foundation | AppKit → `prepare-transcript-review` / `apply-transcript-review` → `promote-transcript`, `align`, `evidence-check` | Sequential real-component and bridge tests; stale-text and interruption tests | Explicit confirmation only |
 | Confirmed Evidence + real SeminarText drafts | Versioned review input | Integra contract adapter | AppKit/bridge → `prepare_topic_review_input` | Real Evidence → topic input test | Drafts remain REVIEW_REQUIRED |
 | Compatible complete-segment topics | Topic decisions and knowledge | Pinned SeminarText review workflow and knowledge bridge | AppKit → `prepare-knowledge-review` / `apply-knowledge-review` → pinned subprocesses | Real package → explicit decisions → Canonical Knowledge tests | Explicit accept/reject; no default acceptance |
-| Arbitrary topic boundaries | Knowledge compilation | Pinned SeminarText compiler | Rejected before decisions | Compiler requires complete BenchmarkSegments | В разработке |
+| Arbitrary topic boundaries | Exact-fragment review | Pinned SeminarText V2 workflow | AppKit → review bridge → `apply-v2` | Real partial-range fixture, explicit boundary acknowledgement, unchanged Evidence | Reviewed fragments in JSON and Markdown; not Canonical Knowledge |
+| Arbitrary topic boundaries | Canonical Knowledge compilation | Pinned SeminarText compiler | No compatible V2-to-canonical consumer in the pinned runtime | Compiler requires complete BenchmarkSegments | В разработке |
 | Accepted knowledge | Concept/relation editing, arbitrary boundary editing | Future integration | No production authoring path exposed | Not claimed | В разработке |
 
 ## Verified component limitation
@@ -38,8 +45,12 @@ complete BenchmarkSegments. Evidence Foundation produces these segments
 independently of generated topics. Therefore real generated topic boundaries
 can be incompatible even when their word/time references are valid.
 
-Integra must not silently widen a topic quotation or alter its canonical
-Evidence to satisfy this constraint. Such inputs fail before review decisions.
+Integra does not widen a topic quotation or alter its canonical Evidence to
+satisfy this constraint. Such inputs use `apply-v2`, which returns
+`seminartext.human_review_result` with exact fragments and explicit semantic
+inclusion/exclusion decisions. It is not relabelled as
+`seminartext.canonical_knowledge`. The pinned component contains no production
+consumer converting this V2 output to Canonical Knowledge.
 Issue #119 remains open until a compatible pinned contract or a separately
 specified explicit boundary-review workflow resolves this gap. The current
 work does not claim general Knowledge Studio completion or a new managed

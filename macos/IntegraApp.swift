@@ -133,6 +133,7 @@ struct SidebarItem {
     selected = Set<String>(), plan: [String: Any]?
   private var projectID: String?, runID: String?, timer: Timer?
   private var mediaPlayer: AVPlayer?, mediaWindow: NSWindow?
+  private var reviewPlayer: AVPlayer?
   private let items: [SidebarItem] = [
     .init(title: "INTEGRA", id: "", header: true, enabled: false),
     .init(title: "＋ Новая обработка", id: "new", header: false, enabled: true),
@@ -607,6 +608,8 @@ struct SidebarItem {
         case "knowledge_markdown": title = "Открыть проверенные темы и цитаты"
         case "topic_review_package": title = "Открыть пакет проверки тем"
         case "topic_review_decisions": title = "Открыть сохранённые решения"
+        case "reviewed_topics": title = "Открыть проверенные фрагменты (JSON)"
+        case "reviewed_topics_markdown": title = "Открыть проверенные фрагменты и цитаты"
         case "subtitles": title = "Открыть субтитры (SRT)"
         case "word_timeline": title = "Открыть Word Timeline (JSON)"
         case "translation": title = "Открыть перевод VideoText (JSON)"
@@ -664,7 +667,7 @@ struct SidebarItem {
         add(control)
         add(row("Canonical Evidence", detail: "Нужна ваша проверка полного TXT — автоматически не создаётся"))
       }
-      if outputs["canonical_knowledge"] == nil, outputs["canonical_evidence"] as? String != nil, outputs["topics"] as? String != nil,
+      if outputs["reviewed_topics"] == nil, outputs["canonical_knowledge"] == nil, outputs["canonical_evidence"] as? String != nil, outputs["topics"] as? String != nil,
         let projectID = projectID, let runID = runID, let sourceID = result["source_id"] as? String
       {
         let control = button("Подготовить темы к проверке", #selector(prepareTopicReview(_:)))
@@ -711,47 +714,76 @@ struct SidebarItem {
     guard let topics = package["topics"] as? [[String: Any]], !topics.isEmpty,
       let hash = package["package_sha256"] as? String else { status.stringValue = "Нет тем для проверки"; return }
     NSSound.beep()
+    let exactFragments = package["review_mode"] as? String == "EXACT_FRAGMENTS_V2"
     let alert = NSAlert()
-    alert.messageText = "Проверьте темы перед созданием знаний"
-    alert.informativeText = "Для каждой темы прочитайте цитату и выберите решение. Без вашего решения знания не создаются."
-    let stack = NSStackView()
+    alert.messageText = exactFragments ? "Проверьте фрагменты и их точные границы" : "Проверьте темы перед созданием знаний"
+    alert.informativeText = exactFragments ? "Выберите, какие фрагменты включить в знания, а какие исключить. Результат — проверенные фрагменты с цитатами; создание Canonical Knowledge для этих границ пока в разработке." : "Для каждой темы прочитайте цитату и выберите решение. Без вашего решения знания не создаются."
+    let stack = FlippedStackView()
     stack.orientation = .vertical; stack.alignment = .leading; stack.spacing = 12
+    if let mediaPath = package["media_path"] as? String {
+      let player = AVPlayer(url: URL(fileURLWithPath: mediaPath))
+      reviewPlayer = player
+      let video = AVPlayerView(frame: NSRect(x: 0, y: 0, width: 560, height: 220))
+      video.player = player
+      video.widthAnchor.constraint(equalToConstant: 560).isActive = true
+      video.heightAnchor.constraint(equalToConstant: 220).isActive = true
+      stack.addArrangedSubview(video)
+    }
+    defer { reviewPlayer?.pause(); reviewPlayer = nil }
     var choices: [(String, NSPopUpButton)] = []
     for topic in topics {
       guard let id = topic["id"] as? String else { return }
       let text = NSTextField(wrappingLabelWithString: "\(topic["title"] as? String ?? "Тема")\n\(topic["summary"] as? String ?? "")\nЦитата: \(topic["quote"] as? String ?? "")")
       text.widthAnchor.constraint(equalToConstant: 560).isActive = true
       stack.addArrangedSubview(text)
+      if let start = topic["start_seconds"] as? Double, let end = topic["end_seconds"] as? Double {
+        let interval = String(format: "%.3f–%.3f с", start, end)
+        let play = button("Прослушать цитату · \(interval)", #selector(playReviewQuote(_:)), enabled: reviewPlayer != nil)
+        play.toolTip = "\(start)\n\(end)"
+        stack.addArrangedSubview(play)
+      }
       let choice = NSPopUpButton()
-      choice.addItems(withTitles: ["Выберите решение", "Принять", "Отклонить"])
+      choice.addItems(withTitles: exactFragments ? ["Выберите решение", "Включить фрагмент в знания", "Исключить фрагмент из знаний"] : ["Выберите решение", "Принять", "Отклонить"])
       stack.addArrangedSubview(choice); choices.append((id, choice))
     }
     let reviewer = NSTextField(frame: NSRect(x: 0, y: 0, width: 560, height: 24))
     reviewer.placeholderString = "Идентификатор проверяющего"; stack.addArrangedSubview(reviewer)
+    let boundaries = NSButton(checkboxWithTitle: "Подтверждаю точные границы показанных цитат", target: nil, action: nil)
+    if exactFragments { stack.addArrangedSubview(boundaries) }
     let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 590, height: 420))
     scroll.hasVerticalScroller = true; scroll.documentView = stack
     stack.setFrameSize(NSSize(width: 570, height: stack.fittingSize.height))
     alert.accessoryView = scroll
-    alert.addButton(withTitle: "Сохранить решения и создать знания"); alert.addButton(withTitle: "Отмена")
+    alert.addButton(withTitle: exactFragments ? "Сохранить проверенные фрагменты" : "Сохранить решения и создать знания"); alert.addButton(withTitle: "Отмена")
     while true {
       guard alert.runModal() == .alertFirstButtonReturn else { return }
-      if choices.allSatisfy({ $0.1.indexOfSelectedItem > 0 }) && !reviewer.stringValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { break }
-      alert.informativeText = "Выберите решение для КАЖДОЙ темы и укажите идентификатор проверяющего."
+      if choices.allSatisfy({ $0.1.indexOfSelectedItem > 0 }) && !reviewer.stringValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && (!exactFragments || boundaries.state == .on) { break }
+      alert.informativeText = "Выберите решение для КАЖДОЙ темы, укажите идентификатор проверяющего и подтвердите границы цитат, если показан этот пункт."
     }
     let decisions = choices.map { ["topic_id": $0.0, "action": $0.1.indexOfSelectedItem == 1 ? "ACCEPT" : "REJECT", "reason": "Explicit decision in Integra macOS review"] }
     let reviewerID = reviewer.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-    status.stringValue = "Сохраняю решения и создаю знания…"
+    status.stringValue = "Сохраняю решения и формирую проверенный результат…"
     let bridge = self.bridge!
     DispatchQueue.global(qos: .userInitiated).async {
       do {
-        _ = try bridge.json("apply-knowledge-review", request: [
+        let response = try bridge.json("apply-knowledge-review", request: [
           "project_id": identifiers[0], "run_id": identifiers[1], "source_id": identifiers[2],
-          "expected_package_sha256": hash, "reviewer_id": reviewerID, "decisions": decisions])
-        DispatchQueue.main.async { self.renderOutputs(); self.status.stringValue = "Решения сохранены. Проверенные знания доступны в результатах." }
+          "expected_package_sha256": hash, "reviewer_id": reviewerID, "decisions": decisions, "boundaries_acknowledged": exactFragments])
+        let result = response["result"] as? [String: Any]
+        let fragments = result?["status"] as? String == "REVIEWED_TOPICS_CREATED"
+        DispatchQueue.main.async { self.renderOutputs(); self.status.stringValue = fragments ? "Проверенные фрагменты сохранены. Canonical Knowledge для этих границ — В разработке." : "Решения сохранены. Проверенные знания доступны в результатах." }
       } catch {
         DispatchQueue.main.async { self.status.textColor = .systemRed; self.status.stringValue = error.localizedDescription }
       }
     }
+  }
+  @objc private func playReviewQuote(_ sender: NSButton) {
+    let times = sender.toolTip?.split(separator: "\n").compactMap { Double($0) } ?? []
+    guard times.count == 2, let player = reviewPlayer else { return }
+    player.pause()
+    player.currentItem?.forwardPlaybackEndTime = CMTime(seconds: times[1], preferredTimescale: 600)
+    player.seek(to: CMTime(seconds: times[0], preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero)
+    player.play()
   }
   @objc private func showTranscriptReview(_ sender: NSButton) {
     let identifiers = sender.toolTip?.split(separator: "\n", maxSplits: 2).map(String.init) ?? []

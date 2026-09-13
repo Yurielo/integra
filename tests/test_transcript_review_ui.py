@@ -19,6 +19,11 @@ class TranscriptReviewUITests(unittest.TestCase):
         self.assertIn('bridge.json("apply-knowledge-review"', source)
         self.assertIn('"Выберите решение", "Принять", "Отклонить"', source)
         self.assertIn('"expected_request_sha256": requestHash', source)
+        self.assertIn("Подтверждаю точные границы показанных цитат", source)
+        self.assertIn("Включить фрагмент в знания", source)
+        self.assertIn("Исключить фрагмент из знаний", source)
+        self.assertIn("Прослушать цитату", source)
+        self.assertIn("forwardPlaybackEndTime", source)
         allowed = source.split("let allowed = [", 1)[1].split("]", 1)[0]
         for operation in ("prepare-transcript-review", "apply-transcript-review", "prepare-knowledge-review", "apply-knowledge-review"):
             self.assertIn('"' + operation + '"', allowed)

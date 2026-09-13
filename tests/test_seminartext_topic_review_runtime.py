@@ -47,9 +47,9 @@ class TopicReviewRuntimeTests(unittest.TestCase):
     def prepare(self):
         return prepare_topic_review(self.project, source_id=self.source_id, canonical_evidence_path=self.evidence, topics_path=str(self.topics))
 
-    def apply(self, package, decisions):
+    def apply(self, package, decisions, **kwargs):
         return apply_topic_review(self.project, source_id=self.source_id, expected_package_sha256=package["package_sha256"],
-                                  reviewer_id="synthetic-reviewer", decisions=decisions)
+                                  reviewer_id="synthetic-reviewer", decisions=decisions, **kwargs)
 
     def decisions(self, package):
         return [{"topic_id": item["id"], "action": "ACCEPT" if index == 0 else "REJECT", "reason": "Explicit synthetic test decision"}
@@ -96,12 +96,80 @@ class TopicReviewRuntimeTests(unittest.TestCase):
             self.apply(prepared, self.decisions(prepared))
         self.assertTrue(Path(result["canonical_knowledge_path"]).exists())
 
-    def test_incompatible_topic_bounds_fail_before_human_decision(self):
+    def prepare_fragments(self):
         topics = json.loads(self.topics.read_text())
         topics["topics"][0]["end_seconds"] = 10.8
         self.topics.write_text(json.dumps(topics))
-        with self.assertRaisesRegex(ValueError, "complete BenchmarkSegments"):
+        prepared = self.prepare()
+        self.assertEqual(prepared["review_mode"], "EXACT_FRAGMENTS_V2")
+        return prepared
+
+    def test_arbitrary_ranges_create_real_reviewed_fragments_without_widening(self):
+        canonical_bytes = Path(self.evidence).read_bytes()
+        prepared = self.prepare_fragments()
+        self.assertEqual(prepared["topics"][0]["quote"], " ".join(self.tokens[:11]))
+        with self.assertRaisesRegex(ValueError, "exact boundaries"):
+            self.apply(prepared, self.decisions(prepared))
+        self.assertFalse(list(self.project.rglob("decisions.json")))
+        result = self.apply(prepared, self.decisions(prepared), boundaries_acknowledged=True)
+        self.assertEqual(result["status"], "REVIEWED_TOPICS_CREATED")
+        self.assertNotIn("canonical_knowledge_path", result)
+        self.assertFalse(list(self.project.rglob("canonical_knowledge.json")))
+        self.assertEqual(Path(self.evidence).read_bytes(), canonical_bytes)
+        payload = json.loads(Path(result["reviewed_topics_path"]).read_text())
+        self.assertEqual(payload["artifact_type"], "seminartext.human_review_result")
+        self.assertEqual(len(payload["semantic_knowledge"]), 1)
+        self.assertEqual(len(payload["non_semantic_excluded"]), 1)
+        self.assertEqual(payload["semantic_knowledge"][0]["word_end_sequence"], 10)
+        self.assertIn(" ".join(self.tokens[:11]), Path(result["reviewed_topics_markdown_path"]).read_text())
+        self.assertEqual(self.apply(prepared, self.decisions(prepared), boundaries_acknowledged=True), result)
+
+    def test_arbitrary_ranges_all_excluded_and_failed_component_retry(self):
+        prepared = self.prepare_fragments()
+        decisions = self.decisions(prepared)
+        for decision in decisions:
+            decision["action"] = "REJECT"
+        with patch("integra_core.seminartext_topic_review_runtime._invoke", side_effect=ValueError("injected V2 failure")):
+            with self.assertRaisesRegex(ValueError, "injected V2 failure"):
+                self.apply(prepared, decisions, boundaries_acknowledged=True)
+        result = self.apply(prepared, decisions, boundaries_acknowledged=True)
+        self.assertEqual((result["accepted"], result["rejected"]), (0, 2))
+        payload = json.loads(Path(result["reviewed_topics_path"]).read_text())
+        self.assertEqual(payload["semantic_knowledge"], [])
+        self.assertFalse(list(self.project.rglob("canonical_knowledge.json")))
+
+    def test_arbitrary_ranges_reject_changed_word_timeline(self):
+        prepared = self.prepare_fragments()
+        timeline = Path(self.evidence).parent / "word_timeline.json"
+        timeline.write_bytes(timeline.read_bytes() + b"\n")
+        with self.assertRaisesRegex(ValueError, "Word Timeline changed"):
+            self.apply(prepared, self.decisions(prepared), boundaries_acknowledged=True)
+        self.assertFalse(list(self.project.rglob("decisions.json")))
+
+    def test_legacy_v1_binding_without_mode_reuses_package_and_applies(self):
+        prepared = self.prepare()
+        binding_path = Path(prepared["package_path"]).parent.parent / "binding.json"
+        binding = json.loads(binding_path.read_text())
+        del binding["review_mode"]
+        binding_path.write_text(json.dumps(binding))
+        self.assertEqual(self.prepare()["review_mode"], "CANONICAL_KNOWLEDGE_V1")
+        result = self.apply(prepared, self.decisions(prepared))
+        self.assertEqual(result["status"], "KNOWLEDGE_CREATED")
+        decision_bytes = Path(result["decisions_path"]).read_bytes()
+        self.assertEqual(self.prepare()["package_sha256"], prepared["package_sha256"])
+        self.assertEqual(self.apply(prepared, self.decisions(prepared)), result)
+        self.assertEqual(Path(result["decisions_path"]).read_bytes(), decision_bytes)
+
+    def test_v2_binding_missing_mode_never_defaults(self):
+        prepared = self.prepare_fragments()
+        binding_path = Path(prepared["package_path"]).parent.parent / "binding.json"
+        binding = json.loads(binding_path.read_text())
+        del binding["review_mode"]
+        binding_path.write_text(json.dumps(binding))
+        with self.assertRaisesRegex(ValueError, "persisted review mode"):
             self.prepare()
+        with self.assertRaisesRegex(ValueError, "persisted review mode"):
+            self.apply(prepared, self.decisions(prepared), boundaries_acknowledged=True)
         self.assertFalse(list(self.project.rglob("decisions.json")))
 
     def test_all_rejected_topics_remain_rejected(self):

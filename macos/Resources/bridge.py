@@ -239,17 +239,30 @@ def _knowledge_review(root, request, apply=False):
     if apply:
         result = apply_topic_review(values["project_dir"], source_id=values["source_id"],
             expected_package_sha256=request.get("expected_package_sha256"),
-            reviewer_id=request.get("reviewer_id"), decisions=request.get("decisions"))
-        outputs["canonical_knowledge"] = result["canonical_knowledge_path"]
-        outputs["knowledge_markdown"] = result["knowledge_markdown_path"]
+            reviewer_id=request.get("reviewer_id"), decisions=request.get("decisions"),
+            boundaries_acknowledged=request.get("boundaries_acknowledged", False))
+        if result["status"] == "REVIEWED_TOPICS_CREATED":
+            outputs["reviewed_topics"] = result["reviewed_topics_path"]
+            outputs["reviewed_topics_markdown"] = result["reviewed_topics_markdown_path"]
+            keys = ("reviewed_topics", "reviewed_topics_markdown", "topic_review_decisions")
+        else:
+            outputs["canonical_knowledge"] = result["canonical_knowledge_path"]
+            outputs["knowledge_markdown"] = result["knowledge_markdown_path"]
+            keys = ("canonical_knowledge", "knowledge_markdown", "topic_review_decisions")
         outputs["topic_review_decisions"] = result["decisions_path"]
     else:
         if not isinstance(outputs.get("canonical_evidence"), str) or not isinstance(outputs.get("topics"), str):
             raise ValueError("reviewed Evidence and real topics are required")
         result = prepare_topic_review(values["project_dir"], source_id=values["source_id"],
             canonical_evidence_path=outputs["canonical_evidence"], topics_path=outputs["topics"])
+        from integra_core.seminartext_evidence_runtime import _inside, _sha256
+        media = _inside(Path(values["media_path"]), values["project_dir"], "review media")
+        evidence = json.loads(Path(outputs["canonical_evidence"]).read_text(encoding="utf-8"))
+        if _sha256(media) not in {item.get("content_sha256") for item in evidence.get("sources", [])}:
+            raise ValueError("source media changed since Evidence was confirmed")
+        result["media_path"] = str(media)
         outputs["topic_review_package"] = result["package_path"]
-    keys = ("canonical_knowledge", "knowledge_markdown", "topic_review_decisions") if apply else ("topic_review_package",)
+        keys = ("topic_review_package",)
     _record_review_outputs(values["project_dir"], request.get("run_id"), values["source_id"], {key: outputs[key] for key in keys})
     return result
 
