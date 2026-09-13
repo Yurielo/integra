@@ -13,6 +13,7 @@ from .user_media import SUPPORTED as MEDIA_EXTENSIONS, ffmpeg_preflight, preflig
 from .seminartext_runtime import preflight as seminartext_preflight
 from .word_timeline_runtime import preflight as word_timeline_preflight
 from .videotext_runtime import preflight as videotext_preflight
+from .booktext_runtime import preflight as booktext_preflight
 
 VIDEO = {".m4v", ".mkv", ".mov", ".mp4", ".webm"}
 AUDIO = MEDIA_EXTENSIONS - VIDEO
@@ -81,7 +82,7 @@ def capability_registry(sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
     types={item["source_type"] for item in sources}; media=bool(types & {"LOCAL_VIDEO","LOCAL_AUDIO"})
     documents=bool(types & set(value[0] for value in FORMAT_BY_SUFFIX.values()))
     youtube=bool(types & {"YOUTUBE_VIDEO","YOUTUBE_PLAYLIST"})
-    runtime={}; media_ready=False; media_reason=""; enhancement_ready=False; enhancement_reason=""; topics_ready=False; topics_reason=""; timeline_ready=False; timeline_reason=""; translation_ready=False; translation_reason=""
+    runtime={}; media_ready=False; media_reason=""; enhancement_ready=False; enhancement_reason=""; topics_ready=False; topics_reason=""; timeline_ready=False; timeline_reason=""; translation_ready=False; translation_reason=""; ocr_ready=False; ocr_reason=""
     if media:
         try: runtime=preflight(hash_model=False); media_ready=True
         except ValueError as error: media_reason=str(error)
@@ -93,6 +94,9 @@ def capability_registry(sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
         except ValueError as error: timeline_reason=str(error)
         try: videotext_preflight(); translation_ready=True
         except ValueError as error: translation_reason=str(error)
+    if documents:
+        try: booktext_preflight(); ocr_ready=True
+        except ValueError as error: ocr_reason=str(error)
     native_docs=documents and all(item.get("properties",{}).get("ocr_status")!="REQUIRED" for item in sources if item["kind"]=="DOCUMENT")
     caps = [
         _capability("transcript","Расшифровка","Основная обработка",{"LOCAL_VIDEO","LOCAL_AUDIO"},"integra.local_media_adapter",True,["media_preparation"],available=media and media_ready,reason=media_reason),
@@ -109,10 +113,10 @@ def capability_registry(sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
         _capability("clips","Создать тематические клипы","Видео / медиа",{"LOCAL_VIDEO"},"videotext",False,["topics"]),
         _capability("enhance_audio","Улучшить звук","Видео / медиа",{"LOCAL_VIDEO","LOCAL_AUDIO"},"integra.local_media_adapter",True,["media_preparation"],available=media and enhancement_ready,reason=enhancement_reason),
         _capability("social_versions","Версии для соцсетей","Видео / медиа",{"LOCAL_VIDEO"},"videotext",False,["clips"]),
-        _capability("document_text","Извлечь текст","Основная обработка",{"PDF","DOCX","PPTX","TXT","MARKDOWN"},"integra.document_adapter",True,["document_analysis"],available=native_docs,reason="требуется OCR BookText" if documents and not native_docs else ""),
+        _capability("document_text","Извлечь текст","Основная обработка",{"PDF","DOCX","PPTX","TXT","MARKDOWN","IMAGE"},"integra.document_adapter",True,["document_analysis"],available=documents and (native_docs or ocr_ready),reason=ocr_reason if documents and not native_docs else ""),
         _capability("document_structure","Сохранить структуру страниц","Структура",{"PDF","DOCX","PPTX","TXT","MARKDOWN","IMAGE"},"integra.document_adapter",True,["document_analysis"],available=documents),
         _capability("discover_images","Определить встроенные изображения","Основная обработка",{"PDF","DOCX","PPTX"},"integra.document_adapter",True,["document_analysis"],available=documents),
-        _capability("ocr","OCR / извлечение текста","Основная обработка",{"PDF","IMAGE"},"booktext",False,["document_analysis"]),
+        _capability("ocr","OCR / извлечение текста","Основная обработка",{"PDF","IMAGE"},"booktext",True,["document_analysis"],available=documents and ocr_ready,reason=ocr_reason),
         _capability("extract_images","Извлечь изображения","Основная обработка",{"PDF","DOCX","PPTX"},"integra.document_adapter",True,["discover_images"],available=documents),
         _capability("document_outline","Главы, разделы и оглавление","Структура",{"PDF","DOCX","PPTX","TXT","MARKDOWN"},"booktext",False,["document_text"]),
         _capability("learning","Учебные материалы","Материалы",set(),"integra.learning",False,["knowledge"]),
@@ -147,6 +151,11 @@ def build_plan(sources: list[dict[str, Any]], selected: list[str]) -> dict[str, 
             if identifier not in [item["id"] for item in stages]: stages.append({"id":identifier,"title":title,"technical":True})
             return
         cap=registry[identifier]
+        if identifier == "document_text" and any(
+            source.get("kind") == "DOCUMENT" and source.get("properties", {}).get("ocr_status") == "REQUIRED"
+            for source in sources
+        ):
+            add("ocr")
         for dependency in cap["dependencies"]: add(dependency)
         if identifier not in [item["id"] for item in stages]: stages.append({"id":identifier,"title":cap["title"],"technical":False})
     for identifier in selected: add(identifier)

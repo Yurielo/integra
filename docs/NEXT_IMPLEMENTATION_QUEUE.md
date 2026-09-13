@@ -22,7 +22,7 @@ but cannot be presented as working UI capabilities.
 | 3 | COMPLETED | Multiple-result publication selection | PR #98, commit `692cac5`: macOS lists only revalidated packages from completed persisted runs and requires explicit selection before the existing preview-before-write and collision protections. |
 | 4 | COMPLETED | SeminarText Word Timeline | PR #109: existing SRT is aligned by the bundled personal-use WhisperX 3.8.6 runtime and the pinned Russian Wav2Vec2 model. The output preserves native word timing or explicitly marks a word unaligned; no timing is fabricated. |
 | 5 | BLOCKED | VideoText general media runtime | Requires a packaged, version-pinned VideoText adapter for arbitrary user media; certification workers alone are insufficient. |
-| 6 | BLOCKED | BookText OCR runtime | Requires a pinned BookText identity, versioned Integra adapter, local runtime binding, and OCR smoke evidence. |
+| 6 | COMPLETED | BookText OCR runtime | Issue #113: the pinned BookText source is packaged into Integra with its exact Apple Vision QA executable; the source-first path invokes real Surya OCR and retains actual TXT, Markdown, JSON, searchable-PDF, raw OCR and review artifacts. |
 | 7 | BLOCKED | Live YouTube ingest | Requires the deferred live discovery/download authority and runtime adapter. |
 | 8 | BLOCKED | Marketing, Learning, Assistant, and social adapters | Remain post-ready-app roadmap work and must retain `В разработке` until separately implemented end-to-end. |
 

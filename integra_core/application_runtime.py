@@ -11,6 +11,7 @@ from typing import Any
 
 from .capabilities import build_plan
 from .documents import extract_document, materialize_embedded_media
+from .booktext_runtime import run_ocr as run_booktext_ocr
 from .user_media import atomic_json, import_source, now, run_job
 
 
@@ -126,6 +127,40 @@ def _materialize_embedded_images(
     return str(directory), str(manifest_path)
 
 
+def _booktext_provider(result: dict[str, Any], source_format: str) -> dict[str, Any]:
+    """Translate persisted BookText page evidence into the v1 OCR contract."""
+    unit_kind = {"IMAGE": "IMAGE", "PDF": "PAGE"}.get(source_format)
+    if unit_kind is None:
+        raise ValueError("BookText OCR is only available for images and PDF")
+    blocks = result.get("blocks")
+    if not isinstance(blocks, list):
+        raise ValueError("BookText OCR result has no page evidence")
+    return {
+        "provider": {
+            "component_id": "booktext",
+            "implementation_sha256": result["entrypoint_sha256"],
+            "model_id": "datalab-to/surya-ocr-2",
+            "model_sha256": result["runtime"]["model_sha256"],
+        },
+        "blocks": [{
+            "unit_kind": unit_kind, "unit_index": item["unit_index"],
+            "region": {"x": 0.0, "y": 0.0, "width": 1.0, "height": 1.0},
+            "text": item["text"], "confidence": item["confidence"],
+        } for item in blocks],
+    }
+
+
+def _booktext_outputs(result: dict[str, Any], output_dir: Path) -> dict[str, str]:
+    values = {
+        "booktext_text": "book_clean.txt", "booktext_markdown": "book.md",
+        "booktext_record": "book.json", "booktext_manifest": "integra_booktext_manifest.json",
+        "booktext_review": "review.txt", "booktext_review_json": "review.json",
+        "booktext_searchable_pdf": "book_ocr.pdf", "booktext_pages": "pages",
+        "booktext_surya_raw": "surya", "booktext_vision_qa": "vision",
+    }
+    return {key: str(output_dir / value) for key, value in values.items() if (output_dir / value).exists()}
+
+
 def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
     path=run_path(project_dir,run_id); record=json.loads(path.read_bytes()); plan=record["plan"]
     jobs_path=project_dir/"jobs.json"
@@ -152,20 +187,32 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
             elif source["kind"]=="DOCUMENT":
                 record["current_stage"]="document_analysis"; atomic_json(path,record); owned=_copy_document(project_dir,source)
                 artifact_dir=project_dir/"artifacts"/uuid.uuid4().hex; artifact_dir.mkdir(parents=True)
-                document=extract_document(owned,captured_at=now())
+                preliminary = extract_document(owned, captured_at=now())
+                needs_ocr = "ocr" in outputs or ("document_text" in outputs and preliminary["ocr"]["status"] == "REQUIRED")
+                booktext_result = None
+                if needs_ocr:
+                    record["current_stage"] = "ocr"; record["message"] = "BookText OCR / Surya"; atomic_json(path, record)
+                    booktext_dir = artifact_dir / "booktext"
+                    booktext_result = run_booktext_ocr(owned, booktext_dir)
+                    document = extract_document(owned, captured_at=now(), ocr_provider=lambda _request: _booktext_provider(booktext_result, preliminary["source"]["format"]))
+                else:
+                    document = preliminary
                 if document["source"]["source_id"] != source["source_id"]:
                     raise ValueError("document source changed after plan creation")
                 atomic_json(artifact_dir/"document.json",document)
                 blocks=document["native_extraction"]["blocks"]+document["ocr"]["blocks"]
                 text_path=artifact_dir/"text.txt"; text_path.write_text("\n\n".join(item["text"] for item in blocks)+"\n",encoding="utf-8")
                 outputs_map={"document_record":str(artifact_dir/"document.json")}
+                if booktext_result is not None:
+                    outputs_map.update(_booktext_outputs(booktext_result, artifact_dir / "booktext"))
                 if "document_structure" in outputs: outputs_map["document_structure"] = _write_document_structure(document, artifact_dir)
                 if "discover_images" in outputs: outputs_map["discover_images"] = _write_discovered_images(document, artifact_dir)
                 if "extract_images" in outputs:
                     directory, manifest = _materialize_embedded_images(document, owned, artifact_dir)
                     outputs_map["embedded_images_directory"] = directory
                     outputs_map["embedded_images_manifest"] = manifest
-                if "document_text" in outputs: outputs_map["text"]=str(text_path)
+                if "document_text" in outputs:
+                    outputs_map["text"] = outputs_map.get("booktext_text", str(text_path))
                 record["source_results"].append({"source_id":source["source_id"],"display_name":source["display_name"],"state":"COMPLETED","outputs":outputs_map,"document_properties":{"content_mode":document["content_mode"],"ocr_status":document["ocr"]["status"],"embedded_media_count":len(document["embedded_media"])}})
             record["completed_sources"]+=1; atomic_json(path,record)
         record = refresh_record()
