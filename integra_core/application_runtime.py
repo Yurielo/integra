@@ -141,7 +141,7 @@ def _booktext_provider(result: dict[str, Any], source_format: str) -> dict[str, 
         "provider": {
             "component_id": "booktext",
             "implementation_sha256": result["entrypoint_sha256"],
-            "model_id": "datalab-to/surya-ocr-2",
+            "model_id": "surya-runtime-unattested; available-local-candidate-only" if result["runtime"].get("model_evidence") else "datalab-to/surya-ocr-2",
             "model_sha256": result["runtime"]["model_sha256"],
         },
         "blocks": [{
@@ -212,12 +212,13 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                 record["current_stage"]="document_analysis"; atomic_json(path,record); owned=_copy_document(project_dir,source)
                 artifact_dir=project_dir/"artifacts"/uuid.uuid4().hex; artifact_dir.mkdir(parents=True)
                 preliminary = extract_document(owned, captured_at=now())
-                needs_ocr = "ocr" in outputs or ("document_text" in outputs and preliminary["ocr"]["status"] == "REQUIRED")
+                selection = {key: source[field] for key, field in (("pages", "booktext_pages"), ("exclude_pages", "booktext_exclude_pages")) if source.get(field)}
+                needs_ocr = "ocr" in outputs or bool(selection) or ("document_text" in outputs and preliminary["ocr"]["status"] == "REQUIRED")
                 booktext_result = None
                 if needs_ocr:
                     record["current_stage"] = "ocr"; record["message"] = "BookText OCR / Surya"; atomic_json(path, record)
                     booktext_dir = artifact_dir / "booktext"
-                    booktext_result = run_booktext_ocr(owned, booktext_dir)
+                    booktext_result = run_booktext_ocr(owned, booktext_dir, **selection)
                     document = extract_document(owned, captured_at=now(), ocr_provider=lambda _request: _booktext_provider(booktext_result, preliminary["source"]["format"]))
                 else:
                     document = preliminary
@@ -229,6 +230,15 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                 outputs_map={"document_record":str(artifact_dir/"document.json")}
                 if booktext_result is not None:
                     outputs_map.update(_booktext_outputs(booktext_result, artifact_dir / "booktext"))
+                    # Keep original full-document extraction separate from selected
+                    # OCR evidence. Native PDFs may not invoke the OCR provider.
+                    selected_record = artifact_dir / "selected_ocr_pages.json"
+                    atomic_json(selected_record, {"schema_version": "1.0", "component": "booktext",
+                        "source_id": source["source_id"], "selection": selection,
+                        "scope": "SELECTED_OCR_PAGES_ORIGINAL_NUMBERING",
+                        "model_evidence": booktext_result.get("runtime", {}).get("model_evidence", "UNATTESTED"),
+                        "blocks": booktext_result["blocks"]})
+                    outputs_map["selected_ocr_pages"] = str(selected_record)
                 if "document_structure" in outputs: outputs_map["document_structure"] = _write_document_structure(document, artifact_dir)
                 if "discover_images" in outputs: outputs_map["discover_images"] = _write_discovered_images(document, artifact_dir)
                 if "extract_images" in outputs:
@@ -237,7 +247,7 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                     outputs_map["embedded_images_manifest"] = manifest
                 if "document_text" in outputs:
                     outputs_map["text"] = outputs_map.get("booktext_text", str(text_path))
-                record["source_results"].append({"source_id":source["source_id"],"display_name":source["display_name"],"state":"COMPLETED","outputs":outputs_map,"document_properties":{"content_mode":document["content_mode"],"ocr_status":document["ocr"]["status"],"embedded_media_count":len(document["embedded_media"])}})
+                record["source_results"].append({"source_id":source["source_id"],"display_name":source["display_name"],"state":"COMPLETED","outputs":outputs_map,"document_properties":{"content_mode":document["content_mode"],"ocr_status":document["ocr"]["status"],"embedded_media_count":len(document["embedded_media"]),"ocr_selection":selection,"document_record_scope":"FULL_SOURCE_EXTRACTION; SELECTED_OCR_IN_SEPARATE_ARTIFACT"}})
             if any(item.get("state") == "CANCELLED" for item in record["source_results"]):
                 record.update(state="CANCELLED", current_stage=None, cancelled_at=now())
                 atomic_json(path, record)

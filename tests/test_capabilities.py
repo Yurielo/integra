@@ -15,6 +15,9 @@ class CapabilityRegistryTests(unittest.TestCase):
         verified_asr = patch("integra_core.user_media.asr.preflight", return_value={"state":"READY"})
         verified_asr.start()
         self.addCleanup(verified_asr.stop)
+        verified_media = patch("integra_core.capabilities.media_component_preflight", return_value={"state":"READY"})
+        verified_media.start()
+        self.addCleanup(verified_media.stop)
         tool=root/"tool"; tool.write_text("#!/bin/sh\nexit 0\n"); tool.chmod(tool.stat().st_mode|stat.S_IXUSR)
         model=root/"model"; model.write_bytes(b"model")
         return {"INTEGRA_FFMPEG":str(tool),"INTEGRA_WHISPER_CLI":str(tool),"INTEGRA_WHISPER_MODEL":str(model)}
@@ -136,7 +139,7 @@ class CapabilityRegistryTests(unittest.TestCase):
                     if value is None: os.environ.pop(key,None)
                     else: os.environ[key]=value
         self.assertTrue(registry["burn_subtitles"]["runtime_available"])
-        self.assertEqual(registry["burn_subtitles"]["component"],"integra.local_media_adapter")
+        self.assertEqual(registry["burn_subtitles"]["component"],"videotext")
 
     def test_audio_enhancement_requires_only_the_owned_ffmpeg_runtime(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -11,6 +11,7 @@ from unittest.mock import patch
 from integra_core.application_runtime import execute_run, prepare_run, read_run
 from integra_core.capabilities import build_plan, detect_source
 from tests.asr_tools import media_environment
+from tests.test_videotext_media_runtime import real_media_fixture
 
 
 class ApplicationRuntimeTests(unittest.TestCase):
@@ -142,7 +143,7 @@ class ApplicationRuntimeTests(unittest.TestCase):
         self.assertNotIn("knowledge", outputs)
 
     def test_burns_generated_subtitles_into_local_video(self):
-        source_path=self.root/"video.mp4"; source_path.write_bytes(b"video")
+        source_path=self.root/"video.mp4"; real_media_fixture(source_path)
         overrides=self.media_environment(); old={key:os.environ.get(key) for key in overrides}
         try:
             os.environ.update(overrides); plan=build_plan([detect_source(str(source_path))],["burn_subtitles"])
@@ -153,7 +154,57 @@ class ApplicationRuntimeTests(unittest.TestCase):
                 else: os.environ[key]=value
         outputs=result["source_results"][0]["outputs"]
         self.assertTrue(Path(outputs["burned_video"]).is_file())
-        self.assertEqual(Path(outputs["burned_video"]).read_bytes(),b"video")
+        self.assertEqual(result["state"],"COMPLETED",result)
+        self.assertGreater(Path(outputs["burned_video"]).stat().st_size,100)
+        self.assertNotEqual(Path(outputs["burned_video"]).read_bytes(),source_path.read_bytes())
+
+    def test_real_video_analysis_and_speed_do_not_invoke_asr(self):
+        source=self.root/"video.mp4"; ffmpeg=real_media_fixture(source)
+        with patch.dict(os.environ,{"INTEGRA_FFMPEG":ffmpeg}), \
+             patch("integra_core.user_media.asr.transcribe",side_effect=AssertionError("ASR must not run")):
+            plan=build_plan([detect_source(str(source))],["audio_analysis","speed_video"])
+            run=prepare_run(self.project,plan); result=execute_run(self.project,run["run_id"])
+        self.assertEqual(result["state"],"COMPLETED",result)
+        outputs=result["source_results"][0]["outputs"]
+        self.assertTrue(Path(outputs["audio_analysis"]).is_file())
+        self.assertTrue(Path(outputs["speed_video"]).is_file())
+        self.assertNotIn("transcript",outputs)
+        self.assertIn("integratedLoudnessLUFS",json.loads(Path(outputs["audio_analysis"]).read_text()))
+
+    def test_mixed_topics_and_real_burn_both_execute(self):
+        source=self.root/"mixed.mp4"; real_media_fixture(source)
+        overrides=self.media_environment()
+        def timeline(_audio,_subtitles,output):
+            output.write_text(json.dumps({"capability":"word_timeline","words":[{"alignment_status":"ALIGNED"}]}))
+            return json.loads(output.read_text())
+        def topics(_subtitles,output):
+            output.write_text(json.dumps({"component":"seminartext","topics":[{"semantic_status":"REVIEW_REQUIRED"}]}))
+            return json.loads(output.read_text())
+        # ASR/topic fixtures isolate semantic model costs; VideoText really renders.
+        with patch.dict(os.environ,overrides), \
+             patch("integra_core.capabilities.seminartext_preflight",return_value={"state":"READY"}), \
+             patch("integra_core.capabilities.word_timeline_preflight",return_value={"state":"READY"}), \
+             patch("integra_core.user_media.generate_word_timeline",side_effect=timeline), \
+             patch("integra_core.user_media.generate_topics",side_effect=topics) as topic_call:
+            plan=build_plan([detect_source(str(source))],["topics","burn_subtitles"])
+            run=prepare_run(self.project,plan); result=execute_run(self.project,run["run_id"])
+        self.assertEqual(result["state"],"COMPLETED",result)
+        outputs=result["source_results"][0]["outputs"]
+        self.assertTrue(Path(outputs["burned_video"]).is_file())
+        self.assertEqual(json.loads(Path(outputs["topics"]).read_text())["topics"][0]["semantic_status"],"REVIEW_REQUIRED")
+        topic_call.assert_called_once()
+
+    def test_videotext_cancellation_stays_cancelled_without_outputs(self):
+        from integra_core.videotext_media_runtime import MediaCancelled
+        source=self.root/"cancel.mp4"; source.write_bytes(b"cancellation-boundary-fixture")
+        ffmpeg=self.root/"tool"; ffmpeg.write_text("#!/bin/sh\nexit 0\n"); ffmpeg.chmod(0o700)
+        with patch.dict(os.environ,{"INTEGRA_FFMPEG":str(ffmpeg)}), \
+             patch("integra_core.capabilities.media_component_preflight",return_value={"state":"READY"}), \
+             patch("integra_core.user_media.videotext_media.process",side_effect=MediaCancelled("cancelled")):
+            plan=build_plan([detect_source(str(source))],["speed_video"])
+            run=prepare_run(self.project,plan); result=execute_run(self.project,run["run_id"])
+        self.assertEqual(result["state"],"CANCELLED",result)
+        self.assertFalse(result["source_results"][0].get("outputs"))
 
     def test_enhances_audio_without_requiring_transcription_runtime(self):
         source_path=self.root/"audio.wav"; source_path.write_bytes(b"audio")

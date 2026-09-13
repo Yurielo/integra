@@ -13,8 +13,9 @@ from .user_media import SUPPORTED as MEDIA_EXTENSIONS, ffmpeg_preflight, preflig
 from .seminartext_runtime import preflight as seminartext_preflight
 from .word_timeline_runtime import preflight as word_timeline_preflight
 from .videotext_runtime import preflight as videotext_preflight
-from .booktext_runtime import preflight as booktext_preflight
+from .booktext_runtime import preflight as booktext_preflight, validate_page_selection
 from .youtube_runtime import preflight as youtube_preflight
+from .videotext_media_runtime import preflight as media_component_preflight
 
 VIDEO = {".m4v", ".mkv", ".mov", ".mp4", ".webm"}
 AUDIO = MEDIA_EXTENSIONS - VIDEO
@@ -85,6 +86,11 @@ def capability_registry(sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
     documents=bool(types & set(value[0] for value in FORMAT_BY_SUFFIX.values()))
     youtube=bool(types & {"YOUTUBE_VIDEO","YOUTUBE_PLAYLIST"})
     runtime={}; media_ready=False; media_reason=""; enhancement_ready=False; enhancement_reason=""; topics_ready=False; topics_reason=""; timeline_ready=False; timeline_reason=""; translation_ready=False; translation_reason=""; ocr_ready=False; ocr_reason=""; youtube_ready=False; youtube_reason=""
+    component_ready = False
+    component_reason = ""
+    if media:
+        try: media_component_preflight(); component_ready = True
+        except (ValueError, OSError) as error: component_reason = str(error)
     if media or youtube_video:
         try: runtime=preflight(hash_model=False); media_ready=True
         except ValueError as error: media_reason=str(error)
@@ -114,7 +120,9 @@ def capability_registry(sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
         _capability("knowledge","База знаний","Смысловая обработка",{"LOCAL_VIDEO","LOCAL_AUDIO","PDF","DOCX","PPTX","TXT","MARKDOWN","IMAGE"},"seminartext",False,["evidence"]),
         _capability("summary","Краткое содержание","Смысловая обработка",{"LOCAL_VIDEO","LOCAL_AUDIO","PDF","DOCX","PPTX","TXT","MARKDOWN","IMAGE"},"seminartext",False,["evidence"]),
         _capability("detailed_notes","Подробный конспект","Смысловая обработка",{"LOCAL_VIDEO","LOCAL_AUDIO","PDF","DOCX","PPTX","TXT","MARKDOWN","IMAGE"},"seminartext",False,["evidence"]),
-        _capability("burn_subtitles","Встроить субтитры","Видео / медиа",{"LOCAL_VIDEO"},"integra.local_media_adapter",True,["subtitles"],available=media and media_ready,reason=media_reason),
+        _capability("burn_subtitles","Встроить субтитры","Видео / медиа",{"LOCAL_VIDEO"},"videotext",True,["subtitles"],available=media and media_ready and component_ready,reason=media_reason or component_reason),
+        _capability("audio_analysis","Анализ громкости, шума и пауз","Видео / медиа",{"LOCAL_VIDEO","LOCAL_AUDIO"},"videotext",True,["media_preparation"],available=media and component_ready,reason=component_reason),
+        _capability("speed_video","Видео со скоростью 1,25×","Видео / медиа",{"LOCAL_VIDEO"},"videotext",True,["media_preparation"],available=media and component_ready,reason=component_reason),
         _capability("clips","Создать тематические клипы","Видео / медиа",{"LOCAL_VIDEO"},"videotext",False,["topics"]),
         _capability("enhance_audio","Улучшить звук","Видео / медиа",{"LOCAL_VIDEO","LOCAL_AUDIO"},"integra.local_media_adapter",True,["media_preparation"],available=media and enhancement_ready,reason=enhancement_reason),
         _capability("social_versions","Версии для соцсетей","Видео / медиа",{"LOCAL_VIDEO"},"videotext",False,["clips"]),
@@ -143,6 +151,11 @@ def capability_registry(sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 def build_plan(sources: list[dict[str, Any]], selected: list[str]) -> dict[str, Any]:
     if not sources: raise ValueError("add at least one source")
+    for source in sources:
+        if source.get("booktext_pages") or source.get("booktext_exclude_pages"):
+            validate_page_selection(source.get("booktext_pages"), source.get("booktext_exclude_pages"))
+            if source.get("source_type") != "PDF": raise ValueError("page selection requires a PDF")
+            if not set(selected) & {"ocr", "document_text"}: raise ValueError("page selection requires OCR/text output")
     registry={item["id"]:item for item in capability_registry(sources)}
     if not selected: raise ValueError("select at least one available output")
     for identifier in selected:
@@ -158,10 +171,12 @@ def build_plan(sources: list[dict[str, Any]], selected: list[str]) -> dict[str, 
             return
         cap=registry[identifier]
         if identifier == "document_text" and any(
-            source.get("kind") == "DOCUMENT" and source.get("properties", {}).get("ocr_status") == "REQUIRED"
+            source.get("kind") == "DOCUMENT" and (source.get("properties", {}).get("ocr_status") == "REQUIRED" or source.get("booktext_pages") or source.get("booktext_exclude_pages"))
             for source in sources
         ):
             add("ocr")
+        if cap["implementation_state"] != "IMPLEMENTED" or not cap["runtime_available"]:
+            raise ValueError(f"required dependency is unavailable: {identifier}")
         for dependency in cap["dependencies"]: add(dependency)
         if identifier not in [item["id"] for item in stages]: stages.append({"id":identifier,"title":cap["title"],"technical":False})
     for identifier in selected: add(identifier)
@@ -170,5 +185,7 @@ def build_plan(sources: list[dict[str, Any]], selected: list[str]) -> dict[str, 
         applicable=[identifier for identifier in selected if source["source_type"] in registry[identifier]["source_types"] or not registry[identifier]["source_types"]]
         source_plans.append({"source_id":source["source_id"],"display_name":source["display_name"],"source_type":source["source_type"],"outputs":applicable})
     identity={"sources":[item["source_id"] for item in sources],"selected_outputs":selected,"stages":[item["id"] for item in stages]}
+    selections = [{key: item[key] for key in ("booktext_pages", "booktext_exclude_pages") if item.get(key)} for item in sources]
+    if any(selections): identity["booktext_selection"] = selections
     return {"schema_version":"1.0","plan_id":f"urn:integra:plan:{content_sha256(identity)}","sources":sources,
             "selected_outputs":selected,"stages":stages,"source_plans":source_plans,"state":"READY_TO_EXECUTE"}

@@ -205,7 +205,23 @@ def _prepare_transcript_review(root, request):
     values=_review_inputs(root,request)
     return prepare_transcript_review(**values)
 
-def _record_review_outputs(project_dir, run_id, source_id, updates):
+def _create_machine_evidence(root, request):
+    from integra_core.seminartext_evidence_runtime import create_machine_evidence
+    values = _review_inputs(root, request)
+    result = create_machine_evidence(**values)
+    _record_review_outputs(values["project_dir"], request.get("run_id"), values["source_id"], {
+        "canonical_evidence": result["seminartext"]["canonical_evidence_path"],
+        "machine_evidence_record": result["evidence_result_path"],
+    }, preserve_existing_evidence=True)
+    return result
+
+OPERATIONS.add("create-machine-evidence")
+
+_EVIDENCE_DEPENDENTS = ("topic_review_drafts", "topic_review_package", "topic_review_decisions",
+                        "reviewed_topics", "canonical_knowledge", "package_dir")
+
+def _record_review_outputs(project_dir, run_id, source_id, updates, *, preserve_existing_evidence=False,
+                           expected_outputs=None):
     destination = run_path(project_dir, run_id)
     descriptor = os.open(destination.with_suffix(".review.lock"), os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
     with os.fdopen(descriptor, "a") as lock:
@@ -214,7 +230,16 @@ def _record_review_outputs(project_dir, run_id, source_id, updates):
         source = next((item for item in run.get("source_results", []) if item.get("source_id") == source_id), None)
         if not isinstance(source, dict) or source.get("state") != "COMPLETED":
             raise ValueError("completed source result is unavailable")
-        source.setdefault("outputs", {}).update(updates)
+        outputs = source.setdefault("outputs", {})
+        if expected_outputs is not None and any(outputs.get(key) != value for key, value in expected_outputs.items()):
+            raise ValueError("Review inputs changed during processing; refresh the source results")
+        if preserve_existing_evidence and outputs.get("canonical_evidence") not in (None, updates.get("canonical_evidence")):
+            raise ValueError("Existing Evidence cannot be replaced by machine Evidence")
+        if ("canonical_evidence" in updates and outputs.get("canonical_evidence") is not None
+                and outputs["canonical_evidence"] != updates["canonical_evidence"]
+                and any(outputs.get(key) for key in _EVIDENCE_DEPENDENTS)):
+            raise ValueError("Evidence has dependent review results; create a new run instead of replacing it")
+        outputs.update(updates)
         _atomic_json(destination, run)
 
 def _apply_transcript_review(root, request):
@@ -222,16 +247,19 @@ def _apply_transcript_review(root, request):
     reviewer_id=request.get("reviewer_id")
     acknowledged=request.get("acknowledged")
     if not isinstance(reviewer_id,str) or not isinstance(acknowledged,bool): raise ValueError("reviewer confirmation is required")
-    result=apply_human_transcript_review(**values,reviewer_id=reviewer_id,acknowledged=acknowledged,expected_request_sha256=request.get("expected_request_sha256", ""))
     project_id=request.get("project_id"); run_id=request.get("run_id")
     run=read_run(values["project_dir"],run_id)
     source_result=next((item for item in run.get("source_results",[]) if item.get("source_id")==values["source_id"]),None)
     if not isinstance(source_result,dict): raise ValueError("completed source result is unavailable")
     outputs=source_result.setdefault("outputs",{})
+    if any(outputs.get(key) for key in _EVIDENCE_DEPENDENTS):
+        raise ValueError("Evidence has dependent review results; create a new run instead of replacing it")
+    expected = {"canonical_evidence": outputs.get("canonical_evidence")}
+    result=apply_human_transcript_review(**values,reviewer_id=reviewer_id,acknowledged=acknowledged,expected_request_sha256=request.get("expected_request_sha256", ""))
     outputs["canonical_evidence"]=result["seminartext"]["canonical_evidence_path"]
     outputs["transcript_review_result"]=result["review_result_path"]
     _record_review_outputs(values["project_dir"],run_id,values["source_id"],
-        {key: outputs[key] for key in ("canonical_evidence", "transcript_review_result")})
+        {key: outputs[key] for key in ("canonical_evidence", "transcript_review_result")}, expected_outputs=expected)
     return result
 
 def _prepare_topic_review(root, request):
@@ -240,11 +268,12 @@ def _prepare_topic_review(root, request):
     source_result=next((item for item in run.get("source_results",[]) if item.get("source_id")==values["source_id"]),None)
     outputs=source_result.get("outputs") if isinstance(source_result,dict) else None
     if not isinstance(outputs,dict) or not isinstance(outputs.get("canonical_evidence"),str) or not isinstance(outputs.get("topics"),str):
-        raise ValueError("Topic review requires human-confirmed Canonical Evidence and real SeminarText topic drafts")
+        raise ValueError("Topic review requires Canonical Evidence and real SeminarText topic drafts")
+    expected = {key: outputs.get(key) for key in ("canonical_evidence", "topics")}
     result=prepare_topic_review_input(values["project_dir"],source_id=values["source_id"],canonical_evidence_path=outputs["canonical_evidence"],topics_path=outputs["topics"])
     outputs["topic_review_drafts"]=result["topic_drafts_path"]
     _record_review_outputs(values["project_dir"],run_id,values["source_id"],
-        {"topic_review_drafts": result["topic_drafts_path"]})
+        {"topic_review_drafts": result["topic_drafts_path"]}, expected_outputs=expected)
     return result
 
 def _knowledge_review(root, request, apply=False):
@@ -253,6 +282,7 @@ def _knowledge_review(root, request, apply=False):
     run = read_run(values["project_dir"], request.get("run_id"))
     source = next(item for item in run["source_results"] if item.get("source_id") == values["source_id"])
     outputs = source["outputs"]
+    expected = {key: outputs.get(key) for key in ("canonical_evidence", "topics", "topic_review_package")}
     if apply:
         result = apply_topic_review(values["project_dir"], source_id=values["source_id"],
             expected_package_sha256=request.get("expected_package_sha256"),
@@ -280,7 +310,7 @@ def _knowledge_review(root, request, apply=False):
         result["media_path"] = str(media)
         outputs["topic_review_package"] = result["package_path"]
         keys = ("topic_review_package",)
-    _record_review_outputs(values["project_dir"], request.get("run_id"), values["source_id"], {key: outputs[key] for key in keys})
+    _record_review_outputs(values["project_dir"], request.get("run_id"), values["source_id"], {key: outputs[key] for key in keys}, expected_outputs=expected)
     return result
 
 OPERATIONS.update({"prepare-knowledge-review", "apply-knowledge-review"})
@@ -301,13 +331,13 @@ def _create_media_clip(root, request):
     if not isinstance(result,dict) or result.get("state")!="COMPLETED": raise ValueError("completed source result is unavailable")
     directory=project_dir/"artifacts"/"clips"/str(uuid.UUID(run_id.removeprefix("urn:integra:run:")))
     directory.mkdir(parents=True,exist_ok=True)
-    clip=directory/f"clip_{int(start*1000):010d}_{int(end*1000):010d}.mp4"
-    ffmpeg=ffmpeg_preflight()["ffmpeg"]
-    completed=subprocess.run([ffmpeg,"-nostdin","-y","-ss",f"{start:.3f}","-to",f"{end:.3f}","-i",navigation["media_path"],"-map","0:v?","-map","0:a?","-c:v","libx264","-c:a","aac",str(clip)],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
-    if completed.returncode != 0 or clip.is_symlink() or not clip.is_file() or clip.stat().st_size == 0: raise ValueError("clip rendering produced no media output")
+    clip=directory/f"clip_{int(start*1000):010d}_{int(end*1000):010d}_{uuid.uuid4().hex[:8]}.mp4"
+    from integra_core.local_audio_clip import cut_media_compatible
+    evidence = cut_media_compatible(Path(navigation["media_path"]), clip, start, end)
+    _atomic_json(clip.with_suffix(".provenance.json"), evidence)
     manifest=directory/"clips.json"; current={"schema_version":"1.0","source_id":source_id,"source_path":navigation["media_path"],"subtitles_path":navigation["subtitles_path"],"clips":[]}
     if manifest.is_file() and not manifest.is_symlink(): current=json.loads(manifest.read_bytes())
-    record={"path":str(clip),"start_seconds":start,"end_seconds":end,"locator":f"media:{source_id}#t={start:.3f},{end:.3f}"}
+    record={"path":str(clip),"start_seconds":start,"end_seconds":end,"locator":f"media:{source_id}#t={start:.3f},{end:.3f}","provenance_path":str(clip.with_suffix(".provenance.json"))}
     current["clips"]=[item for item in current.get("clips",[]) if item.get("path")!=str(clip)]+[record]; _atomic_json(manifest,current)
     _record_review_outputs(project_dir,run_id,source_id,
         {"clips_manifest":str(manifest), f"clip_{int(start*1000)}_{int(end*1000)}":str(clip)})
@@ -363,6 +393,7 @@ def _build_reviewed_package(root, request):
     project = values["project_dir"]
     run = read_run(project, request["run_id"])
     outputs = next(item["outputs"] for item in run["source_results"] if item["source_id"] == values["source_id"])
+    expected = {key: outputs.get(key) for key in ("canonical_evidence", "topic_review_decisions")}
     decisions = outputs.get("topic_review_decisions")
     if not isinstance(decisions, str):
         raise ValueError("explicit persisted topic decisions are required before packaging")
@@ -392,7 +423,7 @@ def _build_reviewed_package(root, request):
                 os.rename(stage, target)
     finally:
         os.close(descriptor)
-    _record_review_outputs(project, request["run_id"], values["source_id"], {"package_dir": str(target)})
+    _record_review_outputs(project, request["run_id"], values["source_id"], {"package_dir": str(target)}, expected_outputs=expected)
     return {"status": "PACKAGE_CREATED", "package_dir": str(target), "package_id": manifest["package_id"],
             "result_kind": manifest["result_kind"], "published": False}
 
@@ -474,6 +505,7 @@ def main():
         elif operation == "media-navigation": result = _media_navigation(root, request)
         elif operation == "create-media-clip": result = _create_media_clip(root, request)
         elif operation == "prepare-transcript-review": result = _prepare_transcript_review(root, request)
+        elif operation == "create-machine-evidence": result = _create_machine_evidence(root, request)
         elif operation == "apply-transcript-review": result = _apply_transcript_review(root, request)
         elif operation == "prepare-topic-review": result = _prepare_topic_review(root, request)
         elif operation == "prepare-knowledge-review": result = _knowledge_review(root, request)
