@@ -453,7 +453,7 @@ struct SidebarItem {
     let alert = NSAlert()
     alert.messageText = "YouTube"
     alert.informativeText =
-      "Введите одну или несколько ссылок, каждую с новой строки. Одиночное видео будет загружено в проект и обработано выбранными результатами. Плейлисты пока помечены «В разработке»."
+      "Введите одну или несколько ссылок, каждую с новой строки. Одиночное видео или плейлист будут загружены в проект после выбора доступного результата. Плейлист сначала получает фактический состав, затем скачивает элементы последовательно с checkpoint после каждого элемента."
     let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 420, height: 72))
     field.placeholderString = "https://youtube.com/watch?v=…"
     alert.accessoryView = field
@@ -601,6 +601,12 @@ struct SidebarItem {
         case "translation": title = "Открыть перевод VideoText (JSON)"
         case "downloaded_media": title = "Открыть загруженное видео/аудио YouTube"
         case "youtube_source_record": title = "Открыть сведения о загрузке YouTube (JSON)"
+        case "playlist_snapshot": title = "Открыть фактический состав плейлиста YouTube (JSON)"
+        case "playlist_discovery": title = "Открыть provenance плейлиста YouTube (JSON)"
+        case "playlist_plan": title = "Открыть план обработки плейлиста (JSON)"
+        case "playlist_checkpoint": title = "Открыть checkpoint плейлиста (JSON)"
+        case "playlist_downloads": title = "Открыть записи скачанных элементов (JSON)"
+        case "playlist_artifacts_directory": title = "Открыть загруженные элементы плейлиста"
         case "topics": title = "Открыть черновики тем SeminarText (JSON)"
         case "burned_video": title = "Открыть видео со встроенными субтитрами"
         case "clips_manifest": title = "Открыть список созданных клипов (JSON)"

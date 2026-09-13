@@ -37,6 +37,18 @@ class ApplicationRuntimeTests(unittest.TestCase):
         downloader.chmod(downloader.stat().st_mode|stat.S_IXUSR)
         return str(downloader)
 
+    def youtube_playlist_downloader(self):
+        downloader=self.root/"yt-dlp-playlist"
+        downloader.write_text("#!/bin/sh\n"
+                              "if [ \"$1\" = \"--version\" ]; then echo 2026.01.01; exit 0; fi\n"
+                              "for arg in \"$@\"; do [ \"$arg\" = \"--flat-playlist\" ] && { echo '{\"id\":\"PL-real\",\"entries\":[{\"id\":\"video-a\",\"title\":\"First real video\",\"duration\":12,\"filesize_approx\":42},{\"id\":\"video-b\",\"title\":\"Second real video\",\"duration\":8,\"filesize\":24}]}'; exit 0; }; done\n"
+                              "previous=''\n"
+                              "for arg in \"$@\"; do [ \"$previous\" = \"--output\" ] && output=$arg; previous=$arg; done\n"
+                              "target=$(printf '%s' \"$output\" | sed 's/%(ext)s/mp3/')\n"
+                              "printf 'playlist-media' > \"$target\"\n")
+        downloader.chmod(downloader.stat().st_mode|stat.S_IXUSR)
+        return str(downloader)
+
     def test_downloads_selected_youtube_video_into_owned_project_storage(self):
         old=os.environ.get("INTEGRA_YTDLP")
         try:
@@ -54,6 +66,29 @@ class ApplicationRuntimeTests(unittest.TestCase):
         record=json.loads(Path(outputs["youtube_source_record"]).read_bytes())
         self.assertEqual(record["source_url"],source["input"])
         self.assertEqual(record["content_sha256"],hashlib.sha256(b"downloaded-media").hexdigest())
+
+    def test_downloads_youtube_playlist_sequentially_with_persisted_live_membership(self):
+        old=os.environ.get("INTEGRA_YTDLP")
+        try:
+            os.environ["INTEGRA_YTDLP"]=self.youtube_playlist_downloader()
+            source=detect_source("https://www.youtube.com/playlist?list=PL-real")
+            plan=build_plan([source],["youtube_playlist_ingest"])
+            self.assertEqual([stage["id"] for stage in plan["stages"]],["youtube_playlist_ingest"])
+            run=prepare_run(self.project,plan); result=execute_run(self.project,run["run_id"])
+        finally:
+            if old is None: os.environ.pop("INTEGRA_YTDLP",None)
+            else: os.environ["INTEGRA_YTDLP"]=old
+        self.assertEqual(result["state"],"COMPLETED")
+        outputs=result["source_results"][0]["outputs"]
+        discovery=json.loads(Path(outputs["playlist_discovery"]).read_bytes())
+        checkpoint=json.loads(Path(outputs["playlist_checkpoint"]).read_bytes())
+        downloads=json.loads(Path(outputs["playlist_downloads"]).read_bytes())
+        self.assertEqual([item["video_id"] for item in discovery["items"]],["video-a","video-b"])
+        self.assertFalse(discovery["network_access_performed"])
+        self.assertEqual(checkpoint["status"],"COMPLETE")
+        self.assertEqual([item["video_id"] for item in checkpoint["completed"]],["video-a","video-b"])
+        self.assertEqual(sorted(downloads),["video-a","video-b"])
+        self.assertTrue(all((Path(outputs["playlist_artifacts_directory"])/item["relative_path"]).is_file() for item in checkpoint["completed"]))
 
     def test_executes_selected_real_media_outputs_without_semantic_fakes(self):
         source_path=self.root/"audio.wav"; source_path.write_bytes(b"audio"); overrides=self.media_environment(); old={key:os.environ.get(key) for key in overrides}

@@ -96,7 +96,10 @@ read-only закреплённый SeminarText runtime.
 
 Отдельными решениями остаются:
 
-- live playlist discovery/download требует отдельного runtime и политики
+- live playlist discovery/download реализованы отдельным local runtime: он
+  получает фактический inventory через `yt-dlp`, сохраняет provenance,
+  нормализует его в принятый offline-контракт и скачивает элементы строго
+  последовательно с checkpoint после каждого обработанного элемента.
   источников;
 - Marketing, Learning, Assistant и social требуют отдельных production
   adapters и не могут быть открыты общей заглушкой.

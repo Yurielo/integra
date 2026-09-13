@@ -14,6 +14,7 @@ from .documents import extract_document, materialize_embedded_media
 from .booktext_runtime import run_ocr as run_booktext_ocr
 from .user_media import atomic_json, import_source, now, run_job
 from .youtube_runtime import download_video
+from .youtube_playlist_runtime import execute_playlist
 
 
 def _runs(project_dir: Path) -> Path:
@@ -185,7 +186,7 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                 jobs=json.loads(jobs_path.read_bytes())
                 jobs["jobs"].append(job); atomic_json(jobs_path,jobs); result=run_job(project_dir,job["job_id"])
                 record["source_results"].append({"source_id":source["source_id"],"display_name":source["display_name"],"state":result["state"],"outputs":result.get("outputs",{}),"job_id":job["job_id"]})
-            elif source["kind"] == "URL":
+            elif source["kind"] == "URL" and source["source_type"] == "YOUTUBE_VIDEO":
                 record["current_stage"] = "youtube_ingest"; record["message"] = "Downloading selected YouTube video"; atomic_json(path, record)
                 downloaded = download_video(project_dir, source, run_id=run_id)
                 downloaded_outputs = {
@@ -201,6 +202,12 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                     jobs = json.loads(jobs_path.read_bytes())
                     jobs["jobs"].append(job); atomic_json(jobs_path, jobs); result = run_job(project_dir, job["job_id"])
                     record["source_results"].append({"source_id": source["source_id"], "display_name": source["display_name"], "state": result["state"], "outputs": downloaded_outputs | result.get("outputs", {}), "job_id": job["job_id"]})
+            elif source["kind"] == "URL" and source["source_type"] == "YOUTUBE_PLAYLIST":
+                if outputs != ["youtube_playlist_ingest"]:
+                    raise ValueError("playlist plan has unsupported outputs")
+                record["current_stage"] = "youtube_playlist_ingest"; record["message"] = "Discovering and downloading selected YouTube playlist"; atomic_json(path, record)
+                playlist_outputs = execute_playlist(project_dir, source, run_id=run_id)
+                record["source_results"].append({"source_id": source["source_id"], "display_name": source["display_name"], "state": "COMPLETED", "outputs": playlist_outputs})
             elif source["kind"]=="DOCUMENT":
                 record["current_stage"]="document_analysis"; atomic_json(path,record); owned=_copy_document(project_dir,source)
                 artifact_dir=project_dir/"artifacts"/uuid.uuid4().hex; artifact_dir.mkdir(parents=True)
@@ -240,4 +247,7 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
             project=json.loads(project_path.read_bytes()); project["source_count"]=len(plan["sources"]); project["status"]="READY"; atomic_json(project_path,project)
         return record
     except Exception as error:
-        record.update(state="FAILED",error=str(error)[:500],failed_at=now()); atomic_json(path,record); raise
+        latest = refresh_record()
+        if latest.get("state") == "CANCELLED":
+            return latest
+        latest.update(state="FAILED",error=str(error)[:500],failed_at=now()); atomic_json(path,latest); raise

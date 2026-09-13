@@ -16,7 +16,7 @@
     },
     {
       "path": "macos/IntegraApp.swift",
-      "sha256": "e346347c1aeaf62cbe86d752b6973fc0ffadad50630d5c45f319fde9f897cb0e"
+      "sha256": "fcfdb39ae72841f6af4af41b591990bb1b956f17708da72e67fa2909bf8bba20"
     },
     {
       "path": "macos/Info.plist",
@@ -108,7 +108,7 @@
     },
     {
       "path": "tests/test_macos_app.py",
-      "sha256": "534509bd667959be85ec0320947ac341fddeb1869b79c6d4acce237db18e40ef"
+      "sha256": "6b877e0ee7667fd3c2eb67046d9b3866d07d80c0dd04710d2c88526e156a92c5"
     }
   ],
   "acceptance": {

@@ -23,7 +23,8 @@ but cannot be presented as working UI capabilities.
 | 4 | COMPLETED | SeminarText Word Timeline | PR #109: existing SRT is aligned by the bundled personal-use WhisperX 3.8.6 runtime and the pinned Russian Wav2Vec2 model. The output preserves native word timing or explicitly marks a word unaligned; no timing is fabricated. |
 | 5 | BLOCKED | VideoText general media runtime | Requires a packaged, version-pinned VideoText adapter for arbitrary user media; certification workers alone are insufficient. |
 | 6 | COMPLETED | BookText OCR runtime | Issue #113: the pinned BookText source is packaged into Integra with its exact Apple Vision QA executable; the source-first path invokes real Surya OCR and retains actual TXT, Markdown, JSON, searchable-PDF, raw OCR and review artifacts. |
-| 7 | COMPLETED | Individual YouTube video ingest | Issue #117: a user-selected video is downloaded by the local `yt-dlp` adapter into Integra-owned project storage, recorded with URL/runtime/SHA-256 provenance, then handed to selected real media outputs. Live playlist ingest remains deferred. |
+| 7 | COMPLETED | Individual YouTube video ingest | Issue #117: a user-selected video is downloaded by the local `yt-dlp` adapter into Integra-owned project storage, recorded with URL/runtime/SHA-256 provenance, then handed to selected real media outputs. |
+| 9 | COMPLETED | YouTube playlist ingest | Issue #120: a user-selected playlist is discovered through local `yt-dlp`, retaining live acquisition provenance while reusing the accepted offline playlist contracts. Members are downloaded sequentially with per-item checkpoints and verified artifacts. |
 | 8 | BLOCKED | Marketing, Learning, Assistant, and social adapters | Remain post-ready-app roadmap work and must retain `В разработке` until separately implemented end-to-end. |
 
 ## Execution rule

@@ -96,7 +96,7 @@ def capability_registry(sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
         except ValueError as error: timeline_reason=str(error)
         try: videotext_preflight(); translation_ready=True
         except ValueError as error: translation_reason=str(error)
-    if youtube_video:
+    if youtube_video or "YOUTUBE_PLAYLIST" in types:
         try: youtube_preflight(); youtube_ready=True
         except ValueError as error: youtube_reason=str(error)
     if documents:
@@ -128,7 +128,7 @@ def capability_registry(sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
         _capability("marketing","Маркетинговые материалы","Материалы",set(),"integra.marketing",False,["knowledge"]),
         _capability("publication_package","Подготовка публикации","Материалы",set(),"integra.publishing",False,["evidence"]),
         _capability("youtube_ingest","Загрузить видео из YouTube","Основная обработка",{"YOUTUBE_VIDEO"},"integra.youtube_adapter",True,[],available=youtube_video and youtube_ready,reason=youtube_reason),
-        _capability("youtube_playlist_ingest","Загрузить плейлист YouTube","Основная обработка",{"YOUTUBE_PLAYLIST"},"integra.youtube_adapter",False,[]),
+        _capability("youtube_playlist_ingest","Загрузить плейлист YouTube","Основная обработка",{"YOUTUBE_PLAYLIST"},"integra.youtube_playlist_adapter",True,[],available="YOUTUBE_PLAYLIST" in types and youtube_ready,reason=youtube_reason),
         _capability("collection_alignment","Сопоставить источники коллекции","Коллекция",set(),"integra.alignment",False,["topics"]),
     ]
     result=[]
