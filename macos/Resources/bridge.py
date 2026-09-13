@@ -21,6 +21,7 @@ from integra_core.seminartext_evidence_runtime import prepare_transcript_review,
 OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "import-media", "media-preflight", "seminartext-preflight", "process-media-job", "project-view", "detect-sources", "capability-registry", "build-plan", "execute-plan", "process-plan", "run-status", "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "prepare-transcript-review", "apply-transcript-review", "prepare-topic-review", "package-preview", "package-publish", "obsidian-preview", "onedrive-preview"}
 
 OPERATIONS.add("build-reviewed-package")
+OPERATIONS.add("transcript-text")
 
 def _safe_error(error):
     message = str(error).replace(str(Path.home()), "<HOME>")
@@ -184,7 +185,21 @@ def _review_inputs(root, request):
     if not isinstance(job,dict) or job.get("source_id")!=source_id: raise ValueError("owned media job is unavailable")
     for key in ("transcript","word_timeline"):
         if not isinstance(outputs.get(key),str): raise ValueError("Transcript review requires the real TXT transcript and Word Timeline")
-    return {"project_dir":project_dir,"source_id":source_id,"media_path":job.get("owned_path"),"transcript_path":outputs["transcript"],"word_timeline_path":outputs["word_timeline"]}
+    from integra_core.transcript_output import resolve_transcript_text
+    transcript = resolve_transcript_text(project_dir, source_id, outputs["transcript"])
+    return {"project_dir":project_dir,"source_id":source_id,"media_path":job.get("owned_path"),"transcript_path":transcript,"word_timeline_path":outputs["word_timeline"]}
+
+def _transcript_text(root, request):
+    from integra_core.transcript_output import resolve_transcript_text
+    project = _project_dir(root, _project(root, request.get("project_id"))["project_id"])
+    run = read_run(project, request.get("run_id"))
+    source_id = request.get("source_id")
+    source = next((item for item in run.get("source_results", []) if item.get("source_id") == source_id), None)
+    if not isinstance(source, dict) or source.get("state") != "COMPLETED":
+        raise ValueError("completed transcript source is unavailable")
+    path = source.get("outputs", {}).get("transcript")
+    if not isinstance(path, str): raise ValueError("transcript is unavailable")
+    return {"path": resolve_transcript_text(project, source_id, path), "format": "txt"}
 
 def _prepare_transcript_review(root, request):
     values=_review_inputs(root,request)
@@ -465,6 +480,7 @@ def main():
         elif operation == "apply-knowledge-review": result = _knowledge_review(root, request, True)
         elif operation == "cancel-run": result = _run_action(root, request, "cancel")
         elif operation == "retry-run": result = _run_action(root, request, "retry")
+        elif operation == "transcript-text": result = _transcript_text(root, request)
         elif operation == "build-reviewed-package": result = _build_reviewed_package(root, request)
         elif operation == "package-preview": result = _publication(root, request, False)
         else: result = _publication(root, request, True)

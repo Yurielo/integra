@@ -25,7 +25,7 @@ final class Bridge: @unchecked Sendable {
       "cancel-job", "resume-job", "import-media", "media-preflight", "seminartext-preflight", "project-view",
       "detect-sources", "capability-registry", "build-plan", "execute-plan", "run-status",
       "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "build-reviewed-package", "package-preview", "package-publish",
-      "obsidian-preview",
+      "obsidian-preview", "transcript-text",
       "onedrive-preview",
       "prepare-transcript-review", "apply-transcript-review", "prepare-topic-review",
       "prepare-knowledge-review", "apply-knowledge-review",
@@ -648,6 +648,13 @@ struct SidebarItem {
         case "package_id": title = "Открыть package id (metadata)"
         default: title = "Открыть: \(kind)"
         }
+        if kind == "transcript", let projectID = projectID, let runID = runID,
+          let sourceID = result["source_id"] as? String {
+          let control = button(title, #selector(openTranscript(_:)))
+          control.toolTip = "\(projectID)\n\(runID)\n\(sourceID)"
+          add(control)
+          continue
+        }
         let control = button(title, #selector(openOutput(_:)))
         control.toolTip = path as? String
         add(control)
@@ -871,6 +878,20 @@ struct SidebarItem {
   }
   @objc private func openOutput(_ sender: NSButton) {
     if let path = sender.toolTip { NSWorkspace.shared.open(URL(fileURLWithPath: path)) }
+  }
+  @objc private func openTranscript(_ sender: NSButton) {
+    let identifiers = sender.toolTip?.split(separator: "\n", maxSplits: 2).map(String.init) ?? []
+    guard identifiers.count == 3 else { return }
+    do {
+      let result = try bridge.json("transcript-text", request: ["project_id": identifiers[0],
+        "run_id": identifiers[1], "source_id": identifiers[2]])["result"] as? [String: Any]
+      guard let path = result?["path"] as? String else { return }
+      if !NSWorkspace.shared.open(URL(fileURLWithPath: path)) {
+        status.stringValue = "TXT создан, но macOS не смогла открыть текстовый редактор."
+      }
+    } catch {
+      status.textColor = .systemRed; status.stringValue = error.localizedDescription
+    }
   }
   @objc private func showMediaNavigation(_ sender: NSButton) {
     let identifiers = sender.toolTip?.split(separator: "\n", maxSplits: 2).map(String.init) ?? []
