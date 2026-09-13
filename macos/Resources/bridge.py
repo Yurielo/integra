@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Closed local bridge between the AppKit shell and accepted Integra services."""
 from __future__ import annotations
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 import fcntl, json, os, re, signal, subprocess, sys, tempfile, uuid
 from pathlib import Path
@@ -15,6 +16,7 @@ from integra_core.publishing import preview_obsidian_export, publish_obsidian_ex
 from integra_core.user_media import _parse_srt, ffmpeg_preflight, import_source, preflight, run_job
 from integra_core.capabilities import build_plan, capability_registry, detect_source
 from integra_core.application_runtime import execute_run, prepare_run, read_run, run_path
+from integra_core.shutdown_runtime import cancel_run, register_worker, requires_shutdown
 from integra_core.seminartext_runtime import preflight as seminartext_preflight
 from integra_core.seminartext_evidence_runtime import prepare_transcript_review, apply_human_transcript_review, prepare_topic_review_input
 
@@ -22,6 +24,7 @@ OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-projec
 
 OPERATIONS.add("build-reviewed-package")
 OPERATIONS.add("transcript-text")
+OPERATIONS.add("shutdown-active-runs")
 
 def _safe_error(error):
     message = str(error).replace(str(Path.home()), "<HOME>")
@@ -97,35 +100,41 @@ def _spawn_media(root, project_id, job_id):
 def _spawn_plan(root, project_id, run_id):
     environment=dict(os.environ); environment["INTEGRA_APP_DATA_ROOT"]=str(root); environment["PYTHONDONTWRITEBYTECODE"]="1"
     request=json.dumps({"project_id":project_id,"run_id":run_id}).encode()
-    process=subprocess.Popen([sys.executable,str(Path(__file__).resolve()),"process-plan"],stdin=subprocess.PIPE,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,env=environment,start_new_session=True)
-    process.stdin.write(request); process.stdin.close()
-    path=run_path(_project_dir(root,project_id),run_id); record=json.loads(path.read_bytes()); record["worker_pid"]=process.pid; _atomic_json(path,record)
+    nonce=uuid.uuid4().hex
+    process=subprocess.Popen([sys.executable,str(Path(__file__).resolve()),"process-plan","--integra-run-owner",nonce],stdin=subprocess.PIPE,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,env=environment,start_new_session=True)
+    path=run_path(_project_dir(root,project_id),run_id)
+    try:
+        register_worker(path,process.pid,nonce)
+        record=json.loads(path.read_bytes()); record["worker_pid"]=process.pid; _atomic_json(path,record)
+        process.stdin.write(request); process.stdin.close()
+    except Exception:
+        process.terminate(); process.wait(timeout=5)
+        raise
     return record
 
 def _execute_plan(root,request):
-    plan=request.get("plan"); name=request.get("name") or "Новая обработка"
-    project=_create(root,{"name":name}); project_dir=_project_dir(root,project["project_id"])
-    run=prepare_run(project_dir,plan); return {"project":project,"run":_spawn_plan(root,project["project_id"],run["run_id"])}
+    with _run_lifecycle(root, wait=False):
+        plan=request.get("plan"); name=request.get("name") or "Новая обработка"
+        project=_create(root,{"name":name}); project_dir=_project_dir(root,project["project_id"])
+        run=prepare_run(project_dir,plan); return {"project":project,"run":_spawn_plan(root,project["project_id"],run["run_id"])}
+
+@contextmanager
+def _run_lifecycle(root, *, wait):
+    path=root/".run-lifecycle.lock"
+    if path.is_symlink(): raise ValueError("Run lifecycle lock is unsafe")
+    with path.open("a") as lock:
+        try: fcntl.flock(lock,fcntl.LOCK_EX | (0 if wait else fcntl.LOCK_NB))
+        except BlockingIOError as error: raise ValueError("Cannot start processing while shutdown is in progress") from error
+        yield
 
 def _run_action(root,request,action):
     project_id=request.get("project_id"); project_dir=_project_dir(root,_project(root,project_id)["project_id"]); record=read_run(project_dir,request.get("run_id"))
     if action=="status": return record
     if action=="cancel":
-        if record["state"] not in {"QUEUED","RUNNING"}: raise ValueError("run cannot be cancelled from current state")
-        pid=record.get("worker_pid")
-        if isinstance(pid,int):
-            try: os.killpg(pid,signal.SIGTERM)
-            except ProcessLookupError: pass
-        jobs_path=project_dir/"jobs.json"
-        if jobs_path.is_file() and not jobs_path.is_symlink():
-            jobs_record=json.loads(jobs_path.read_bytes()); changed=False
-            for job in jobs_record.get("jobs",[]):
-                if job.get("run_id")==record["run_id"] and job.get("state") in {"QUEUED","RUNNING"}:
-                    job.update(state="CANCELLED",message="Cancelled with source-first run",updated_at=_instant(_now())); changed=True
-            if changed: _atomic_json(jobs_path,jobs_record)
-        record.update(state="CANCELLED",cancelled_at=_instant(_now()),current_stage=None); _atomic_json(run_path(project_dir,record["run_id"]),record); return record
+        return cancel_run(project_dir, record["run_id"])
     if record["state"] not in {"FAILED","CANCELLED"}: raise ValueError("run cannot be retried from current state")
-    new=prepare_run(project_dir,record["plan"]); return _spawn_plan(root,project_id,new["run_id"])
+    with _run_lifecycle(root, wait=False):
+        new=prepare_run(project_dir,record["plan"]); return _spawn_plan(root,project_id,new["run_id"])
 
 def _recent_runs(root):
     result=[]
@@ -135,6 +144,24 @@ def _recent_runs(root):
         for path in directory.glob("*.json"):
             if path.is_file() and not path.is_symlink(): result.append({"project":project,"run":json.loads(path.read_bytes())})
     return sorted(result,key=lambda item:item["run"].get("created_at",""),reverse=True)
+
+def _shutdown_active_runs(root):
+    with _run_lifecycle(root, wait=True):
+        return _shutdown_active_runs_locked(root)
+
+def _shutdown_active_runs_locked(root):
+    stopped=[]
+    failures=[]
+    for item in _recent_runs(root):
+        try:
+            directory=_project_dir(root,item["project"]["project_id"])
+            if not requires_shutdown(run_path(directory,item["run"]["run_id"]),item["run"]): continue
+            record=cancel_run(directory,item["run"]["run_id"])
+            stopped.append({"run_id":record["run_id"],"state":record["state"]})
+        except Exception as error:
+            failures.append(str(error))
+    if failures: raise ValueError("; ".join(failures))
+    return {"state":"SHUTDOWN_READY","runs":stopped}
 
 def _available_packages(root):
     """Return only package artifacts that still validate from persisted completed runs."""
@@ -476,7 +503,9 @@ def _publication(root, request, publish):
 
 def main():
     try:
-        if len(sys.argv) != 2 or sys.argv[1] not in OPERATIONS: raise ValueError("unsupported bridge operation")
+        owned_worker = (len(sys.argv) == 4 and sys.argv[1:3] == ["process-plan", "--integra-run-owner"]
+                        and re.fullmatch(r"[a-f0-9]{32}", sys.argv[3]))
+        if (len(sys.argv) != 2 and not owned_worker) or sys.argv[1] not in OPERATIONS: raise ValueError("unsupported bridge operation")
         operation = sys.argv[1]; request = _request(); root = _root()
         if operation == "workflow": result = json.loads((RESOURCES/"source_first_workflow.json").read_text())
         elif operation == "deferred": result = json.loads((RESOURCES/"deferred_features.json").read_text())
@@ -501,6 +530,7 @@ def main():
         elif operation == "process-plan": result = execute_run(_project_dir(root, request.get("project_id")), request.get("run_id"))
         elif operation == "run-status": result = _run_action(root, request, "status")
         elif operation == "recent-runs": result = _recent_runs(root)
+        elif operation == "shutdown-active-runs": result = _shutdown_active_runs(root)
         elif operation == "available-packages": result = _available_packages(root)
         elif operation == "media-navigation": result = _media_navigation(root, request)
         elif operation == "create-media-clip": result = _create_media_clip(root, request)

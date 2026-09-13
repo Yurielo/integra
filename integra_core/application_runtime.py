@@ -12,7 +12,7 @@ from typing import Any
 from .capabilities import build_plan
 from .documents import extract_document, materialize_embedded_media
 from .booktext_runtime import run_ocr as run_booktext_ocr
-from .user_media import atomic_json, import_source, now, run_job
+from .user_media import atomic_json, import_source, now, run_job, _is_run_cancelled
 from .youtube_runtime import download_video
 from .youtube_playlist_runtime import execute_playlist
 
@@ -169,10 +169,13 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
     def refresh_record():
         return json.loads(path.read_bytes())
     try:
+        if _is_run_cancelled(project_dir, run_id):
+            record.update(state="CANCELLED",current_stage=None,cancelled_at=now()); atomic_json(path,record)
+            return record
         record.update(state="RUNNING",started_at=now()); atomic_json(path,record)
         for source_plan,source in zip(plan["source_plans"],plan["sources"]):
             record = refresh_record()
-            if record.get("state") != "RUNNING":
+            if record.get("state") != "RUNNING" or _is_run_cancelled(project_dir, run_id):
                 break
             outputs=source_plan["outputs"]
             if not outputs:
@@ -248,13 +251,13 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                 if "document_text" in outputs:
                     outputs_map["text"] = outputs_map.get("booktext_text", str(text_path))
                 record["source_results"].append({"source_id":source["source_id"],"display_name":source["display_name"],"state":"COMPLETED","outputs":outputs_map,"document_properties":{"content_mode":document["content_mode"],"ocr_status":document["ocr"]["status"],"embedded_media_count":len(document["embedded_media"]),"ocr_selection":selection,"document_record_scope":"FULL_SOURCE_EXTRACTION; SELECTED_OCR_IN_SEPARATE_ARTIFACT"}})
-            if any(item.get("state") == "CANCELLED" for item in record["source_results"]):
+            if _is_run_cancelled(project_dir, run_id) or any(item.get("state") == "CANCELLED" for item in record["source_results"]):
                 record.update(state="CANCELLED", current_stage=None, cancelled_at=now())
                 atomic_json(path, record)
                 return record
             record["completed_sources"]+=1; atomic_json(path,record)
         record = refresh_record()
-        final_state = "CANCELLED" if record.get("state") == "CANCELLED" else "COMPLETED"
+        final_state = "CANCELLED" if _is_run_cancelled(project_dir, run_id) else "COMPLETED"
         record.update(state=final_state,current_stage=None,completed_at=now()); atomic_json(path,record)
         project_path=project_dir/"project.json"
         if project_path.is_file():
@@ -262,7 +265,8 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
         return record
     except Exception as error:
         latest = refresh_record()
-        if latest.get("state") == "CANCELLED":
+        if _is_run_cancelled(project_dir, run_id):
+            latest.update(state="CANCELLED",current_stage=None,cancelled_at=now()); atomic_json(path,latest)
             return latest
         # Failed ASR quality is inspectable but never a successful transcript.
         from .seminartext_asr_runtime import ASRQualityError

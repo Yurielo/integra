@@ -57,7 +57,10 @@ def _is_run_cancelled(project_dir: Path, run_id: str | None) -> bool:
     if not run_id:
         return False
     try:
-        record = json.loads(_run_path(project_dir, run_id).read_bytes())
+        path = _run_path(project_dir, run_id)
+        if path.with_suffix(".cancel").exists():
+            return True
+        record = json.loads(path.read_bytes())
     except Exception:
         return False
     return record.get("state") == "CANCELLED"

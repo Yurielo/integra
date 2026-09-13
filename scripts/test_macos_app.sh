@@ -49,15 +49,16 @@ python3 "$app/Contents/Resources/bridge.py" obsidian-preview | python3 -c 'impor
 python3 "$app/Contents/Resources/bridge.py" onedrive-preview | python3 -c 'import json,sys; x=json.load(sys.stdin); assert x["writes_performed"] is False and x["cloud_verified"] is False'
 
 marker="$test_root/launched.txt"
-INTEGRA_LAUNCH_PROBE="$marker" "$app/Contents/MacOS/Integra"
+INTEGRA_APP_DATA_ROOT="$test_root/app-data" INTEGRA_LAUNCH_PROBE="$marker" "$app/Contents/MacOS/Integra"
 grep -q '^LAUNCHED visible=true workflow=source-first title=Integra' "$marker"
 
 close_marker="$test_root/closed.txt"
-INTEGRA_CLOSE_PROBE="$close_marker" "$app/Contents/MacOS/Integra"
+INTEGRA_APP_DATA_ROOT="$test_root/app-data" INTEGRA_CLOSE_PROBE="$close_marker" "$app/Contents/MacOS/Integra"
 grep -q '^TERMINATED_AFTER_LAST_WINDOW_CLOSED$' "$close_marker"
 echo "INTEGRA_MACOS_CLOSE_TEST: PASS"
 
 python3 "$repo_root/tests/native_workflow_probe.py" "$app" "$test_root/native-workflow"
+python3 "$repo_root/tests/native_shutdown_probe.py" "$app" "$test_root/native-shutdown"
 
 test -z "$(find "$app" -type l -print -quit)"
 test -f "$app/Contents/Resources/integra_core/publishing.py"
