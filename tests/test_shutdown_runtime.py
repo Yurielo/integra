@@ -78,7 +78,26 @@ class ShutdownRuntimeTests(unittest.TestCase):
             shutdown.cancel_run(self.root, self.run_id, timeout=.05)
         self.assertIsNone(worker.poll())
         self.assertEqual(read_run(self.root, self.run_id)["state"], "RUNNING")
-        self.assertTrue(shutdown.cancellation_path(self.path).is_file())
+        self.assertFalse(shutdown.cancellation_path(self.path).exists())
+
+    def test_cooperative_cancel_marker_is_published_only_after_tree_is_frozen(self):
+        worker = self.worker()
+        marker = shutdown.cancellation_path(self.path)
+        original = shutdown._signal_owned
+        signals = []
+        def check_order(identity, sig):
+            if sig == signal.SIGSTOP:
+                self.assertFalse(marker.exists())
+            if sig == signal.SIGKILL:
+                self.assertTrue(marker.is_file())
+                self.assertTrue(shutdown.process_snapshot()[identity["pid"]]["stopped"])
+            signals.append(sig)
+            original(identity, sig)
+        with patch.object(shutdown, "_signal_owned", side_effect=check_order):
+            self.assertEqual(shutdown.cancel_run(self.root, self.run_id)["state"], "CANCELLED")
+        self.assertIsNotNone(worker.poll())
+        self.assertIn(signal.SIGSTOP, signals)
+        self.assertIn(signal.SIGKILL, signals)
 
     def test_completed_race_preserves_completed_artifact_record(self):
         worker = self.worker()

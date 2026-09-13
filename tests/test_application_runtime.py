@@ -323,7 +323,7 @@ class ApplicationRuntimeTests(unittest.TestCase):
              patch("integra_core.user_media.asr.preflight",return_value={"state":"READY"}), \
              patch("integra_core.capabilities.seminartext_preflight",return_value={"state":"READY"}), \
              patch("integra_core.capabilities.word_timeline_preflight",return_value={"state":"READY"}), \
-             patch("integra_core.user_media.asr.transcribe",side_effect=error), \
+             patch("integra_core.user_media.asr_reuse.transcribe_or_reuse",side_effect=error), \
              patch("integra_core.user_media.generate_word_timeline") as alignment, \
              patch("integra_core.user_media.generate_topics") as topics:
             plan=build_plan([detect_source(str(source_path))],["topics"])

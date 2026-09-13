@@ -189,6 +189,8 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                 jobs=json.loads(jobs_path.read_bytes())
                 jobs["jobs"].append(job); atomic_json(jobs_path,jobs); result=run_job(project_dir,job["job_id"])
                 record["source_results"].append({"source_id":source["source_id"],"display_name":source["display_name"],"state":result["state"],"outputs":result.get("outputs",{}),"job_id":job["job_id"]})
+                if result.get("asr_reuse"):
+                    record["source_results"][-1]["asr_reuse"] = result["asr_reuse"]
             elif source["kind"] == "URL" and source["source_type"] == "YOUTUBE_VIDEO":
                 record["current_stage"] = "youtube_ingest"; record["message"] = "Downloading selected YouTube video"; atomic_json(path, record)
                 downloaded = download_video(project_dir, source, run_id=run_id)
@@ -205,6 +207,8 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                     jobs = json.loads(jobs_path.read_bytes())
                     jobs["jobs"].append(job); atomic_json(jobs_path, jobs); result = run_job(project_dir, job["job_id"])
                     record["source_results"].append({"source_id": source["source_id"], "display_name": source["display_name"], "state": result["state"], "outputs": downloaded_outputs | result.get("outputs", {}), "job_id": job["job_id"]})
+                    if result.get("asr_reuse"):
+                        record["source_results"][-1]["asr_reuse"] = result["asr_reuse"]
             elif source["kind"] == "URL" and source["source_type"] == "YOUTUBE_PLAYLIST":
                 if outputs != ["youtube_playlist_ingest"]:
                     raise ValueError("playlist plan has unsupported outputs")
