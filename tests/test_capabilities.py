@@ -59,7 +59,7 @@ class CapabilityRegistryTests(unittest.TestCase):
                     if value is None: os.environ.pop(key,None)
                     else: os.environ[key]=value
 
-    def test_youtube_video_uses_a_real_ingest_stage_but_playlist_remains_deferred(self):
+    def test_youtube_video_and_playlist_use_real_ingest_stages_after_preflight(self):
         video=detect_source("https://www.youtube.com/watch?v=real-video")
         playlist=detect_source("https://www.youtube.com/playlist?list=PL1")
         with tempfile.TemporaryDirectory() as directory:
@@ -70,6 +70,7 @@ class CapabilityRegistryTests(unittest.TestCase):
                     registry={item["id"]:item for item in capability_registry([video])}
                     plan=build_plan([video],["subtitles"])
                     deferred={item["id"]:item for item in capability_registry([playlist])}
+                    playlist_plan=build_plan([playlist],["youtube_playlist_ingest"])
             finally:
                 for key,value in old.items():
                     if value is None: os.environ.pop(key,None)
@@ -77,7 +78,9 @@ class CapabilityRegistryTests(unittest.TestCase):
         self.assertTrue(registry["youtube_ingest"]["runtime_available"])
         self.assertEqual(registry["youtube_ingest"]["implementation_state"],"IMPLEMENTED")
         self.assertEqual([item["id"] for item in plan["stages"]],["youtube_ingest","media_preparation","transcript","subtitles"])
-        self.assertEqual(deferred["youtube_playlist_ingest"]["ui_state"],"В разработке")
+        self.assertEqual(deferred["youtube_playlist_ingest"]["ui_state"],"Доступно")
+        self.assertEqual(deferred["youtube_playlist_ingest"]["component"],"integra.youtube_playlist_adapter")
+        self.assertEqual([item["id"] for item in playlist_plan["stages"]],["youtube_playlist_ingest"])
 
     def test_scanned_document_requires_verified_booktext_runtime(self):
         source={"source_id":"s","display_name":"scan.pdf","input":"/scan.pdf","source_type":"PDF","kind":"DOCUMENT",

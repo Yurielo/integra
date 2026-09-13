@@ -1,10 +1,13 @@
 import json
 import hashlib
+import os
 from pathlib import Path
 import subprocess
 import platform
+import stat
 import struct
 import tempfile
+import time
 import unittest
 
 from tests.test_publishing import fixtures
@@ -118,13 +121,55 @@ class MacOSApplicationTests(unittest.TestCase):
             )
             self.assertEqual(len(json.loads(jobs.stdout)["result"]), 1)
 
+    def test_bridge_executes_youtube_playlist_through_source_first_runtime(self):
+        bridge = ROOT / "macos/Resources/bridge.py"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            downloader = root / "yt-dlp"
+            downloader.write_text(
+                "#!/bin/sh\n"
+                "if [ \"$1\" = \"--version\" ]; then echo 2026.01.01; exit 0; fi\n"
+                "for arg in \"$@\"; do [ \"$arg\" = \"--flat-playlist\" ] && { echo '{\"id\":\"PL-bridge\",\"entries\":[{\"id\":\"bridge-video\",\"title\":\"Bridge video\",\"duration\":1,\"filesize\":4}]}'; exit 0; }; done\n"
+                "previous=''\n"
+                "for arg in \"$@\"; do [ \"$previous\" = \"--output\" ] && output=$arg; previous=$arg; done\n"
+                "target=$(printf '%s' \"$output\" | sed 's/%(ext)s/mp3/')\n"
+                "printf 'real-bridge-media' > \"$target\"\n"
+            )
+            downloader.chmod(downloader.stat().st_mode | stat.S_IXUSR)
+            environment = {**os.environ, "INTEGRA_APP_DATA_ROOT": str(root / "app-data"), "INTEGRA_YTDLP": str(downloader)}
+
+            def invoke(operation, request):
+                completed = subprocess.run(
+                    ["python3", str(bridge), operation], input=json.dumps(request), check=True,
+                    capture_output=True, text=True, env=environment,
+                )
+                return json.loads(completed.stdout)["result"]
+
+            sources = invoke("detect-sources", {"inputs": ["https://www.youtube.com/playlist?list=PL-bridge"]})
+            registry = invoke("capability-registry", {"sources": sources})
+            self.assertEqual(next(item for item in registry if item["id"] == "youtube_playlist_ingest")["ui_state"], "Доступно")
+            plan = invoke("build-plan", {"sources": sources, "selected_outputs": ["youtube_playlist_ingest"]})
+            execution = invoke("execute-plan", {"plan": plan, "name": "Bridge playlist"})
+            project_id = execution["project"]["project_id"]
+            run_id = execution["run"]["run_id"]
+            result = None
+            for _ in range(100):
+                result = invoke("run-status", {"project_id": project_id, "run_id": run_id})
+                if result["state"] in {"COMPLETED", "FAILED", "CANCELLED"}:
+                    break
+                time.sleep(0.05)
+            self.assertEqual(result["state"], "COMPLETED")
+            outputs = result["source_results"][0]["outputs"]
+            self.assertTrue(Path(outputs["playlist_checkpoint"]).is_file())
+            self.assertTrue(Path(outputs["playlist_artifacts_directory"]).is_dir())
+
     def test_native_source_exposes_source_first_real_actions(self):
         source = (ROOT / "macos/IntegraApp.swift").read_text()
         for operation in ("detect-sources", "capability-registry", "build-plan", "execute-plan", "run-status", "media-navigation", "seminartext-preflight", "package-preview", "package-publish"):
             self.assertIn(operation, source)
         self.assertIn("NSOpenPanel", source)
-        self.assertIn("Одиночное видео будет загружено в проект", source)
-        self.assertIn("Плейлисты пока помечены «В разработке»", source)
+        self.assertIn("Одиночное видео или плейлист будут загружены в проект", source)
+        self.assertIn("скачивает элементы последовательно с checkpoint", source)
         self.assertIn("ЧТО НУЖНО ПОЛУЧИТЬ?", source)
         self.assertIn("Выполнить", source)
         self.assertIn("Перетащите файлы сюда", source)
