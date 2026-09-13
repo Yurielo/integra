@@ -126,6 +126,24 @@ class TranscriptReviewBridgeTests(unittest.TestCase):
                 self.assertNotIn("canonical_knowledge_path", knowledge)
                 final_run = json.loads((project / "runs" / f"{run_id.removeprefix('urn:integra:run:')}.json").read_text())
                 self.assertNotIn("canonical_knowledge", final_run["source_results"][0]["outputs"])
+            exported = invoke("build-reviewed-package", request)
+            self.assertEqual(exported["status"], "PACKAGE_CREATED")
+            self.assertFalse(exported["published"])
+            self.assertEqual(exported["result_kind"], "REVIEWED_FRAGMENTS_V2" if partial else "CANONICAL_KNOWLEDGE_V1")
+            self.assertEqual(invoke("build-reviewed-package", request), exported)
+            available = invoke("available-packages", {})
+            self.assertEqual(available[0]["package_id"], exported["package_id"])
+            for destination in ("obsidian", "onedrive"):
+                target = Path(directory) / ("synthetic-" + destination)
+                target.mkdir()
+                publication = {"package_dir": exported["package_dir"], "target_dir": str(target), "publication_target": destination}
+                preview = invoke("package-preview", publication)
+                self.assertFalse(list(target.rglob("COMPLETE.json")))
+                published = invoke("package-publish", publication)
+                self.assertEqual(published["state"], "EXPORTED" if destination == "obsidian" else "LOCALLY_PUBLISHED")
+                self.assertEqual(published["package_id"], preview["package_id"])
+                self.assertFalse(published["cloud_verified"])
+                self.assertEqual(len(list(target.rglob("COMPLETE.json"))), 1)
 
 
 if __name__ == "__main__":

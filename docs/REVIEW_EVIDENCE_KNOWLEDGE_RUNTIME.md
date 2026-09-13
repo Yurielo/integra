@@ -21,6 +21,12 @@
    **Прослушать цитату** plays the exact displayed interval of the verified
    source inside the review window and stops at its end.
 5. Open the resulting knowledge and decision artifacts from the source results.
+6. Choose **Подготовить проверенный пакет для Obsidian / OneDrive**. Integra
+   revalidates the saved decisions and their exact outputs, then prepares a
+   portable managed package. No publication occurs at this step.
+7. Choose Obsidian or OneDrive, select the package and destination, inspect the
+   preview and explicitly publish. OneDrive reports local completion only,
+   not cloud synchronization. See [package contract](REVIEWED_RESULT_PACKAGE_V1.md).
 
 No original SeminarText project is modified. Integra uses an owned source copy
 and a separate review snapshot. Failed Evidence attempts remain isolated for
@@ -36,6 +42,7 @@ persisted decisions cannot be silently rewritten by another decision.
 | Compatible complete-segment topics | Topic decisions and knowledge | Pinned SeminarText review workflow and knowledge bridge | AppKit → `prepare-knowledge-review` / `apply-knowledge-review` → pinned subprocesses | Real package → explicit decisions → Canonical Knowledge tests | Explicit accept/reject; no default acceptance |
 | Arbitrary topic boundaries | Exact-fragment review | Pinned SeminarText V2 workflow | AppKit → review bridge → `apply-v2` | Real partial-range fixture, explicit boundary acknowledgement, unchanged Evidence | Reviewed fragments in JSON and Markdown; not Canonical Knowledge |
 | Arbitrary topic boundaries | Canonical Knowledge compilation | Pinned SeminarText compiler | No compatible V2-to-canonical consumer in the pinned runtime | Compiler requires complete BenchmarkSegments | В разработке |
+| Saved V1 knowledge or V2 fragments | Verified managed export package | Integra publication adapter | AppKit → `build-reviewed-package` → immutable package → preview/publish | Real V1/V2 bridge tests through synthetic Obsidian and OneDrive destinations | Explicit preparation and separate publication; V2 is never relabelled canonical |
 | Accepted knowledge | Concept/relation editing, arbitrary boundary editing | Future integration | No production authoring path exposed | Not claimed | В разработке |
 
 ## Verified component limitation
@@ -53,8 +60,9 @@ inclusion/exclusion decisions. It is not relabelled as
 consumer converting this V2 output to Canonical Knowledge.
 Issue #119 remains open until a compatible pinned contract or a separately
 specified explicit boundary-review workflow resolves this gap. The current
-work does not claim general Knowledge Studio completion or a new managed
-Obsidian/OneDrive publication package path.
+work does not claim general Knowledge Studio completion. A separate
+`integra.reviewed_result_package` now exports either the real canonical V1
+result or the real V2 reviewed fragments without changing that distinction.
 
 ## Reproducible local build
 

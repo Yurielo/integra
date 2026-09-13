@@ -24,7 +24,7 @@ final class Bridge: @unchecked Sendable {
       "workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job",
       "cancel-job", "resume-job", "import-media", "media-preflight", "seminartext-preflight", "project-view",
       "detect-sources", "capability-registry", "build-plan", "execute-plan", "run-status",
-      "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "package-preview", "package-publish",
+      "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "build-reviewed-package", "package-preview", "package-publish",
       "obsidian-preview",
       "onedrive-preview",
       "prepare-transcript-review", "apply-transcript-review", "prepare-topic-review",
@@ -652,6 +652,13 @@ struct SidebarItem {
         control.toolTip = path as? String
         add(control)
       }
+      if outputs["topic_review_decisions"] as? String != nil,
+        let projectID = projectID, let runID = runID, let sourceID = result["source_id"] as? String
+      {
+        let control = button("Подготовить проверенный пакет для Obsidian / OneDrive", #selector(buildReviewedPackage(_:)))
+        control.toolTip = "\(projectID)\n\(runID)\n\(sourceID)"
+        add(control)
+      }
       if outputs["subtitles"] as? String != nil,
         let projectID = projectID, let runID = runID, let sourceID = result["source_id"] as? String
       {
@@ -679,12 +686,30 @@ struct SidebarItem {
     add(section("СЛЕДУЮЩИЕ ДЕЙСТВИЯ"))
     for title in [
       "Редактор границ тем", "Редактор связей знаний", "Тематические клипы", "Учебные материалы",
-      "Маркетинговые материалы", "Подготовить публикацию",
+      "Маркетинговые материалы", "Другие форматы публикации",
     ] {
       add(button("\(title) — В разработке", #selector(unavailableAction), enabled: false))
     }
   }
   @objc private func unavailableAction() {}
+  @objc private func buildReviewedPackage(_ sender: NSButton) {
+    let identifiers = sender.toolTip?.split(separator: "\n", maxSplits: 2).map(String.init) ?? []
+    guard identifiers.count == 3 else { return }
+    status.stringValue = "Проверяю сохранённые решения и формирую пакет…"
+    let bridge = self.bridge!
+    DispatchQueue.global(qos: .userInitiated).async {
+      do {
+        _ = try bridge.json("build-reviewed-package", request: [
+          "project_id": identifiers[0], "run_id": identifiers[1], "source_id": identifiers[2]])
+        DispatchQueue.main.async {
+          self.renderOutputs()
+          self.status.stringValue = "Пакет готов. Выберите Obsidian или OneDrive для предварительного просмотра и публикации. Ничего не опубликовано автоматически."
+        }
+      } catch {
+        DispatchQueue.main.async { self.status.textColor = .systemRed; self.status.stringValue = error.localizedDescription }
+      }
+    }
+  }
   @objc private func prepareTopicReview(_ sender: NSButton) {
     let identifiers = sender.toolTip?.split(separator: "\n", maxSplits: 2).map(String.init) ?? []
     guard identifiers.count == 3 else { return }
@@ -1084,7 +1109,7 @@ struct SidebarItem {
       targetPanel.canChooseDirectories = true
       targetPanel.canChooseFiles = false
       guard targetPanel.runModal() == .OK, let targetURL = targetPanel.url else { return }
-      let request = ["package_dir": packagePath.path, "target_dir": targetURL.path]
+      let request = ["package_dir": packagePath.path, "target_dir": targetURL.path, "publication_target": kind]
       let preview = try bridge.json("package-preview", request: request)
       let alert = NSAlert()
       alert.messageText = "Подтвердить публикацию?"

@@ -16,7 +16,7 @@ from .protocol import canonical_json, content_sha256
 from .publishing import (
     CHECKSUMS, COMPLETE, CURRENT, MANAGED_ROOT, MANIFEST, HEX, PublishingError,
     _atomic_file, _expected_directories, _fsync_dir, _lexists, _managed_path,
-    _safe_relative, _safe_slug, _target_lock, sha256_bytes, validate_package,
+    _safe_relative, _safe_slug, _target_lock, sha256_bytes, validate_managed_package,
 )
 
 
@@ -28,9 +28,13 @@ def build_onedrive_package(
     obsidian_manifest: dict[str, Any], files: dict[str, bytes], *, created_at: str,
 ) -> tuple[dict[str, Any], dict[str, bytes]]:
     """Bind an accepted immutable Obsidian package without writing a sync root."""
-    validate_package(obsidian_manifest, files)
+    validate_managed_package(obsidian_manifest, files)
     _utc(created_at)
     packaged = dict(sorted(files.items()))
+    if obsidian_manifest["artifact_type"] == "integra.reviewed_result_package":
+        if "_meta/integra_reviewed_package.json" in packaged:
+            raise PublishingError("reviewed package metadata path is reserved")
+        packaged["_meta/integra_reviewed_package.json"] = canonical_json(obsidian_manifest) + b"\n"
     inventory = [
         {"path": name, "size_bytes": len(payload), "sha256": sha256_bytes(payload),
          "ownership_class": "MANAGED_GENERATED"}
@@ -118,6 +122,15 @@ def validate_onedrive_package(manifest: dict[str, Any], files: dict[str, bytes])
     )
     if manifest.get("package_id") != expected_id:
         raise PublishingError("OneDrive package derived identity differs")
+    review_metadata = files.get("_meta/integra_reviewed_package.json")
+    if review_metadata is not None:
+        reviewed = json.loads(review_metadata)
+        if reviewed.get("artifact_type") != "integra.reviewed_result_package":
+            raise PublishingError("OneDrive reviewed source type differs")
+        validate_managed_package(reviewed, {name: payload for name, payload in files.items()
+                                           if name != "_meta/integra_reviewed_package.json"})
+        if source != {"package_id": reviewed["package_id"], "version_sha256": reviewed["version_sha256"]}:
+            raise PublishingError("OneDrive reviewed source binding differs")
 
 
 def preview_onedrive_publication(sync_root: Path, workspace: Path,

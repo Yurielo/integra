@@ -2,16 +2,16 @@
 """Closed local bridge between the AppKit shell and accepted Integra services."""
 from __future__ import annotations
 from datetime import datetime, timedelta, timezone
-import fcntl, json, os, re, signal, subprocess, sys, uuid
+import fcntl, json, os, re, signal, subprocess, sys, tempfile, uuid
 from pathlib import Path
 
 RESOURCES = Path(__file__).resolve().parent
 sys.path.insert(0, str(RESOURCES))
 sys.path.insert(1, str(RESOURCES.parents[1]))
-from integra_core.onedrive import preview_onedrive_publication, publish_onedrive_package, validate_onedrive_package
+from integra_core.onedrive import build_onedrive_package, preview_onedrive_publication, publish_onedrive_package, validate_onedrive_package
 from integra_core.project_lease import LeaseStore
 from integra_core.protocol import canonical_json, content_sha256
-from integra_core.publishing import preview_obsidian_export, publish_obsidian_export, validate_package
+from integra_core.publishing import preview_obsidian_export, publish_obsidian_export, validate_managed_package
 from integra_core.user_media import _parse_srt, ffmpeg_preflight, import_source, preflight, run_job
 from integra_core.capabilities import build_plan, capability_registry, detect_source
 from integra_core.application_runtime import execute_run, prepare_run, read_run, run_path
@@ -19,6 +19,8 @@ from integra_core.seminartext_runtime import preflight as seminartext_preflight
 from integra_core.seminartext_evidence_runtime import prepare_transcript_review, apply_human_transcript_review, prepare_topic_review_input
 
 OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "import-media", "media-preflight", "seminartext-preflight", "process-media-job", "project-view", "detect-sources", "capability-registry", "build-plan", "execute-plan", "process-plan", "run-status", "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "prepare-transcript-review", "apply-transcript-review", "prepare-topic-review", "package-preview", "package-publish", "obsidian-preview", "onedrive-preview"}
+
+OPERATIONS.add("build-reviewed-package")
 
 def _safe_error(error):
     message = str(error).replace(str(Path.home()), "<HOME>")
@@ -340,6 +342,46 @@ def _job(root, request, action):
         item["updated_at"] = _instant(_now())
     _atomic_json(path, {"schema_version":"1.0", "jobs":jobs}); return item
 
+def _build_reviewed_package(root, request):
+    from integra_core.reviewed_result_package import build_reviewed_result_package
+    values = _review_inputs(root, request)
+    project = values["project_dir"]
+    run = read_run(project, request["run_id"])
+    outputs = next(item["outputs"] for item in run["source_results"] if item["source_id"] == values["source_id"])
+    decisions = outputs.get("topic_review_decisions")
+    if not isinstance(decisions, str):
+        raise ValueError("explicit persisted topic decisions are required before packaging")
+    manifest, files = build_reviewed_result_package(project_dir=project, source_id=values["source_id"],
+        decisions_path=decisions, project_id=request["project_id"],
+        project_slug=request["project_id"].removeprefix("urn:integra:project:"))
+    exports = project / "reviewed-exports"
+    if exports.is_symlink(): raise ValueError("export directory must not be a symlink")
+    exports.mkdir(exist_ok=True)
+    target = exports / manifest["version_sha256"]
+    descriptor = os.open(exports / ".package.lock", os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+    try:
+        fcntl.flock(descriptor, fcntl.LOCK_EX)
+        if target.exists() or target.is_symlink():
+            previous, previous_files = _package(str(target))
+            if previous != manifest or previous_files != files:
+                raise ValueError("existing reviewed export differs")
+        else:
+            with tempfile.TemporaryDirectory(prefix=".package-", dir=exports) as temporary:
+                stage = Path(temporary)
+                for name, payload in files.items():
+                    destination = stage / "files" / name
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    destination.write_bytes(payload)
+                (stage / "package.json").write_bytes(canonical_json(manifest) + b"\n")
+                _package(str(stage))
+                os.rename(stage, target)
+    finally:
+        os.close(descriptor)
+    _record_review_outputs(project, request["run_id"], values["source_id"], {"package_dir": str(target)})
+    return {"status": "PACKAGE_CREATED", "package_dir": str(target), "package_id": manifest["package_id"],
+            "result_kind": manifest["result_kind"], "published": False}
+
+
 def _package(path_value):
     path = Path(path_value)
     if path.is_symlink() or not path.is_dir(): raise ValueError("package directory is unsafe or missing")
@@ -350,7 +392,7 @@ def _package(path_value):
         relative = item.get("path"); candidate = files_root / relative
         if candidate.is_symlink() or not candidate.is_file() or not candidate.resolve().is_relative_to(files_root): raise ValueError("package file is unsafe or missing")
         files[relative] = candidate.read_bytes()
-    if manifest.get("artifact_type") == "integra.obsidian_package": validate_package(manifest, files)
+    if manifest.get("artifact_type") in {"integra.obsidian_package", "integra.reviewed_result_package"}: validate_managed_package(manifest, files)
     elif manifest.get("artifact_type") == "integra.onedrive_package": validate_onedrive_package(manifest, files)
     else: raise ValueError("unsupported package type")
     return manifest, files
@@ -362,10 +404,17 @@ def _lease(root, manifest, component):
 
 def _publication(root, request, publish):
     manifest, files = _package(request.get("package_dir", "")); target = Path(request.get("target_dir", ""))
+    destination = request.get("publication_target")
+    if destination not in {None, "obsidian", "onedrive"}:
+        raise ValueError("unsupported publication target")
+    if destination == "obsidian" and manifest["artifact_type"] == "integra.onedrive_package":
+        raise ValueError("select an Obsidian or reviewed-result source package")
+    if destination == "onedrive" and manifest["artifact_type"] != "integra.onedrive_package":
+        manifest, files = build_onedrive_package(manifest, files, created_at=manifest["created_at"])
     workspace_value = request.get("workspace_dir")
     workspace = Path(workspace_value) if workspace_value else root / "publication-workspace"
     if not workspace_value: workspace.mkdir(parents=True, exist_ok=True)
-    if manifest["artifact_type"] == "integra.obsidian_package":
+    if manifest["artifact_type"] in {"integra.obsidian_package", "integra.reviewed_result_package"}:
         receipt = preview_obsidian_export(target, manifest, files)
         if publish:
             lease, store = _lease(root, manifest, "integra.obsidian_exporter")
@@ -416,6 +465,7 @@ def main():
         elif operation == "apply-knowledge-review": result = _knowledge_review(root, request, True)
         elif operation == "cancel-run": result = _run_action(root, request, "cancel")
         elif operation == "retry-run": result = _run_action(root, request, "retry")
+        elif operation == "build-reviewed-package": result = _build_reviewed_package(root, request)
         elif operation == "package-preview": result = _publication(root, request, False)
         else: result = _publication(root, request, True)
         result_hash = content_sha256(result)
