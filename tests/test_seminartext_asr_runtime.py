@@ -10,7 +10,7 @@ import unittest
 from unittest.mock import patch
 
 from integra_core import seminartext_asr_runtime as asr
-from tests.asr_tools import media_environment, TRANSCRIPT
+from tests.asr_tools import media_environment, TRANSCRIPT, require_subtitle_runtime
 
 
 class SeminarTextASRTests(unittest.TestCase):
@@ -38,6 +38,7 @@ class SeminarTextASRTests(unittest.TestCase):
                     asr._runtime()
 
     def test_srt_normalization_rejects_malformed_source_without_editing_it(self):
+        require_subtitle_runtime()
         cases=['', 'missing timing\ntext\n',
                '00:00:02,000 --> 00:00:01,000\ntext\n',
                '00:00:00,000 --> 00:00:01,000\n']
@@ -95,7 +96,7 @@ Path(prefix + '.srt').write_text('1\\n00:00:00,000 --> 00:00:01,250\\n' + text +
             self.assertEqual(Path(result['source_srt']).read_text(),
                              '00:00:00,000 --> 00:00:01,250\n' + TRANSCRIPT + '\n\n')
             self.assertEqual(Path(result['srt']).read_text(),
-                             '1\n00:00:00,000 --> 00:00:01,250\n' + TRANSCRIPT + '\n\n')
+                             '1\n00:00:00,000 --> 00:00:01,250\n' + TRANSCRIPT + '\n')
             self.assertNotEqual(result['srt'],result['source_srt'])
             self.assertEqual(source.read_bytes(), original)
             provenance = json.loads(Path(result['record']).read_text())
@@ -130,7 +131,7 @@ for index in range(2 if '%04d' in target else 1):
                       '00:05:00,000 --> 00:05:01,250\n'+TRANSCRIPT+'\n\n')
             self.assertEqual(original,expected.encode())
             numbered=Path(result['srt']).read_text()
-            self.assertEqual(numbered,'1\n'+expected.split('\n\n')[0]+'\n\n2\n'+expected.split('\n\n')[1]+'\n\n')
+            self.assertEqual(numbered,'1\n'+expected.split('\n\n')[0]+'\n\n2\n'+expected.split('\n\n')[1]+'\n')
             self.assertEqual(Path(result['source_srt']).read_bytes(),original)
 
     def test_cancellation_terminates_owned_cli_without_success_outputs(self):

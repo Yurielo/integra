@@ -41,5 +41,14 @@ def require_asr_runtime():
         _runtime()
     except ASRError as error:
         raise unittest.SkipTest(str(error)) from error
+    require_subtitle_runtime()
     if not (Path.home() / "whisper-models/ggml-silero-v5.1.2.bin").is_file():
         raise unittest.SkipTest("requires pinned Silero VAD model for real SeminarText CLI")
+
+
+def require_subtitle_runtime():
+    from integra_core.videotext_subtitles import preflight
+    try:
+        return preflight()
+    except (ValueError, OSError) as error:
+        raise unittest.SkipTest(str(error)) from error

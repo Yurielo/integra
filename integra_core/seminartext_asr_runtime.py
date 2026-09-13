@@ -19,6 +19,7 @@ import time
 from typing import Callable, Any
 
 from .seminartext_runtime import PINNED_COMMIT
+from . import videotext_subtitles
 
 ENTRYPOINT_SHA256 = "020cc5fcd36fa3040b59e3e725afb1439e15c00cb4ad1fda03e171fa94a1c9d7"
 VERSION_SHA256 = "e1d49c569ae09b2ede16e2d83820a3809b35eb6c44c13ba9b5330598d6b8f43c"
@@ -91,6 +92,10 @@ def preflight(ffmpeg: Path, whisper: Path, model: Path, vad_model: Path | None =
     vad = _file(vad_path, "Silero VAD model")
     if _sha(vad) != VAD_SHA256:
         raise ASRError("Silero VAD model differs from pinned v5.1.2 bytes")
+    try:
+        subtitle_runtime = videotext_subtitles.preflight()
+    except ValueError as error:
+        raise ASRError(str(error)) from error
     configured_probe = os.environ.get("INTEGRA_FFPROBE")
     probe = Path(configured_probe) if configured_probe else ffmpeg.parent / "ffprobe"
     if not configured_probe and not probe.is_file():
@@ -101,7 +106,8 @@ def preflight(ffmpeg: Path, whisper: Path, model: Path, vad_model: Path | None =
             "version_sha256": VERSION_SHA256, "ffmpeg": str(ffmpeg), "ffprobe": str(probe),
             "whisper": str(whisper), "model": str(model), "vad_model": str(vad),
             "vad_sha256": VAD_SHA256, "chunk_seconds": 300,
-            "language": "ru", "mode": "normal", "cleaned_text_authority": "DERIVED_UNVERIFIED"}
+            "language": "ru", "mode": "normal", "cleaned_text_authority": "DERIVED_UNVERIFIED",
+            "subtitle_runtime": subtitle_runtime}
 
 
 def _stop(process: subprocess.Popen) -> None:
@@ -123,36 +129,12 @@ def _stop(process: subprocess.Popen) -> None:
     process.wait(timeout=5)
 
 
-def _number_srt(source: Path, target: Path) -> None:
-    """Add required cue numbers without changing source timing or wording.
-
-    SeminarText's chunk merger intentionally drops local cue numbers. Keep
-    those source bytes intact and make a separate interoperable SRT artifact.
-    """
-    timestamp = r"(\d{2,}):([0-5]\d):([0-5]\d),(\d{3})"
-    timing = re.compile(timestamp + r" --> " + timestamp)
-    text = source.read_text(encoding="utf-8")
-    blocks = re.split(r"\n[ \t]*\n", text.strip("\n"))
-    output = []
-    for block in blocks:
-        if not block.strip():
-            continue
-        lines = block.splitlines()
-        if lines and re.fullmatch(r"\d+", lines[0]):
-            lines = lines[1:]
-        match = timing.fullmatch(lines[0]) if lines else None
-        if not match or len(lines) < 2 or not any(line.strip() for line in lines[1:]):
-            raise ASRError("SeminarText produced malformed SRT cue")
-        values = [int(value) for value in match.groups()]
-        start = ((values[0] * 60 + values[1]) * 60 + values[2]) * 1000 + values[3]
-        end = ((values[4] * 60 + values[5]) * 60 + values[6]) * 1000 + values[7]
-        if end <= start:
-            raise ASRError("SeminarText produced invalid SRT interval")
-        output.append(str(len(output) + 1) + "\n" + "\n".join(lines))
-    if not output:
-        raise ASRError("SeminarText produced empty SRT")
-    with target.open("x", encoding="utf-8", newline="\n") as stream:
-        stream.write("\n\n".join(output) + "\n\n")
+def _number_srt(source: Path, target: Path) -> dict:
+    """Keep source SRT intact; delegate serialization/validation to VideoText."""
+    try:
+        return videotext_subtitles.normalize(source, target)
+    except ValueError as error:
+        raise ASRError(str(error)) from error
 
 
 def transcribe(source: Path, work: Path, *, ffmpeg: Path, whisper: Path, model: Path,
@@ -245,7 +227,7 @@ def transcribe(source: Path, work: Path, *, ffmpeg: Path, whisper: Path, model: 
         path = Path(artifacts[key])
         if path.is_symlink() or not path.is_file() or not path.stat().st_size:
             raise ASRError(f"SeminarText did not produce complete {key}")
-    _number_srt(Path(artifacts["source_srt"]), Path(artifacts["srt"]))
+    subtitle_record = _number_srt(Path(artifacts["source_srt"]), Path(artifacts["srt"]))
     info = folder / "info.txt"
     if info.is_symlink() or not info.is_file() or not (folder / ".seminartext_complete").is_file():
         raise ASRError("SeminarText completion evidence is missing")
@@ -259,7 +241,8 @@ def transcribe(source: Path, work: Path, *, ffmpeg: Path, whisper: Path, model: 
     identity["ffmpeg_sha256"] = _sha(Path(identity["ffmpeg"]))
     identity["artifact_sha256"] = {key: _sha(Path(artifacts[key])) for key in (
         "raw_txt", "cleaned_txt", "review_txt", "source_srt", "srt", "transcript_json")}
-    identity["srt_adaptation"] = "SEQUENTIAL_CUE_NUMBERS_ONLY"
+    identity["srt_adaptation"] = "VIDEOTEXT_SRT_SERVICE"
+    identity["subtitle_result"] = subtitle_record
     (owned / "provenance.json").write_text(json.dumps(identity, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     if int(matches[0]):
         raise ASRQualityError("SeminarText: после повторного распознавания остались подозрительные фрагменты; требуется проверка аудио", artifacts)
