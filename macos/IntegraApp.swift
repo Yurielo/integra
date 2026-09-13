@@ -27,6 +27,8 @@ final class Bridge: @unchecked Sendable {
       "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "package-preview", "package-publish",
       "obsidian-preview",
       "onedrive-preview",
+      "prepare-transcript-review", "apply-transcript-review", "prepare-topic-review",
+      "prepare-knowledge-review", "apply-knowledge-review",
     ]
     guard allowed.contains(operation) else { throw BridgeError.failed("Unsupported operation") }
     let script = resources.appendingPathComponent("bridge.py")
@@ -48,8 +50,10 @@ final class Bridge: @unchecked Sendable {
     try process.run()
     input.fileHandleForWriting.write(try JSONSerialization.data(withJSONObject: request))
     try input.fileHandleForWriting.close()
-    process.waitUntilExit()
+    // Drain review packages while the child runs; a large JSON response can
+    // otherwise fill the pipe and prevent the process from ever exiting.
     let data = output.fileHandleForReading.readDataToEndOfFile()
+    process.waitUntilExit()
     if process.terminationStatus != 0 {
       if let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
         let message = object["error"] as? String, !message.isEmpty
@@ -596,6 +600,13 @@ struct SidebarItem {
         let title: String
         switch kind {
         case "transcript": title = "Открыть расшифровку (TXT)"
+        case "canonical_evidence": title = "Открыть Canonical Evidence SeminarText (JSON)"
+        case "transcript_review_result": title = "Открыть подтверждение проверки TXT (JSON)"
+        case "topic_review_drafts": title = "Открыть входные данные проверки тем SeminarText (JSON)"
+        case "canonical_knowledge": title = "Открыть проверенные знания (JSON)"
+        case "knowledge_markdown": title = "Открыть проверенные темы и цитаты"
+        case "topic_review_package": title = "Открыть пакет проверки тем"
+        case "topic_review_decisions": title = "Открыть сохранённые решения"
         case "subtitles": title = "Открыть субтитры (SRT)"
         case "word_timeline": title = "Открыть Word Timeline (JSON)"
         case "translation": title = "Открыть перевод VideoText (JSON)"
@@ -645,16 +656,162 @@ struct SidebarItem {
         control.toolTip = "\(projectID)\n\(runID)\n\(sourceID)"
         add(control)
       }
+      if outputs["canonical_evidence"] == nil, outputs["transcript"] as? String != nil, outputs["word_timeline"] as? String != nil,
+        let projectID = projectID, let runID = runID, let sourceID = result["source_id"] as? String
+      {
+        let control = button("Проверить TXT и создать Evidence", #selector(showTranscriptReview(_:)))
+        control.toolTip = "\(projectID)\n\(runID)\n\(sourceID)"
+        add(control)
+        add(row("Canonical Evidence", detail: "Нужна ваша проверка полного TXT — автоматически не создаётся"))
+      }
+      if outputs["canonical_knowledge"] == nil, outputs["canonical_evidence"] as? String != nil, outputs["topics"] as? String != nil,
+        let projectID = projectID, let runID = runID, let sourceID = result["source_id"] as? String
+      {
+        let control = button("Подготовить темы к проверке", #selector(prepareTopicReview(_:)))
+        control.toolTip = "\(projectID)\n\(runID)\n\(sourceID)"
+        add(control)
+        add(row("Проверка тем", detail: "Проверьте цитаты и явно примите или отклоните каждую тему."))
+      }
     }
     add(section("СЛЕДУЮЩИЕ ДЕЙСТВИЯ"))
     for title in [
-      "Темы и таймкоды", "База знаний", "Создать клипы", "Учебные материалы",
+      "Редактор границ тем", "Редактор связей знаний", "Тематические клипы", "Учебные материалы",
       "Маркетинговые материалы", "Подготовить публикацию",
     ] {
       add(button("\(title) — В разработке", #selector(unavailableAction), enabled: false))
     }
   }
   @objc private func unavailableAction() {}
+  @objc private func prepareTopicReview(_ sender: NSButton) {
+    let identifiers = sender.toolTip?.split(separator: "\n", maxSplits: 2).map(String.init) ?? []
+    guard identifiers.count == 3 else { return }
+    sender.isEnabled = false; sender.title = "Подготавливаю review input…"
+    let bridge = self.bridge!
+    DispatchQueue.global(qos: .userInitiated).async {
+      do {
+        let result = try bridge.json("prepare-knowledge-review", request: [
+          "project_id": identifiers[0], "run_id": identifiers[1], "source_id": identifiers[2]])["result"] as? [String: Any] ?? [:]
+        guard result["status"] as? String == "REVIEW_REQUIRED" else { throw BridgeError.invalidResponse }
+        DispatchQueue.main.async {
+          sender.title = "Подготовить темы к проверке"; sender.isEnabled = true
+          self.presentTopicReview(result, identifiers: identifiers)
+        }
+      } catch {
+        DispatchQueue.main.async {
+          let incompatible = error.localizedDescription.contains("BenchmarkSegments")
+          sender.title = incompatible ? "Эти границы тем — В разработке" : "Повторить подготовку тем"
+          sender.isEnabled = !incompatible
+          self.status.textColor = .systemRed
+          self.status.stringValue = incompatible ? "Границы этих тем пока не поддерживаются компонентом знаний. Решения не запрошены, знания не созданы." : error.localizedDescription
+        }
+      }
+    }
+  }
+  private func presentTopicReview(_ package: [String: Any], identifiers: [String]) {
+    guard let topics = package["topics"] as? [[String: Any]], !topics.isEmpty,
+      let hash = package["package_sha256"] as? String else { status.stringValue = "Нет тем для проверки"; return }
+    NSSound.beep()
+    let alert = NSAlert()
+    alert.messageText = "Проверьте темы перед созданием знаний"
+    alert.informativeText = "Для каждой темы прочитайте цитату и выберите решение. Без вашего решения знания не создаются."
+    let stack = NSStackView()
+    stack.orientation = .vertical; stack.alignment = .leading; stack.spacing = 12
+    var choices: [(String, NSPopUpButton)] = []
+    for topic in topics {
+      guard let id = topic["id"] as? String else { return }
+      let text = NSTextField(wrappingLabelWithString: "\(topic["title"] as? String ?? "Тема")\n\(topic["summary"] as? String ?? "")\nЦитата: \(topic["quote"] as? String ?? "")")
+      text.widthAnchor.constraint(equalToConstant: 560).isActive = true
+      stack.addArrangedSubview(text)
+      let choice = NSPopUpButton()
+      choice.addItems(withTitles: ["Выберите решение", "Принять", "Отклонить"])
+      stack.addArrangedSubview(choice); choices.append((id, choice))
+    }
+    let reviewer = NSTextField(frame: NSRect(x: 0, y: 0, width: 560, height: 24))
+    reviewer.placeholderString = "Идентификатор проверяющего"; stack.addArrangedSubview(reviewer)
+    let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 590, height: 420))
+    scroll.hasVerticalScroller = true; scroll.documentView = stack
+    stack.setFrameSize(NSSize(width: 570, height: stack.fittingSize.height))
+    alert.accessoryView = scroll
+    alert.addButton(withTitle: "Сохранить решения и создать знания"); alert.addButton(withTitle: "Отмена")
+    while true {
+      guard alert.runModal() == .alertFirstButtonReturn else { return }
+      if choices.allSatisfy({ $0.1.indexOfSelectedItem > 0 }) && !reviewer.stringValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { break }
+      alert.informativeText = "Выберите решение для КАЖДОЙ темы и укажите идентификатор проверяющего."
+    }
+    let decisions = choices.map { ["topic_id": $0.0, "action": $0.1.indexOfSelectedItem == 1 ? "ACCEPT" : "REJECT", "reason": "Explicit decision in Integra macOS review"] }
+    let reviewerID = reviewer.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+    status.stringValue = "Сохраняю решения и создаю знания…"
+    let bridge = self.bridge!
+    DispatchQueue.global(qos: .userInitiated).async {
+      do {
+        _ = try bridge.json("apply-knowledge-review", request: [
+          "project_id": identifiers[0], "run_id": identifiers[1], "source_id": identifiers[2],
+          "expected_package_sha256": hash, "reviewer_id": reviewerID, "decisions": decisions])
+        DispatchQueue.main.async { self.renderOutputs(); self.status.stringValue = "Решения сохранены. Проверенные знания доступны в результатах." }
+      } catch {
+        DispatchQueue.main.async { self.status.textColor = .systemRed; self.status.stringValue = error.localizedDescription }
+      }
+    }
+  }
+  @objc private func showTranscriptReview(_ sender: NSButton) {
+    let identifiers = sender.toolTip?.split(separator: "\n", maxSplits: 2).map(String.init) ?? []
+    guard identifiers.count == 3 else { return }
+    sender.isEnabled = false
+    let bridge = self.bridge!
+    DispatchQueue.global(qos: .userInitiated).async {
+      do {
+        let prepared = try bridge.json("prepare-transcript-review", request: [
+          "project_id": identifiers[0], "run_id": identifiers[1], "source_id": identifiers[2]])["result"] as? [String: Any] ?? [:]
+        guard let transcriptPath = prepared["transcript_path"] as? String else { throw BridgeError.invalidResponse }
+        DispatchQueue.main.async {
+          sender.isEnabled = true
+          self.presentTranscriptReview(prepared: prepared, transcriptPath: transcriptPath, identifiers: identifiers)
+        }
+      } catch {
+        DispatchQueue.main.async { sender.isEnabled = true; self.status.textColor = .systemRed; self.status.stringValue = error.localizedDescription }
+      }
+    }
+  }
+  private func presentTranscriptReview(prepared: [String: Any], transcriptPath: String, identifiers: [String]) {
+    guard let requestHash = prepared["request_sha256"] as? String else { return }
+    NSSound.beep()
+    let alert = NSAlert()
+    alert.messageText = "Проверка расшифровки нужна перед созданием Evidence"
+    alert.informativeText = "Откройте и проверьте весь TXT. Подтверждение создаст Canonical Evidence через закреплённый SeminarText и будет привязано к точным хэшам источника, TXT и Word Timeline. Это действие не выполняется автоматически."
+    let accessory = NSStackView()
+    accessory.orientation = .vertical; accessory.alignment = .leading; accessory.spacing = 8
+    let open = button("Открыть TXT для проверки", #selector(openOutput(_:)))
+    open.toolTip = transcriptPath; accessory.addArrangedSubview(open)
+    let reviewer = NSTextField(frame: NSRect(x: 0, y: 0, width: 420, height: 24))
+    reviewer.placeholderString = "Ваш идентификатор проверки (например, yurielokhin)"
+    accessory.addArrangedSubview(reviewer)
+    let acknowledged = NSButton(checkboxWithTitle: "Я проверил(а) весь TXT и подтверждаю его для Evidence", target: nil, action: nil)
+    accessory.addArrangedSubview(acknowledged)
+    alert.accessoryView = accessory
+    alert.addButton(withTitle: "Создать Canonical Evidence")
+    alert.addButton(withTitle: "Отмена")
+    guard alert.runModal() == .alertFirstButtonReturn else { return }
+    guard acknowledged.state == .on else { status.textColor = .systemRed; status.stringValue = "Evidence не создан: требуется явное подтверждение проверки TXT."; return }
+    let reviewerID = reviewer.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !reviewerID.isEmpty else { status.textColor = .systemRed; status.stringValue = "Evidence не создан: укажите идентификатор проверяющего."; return }
+    status.textColor = .secondaryLabelColor; status.stringValue = "Создаю Canonical Evidence через SeminarText…"
+    let bridge = self.bridge!
+    DispatchQueue.global(qos: .userInitiated).async {
+      do {
+        let result = try bridge.json("apply-transcript-review", request: [
+          "project_id": identifiers[0], "run_id": identifiers[1], "source_id": identifiers[2],
+          "reviewer_id": reviewerID, "acknowledged": true, "expected_request_sha256": requestHash])["result"] as? [String: Any] ?? [:]
+        guard result["status"] as? String == "EVIDENCE_CREATED" else { throw BridgeError.invalidResponse }
+        DispatchQueue.main.async {
+          self.status.textColor = .labelColor
+          self.status.stringValue = "Canonical Evidence создан из подтверждённого TXT. Теперь можно подготовить темы к проверке."
+          self.renderOutputs()
+        }
+      } catch {
+        DispatchQueue.main.async { self.status.textColor = .systemRed; self.status.stringValue = error.localizedDescription }
+      }
+    }
+  }
   @objc private func openOutput(_ sender: NSButton) {
     if let path = sender.toolTip { NSWorkspace.shared.open(URL(fileURLWithPath: path)) }
   }
