@@ -136,6 +136,7 @@ struct SidebarItem {
   private var mediaPlayer: AVPlayer?, mediaWindow: NSWindow?
   private var reviewPlayer: AVPlayer?
   private var terminationPending = false
+  private var retryPending = false
   private let serviceQueue = DispatchQueue(label: "Integra.native-services", qos: .userInitiated)
   private let items: [SidebarItem] = [
     .init(title: "INTEGRA", id: "", header: true, enabled: false),
@@ -617,10 +618,12 @@ struct SidebarItem {
   // the button, only with caller-owned fixtures in an isolated application root.
   // No semantic decisions, account access or publication are permitted here.
   private func runNativeSmokeIfRequested() {
+    let retryProbe = ProcessInfo.processInfo.environment["INTEGRA_NATIVE_RETRY_SMOKE"] == "1"
+    let allowedOutputs: Set<String> = retryProbe ? ["word_timeline"] : ["speed_video", "audio_analysis", "document_text"]
     guard let directory = ProcessInfo.processInfo.environment["INTEGRA_NATIVE_SMOKE_DIR"],
       let dataRoot = ProcessInfo.processInfo.environment["INTEGRA_APP_DATA_ROOT"],
       dataRoot == directory + "/app-data", plan != nil,
-      !selected.isEmpty, selected.isSubset(of: ["speed_video", "audio_analysis", "document_text"]),
+      !selected.isEmpty, selected.isSubset(of: allowedOutputs),
       sources.allSatisfy({ ($0["input"] as? String)?.hasPrefix(directory + "/") == true })
     else { return }
     func capture(_ name: String) {
@@ -631,15 +634,16 @@ struct SidebarItem {
       try? bitmap.representation(using: .png, properties: [:])?.write(
         to: URL(fileURLWithPath: directory).appendingPathComponent(name))
     }
-    func actionButton(_ view: NSView) -> NSButton? {
-      if let button = view as? NSButton, button.action == #selector(execute), button.isEnabled { return button }
-      for child in view.subviews { if let button = actionButton(child) { return button } }
+    func actionButton(_ view: NSView, action: Selector) -> NSButton? {
+      if let button = view as? NSButton, button.action == action, button.isEnabled { return button }
+      for child in view.subviews { if let button = actionButton(child, action: action) { return button } }
       return nil
     }
     capture("plan.png")
-    guard let view = window.contentView, let button = actionButton(view) else { return }
+    guard let view = window.contentView, let button = actionButton(view, action: #selector(execute)) else { return }
     button.performClick(nil)
     let deadline = Date().addingTimeInterval(180)
+    var retriedRun: String?
     Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] probe in
       Task { @MainActor in
         guard let self else { probe.invalidate(); return }
@@ -647,6 +651,18 @@ struct SidebarItem {
           let run = try? self.bridge.json("run-status", request: ["project_id": projectID, "run_id": runID])["result"] as? [String: Any],
           ["COMPLETED", "FAILED", "CANCELLED"].contains(run["state"] as? String ?? "")
         {
+          if retryProbe && run["state"] as? String == "FAILED" && retriedRun == nil {
+            self.renderOperations()
+            capture("before-retry.png")
+            try? JSONSerialization.data(withJSONObject: run, options: [.prettyPrinted, .sortedKeys]).write(
+              to: URL(fileURLWithPath: directory).appendingPathComponent("failed-run.json"))
+            if let view = self.window.contentView, let retry = actionButton(view, action: #selector(self.retryRun)) {
+              retriedRun = runID
+              retry.performClick(nil)
+              return
+            }
+          }
+          if retriedRun == runID && Date() < deadline { return }
           probe.invalidate()
           self.renderOperations()
           capture("results.png")
@@ -711,6 +727,9 @@ struct SidebarItem {
           result["display_name"] as? String ?? "Источник",
           detail: result["state"] as? String ?? "UNKNOWN"))
       let outputs = result["outputs"] as? [String: Any] ?? [:]
+      if let reuse = result["asr_reuse"] as? [String: Any], reuse["state"] as? String == "REUSED" {
+        add(row("Расшифровка использована повторно", detail: "Исходник, модель, настройки и файлы проверены. Повторное распознавание не запускалось."))
+      }
       for (kind, path) in outputs.sorted(by: { $0.key < $1.key }) {
         let title: String
         switch kind {
@@ -1136,14 +1155,23 @@ struct SidebarItem {
   }
   @objc private func retryRun() {
     guard !terminationPending else { return }
+    guard !retryPending else { return }
     guard let p = projectID, let r = runID else { return }
-    do {
-      let value =
-        try bridge.json("retry-run", request: ["project_id": p, "run_id": r])["result"]
-        as? [String: Any]
-      runID = value?["run_id"] as? String
-      renderOperations()
-    } catch { status.stringValue = error.localizedDescription }
+    retryPending = true
+    let service = bridge!
+    status.stringValue = "Подготавливаю повтор; сохранённая расшифровка будет проверена перед использованием…"
+    serviceQueue.async {
+      do {
+        let value = try service.json("retry-run", request: ["project_id": p, "run_id": r])["result"] as? [String: Any]
+        DispatchQueue.main.async {
+          self.retryPending = false
+          self.runID = value?["run_id"] as? String
+          self.renderOperations()
+        }
+      } catch {
+        DispatchQueue.main.async { self.retryPending = false; self.status.stringValue = error.localizedDescription }
+      }
+    }
   }
   private func renderProjects() {
     reset("Проекты", "Реальные локальные проекты Integra. Откройте проект, чтобы увидеть сохранённые источники и обработки.")

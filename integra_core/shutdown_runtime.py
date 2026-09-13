@@ -172,7 +172,6 @@ def _cancel_run(project_dir: Path, run_id: str, *, timeout: float) -> dict:
     marker = cancellation_path(path)
     if marker.is_symlink():
         raise ValueError("Shutdown cancellation marker is unsafe")
-    marker.touch(exist_ok=True)
     owned = {identity["pid"]: identity}
     for item in owner.get("observed_processes", []):
         owned[item["pid"]] = item
@@ -207,6 +206,9 @@ def _cancel_run(project_dir: Path, run_id: str, *, timeout: float) -> dict:
             time.sleep(.01)
         # Stop descendants before the leader. No termination handler is run,
         # so the frozen, fully captured tree cannot fork outside ownership.
+        # Publish the cooperative request only after capture: otherwise ASR's
+        # polling callback can exit during the ownership snapshot itself.
+        marker.touch(exist_ok=True)
         for item in reversed(living):
             _signal_owned(item, signal.SIGKILL)
         while True:

@@ -23,6 +23,7 @@ from .word_timeline_runtime import generate_word_timeline
 from .videotext_runtime import translate as translate_videotext
 from . import seminartext_asr_runtime as asr
 from . import videotext_media_runtime as videotext_media
+from . import asr_reuse
 
 
 class _RunCancelled(Exception):
@@ -290,17 +291,19 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
             atomic_json(jobs_path, jobs)
             return job
         _, whisper, model = _tools()
-        checkpoint("RUNNING", 25, "Распознавание SeminarText: фрагменты, VAD и проверка качества", run_stage="transcript")
-        recognized = asr.transcribe(source, work, ffmpeg=Path(ffmpeg), whisper=Path(whisper), model=Path(model),
+        checkpoint("RUNNING", 25, "Проверяю возможность повторного использования расшифровки", run_stage="transcript")
+        recognized = asr_reuse.transcribe_or_reuse(project_dir, source, work, ffmpeg=Path(ffmpeg), whisper=Path(whisper), model=Path(model),
+            expected_source_sha256=job["source_sha256"],
             cancelled=lambda: _is_run_cancelled(project_dir, job.get("run_id")),
             progress=lambda message: checkpoint("RUNNING", 25, message, run_stage="transcript"))
+        job["asr_reuse"] = recognized["reuse"]
         subtitles = Path(recognized["srt"])
         segments = _parse_srt(subtitles.read_text(encoding="utf-8"), job["source_id"])
         if not segments: raise ValueError("transcription produced no timed speech segments")
         checkpoint("RUNNING", 80, "Saving timed transcript and subtitles", run_stage="subtitles")
         transcript = {"schema_version":"1.0", "source_id":job["source_id"], "assurance":"MACHINE_TRANSCRIPT_UNREVIEWED",
-                      "model_sha256":hashlib.sha256(Path(model).read_bytes()).hexdigest(), "segments":segments,
-                      "asr_provenance": recognized["provenance"]}
+                      "model_sha256":recognized["provenance"]["model_sha256"], "segments":segments,
+                      "asr_provenance": recognized["provenance"], "asr_reuse": recognized["reuse"]}
         transcript_text = "\n".join(segment["text"] for segment in segments)
         transcript_txt = work / "transcript.txt"
         transcript_txt.write_text((transcript_text + "\n") if transcript_text else "", encoding="utf-8")
