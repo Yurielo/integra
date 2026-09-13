@@ -29,6 +29,7 @@ final class Bridge: @unchecked Sendable {
       "onedrive-preview",
       "prepare-transcript-review", "apply-transcript-review", "prepare-topic-review",
       "prepare-knowledge-review", "apply-knowledge-review", "create-machine-evidence",
+      "shutdown-active-runs",
     ]
     guard allowed.contains(operation) else { throw BridgeError.failed("Unsupported operation") }
     let script = resources.appendingPathComponent("bridge.py")
@@ -124,7 +125,7 @@ struct SidebarItem {
 }
 
   @MainActor
-  final class AppDelegate: NSObject, NSApplicationDelegate, NSTableViewDataSource, NSTableViewDelegate
+  final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTableViewDataSource, NSTableViewDelegate
   {
   private var window: NSWindow!, bridge: Bridge!
   private let sidebar = NSTableView(), content = FlippedStackView(),
@@ -134,6 +135,8 @@ struct SidebarItem {
   private var projectID: String?, runID: String?, timer: Timer?
   private var mediaPlayer: AVPlayer?, mediaWindow: NSWindow?
   private var reviewPlayer: AVPlayer?
+  private var terminationPending = false
+  private let serviceQueue = DispatchQueue(label: "Integra.native-services", qos: .userInitiated)
   private let items: [SidebarItem] = [
     .init(title: "INTEGRA", id: "", header: true, enabled: false),
     .init(title: "＋ Новая обработка", id: "new", header: false, enabled: true),
@@ -189,27 +192,53 @@ struct SidebarItem {
       NSApp.terminate(nil)
     } else if ProcessInfo.processInfo.environment["INTEGRA_CLOSE_PROBE"] != nil {
       DispatchQueue.main.async { self.window.performClose(nil) }
+    } else if ProcessInfo.processInfo.environment["INTEGRA_QUIT_PROBE"] != nil {
+      DispatchQueue.main.async { NSApp.terminate(nil) }
     }
   }
 
   func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
+  func windowShouldClose(_ sender: NSWindow) -> Bool {
+    NSApp.terminate(nil)
+    return false
+  }
   func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-    Task {
-      if let projectID, let runID {
-        _ = try? bridge.json("cancel-run", request: ["project_id": projectID, "run_id": runID])
-      }
-      if let recent = try? bridge.json("recent-runs")["result"] as? [[String: Any]] {
-        for item in recent {
-          guard let project = item["project"] as? [String: Any], let run = item["run"] as? [String: Any],
-                ["RUNNING", "QUEUED"].contains(run["state"] as? String ?? ""),
-                let projectID = project["project_id"] as? String,
-                let runID = run["run_id"] as? String
-          else { continue }
-          _ = try? bridge.json("cancel-run", request: ["project_id": projectID, "run_id": runID])
+    guard !terminationPending else { return .terminateLater }
+    terminationPending = true
+    window.ignoresMouseEvents = true
+    timer?.invalidate()
+    status.stringValue = "Останавливаю активную обработку перед закрытием…"
+    let service = bridge!
+    serviceQueue.async {
+      do {
+        let result = try service.json("shutdown-active-runs")["result"] as? [String: Any]
+        guard result?["state"] as? String == "SHUTDOWN_READY" else {
+          throw BridgeError.failed("Остановка обработки не подтверждена.")
+        }
+        // terminateLater can run AppKit's modal loop, which does not drain the
+        // main dispatch queue. Deliver its reply in that run-loop mode too.
+        RunLoop.main.perform(inModes: [.default, .modalPanel, .eventTracking]) {
+          MainActor.assumeIsolated { NSApp.reply(toApplicationShouldTerminate: true) }
+        }
+      } catch {
+        let message = error.localizedDescription
+        RunLoop.main.perform(inModes: [.default, .modalPanel, .eventTracking]) {
+          MainActor.assumeIsolated {
+            self.terminationPending = false
+            self.window.ignoresMouseEvents = false
+            NSApp.reply(toApplicationShouldTerminate: false)
+            self.window.makeKeyAndOrderFront(nil)
+            self.status.textColor = .systemRed
+            self.status.stringValue = "Не удалось безопасно остановить обработку: \(message). Приложение осталось открытым."
+            if self.runID != nil { self.startPolling() }
+            if let marker = ProcessInfo.processInfo.environment["INTEGRA_SHUTDOWN_FAILURE_PROBE"] {
+              try? self.status.stringValue.write(toFile: marker, atomically: true, encoding: .utf8)
+            }
+          }
         }
       }
     }
-    return .terminateNow
+    return .terminateLater
   }
 
   func applicationWillTerminate(_ notification: Notification) {
@@ -217,6 +246,9 @@ struct SidebarItem {
     if let marker = ProcessInfo.processInfo.environment["INTEGRA_CLOSE_PROBE"] {
       try? "TERMINATED_AFTER_LAST_WINDOW_CLOSED\n"
         .write(toFile: marker, atomically: true, encoding: .utf8)
+    }
+    if let marker = ProcessInfo.processInfo.environment["INTEGRA_QUIT_PROBE"] {
+      try? "TERMINATED_AFTER_CONFIRMED_SHUTDOWN\n".write(toFile: marker, atomically: true, encoding: .utf8)
     }
   }
 
@@ -226,6 +258,8 @@ struct SidebarItem {
       styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
       backing: .buffered, defer: false)
     window.title = "Integra — Новая обработка"
+    window.isReleasedWhenClosed = false
+    window.delegate = self
     window.minSize = NSSize(width: 1080, height: 620)
     window.center()
     window.toolbar = NSToolbar(identifier: "IntegraToolbar")
@@ -499,7 +533,7 @@ struct SidebarItem {
     status.textColor = .secondaryLabelColor
     status.stringValue = "Определяю тип и реальные возможности…"
     let bridge = self.bridge!
-    DispatchQueue.global(qos: .userInitiated).async {
+    serviceQueue.async {
       do {
         let detected =
           try bridge.json("detect-sources", request: ["inputs": inputs])["result"]
@@ -552,12 +586,13 @@ struct SidebarItem {
     }
   }
   @objc private func execute() {
+    guard !terminationPending else { return }
     guard let plan = plan else { return }
     status.textColor = .secondaryLabelColor
     status.stringValue = "Создаю проект и ставлю реальную обработку в очередь…"
     let bridge = self.bridge!
     let name = sources.first?["display_name"] as? String ?? "Новая обработка"
-    DispatchQueue.global(qos: .userInitiated).async {
+    serviceQueue.async {
       do {
         let result =
           try bridge.json("execute-plan", request: ["plan": plan, "name": name])["result"]
@@ -811,7 +846,7 @@ struct SidebarItem {
     guard ids.count == 3 else { return }
     sender.isEnabled = false
     let bridge = self.bridge!
-    DispatchQueue.global(qos: .userInitiated).async {
+    serviceQueue.async {
       do {
         _ = try bridge.json("create-machine-evidence", request: ["project_id": ids[0], "run_id": ids[1], "source_id": ids[2]])
         DispatchQueue.main.async { self.renderOutputs() }
@@ -825,7 +860,7 @@ struct SidebarItem {
     guard identifiers.count == 3 else { return }
     status.stringValue = "Проверяю сохранённые решения и формирую пакет…"
     let bridge = self.bridge!
-    DispatchQueue.global(qos: .userInitiated).async {
+    serviceQueue.async {
       do {
         _ = try bridge.json("build-reviewed-package", request: [
           "project_id": identifiers[0], "run_id": identifiers[1], "source_id": identifiers[2]])
@@ -843,7 +878,7 @@ struct SidebarItem {
     guard identifiers.count == 3 else { return }
     sender.isEnabled = false; sender.title = "Подготавливаю review input…"
     let bridge = self.bridge!
-    DispatchQueue.global(qos: .userInitiated).async {
+    serviceQueue.async {
       do {
         let result = try bridge.json("prepare-knowledge-review", request: [
           "project_id": identifiers[0], "run_id": identifiers[1], "source_id": identifiers[2]])["result"] as? [String: Any] ?? [:]
@@ -917,7 +952,7 @@ struct SidebarItem {
     let reviewerID = reviewer.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
     status.stringValue = "Сохраняю решения и формирую проверенный результат…"
     let bridge = self.bridge!
-    DispatchQueue.global(qos: .userInitiated).async {
+    serviceQueue.async {
       do {
         let response = try bridge.json("apply-knowledge-review", request: [
           "project_id": identifiers[0], "run_id": identifiers[1], "source_id": identifiers[2],
@@ -943,7 +978,7 @@ struct SidebarItem {
     guard identifiers.count == 3 else { return }
     sender.isEnabled = false
     let bridge = self.bridge!
-    DispatchQueue.global(qos: .userInitiated).async {
+    serviceQueue.async {
       do {
         let prepared = try bridge.json("prepare-transcript-review", request: [
           "project_id": identifiers[0], "run_id": identifiers[1], "source_id": identifiers[2]])["result"] as? [String: Any] ?? [:]
@@ -981,7 +1016,7 @@ struct SidebarItem {
     guard !reviewerID.isEmpty else { status.textColor = .systemRed; status.stringValue = "Evidence не создан: укажите идентификатор проверяющего."; return }
     status.textColor = .secondaryLabelColor; status.stringValue = "Создаю Canonical Evidence через SeminarText…"
     let bridge = self.bridge!
-    DispatchQueue.global(qos: .userInitiated).async {
+    serviceQueue.async {
       do {
         let result = try bridge.json("apply-transcript-review", request: [
           "project_id": identifiers[0], "run_id": identifiers[1], "source_id": identifiers[2],
@@ -1082,7 +1117,7 @@ struct SidebarItem {
     sender.isEnabled = false
     sender.title = "Создаю локальный клип…"
     let bridge = self.bridge!
-    DispatchQueue.global(qos: .userInitiated).async {
+    serviceQueue.async {
       do {
         let result = try bridge.json("create-media-clip", request: ["project_id": values[0], "run_id": values[1], "source_id": values[2], "start_seconds": start, "end_seconds": end])["result"] as? [String: Any]
         guard let path = result?["path"] as? String else { throw BridgeError.invalidResponse }
@@ -1100,6 +1135,7 @@ struct SidebarItem {
     } catch { status.stringValue = error.localizedDescription }
   }
   @objc private func retryRun() {
+    guard !terminationPending else { return }
     guard let p = projectID, let r = runID else { return }
     do {
       let value =
