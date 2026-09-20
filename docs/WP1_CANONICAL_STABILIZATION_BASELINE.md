@@ -73,7 +73,7 @@ Completed cheapest-first checks:
 | governance validator | NOT RECERTIFIED: its immutable R12 implementation hashes intentionally describe historical accepted bytes and detect this WP1 bridge/build change |
 | review-wheel contract and two fresh-cache restorations | PASS: five exact wheels, identical filename/hash inventory |
 | clean isolated candidate build | PASS |
-| embedded Candidate Manifest and bundle digest validation | PASS |
+| embedded Candidate Manifest and bundle digest validation before/after self-test | PASS; same Candidate ID/digest |
 | native self-test | PASS (`INTEGRA_MACOS_SELF_TEST: PASS`) |
 | bundled SeminarText identity/preflight | PASS: commit `970bde…cb9c0`, CLI `f7f411…ef13a` |
 | Candidate-bound Word Alignment identity/preflight | PASS: CPython 3.13, model revision `232910…f3406`, weights `d1cdb1…df0c1c` |
@@ -92,10 +92,10 @@ The authoritative final candidate produced the following immutable evidence:
 
 | Field | Value |
 | --- | --- |
-| Candidate path | `/private/tmp/integra-wp1-candidate-authoritative.FINhlx/Integra.app` |
-| Candidate ID | `candidate-v1-59cbbfbea96fc6340fdf169739418cddca4ba51cf090e8b000d87ecdc068424a` |
-| Bundle digest | `1bef491399fe36189260e1c7dee2d06b2d926616d2959007662aba830ba39764` |
-| Build source commit | `57f784594d5f5783bd1ccec17bb3e0827a1648fc` |
+| Candidate path | `/private/tmp/integra-wp1-candidate-final2.AIeRQx/Integra.app` |
+| Candidate ID | `candidate-v1-12b31da7ff02f9ad329c6d6a535d8ced3525ef52a727e3ab648c10acc3d94c03` |
+| Bundle digest | `991ee9d6f64df1c97ce74c62552b2fe8aa4eb84c2b10953066e16edb329545e9` |
+| Build source commit | `573c27b5c32646e83250e8c93b204867f4fee3e4` |
 
 The manifest reports `dirty=false` and tree `8f1c00f1b2e7902c1a91451cd200bf74794c3e9a`.
 The subsequent report-only commit does not alter the candidate or its bundle;
