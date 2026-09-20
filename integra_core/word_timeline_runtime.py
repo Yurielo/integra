@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import subprocess
 from pathlib import Path
@@ -53,12 +54,16 @@ def preflight() -> dict[str, Any]:
 def generate_word_timeline(audio: Path, subtitles: Path, output: Path) -> dict[str, Any]:
     runtime = preflight()
     output.parent.mkdir(parents=True, exist_ok=True)
-    completed = subprocess.run([runtime["python"], runtime["worker"], "--audio", str(audio), "--srt", str(subtitles),
-                                "--model-dir", runtime["model_dir"], "--output", str(output)], capture_output=True, text=True,
-                               timeout=1200, env={**os.environ, "PYTHONPATH": runtime["site_packages"], "HF_HUB_OFFLINE":"1"})
+    command = [runtime["python"], runtime["worker"], "--audio", str(audio), "--srt", str(subtitles),
+               "--model-dir", runtime["model_dir"], "--output", str(output)]
+    completed = subprocess.run(command, capture_output=True, text=True, timeout=1200,
+                               env={**os.environ, "PYTHONPATH": runtime["site_packages"], "HF_HUB_OFFLINE":"1"})
+    diagnostic = output.with_suffix(".worker-diagnostic.json")
+    diagnostic.write_text(json.dumps({"schema_version": "1.0", "component": "seminartext",
+        "stage": "word_timeline", "command": command, "exit_status": completed.returncode,
+        "stdout": completed.stdout[-16384:], "stderr": completed.stderr[-16384:]}, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
     if completed.returncode != 0 or output.is_symlink() or not output.is_file():
-        raise ValueError("Word Timeline worker did not produce a validated output")
-    import json
+        raise ValueError(f"Word Timeline worker did not produce a validated output; diagnostics: {diagnostic}")
     result = json.loads(output.read_bytes()); words = result.get("words") if isinstance(result, dict) else None
     if result.get("capability") != "word_timeline" or not isinstance(words, list) or not words:
         raise ValueError("Word Timeline output is invalid")
