@@ -60,7 +60,32 @@ not an acceptance decision.
 
 ## WP1 validation record
 
-The final branch revision records the exact candidate path, Candidate ID, and
-validation commands/results below after the isolated build. This issue claims
-neither primary product E2E, MCWMA readiness, nor owner acceptance. WP2 is the
-first permitted #148 classification work; WP3 owns repair and E2E.
+Completed cheapest-first checks:
+
+| Check | Result |
+| --- | --- |
+| Python syntax for changed modules and candidate tool | PASS |
+| `bash -n scripts/build_macos_app.sh` / `git diff --check` | PASS |
+| focused Candidate Manifest, Ollama, Word Timeline, VideoText and SeminarText runtime tests | PASS: 26 run, 6 environment skips |
+| agent validator | PASS |
+| governance validator | NOT RECERTIFIED: its immutable R12 implementation hashes intentionally describe historical accepted bytes and detect this WP1 bridge/build change |
+| clean isolated candidate build | BLOCKED before completion |
+
+The isolated build used clean detached source checkouts: SeminarText final pin,
+VideoText final pin and BookText final pin. It correctly rejected the original
+local VideoText checkout because its `TranslationAdapter.swift` bytes differed
+from the pinned hash; that checkout was not changed. With the clean checkouts,
+the build reached `scripts/package_review_runtime.py` and stopped fail-closed:
+the new worktree has no `/.runtime-components/review-wheels` cache, and its
+mandatory offline, hash-locked installation cannot find `attrs==26.1.0`.
+No candidate manifest can truthfully be generated before that package step.
+
+**WP1 status: `BLOCKED`.** The missing exact review-wheel build input must be
+made available through the existing governed build-input mechanism before a
+fresh isolated candidate can be built and its manifest/self-test/Word Alignment
+preflight validated. This is not a Word Timeline diagnosis, product repair,
+runtime-pin change, or permission to reuse an old candidate PASS.
+
+This issue claims neither primary product E2E, MCWMA readiness, nor owner
+acceptance. WP2 is the first permitted #148 classification work; WP3 owns
+repair and E2E.
