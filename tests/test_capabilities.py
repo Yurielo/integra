@@ -32,6 +32,16 @@ class CapabilityRegistryTests(unittest.TestCase):
             self.assertFalse(registry["transcript"]["runtime_available"])
             self.assertIn("ASR runtime unavailable", registry["transcript"]["ui_state"])
 
+    def test_verified_asr_runtime_keeps_transcript_and_srt_available(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "talk.wav"; source.write_bytes(b"audio")
+            with patch.dict(os.environ, self.media_runtime(root)):
+                registry = {item["id"]: item for item in capability_registry([detect_source(str(source))])}
+        for identifier in ("transcript", "subtitles"):
+            self.assertTrue(registry[identifier]["runtime_available"], identifier)
+            self.assertEqual(registry[identifier]["ui_state"], "Доступно")
+
     def test_source_detection_distinguishes_media_documents_and_youtube(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory); audio=root/"talk.mp3"; audio.write_bytes(b"audio")
