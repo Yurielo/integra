@@ -153,7 +153,7 @@ No mandatory gate exposed a reproducible product defect. Consequently:
 | Clean governed build | PASS |
 | Candidate manifest generation/validation | PASS |
 | Native self-test | PASS (`INTEGRA_MACOS_SELF_TEST: PASS`) |
-| GitHub Quality Gate | PASS on PR #154 final HEAD (recorded by CI) |
+| GitHub Quality Gate | PASS, run `35537584738` / job `106149262598` on commit `3f10482a8638b8241171c9799ec099f75c0ce508` |
 | Runtime/component identity | PASS |
 | Deterministic Russian packaged E2E | PASS |
 | Realistic Russian packaged E2E | PASS |
