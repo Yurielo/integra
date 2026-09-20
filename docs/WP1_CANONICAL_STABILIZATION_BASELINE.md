@@ -70,7 +70,7 @@ Completed cheapest-first checks:
 | `bash -n scripts/build_macos_app.sh` / `git diff --check` | PASS |
 | focused Candidate Manifest, Ollama, Word Timeline, VideoText and SeminarText runtime tests | PASS: 26 run, 6 environment skips |
 | agent validator | PASS |
-| governance validator | NOT RECERTIFIED: its immutable R12 implementation hashes intentionally describe historical accepted bytes and detect this WP1 bridge/build change |
+| governance validator | PASS: immutable R12/R13 certifications remain unchanged; the candidate-bound current canonical baseline explicitly records only the superseding WP1 bytes and remains fail-closed on drift |
 | review-wheel contract and two fresh-cache restorations | PASS: five exact wheels, identical filename/hash inventory |
 | clean isolated candidate build | PASS |
 | embedded Candidate Manifest and bundle digest validation before/after self-test | PASS; same Candidate ID/digest |

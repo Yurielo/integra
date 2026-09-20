@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.current_canonical_baseline",
+  "scope": "current_canonical_stabilization",
+  "parent_main_sha": "8fce7a625cac3d57f0d197e2ea610241821452f5",
+  "baseline_source_commit": "573c27b5c32646e83250e8c93b204867f4fee3e4",
+  "candidate": {
+    "candidate_id": "candidate-v1-12b31da7ff02f9ad329c6d6a535d8ced3525ef52a727e3ab648c10acc3d94c03",
+    "identity_sha256": "12b31da7ff02f9ad329c6d6a535d8ced3525ef52a727e3ab648c10acc3d94c03",
+    "bundle_digest": "991ee9d6f64df1c97ce74c62552b2fe8aa4eb84c2b10953066e16edb329545e9",
+    "manifest_schema": "schemas/candidate_manifest_v1.schema.json",
+    "manifest_schema_sha256": "72ba51886ebf48bce6b6a3dcf9ac1dd435d88fd97e39531929633dd243373dca"
+  },
+  "historical_certifications": [
+    "state/native_macos_app_v1.json",
+    "state/ready_app_v1.json"
+  ],
+  "files": [
+    {
+      "path": "macos/Resources/bridge.py",
+      "current_sha256": "f362d20b4738e3cf58f435c2defc213a8f50e056e4a4d41b84d1f84dc78d404f",
+      "historical_refs": [
+        {"state_path": "state/native_macos_app_v1.json", "sha256": "f83a5e9c82a4be43e170a054c51427b794eb0d2f3e76fbfc7c72bc6db011a806"},
+        {"state_path": "state/ready_app_v1.json", "sha256": "f83a5e9c82a4be43e170a054c51427b794eb0d2f3e76fbfc7c72bc6db011a806"}
+      ]
+    },
+    {
+      "path": "scripts/build_macos_app.sh",
+      "current_sha256": "f2c7577b3afcde75e00828e8a9d0303a9370eac517902d7c49a87cce65237623",
+      "historical_refs": [
+        {"state_path": "state/native_macos_app_v1.json", "sha256": "bff4da354032d164774879721359ea995365129eb605f5a3d90d1972d0699f5e"}
+      ]
+    },
+    {
+      "path": "scripts/test_macos_app.sh",
+      "current_sha256": "09bf6703b0cbd205b214e8361ce9242b33fc465ce57913177b71944361db5039",
+      "historical_refs": [
+        {"state_path": "state/native_macos_app_v1.json", "sha256": "efb95b9041a3c010680affe1551e2c0e11b535bbaa7ae7ee41ffa62549e887eb"}
+      ]
+    },
+    {
+      "path": "scripts/validate_governance.py",
+      "current_sha256": "fbf9de2f516583b5340887429864334880f29c49a7c389ecfdd1bbe0f2d6e266",
+      "historical_refs": []
+    },
+    {
+      "path": "schemas/current_canonical_baseline_v1.schema.json",
+      "current_sha256": "535d7da274dfbe71de92b48a9ee1530626b39d05dbd4ccd2327c10934523a099",
+      "historical_refs": []
+    }
+  ]
+}
