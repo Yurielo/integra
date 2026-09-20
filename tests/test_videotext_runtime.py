@@ -20,3 +20,12 @@ class VideoTextRuntimeTests(unittest.TestCase):
                 runtime = preflight()
         self.assertEqual(runtime["component"], "videotext")
         self.assertEqual(runtime["model"], "qwen3:8b")
+
+    def test_preflight_reports_missing_ollama_without_raw_os_error(self):
+        with tempfile.TemporaryDirectory() as directory:
+            worker = Path(directory) / "translation-worker"; worker.write_text("#!/bin/sh\n")
+            worker.chmod(worker.stat().st_mode | stat.S_IXUSR)
+            with patch.dict(os.environ, {"INTEGRA_VIDEOTEXT_TRANSLATION_WORKER": str(worker), "PATH": "/missing"}, clear=True), \
+                 patch("integra_core.ollama_runtime.MACOS_OLLAMA_PATHS", ()):
+                with self.assertRaisesRegex(ValueError, "Ollama is unavailable"):
+                    preflight()
