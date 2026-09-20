@@ -69,22 +69,38 @@ Completed cheapest-first checks:
 | focused Candidate Manifest, Ollama, Word Timeline, VideoText and SeminarText runtime tests | PASS: 26 run, 6 environment skips |
 | agent validator | PASS |
 | governance validator | NOT RECERTIFIED: its immutable R12 implementation hashes intentionally describe historical accepted bytes and detect this WP1 bridge/build change |
-| clean isolated candidate build | BLOCKED before completion |
+| review-wheel contract and two fresh-cache restorations | PASS: five exact wheels, identical filename/hash inventory |
+| clean isolated candidate build | PASS |
+| embedded Candidate Manifest and bundle digest validation | PASS |
+| native self-test | PASS (`INTEGRA_MACOS_SELF_TEST: PASS`) |
+| bundled SeminarText identity/preflight | PASS: commit `970bde…cb9c0`, CLI `f7f411…ef13a` |
+| Candidate-bound Word Alignment identity/preflight | PASS: CPython 3.13, model revision `232910…f3406`, weights `d1cdb1…df0c1c` |
 
 The isolated build used clean detached source checkouts: SeminarText final pin,
 VideoText final pin and BookText final pin. It correctly rejected the original
 local VideoText checkout because its `TranslationAdapter.swift` bytes differed
 from the pinned hash; that checkout was not changed. With the clean checkouts,
-the build reached `scripts/package_review_runtime.py` and stopped fail-closed:
-the new worktree has no `/.runtime-components/review-wheels` cache, and its
-mandatory offline, hash-locked installation cannot find `attrs==26.1.0`.
-No candidate manifest can truthfully be generated before that package step.
+the build reached `scripts/package_review_runtime.py` and initially stopped
+fail-closed because the new worktree had no governed wheel cache. That blocker
+was resolved only by the contract-first procedure above; the clean retry used
+the validated fresh cache through `INTEGRA_REVIEW_WHEELS`. No old candidate
+runtime or wheel file was copied.
 
-**WP1 status: `BLOCKED`.** The missing exact review-wheel build input must be
-made available through the existing governed build-input mechanism before a
-fresh isolated candidate can be built and its manifest/self-test/Word Alignment
-preflight validated. This is not a Word Timeline diagnosis, product repair,
-runtime-pin change, or permission to reuse an old candidate PASS.
+The successful pre-doc candidate produced the following immutable evidence:
+
+| Field | Value |
+| --- | --- |
+| Candidate path | `/private/tmp/integra-wp1-candidate-final.jhAlE9/Integra.app` |
+| Candidate ID | `candidate-v1-03a0bf097ca5aef42956093ce3eaca336d161aa372aa0e76165300022d9c4326` |
+| Bundle digest | `1bef491399fe36189260e1c7dee2d06b2d926616d2959007662aba830ba39764` |
+| Build source commit | `47b4a50969b29826f57910e19f1fa336725744d9` |
+
+The final report commit is documentation/state evidence only; the final clean
+candidate build below is performed after that commit so the delivered Candidate
+ID binds the final branch source exactly.
+
+This is not a Word Timeline diagnosis, product repair, runtime-pin change, or
+permission to reuse an old candidate PASS.
 
 The governed review-wheel closure is explicit in
 `state/review_runtime_cache_v1.json`: requirements-file digest, PyPI
