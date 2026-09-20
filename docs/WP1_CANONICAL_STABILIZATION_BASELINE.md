@@ -86,6 +86,16 @@ fresh isolated candidate can be built and its manifest/self-test/Word Alignment
 preflight validated. This is not a Word Timeline diagnosis, product repair,
 runtime-pin change, or permission to reuse an old candidate PASS.
 
+The governed review-wheel closure is explicit in
+`state/review_runtime_cache_v1.json`: requirements-file digest, PyPI
+simple-index provenance, CPython 3.14/macOS arm64 wheel contract, all five
+filenames and hashes, and the offline install command. Two independently
+restored fresh caches were produced with hash-locked `pip download`; both
+passed the validator and produced identical filename/hash inventories. No
+wheel was installed or copied from an old candidate. Packaging now invokes the
+validator before its existing offline install and receives the validated cache
+through `INTEGRA_REVIEW_WHEELS`.
+
 This issue claims neither primary product E2E, MCWMA readiness, nor owner
 acceptance. WP2 is the first permitted #148 classification work; WP3 owns
 repair and E2E.
