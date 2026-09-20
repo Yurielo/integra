@@ -36,7 +36,7 @@ def main() -> None:
     env = {key: value for key, value in os.environ.items() if not key.startswith("INTEGRA_")}
     env.update(INTEGRA_APP_DATA_ROOT=str(args.work / "app-data"), PYTHONPATH=str(resources), PYTHONDONTWRITEBYTECODE="1")
     def call(operation, request):
-        result = run([sys.executable, str(bridge), operation], input=json.dumps(request), text=True, capture_output=True, env=env, timeout=30)
+        result = run(["/usr/bin/python3", str(bridge), operation], input=json.dumps(request), text=True, capture_output=True, env=env, timeout=30)
         value = json.loads(result.stdout)
         if not value.get("ok"): raise AssertionError(value)
         return value["result"]

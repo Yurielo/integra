@@ -82,7 +82,12 @@ persisted run `urn:integra:run:b84522b9-45e9-461f-8740-0c224fe112f3`:
 | Persisted artifacts and navigation metadata | PASS |
 | Final state | PASS (`COMPLETED`, mapped to Issue `SUCCESS`) |
 
-The owner correctly rejected this as a Phase 1 acceptance claim. The short
+The owner correctly rejected this as a Phase 1 acceptance claim. In addition,
+the earlier harness invoked the bridge through Homebrew Python 3.14, while the
+GUI uses `/usr/bin/python3`; an earlier probe also referenced #146e paths.
+Those runs are invalid as fresh-candidate GUI-equivalence evidence. The harness
+now explicitly uses `/usr/bin/python3`, but has not been rerun because the
+original failure class remains blocked. The short
 generated fixture proves only a happy path; it is not an
 `ORIGINAL_FAILURE_CLASS_REGRESSION_PASS` and must not be used for owner
 handoff.
