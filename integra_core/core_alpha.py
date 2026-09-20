@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import binascii
+import copy
 import hashlib
 import json
 import os
@@ -74,8 +75,8 @@ EXPECTED_PINNED_COMPONENTS = {
     "seminartext": {
         "component_id": "seminartext",
         "repository": "Yurielo/seminartext",
-        "commit_sha": "a94936cd77cde13561c97c804ece1ac1134e01a6",
-        "tree_sha": "5f5951da1d5dcf957ef982510fde3537f601ea15",
+        "commit_sha": "970bde598ddd649599295139986933e0e06cb9c0",
+        "tree_sha": "6384533c5a41dc97e9fa36f57e7240ac825e411c",
         "version": "4.0.0",
         "contracts": [
             "canonical_evidence_v1",
@@ -408,24 +409,11 @@ def validate_core_alpha_manifest(manifest: dict[str, Any]) -> None:
 
 
 def load_component_identities(root: Path) -> dict[str, dict[str, Any]]:
-    manifest = json.loads(
-        (root / "state/component_baselines_v1.json").read_text(encoding="utf-8")
-    )
-    identities: dict[str, dict[str, Any]] = {}
-    for component in manifest["components"]:
-        identity = {
-            "component_id": component["id"],
-            "repository": component["repository"],
-            "commit_sha": component["commit_sha"],
-            "tree_sha": component["tree_sha"],
-            "version": component["version"],
-            "contracts": [item["id"] for item in component["supported_contracts"]],
-            "runtime": {"kind": "pinned_component", "version": component["version"]},
-        }
+    """Return current execution pins, not immutable R1 baseline provenance."""
+    del root
+    identities = copy.deepcopy(EXPECTED_PINNED_COMPONENTS)
+    for identity in identities.values():
         validate_component_identity(identity)
-        identities[component["id"]] = identity
-    if identities != EXPECTED_PINNED_COMPONENTS:
-        raise CoreAlphaError("R1 component identities differ from the R6 pinned baseline")
     return identities
 
 

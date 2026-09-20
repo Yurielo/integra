@@ -221,12 +221,13 @@ cannot introduce a competing authoritative writer.
 ## 3.1 Delivery-agent control plane
 
 Integra delivery uses the governed role registry in `state/agent_team_v1.json`.
-The `product-owner` agent is the coordination entry point for material work;
-the read-only `system-architect` is activated for cross-module boundaries,
-NFR trade-offs and ADRs without acquiring implementation or human authority.
-backend, frontend, data, QA, CI/CD, review, planning, and documentation roles
-are selected only when their responsibility is relevant. This affects delivery
-ownership, not runtime architecture or product data ownership.
+The `product-owner` agent is the coordination entry point for material work.
+Backend, frontend, data, QA, and CI/CD retain permanent operational ownership.
+The read-only `system-architect`, independent reviewer, planner, and
+documentation specialist are on-demand capabilities activated only when their
+responsibility is relevant; architecture advice does not acquire implementation
+or human authority. This affects delivery ownership, not runtime architecture
+or product data ownership.
 
 The human Product Owner retains genuine decision authority. Agent-to-agent
 handoff, review, CI, merge, and roadmap advancement remain autonomous technical

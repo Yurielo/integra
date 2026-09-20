@@ -191,6 +191,7 @@ class MacOSApplicationTests(unittest.TestCase):
         self.assertIn('Resources/workers', build)
         self.assertIn('runtime/seminartext', build)
         self.assertIn('seminartext_topics.py', build)
+        self.assertIn('"$seminartext_cli_sha256"', build)
 
     def test_macos_build_packages_pinned_booktext_ocr_runtime(self):
         build = (ROOT / "scripts/build_macos_app.sh").read_text()

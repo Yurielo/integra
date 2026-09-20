@@ -155,7 +155,7 @@ class WorkerProtocolSafetyTests(unittest.TestCase):
 
     def test_resume_binding_is_deterministic_and_input_sensitive(self):
         job_id = self.job["payload"]["job_id"]
-        commit = "a94936cd77cde13561c97c804ece1ac1134e01a6"
+        commit = "970bde598ddd649599295139986933e0e06cb9c0"
         first = resume_binding(job_id, "canonical_evidence.validate", commit, ["b" * 64])
         second = resume_binding(job_id, "canonical_evidence.validate", commit, ["b" * 64])
         changed = resume_binding(job_id, "canonical_evidence.validate", commit, ["c" * 64])
@@ -175,7 +175,7 @@ class WorkerProtocolSafetyTests(unittest.TestCase):
 
     def test_resume_token_must_match_current_job_facts(self):
         job_id = self.job["payload"]["job_id"]
-        commit = "a94936cd77cde13561c97c804ece1ac1134e01a6"
+        commit = "970bde598ddd649599295139986933e0e06cb9c0"
         token = {
             "token": "opaque-token",
             "binding_sha256": resume_binding(

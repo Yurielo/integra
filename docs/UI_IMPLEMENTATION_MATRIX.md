@@ -1,7 +1,7 @@
 # UI Implementation Matrix — Issue #76
 
 Verified against Integra through Issue #117,
-SeminarText at pinned clean commit `a94936cd77cde13561c97c804ece1ac1134e01a6`,
+SeminarText at pinned clean commit `970bde598ddd649599295139986933e0e06cb9c0`,
 VideoText at pinned commit `2e098d1705b6815628bee1e023f4742718eabf02`,
 and BookText remote `main` at `46396649214275eb18054b670a842bace02d02e1`.
 

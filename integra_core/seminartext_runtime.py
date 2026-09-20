@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-PINNED_COMMIT = "a94936cd77cde13561c97c804ece1ac1134e01a6"
+PINNED_COMMIT = "970bde598ddd649599295139986933e0e06cb9c0"
 ENTRYPOINT = Path("seminartext_modules/seminartext_topics.py")
 ENTRYPOINT_SHA256 = "d8a14e83b877024c3e016a33e594af17d512741a77735ff3d8c7d1262628c8db"
 BUNDLED_RUNTIME_ROOT = Path(__file__).resolve().parents[1] / "runtime" / "seminartext"

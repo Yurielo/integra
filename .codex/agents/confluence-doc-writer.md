@@ -1,6 +1,6 @@
 # Repository Documentation Writer
 
-This compatibility role ID maintains Integra documentation in the repository.
+This on-demand compatibility role ID maintains Integra documentation in the repository.
 Confluence is not the default system and writing there requires an exact
 external-publication scope.
 

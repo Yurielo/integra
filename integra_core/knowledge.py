@@ -22,8 +22,8 @@ ID = re.compile(r"^[a-z][a-z0-9._:-]{2,127}$")
 PINNED_SEMINARTEXT = {
     "component_id": "seminartext",
     "repository": "Yurielo/seminartext",
-    "commit_sha": "a94936cd77cde13561c97c804ece1ac1134e01a6",
-    "tree_sha": "5f5951da1d5dcf957ef982510fde3537f601ea15",
+    "commit_sha": "970bde598ddd649599295139986933e0e06cb9c0",
+    "tree_sha": "6384533c5a41dc97e9fa36f57e7240ac825e411c",
     "version": "4.0.0",
     "contracts": ["canonical_evidence_v1", "canonical_knowledge_v1"],
     "runtime": {"kind": "python", "version": "3"},

@@ -46,10 +46,10 @@
           "const": "seminartext"
         },
         "commit_sha": {
-          "const": "a94936cd77cde13561c97c804ece1ac1134e01a6"
+          "const": "970bde598ddd649599295139986933e0e06cb9c0"
         },
         "tree_sha": {
-          "const": "5f5951da1d5dcf957ef982510fde3537f601ea15"
+          "const": "6384533c5a41dc97e9fa36f57e7240ac825e411c"
         },
         "component_identity_sha256": {
           "$ref": "#/$defs/sha256"

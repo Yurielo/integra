@@ -23,8 +23,8 @@ CREATED = "2026-09-11T00:00:00Z"
 def _component() -> dict:
     return {
         "component_id": "seminartext", "repository": "Yurielo/seminartext",
-        "commit_sha": "a94936cd77cde13561c97c804ece1ac1134e01a6",
-        "tree_sha": "5f5951da1d5dcf957ef982510fde3537f601ea15", "version": "4.0.0",
+        "commit_sha": "970bde598ddd649599295139986933e0e06cb9c0",
+        "tree_sha": "6384533c5a41dc97e9fa36f57e7240ac825e411c", "version": "4.0.0",
         "contracts": ["canonical_evidence_v1", "canonical_knowledge_v1"],
         "runtime": {"kind": "python", "version": "3"},
     }
@@ -272,8 +272,8 @@ class KnowledgeIntegrationTests(unittest.TestCase):
     def test_pinned_component_and_contract_identity_are_not_caller_controlled(self) -> None:
         binding = self.view["source_binding"]
         self.assertEqual(binding["component_id"], "seminartext")
-        self.assertEqual(binding["commit_sha"], "a94936cd77cde13561c97c804ece1ac1134e01a6")
-        self.assertEqual(binding["tree_sha"], "5f5951da1d5dcf957ef982510fde3537f601ea15")
+        self.assertEqual(binding["commit_sha"], "970bde598ddd649599295139986933e0e06cb9c0")
+        self.assertEqual(binding["tree_sha"], "6384533c5a41dc97e9fa36f57e7240ac825e411c")
         tampered = copy.deepcopy(self.view)
         tampered["source_binding"]["commit_sha"] = "f" * 40
         tampered["record_sha256"] = "0" * 64
