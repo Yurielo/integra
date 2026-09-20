@@ -7,7 +7,7 @@ Program Epic: [GitHub Issue #1](https://github.com/Yurielo/integra/issues/1)
 Rebaseline authority: [GitHub Issue #62](https://github.com/Yurielo/integra/issues/62)
 
 The active target is `READY_APP_V1`. Delivery is coordinated by the governed
-ten-role agent team defined in
+six-permanent-role team with four on-demand specialist capabilities defined in
 [`AGENT_TEAM_OPERATING_MODEL.md`](architecture/AGENT_TEAM_OPERATING_MODEL.md).
 `product-owner` is the lead agent; specialist activation is risk-based and does
 not add routine human gates or change stage dependencies.

@@ -80,7 +80,7 @@
         "model_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]}
       },
       "allOf": [
-        {"if": {"properties": {"component_id": {"const": "seminartext"}}}, "then": {"properties": {"commit_sha": {"const": "a94936cd77cde13561c97c804ece1ac1134e01a6"}, "contract_id": {"enum": ["canonical_evidence_v1", "canonical_knowledge_v1", "topic_review_workflow_v2"]}}}},
+        {"if": {"properties": {"component_id": {"const": "seminartext"}}}, "then": {"properties": {"commit_sha": {"const": "970bde598ddd649599295139986933e0e06cb9c0"}, "contract_id": {"enum": ["canonical_evidence_v1", "canonical_knowledge_v1", "topic_review_workflow_v2"]}}}},
         {"if": {"properties": {"component_id": {"const": "videotext"}}}, "then": {"properties": {"commit_sha": {"const": "2e098d1705b6815628bee1e023f4742718eabf02"}, "contract_id": {"enum": ["project_schema_v7", "project_store_v7", "build_identity_0_6_4"]}}}}
       ],
       "oneOf": [

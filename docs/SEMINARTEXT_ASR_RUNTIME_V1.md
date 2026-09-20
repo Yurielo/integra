@@ -8,7 +8,7 @@ benchmark ownership remains historical evidence, not a description of this path.
 ## Actual implementation
 
 The pinned `seminartext` Bash CLI at commit
-`a94936cd77cde13561c97c804ece1ac1134e01a6` is executed unchanged through
+`970bde598ddd649599295139986933e0e06cb9c0` is executed unchanged through
 `project-transcribe` against an isolated Integra-owned project. The CLI and
 `SEMINARTEXT_VERSION` are copied into the macOS bundle only after SHA-256 checks.
 No SeminarText source checkout or user project is modified.

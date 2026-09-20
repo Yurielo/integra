@@ -35,12 +35,12 @@ class AgentTeamValidationTests(unittest.TestCase):
         errors = CHECKER.validate_agent_team(registry)
         self.assertIn("human Product Owner authority must remain explicit", errors)
 
-    def test_every_role_is_required_exactly_once(self):
+    def test_current_role_model_is_required(self):
         registry = copy.deepcopy(self.registry)
         registry["roles"].pop()
         errors = CHECKER.validate_agent_team(registry)
         self.assertIn(
-            "agent role inventory must contain exactly the ten governed roles", errors
+            "agent role inventory must match the accepted current role model", errors
         )
 
     def test_routine_human_dispatch_cannot_be_enabled(self):
@@ -79,15 +79,32 @@ class AgentTeamValidationTests(unittest.TestCase):
         errors = CHECKER.validate_agent_team(registry)
         self.assertIn("role mode mismatch for product-owner", errors)
 
-    def test_system_architect_is_registered_read_only(self):
+    def test_system_architect_is_on_demand_and_registered_read_only(self):
         role = next(
             item for item in self.registry["roles"] if item["id"] == "system-architect"
         )
-        self.assertEqual(role["mode"], "READ_ONLY_ADVISORY")
+        self.assertEqual(role["mode"], "ON_DEMAND_ADVISORY")
         registration = CHECKER.tomllib.loads(
             (ROOT / role["registration"]).read_text(encoding="utf-8")
         )
         self.assertEqual(registration["sandbox_mode"], "read-only")
+
+    def test_responsibility_coverage_fails_closed_when_an_owner_is_removed(self):
+        registry = copy.deepcopy(self.registry)
+        registry["responsibility_coverage"].pop()
+        errors = CHECKER.validate_agent_team(registry)
+        self.assertIn(
+            "responsibility coverage must match the accepted current model", errors
+        )
+
+    def test_responsibility_coverage_fails_closed_when_owner_is_wrong(self):
+        registry = copy.deepcopy(self.registry)
+        registry["responsibility_coverage"][0]["owner"] = "backend-developer"
+        errors = CHECKER.validate_agent_team(registry)
+        self.assertIn(
+            "responsibility coverage mismatch for delivery_coordination_and_acceptance",
+            errors,
+        )
 
     def test_handoff_inventory_is_exact(self):
         registry = copy.deepcopy(self.registry)

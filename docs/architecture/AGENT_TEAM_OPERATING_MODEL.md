@@ -21,19 +21,43 @@ silence, an open Issue, or a specialist recommendation.
 | Role | Primary responsibility | Default mode |
 | --- | --- | --- |
 | `product-owner` | Lead coordination, scope, acceptance matrix, routing, final evidence consolidation | read-only |
-| `system-architect` | Cross-module architecture, NFRs, trade-offs, compatibility and ADR recommendations | read-only advisory |
+| `system-architect` | Cross-module architecture, NFRs, trade-offs, compatibility and ADR recommendations | on-demand advisory |
 | `backend-developer` | Control plane, workers, adapters, contracts, orchestration, recovery | implementation |
 | `frontend-developer` | Native macOS interaction, state, accessibility, exact user-visible truth | implementation |
 | `database-architect` | Artifact/state schemas, ownership, migration, indexes and compatibility | design/implementation |
 | `qa-test-engineer` | Independent tests, regression matrix, failure reproduction and QA verdict | test implementation |
 | `ci-cd-engineer` | CI, build, packaging, signing/notarization preparation and release evidence | implementation |
-| `github-pr-reviewer` | Independent read-only diff and PR review | read-only |
-| `jira-sprint-planner` | GitHub Issue/Milestone decomposition and dependency planning | planning |
-| `confluence-doc-writer` | Repository architecture, runbooks, user documentation and release notes | documentation |
+| `github-pr-reviewer` | Independent read-only diff and PR review | on-demand review |
+| `jira-sprint-planner` | GitHub Issue/Milestone decomposition and dependency planning | on-demand planning |
+| `confluence-doc-writer` | Repository architecture, runbooks, user documentation and release notes | on-demand documentation |
 
-The final two IDs are retained for compatibility with the supplied role set.
-For Integra, GitHub Issues/Milestones and repository Markdown are the defaults.
-Jira or Confluence access is never inferred from a role name.
+Six roles have direct operational ownership and are permanent. The four
+advisory/process capabilities are retained as on-demand roles: they are
+activated by a material architecture, independent-review, planning, or
+documentation need, rather than being a permanent delivery stage. For Integra,
+GitHub Issues/Milestones and repository Markdown are the defaults. Jira or
+Confluence access is never inferred from a role name.
+
+## 2.1 Responsibility coverage
+
+The current accepted model has one explicit owner for each responsibility:
+
+| Responsibility | Owner | Activation |
+| --- | --- | --- |
+| Delivery coordination and acceptance | `product-owner` | permanent |
+| Control plane and worker implementation | `backend-developer` | permanent |
+| Native macOS UI implementation | `frontend-developer` | permanent |
+| Persisted state and artifact contracts | `database-architect` | permanent |
+| Independent quality and regression evidence | `qa-test-engineer` | permanent |
+| Build, runtime identity, and CI evidence | `ci-cd-engineer` | permanent |
+| Cross-module architecture and NFR advice | `system-architect` | on-demand |
+| Independent material-diff review | `github-pr-reviewer` | on-demand |
+| Roadmap and dependency planning | `jira-sprint-planner` | on-demand |
+| Repository documentation from verified evidence | `confluence-doc-writer` | on-demand |
+
+`state/agent_team_v1.json` is the authoritative machine-readable coverage
+matrix. Its validator fails closed if a responsibility, owner, or activation
+changes without an accepted current-team update.
 
 ## 3. Activation and routing
 

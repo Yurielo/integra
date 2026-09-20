@@ -5,7 +5,7 @@ user-facing operations, not every internal helper. Code and source tests were
 inspected independently; source-test existence alone is not runtime proof.
 All three GitHub main heads match the current Integra pins:
 
-- SeminarText `a94936cd77cde13561c97c804ece1ac1134e01a6`
+- SeminarText `970bde598ddd649599295139986933e0e06cb9c0`
 - VideoText `2e098d1705b6815628bee1e023f4742718eabf02`
 - BookText `46396649214275eb18054b670a842bace02d02e1`
 

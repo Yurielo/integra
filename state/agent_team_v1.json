@@ -11,17 +11,29 @@
     "jira": "EXPLICIT_EXTERNAL_SCOPE_REQUIRED",
     "confluence": "EXPLICIT_EXTERNAL_SCOPE_REQUIRED"
   },
+  "responsibility_coverage": [
+    {"responsibility": "delivery_coordination_and_acceptance", "owner": "product-owner", "activation": "PERMANENT"},
+    {"responsibility": "control_plane_and_worker_implementation", "owner": "backend-developer", "activation": "PERMANENT"},
+    {"responsibility": "native_macos_ui_implementation", "owner": "frontend-developer", "activation": "PERMANENT"},
+    {"responsibility": "persisted_state_and_artifact_contracts", "owner": "database-architect", "activation": "PERMANENT"},
+    {"responsibility": "independent_quality_and_regression_evidence", "owner": "qa-test-engineer", "activation": "PERMANENT"},
+    {"responsibility": "build_runtime_identity_and_ci_evidence", "owner": "ci-cd-engineer", "activation": "PERMANENT"},
+    {"responsibility": "cross_module_architecture_and_nfr_advice", "owner": "system-architect", "activation": "ON_DEMAND"},
+    {"responsibility": "independent_material_diff_review", "owner": "github-pr-reviewer", "activation": "ON_DEMAND"},
+    {"responsibility": "roadmap_and_dependency_planning", "owner": "jira-sprint-planner", "activation": "ON_DEMAND"},
+    {"responsibility": "repository_documentation_from_verified_evidence", "owner": "confluence-doc-writer", "activation": "ON_DEMAND"}
+  ],
   "roles": [
     {"id": "product-owner", "mode": "LEAD_READ_ONLY", "registration": ".codex/agents/product-owner.toml", "contract": ".codex/agents/product-owner.md"},
-    {"id": "system-architect", "mode": "READ_ONLY_ADVISORY", "registration": ".codex/agents/system-architect.toml", "contract": ".codex/agents/system-architect.md"},
+    {"id": "system-architect", "mode": "ON_DEMAND_ADVISORY", "registration": ".codex/agents/system-architect.toml", "contract": ".codex/agents/system-architect.md"},
     {"id": "backend-developer", "mode": "IMPLEMENTATION", "registration": ".codex/agents/backend-developer.toml", "contract": ".codex/agents/backend-developer.md"},
     {"id": "frontend-developer", "mode": "IMPLEMENTATION", "registration": ".codex/agents/frontend-developer.toml", "contract": ".codex/agents/frontend-developer.md"},
     {"id": "database-architect", "mode": "DESIGN_AND_IMPLEMENTATION", "registration": ".codex/agents/database-architect.toml", "contract": ".codex/agents/database-architect.md"},
     {"id": "qa-test-engineer", "mode": "TEST_IMPLEMENTATION", "registration": ".codex/agents/qa-test-engineer.toml", "contract": ".codex/agents/qa-test-engineer.md"},
     {"id": "ci-cd-engineer", "mode": "IMPLEMENTATION", "registration": ".codex/agents/ci-cd-engineer.toml", "contract": ".codex/agents/ci-cd-engineer.md"},
-    {"id": "github-pr-reviewer", "mode": "READ_ONLY", "registration": ".codex/agents/github-pr-reviewer.toml", "contract": ".codex/agents/github-pr-reviewer.md"},
-    {"id": "jira-sprint-planner", "mode": "PLANNING", "registration": ".codex/agents/jira-sprint-planner.toml", "contract": ".codex/agents/jira-sprint-planner.md"},
-    {"id": "confluence-doc-writer", "mode": "DOCUMENTATION", "registration": ".codex/agents/confluence-doc-writer.toml", "contract": ".codex/agents/confluence-doc-writer.md"}
+    {"id": "github-pr-reviewer", "mode": "ON_DEMAND_REVIEW", "registration": ".codex/agents/github-pr-reviewer.toml", "contract": ".codex/agents/github-pr-reviewer.md"},
+    {"id": "jira-sprint-planner", "mode": "ON_DEMAND_PLANNING", "registration": ".codex/agents/jira-sprint-planner.toml", "contract": ".codex/agents/jira-sprint-planner.md"},
+    {"id": "confluence-doc-writer", "mode": "ON_DEMAND_DOCUMENTATION", "registration": ".codex/agents/confluence-doc-writer.toml", "contract": ".codex/agents/confluence-doc-writer.md"}
   ],
   "handoff_required_fields": [
     "authority",

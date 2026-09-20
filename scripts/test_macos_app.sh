@@ -32,7 +32,7 @@ printf '#!/bin/sh\nprintf "NAME ID SIZE MODIFIED\\ngemma3:4b id size now\\n"\n' 
 chmod 755 "$fake_ollama"
 (
   cd "$test_root"
-  PATH="$test_root:$PATH" PYTHONPATH="$app/Contents/Resources" python3 -c 'from integra_core.seminartext_runtime import preflight; value=preflight(); assert value["origin"] == "BUNDLED_PERSONAL_RUNTIME"; assert value["commit_sha"] == "a94936cd77cde13561c97c804ece1ac1134e01a6"'
+  PATH="$test_root:$PATH" PYTHONPATH="$app/Contents/Resources" python3 -c 'from pathlib import Path; import hashlib, json; from integra_core.seminartext_runtime import preflight; value=preflight(); runtime=Path("runtime/seminartext/runtime.json"); manifest=json.loads(runtime.read_text()); cli=Path("runtime/seminartext/seminartext"); assert value["origin"] == "BUNDLED_PERSONAL_RUNTIME"; assert value["commit_sha"] == "970bde598ddd649599295139986933e0e06cb9c0"; assert manifest["entrypoint_sha256"] == "f7f411bf106341ae970bc40d759e1e3c964273b977bdb12d0f1840e629def13a"; assert hashlib.sha256(cli.read_bytes()).hexdigest() == manifest["entrypoint_sha256"]'
 )
 echo "INTEGRA_BUNDLED_SEMINARTEXT_PREFLIGHT: PASS"
 (

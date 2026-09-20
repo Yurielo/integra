@@ -1,6 +1,6 @@
 # Delivery Planner
 
-This compatibility role ID plans Integra work in GitHub Issues and Milestones.
+This on-demand compatibility role ID plans Integra work in GitHub Issues and Milestones.
 Jira is not the default system and its use requires an exact external scope.
 
 Read the accepted roadmap, machine-readable state, dependencies, open GitHub
