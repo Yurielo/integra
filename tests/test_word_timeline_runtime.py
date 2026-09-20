@@ -1,3 +1,4 @@
+import json
 import os
 from pathlib import Path
 import stat
@@ -5,10 +6,25 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+from integra_core import word_timeline_runtime as runtime
 from integra_core.word_timeline_runtime import MODEL_SHA256, preflight
 
 
 class WordTimelineRuntimeTests(unittest.TestCase):
+    def test_worker_failure_persists_bounded_candidate_evidence_and_stays_fail_closed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); audio = root / "audio.wav"; srt = root / "speech.srt"; output = root / "timeline.json"
+            audio.write_bytes(b"audio"); srt.write_text("1\n00:00:00,000 --> 00:00:01,000\nTest\n")
+            identity = {"python": "/bin/echo", "worker": "/worker", "model_dir": "/model", "site_packages": "/packages"}
+            failed = __import__("subprocess").CompletedProcess([], 19, "out" * 6000, "err" * 6000)
+            with patch.object(runtime, "preflight", return_value=identity), patch("subprocess.run", return_value=failed):
+                with self.assertRaisesRegex(ValueError, "did not produce"):
+                    runtime.generate_word_timeline(audio, srt, output)
+            evidence = json.loads(output.with_suffix(".worker-evidence.json").read_text())
+        self.assertEqual(evidence["result"], "FAIL")
+        self.assertEqual(evidence["details"]["exit_status"], 19)
+        self.assertLessEqual(len(evidence["details"]["stdout_tail"]), 16384)
+        self.assertLessEqual(len(evidence["details"]["stderr_tail"]), 16384)
     def test_preflight_reports_exact_personal_runtime(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory); packages = root / "packages" / "whisperx"; packages.mkdir(parents=True)

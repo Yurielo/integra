@@ -32,7 +32,7 @@ printf '#!/bin/sh\nprintf "NAME ID SIZE MODIFIED\\ngemma3:4b id size now\\n"\n' 
 chmod 755 "$fake_ollama"
 (
   cd "$test_root"
-  PATH="$test_root:$PATH" PYTHONPATH="$app/Contents/Resources" python3 -c 'from integra_core.seminartext_runtime import preflight; value=preflight(); assert value["origin"] == "BUNDLED_PERSONAL_RUNTIME"; assert value["commit_sha"] == "a94936cd77cde13561c97c804ece1ac1134e01a6"'
+  PATH="$test_root:$PATH" PYTHONPATH="$app/Contents/Resources" python3 -c 'from integra_core.seminartext_runtime import preflight; value=preflight(); assert value["origin"] == "BUNDLED_PERSONAL_RUNTIME"; assert value["commit_sha"] == "970bde598ddd649599295139986933e0e06cb9c0"'
 )
 echo "INTEGRA_BUNDLED_SEMINARTEXT_PREFLIGHT: PASS"
 (

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Integra Candidate-bound Evidence v1",
+  "type": "object",
+  "required": ["schema_version", "artifact_type", "candidate_id", "gate_name", "timestamp", "result", "artifact_locations", "details"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "artifact_type": {"const": "integra.candidate_evidence"},
+    "candidate_id": {"type": "string"},
+    "manifest_identity_sha256": {"type": ["string", "null"]},
+    "bundle_digest": {"type": ["string", "null"]},
+    "gate_name": {"type": "string"},
+    "timestamp": {"type": "string"},
+    "result": {"enum": ["PASS", "FAIL", "BLOCKED"]},
+    "artifact_locations": {"type": "array", "items": {"type": "string"}},
+    "details": {"type": "object"}
+  },
+  "additionalProperties": false
+}
