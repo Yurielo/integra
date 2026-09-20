@@ -34,3 +34,11 @@ class CandidateIdentityTests(unittest.TestCase):
                                    timestamp="2026-09-20T00:00:00Z", artifact_locations=["/evidence/log"], details={})
             self.assertEqual(json.loads(path.read_text()), value)
         self.assertEqual(value["candidate_id"], candidate["candidate_id"])
+
+    def test_bundle_digest_ignores_runtime_python_cache(self):
+        from integra_core.candidate_identity import tree_sha256
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); (root / "stable.txt").write_text("stable")
+            first = tree_sha256(root)
+            cache = root / "__pycache__"; cache.mkdir(); (cache / "module.cpython-314.pyc").write_bytes(b"volatile")
+            self.assertEqual(tree_sha256(root), first)

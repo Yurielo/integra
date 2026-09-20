@@ -47,7 +47,9 @@ is SHA-256 hashed as `candidate-v1-<sha256>`.
 `build.timestamp` and `build.build_id` are informational only: they do not
 change the Candidate ID, so byte-identical identity inputs remain comparable.
 The bundle digest is a deterministic SHA-256 tree digest excluding the manifest
-itself, avoiding a self-referential hash. The build embeds this digest, then
+itself and volatile Python `__pycache__`/`.pyc` files, avoiding a
+self-referential hash and post-self-test cache drift. The build embeds this
+digest, then
 `scripts/candidate_manifest.py validate <Integra.app>` validates the manifest,
 bundle, component runtime manifests, Word packages/model, and the external GUI
 and Word Python identities without opening the GUI.

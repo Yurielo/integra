@@ -41,7 +41,7 @@ def tree_sha256(root: Path, *, exclude: set[str] | None = None) -> str:
         if not path.is_file():
             continue
         relative = path.relative_to(root).as_posix()
-        if relative in excluded:
+        if relative in excluded or "__pycache__" in path.parts or path.suffix == ".pyc":
             continue
         entries.append({"path": relative, "sha256": sha256_file(path)})
     return sha256_bytes(canonical_bytes(entries))
