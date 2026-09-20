@@ -2,7 +2,8 @@
 
 Status: `READY_FOR_SINGLE_OWNER_ACCEPTANCE` (technical handoff only; not `USER_ACCEPTED`).
 
-This report is evidence for Issue #156 on `codex/stabilization-mcwma` / PR #154. No
+This report is evidence for Issue #156 on `codex/stabilization-mcwma` / PR #154. Final
+evidence/report HEAD: `59c14d0759790eb4c1f53fc0a4e1098dc1597a01`. No
 product repair, component-pin change, semantic change, merge, deploy, or owner
 request was made. Secondary capabilities remained frozen.
 
@@ -10,7 +11,7 @@ request was made. Secondary capabilities remained frozen.
 
 | Check | Result |
 |---|---|
-| Accepted entering HEAD | `b1f2621cdf5b9fa6982d9625b5e23eb811d994a2` |
+| Accepted entering baseline HEAD | `b1f2621cdf5b9fa6982d9625b5e23eb811d994a2` (historical WP3 entry baseline) |
 | PR #154 head before WP3 | exact accepted HEAD |
 | Prior GitHub Quality Gate | run `35535680951`, PASS |
 | WP2 report | present; classification `HISTORICAL_NON_REPRODUCIBLE_WITH_INSUFFICIENT_ORIGINAL_DIAGNOSTICS` |
@@ -28,7 +29,7 @@ bundle is not installed and does not replace `current-build`.
 | Candidate path | `/private/tmp/integra-wp3-cleanbuild.91e4OE/Integra.app` |
 | Candidate ID | `candidate-v1-a9c599ce6e958da69f3207a14871a8d8af31d24a296b11e71e9fa4269e5b1dab` |
 | Bundle SHA-256 tree digest | `991ee9d6f64df1c97ce74c62552b2fe8aa4eb84c2b10953066e16edb329545e9` |
-| Build source HEAD | `b1f2621cdf5b9fa6982d9625b5e23eb811d994a2` (clean) |
+| Build source snapshot | `b1f2621cdf5b9fa6982d9625b5e23eb811d994a2` (clean; product source unchanged by evidence-only commits) |
 | SeminarText commit | `970bde598ddd649599295139986933e0e06cb9c0` |
 | SeminarText CLI SHA-256 | `f7f411bf106341ae970bc40d759e1e3c964273b977bdb12d0f1840e629def13a` |
 | VideoText commit | `2e098d1705b6815628bee1e023f4742718eabf02` |
@@ -153,7 +154,7 @@ No mandatory gate exposed a reproducible product defect. Consequently:
 | Clean governed build | PASS |
 | Candidate manifest generation/validation | PASS |
 | Native self-test | PASS (`INTEGRA_MACOS_SELF_TEST: PASS`) |
-| GitHub Quality Gate | PASS, run `35537584738` / job `106149262598` on commit `3f10482a8638b8241171c9799ec099f75c0ce508` |
+| GitHub Quality Gate | PASS, final run `35537652581` / job `106149447789` on final HEAD `59c14d0759790eb4c1f53fc0a4e1098dc1597a01` |
 | Runtime/component identity | PASS |
 | Deterministic Russian packaged E2E | PASS |
 | Realistic Russian packaged E2E | PASS |
