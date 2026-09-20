@@ -18,11 +18,15 @@ component smoke prove none of the higher states.
 
 Must work now: source selection, truthful capability plan, bundled production
 execution, results/navigation, error/progress and Candidate ID diagnostics.
-Must be stable now: bounded workers, fail-closed identities, persisted
-diagnostics, retry/cancel truthfulness. Translation, OCR, YouTube, publishing,
-knowledge expansion and media variants may be unavailable; they must not be on
-the critical path. Marketing, learning, social, release/signing and source
-consolidation defer until MCWMA acceptance.
+Must be stable/recoverable now: bounded workers, fail-closed identities and
+persisted diagnostics; one controlled primary-journey failure is presented
+truthfully; no partial or failed result is labelled successful; its diagnostic
+and any valid preceding artifacts remain inspectable; then a subsequent new
+primary run can start and complete without an unexplained app restart. This is
+the minimum recovery sanity, not a promise to solve all #137 recovery UX.
+Translation, OCR, YouTube, publishing, knowledge expansion and media variants
+may be unavailable; they must not be on the critical path. Marketing, learning,
+social, release/signing and source consolidation defer until MCWMA acceptance.
 
 ## 2. Diagnosis
 
@@ -38,10 +42,12 @@ consolidation defer until MCWMA acceptance.
 
 ## 3. Critical path and lifecycle
 
-`P0 truthful baseline → P1 candidate/observability controls → P2 classify #148
-failure → P3 root-cause repair/regression → P4 two-fixture packaged E2E → P5
-owner acceptance` is the critical path. Freeze unrelated implementation while
-any stage is red.
+`P0 canonical stabilization baseline → P1 candidate manifest → P2 observable,
+bounded #148 classification → P3 primary journey stabilization → P4 owner
+acceptance` is the critical path. The canonical baseline is established before
+any further diagnosis or repair; all Candidate IDs, diagnostics, regressions and
+E2E evidence are produced on that single line. Freeze unrelated implementation
+while any stage is red.
 
 Evidence ladder: UNIT, COMPONENT, INTEGRATION, PACKAGED_E2E_DETERMINISTIC,
 PACKAGED_E2E_REALISTIC, KNOWN_FAILURE_REGRESSION, USER_ACCEPTANCE. Each proves
@@ -81,10 +87,24 @@ full suite only after focused gates are green and before merge.
 ## 6. Branch/PR reset
 
 #141/#143/#145/#147/#149 are historical draft evidence, not a merge queue.
-After P1–P4 pass, create one clean stabilization branch from current `main` and
-cherry-pick only verified repairs/controls. Do not rebase the long stack under
-live evidence. Merge criteria: reviewed stabilization PR and complete Owner
-Entry Gate. Then explicitly supersede/archive old drafts.
+Before further product diagnosis/repair, establish one canonical stabilization
+baseline from current `main`, using the matrix below. This strategy does not
+create it or transfer code. The later implementation package will transfer only
+the approved individual changes, never an entire PR by implication. Do not
+rebase the long stack under live evidence. Merge criteria: reviewed stabilization
+PR and complete Owner Entry Gate; then explicitly supersede/archive old drafts.
+
+### Salvage Matrix
+
+| Change | Source PR | Purpose | Owner-proven? | Technically-proven? | Currently required? | Decision | Reason |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Clean Word Alignment runtime | #143 | exact Python/WhisperX/model bundle | No | component/preflight only | Yes | NEEDS_MORE_EVIDENCE | #148 owner failure reached this runtime. |
+| Ollama GUI resolution | #145 | resolve packaged GUI executable | Owner launch PASS | Yes, narrow | Yes | TRANSFER_EXACT | no contradictory evidence; still needs Candidate binding. |
+| SeminarText active CLI SHA | #147 | align ASR expected hash with final pin | Owner capability PASS | Yes | Yes | TRANSFER_EXACT | exact stale-identity repair, independently byte-verifiable. |
+| Word Timeline diagnostics | #149 | retain worker status/logs | No historic cause | focused unit only | Yes | REIMPLEMENT_CLEANLY | current form is incomplete for timeout/validator/job linkage. |
+| Packaged primary E2E harness | #149 | bridge-path acceptance | No | invalid candidate/interpreter evidence | Yes | REIMPLEMENT_CLEANLY | retain intent; rebuild under canonical Candidate ID. |
+| #138 governance/pin migration/docs | #141 stack | review-era reconciliation | No | mixed historical evidence | No for MCWMA | HISTORICAL_EVIDENCE_ONLY | not a primary-journey control. |
+| unrelated workflow/governance changes | #141–#149 | accumulated stack work | No | varies | No | DROP | no transfer without package-level need/evidence. |
 
 ## 7. Cost versus information
 
@@ -102,19 +122,28 @@ Entry Gate. Then explicitly supersede/archive old drafts.
 
 | Order | Outcome | Uncertainty | First test | Packaged gate | Owner gate | Agents | Stop |
 | --- | --- | --- | --- | --- | --- | --- |
-| P0 | truth baseline | identity/maturity | manifest schema | manifest embedded | none | backend, QA, CI/CD | contradiction |
-| P1 | observable primary path | diagnostics/interpreter | unit failure paths | candidate diagnostic | none | backend, QA, CI/CD | unavailable identity |
-| P2 | classify #148 | realistic fixture/root cause | fixture provenance | bridge repetition | decision only if private-only | backend, QA, CI/CD | missing evidence |
-| P3 | restored journey | evidenced fix | root-cause regression | two-fixture E2E | none | backend, QA, CI/CD | semantic/model change |
-| P4 | MCWMA handoff | coherent utility | manifest check | all primary rows | one owner acceptance | QA, CI/CD | owner tech failure→P2 |
+| P0 | canonical baseline | salvage + one line | matrix review | candidate manifest | none | backend, QA, CI/CD | ambiguous transfer |
+| P1 | observable failure classification | diagnostics/interpreter/#148 | unit failure paths | bounded bridge attempts | none | backend, QA, CI/CD | missing original evidence classified |
+| P2 | restored primary journey | evidenced fix or classification | regression | deterministic+realistic+recovery E2E | none | backend, QA, CI/CD | semantic/model change |
+| P3 | MCWMA handoff | coherent utility | manifest check | all primary rows | one owner acceptance | QA, CI/CD | owner tech failure→P1 |
 | P5 | secondary journey | one capability | capability check | per-journey E2E | milestone only | minimal triggered | P0–P4 red |
 
 ## 9. Immediate three packages
 
-1. P0/P1 Candidate Manifest plus complete worker diagnostic contract.
-2. P2 #148 realistic, non-private failure-class classification; no owner test.
-3. P3 only after P2: minimal repair, original-class regression and
-deterministic+realistic E2E on one Candidate ID.
+1. **WP1 — Canonical Stabilization Baseline + Salvage Matrix + Candidate
+   Manifest.** Pure identity/control outcome: one authoritative Integra line
+   and Candidate ID; no Word Timeline repair/debugging.
+2. **WP2 — Observability + bounded #148 failure classification.** Small fixed
+   protocol: three instrumented GUI-equivalent bridge attempts using saved
+   owner-derived WAV/SRT only where authorized/available, plus one realistic
+   non-private fixture; each records Candidate ID and diagnostics. A reproduced
+   failure requires root cause and repair. Otherwise terminal classification is
+   `HISTORICAL_NON_REPRODUCIBLE_WITH_INSUFFICIENT_ORIGINAL_DIAGNOSTICS`; retain
+   observability/regression and stop historical speculation.
+3. **WP3 — Primary Journey Stabilization.** On one Candidate ID run
+   deterministic packaged E2E, realistic packaged E2E, applicable known-failure
+   regression, and MCWMA controlled-failure/subsequent-run sanity. Owner
+   handoff remains forbidden until all are green.
 
 ## 10. Dashboard, no-work list and preconditions
 
