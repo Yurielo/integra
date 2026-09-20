@@ -2,7 +2,7 @@
 
 ## Phase 1 status
 
-`PHASE_1_PASS`. Only the required Phase 1 specialists were activated:
+`BLOCKED` after the Owner Audit Correction. Only the required Phase 1 specialists were activated:
 backend-developer, qa-test-engineer, and ci-cd-engineer. No other role has a
 concrete activation trigger.
 
@@ -50,7 +50,7 @@ retain actionable Word Timeline worker diagnostics without weakening the
 validator. The primary gate is green only after that harness passes on a fresh
 isolated candidate.
 
-## Phase 1 repair and gate evidence
+## Superseded happy-path evidence
 
 The integration repair preserves fail-closed behavior. Word Timeline now writes
 a bounded `word_timeline.worker-diagnostic.json` beside its intended output,
@@ -81,6 +81,39 @@ persisted run `urn:integra:run:b84522b9-45e9-461f-8740-0c224fe112f3`:
 | Topics | PASS |
 | Persisted artifacts and navigation metadata | PASS |
 | Final state | PASS (`COMPLETED`, mapped to Issue `SUCCESS`) |
+
+The owner correctly rejected this as a Phase 1 acceptance claim. The short
+generated fixture proves only a happy path; it is not an
+`ORIGINAL_FAILURE_CLASS_REGRESSION_PASS` and must not be used for owner
+handoff.
+
+## Original failure evidence and missing root-cause evidence
+
+The preserved owner run is
+`urn:integra:run:0e41299d-0ae3-48c9-b1d8-66526ba9695d`, with job
+`urn:integra:job:9b701e50-56f5-4e01-b78c-094ea72820c7`. It proves that the
+real local video completed ASR/SRT and failed at `word_timeline` (progress 85),
+without a timeline output. It contains only the generic error.
+
+The original app version predated the diagnostic artifact. It persisted neither
+the Word Timeline command environment nor worker exit status/stdout/stderr, and
+the bridge discarded plan-worker stdout/stderr. Therefore the saved run cannot
+distinguish a worker crash, process/environment difference, model load error,
+or output validation error. This evidence is irretrievably absent; the new
+diagnostic capture cannot reconstruct it retroactively.
+
+The exact packaged worker has since been run against the saved owner WAV and
+SRT with the exact bundled runtime and model: exit `0`, stderr empty, 174
+words. This disproves a static bad-model/bad-input explanation but does not
+identify the historical cause or constitute a repaired regression.
+
+Accordingly the required chain remains incomplete:
+
+`REPRODUCED → ROOT_CAUSE_IDENTIFIED → FIXED → ORIGINAL_FAILURE_CLASS_REGRESSION_PASS → PACKAGED_E2E_PASS`
+
+Only the final happy-path element has evidence. No Phase 2 or Phase 3 result is
+claimed; the earlier translation observation is superseded and must not be
+treated as Phase 2 execution under the corrected fail-fast order.
 
 ## Secondary readiness
 
