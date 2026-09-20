@@ -86,18 +86,18 @@ was resolved only by the contract-first procedure above; the clean retry used
 the validated fresh cache through `INTEGRA_REVIEW_WHEELS`. No old candidate
 runtime or wheel file was copied.
 
-The successful pre-doc candidate produced the following immutable evidence:
+The authoritative final candidate produced the following immutable evidence:
 
 | Field | Value |
 | --- | --- |
-| Candidate path | `/private/tmp/integra-wp1-candidate-final.jhAlE9/Integra.app` |
-| Candidate ID | `candidate-v1-03a0bf097ca5aef42956093ce3eaca336d161aa372aa0e76165300022d9c4326` |
+| Candidate path | `/private/tmp/integra-wp1-candidate-authoritative.FINhlx/Integra.app` |
+| Candidate ID | `candidate-v1-59cbbfbea96fc6340fdf169739418cddca4ba51cf090e8b000d87ecdc068424a` |
 | Bundle digest | `1bef491399fe36189260e1c7dee2d06b2d926616d2959007662aba830ba39764` |
-| Build source commit | `47b4a50969b29826f57910e19f1fa336725744d9` |
+| Build source commit | `57f784594d5f5783bd1ccec17bb3e0827a1648fc` |
 
-The final report commit is documentation/state evidence only; the final clean
-candidate build below is performed after that commit so the delivered Candidate
-ID binds the final branch source exactly.
+The manifest reports `dirty=false` and tree `8f1c00f1b2e7902c1a91451cd200bf74794c3e9a`.
+The subsequent report-only commit does not alter the candidate or its bundle;
+the manifest remains bound to the clean implementation commit shown above.
 
 This is not a Word Timeline diagnosis, product repair, runtime-pin change, or
 permission to reuse an old candidate PASS.
@@ -115,3 +115,9 @@ through `INTEGRA_REVIEW_WHEELS`.
 This issue claims neither primary product E2E, MCWMA readiness, nor owner
 acceptance. WP2 is the first permitted #148 classification work; WP3 owns
 repair and E2E.
+
+**WP1 status: `WP1_PASS`.** The canonical stabilization branch, itemized
+salvage, immutable Candidate Manifest/ID, candidate-bound evidence contract,
+fresh-cache provenance closure, isolated build, native self-test, final
+SeminarText identity and Word Alignment preflight all pass. No product E2E,
+WP2/WP3 work, or owner acceptance is claimed.
