@@ -2,7 +2,7 @@
 
 ## Phase 1 status
 
-`IN_PROGRESS`. Only the required Phase 1 specialists were activated:
+`PHASE_1_PASS`. Only the required Phase 1 specialists were activated:
 backend-developer, qa-test-engineer, and ci-cd-engineer. No other role has a
 concrete activation trigger.
 
@@ -49,3 +49,44 @@ Do not enter Phase 2 or Phase 3. Add a bounded reusable built-app harness and
 retain actionable Word Timeline worker diagnostics without weakening the
 validator. The primary gate is green only after that harness passes on a fresh
 isolated candidate.
+
+## Phase 1 repair and gate evidence
+
+The integration repair preserves fail-closed behavior. Word Timeline now writes
+a bounded `word_timeline.worker-diagnostic.json` beside its intended output,
+containing the worker command, exit status, and final 16 KiB of stdout/stderr.
+A non-zero exit or absent output is still rejected. The diagnostic exists to
+make a future failure attributable; it is not accepted as output.
+
+Reusable command:
+
+`python3 scripts/test_packaged_primary_e2e.py <Integra.app> <isolated-work-dir>`
+
+It uses only the built app's bundled bridge/runtimes; clears inherited
+`INTEGRA_*` component override variables; creates a bounded non-private Russian
+speech fixture; enters through `execute-plan`; polls `run-status` for at most
+300 seconds; and retains the isolated app-data tree on either outcome.
+
+Fresh candidate: `/private/tmp/integra-candidate-issue-148-phase1/Integra.app`.
+Native self-test passed. The reusable gate passed with fixture SHA-256
+`5f1447fc19684f710a4c83b435160725cd5130c106f299074a605b823575b5a1` and
+persisted run `urn:integra:run:b84522b9-45e9-461f-8740-0c224fe112f3`:
+
+| Mandatory primary row | Result |
+| --- | --- |
+| Build, self-test, bundled identities | PASS |
+| Source ingestion and capability/plan | PASS |
+| Real packaged ASR, transcript, SRT | PASS |
+| Real packaged Word Timeline and validation | PASS |
+| Topics | PASS |
+| Persisted artifacts and navigation metadata | PASS |
+| Final state | PASS (`COMPLETED`, mapped to Issue `SUCCESS`) |
+
+## Secondary readiness
+
+Translation was started through the same bundled bridge path on the primary
+fixture. It remained `RUNNING` for more than three minutes without producing a
+terminal record, so the bounded observation was stopped and is recorded as
+`BLOCKED` pending the known translation latency/progress investigation. No
+translation repair is made in this issue. BookText and resilience checks remain
+`NOT_RUN` at this checkpoint.
