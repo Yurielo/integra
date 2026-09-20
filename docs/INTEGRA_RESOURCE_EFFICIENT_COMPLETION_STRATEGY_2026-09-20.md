@@ -42,8 +42,9 @@ social, release/signing and source consolidation defer until MCWMA acceptance.
 
 ## 3. Critical path and lifecycle
 
-`P0 canonical stabilization baseline → P1 candidate manifest → P2 observable,
-bounded #148 classification → P3 primary journey stabilization → P4 owner
+`P0 canonical stabilization baseline and Candidate identity → P1 observability
+and bounded #148 failure classification → P2 primary-journey repair/stabilization
+→ P3 MCWMA technical handoff gate → P4 secondary journeys after MCWMA owner
 acceptance` is the critical path. The canonical baseline is established before
 any further diagnosis or repair; all Candidate IDs, diagnostics, regressions and
 E2E evidence are produced on that single line. Freeze unrelated implementation
@@ -98,7 +99,7 @@ PR and complete Owner Entry Gate; then explicitly supersede/archive old drafts.
 
 | Change | Source PR | Purpose | Owner-proven? | Technically-proven? | Currently required? | Decision | Reason |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Clean Word Alignment runtime | #143 | exact Python/WhisperX/model bundle | No | component/preflight only | Yes | NEEDS_MORE_EVIDENCE | #148 owner failure reached this runtime. |
+| Clean Word Alignment runtime | #143 | exact Python/WhisperX/model bundle | No | saved owner WAV/SRT replayed through the exact packaged runtime: exit 0, 174 words | Yes | TRANSFER_EXACT | Exact runtime construction, versions and model identity are salvageable. It inherits no old-candidate PASS: revalidate it in the canonical Candidate ID. Full Word Timeline orchestration remains unproven until WP3. |
 | Ollama GUI resolution | #145 | resolve packaged GUI executable | Owner launch PASS | Yes, narrow | Yes | TRANSFER_EXACT | no contradictory evidence; still needs Candidate binding. |
 | SeminarText active CLI SHA | #147 | align ASR expected hash with final pin | Owner capability PASS | Yes | Yes | TRANSFER_EXACT | exact stale-identity repair, independently byte-verifiable. |
 | Word Timeline diagnostics | #149 | retain worker status/logs | No historic cause | focused unit only | Yes | REIMPLEMENT_CLEANLY | current form is incomplete for timeout/validator/job linkage. |
@@ -122,28 +123,32 @@ PR and complete Owner Entry Gate; then explicitly supersede/archive old drafts.
 
 | Order | Outcome | Uncertainty | First test | Packaged gate | Owner gate | Agents | Stop |
 | --- | --- | --- | --- | --- | --- | --- |
-| P0 | canonical baseline | salvage + one line | matrix review | candidate manifest | none | backend, QA, CI/CD | ambiguous transfer |
-| P1 | observable failure classification | diagnostics/interpreter/#148 | unit failure paths | bounded bridge attempts | none | backend, QA, CI/CD | missing original evidence classified |
-| P2 | restored primary journey | evidenced fix or classification | regression | deterministic+realistic+recovery E2E | none | backend, QA, CI/CD | semantic/model change |
-| P3 | MCWMA handoff | coherent utility | manifest check | all primary rows | one owner acceptance | QA, CI/CD | owner tech failure→P1 |
-| P5 | secondary journey | one capability | capability check | per-journey E2E | milestone only | minimal triggered | P0–P4 red |
+| P0 | canonical baseline and Candidate identity | salvage + one line | matrix review | candidate manifest | none | backend, QA, CI/CD | ambiguous transfer |
+| P1 | observability and bounded failure classification | diagnostics/interpreter/#148 | unit failure paths | bounded bridge attempts | none | backend, QA, CI/CD | missing original evidence classified |
+| P2 | primary-journey repair/stabilization | evidenced repair specification | failure-class regression | deterministic+realistic+recovery E2E | none | backend, QA, CI/CD | semantic/model change |
+| P3 | MCWMA technical handoff gate | coherent technical evidence | manifest check | all primary rows | authorize one owner acceptance handoff | QA, CI/CD | owner technical failure→P1 |
+| P4 | secondary journeys after MCWMA acceptance | one capability | capability check | per-journey E2E | milestone only | minimal triggered | P0–P3 red |
 
 ## 9. Immediate three packages
 
-1. **WP1 — Canonical Stabilization Baseline + Salvage Matrix + Candidate
+1. **WP1 (P0) — Canonical Stabilization Baseline + Salvage Matrix + Candidate
    Manifest.** Pure identity/control outcome: one authoritative Integra line
    and Candidate ID; no Word Timeline repair/debugging.
-2. **WP2 — Observability + bounded #148 failure classification.** Small fixed
+2. **WP2 (P1) — Observability + bounded #148 failure classification.** Small fixed
    protocol: three instrumented GUI-equivalent bridge attempts using saved
    owner-derived WAV/SRT only where authorized/available, plus one realistic
-   non-private fixture; each records Candidate ID and diagnostics. A reproduced
-   failure requires root cause and repair. Otherwise terminal classification is
-   `HISTORICAL_NON_REPRODUCIBLE_WITH_INSUFFICIENT_ORIGINAL_DIAGNOSTICS`; retain
-   observability/regression and stop historical speculation.
-3. **WP3 — Primary Journey Stabilization.** On one Candidate ID run
-   deterministic packaged E2E, realistic packaged E2E, applicable known-failure
-   regression, and MCWMA controlled-failure/subsequent-run sanity. Owner
-   handoff remains forbidden until all are green.
+   non-private fixture; each records Candidate ID and diagnostics. This package
+   is diagnostic/classification only: it ends exclusively in
+   `ROOT_CAUSE_IDENTIFIED` with evidence and a bounded repair specification for
+   WP3, or `HISTORICAL_NON_REPRODUCIBLE_WITH_INSUFFICIENT_ORIGINAL_DIAGNOSTICS`.
+   It performs no product repair and stops historical speculation.
+3. **WP3 (P2 → P3) — Primary Journey Stabilization + MCWMA technical handoff
+   gate.** If WP2 produces a repair specification, make only that minimal,
+   evidence-backed repair; then run its failure-class regression, deterministic
+   and realistic packaged E2E, and MCWMA controlled-failure/subsequent-run
+   recovery sanity on the relevant Candidate ID(s). P3 authorizes a single
+   owner handoff only after every primary gate is green. P4 secondary journeys
+   begin only after that MCWMA owner acceptance.
 
 ## 10. Dashboard, no-work list and preconditions
 
