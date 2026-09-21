@@ -164,8 +164,11 @@ semantics are unchanged.
 | Targeted ASR/project-transcribe/integration tests | `30 passed, 26 skipped` | PASS |
 | SeminarText ASR quality-gate contract | pinned checkout `tests/test_asr_quality_gate.py`: `7 passed` | PASS |
 | Governance validator and shell/diff checks | `INTEGRA_GOVERNANCE_VALIDATION: PASS`; `bash -n`; `git diff --check` | PASS |
-| GitHub Quality Gate | required final-HEAD check remains pending until this report commit is pushed | PENDING |
+| GitHub Quality Gate | run `35655422848`, job `106517637471`, PASS on product/evidence HEAD `754cb885dece72d8f4d284939138a5095178b8c9` | PASS |
 
+The final Candidate was built from clean product/evidence source HEAD
+`da51a1c528a3b720a7ba97adcc4c1f26085f8232`; the later `754cb88…` commit only
+binds the portable CI ffmpeg test fixture and does not alter the Candidate bundle.
 The previous shell-only false-positive condition is explicitly absent from every
 corrected Word Timeline evidence record: `uses_inherited_path=false`, with the
 same resolved ffmpeg SHA-256. The old Candidate's PASS evidence is not reused.
