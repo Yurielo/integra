@@ -9,6 +9,7 @@ from pathlib import Path
 import signal
 import subprocess
 import sys
+import threading
 import time
 import uuid
 
@@ -19,6 +20,131 @@ def cancellation_path(record_path: Path) -> Path:
 
 def ownership_path(record_path: Path) -> Path:
     return record_path.parent / ".workers" / record_path.name
+
+
+class RunTimedOut(TimeoutError):
+    """The production plan worker exceeded its bounded lifecycle deadline."""
+
+
+def run_with_timeout(callback, timeout: float):
+    """Run a plan callback with a process-local, fail-closed watchdog.
+
+    The plan worker is a dedicated foreground process.  SIGALRM therefore
+    interrupts the same Python thread that owns the external worker cleanup
+    ``finally`` blocks, while the caller can persist the terminal FAILED state.
+    """
+    timeout = float(timeout)
+    if timeout <= 0 or timeout != timeout or timeout == float("inf"):
+        raise ValueError("run timeout must be a finite positive number")
+    if threading.current_thread() is not threading.main_thread():
+        raise ValueError("run timeout must be installed in the worker main thread")
+    previous_handler = signal.getsignal(signal.SIGALRM)
+    previous_timer = signal.setitimer(signal.ITIMER_REAL, 0)
+
+    def alarm(_signum, _frame):
+        raise RunTimedOut(f"Processing exceeded bounded timeout ({timeout:g}s)")
+
+    signal.signal(signal.SIGALRM, alarm)
+    signal.setitimer(signal.ITIMER_REAL, timeout)
+    try:
+        return callback()
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous_handler)
+        if previous_timer[0] > 0:
+            signal.setitimer(signal.ITIMER_REAL, previous_timer[0], previous_timer[1])
+
+
+def _run_records(root: Path):
+    projects = Path(root) / "projects"
+    if not projects.is_dir() or projects.is_symlink():
+        return
+    for project in sorted(projects.iterdir()):
+        runs = project / "runs"
+        if project.is_symlink() or not project.is_dir() or runs.is_symlink() or not runs.is_dir():
+            continue
+        for path in sorted(runs.glob("*.json")):
+            if path.is_symlink() or not path.is_file():
+                continue
+            try:
+                record = json.loads(path.read_bytes())
+            except (OSError, json.JSONDecodeError):
+                continue
+            if isinstance(record, dict) and record.get("state") in {"QUEUED", "RUNNING"}:
+                yield project, path, record
+
+
+def reconcile_stale_runs(root: Path) -> int:
+    """Terminalize active records whose owned worker is no longer provably live.
+
+    This is intentionally conservative: a live, identity-matching worker is
+    left alone; a missing/invalid/dead ownership record becomes FAILED (or
+    CANCELLED when an explicit cancellation marker exists).  Existing source
+    and completed upstream artifacts are never deleted or rewritten.
+    """
+    from .user_media import atomic_json, now
+
+    snapshot = process_snapshot()
+    changed = 0
+    for project, path, record in list(_run_records(root)):
+        owner_path = ownership_path(path)
+        owner = None
+        if not owner_path.is_symlink() and owner_path.is_file():
+            try:
+                candidate = json.loads(owner_path.read_bytes())
+                identity = candidate.get("process", {})
+                if isinstance(candidate, dict) and same_birth(identity, snapshot.get(identity.get("pid"))):
+                    owner = candidate
+            except (OSError, json.JSONDecodeError, TypeError, KeyError):
+                owner = None
+        if owner is not None:
+            continue
+        cancellation = cancellation_path(path)
+        cancelled = cancellation.is_file() and not cancellation.is_symlink()
+        previous_state = record.get("state")
+        stage = record.get("current_stage")
+        terminal = "CANCELLED" if cancelled else "FAILED"
+        updated = dict(record)
+        updated["state"] = terminal
+        updated["current_stage"] = None
+        updated["updated_at"] = now()
+        updated["interrupted_stage"] = stage
+        if terminal == "CANCELLED":
+            updated["cancelled_at"] = now()
+            updated["message"] = "Обработка была остановлена до завершения; сохранённые результаты не изменены"
+        else:
+            updated["failed_at"] = now()
+            updated["error"] = "Processing was interrupted before completion; retry is required"
+            updated["message"] = "Обработка прервана до завершения; повторите запуск"
+        updated["recovery"] = {
+            "classification": "CANCELLED_AFTER_INTERRUPTION" if cancelled else "STALE_RUNNING_RECONCILED",
+            "previous_state": previous_state,
+            "worker_identity_verified": False,
+            "upstream_artifacts_preserved": True,
+        }
+        atomic_json(path, updated)
+        jobs_path = project / "jobs.json"
+        if jobs_path.is_file() and not jobs_path.is_symlink():
+            try:
+                jobs = json.loads(jobs_path.read_bytes())
+            except (OSError, json.JSONDecodeError):
+                jobs = None
+            if isinstance(jobs, dict):
+                touched = False
+                for job in jobs.get("jobs", []):
+                    if isinstance(job, dict) and job.get("run_id") == record.get("run_id") and job.get("state") in {"QUEUED", "RUNNING"}:
+                        job["state"] = terminal
+                        job["message"] = updated["message"]
+                        job["updated_at"] = updated["updated_at"]
+                        touched = True
+                if touched:
+                    atomic_json(jobs_path, jobs)
+        if owner_path.is_file() and not owner_path.is_symlink():
+            owner_path.unlink(missing_ok=True)
+        if cancellation.is_file() and not cancellation.is_symlink():
+            cancellation.unlink(missing_ok=True)
+        changed += 1
+    return changed
 
 
 def requires_shutdown(record_path: Path, record: dict) -> bool:
