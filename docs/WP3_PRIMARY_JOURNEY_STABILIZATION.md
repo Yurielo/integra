@@ -1,18 +1,18 @@
 # WP3 — Primary Journey Stabilization Evidence
 
-Status: `BLOCKED` — owner acceptance failed; technical handoff revoked (not `USER_ACCEPTED`).
+Status: `READY_FOR_SINGLE_OWNER_ACCEPTANCE` — repair cycle 1 Owner Entry Gate is green; not `USER_ACCEPTED`.
 
-This report is evidence for Issue #156 on `codex/stabilization-mcwma` / PR #154. Prior
-product/evidence HEAD: `59c14d0759790eb4c1f53fc0a4e1098dc1597a01`; this diagnostic
-revision is documentation-only. No
-product repair, component-pin change, semantic change, merge, deploy, or owner
-request was made. Secondary capabilities remained frozen.
+This report is evidence for Issue #156 on `codex/stabilization-mcwma` / PR #154. The
+prior rejected product/evidence HEAD was `59c14d0759790eb4c1f53fc0a4e1098dc1597a01`;
+repair cycle 1 is bounded to deterministic Word Timeline ffmpeg resolution. No
+component-pin, model, ASR, Topics, secondary-capability, merge, deploy, or owner
+retest action was performed. Secondary capabilities remain frozen.
 
 ## Owner Acceptance Failure — exact run and root-cause diagnosis
 
-The single authorized owner acceptance attempt was rejected. No owner retest has
-been requested or performed, and no product code, candidate runtime, manifest, or
-test logic has been changed in response.
+The single authorized owner acceptance attempt was rejected before repair. No owner
+retest has been requested or performed; the rejected candidate remains historical
+pre-repair evidence.
 
 ### Exact failed owner run
 
@@ -110,6 +110,76 @@ journey failed on the same candidate and content.
 This diagnosis is complete with sufficient evidence. The candidate remains
 owner-rejected; no code change, rebuild, owner retest, merge, or deploy is
 authorized by this step.
+
+## Repair cycle 1 — corrected Candidate and Owner Entry Gate
+
+The pre-repair failure-class evidence was preserved before the bounded repair in
+`docs/evidence/WP3_FFMPEG_PRE_REPAIR_REGRESSION.json`. It uses the exact rejected
+Candidate, real WhisperX worker, owner-derived input hashes, Finder-like
+`PATH=/usr/bin:/bin:/usr/sbin:/sbin`, exit status `1`, and the real
+`FileNotFoundError: ... 'ffmpeg'` traceback. No fake worker was used for that
+regression.
+
+### Bounded product/evidence change
+
+`integra_core/word_timeline_runtime.py` now resolves ffmpeg in this order:
+
+1. explicit `INTEGRA_FFMPEG`;
+2. fixed standard macOS locations (`ffmpeg-full` Homebrew prefix, Homebrew and
+   `/usr/local`, then system locations);
+3. no inherited PATH lookup.
+
+Preflight verifies executable availability and `--version`, and records path,
+version, SHA-256, resolution source, and bounded PATH classification. The real
+worker receives a bounded PATH containing the resolved executable's parent plus
+system directories. Candidate manifest execution identity binds the same
+ffmpeg path/version/SHA. If resolution fails, Word Timeline fails closed before
+worker execution. ASR, Word Alignment model, component pins, Topics, and output
+semantics are unchanged.
+
+### Final repair Candidate
+
+| Identity | Value |
+|---|---|
+| Candidate path | `/private/tmp/integra-wp3-repair1-finalbuild.j9dBzZ/Integra.app` |
+| Candidate ID | `candidate-v1-c5851d168b116fed83109014519ebc01c0291e23705ac9d2ec0a4e5df2471960` |
+| Bundle SHA-256 tree digest | `90c6c816c7f4ec82b8a3393c46a5a96239ce7cbc16ba50a83677d78a0cdea8cb` |
+| Candidate source HEAD | `da51a1c528a3b720a7ba97adcc4c1f26085f8232` |
+| SeminarText commit / CLI SHA-256 | `970bde598ddd649599295139986933e0e06cb9c0` / `f7f411bf106341ae970bc40d759e1e3c964273b977bdb12d0f1840e629def13a` |
+| Word Alignment model revision / weights | `2329100508896c6d9b157019803ab5601e6f3406` / `d1cdb1a7921de7d363f967a9b0101a713602e109dba62b6f3f9ae2e0b2df0c1c` |
+| Resolved ffmpeg | `/opt/homebrew/Cellar/ffmpeg-full/9.0.1/bin/ffmpeg` |
+| ffmpeg version / SHA-256 | `ffmpeg version 9.0.1` / `58b8f5171449c6d3174173d84409a35682b1ab157e2e24b4023a8d8b329d7e3d` |
+| Resolution source | `standard:/opt/homebrew/opt/ffmpeg-full/bin`; `uses_inherited_path=false` |
+
+### Corrected mandatory gates — all bound to the final Candidate
+
+| Gate | Evidence | Result |
+|---|---|---|
+| Fresh isolated build, manifest validation, native self-test | Candidate above; `INTEGRA_MACOS_SELF_TEST: PASS` | PASS |
+| Deterministic Russian full packaged bridge journey, minimal PATH | run `urn:integra:run:9302ceaa-7c75-4527-b9f1-fbb1b7191aee`; Word Timeline evidence SHA `8ba6246b653273525ebf71496aa6561abdb629154747261f709a6d1a0a2822c1`; Topics and navigation (2 segments) persisted | PASS |
+| Realistic natural-Russian full packaged bridge journey, minimal PATH | run `urn:integra:run:4b0754c0-0a7d-47ea-8043-5efcfabf1237`; Word Timeline evidence SHA `69eccc1843ce3820f0388f81d69d2cfed0e76f37723aad99ee2fabac16a1cb65`; Topics and navigation (12 segments) persisted | PASS |
+| Owner-derived real WhisperX regression, minimal PATH | owner WAV `acf25b…`, SRT `af17d8…`; evidence SHA `c736c315fe3e46ff563e0f79f872d36911b944072ee92ccb3d31d76b21c36c50`; 174 words | PASS |
+| Controlled failure → subsequent successful run without restart | failed run `urn:integra:run:f6814a1d-e860-4a44-bf7b-a779939fad5e`, exit 23; subsequent run `urn:integra:run:d215d69d-533a-49e0-a9a0-11863c32d1c1`; retry evidence SHA `27fd22f3b334b8fa8d3f6b7055b5e5ab7b4796a0e580c7897edaae981d2ca915` | PASS |
+| Focused resolver/runtime tests | `7 passed` (`tests/test_word_timeline_runtime.py`, `tests/test_candidate_identity.py`) | PASS |
+| Targeted ASR/project-transcribe/integration tests | `30 passed, 26 skipped` | PASS |
+| SeminarText ASR quality-gate contract | pinned checkout `tests/test_asr_quality_gate.py`: `7 passed` | PASS |
+| Governance validator and shell/diff checks | `INTEGRA_GOVERNANCE_VALIDATION: PASS`; `bash -n`; `git diff --check` | PASS |
+| GitHub Quality Gate | required final-HEAD check remains pending until this report commit is pushed | PENDING |
+
+The previous shell-only false-positive condition is explicitly absent from every
+corrected Word Timeline evidence record: `uses_inherited_path=false`, with the
+same resolved ffmpeg SHA-256. The old Candidate's PASS evidence is not reused.
+
+The complete local suite ran `567 passed, 73 skipped, 2 failed` (118 subtests).
+The two failures are unrelated worktree packaging failures: both scripts tried
+to use the absent local `.runtime-components/seminartext-pinned` checkout before
+any GUI action (`scripts/test_macos_app.sh` and `scripts/package_ready_app.sh`).
+They do not affect the isolated Candidate gates above and were not repaired.
+
+The numbered sections below preserve the prior WP3 pre-repair evidence for
+lineage. Where they mention Candidate `candidate-v1-a9c599…` or the former
+Owner Entry Gate, those values are historical and are superseded by the repair
+cycle 1 section above.
 
 ## 1. Prerequisites
 
