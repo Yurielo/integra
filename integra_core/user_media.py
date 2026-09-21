@@ -324,7 +324,8 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
             _run_with_cancellation([ffmpeg, "-nostdin", "-y", "-i", str(source), "-vn", "-ar", "16000",
                                     "-ac", "1", "-c:a", "pcm_s16le", str(wav)], project_dir, job.get("run_id"))
             timeline_path = work / "word_timeline.json"
-            generate_word_timeline(wav, subtitles, timeline_path)
+            generate_word_timeline(wav, subtitles, timeline_path,
+                                   diagnostic_context={"run_id": str(job.get("run_id", "")), "stage": "word_timeline"})
             job["outputs"]["word_timeline"] = str(timeline_path)
         if requested and "topics" in requested:
             checkpoint("RUNNING", 88, "Generating topic drafts with SeminarText", run_stage="topics")

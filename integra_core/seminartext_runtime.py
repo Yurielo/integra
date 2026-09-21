@@ -4,13 +4,14 @@ from __future__ import annotations
 import os
 import json
 import hashlib
-import shutil
 import subprocess
 import sys
 from pathlib import Path
 from typing import Any
 
-PINNED_COMMIT = "a94936cd77cde13561c97c804ece1ac1134e01a6"
+from .ollama_runtime import listed_models
+
+PINNED_COMMIT = "970bde598ddd649599295139986933e0e06cb9c0"
 ENTRYPOINT = Path("seminartext_modules/seminartext_topics.py")
 ENTRYPOINT_SHA256 = "d8a14e83b877024c3e016a33e594af17d512741a77735ff3d8c7d1262628c8db"
 BUNDLED_RUNTIME_ROOT = Path(__file__).resolve().parents[1] / "runtime" / "seminartext"
@@ -46,11 +47,8 @@ def preflight() -> dict[str, Any]:
             raise ValueError("SeminarText runtime is not configured")
     if not _entrypoint_is_exact(entrypoint):
         raise ValueError("SeminarText Topic Engine entrypoint differs from the pinned runtime")
-    ollama = shutil.which("ollama")
-    if not ollama:
-        raise ValueError("Ollama is not installed")
-    models = subprocess.run([ollama, "list"], capture_output=True, text=True, check=False, timeout=10).stdout
-    if model not in {line.split()[0] for line in models.splitlines()[1:] if line.split()}:
+    _ollama, models = listed_models()
+    if model not in models:
         raise ValueError("SeminarText topic model is unavailable")
     return {"state":"READY","component":"seminartext","commit_sha":commit,"checkout":str(checkout.resolve(strict=True)),"entrypoint":str(entrypoint.resolve(strict=True)),"model":model,"origin":origin}
 
