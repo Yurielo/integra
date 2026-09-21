@@ -21,7 +21,9 @@ from typing import Callable, Any
 from .seminartext_runtime import PINNED_COMMIT
 from . import videotext_subtitles
 
-ENTRYPOINT_SHA256 = "020cc5fcd36fa3040b59e3e725afb1439e15c00cb4ad1fda03e171fa94a1c9d7"
+# Active CLI bytes from the final accepted SeminarText pin. Historical evidence
+# retains its old hashes; this fail-closed runtime check does not.
+ENTRYPOINT_SHA256 = "f7f411bf106341ae970bc40d759e1e3c964273b977bdb12d0f1840e629def13a"
 VERSION_SHA256 = "e1d49c569ae09b2ede16e2d83820a3809b35eb6c44c13ba9b5330598d6b8f43c"
 VAD_SHA256 = "29940d98d42b91fbd05ce489f3ecf7c72f0a42f027e4875919a28fb4c04ea2cf"
 BUNDLED_RUNTIME_ROOT = Path(__file__).resolve().parents[1] / "runtime" / "seminartext"

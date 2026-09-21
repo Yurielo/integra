@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "kind": "wp3_pre_repair_failure_class_regression",
+  "candidate_id": "candidate-v1-a9c599ce6e958da69f3207a14871a8d8af31d24a296b11e71e9fa4269e5b1dab",
+  "bundle_digest": "991ee9d6f64df1c97ce74c62552b2fe8aa4eb84c2b10953066e16edb329545e9",
+  "launch_contract": {
+    "environment": "Finder-like minimal",
+    "path": "/usr/bin:/bin:/usr/sbin:/sbin",
+    "homebrew_path_present": false,
+    "fake_worker": false,
+    "real_whisperx_worker": true
+  },
+  "command": [
+    "/opt/homebrew/opt/python@3.13/bin/python3.13",
+    "/private/tmp/integra-wp3-cleanbuild.91e4OE/Integra.app/Contents/Resources/workers/seminartext_word_alignment_worker.py",
+    "--audio",
+    "<OWNER_ARTIFACT>/audio.wav",
+    "--srt",
+    "<OWNER_ARTIFACT>/seminartext-asr/transcript.srt",
+    "--model-dir",
+    "/private/tmp/integra-wp3-cleanbuild.91e4OE/Integra.app/Contents/Resources/runtime/word-alignment/model",
+    "--output",
+    "/private/tmp/wp3-pre-repair-owner.gwZRB9/word_timeline.json"
+  ],
+  "inputs": {
+    "audio_sha256": "acf25b9ac68a11dc3f0fd193ec67283843e856a4a190a8e4cb2f35fcfa3df67c",
+    "srt_sha256": "af17d83246dedc55dbef5aa0ff2059461dd263415dac1ce32e7d993c007c3492"
+  },
+  "runtime": {
+    "python": "/opt/homebrew/opt/python@3.13/bin/python3.13",
+    "model_revision": "2329100508896c6d9b157019803ab5601e6f3406",
+    "model_sha256": "d1cdb1a7921de7d363f967a9b0101a713602e109dba62b6f3f9ae2e0b2df0c1c"
+  },
+  "result": {
+    "exit_status": 1,
+    "output_created": false,
+    "stderr_sha256": "00bfacc7a279fd86003e970b691ee8340e2277f8183b3fca264a8266d037fc8e",
+    "failure_class": "ffmpeg_unavailable",
+    "exception": "FileNotFoundError: [Errno 2] No such file or directory: 'ffmpeg'"
+  },
+  "provenance": "Immutable pre-repair reproduction of the authorized owner failure class; private media is represented only by hashes and is not stored in Git."
+}

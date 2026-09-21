@@ -33,6 +33,8 @@ def main():
         shutil.copyfile(source, target)
     target = resources / "runtime/review-python/site-packages"
     wheels = Path(os.environ.get("INTEGRA_REVIEW_WHEELS", root / ".runtime-components/review-wheels"))
+    subprocess.run([sys.executable, str(root / "scripts/validate_review_wheel_cache.py"), str(wheels),
+                    "--manifest", str(root / "state/review_runtime_cache_v1.json")], check=True)
     subprocess.run([sys.executable, "-m", "pip", "install", "--no-index", "--no-compile",
         "--no-deps", "--require-hashes", "--only-binary=:all:", "--find-links", str(wheels),
         "--target", str(target), "-r", str(root / "scripts/review-runtime-requirements.txt")],

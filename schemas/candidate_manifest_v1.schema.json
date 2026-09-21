@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Integra Candidate Manifest v1",
+  "type": "object",
+  "required": ["schema_version", "candidate_id", "identity_sha256", "identity", "bundle", "build"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "candidate_id": {"pattern": "^candidate-v1-[0-9a-f]{64}$"},
+    "identity_sha256": {"pattern": "^[0-9a-f]{64}$"},
+    "identity": {"type": "object"},
+    "bundle": {"type": "object", "required": ["digest_algorithm", "digest"]},
+    "build": {"type": "object", "required": ["timestamp", "build_id"]}
+  },
+  "additionalProperties": false
+}
