@@ -277,10 +277,9 @@ and must not be inferred as accepted from this report.
 
 ## 11. Handoff
 
-Technical handoff may use exactly one candidate:
+The previous technical handoff used exactly one candidate:
 
 `/private/tmp/integra-wp3-cleanbuild.91e4OE/Integra.app`
 
-Open the packaged app through the owner's normal acceptance workflow and test only
-the primary journey described in Issue #156. This report authorizes a single owner
-acceptance attempt; it does not claim user acceptance.
+That candidate is now owner-rejected after the exact failed run recorded above.
+This report does not authorize another owner attempt or claim user acceptance.
