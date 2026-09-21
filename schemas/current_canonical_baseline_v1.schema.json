@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://integra.local/schemas/current_canonical_baseline_v1.schema.json",
+  "title": "Integra Current Canonical Baseline v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_type",
+    "scope",
+    "parent_main_sha",
+    "baseline_source_commit",
+    "candidate",
+    "historical_certifications",
+    "files"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "artifact_type": {"const": "integra.current_canonical_baseline"},
+    "scope": {"const": "current_canonical_stabilization"},
+    "parent_main_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "baseline_source_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candidate_id", "identity_sha256", "bundle_digest", "manifest_schema", "manifest_schema_sha256"],
+      "properties": {
+        "candidate_id": {"type": "string", "pattern": "^candidate-v1-[0-9a-f]{64}$"},
+        "identity_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "bundle_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "manifest_schema": {"const": "schemas/candidate_manifest_v1.schema.json"},
+        "manifest_schema_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "historical_certifications": {
+      "type": "array",
+      "const": ["state/native_macos_app_v1.json", "state/ready_app_v1.json"]
+    },
+    "files": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "current_sha256", "historical_refs"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "current_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "historical_refs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["state_path", "sha256"],
+              "properties": {
+                "state_path": {"type": "string", "minLength": 1},
+                "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

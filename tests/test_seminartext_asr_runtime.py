@@ -14,6 +14,9 @@ from tests.asr_tools import media_environment, TRANSCRIPT, require_subtitle_runt
 
 
 class SeminarTextASRTests(unittest.TestCase):
+    def test_active_cli_pin_is_the_final_seminartext_artifact(self):
+        self.assertEqual(asr.ENTRYPOINT_SHA256, "f7f411bf106341ae970bc40d759e1e3c964273b977bdb12d0f1840e629def13a")
+
     def test_native_failed_run_surfaces_quality_report_in_both_views(self):
         swift=(Path(__file__).resolve().parents[1]/"macos/IntegraApp.swift").read_text()
         self.assertIn('if state == "FAILED" { renderFailedASRReports(run) }',swift)
@@ -34,6 +37,17 @@ class SeminarTextASRTests(unittest.TestCase):
             root = Path(directory)
             (root / "seminartext").write_text("not the pinned program")
             with patch.dict(os.environ, {}, clear=True), patch.object(asr, "BUNDLED_RUNTIME_ROOT", root):
+                with self.assertRaisesRegex(asr.ASRError, "pinned bytes"):
+                    asr._runtime()
+
+    def test_verified_runtime_is_accepted_but_modified_bytes_fail_closed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); entrypoint = root / "seminartext"; version = root / "SEMINARTEXT_VERSION"
+            entrypoint.write_bytes(b"verified packaged SeminarText CLI"); version.write_bytes(b"verified version metadata")
+            with patch.dict(os.environ, {}, clear=True), patch.object(asr, "BUNDLED_RUNTIME_ROOT", root), \
+                 patch.object(asr, "ENTRYPOINT_SHA256", asr._sha(entrypoint)), patch.object(asr, "VERSION_SHA256", asr._sha(version)):
+                self.assertEqual(asr._runtime(), root.resolve())
+                entrypoint.write_bytes(entrypoint.read_bytes() + b"\nmodified")
                 with self.assertRaisesRegex(asr.ASRError, "pinned bytes"):
                     asr._runtime()
 

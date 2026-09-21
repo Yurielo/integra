@@ -99,10 +99,17 @@ def _spawn_media(root, project_id, job_id):
 
 def _spawn_plan(root, project_id, run_id):
     environment=dict(os.environ); environment["INTEGRA_APP_DATA_ROOT"]=str(root); environment["PYTHONDONTWRITEBYTECODE"]="1"
+    environment["INTEGRA_RUN_ID"] = run_id; environment["INTEGRA_STAGE_ID"] = "plan"
     request=json.dumps({"project_id":project_id,"run_id":run_id}).encode()
     nonce=uuid.uuid4().hex
-    process=subprocess.Popen([sys.executable,str(Path(__file__).resolve()),"process-plan","--integra-run-owner",nonce],stdin=subprocess.PIPE,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,env=environment,start_new_session=True)
     path=run_path(_project_dir(root,project_id),run_id)
+    diagnostics = path.parent / "diagnostics"; diagnostics.mkdir(parents=True, exist_ok=True)
+    stdout = (diagnostics / (run_id.removeprefix("urn:integra:run:") + ".stdout.log")).open("wb")
+    stderr = (diagnostics / (run_id.removeprefix("urn:integra:run:") + ".stderr.log")).open("wb")
+    try:
+        process=subprocess.Popen([sys.executable,str(Path(__file__).resolve()),"process-plan","--integra-run-owner",nonce],stdin=subprocess.PIPE,stdout=stdout,stderr=stderr,env=environment,start_new_session=True)
+    finally:
+        stdout.close(); stderr.close()
     try:
         register_worker(path,process.pid,nonce)
         record=json.loads(path.read_bytes()); record["worker_pid"]=process.pid; _atomic_json(path,record)

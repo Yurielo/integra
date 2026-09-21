@@ -1,6 +1,8 @@
 import copy
 import importlib.util
 import json
+import shutil
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -85,6 +87,104 @@ class GovernanceValidationTests(unittest.TestCase):
         cls.obsidian_export = json.loads(
             (ROOT / "state" / "obsidian_export_v1.json").read_text(encoding="utf-8")
         )
+        cls.current_baseline = json.loads(
+            (ROOT / "state" / "current_canonical_baseline_v1.json").read_text(
+                encoding="utf-8"
+            )
+        )
+
+    def _baseline_fixture_root(self) -> Path:
+        """Build a tiny isolated root for current-baseline mutation tests."""
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        root = Path(temp.name)
+        paths = {
+            item["path"] for item in self.current_baseline["files"]
+        } | {
+            "schemas/candidate_manifest_v1.schema.json",
+            "state/native_macos_app_v1.json",
+            "state/ready_app_v1.json",
+        }
+        for relative in paths:
+            destination = root / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(ROOT / relative, destination)
+        return root
+
+    def test_current_baseline_exact_contract_passes(self):
+        self.assertEqual(
+            VALIDATOR.validate_current_canonical_baseline(self.current_baseline), []
+        )
+
+    def test_current_governed_byte_mutation_fails_closed(self):
+        root = self._baseline_fixture_root()
+        target = root / "macos/Resources/bridge.py"
+        target.write_bytes(target.read_bytes() + b"\\n# unauthorized mutation\\n")
+        errors = VALIDATOR.validate_current_canonical_baseline(
+            self.current_baseline, root=root
+        )
+        self.assertIn(
+            "current canonical baseline hash differs: macos/Resources/bridge.py",
+            errors,
+        )
+
+    def test_missing_current_baseline_does_not_bypass_historical_drift(self):
+        errors = VALIDATOR.validate_current_canonical_baseline({})
+        self.assertIn("current canonical baseline fields must match v1", errors)
+        native = json.loads(
+            (ROOT / "state" / "native_macos_app_v1.json").read_text(encoding="utf-8")
+        )
+        drift = VALIDATOR.validate_native_macos_app_evidence(native)
+        self.assertIn("R12 implementation hash differs: macos/Resources/bridge.py", drift)
+
+    def test_corrupt_current_baseline_record_fails_closed(self):
+        baseline = copy.deepcopy(self.current_baseline)
+        baseline["files"][0]["current_sha256"] = "0" * 64
+        errors = VALIDATOR.validate_current_canonical_baseline(baseline)
+        self.assertIn(
+            "current canonical baseline record differs: macos/Resources/bridge.py",
+            errors,
+        )
+
+    def test_candidate_identity_substitution_fails(self):
+        baseline = copy.deepcopy(self.current_baseline)
+        baseline["candidate"]["candidate_id"] = "candidate-v1-" + "0" * 64
+        errors = VALIDATOR.validate_current_canonical_baseline(baseline)
+        self.assertIn(
+            "current canonical baseline candidate ID is not bound to identity hash",
+            errors,
+        )
+
+    def test_valid_superseding_baseline_suppresses_only_explained_historical_drift(self):
+        native = json.loads(
+            (ROOT / "state" / "native_macos_app_v1.json").read_text(encoding="utf-8")
+        )
+        ready = json.loads(
+            (ROOT / "state" / "ready_app_v1.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            VALIDATOR.validate_native_macos_app_evidence(
+                native, current_baseline=self.current_baseline
+            ),
+            [],
+        )
+        self.assertEqual(
+            VALIDATOR.validate_ready_app_evidence(
+                ready, current_baseline=self.current_baseline
+            ),
+            [],
+        )
+
+    def test_historical_certification_records_are_not_rewritten(self):
+        native_path = ROOT / "state" / "native_macos_app_v1.json"
+        ready_path = ROOT / "state" / "ready_app_v1.json"
+        native_before = native_path.read_bytes()
+        ready_before = ready_path.read_bytes()
+        self.assertEqual(
+            VALIDATOR.validate_current_canonical_baseline(self.current_baseline), []
+        )
+        self.assertEqual(native_path.read_bytes(), native_before)
+        self.assertEqual(ready_path.read_bytes(), ready_before)
 
     def test_repository_state_is_valid(self):
         self.assertEqual(VALIDATOR.validate_state(self.state), [])

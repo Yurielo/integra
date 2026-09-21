@@ -131,6 +131,34 @@ NATIVE_MACOS_APP_PATH = ROOT / "state" / "native_macos_app_v1.json"
 NATIVE_MACOS_APP_SCHEMA_PATH = ROOT / "schemas" / "native_macos_app_evidence_v1.schema.json"
 READY_APP_PATH = ROOT / "state" / "ready_app_v1.json"
 READY_APP_SCHEMA_PATH = ROOT / "schemas" / "ready_app_v1_evidence.schema.json"
+CURRENT_CANONICAL_BASELINE_PATH = ROOT / "state" / "current_canonical_baseline_v1.json"
+CURRENT_CANONICAL_BASELINE_SCHEMA_PATH = ROOT / "schemas" / "current_canonical_baseline_v1.schema.json"
+CURRENT_CANONICAL_BASELINE_PARENT_MAIN = "8fce7a625cac3d57f0d197e2ea610241821452f5"
+CURRENT_CANONICAL_BASELINE_SOURCE_COMMIT = "573c27b5c32646e83250e8c93b204867f4fee3e4"
+CURRENT_CANONICAL_BASELINE_FILES = {
+    "macos/Resources/bridge.py",
+    "scripts/build_macos_app.sh",
+    "scripts/test_macos_app.sh",
+    "scripts/validate_governance.py",
+    "schemas/current_canonical_baseline_v1.schema.json",
+}
+CURRENT_CANONICAL_BASELINE_HISTORICAL_CERTIFICATIONS = {
+    "state/native_macos_app_v1.json",
+    "state/ready_app_v1.json",
+}
+CURRENT_CANONICAL_BASELINE_EXPECTED_CANDIDATE = {
+    "candidate_id": "candidate-v1-12b31da7ff02f9ad329c6d6a535d8ced3525ef52a727e3ab648c10acc3d94c03",
+    "identity_sha256": "12b31da7ff02f9ad329c6d6a535d8ced3525ef52a727e3ab648c10acc3d94c03",
+    "bundle_digest": "991ee9d6f64df1c97ce74c62552b2fe8aa4eb84c2b10953066e16edb329545e9",
+    "manifest_schema": "schemas/candidate_manifest_v1.schema.json",
+    "manifest_schema_sha256": "72ba51886ebf48bce6b6a3dcf9ac1dd435d88fd97e39531929633dd243373dca",
+}
+CURRENT_CANONICAL_BASELINE_EXPECTED_CURRENT_HASHES = {
+    "macos/Resources/bridge.py": "f362d20b4738e3cf58f435c2defc213a8f50e056e4a4d41b84d1f84dc78d404f",
+    "scripts/build_macos_app.sh": "f2c7577b3afcde75e00828e8a9d0303a9370eac517902d7c49a87cce65237623",
+    "scripts/test_macos_app.sh": "09bf6703b0cbd205b214e8361ce9242b33fc465ce57913177b71944361db5039",
+    "schemas/current_canonical_baseline_v1.schema.json": "535d7da274dfbe71de92b48a9ee1530626b39d05dbd4ccd2327c10934523a099",
+}
 EXPECTED_READY_APP_IMPLEMENTATION = {
     "docs/architecture/READY_APP_V1_PACKAGING.md", "macos/Info.plist",
     "macos/Integra.entitlements", "docs/THIRD_PARTY_NOTICES.md",
@@ -2647,7 +2675,138 @@ def validate_onedrive_publication_evidence(evidence: dict, root: Path = ROOT) ->
     return errors
 
 
-def validate_native_macos_app_evidence(evidence: dict, root: Path = ROOT) -> list[str]:
+def _historical_hash_is_superseded(
+    baseline: dict | None,
+    path: str,
+    historical_sha256: str,
+    current_sha256: str | None,
+) -> bool:
+    """Allow only an explicit, candidate-bound current supersession.
+
+    R12/R13 records are immutable historical certifications.  A current
+    stabilization baseline may supersede their implementation bytes, but only
+    for an explicitly listed path, with the exact old hash and current hash
+    bound together.  Missing or malformed baseline data therefore remains
+    fail-closed and retains the historical mismatch error.
+    """
+    if not isinstance(baseline, dict) or not isinstance(current_sha256, str):
+        return False
+    for item in baseline.get("files", []):
+        if not isinstance(item, dict) or item.get("path") != path:
+            continue
+        if item.get("current_sha256") != current_sha256:
+            continue
+        for reference in item.get("historical_refs", []):
+            if isinstance(reference, dict) and reference.get("sha256") == historical_sha256:
+                return True
+    return False
+
+
+def validate_current_canonical_baseline(baseline: dict, root: Path = ROOT) -> list[str]:
+    """Validate the current candidate-bound supersession contract.
+
+    This is deliberately separate from the immutable R12/R13 evidence.  It
+    records the exact current bytes that intentionally supersede historical
+    certification bytes and binds those bytes to the WP1 Candidate Manifest
+    identity.  No branch-name or broad "current tree" exception is accepted.
+    """
+    errors: list[str] = []
+    expected_fields = {
+        "schema_version", "artifact_type", "scope", "parent_main_sha",
+        "baseline_source_commit", "candidate", "historical_certifications", "files",
+    }
+    if not isinstance(baseline, dict) or set(baseline) != expected_fields:
+        return ["current canonical baseline fields must match v1"]
+    if baseline.get("schema_version") != "1.0":
+        errors.append("current canonical baseline schema_version must be 1.0")
+    if baseline.get("artifact_type") != "integra.current_canonical_baseline":
+        errors.append("current canonical baseline artifact_type differs")
+    if baseline.get("scope") != "current_canonical_stabilization":
+        errors.append("current canonical baseline scope differs")
+    if baseline.get("parent_main_sha") != CURRENT_CANONICAL_BASELINE_PARENT_MAIN:
+        errors.append("current canonical baseline parent main differs")
+    if baseline.get("baseline_source_commit") != CURRENT_CANONICAL_BASELINE_SOURCE_COMMIT:
+        errors.append("current canonical baseline source commit differs")
+    if set(baseline.get("historical_certifications", [])) != CURRENT_CANONICAL_BASELINE_HISTORICAL_CERTIFICATIONS:
+        errors.append("current canonical baseline historical certifications differ")
+
+    candidate = baseline.get("candidate")
+    expected_candidate_fields = {
+        "candidate_id", "identity_sha256", "bundle_digest",
+        "manifest_schema", "manifest_schema_sha256",
+    }
+    if not isinstance(candidate, dict) or set(candidate) != expected_candidate_fields:
+        errors.append("current canonical baseline candidate contract differs")
+    else:
+        if candidate != CURRENT_CANONICAL_BASELINE_EXPECTED_CANDIDATE:
+            errors.append("current canonical baseline candidate identity differs")
+        candidate_id = candidate.get("candidate_id", "")
+        identity_sha = candidate.get("identity_sha256", "")
+        if not isinstance(candidate_id, str) or not candidate_id.startswith("candidate-v1-"):
+            errors.append("current canonical baseline candidate ID is malformed")
+        elif candidate_id != f"candidate-v1-{identity_sha}":
+            errors.append("current canonical baseline candidate ID is not bound to identity hash")
+        if not isinstance(identity_sha, str) or len(identity_sha) != 64 or any(c not in "0123456789abcdef" for c in identity_sha):
+            errors.append("current canonical baseline candidate identity hash is malformed")
+        bundle_digest = candidate.get("bundle_digest", "")
+        if not isinstance(bundle_digest, str) or len(bundle_digest) != 64 or any(c not in "0123456789abcdef" for c in bundle_digest):
+            errors.append("current canonical baseline bundle digest is malformed")
+        if candidate.get("manifest_schema") != "schemas/candidate_manifest_v1.schema.json":
+            errors.append("current canonical baseline manifest schema path differs")
+        schema_path = root / "schemas/candidate_manifest_v1.schema.json"
+        if not schema_path.is_file() or sha256_file(schema_path) != candidate.get("manifest_schema_sha256"):
+            errors.append("current canonical baseline candidate manifest schema hash differs")
+
+    files = baseline.get("files", [])
+    paths: list[str] = []
+    if not isinstance(files, list):
+        errors.append("current canonical baseline files must be a list")
+        files = []
+    for item in files:
+        if not isinstance(item, dict) or set(item) != {"path", "current_sha256", "historical_refs"}:
+            errors.append("current canonical baseline file record differs")
+            continue
+        path_text = item.get("path")
+        paths.append(path_text)
+        path = root / path_text
+        current_sha = item.get("current_sha256")
+        expected_current_sha = CURRENT_CANONICAL_BASELINE_EXPECTED_CURRENT_HASHES.get(path_text)
+        if expected_current_sha is not None and current_sha != expected_current_sha:
+            errors.append(f"current canonical baseline record differs: {path_text}")
+        if not isinstance(current_sha, str) or len(current_sha) != 64 or any(c not in "0123456789abcdef" for c in current_sha):
+            errors.append(f"current canonical baseline hash is malformed: {path_text}")
+        elif not path.is_file() or sha256_file(path) != current_sha:
+            errors.append(f"current canonical baseline hash differs: {path_text}")
+        refs = item.get("historical_refs")
+        if not isinstance(refs, list):
+            errors.append(f"current canonical baseline historical refs malformed: {path_text}")
+            continue
+        for reference in refs:
+            if not isinstance(reference, dict) or set(reference) != {"state_path", "sha256"}:
+                errors.append(f"current canonical baseline historical ref differs: {path_text}")
+                continue
+            state_path = reference.get("state_path")
+            if state_path not in CURRENT_CANONICAL_BASELINE_HISTORICAL_CERTIFICATIONS:
+                errors.append(f"current canonical baseline references non-certification state: {state_path}")
+                continue
+            try:
+                state = json.loads((root / state_path).read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                errors.append(f"current canonical baseline historical state unreadable: {state_path}")
+                continue
+            matching = [entry for entry in state.get("implementation", []) if isinstance(entry, dict) and entry.get("path") == path_text]
+            if len(matching) != 1 or matching[0].get("sha256") != reference.get("sha256"):
+                errors.append(f"current canonical baseline historical ref does not match state: {path_text}")
+    if set(paths) != CURRENT_CANONICAL_BASELINE_FILES or len(paths) != len(set(paths)):
+        errors.append("current canonical baseline implementation inventory must be exact")
+    return errors
+
+
+def validate_native_macos_app_evidence(
+    evidence: dict,
+    root: Path = ROOT,
+    current_baseline: dict | None = None,
+) -> list[str]:
     errors: list[str] = []
     expected_fields = {"schema_version", "status", "issue", "dependencies", "implementation", "acceptance", "reference_mac", "safety", "limitations"}
     if not isinstance(evidence, dict) or set(evidence) != expected_fields:
@@ -2661,7 +2820,10 @@ def validate_native_macos_app_evidence(evidence: dict, root: Path = ROOT) -> lis
         if not isinstance(item, dict) or set(item) != {"path", "sha256"}:
             errors.append("R12 implementation reference differs"); continue
         paths.append(item["path"]); path = root / item["path"]
-        if not path.is_file() or sha256_file(path) != item["sha256"]:
+        current_sha = sha256_file(path) if path.is_file() else None
+        if current_sha != item["sha256"] and not _historical_hash_is_superseded(
+            current_baseline, item["path"], item["sha256"], current_sha
+        ):
             errors.append(f"R12 implementation hash differs: {item['path']}")
     if set(paths) != EXPECTED_NATIVE_MACOS_APP_IMPLEMENTATION or len(paths) != len(set(paths)):
         errors.append("R12 implementation inventory must be exact")
@@ -2699,7 +2861,11 @@ def validate_native_macos_app_evidence(evidence: dict, root: Path = ROOT) -> lis
         errors.append("R12 limitations must be a non-empty unique list")
     return errors
 
-def validate_ready_app_evidence(evidence: dict, root: Path = ROOT) -> list[str]:
+def validate_ready_app_evidence(
+    evidence: dict,
+    root: Path = ROOT,
+    current_baseline: dict | None = None,
+) -> list[str]:
     errors=[]
     fields={"schema_version","status","issue","dependencies","implementation","acceptance","safety","limitations"}
     if not isinstance(evidence,dict) or set(evidence)!=fields: return ["R13 evidence fields must match v1"]
@@ -2709,7 +2875,10 @@ def validate_ready_app_evidence(evidence: dict, root: Path = ROOT) -> list[str]:
     for item in evidence.get("implementation",[]):
         if not isinstance(item,dict) or set(item)!={"path","sha256"}: errors.append("R13 implementation reference differs"); continue
         paths.append(item["path"]); path=root/item["path"]
-        if not path.is_file() or sha256_file(path)!=item["sha256"]: errors.append(f"R13 implementation hash differs: {item['path']}")
+        current_sha = sha256_file(path) if path.is_file() else None
+        if current_sha != item["sha256"] and not _historical_hash_is_superseded(
+            current_baseline, item["path"], item["sha256"], current_sha
+        ): errors.append(f"R13 implementation hash differs: {item['path']}")
     if set(paths)!=EXPECTED_READY_APP_IMPLEMENTATION or len(paths)!=len(set(paths)): errors.append("R13 implementation inventory must be exact")
     expected_acceptance={"backup_verification":True,"bridge_path_redaction":True,"bundle_identifier_final":True,"dependency_preflight":True,"local_ad_hoc_seal_verified":True,"minimum_macos_declared":True,"reproducible_tree_hash":True,"self_test_passed":True}
     if evidence.get("acceptance")!=expected_acceptance: errors.append("R13 acceptance differs")
@@ -2743,6 +2912,7 @@ def main() -> int:
     onedrive_publication = load_json(ONEDRIVE_PUBLICATION_PATH)
     native_macos_app = load_json(NATIVE_MACOS_APP_PATH)
     ready_app = load_json(READY_APP_PATH)
+    current_canonical_baseline = load_json(CURRENT_CANONICAL_BASELINE_PATH)
     load_json(SCHEMA_PATH)
     load_json(BASELINES_SCHEMA_PATH)
     load_json(OWNERSHIP_SCHEMA_PATH)
@@ -2782,6 +2952,7 @@ def main() -> int:
     load_json(ONEDRIVE_RECEIPT_SCHEMA_PATH)
     load_json(NATIVE_MACOS_APP_SCHEMA_PATH)
     load_json(READY_APP_SCHEMA_PATH)
+    load_json(CURRENT_CANONICAL_BASELINE_SCHEMA_PATH)
     load_json(ROOT / "schemas/youtube_playlist_snapshot_v1.schema.json")
     load_json(ROOT / "schemas/youtube_playlist_plan_v1.schema.json")
     load_json(ROOT / "schemas/youtube_playlist_checkpoint_v1.schema.json")
@@ -2809,8 +2980,9 @@ def main() -> int:
         + validate_cross_navigation_evidence(cross_navigation)
         + validate_obsidian_export_evidence(obsidian_export)
         + validate_onedrive_publication_evidence(onedrive_publication)
-        + validate_native_macos_app_evidence(native_macos_app)
-        + validate_ready_app_evidence(ready_app)
+        + validate_current_canonical_baseline(current_canonical_baseline)
+        + validate_native_macos_app_evidence(native_macos_app, current_baseline=current_canonical_baseline)
+        + validate_ready_app_evidence(ready_app, current_baseline=current_canonical_baseline)
     )
     if errors:
         print("INTEGRA_GOVERNANCE_VALIDATION: FAIL")
