@@ -55,7 +55,11 @@ class WordTimelineRuntimeTests(unittest.TestCase):
             python = root / "python3.13"; python.write_text("#!/bin/sh\n[ \"$1\" = --version ] && { echo Python 3.13.15; exit 0; }; echo READY\n"); python.chmod(python.stat().st_mode | stat.S_IXUSR)
             with patch.dict(os.environ, {"INTEGRA_WORD_ALIGNMENT_PYTHON":str(python), "INTEGRA_WORD_ALIGNMENT_SITE_PACKAGES":str(root / "packages"), "INTEGRA_WORD_ALIGNMENT_MODEL_DIR":str(model)}, clear=True), \
                  patch("integra_core.word_timeline_runtime.WORKER", worker), \
-                 patch("integra_core.word_timeline_runtime._sha256", return_value=MODEL_SHA256):
+                 patch("integra_core.word_timeline_runtime._sha256", return_value=MODEL_SHA256), \
+                 patch("integra_core.word_timeline_runtime.resolve_ffmpeg", return_value={
+                     "path": "/usr/bin/ffmpeg", "sha256": "f" * 64, "version": "ffmpeg version test",
+                     "resolution_source": "test-fixture", "path_classification": {
+                         "uses_inherited_path": False, "homebrew_directory": False, "parent": "/usr/bin"}}):
                 result = preflight()
         self.assertEqual(result["capability"], "word_timeline")
         self.assertEqual(result["model_sha256"], MODEL_SHA256)
