@@ -1,11 +1,115 @@
 # WP3 — Primary Journey Stabilization Evidence
 
-Status: `READY_FOR_SINGLE_OWNER_ACCEPTANCE` (technical handoff only; not `USER_ACCEPTED`).
+Status: `BLOCKED` — owner acceptance failed; technical handoff revoked (not `USER_ACCEPTED`).
 
-This report is evidence for Issue #156 on `codex/stabilization-mcwma` / PR #154. Final
-evidence/report HEAD: `59c14d0759790eb4c1f53fc0a4e1098dc1597a01`. No
+This report is evidence for Issue #156 on `codex/stabilization-mcwma` / PR #154. Prior
+product/evidence HEAD: `59c14d0759790eb4c1f53fc0a4e1098dc1597a01`; this diagnostic
+revision is documentation-only. No
 product repair, component-pin change, semantic change, merge, deploy, or owner
 request was made. Secondary capabilities remained frozen.
+
+## Owner Acceptance Failure — exact run and root-cause diagnosis
+
+The single authorized owner acceptance attempt was rejected. No owner retest has
+been requested or performed, and no product code, candidate runtime, manifest, or
+test logic has been changed in response.
+
+### Exact failed owner run
+
+| Field | Evidence |
+|---|---|
+| Project | `urn:integra:project:e39e4c96-dc28-4bb5-91f9-c6f8a16a01fc` |
+| Run | `urn:integra:run:e6462138-47c2-485a-9461-1a31f3a68bd5` |
+| Job | `urn:integra:job:c236a2c1-936e-40bf-85c4-d0c4ac94a3dd` |
+| Created / started / failed | `2026-09-21T19:36:46Z` / `19:36:47Z` / `19:37:26Z` |
+| Stage / progress | `word_timeline` / `85` |
+| GUI result | `Processing` → `Ошибка`; `completed_sources=0` |
+| User-visible error | `Word Timeline worker did not produce a validated output` |
+| Source SHA-256 | `9faa1c03460aad1e8867593d28db1f140d0c839879a569ac362cb6a5eaf6ce6c` |
+| Candidate ID / bundle digest | `candidate-v1-a9c599ce6e958da69f3207a14871a8d8af31d24a296b11e71e9fa4269e5b1dab` / `991ee9d6f64df1c97ce74c62552b2fe8aa4eb84c2b10953066e16edb329545e9` |
+| Failed-run JSON | `/Users/yurielokhin/Library/Application Support/Integra/projects/e39e4c96-dc28-4bb5-91f9-c6f8a16a01fc/runs/e6462138-47c2-485a-9461-1a31f3a68bd5.json` |
+| Failed-run JSON SHA-256 | `f852cef104641ce5221a7825034718a094857843c00926704b735d71bc745489` |
+| Candidate-bound diagnostic | `/Users/yurielokhin/Library/Application Support/Integra/projects/e39e4c96-dc28-4bb5-91f9-c6f8a16a01fc/artifacts/c236a2c1-936e-40bf-85c4-d0c4ac94a3dd/word_timeline.worker-evidence.json` |
+| Diagnostic SHA-256 | `08509ee4f4a4bef34c39d4a723d5e52a8b1d7525f0f42fe779a6778c89f7a748` |
+
+The diagnostic is bound to the exact rejected candidate and records the same
+Word Python, model revision/weights, worker path, and owner-derived input hashes:
+
+- audio/WAV: `acf25b9ac68a11dc3f0fd193ec67283843e856a4a190a8e4cb2f35fcfa3df67c`;
+- SRT: `af17d83246dedc55dbef5aa0ff2059461dd263415dac1ce32e7d993c007c3492`;
+- model revision: `2329100508896c6d9b157019803ab5601e6f3406`;
+- model SHA-256: `d1cdb1a7921de7d363f967a9b0101a713602e109dba62b6f3f9ae2e0b2df0c1c`.
+
+The decisive stderr is:
+
+```text
+File ".../whisperx/audio.py", line 61, in load_audio
+  out = subprocess.run(cmd, capture_output=True, check=True).stdout
+FileNotFoundError: [Errno 2] No such file or directory: 'ffmpeg'
+```
+
+Exit status was `1`; no Word Timeline output was produced and the validator
+correctly returned `worker_nonzero_exit_or_missing_output`.
+
+### Comparison of owner GUI, WP3 E2E, and controlled probe
+
+| Path | Inputs/candidate | Launch environment | Result | What it proves |
+|---|---|---|---|---|
+| Owner GUI primary journey | owner WAV/SRT hashes above; rejected final candidate | Finder/launchd-style minimal environment; inherited PATH has no Homebrew `ffmpeg` | FAIL at audio load | Real production failure is deterministic and downstream of ASR; transcript/SRT had already been produced |
+| Deterministic packaged E2E | run `urn:integra:run:5205a5ab-32cc-4177-893d-112bc08fee31`; final candidate; evidence SHA `5028a393fa1304d4e076b711e276dc0c8c2b8f2686931a7a4023630a83ec0ec7` | Shell harness; Homebrew PATH available | PASS | Production bridge orchestration works when bare `ffmpeg` resolves |
+| Realistic packaged E2E | run `urn:integra:run:72be84a5-51e0-48cb-8fb8-f10227f6cf4e`; final candidate; evidence SHA `10852dc07672120980c71d2f2df6a135bded33b04ad6ad202b37136230dfede7` | Shell harness; Homebrew PATH available | PASS | Natural-Russian path does not exercise Finder PATH semantics |
+| Owner-derived direct Word Timeline regression | owner WAV/SRT hashes above; evidence SHA `29bf456dae04e231a00c30288d02b02c5682f4fc85b944b6a60232da05e2e2cd` | Shell harness; Homebrew PATH available | PASS | Same content/candidate passes only under the non-GUI environment |
+| Controlled failure/recovery probe | same packaged candidate; test-only fake alignment worker | Shell harness; fake worker masks WhisperX/ffmpeg | PASS recovery | State/retry semantics only; not an ffmpeg integration test |
+
+The deterministic and realistic evidence therefore did not contradict the owner
+failure: both were run with a materially different PATH. In addition,
+`tests/native_workflow_probe.py` inherits the invoking shell environment, while
+the test-only retry probe replaces the real alignment worker. Candidate evidence
+sanitization intentionally omits the full PATH and therefore did not expose the
+condition that decided the outcome. This is the false-positive Owner Entry Gate:
+the gate treated shell-launched PASS evidence as GUI-equivalent although the
+production GUI launch contract was not exercised.
+
+### Root-cause classification
+
+**Product failure (confirmed):** `macos/IntegraApp.swift` and
+`macos/Resources/bridge.py` preserve the caller's environment; the Word Timeline
+runtime preflight validates Python/site-packages/model but neither resolves nor
+validates `ffmpeg`. `word_timeline_runtime.generate_word_timeline()` launches the
+candidate worker without a deterministic ffmpeg binding, and WhisperX invokes the
+bare command `ffmpeg`. Finder/launchd therefore fails before alignment whenever
+Homebrew's directory is absent from PATH. The owner traceback, exact candidate,
+and identical owner WAV/SRT hashes establish this as a deterministic launch-path
+failure, not an intermittent model/content failure.
+
+**Owner Entry Gate false positive (confirmed):** automated “GUI-equivalent” E2E
+and the direct owner-derived regression were shell-launched with Homebrew PATH;
+the recovery probe used a fake worker; and sanitized evidence omitted PATH. The
+three checks could therefore all PASS while the actual Finder-launched primary
+journey failed on the same candidate and content.
+
+### Bounded repair and regression specification (no implementation in this step)
+
+1. Add the smallest candidate-bound production repair: resolve the existing
+   pinned ffmpeg identity (or an explicit candidate-bound runtime path), pass a
+   deterministic executable/path to the Word Timeline worker, and fail closed in
+   preflight when it is unavailable. Do not change model/component pins or ASR
+   semantics.
+2. Add a packaged/native regression that launches the real WhisperX worker under
+   a Finder-like minimal PATH using the owner-derived WAV/SRT hashes; it must
+   reproduce the current `FileNotFoundError` before repair and PASS after repair
+   on the same candidate contract.
+3. Record safe observability for resolved ffmpeg path and identity (path plus
+   SHA-256, not credentials or an unbounded raw PATH) in Candidate-bound
+   diagnostics. Run deterministic, realistic, and owner-derived checks through
+   the same minimal-environment contract; keep the controlled retry probe as a
+   state/recovery test only.
+4. After an authorized repair, build a new candidate and rerun all mandatory WP3
+   gates. Do not request owner retest until that evidence is green.
+
+This diagnosis is complete with sufficient evidence. The candidate remains
+owner-rejected; no code change, rebuild, owner retest, merge, or deploy is
+authorized by this step.
 
 ## 1. Prerequisites
 
