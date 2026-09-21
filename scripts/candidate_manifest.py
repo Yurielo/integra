@@ -72,6 +72,8 @@ def generate(app: Path, source_root: Path, build_command: str, word_python: Path
     video = json.loads((video_root / "runtime.json").read_text(encoding="utf-8"))
     book = json.loads((book_root / "runtime.json").read_text(encoding="utf-8"))
     word = json.loads((word_root / "runtime.json").read_text(encoding="utf-8"))
+    from integra_core.word_timeline_runtime import resolve_ffmpeg
+    ffmpeg = resolve_ffmpeg()
     word.update({
         "site_packages_tree_sha256": tree_sha256(word_root / "site-packages"),
         "weights_actual_sha256": sha256_file(word_root / "model" / "pytorch_model.bin"),
@@ -85,6 +87,7 @@ def generate(app: Path, source_root: Path, build_command: str, word_python: Path
             "gui_python": executable_identity(Path("/usr/bin/python3")),
             "word_alignment_python": executable_identity(word_python),
             "word_alignment": word,
+            "word_timeline_ffmpeg": ffmpeg,
             "ollama": optional_ollama_identity(),
             "host_architecture": platform.machine(),
         },

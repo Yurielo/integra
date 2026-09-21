@@ -15,7 +15,8 @@ class WordTimelineRuntimeTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory); audio = root / "audio.wav"; srt = root / "speech.srt"; output = root / "timeline.json"
             audio.write_bytes(b"audio"); srt.write_text("1\n00:00:00,000 --> 00:00:01,000\nTest\n")
-            identity = {"python": "/bin/echo", "worker": "/worker", "model_dir": "/model", "site_packages": "/packages"}
+            identity = {"python": "/bin/echo", "worker": "/worker", "model_dir": "/model", "site_packages": "/packages",
+                        "ffmpeg": {"path": "/usr/bin/ffmpeg", "resolution_source": "standard:/usr/bin"}}
             failed = __import__("subprocess").CompletedProcess([], 19, "out" * 6000, "err" * 6000)
             with patch.object(runtime, "preflight", return_value=identity), patch("subprocess.run", return_value=failed):
                 with self.assertRaisesRegex(ValueError, "did not produce"):
@@ -25,6 +26,27 @@ class WordTimelineRuntimeTests(unittest.TestCase):
         self.assertEqual(evidence["details"]["exit_status"], 19)
         self.assertLessEqual(len(evidence["details"]["stdout_tail"]), 16384)
         self.assertLessEqual(len(evidence["details"]["stderr_tail"]), 16384)
+
+    def test_resolve_ffmpeg_ignores_minimal_path_when_explicit_runtime_is_bound(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); ffmpeg = root / "ffmpeg"
+            ffmpeg.write_text("#!/bin/sh\necho 'ffmpeg version test'\n")
+            ffmpeg.chmod(ffmpeg.stat().st_mode | stat.S_IXUSR)
+            with patch.dict(os.environ, {"INTEGRA_FFMPEG": str(ffmpeg), "PATH": "/usr/bin:/bin:/usr/sbin:/sbin"}, clear=True):
+                result = runtime.resolve_ffmpeg()
+        self.assertEqual(result["path"], str(ffmpeg.resolve()))
+        self.assertEqual(result["resolution_source"], "INTEGRA_FFMPEG")
+        self.assertFalse(result["path_classification"]["uses_inherited_path"])
+
+    def test_worker_environment_binds_resolved_ffmpeg_for_whisperx(self):
+        runtime_identity = {
+            "site_packages": "/packages",
+            "ffmpeg": {"path": "/opt/homebrew/bin/ffmpeg", "resolution_source": "standard:/opt/homebrew/bin"},
+        }
+        environment = runtime._worker_environment(runtime_identity)
+        self.assertEqual(environment["INTEGRA_FFMPEG"], "/opt/homebrew/bin/ffmpeg")
+        self.assertEqual(environment["PATH"], "/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin")
+        self.assertEqual(environment["INTEGRA_FFMPEG_RESOLUTION_SOURCE"], "standard:/opt/homebrew/bin")
     def test_preflight_reports_exact_personal_runtime(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory); packages = root / "packages" / "whisperx"; packages.mkdir(parents=True)

@@ -117,7 +117,7 @@ def validate_bundle(app: Path) -> dict[str, Any]:
     execution = manifest["identity"].get("execution", {})
     if execution.get("word_alignment", {}).get("site_packages_tree_sha256") != tree_sha256(word_root / "site-packages"):
         raise ValueError("candidate Word Alignment packages differ from manifest")
-    for key in ("gui_python", "word_alignment_python"):
+    for key in ("gui_python", "word_alignment_python", "word_timeline_ffmpeg"):
         executable = execution.get(key, {})
         path = Path(str(executable.get("path", "")))
         if not path.is_file() or sha256_file(path) != executable.get("sha256"):
@@ -128,7 +128,8 @@ def validate_bundle(app: Path) -> dict[str, Any]:
 def sanitized_environment(environment: dict[str, str] | None = None) -> dict[str, str]:
     """Keep execution-relevant values while avoiding credentials and full PATH."""
     source = environment or os.environ
-    keys = ("PYTHONPATH", "HF_HUB_OFFLINE", "INTEGRA_CANDIDATE_ID", "INTEGRA_RUN_ID", "INTEGRA_STAGE_ID")
+    keys = ("PYTHONPATH", "HF_HUB_OFFLINE", "INTEGRA_CANDIDATE_ID", "INTEGRA_RUN_ID", "INTEGRA_STAGE_ID",
+            "INTEGRA_FFMPEG", "INTEGRA_FFMPEG_RESOLUTION_SOURCE")
     return {key: source[key] for key in keys if key in source}
 
 

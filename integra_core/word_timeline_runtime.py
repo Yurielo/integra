@@ -17,10 +17,72 @@ RESOURCES = Path(__file__).resolve().parents[1]
 BUNDLED_SITE_PACKAGES = RESOURCES / "runtime" / "word-alignment" / "site-packages"
 BUNDLED_MODEL_DIR = RESOURCES / "runtime" / "word-alignment" / "model"
 WORKER = RESOURCES / "workers" / "seminartext_word_alignment_worker.py"
+FFMPEG_SEARCH_PATHS = (
+    "/opt/homebrew/opt/ffmpeg-full/bin",
+    "/usr/local/opt/ffmpeg-full/bin",
+    "/opt/homebrew/bin",
+    "/usr/local/bin",
+    "/usr/bin",
+    "/bin",
+    "/usr/sbin",
+    "/sbin",
+)
 
 
 def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def resolve_ffmpeg() -> dict[str, Any]:
+    """Resolve the external tool without relying on a GUI-inherited PATH."""
+    candidates: list[tuple[str, Path]] = []
+    configured = os.environ.get("INTEGRA_FFMPEG")
+    if configured:
+        candidates.append(("INTEGRA_FFMPEG", Path(configured).expanduser()))
+    candidates.extend((f"standard:{directory}", Path(directory) / "ffmpeg") for directory in FFMPEG_SEARCH_PATHS)
+    seen: set[str] = set()
+    for source, candidate in candidates:
+        try:
+            resolved = candidate.resolve(strict=True)
+        except OSError:
+            continue
+        if str(resolved) in seen or not resolved.is_file() or not os.access(resolved, os.X_OK):
+            continue
+        seen.add(str(resolved))
+        try:
+            version = subprocess.run([str(resolved), "-version"], capture_output=True, text=True,
+                                     check=False, timeout=10)
+        except (OSError, subprocess.SubprocessError):
+            continue
+        if version.returncode != 0:
+            continue
+        version_output = (version.stdout or version.stderr).splitlines()
+        return {
+            "path": str(resolved),
+            "sha256": _sha256(resolved),
+            "version": version_output[0] if version_output else "",
+            "resolution_source": source,
+            "path_classification": {
+                "uses_inherited_path": False,
+                "homebrew_directory": "/opt/homebrew" in str(resolved),
+                "parent": str(resolved.parent),
+            },
+        }
+    raise ValueError("Word Timeline ffmpeg runtime is unavailable")
+
+
+def _worker_environment(runtime: dict[str, Any]) -> dict[str, str]:
+    """Give WhisperX a bounded deterministic PATH containing resolved ffmpeg."""
+    ffmpeg = Path(runtime["ffmpeg"]["path"])
+    bounded_path = os.pathsep.join([str(ffmpeg.parent), "/usr/bin", "/bin", "/usr/sbin", "/sbin"])
+    return {
+        **os.environ,
+        "PATH": bounded_path,
+        "INTEGRA_FFMPEG": str(ffmpeg),
+        "INTEGRA_FFMPEG_RESOLUTION_SOURCE": str(runtime["ffmpeg"]["resolution_source"]),
+        "PYTHONPATH": runtime["site_packages"],
+        "HF_HUB_OFFLINE": "1",
+    }
 
 
 def preflight() -> dict[str, Any]:
@@ -49,9 +111,11 @@ def preflight() -> dict[str, Any]:
                                env={**os.environ, "PYTHONPATH": str(packages), "HF_HUB_OFFLINE": "1"}, timeout=20)
     if imported.returncode != 0 or imported.stdout.strip() != "READY":
         raise ValueError("Word Timeline WhisperX runtime cannot be imported")
+    ffmpeg = resolve_ffmpeg()
     return {"state":"READY", "component":"seminartext", "capability":"word_timeline", "python":str(python),
             "site_packages":str(packages.resolve(strict=True)), "model_dir":str(model.resolve(strict=True)),
-            "model_revision":MODEL_REVISION, "model_sha256":MODEL_SHA256, "worker":str(WORKER.resolve(strict=True))}
+            "model_revision":MODEL_REVISION, "model_sha256":MODEL_SHA256, "worker":str(WORKER.resolve(strict=True)),
+            "ffmpeg":ffmpeg}
 
 
 def _candidate_manifest() -> dict[str, Any] | None:
@@ -68,7 +132,7 @@ def generate_word_timeline(audio: Path, subtitles: Path, output: Path,
     output.parent.mkdir(parents=True, exist_ok=True)
     command = [runtime["python"], runtime["worker"], "--audio", str(audio), "--srt", str(subtitles),
                "--model-dir", runtime["model_dir"], "--output", str(output)]
-    environment = {**os.environ, "PYTHONPATH": runtime["site_packages"], "HF_HUB_OFFLINE": "1"}
+    environment = _worker_environment(runtime)
     stdout = stderr = ""
     exit_status: int | None = None
     reason: str | None = None
