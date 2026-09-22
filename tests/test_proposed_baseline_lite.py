@@ -20,7 +20,11 @@ from proposed_baseline_lite import (  # noqa: E402
     validate_proposal,
     verify_promotion_material,
 )
-from validate_governance import _promoted_current_v2_supersedes_historical_hash  # noqa: E402
+from validate_governance import (  # noqa: E402
+    _promoted_current_v2_supersedes_historical_hash,
+    validate_native_macos_app_evidence,
+    validate_ready_app_evidence,
+)
 
 
 class ProposedBaselineLiteTests(unittest.TestCase):
@@ -52,6 +56,7 @@ class ProposedBaselineLiteTests(unittest.TestCase):
             "intended_scope": {"wp": "Recovery #162", "journey": "failure/cancel/timeout recovery"},
             "candidate": {"candidate_id": "candidate-v1-" + "3" * 64, "identity_sha256": "3" * 64, "manifest_digest": "6" * 64, "bundle_digest": "4" * 64},
             "delta": [{"path": changed["path"], "before_sha256": changed["sha256"], "after_sha256": "5" * 64}],
+            "historical_test_successors": [],
             "gates": [{"name": "candidate-manifest", "result": "PASS", "evidence_ref": "evidence/candidate.json"}],
             "evidence": {
                 "candidate_manifest": {"path": "manifest.json", "sha256": "6" * 64},
@@ -102,6 +107,38 @@ class ProposedBaselineLiteTests(unittest.TestCase):
         self.assertIn("PROPOSED baseline mandatory gates are not all PASS with evidence", validate_proposal(proposal, self.current, ROOT))
         proposal = self.proposal(); proposal["evidence"]["candidate_manifest"]["path"] = ""
         self.assertIn("PROPOSED baseline candidate-bound evidence is invalid", validate_proposal(proposal, self.current, ROOT))
+
+    def _r12_test_successor(self):
+        return {
+            "path": "tests/test_macos_app.py",
+            "historical_authority": "R12",
+            "before_sha256": "d85790e714fd7098c0b93082a093d231e981b5db5682cbc41477a7247ee0c584",
+            "after_sha256": "ddb2ec1700a77abbe1a3efdda5c8f17927e85a543fb09fe6a891537bcc3fad17",
+            "reason": "Approved Process result boundary removes downstream publication controls.",
+        }
+
+    def test_exact_r12_test_successor_is_accepted_but_wrong_authority_hashes_fail(self):
+        proposal = self.proposal()
+        proposal["historical_test_successors"] = [self._r12_test_successor()]
+        self.assertEqual(validate_proposal(proposal, self.current, ROOT), [])
+        proposal = self.proposal()
+        successor = self._r12_test_successor(); successor["before_sha256"] = "0" * 64
+        proposal["historical_test_successors"] = [successor]
+        self.assertIn("PROPOSED historical test successor before hash differs from immutable authority",
+                      validate_proposal(proposal, self.current, ROOT))
+        proposal = self.proposal()
+        successor = self._r12_test_successor(); successor["historical_authority"] = "R13"
+        proposal["historical_test_successors"] = [successor]
+        self.assertIn("PROPOSED historical test successor is not in immutable authority inventory",
+                      validate_proposal(proposal, self.current, ROOT))
+
+    def test_test_successor_cannot_authorize_wildcard_noninventory_or_executable_path(self):
+        for path in ("tests/*.py", "tests/not-in-r12.py", "macos/IntegraApp.swift"):
+            proposal = self.proposal()
+            successor = self._r12_test_successor(); successor["path"] = path
+            proposal["historical_test_successors"] = [successor]
+            errors = validate_proposal(proposal, self.current, ROOT)
+            self.assertTrue(any("historical test successor" in error for error in errors), path)
 
     def test_technical_green_never_self_accepts_or_promotes(self):
         proposal = self.proposal(); proposal["owner_acceptance"] = "ci-green"
@@ -178,6 +215,14 @@ class ProposedBaselineLiteTests(unittest.TestCase):
         next_current(current, proposal, "owner", previous_current_path="state/current1.json")
         self.assertEqual(before, {path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest() for path in before})
 
+    def test_mutated_historical_r12_or_r13_evidence_is_not_accepted(self):
+        r12 = json.loads((ROOT / "state/native_macos_app_v1.json").read_text())
+        r12["implementation"][0]["sha256"] = "0" * 64
+        self.assertTrue(validate_native_macos_app_evidence(r12, ROOT))
+        r13 = json.loads((ROOT / "state/ready_app_v1.json").read_text())
+        r13["implementation"][0]["sha256"] = "0" * 64
+        self.assertTrue(validate_ready_app_evidence(r13, ROOT))
+
     def test_promoted_current_exactly_supersedes_hash_closed_history(self):
         prior = copy.deepcopy(self.current)
         active = prior["records"][0]
@@ -221,14 +266,26 @@ class ProposedOverlayLineageTests(unittest.TestCase):
                   "commit", "-m", message)
         return self._git(root, "rev-parse", "HEAD")
 
-    def _lineage(self, *, overlay_product=False):
+    def _lineage(self, *, overlay_product=False, historical_test_drift=False,
+                 extra_historical_test_drift=False, declare_historical_test_successor=False):
         temporary = tempfile.TemporaryDirectory(); self.addCleanup(temporary.cleanup)
         root = Path(temporary.name)
         self._git(root, "init", "-q")
-        (root / "integra_core").mkdir(); (root / "state").mkdir()
+        (root / "integra_core").mkdir(); (root / "state").mkdir(); (root / "tests").mkdir()
         product = root / "integra_core/runtime.py"; product.write_text("base\n")
+        historical_test = root / "tests/historical.py"; historical_test.write_text("old\n")
+        second_historical_test = root / "tests/other_historical.py"; second_historical_test.write_text("old-other\n")
+        r12 = {"implementation": [
+            {"path": "tests/historical.py", "sha256": hashlib.sha256(historical_test.read_bytes()).hexdigest()},
+            {"path": "tests/other_historical.py", "sha256": hashlib.sha256(second_historical_test.read_bytes()).hexdigest()},
+        ]}
+        (root / "state/native_macos_app_v1.json").write_text(json.dumps(r12))
         base = self._commit(root, "base")
         product.write_text("recovery\n")
+        if historical_test_drift:
+            historical_test.write_text("new\n")
+        if extra_historical_test_drift:
+            second_historical_test.write_text("new-other\n")
         source = self._commit(root, "product A")
         source_id = {"commit_sha": source, "tree_sha": self._git(root, "rev-parse", "HEAD^{tree}")}
         (root / "docs").mkdir(); (root / "docs/evidence").mkdir()
@@ -258,6 +315,12 @@ class ProposedOverlayLineageTests(unittest.TestCase):
             "candidate": {"candidate_id": manifest["candidate_id"], "identity_sha256": "a" * 64,
                           "manifest_digest": hashlib.sha256(manifest_path.read_bytes()).hexdigest(), "bundle_digest": "b" * 64},
             "delta": [{"path": "integra_core/runtime.py", "before_sha256": before, "after_sha256": after}],
+            "historical_test_successors": ([{
+                "path": "tests/historical.py", "historical_authority": "R12",
+                "before_sha256": hashlib.sha256(b"old\n").hexdigest(),
+                "after_sha256": hashlib.sha256(b"new\n").hexdigest(),
+                "reason": "test-only successor",
+            }] if declare_historical_test_successor else []),
             "gates": [{"name": "candidate", "result": "PASS", "evidence_ref": "docs/report.json"}],
             "evidence": {"candidate_manifest": {"path": "docs/evidence/manifest.json", "sha256": hashlib.sha256(manifest_path.read_bytes()).hexdigest()},
                          "candidate_evidence": {"path": "docs/evidence/evidence.json", "sha256": hashlib.sha256(evidence_path.read_bytes()).hexdigest()},
@@ -295,6 +358,28 @@ class ProposedOverlayLineageTests(unittest.TestCase):
         # A changed evidence blob cannot silently retain its recorded digest.
         evidence = root / "docs/evidence/evidence.json"; evidence.write_text("{}")
         self.assertIn("promotion candidate evidence does not bind PROPOSED candidate/bundle",
+                      verify_promotion_material(proposal, root, path))
+
+    def test_exact_declared_historical_test_successor_passes(self):
+        root, proposal, path = self._lineage(historical_test_drift=True,
+                                             declare_historical_test_successor=True)
+        self.assertEqual(verify_promotion_material(proposal, root, path), [])
+
+    def test_historical_test_drift_without_successor_or_with_wrong_after_fails(self):
+        root, proposal, path = self._lineage(historical_test_drift=True)
+        self.assertIn("promotion historical test drift is undeclared or overstated",
+                      verify_promotion_material(proposal, root, path))
+        root, proposal, path = self._lineage(historical_test_drift=True,
+                                             declare_historical_test_successor=True)
+        proposal["historical_test_successors"][0]["after_sha256"] = "0" * 64
+        self.assertIn("promotion historical test successor differs: tests/historical.py",
+                      verify_promotion_material(proposal, root, path))
+
+    def test_one_declared_historical_test_successor_cannot_hide_another_drift(self):
+        root, proposal, path = self._lineage(historical_test_drift=True,
+                                             extra_historical_test_drift=True,
+                                             declare_historical_test_successor=True)
+        self.assertIn("promotion historical test drift is undeclared or overstated",
                       verify_promotion_material(proposal, root, path))
 
 

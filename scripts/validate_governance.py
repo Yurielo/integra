@@ -68,7 +68,12 @@ from integra_core.multi_source_alignment import (  # noqa: E402
 from integra_core.identity import derive_imported_id  # noqa: E402
 from integra_core.protocol import content_sha256  # noqa: E402
 from scripts.check_agents import load_registry, validate_agent_team  # noqa: E402
-from proposed_baseline_lite import proposal_state, validate_current, verify_promotion_material  # noqa: E402
+from proposed_baseline_lite import (  # noqa: E402
+    proposal_declares_historical_test_successor,
+    proposal_state,
+    validate_current,
+    verify_promotion_material,
+)
 
 
 STATE_PATH = ROOT / "state" / "integra_state_v1.json"
@@ -2909,6 +2914,7 @@ def validate_native_macos_app_evidence(
         if current_sha != item["sha256"] and not (_historical_hash_is_superseded(
             current_baseline, item["path"], item["sha256"], current_sha
         ) or _proposal_declares_current_delta(proposal, item["path"], current_sha)
+             or proposal_declares_historical_test_successor(proposal, "R12", item["path"], item["sha256"], current_sha)
              or _promoted_current_v2_supersedes_historical_hash(current_product_baseline, root, item["path"], item["sha256"], current_sha)):
             errors.append(f"R12 implementation hash differs: {item['path']}")
     if set(paths) != EXPECTED_NATIVE_MACOS_APP_IMPLEMENTATION or len(paths) != len(set(paths)):
@@ -2967,6 +2973,7 @@ def validate_ready_app_evidence(
         if current_sha != item["sha256"] and not (_historical_hash_is_superseded(
             current_baseline, item["path"], item["sha256"], current_sha
         ) or _proposal_declares_current_delta(proposal, item["path"], current_sha)
+             or proposal_declares_historical_test_successor(proposal, "R13", item["path"], item["sha256"], current_sha)
              or _promoted_current_v2_supersedes_historical_hash(current_product_baseline, root, item["path"], item["sha256"], current_sha)):
             errors.append(f"R13 implementation hash differs: {item['path']}")
     if set(paths)!=EXPECTED_READY_APP_IMPLEMENTATION or len(paths)!=len(set(paths)): errors.append("R13 implementation inventory must be exact")
