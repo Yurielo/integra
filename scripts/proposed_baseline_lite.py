@@ -51,6 +51,25 @@ def _governed_product_path(path: str) -> bool:
     )
 
 
+def _git(root: Path, *args: str) -> str:
+    return subprocess.run(["git", "-C", str(root), *args], check=True,
+                          capture_output=True, text=True).stdout.strip()
+
+
+def _commit_identity(root: Path, commit: str) -> dict[str, str]:
+    return {"commit_sha": _git(root, "rev-parse", commit),
+            "tree_sha": _git(root, "rev-parse", f"{commit}^{{tree}}")}
+
+
+def _changed_paths(root: Path, left: str, right: str) -> list[str]:
+    return _git(root, "diff", "--name-only", left, right).splitlines()
+
+
+def _valid_relative_path(value: object) -> bool:
+    return (isinstance(value, str) and bool(value) and not value.startswith("/")
+            and ".." not in Path(value).parts)
+
+
 def _candidate_errors(candidate: object, label: str, *, require_manifest_digest: bool = False) -> list[str]:
     required = {"candidate_id", "identity_sha256", "bundle_digest"}
     if require_manifest_digest:
@@ -75,7 +94,7 @@ def current_record(current: dict[str, Any]) -> dict[str, Any] | None:
     return matches[0] if len(matches) == 1 else None
 
 
-def validate_current(current: object, root: Path) -> list[str]:
+def validate_current(current: object, root: Path, proposal: dict | None = None) -> list[str]:
     """Validate the immutable-in-record CURRENT v2 bytes at this checkout."""
     if not isinstance(current, dict) or set(current) != CURRENT_FIELDS:
         return ["CURRENT v2 fields are invalid"]
@@ -133,13 +152,22 @@ def validate_current(current: object, root: Path) -> list[str]:
             continue
         seen.add(path_text)
         path = root / path_text
-        if not path.is_file() or sha256_file(path) != item["sha256"]:
+        if proposal is not None and isinstance(main, dict) and _is_git_sha(main.get("commit_sha")):
+            try:
+                actual = subprocess.run(["git", "-C", str(root), "show", f"{main['commit_sha']}:{path_text}"],
+                                        check=True, capture_output=True).stdout
+                matches = hashlib.sha256(actual).hexdigest() == item["sha256"]
+            except (OSError, subprocess.CalledProcessError):
+                matches = False
+        else:
+            matches = path.is_file() and sha256_file(path) == item["sha256"]
+        if not matches:
             errors.append(f"CURRENT v2 governed byte drift: {path_text}")
     # The exact inventory catches changes to existing files; this Git-aware
     # check also makes an added executable primary-journey path fail closed.
     # Tiny copied fixture roots intentionally have no Git metadata, so tests of
     # byte validation remain possible without weakening repository validation.
-    if isinstance(main, dict) and _is_git_sha(main.get("commit_sha")):
+    if proposal is None and isinstance(main, dict) and _is_git_sha(main.get("commit_sha")):
         try:
             changed = subprocess.run(
                 ["git", "-C", str(root), "diff", "--name-only", main["commit_sha"], "HEAD"],
@@ -171,8 +199,8 @@ def validate_proposal(proposal: object, current: dict[str, Any], root: Path) -> 
     if not isinstance(source, dict) or set(source) != {"commit_sha", "tree_sha"} or not _is_git_sha(source.get("commit_sha")) or not _is_git_sha(source.get("tree_sha")):
         errors.append("PROPOSED baseline source identity is invalid")
     head = proposal.get("proposed_head")
-    if not isinstance(head, dict) or set(head) != {"commit_sha", "tree_sha"} or not _is_git_sha(head.get("commit_sha")) or not _is_git_sha(head.get("tree_sha")) or head != source:
-        errors.append("PROPOSED baseline exact HEAD/tree does not match source")
+    if not isinstance(head, dict) or set(head) != {"commit_sha", "tree_sha"} or not _is_git_sha(head.get("commit_sha")) or not _is_git_sha(head.get("tree_sha")):
+        errors.append("PROPOSED baseline evidence overlay identity is invalid")
     intended_scope = proposal.get("intended_scope")
     if not isinstance(intended_scope, dict) or set(intended_scope) != {"wp", "journey"} or not all(isinstance(intended_scope.get(key), str) and intended_scope[key] for key in ("wp", "journey")):
         errors.append("PROPOSED baseline intended WP/journey scope is invalid")
@@ -183,7 +211,7 @@ def validate_proposal(proposal: object, current: dict[str, Any], root: Path) -> 
     else:
         paths: set[str] = set()
         for item in delta:
-            if not isinstance(item, dict) or set(item) != {"path", "before_sha256", "after_sha256"} or not isinstance(item.get("path"), str) or not _is_sha(item.get("before_sha256")) or not _is_sha(item.get("after_sha256")):
+            if not isinstance(item, dict) or set(item) != {"path", "before_sha256", "after_sha256"} or not _valid_relative_path(item.get("path")) or not _is_sha(item.get("before_sha256")) or not _is_sha(item.get("after_sha256")):
                 errors.append("PROPOSED baseline delta record is invalid")
                 continue
             if item["path"] in paths:
@@ -202,7 +230,7 @@ def validate_proposal(proposal: object, current: dict[str, Any], root: Path) -> 
     if proposal.get("owner_acceptance") is not None:
         errors.append("PROPOSED baseline must await a separate explicit owner acceptance reference")
     overlays = proposal.get("allowed_overlay_paths")
-    if not isinstance(overlays, list) or not overlays or len(overlays) != len(set(overlays)) or any(not isinstance(item, str) or item.startswith("/") or ".." in Path(item).parts for item in overlays):
+    if not isinstance(overlays, list) or not overlays or len(overlays) != len(set(overlays)) or any(not _valid_relative_path(item) for item in overlays):
         errors.append("PROPOSED baseline overlay paths are invalid")
     return errors
 
@@ -212,7 +240,7 @@ def proposal_state(proposal: object, current: dict[str, Any], root: Path) -> tup
     return ("PROPOSED_BASELINE_VALID / AWAITING_OWNER_ACCEPTANCE", []) if not errors else ("FAIL", errors)
 
 
-def verify_promotion_material(proposal: dict[str, Any], root: Path) -> list[str]:
+def verify_promotion_material(proposal: dict[str, Any], root: Path, proposal_path: Path | None = None) -> list[str]:
     """Verify the exact source, candidate manifest/bundle and named evidence.
 
     This deliberately has no authority side effect.  It is used by the helper
@@ -221,31 +249,69 @@ def verify_promotion_material(proposal: dict[str, Any], root: Path) -> list[str]
     """
     errors: list[str] = []
     try:
-        commit = subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"], check=True, capture_output=True, text=True).stdout.strip()
-        tree = subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD^{tree}"], check=True, capture_output=True, text=True).stdout.strip()
+        commit = _git(root, "rev-parse", "HEAD")
+        tree = _git(root, "rev-parse", "HEAD^{tree}")
     except (OSError, subprocess.CalledProcessError):
         return ["promotion source Git identity is unavailable"]
-    if proposal["proposed_source"] != {"commit_sha": commit, "tree_sha": tree}:
-        errors.append("promotion source HEAD/tree differs from PROPOSED baseline")
-    base_commit = proposal["base_main"]["commit_sha"]
+    source = proposal.get("proposed_source", {})
+    overlay = proposal.get("proposed_head", {})
+    base_commit = proposal.get("base_main", {}).get("commit_sha")
+    if not isinstance(source, dict) or not isinstance(overlay, dict) or not isinstance(base_commit, str):
+        return ["promotion proposal identities are unavailable"]
+    try:
+        if _commit_identity(root, source["commit_sha"]) != source:
+            errors.append("promotion product source identity differs from PROPOSED baseline")
+        if _commit_identity(root, overlay["commit_sha"]) != overlay:
+            errors.append("promotion evidence overlay identity differs from PROPOSED baseline")
+        subprocess.run(["git", "-C", str(root), "merge-base", "--is-ancestor", base_commit, source["commit_sha"]], check=True)
+        subprocess.run(["git", "-C", str(root), "merge-base", "--is-ancestor", source["commit_sha"], overlay["commit_sha"]], check=True)
+    except (OSError, subprocess.CalledProcessError, KeyError):
+        errors.append("promotion source/overlay lineage is invalid")
+        return errors
+    # The persisted proposal cannot name its own commit/tree without a Git blob
+    # self-reference.  It must therefore be the only change immediately after
+    # the exact evidence overlay it names.
+    try:
+        parent = _git(root, "rev-parse", "HEAD^")
+        relative_proposal = proposal_path.resolve().relative_to(root.resolve()).as_posix() if proposal_path else None
+    except (OSError, subprocess.CalledProcessError, ValueError):
+        errors.append("promotion proposal record path is invalid")
+        relative_proposal = None
+        parent = ""
+    if parent != overlay.get("commit_sha"):
+        errors.append("promotion proposal record is not directly atop evidence overlay")
+    if relative_proposal is None or _changed_paths(root, parent, commit) != [relative_proposal]:
+        errors.append("promotion declaration overlay must contain only the PROPOSED record")
+
     declared = {item["path"]: item for item in proposal["delta"]}
     try:
-        changed = subprocess.run(["git", "-C", str(root), "diff", "--name-only", base_commit, commit], check=True, capture_output=True, text=True).stdout.splitlines()
+        product_changes = [path for path in _changed_paths(root, base_commit, source["commit_sha"])
+                           if _governed_product_path(path)]
     except (OSError, subprocess.CalledProcessError):
-        errors.append("promotion cannot compare PROPOSED delta to CURRENT base")
-        changed = []
-    for path_text in changed:
-        if _governed_product_path(path_text) and path_text not in declared:
-            errors.append(f"promotion has undeclared governed delta: {path_text}")
+        errors.append("promotion cannot compare product source to CURRENT base")
+        product_changes = []
+    if set(product_changes) != set(declared):
+        errors.append("promotion governed CURRENT-to-source delta is undeclared or overstated")
     for path_text, item in declared.items():
         try:
             before = subprocess.run(["git", "-C", str(root), "show", f"{base_commit}:{path_text}"], check=True, capture_output=True).stdout
-            after = subprocess.run(["git", "-C", str(root), "show", f"{commit}:{path_text}"], check=True, capture_output=True).stdout
+            after = subprocess.run(["git", "-C", str(root), "show", f"{source['commit_sha']}:{path_text}"], check=True, capture_output=True).stdout
         except (OSError, subprocess.CalledProcessError):
             errors.append(f"promotion declared delta is unavailable: {path_text}")
             continue
         if hashlib.sha256(before).hexdigest() != item["before_sha256"] or hashlib.sha256(after).hexdigest() != item["after_sha256"]:
             errors.append(f"promotion declared delta differs: {path_text}")
+
+    try:
+        overlay_changes = _changed_paths(root, source["commit_sha"], overlay["commit_sha"])
+    except (OSError, subprocess.CalledProcessError):
+        errors.append("promotion cannot compare source to evidence overlay")
+        overlay_changes = []
+    allowed = set(proposal["allowed_overlay_paths"])
+    if any(path not in allowed for path in overlay_changes):
+        errors.append("promotion evidence overlay contains undeclared paths")
+    if any(_governed_product_path(path) for path in overlay_changes):
+        errors.append("promotion evidence overlay contains product/runtime bytes")
     evidence = proposal["evidence"]
     def read_record(label: str) -> dict[str, Any] | None:
         path = root / evidence[label]["path"]
@@ -260,9 +326,13 @@ def verify_promotion_material(proposal: dict[str, Any], root: Path) -> list[str]
     if manifest is not None:
         bundle = manifest.get("bundle")
         manifest_path = root / evidence["candidate_manifest"]["path"]
-        if sha256_file(manifest_path) != evidence["candidate_manifest"]["sha256"] or sha256_file(manifest_path) != proposal["candidate"]["manifest_digest"] or manifest.get("candidate_id") != proposal["candidate"]["candidate_id"] or manifest.get("identity_sha256") != proposal["candidate"]["identity_sha256"] or not isinstance(bundle, dict) or bundle.get("digest") != proposal["candidate"]["bundle_digest"]:
+        manifest_source = ((manifest.get("identity") or {}).get("source"))
+        source_bound = (isinstance(manifest_source, dict)
+                        and {key: manifest_source.get(key) for key in ("commit_sha", "tree_sha")} == source
+                        and manifest_source.get("dirty") is False)
+        if sha256_file(manifest_path) != evidence["candidate_manifest"]["sha256"] or sha256_file(manifest_path) != proposal["candidate"]["manifest_digest"] or manifest.get("candidate_id") != proposal["candidate"]["candidate_id"] or manifest.get("identity_sha256") != proposal["candidate"]["identity_sha256"] or not isinstance(bundle, dict) or bundle.get("digest") != proposal["candidate"]["bundle_digest"] or not source_bound:
             errors.append("promotion candidate manifest does not bind PROPOSED candidate/bundle")
-    if candidate_evidence is not None and (sha256_file(root / evidence["candidate_evidence"]["path"]) != evidence["candidate_evidence"]["sha256"] or candidate_evidence.get("candidate_id") != proposal["candidate"]["candidate_id"] or candidate_evidence.get("manifest_identity_sha256") != proposal["candidate"]["identity_sha256"] or candidate_evidence.get("bundle_digest") != proposal["candidate"]["bundle_digest"]):
+    if candidate_evidence is not None and (sha256_file(root / evidence["candidate_evidence"]["path"]) != evidence["candidate_evidence"]["sha256"] or candidate_evidence.get("candidate_id") != proposal["candidate"]["candidate_id"] or candidate_evidence.get("manifest_identity_sha256") != proposal["candidate"]["identity_sha256"] or candidate_evidence.get("bundle_digest") != proposal["candidate"]["bundle_digest"] or candidate_evidence.get("product_source") != source):
         errors.append("promotion candidate evidence does not bind PROPOSED candidate/bundle")
     for gate in proposal["gates"]:
         if not (root / gate["evidence_ref"]).is_file():

@@ -97,6 +97,11 @@ class GovernanceValidationTests(unittest.TestCase):
                 encoding="utf-8"
             )
         )
+        cls.proposed_baseline = json.loads(
+            (ROOT / "state" / "proposed_baseline_lite_v1.json").read_text(
+                encoding="utf-8"
+            )
+        )
 
     def _baseline_fixture_root(self) -> Path:
         """Build a tiny isolated root for current-baseline mutation tests."""
@@ -119,7 +124,9 @@ class GovernanceValidationTests(unittest.TestCase):
 
     def test_current_baseline_exact_contract_passes(self):
         self.assertEqual(
-            VALIDATOR.validate_current(self.current_product_baseline_v2, ROOT), []
+            VALIDATOR.validate_current(
+                self.current_product_baseline_v2, ROOT, self.proposed_baseline
+            ), []
         )
 
     def test_current_governed_byte_mutation_fails_closed(self):
@@ -168,13 +175,15 @@ class GovernanceValidationTests(unittest.TestCase):
         )
         self.assertEqual(
             VALIDATOR.validate_native_macos_app_evidence(
-                native, current_baseline=self.current_baseline
+                native, current_baseline=self.current_baseline,
+                proposal=self.proposed_baseline,
             ),
             [],
         )
         self.assertEqual(
             VALIDATOR.validate_ready_app_evidence(
-                ready, current_baseline=self.current_baseline
+                ready, current_baseline=self.current_baseline,
+                proposal=self.proposed_baseline,
             ),
             [],
         )
@@ -185,7 +194,9 @@ class GovernanceValidationTests(unittest.TestCase):
         native_before = native_path.read_bytes()
         ready_before = ready_path.read_bytes()
         self.assertEqual(
-            VALIDATOR.validate_current(self.current_product_baseline_v2, ROOT), []
+            VALIDATOR.validate_current(
+                self.current_product_baseline_v2, ROOT, self.proposed_baseline
+            ), []
         )
         self.assertEqual(native_path.read_bytes(), native_before)
         self.assertEqual(ready_path.read_bytes(), ready_before)

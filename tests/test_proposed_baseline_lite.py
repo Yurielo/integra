@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 from pathlib import Path
+import subprocess
 import sys
+import tempfile
 import unittest
 
 
@@ -50,7 +53,10 @@ class ProposedBaselineLiteTests(unittest.TestCase):
         }
 
     def test_current_v2_passes_and_is_not_v1_rewrite(self):
-        self.assertEqual(validate_current(self.current, ROOT), [])
+        # This checkout intentionally carries a product PROPOSED delta.  CURRENT
+        # itself is verified against its recorded base when proposal mode is
+        # active; the proposal verifier owns the exact delta proof.
+        self.assertEqual(validate_current(self.current, ROOT, {}), [])
         predecessor = self.current["records"][0]["historical_predecessors"]
         self.assertEqual({item["path"] for item in predecessor}, {
             "state/current_canonical_baseline_v1.json", "state/native_macos_app_v1.json", "state/ready_app_v1.json",
@@ -112,9 +118,91 @@ class ProposedBaselineLiteTests(unittest.TestCase):
 
     def test_promotion_material_requires_exact_head_and_real_bound_artifacts(self):
         errors = verify_promotion_material(self.proposal(), ROOT)
-        self.assertIn("promotion source HEAD/tree differs from PROPOSED baseline", errors)
-        self.assertIn("promotion candidate_manifest is unavailable or invalid", errors)
-        self.assertIn("promotion candidate_evidence is unavailable or invalid", errors)
+        self.assertIn("promotion source/overlay lineage is invalid", errors)
+        self.assertEqual(errors, ["promotion source/overlay lineage is invalid"])
+
+
+class ProposedOverlayLineageTests(unittest.TestCase):
+    """Anti-bypass contract for CURRENT → A → B → declaration lineage."""
+
+    def _git(self, root, *args):
+        return subprocess.run(["git", "-C", str(root), *args], check=True,
+                              capture_output=True, text=True).stdout.strip()
+
+    def _commit(self, root, message):
+        self._git(root, "add", ".")
+        self._git(root, "-c", "user.name=Test", "-c", "user.email=test@example.invalid",
+                  "commit", "-m", message)
+        return self._git(root, "rev-parse", "HEAD")
+
+    def _lineage(self, *, overlay_product=False):
+        temporary = tempfile.TemporaryDirectory(); self.addCleanup(temporary.cleanup)
+        root = Path(temporary.name)
+        self._git(root, "init", "-q")
+        (root / "integra_core").mkdir(); (root / "state").mkdir()
+        product = root / "integra_core/runtime.py"; product.write_text("base\n")
+        base = self._commit(root, "base")
+        product.write_text("recovery\n")
+        source = self._commit(root, "product A")
+        source_id = {"commit_sha": source, "tree_sha": self._git(root, "rev-parse", "HEAD^{tree}")}
+        (root / "docs").mkdir(); (root / "docs/evidence").mkdir()
+        manifest = {
+            "candidate_id": "candidate-v1-" + "a" * 64,
+            "identity_sha256": "a" * 64,
+            "bundle": {"digest": "b" * 64},
+            "identity": {"source": {**source_id, "dirty": False}},
+        }
+        manifest_path = root / "docs/evidence/manifest.json"; manifest_path.write_text(json.dumps(manifest))
+        evidence = {"candidate_id": manifest["candidate_id"], "manifest_identity_sha256": "a" * 64,
+                    "bundle_digest": "b" * 64, "product_source": source_id}
+        evidence_path = root / "docs/evidence/evidence.json"; evidence_path.write_text(json.dumps(evidence))
+        report_path = root / "docs/report.json"; report_path.write_text("{}")
+        if overlay_product:
+            product.write_text("hidden overlay product change\n")
+        overlay = self._commit(root, "evidence B")
+        overlay_id = {"commit_sha": overlay, "tree_sha": self._git(root, "rev-parse", "HEAD^{tree}")}
+        before = hashlib.sha256(b"base\n").hexdigest()
+        after = hashlib.sha256(b"recovery\n").hexdigest()
+        proposal = {
+            "schema_version": "1.0", "artifact_type": "integra.proposed_product_baseline",
+            "proposal_id": "test", "status": "PROPOSED_BASELINE_VALID",
+            "base_current_id": "current-test", "base_main": {"commit_sha": base, "tree_sha": self._git(root, "rev-parse", f"{base}^{{tree}}")},
+            "proposed_source": source_id, "proposed_head": overlay_id,
+            "intended_scope": {"wp": "test", "journey": "test"},
+            "candidate": {"candidate_id": manifest["candidate_id"], "identity_sha256": "a" * 64,
+                          "manifest_digest": hashlib.sha256(manifest_path.read_bytes()).hexdigest(), "bundle_digest": "b" * 64},
+            "delta": [{"path": "integra_core/runtime.py", "before_sha256": before, "after_sha256": after}],
+            "gates": [{"name": "candidate", "result": "PASS", "evidence_ref": "docs/report.json"}],
+            "evidence": {"candidate_manifest": {"path": "docs/evidence/manifest.json", "sha256": hashlib.sha256(manifest_path.read_bytes()).hexdigest()},
+                         "candidate_evidence": {"path": "docs/evidence/evidence.json", "sha256": hashlib.sha256(evidence_path.read_bytes()).hexdigest()},
+                         "report": {"path": "docs/report.json", "sha256": hashlib.sha256(report_path.read_bytes()).hexdigest()}},
+            "owner_acceptance": None,
+            "allowed_overlay_paths": ["docs/evidence/manifest.json", "docs/evidence/evidence.json", "docs/report.json"],
+        }
+        proposal_path = root / "state/proposal.json"; proposal_path.write_text(json.dumps(proposal))
+        self._commit(root, "proposal declaration")
+        return root, proposal, proposal_path
+
+    def test_valid_product_source_and_evidence_overlay_pass(self):
+        root, proposal, path = self._lineage()
+        self.assertEqual(verify_promotion_material(proposal, root, path), [])
+
+    def test_product_byte_in_overlay_fails(self):
+        root, proposal, path = self._lineage(overlay_product=True)
+        self.assertIn("promotion evidence overlay contains product/runtime bytes",
+                      verify_promotion_material(proposal, root, path))
+
+    def test_candidate_source_and_stale_evidence_fail(self):
+        root, proposal, path = self._lineage()
+        manifest = root / "docs/evidence/manifest.json"
+        data = json.loads(manifest.read_text()); data["identity"]["source"]["commit_sha"] = "0" * 40
+        manifest.write_text(json.dumps(data))
+        self.assertIn("promotion candidate manifest does not bind PROPOSED candidate/bundle",
+                      verify_promotion_material(proposal, root, path))
+        # A changed evidence blob cannot silently retain its recorded digest.
+        evidence = root / "docs/evidence/evidence.json"; evidence.write_text("{}")
+        self.assertIn("promotion candidate evidence does not bind PROPOSED candidate/bundle",
+                      verify_promotion_material(proposal, root, path))
 
 
 if __name__ == "__main__":

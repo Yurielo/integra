@@ -1,0 +1,25 @@
+{
+  "artifact_type": "integra.candidate_evidence",
+  "candidate_id": "candidate-v1-17f50c3788518c57b927f2d4f4ddcbc9ec52e8d121de07c24fe9b2bd1d202d26",
+  "manifest_identity_sha256": "17f50c3788518c57b927f2d4f4ddcbc9ec52e8d121de07c24fe9b2bd1d202d26",
+  "bundle_digest": "de6c6186918ba084fd74d5146313e9d235e0f7801cdff27f664495bba00a50d1",
+  "product_source": {
+    "commit_sha": "e66c800354df847159e0443d339e54e1bb265a66",
+    "tree_sha": "56c8cad09d179c39d8af1be6ff255d384957b42d"
+  },
+  "gates": {
+    "candidate_manifest": "PASS",
+    "native_self_test": "PASS",
+    "packaged_deterministic_russian_video": "PASS",
+    "packaged_public_natural_russian_audio": "PASS",
+    "native_close_quit": "PASS",
+    "native_failure_retry_reuse": "PASS",
+    "asr_reuse_invalidation": "12/12 PASS; 0 skipped"
+  },
+  "evidence_hashes": {
+    "manifest": "c2439ec233c03f84e9bf73b908fab2b5718ff8c058ea388df7226b2a0f190c83",
+    "deterministic_result": "d6ca7e301158e1cbb76f26451f6c7c186f5d722a04682f31ad3bb9740401a69e",
+    "realistic_result": "0bafae3ea4977e7a6d7219b267ea145b6ff05d8067f2907bbc6b25030506a14b",
+    "native_retry": "a46cf8440de9cb85fcecd5c55adea0137a0835ce971f66939c5fbef4adba6746"
+  }
+}

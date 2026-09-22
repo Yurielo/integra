@@ -1,6 +1,6 @@
 # Process v1 WP1: existing proof and Recovery closure ledger
 
-Status: `BLOCKED`. Issue: [#169](https://github.com/Yurielo/integra/issues/169).
+Status: `READY_FOR_OWNER_REVIEW`. Issue: [#169](https://github.com/Yurielo/integra/issues/169).
 This is evidence for the frozen Process v1 Board, not a CURRENT or PROPOSED
 record, merge authorization, or `USER_ACCEPTED`.
 
@@ -50,7 +50,7 @@ compiler/product defect. No repair cycle is spent or inferred by this ledger.
 | Translation | Selected translation outputs | VideoText translation worker | Existing/partial path | Pending | S14/V05/V06 | No transition. |
 | Topics/review | Basic Topics and review | Topics worker / review runtime | P156 basic Topics; review unproven | Pending | S12/S20 | No transition. |
 | Persistence/reuse | Reopen and invalidation | Project/run records / `asr_reuse` | Existing source-bound proof | Pending final Candidate | V21 and 12/12 ledger | No transition. |
-| Recovery reliability | Active close/quit, stale state, downstream failure → retry/reuse | Native app → packaged bridge → reconciled shutdown/runtime and pinned ASR cache | Fresh Candidate plus preserved source-bound ledger | PARTIAL PASS / proposal blocked | Close and quit both PASS; `native_asr_retry_probe` PASS (result SHA-256 `a46cf8…`); prior exact 12/12 reuse/invalidation remains valid. The stale-without-ownership case became `FAILED` with `STALE_RUNNING_RECONCILED`, did not signal its unrelated PID, and let the app close. | No Board transition: a strict PROPOSED record cannot yet be validated; see blocker below. |
+| Recovery reliability | Active close/quit, stale state, downstream failure → retry/reuse | Native app → packaged bridge → reconciled shutdown/runtime and pinned ASR cache | Fresh Candidate plus preserved source-bound ledger | PASS | Close and quit both PASS; `native_asr_retry_probe` PASS (result SHA-256 `a46cf8…`); prior exact 12/12 reuse/invalidation remains valid. The stale-without-ownership case became `FAILED` with `STALE_RUNNING_RECONCILED`, did not signal its unrelated PID, and let the app close. | Technical proposal closure is valid; Process-wide owner acceptance remains reserved. |
 
 No ledger row infers PASS from code, an adapter, historical issue, source test,
 skipped test, or fake worker.
@@ -80,43 +80,17 @@ frozen Board's stale-RUNNING outcome. The Candidate did not signal the unrelated
 PID. This is a stale negative-probe expectation, not evidence of a new Recovery
 product repair. The probe is not counted as PASS.
 
-## Blocker: strict PROPOSED material cannot be closed without a governance repair
+## Resolved bounded detour: strict PROPOSED material closure
 
-`scripts/proposed_baseline_lite.py` requires `proposed_source` and
-`proposed_head` to equal the repository's current `HEAD` and tree, and
-`verify_promotion_material()` requires the candidate manifest, candidate evidence,
-and report to be repository files at that same HEAD. A clean Candidate's manifest
-necessarily binds the prior committed source. Adding those generated
-Candidate-bound files and the PROPOSED record creates a new commit/tree; rebuilding
-from that new tree creates a new manifest that again must be added.
+Proposal Lite now records a product source `A`, a separately verified
+evidence/governance overlay `B`, and a proposal-only declaration commit. The
+Candidate manifest is required to bind exact clean source `A`; the declared
+CURRENT→A governed product delta is hash-verified; `A→B` may contain only the
+explicit allowlist and no product/runtime path; and the declaration commit may
+contain only the PROPOSED record. CURRENT and historical R12/R13 bytes remain
+unchanged, while a legitimate declared delta no longer fails simply because it
+differs from historical bytes.
 
-The current validator does **not** compare the manifest's recorded source identity
-to `proposed_source`. It could therefore be made structurally green by declaring a
-later evidence-only commit as `proposed_source` while the referenced Candidate
-truthfully records the earlier build commit. That would not be the strict
-Candidate/source closure required by Issue #169, so it is not used. Conversely,
-`allowed_overlay_paths` is structurally required but is not applied by the
-exact-HEAD or source-binding checks. Producing a truthful
-`PROPOSED_BASELINE_VALID / AWAITING_OWNER_ACCEPTANCE` record therefore requires a
-governed Proposal Lite transaction/overlay repair, not a product repair and not a
-weakening of identity validation. It is outside Issue #169. CURRENT remains
-unchanged. This is the single cross-cutting blocker for WP1.
-
-The current governed validator independently proves the same blocker on this
-Recovery delta. Its exact fail-closed output is:
-
-```
-CURRENT v2 governed byte drift: macos/Resources/bridge.py
-CURRENT v2 governed byte drift: integra_core/shutdown_runtime.py
-R12 implementation hash differs: macos/Resources/bridge.py
-R13 implementation hash differs: macos/Resources/bridge.py
-```
-
-`validate_governance.py` validates CURRENT and immutable R12/R13 before it can
-consider a PROPOSED record; it has no declared-delta exception for a separately
-governed proposal. Thus a real Recovery product delta cannot reach the requested
-Proposal Lite state while CURRENT remains unchanged, even before the
-Candidate/evidence transaction issue above. Altering CURRENT, historical R12/R13,
-or these fail-closed checks is prohibited by this WP. This is one governance
-mechanism blocker with two observed symptoms, not a claim that the Recovery
-runtime requires repair.
+The committed Proposal Lite record therefore reports
+`PROPOSED_BASELINE_VALID / AWAITING_OWNER_ACCEPTANCE`. It is not a promotion,
+merge authorization, or `USER_ACCEPTED` claim.
