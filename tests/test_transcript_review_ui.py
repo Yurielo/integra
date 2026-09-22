@@ -6,24 +6,18 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class TranscriptReviewUITests(unittest.TestCase):
-    def test_native_ui_exposes_explicit_txt_review_without_automatic_acceptance(self):
+    def test_process_ui_excludes_knowledge_review_controls_but_preserves_bridge_contract(self):
         source = (ROOT / "macos" / "IntegraApp.swift").read_text(encoding="utf-8")
-        self.assertIn("Проверить TXT и создать Evidence", source)
-        self.assertIn("Я проверил(а) весь TXT", source)
-        self.assertIn("NSSound.beep()", source)
+        # Review/Evidence belongs to Knowledge, not to the primary Process
+        # result surface. The local bridge contract remains bundled for the
+        # later Knowledge phase; removing a Process control must not erase it.
+        process_results = source.split("private func renderOutputs()", 1)[1].split("@objc private func publishObsidian", 1)[0]
+        self.assertNotIn("Проверить TXT и создать Evidence", process_results)
+        self.assertNotIn("Я проверил(а) весь TXT", process_results)
         self.assertIn('bridge.json("prepare-transcript-review"', source)
         self.assertIn('bridge.json("apply-transcript-review"', source)
-        self.assertIn("Эти границы тем — В разработке", source)
-        self.assertIn("Подготовить темы к проверке", source)
         self.assertIn('bridge.json("prepare-knowledge-review"', source)
         self.assertIn('bridge.json("apply-knowledge-review"', source)
-        self.assertIn('"Выберите решение", "Принять", "Отклонить"', source)
-        self.assertIn('"expected_request_sha256": requestHash', source)
-        self.assertIn("Подтверждаю точные границы показанных цитат", source)
-        self.assertIn("Включить фрагмент в знания", source)
-        self.assertIn("Исключить фрагмент из знаний", source)
-        self.assertIn("Прослушать цитату", source)
-        self.assertIn("forwardPlaybackEndTime", source)
         allowed = source.split("let allowed = [", 1)[1].split("]", 1)[0]
         for operation in ("prepare-transcript-review", "apply-transcript-review", "prepare-knowledge-review", "apply-knowledge-review"):
             self.assertIn('"' + operation + '"', allowed)
