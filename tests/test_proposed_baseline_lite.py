@@ -119,16 +119,20 @@ class ProposedBaselineLiteTests(unittest.TestCase):
                          hashlib.sha256(expected).hexdigest())
 
     def test_promoted_current_exactly_supersedes_hash_closed_history(self):
-        active = self.current["records"][0]
+        prior = copy.deepcopy(self.current)
+        active = prior["records"][0]
         governed = active["governed_files"][0]
         actual = hashlib.sha256((ROOT / governed["path"]).read_bytes()).hexdigest()
         proposal = self.proposal()
         proposal["delta"] = [{"path": governed["path"], "before_sha256": governed["sha256"], "after_sha256": actual}]
-        result = next_current(self.current, proposal, "owner-ref", previous_current_path="state/history.json")
+        historical = {"implementation": [{"path": governed["path"], "sha256": governed["sha256"]}]}
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory); (root / "state").mkdir()
+            r12 = root / "state/r12.json"; r12.write_text(json.dumps(historical))
+            active["historical_predecessors"] = [{"path": "state/r12.json", "sha256": hashlib.sha256(r12.read_bytes()).hexdigest()}]
+            result = next_current(prior, proposal, "owner-ref", previous_current_path="state/history.json")
             history = root / "state/history.json"
-            history.write_text(json.dumps(self.current, ensure_ascii=False, sort_keys=True, indent=2) + "\n")
+            history.write_text(json.dumps(prior, ensure_ascii=False, sort_keys=True, indent=2) + "\n")
             self.assertTrue(_promoted_current_v2_supersedes_historical_hash(
                 result, root, governed["path"], governed["sha256"], actual))
 

@@ -2748,34 +2748,41 @@ def _promoted_current_v2_supersedes_historical_hash(
     if not any(isinstance(item, dict) and item.get("path") == path and item.get("sha256") == current_sha256
                for item in active_record.get("governed_files", [])):
         return False
-    predecessors = active_record.get("historical_predecessors")
-    if not isinstance(predecessors, list) or not predecessors:
-        return False
-    for predecessor in predecessors:
-        if not isinstance(predecessor, dict) or set(predecessor) != {"path", "sha256"}:
-            continue
-        relative = predecessor.get("path")
-        if not isinstance(relative, str) or relative.startswith("/") or ".." in Path(relative).parts:
-            continue
-        history_path = root / relative
-        try:
-            payload = history_path.read_bytes()
-            if sha256_file(history_path) != predecessor.get("sha256"):
-                continue
-            prior = json.loads(payload)
-        except (OSError, json.JSONDecodeError):
-            continue
-        prior_records = prior.get("records") if isinstance(prior, dict) else None
-        prior_id = prior.get("current_id") if isinstance(prior, dict) else None
-        if not isinstance(prior_records, list) or not isinstance(prior_id, str):
-            continue
-        matching = [item for item in prior_records if isinstance(item, dict) and item.get("baseline_id") == prior_id]
-        if len(matching) == 1 and any(
-            isinstance(item, dict) and item.get("path") == path and item.get("sha256") == historical_sha256
-            for item in matching[0].get("governed_files", [])
-        ):
-            return True
-    return False
+    seen: set[str] = set()
+
+    def historical_payload_contains(payload: dict) -> bool:
+        """Follow only hash-verified predecessor links to the R12/R13 bytes."""
+        if payload.get("artifact_type") == "integra.current_product_baseline":
+            records = payload.get("records"); selected = payload.get("current_id")
+            if not isinstance(records, list) or not isinstance(selected, str):
+                return False
+            matches = [item for item in records if isinstance(item, dict) and item.get("baseline_id") == selected]
+            if len(matches) != 1:
+                return False
+            predecessors = matches[0].get("historical_predecessors")
+            if not isinstance(predecessors, list) or not predecessors:
+                return False
+            for predecessor in predecessors:
+                if not isinstance(predecessor, dict) or set(predecessor) != {"path", "sha256"}:
+                    continue
+                relative = predecessor.get("path")
+                if not isinstance(relative, str) or relative.startswith("/") or ".." in Path(relative).parts or relative in seen:
+                    continue
+                history_path = root / relative
+                try:
+                    if sha256_file(history_path) != predecessor.get("sha256"):
+                        continue
+                    seen.add(relative)
+                    prior = json.loads(history_path.read_bytes())
+                except (OSError, json.JSONDecodeError):
+                    continue
+                if isinstance(prior, dict) and historical_payload_contains(prior):
+                    return True
+            return False
+        return any(isinstance(item, dict) and item.get("path") == path and item.get("sha256") == historical_sha256
+                   for item in payload.get("implementation", []))
+
+    return historical_payload_contains(current)
 
 
 def validate_current_canonical_baseline(baseline: dict, root: Path = ROOT) -> list[str]:
