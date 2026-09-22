@@ -33,20 +33,56 @@ before inspecting or reusing them.
 
 | Board item | Frozen acceptance gate | Machine evidence | Human evidence required? | Result | Board transition |
 | --- | --- | --- | --- | --- | --- |
-| Review TXT | Candidate opening/provenance without source replacement | Candidate has the existing Review TXT control, but the isolated silence source did not produce a transcript to present for review. | Yes: correctness and usable review of a successful TXT are human-visible. | `AWAITING_OWNER_GUI_ACCEPTANCE` | none |
-| Unified results screen | Packaged result view; unavailable outputs honestly labelled | Packaged UI showed the results/status surface and truthful failure state; existing output-row rendering is not treated as proof of a successful selected-result screen. | Yes | `AWAITING_OWNER_GUI_ACCEPTANCE` | none |
-| Open result | Open actual produced Process artifacts from GUI | Existing normal GUI route labels transcript, SRT, review report and provenance actions; no successful non-private artifact was available for safe opening. | Yes | `AWAITING_OWNER_GUI_ACCEPTANCE` | none |
-| Reopen after restart | Candidate close/relaunch/reopen proof with no hidden rerun | Current records are persisted, but safe isolated GUI proof requires a completed result. Normal shutdown against a default data root can also reconcile active owner work, so it was not used. | Yes | `AWAITING_OWNER_GUI_ACCEPTANCE` | none |
-| Ordinary-file export | Selected ordinary Process files, not publication | Generated-output actions exist, but no completed isolated transcript/SRT was available. No source-level control is counted as user proof. | Yes | `AWAITING_OWNER_GUI_ACCEPTANCE` | none |
-| GUI-only normal use | Complete selected scope through Finder-like GUI | Import, output choice, execution and visible terminal failure used normal packaged UI only. The completed-result/reopen portion requires the owner’s representative speech result. | Yes | `AWAITING_OWNER_GUI_ACCEPTANCE` | none |
+| Review TXT | Candidate opening/provenance without source replacement | The Product Owner opened **Открыть очищенный текст SeminarText (производная версия)**. That is a derivative-file action, not the distinct **Проверить TXT и создать Evidence** dialog, which requires opening the complete TXT and exposes an explicit confirmation boundary. | Yes: the actual review interaction remains human-visible. | `AWAITING_OWNER_GUI_ACCEPTANCE` | none |
+| Unified results screen | Packaged result view; unavailable outputs honestly labelled | The Product Owner confirmed that the results screen aggregates outputs, but it presents implementation/component artifacts (for example `… SeminarText (JSON)`, `… VideoText (JSON)`, and Word Timeline JSON) as normal result actions. The owner did not accept that as a finished Process results experience. | No further verification can make the present UX satisfy this gate. | `OPEN_PRODUCT_GAP` | none |
+| Open result | Open actual produced Process artifacts from GUI | Product Owner clicked **Открыть расшифровку (TXT)** from the Process results screen. It opened the correct persisted `transcript.txt` for the processed source. | No | `DONE` | `IN_PROGRESS → DONE` |
+| Reopen after restart | Candidate close/relaunch/reopen proof with no hidden rerun | Product Owner completely exited Integra, relaunched the same `.app`, opened **Обработанные материалы**, and saw `video1591534861.mp4` as `COMPLETED` with persisted result actions. | No | `DONE` | `IN_PROGRESS → DONE` |
+| Ordinary-file export | Selected ordinary Process files, not publication | Current Process result controls are **Открыть …** actions. The only explicit export/publication controls are **Экспортировать в Obsidian** and **Опубликовать в папку OneDrive**, which operate on reviewed packages and are not a normal-user export/save action for selected Process files. | No: a distinct user-facing path is absent. | `OPEN_PRODUCT_GAP` | none |
+| GUI-only normal use | Complete selected scope through Finder-like GUI | Product Owner completed the representative normal GUI journey and reopened the persisted result without Terminal/Codex. | No | `DONE` | `IN_PROGRESS → DONE` |
 | Real progress | Observable progress evidence | Candidate GUI visibly showed `Выполняется`, `0 из 1`, and current stage `Расшифровка` during a non-trivial run, followed by truthful `Ошибка`. | No | `DONE` | `IN_PROGRESS → DONE` |
 
-There is no newly proven integration defect in the six human-bound rows. The
-silent fixture is not representative speech and cannot establish a successful
-ASR result; the generic adapter exit message is recorded as evidence, not
-classified as a repair request in this verification-only package.
+The silent fixture is not representative speech and cannot establish a
+successful ASR result; its generic adapter exit message remains recorded as
+machine evidence, not a repair request. The Product Owner's separate successful
+GUI observations are the basis for the three Board transitions and the two
+results-surface product-gap classifications below.
 
-## OWNER_GUI_TEST
+## Product Owner GUI evidence
+
+The Product Owner supplied the following real normal-GUI observations for the
+exact owner-test Candidate named above. Screenshot evidence remains in the
+controlling conversation; this report records the resulting product evidence
+without copying private screenshots into the repository.
+
+1. **Open result — PASS.** `Открыть расшифровку (TXT)` opened the correct
+   `transcript.txt` for the processed source.
+2. **Reopen after restart — PASS.** After a complete app exit and ordinary
+   relaunch, `video1591534861.mp4` remained `COMPLETED` in
+   `Обработанные материалы`, with its result actions available.
+3. **GUI-only normal use — PASS for the representative journey.** The owner
+   completed the journey and its reopen without Terminal/Codex.
+
+These observations do not claim whole-Process acceptance, do not convert a
+developer-oriented result list into a finished user result experience, and do
+not substitute a cleaned-derivative action for the separate Review TXT gate.
+
+## Remaining open UX rows
+
+| Board item | Current state | Frozen acceptance gate | Owner observation | Current product path | Classification | Minimum required change |
+| --- | --- | --- | --- | --- | --- | --- |
+| Review TXT | `IN_PROGRESS` | Candidate opening/provenance without source replacement: the user must enter the real **Проверить TXT и создать Evidence** dialog, open the full TXT there, and see the explicit human-confirmation boundary. | A cleaned derived TXT was opened. That action is not Review TXT. | `ГОТОВЫЕ РЕЗУЛЬТАТЫ` → **Проверить TXT и создать Evidence** → **Открыть TXT для проверки**. | `AWAITING_OWNER_GUI_ACCEPTANCE` | No product change is implied; perform the existing review-dialog acceptance interaction on a successful source. |
+| Unified results screen | `IN_PROGRESS` | A packaged result view presents selected ordinary Process results cohesively; unavailable outputs are honest and internal component/provenance artifacts are not the normal-user result experience. | The visible screen exposes internal output/component artifacts such as SeminarText JSON, VideoText JSON and Word Timeline JSON. The owner did not accept this as a finished results experience. | `Обработанные материалы` → `ГОТОВЫЕ РЕЗУЛЬТАТЫ` → `renderResultRows`; it renders every stored output key as an **Открыть …** action. | `OPEN_PRODUCT_GAP` | Create a curated user-facing Process results presentation, while retaining provenance/internal artifacts outside the primary normal-user result set. |
+| Ordinary-file export | `IN_PROGRESS` | Selected ordinary Process files can be exported/saved through a normal user action; this is distinct from publication. | No `Экспортировать`, `Сохранить как…`, or equivalent ordinary-file action was visible. | Ordinary artifacts have **Открыть …** actions. `Экспортировать в Obsidian` / `Опубликовать в папку OneDrive` are reviewed-package publication paths, not ordinary-file export. | `OPEN_PRODUCT_GAP` | Add an explicit user-facing export/save action for selected ordinary Process artifacts, distinct from opening and publication. |
+
+The smallest coherent future UX repair package indicated by this evidence is
+**user-facing Process results and ordinary-file export**: the same result
+surface must present normal outputs coherently and offer an explicit ordinary
+file export action. It must preserve provenance and existing publication
+boundaries. This is a classification only, not a repair WP or authorization to
+implement. No additional Product Owner action is required before that bounded
+repair; Review TXT remains a separate future owner-GUI acceptance action.
+
+## Original OWNER_GUI_TEST protocol
 
 Use this exact Candidate once, with one non-private local audio/video containing
 ordinary speech and with no unrelated processing active in the same app-data
@@ -72,10 +108,12 @@ purpose is only the six rows above.
 
 ## Board and next action
 
-Board changes only for Real progress: **21 DONE / 9 IN_PROGRESS / 17 NOT_DONE /
-1 BLOCKED** → **22 DONE / 8 IN_PROGRESS / 17 NOT_DONE / 1 BLOCKED**.
+Machine proof moved Real progress: **21 DONE / 9 IN_PROGRESS / 17 NOT_DONE / 1
+BLOCKED** → **22 DONE / 8 IN_PROGRESS / 17 NOT_DONE / 1 BLOCKED**. Product
+Owner evidence then moved Open result, Reopen after restart and GUI-only normal
+use: **22 DONE / 8 IN_PROGRESS / 17 NOT_DONE / 1 BLOCKED** → **25 DONE / 5
+IN_PROGRESS / 17 NOT_DONE / 1 BLOCKED**.
 
-Owner participation is now required for the six human-visible rows. The single
-next Board-selected action after that evidence is **protective retry
-VERIFY_EXISTING**, because it remains an `IN_PROGRESS` frozen MUST with an
-existing production path and does not depend on a new integration package.
+The remaining classifications above are evidence reconciliation only. They do
+not create a repair WP, alter frozen Process scope, claim `PROCESS V1
+USER_ACCEPTED`, or select a next implementation action.
