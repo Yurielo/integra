@@ -33,7 +33,6 @@ before inspecting or reusing them.
 
 | Board item | Frozen acceptance gate | Machine evidence | Human evidence required? | Result | Board transition |
 | --- | --- | --- | --- | --- | --- |
-| Review TXT | Candidate opening/provenance without source replacement | The Product Owner opened **Открыть очищенный текст SeminarText (производная версия)**. That is a derivative-file action, not the distinct **Проверить TXT и создать Evidence** dialog, which requires opening the complete TXT and exposes an explicit confirmation boundary. | Yes: the actual review interaction remains human-visible. | `AWAITING_OWNER_GUI_ACCEPTANCE` | none |
 | Unified results screen | Packaged result view; unavailable outputs honestly labelled | The Product Owner confirmed that the results screen aggregates outputs, but it presents implementation/component artifacts (for example `… SeminarText (JSON)`, `… VideoText (JSON)`, and Word Timeline JSON) as normal result actions. The owner did not accept that as a finished Process results experience. | No further verification can make the present UX satisfy this gate. | `OPEN_PRODUCT_GAP` | none |
 | Open result | Open actual produced Process artifacts from GUI | Product Owner clicked **Открыть расшифровку (TXT)** from the Process results screen. It opened the correct persisted `transcript.txt` for the processed source. | No | `DONE` | `IN_PROGRESS → DONE` |
 | Reopen after restart | Candidate close/relaunch/reopen proof with no hidden rerun | Product Owner completely exited Integra, relaunched the same `.app`, opened **Обработанные материалы**, and saw `video1591534861.mp4` as `COMPLETED` with persisted result actions. | No | `DONE` | `IN_PROGRESS → DONE` |
@@ -62,49 +61,59 @@ without copying private screenshots into the repository.
 3. **GUI-only normal use — PASS for the representative journey.** The owner
    completed the journey and its reopen without Terminal/Codex.
 
-These observations do not claim whole-Process acceptance, do not convert a
-developer-oriented result list into a finished user result experience, and do
-not substitute a cleaned-derivative action for the separate Review TXT gate.
+These observations do not claim whole-Process acceptance or convert a
+developer-oriented result list into a finished user result experience. The
+separate Evidence/Canonical Evidence interaction is frozen for Knowledge, not
+counted as a Process result gate.
 
 ## Remaining open UX rows
 
 | Board item | Current state | Frozen acceptance gate | Owner observation | Current product path | Classification | Minimum required change |
 | --- | --- | --- | --- | --- | --- | --- |
-| Review TXT | `IN_PROGRESS` | Candidate opening/provenance without source replacement: the user must enter the real **Проверить TXT и создать Evidence** dialog, open the full TXT there, and see the explicit human-confirmation boundary. | A cleaned derived TXT was opened. That action is not Review TXT. | `ГОТОВЫЕ РЕЗУЛЬТАТЫ` → **Проверить TXT и создать Evidence** → **Открыть TXT для проверки**. | `AWAITING_OWNER_GUI_ACCEPTANCE` | No product change is implied; perform the existing review-dialog acceptance interaction on a successful source. |
 | Unified results screen | `IN_PROGRESS` | A packaged result view presents selected ordinary Process results cohesively; unavailable outputs are honest and internal component/provenance artifacts are not the normal-user result experience. | The visible screen exposes internal output/component artifacts such as SeminarText JSON, VideoText JSON and Word Timeline JSON. The owner did not accept this as a finished results experience. | `Обработанные материалы` → `ГОТОВЫЕ РЕЗУЛЬТАТЫ` → `renderResultRows`; it renders every stored output key as an **Открыть …** action. | `OPEN_PRODUCT_GAP` | Create a curated user-facing Process results presentation, while retaining provenance/internal artifacts outside the primary normal-user result set. |
-| Ordinary-file export | `IN_PROGRESS` | Selected ordinary Process files can be exported/saved through a normal user action; this is distinct from publication. | No `Экспортировать`, `Сохранить как…`, or equivalent ordinary-file action was visible. | Ordinary artifacts have **Открыть …** actions. `Экспортировать в Obsidian` / `Опубликовать в папку OneDrive` are reviewed-package publication paths, not ordinary-file export. | `OPEN_PRODUCT_GAP` | Add an explicit user-facing export/save action for selected ordinary Process artifacts, distinct from opening and publication. |
+| Ordinary-file export | `IN_PROGRESS` | Available readable transcript, cleaned-text and translation results can be exported/saved through a normal user action; this is distinct from publication. | No `Экспортировать`, `Сохранить как…`, or equivalent ordinary-file action was visible. | Ordinary artifacts have **Открыть …** actions. `Экспортировать в Obsidian` / `Опубликовать в папку OneDrive` are reviewed-package publication paths, not ordinary-file export. | `OPEN_PRODUCT_GAP` | Add an explicit user-facing export/save action for available readable Process artifacts, distinct from opening and publication. |
 
 The smallest coherent future UX repair package indicated by this evidence is
-**user-facing Process results and ordinary-file export**: the same result
-surface must present normal outputs coherently and offer an explicit ordinary
-file export action. It must preserve provenance and existing publication
-boundaries. This is a classification only, not a repair WP or authorization to
-implement. No additional Product Owner action is required before that bounded
-repair; Review TXT remains a separate future owner-GUI acceptance action.
+**user-facing Process results and ordinary-file export**. Its frozen design is:
 
-## Original OWNER_GUI_TEST protocol
+| Left | Right |
+| --- | --- |
+| Расшифровка — Открыть / Экспортировать | Очищенный текст — Открыть / Экспортировать |
+| Перевод — Открыть / Экспортировать | Темы и таймкоды — Открыть |
+
+Only cards for outputs that actually exist are shown. The normal desktop layout
+has two columns; a narrow window collapses to one column without horizontal
+scrolling. A separate normal Process action is **Открыть исходное видео/аудио с
+расшифровкой**. SRT, Word Timeline, raw transcript/translation JSON, Topics
+JSON, ASR diagnostics, model/runtime metadata and provenance are preserved in a
+collapsed **Технические данные** area. Component names do not define the primary
+result taxonomy. Evidence/Canonical Evidence actions are frozen for Knowledge;
+Studio owns user-facing subtitle/translated-subtitle creation/export.
+
+This is a classification and frozen design only, not a repair WP or authorization
+to implement. No additional Product Owner action is required before that bounded
+repair.
+
+## Process-scope owner GUI protocol
 
 Use this exact Candidate once, with one non-private local audio/video containing
 ordinary speech and with no unrelated processing active in the same app-data
 root:
 
 1. Launch Integra normally from Finder. Choose **Видео или аудио с Mac**, select
-   the source, choose **Расшифровка** and **Субтитры (SRT)**, then press
-   **Выполнить**. Observe a changing processing status/stage and terminal
-   **Готово** without Terminal or Codex.
+   the source, choose **Расшифровка**, then press **Выполнить**. Observe a
+   changing processing status/stage and terminal **Готово** without Terminal or
+   Codex.
 2. In **Готовые результаты**, verify the completed source and the ordinary TXT,
-   SRT, cleaned-text/review-report actions. Open TXT and SRT using their normal
-   GUI actions; verify each is the selected source’s artifact. Use the existing
-   generated-output action to reveal/export the ordinary files—not publication.
-3. Use **Проверить TXT и создать Evidence** only to inspect the Review TXT
-   dialog and its explicit human-confirmation boundary; do not accept Evidence
-   unless the full TXT is actually reviewed.
-4. Close Integra normally only after no unrelated run is active. Relaunch it
+   cleaned-text, translation and Topics/timestamps cards that actually exist.
+   Open the TXT and use the separate source-navigation action. User-facing SRT
+   and Evidence/Canonical Evidence are outside this Process-scope protocol.
+3. Close Integra normally only after no unrelated run is active. Relaunch it
    normally, choose **Проекты**, reopen this exact project/run, and confirm the
    same completed artifacts are still present without rerunning processing.
 
 This is one compact human acceptance test, not Process v1 acceptance. Its
-purpose is only the six rows above.
+purpose is limited to the scoped Process results/persistence evidence above.
 
 ## Board and next action
 
@@ -112,7 +121,10 @@ Machine proof moved Real progress: **21 DONE / 9 IN_PROGRESS / 17 NOT_DONE / 1
 BLOCKED** → **22 DONE / 8 IN_PROGRESS / 17 NOT_DONE / 1 BLOCKED**. Product
 Owner evidence then moved Open result, Reopen after restart and GUI-only normal
 use: **22 DONE / 8 IN_PROGRESS / 17 NOT_DONE / 1 BLOCKED** → **25 DONE / 5
-IN_PROGRESS / 17 NOT_DONE / 1 BLOCKED**.
+IN_PROGRESS / 17 NOT_DONE / 1 BLOCKED**. The subsequent owner scope correction
+reclassified user-facing SRT and translated SRT to Studio, and Review TXT/
+Evidence interaction to Knowledge: **24 DONE / 4 IN_PROGRESS / 16 NOT_DONE / 1
+BLOCKED** across the 45 active Process Board entries.
 
 The remaining classifications above are evidence reconciliation only. They do
 not create a repair WP, alter frozen Process scope, claim `PROCESS V1
