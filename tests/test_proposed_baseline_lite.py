@@ -26,7 +26,16 @@ from validate_governance import _promoted_current_v2_supersedes_historical_hash 
 class ProposedBaselineLiteTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.current = json.loads((ROOT / "state/current_product_baseline_v2.json").read_text())
+        stored = json.loads((ROOT / "state/current_product_baseline_v2.json").read_text())
+        # These anti-bypass cases model a new proposal from the immutable
+        # pre-promotion CURRENT, even when the repository's active CURRENT has
+        # already advanced through a tested promotion transaction.
+        if stored["current_id"] != "current-v2-156-160":
+            original = next(item for item in stored["records"] if item["baseline_id"] == "current-v2-156-160")
+            cls.current = {"schema_version": stored["schema_version"], "artifact_type": stored["artifact_type"],
+                           "current_id": original["baseline_id"], "records": [copy.deepcopy(original)]}
+        else:
+            cls.current = stored
 
     def proposal(self):
         active = self.current["records"][0]
