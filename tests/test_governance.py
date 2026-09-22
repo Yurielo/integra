@@ -154,10 +154,16 @@ class GovernanceValidationTests(unittest.TestCase):
 
     def test_corrupt_current_baseline_record_fails_closed(self):
         baseline = copy.deepcopy(self.current_product_baseline_v2)
-        next(item for item in baseline["records"] if item["baseline_id"] == baseline["current_id"])["governed_files"][0]["sha256"] = "0" * 64
+        governed_files = next(
+            item
+            for item in baseline["records"]
+            if item["baseline_id"] == baseline["current_id"]
+        )["governed_files"]
+        mutated_path = governed_files[0]["path"]
+        governed_files[0]["sha256"] = "0" * 64
         errors = VALIDATOR.validate_current(baseline, ROOT)
         self.assertIn(
-            "CURRENT v2 governed byte drift: macos/Resources/bridge.py",
+            f"CURRENT v2 governed byte drift: {mutated_path}",
             errors,
         )
 
