@@ -14,6 +14,8 @@ class ProcessResultsSurfaceTests(unittest.TestCase):
         self.assertIn("final class ResponsiveResultsGrid", self.source)
         self.assertIn("wideBreakpoint: CGFloat = 720", self.source)
         self.assertIn("? .horizontal : .vertical", self.source)
+        self.assertIn('add(grid)\n      // `content` aligns arranged subviews', self.source)
+        self.assertIn('grid.widthAnchor.constraint(equalTo: content.widthAnchor, constant: -76)', self.source)
         for label in ("Расшифровка", "Очищенный текст", "Перевод", "Темы и таймкоды"):
             self.assertIn(f'processCard("{label}"', self.source)
         self.assertIn('button("Открыть видео/аудио с расшифровкой"', self.source)

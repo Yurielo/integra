@@ -963,7 +963,13 @@ struct SidebarItem {
       let open = button("Открыть", #selector(openOutput(_:))); open.toolTip = path
       addCard(processCard("Темы и таймкоды", controls: [open]), toLeft: left <= right)
     }
-    if left + right > 0 { add(grid) }
+    if left + right > 0 {
+      add(grid)
+      // `content` aligns arranged subviews to the leading edge.  Give the grid
+      // the available result-surface width so its responsive breakpoint is
+      // based on the actual window, rather than on one card's intrinsic width.
+      grid.widthAnchor.constraint(equalTo: content.widthAnchor, constant: -76).isActive = true
+    }
   }
   private func readableOutput(_ outputs: [String: Any], keys: [String]) -> String? {
     for key in keys {
