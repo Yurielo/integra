@@ -127,6 +127,57 @@ class ProposedBaselineLiteTests(unittest.TestCase):
         self.assertEqual(result["records"][-1]["historical_predecessors"][0]["sha256"],
                          hashlib.sha256(expected).hexdigest())
 
+    def _sequential_current(self, governed):
+        current = copy.deepcopy(self.current)
+        active = current["records"][0]
+        active["governed_files"] = [{"path": path, "sha256": value} for path, value in governed.items()]
+        return current
+
+    def _sequential_proposal(self, current, delta, identity):
+        proposal = self.proposal()
+        active = current["records"][0]
+        proposal["base_current_id"] = active["baseline_id"]
+        proposal["base_main"] = active["main"]
+        proposal["candidate"] = {"candidate_id": "candidate-v1-" + identity * 64,
+                                 "identity_sha256": identity * 64, "manifest_digest": "6" * 64,
+                                 "bundle_digest": "4" * 64}
+        proposal["delta"] = delta
+        return proposal
+
+    def test_sequential_promotion_accumulates_previous_and_new_governed_paths(self):
+        current0 = self._sequential_current({"integra_core/a.py": "0" * 64})
+        proposal1 = self._sequential_proposal(current0, [{"path": "integra_core/a.py", "before_sha256": "0" * 64, "after_sha256": "1" * 64}], "1")
+        current1 = next_current(current0, proposal1, "owner-1", previous_current_path="state/current0.json")
+        proposal2 = self._sequential_proposal(current1, [{"path": "integra_core/b.py", "before_sha256": "0" * 64, "after_sha256": "2" * 64}], "2")
+        current2 = next_current(current1, proposal2, "owner-2", previous_current_path="state/current1.json")
+        active = current2["records"][-1]
+        self.assertEqual(active["governed_files"], [{"path": "integra_core/a.py", "sha256": "1" * 64},
+                                                     {"path": "integra_core/b.py", "sha256": "2" * 64}])
+
+    def test_sequential_promotion_replaces_existing_path_only_with_matching_current_hash(self):
+        current1 = self._sequential_current({"integra_core/a.py": "1" * 64})
+        proposal2 = self._sequential_proposal(current1, [{"path": "integra_core/a.py", "before_sha256": "1" * 64, "after_sha256": "2" * 64}], "2")
+        current2 = next_current(current1, proposal2, "owner-2", previous_current_path="state/current1.json")
+        self.assertEqual(current2["records"][-1]["governed_files"], [{"path": "integra_core/a.py", "sha256": "2" * 64}])
+        proposal2["delta"][0]["before_sha256"] = "0" * 64
+        self.assertIn("PROPOSED baseline delta does not start from active CURRENT hash", validate_proposal(proposal2, current1, ROOT))
+        with self.assertRaisesRegex(ValueError, "does not start from active CURRENT hash"):
+            next_current(current1, proposal2, "owner-2", previous_current_path="state/current1.json")
+
+    def test_previously_governed_path_cannot_disappear_from_successor(self):
+        current1 = self._sequential_current({"integra_core/a.py": "1" * 64})
+        proposal2 = self._sequential_proposal(current1, [{"path": "integra_core/b.py", "before_sha256": "0" * 64, "after_sha256": "2" * 64}], "2")
+        current2 = next_current(current1, proposal2, "owner-2", previous_current_path="state/current1.json")
+        self.assertEqual({item["path"] for item in current2["records"][-1]["governed_files"]}, {"integra_core/a.py", "integra_core/b.py"})
+
+    def test_historical_r12_r13_records_remain_unchanged_by_successor_generation(self):
+        before = {path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest() for path in
+                  ("state/native_macos_app_v1.json", "state/ready_app_v1.json")}
+        current = self._sequential_current({"integra_core/a.py": "1" * 64})
+        proposal = self._sequential_proposal(current, [{"path": "integra_core/b.py", "before_sha256": "0" * 64, "after_sha256": "2" * 64}], "2")
+        next_current(current, proposal, "owner", previous_current_path="state/current1.json")
+        self.assertEqual(before, {path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest() for path in before})
+
     def test_promoted_current_exactly_supersedes_hash_closed_history(self):
         prior = copy.deepcopy(self.current)
         active = prior["records"][0]
@@ -225,6 +276,13 @@ class ProposedOverlayLineageTests(unittest.TestCase):
     def test_product_byte_in_overlay_fails(self):
         root, proposal, path = self._lineage(overlay_product=True)
         self.assertIn("promotion evidence overlay contains product/runtime bytes",
+                      verify_promotion_material(proposal, root, path))
+
+    def test_undeclared_previously_governed_product_mutation_fails(self):
+        root, proposal, path = self._lineage()
+        proposal["delta"] = [{"path": "integra_core/other.py", "before_sha256": "0" * 64,
+                              "after_sha256": "1" * 64}]
+        self.assertIn("promotion governed CURRENT-to-source delta is undeclared or overstated",
                       verify_promotion_material(proposal, root, path))
 
     def test_candidate_source_and_stale_evidence_fail(self):

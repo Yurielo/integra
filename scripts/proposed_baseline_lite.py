@@ -217,6 +217,19 @@ def validate_proposal(proposal: object, current: dict[str, Any], root: Path) -> 
             if item["path"] in paths:
                 errors.append("PROPOSED baseline delta paths must be unique")
             paths.add(item["path"])
+        active = current_record(current)
+        active_hashes = {
+            item.get("path"): item.get("sha256")
+            for item in (active or {}).get("governed_files", [])
+            if isinstance(item, dict) and isinstance(item.get("path"), str)
+            and isinstance(item.get("sha256"), str)
+        }
+        for item in delta:
+            if not isinstance(item, dict):
+                continue
+            previous = active_hashes.get(item.get("path"))
+            if previous is not None and item.get("before_sha256") != previous:
+                errors.append("PROPOSED baseline delta does not start from active CURRENT hash")
     gates = proposal.get("gates")
     if not isinstance(gates, list) or not gates or any(not isinstance(item, dict) or set(item) != {"name", "result", "evidence_ref"} or item.get("result") != "PASS" or not isinstance(item.get("evidence_ref"), str) or not item["evidence_ref"] for item in gates):
         errors.append("PROPOSED baseline mandatory gates are not all PASS with evidence")
@@ -352,6 +365,21 @@ def next_current(current: dict[str, Any], proposal: dict[str, Any], owner_accept
     record = current_record(current)
     if record is None:
         raise ValueError("CURRENT record is invalid")
+    # A successor is cumulative: it retains every previously governed byte
+    # unless an exact proposal delta explicitly replaces that path.  Dropping a
+    # path would sever the hash-verified historical chain for R12/R13.
+    governed = {
+        item["path"]: item["sha256"]
+        for item in record.get("governed_files", [])
+        if isinstance(item, dict) and set(item) == {"path", "sha256"}
+    }
+    for item in proposal.get("delta", []):
+        if not isinstance(item, dict) or set(item) != {"path", "before_sha256", "after_sha256"}:
+            raise ValueError("PROPOSED baseline delta is invalid")
+        path = item["path"]
+        if path in governed and item["before_sha256"] != governed[path]:
+            raise ValueError("PROPOSED baseline delta does not start from active CURRENT hash")
+        governed[path] = item["after_sha256"]
     new_id = "current-v2-" + proposal["candidate"]["identity_sha256"]
     new_record = {
         "baseline_id": new_id,
@@ -366,7 +394,7 @@ def next_current(current: dict[str, Any], proposal: dict[str, Any], owner_accept
         # the immutable history file; hashing a different serialization would
         # make a legitimate next CURRENT fail closed after preparation.
         "historical_predecessors": [{"path": previous_current_path, "sha256": hashlib.sha256((json.dumps(current, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode()).hexdigest()}],
-        "governed_files": [{"path": item["path"], "sha256": item["after_sha256"]} for item in proposal["delta"]],
+        "governed_files": [{"path": path, "sha256": governed[path]} for path in sorted(governed)],
     }
     result = json.loads(json.dumps(current))
     result["records"].append(new_record)
