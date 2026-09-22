@@ -1,4 +1,8 @@
-# Recovery WP — reconciled current main evidence
+# Recovery WP — historical reconciled evidence
+
+> This record was created on the #162 lineage rooted at `2af7de5`. It preserves
+> reusable Recovery evidence and does not identify the current WP1/main baseline.
+> `PROCESS_V1_WP1_EXISTING_PROOF_AND_RECOVERY.md` is the current-main ledger.
 
 Status: `IN_PROGRESS`. This is technical evidence only; it does not create a
 CURRENT record, promote Recovery, or assert `USER_ACCEPTED`.
