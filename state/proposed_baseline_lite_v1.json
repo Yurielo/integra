@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.proposed_product_baseline",
+  "proposal_id": "proposal-process-v1-timeout-owned-descendant-cleanup",
+  "status": "PROPOSED_BASELINE_VALID",
+  "base_current_id": "current-v2-589ef6063fd6d8b1bba248fce7fa1f8fa1494df17c4e930e7fc295f873686c1a",
+  "base_main": {"commit_sha": "def776562e8c6b78e1b26b82d55a97ab6e08e1c9", "tree_sha": "8cda4438d8a431ae6b1e63ca59de4637304112cb"},
+  "proposed_source": {"commit_sha": "10dcb5573728073ef42eea37783c67e0da838d02", "tree_sha": "bc5e8dce9deb51174e19a580f14f522f045c2d1f"},
+  "proposed_head": {"commit_sha": "a718efc6b58745524f86f53b2d020e760fb7e15a", "tree_sha": "1af3ede7a1a2273a32f2decbc018637d9da2cbe2"},
+  "intended_scope": {"wp": "Process v1 bounded timeout cleanup", "journey": "Timeout terminal state, owned descendant cleanup, and same-session continuation"},
+  "candidate": {"candidate_id": "candidate-v1-6dd918b453e051e38422e81e05141ce0fcae02a6e2ce1c5b0f8df3ec551de611", "identity_sha256": "6dd918b453e051e38422e81e05141ce0fcae02a6e2ce1c5b0f8df3ec551de611", "manifest_digest": "7a8f1271f24187bdda710098801d287cb81426a73bb080491d08dd6fd8996eaa", "bundle_digest": "2a3ef3269a31d9db726b8576f4a0f40df926c5b908d1fea195ed2b7cf46ac1d1"},
+  "delta": [
+    {"path": "integra_core/seminartext_asr_runtime.py", "before_sha256": "616ebd003d7b0b99f263c35faf9fdaff057622e001f8c200da9994525b6638ba", "after_sha256": "6097f392f6a151efd68cc1409abb5e27375f419029216464031b0c5ba487f6cc"},
+    {"path": "integra_core/shutdown_runtime.py", "before_sha256": "cb7c4e7f3aab2fb66ed7c3cd3a53cf7f5a84385968a68a56d195855161e83edc", "after_sha256": "0dc2bc03c25bae4e8c124c613a1be12b9b1c5227652291704ceca088f2f01192"}
+  ],
+  "gates": [
+    {"name": "candidate-manifest", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_TIMEOUT_CLEANUP_CANDIDATE_EVIDENCE.json"},
+    {"name": "packaged-timeout-owned-descendant-cleanup", "result": "PASS", "evidence_ref": "docs/PROCESS_V1_RECOVERY_LIFECYCLE_PROOF.md"},
+    {"name": "affected-cancel-failure-retry-regressions", "result": "PASS", "evidence_ref": "docs/PROCESS_V1_RECOVERY_LIFECYCLE_PROOF.md"},
+    {"name": "proposal-lite-anti-bypass-regressions", "result": "PASS", "evidence_ref": "tests/test_proposed_baseline_lite.py"}
+  ],
+  "evidence": {
+    "candidate_manifest": {"path": "docs/evidence/PROCESS_V1_TIMEOUT_CLEANUP_CANDIDATE_MANIFEST.json", "sha256": "7a8f1271f24187bdda710098801d287cb81426a73bb080491d08dd6fd8996eaa"},
+    "candidate_evidence": {"path": "docs/evidence/PROCESS_V1_TIMEOUT_CLEANUP_CANDIDATE_EVIDENCE.json", "sha256": "558f63fd066d7474928679b48f20bc868bbbd1bb761023a2cb976b49e30444d1"},
+    "report": {"path": "docs/PROCESS_V1_RECOVERY_LIFECYCLE_PROOF.md", "sha256": "61651c971b49b315660dea41b68774257acffba98213d9b5262ce545bbf8697d"}
+  },
+  "owner_acceptance": null,
+  "allowed_overlay_paths": ["docs/PROCESS_V1_DEFINITION_OF_DONE.md", "docs/PROCESS_V1_RECOVERY_LIFECYCLE_PROOF.md", "docs/evidence/PROCESS_V1_TIMEOUT_CLEANUP_CANDIDATE_EVIDENCE.json", "docs/evidence/PROCESS_V1_TIMEOUT_CLEANUP_CANDIDATE_MANIFEST.json", "tests/packaged_recovery_timeout_probe.py"]
+}
