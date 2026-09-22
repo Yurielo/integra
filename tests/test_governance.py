@@ -92,6 +92,11 @@ class GovernanceValidationTests(unittest.TestCase):
                 encoding="utf-8"
             )
         )
+        cls.current_product_baseline_v2 = json.loads(
+            (ROOT / "state" / "current_product_baseline_v2.json").read_text(
+                encoding="utf-8"
+            )
+        )
 
     def _baseline_fixture_root(self) -> Path:
         """Build a tiny isolated root for current-baseline mutation tests."""
@@ -99,7 +104,8 @@ class GovernanceValidationTests(unittest.TestCase):
         self.addCleanup(temp.cleanup)
         root = Path(temp.name)
         paths = {
-            item["path"] for item in self.current_baseline["files"]
+            item["path"]
+            for item in self.current_product_baseline_v2["records"][0]["governed_files"]
         } | {
             "schemas/candidate_manifest_v1.schema.json",
             "state/native_macos_app_v1.json",
@@ -113,24 +119,22 @@ class GovernanceValidationTests(unittest.TestCase):
 
     def test_current_baseline_exact_contract_passes(self):
         self.assertEqual(
-            VALIDATOR.validate_current_canonical_baseline(self.current_baseline), []
+            VALIDATOR.validate_current(self.current_product_baseline_v2, ROOT), []
         )
 
     def test_current_governed_byte_mutation_fails_closed(self):
         root = self._baseline_fixture_root()
         target = root / "macos/Resources/bridge.py"
         target.write_bytes(target.read_bytes() + b"\\n# unauthorized mutation\\n")
-        errors = VALIDATOR.validate_current_canonical_baseline(
-            self.current_baseline, root=root
-        )
+        errors = VALIDATOR.validate_current(self.current_product_baseline_v2, root=root)
         self.assertIn(
-            "current canonical baseline hash differs: macos/Resources/bridge.py",
+            "CURRENT v2 governed byte drift: macos/Resources/bridge.py",
             errors,
         )
 
     def test_missing_current_baseline_does_not_bypass_historical_drift(self):
-        errors = VALIDATOR.validate_current_canonical_baseline({})
-        self.assertIn("current canonical baseline fields must match v1", errors)
+        errors = VALIDATOR.validate_current({}, ROOT)
+        self.assertIn("CURRENT v2 fields are invalid", errors)
         native = json.loads(
             (ROOT / "state" / "native_macos_app_v1.json").read_text(encoding="utf-8")
         )
@@ -138,20 +142,20 @@ class GovernanceValidationTests(unittest.TestCase):
         self.assertIn("R12 implementation hash differs: macos/Resources/bridge.py", drift)
 
     def test_corrupt_current_baseline_record_fails_closed(self):
-        baseline = copy.deepcopy(self.current_baseline)
-        baseline["files"][0]["current_sha256"] = "0" * 64
-        errors = VALIDATOR.validate_current_canonical_baseline(baseline)
+        baseline = copy.deepcopy(self.current_product_baseline_v2)
+        baseline["records"][0]["governed_files"][0]["sha256"] = "0" * 64
+        errors = VALIDATOR.validate_current(baseline, ROOT)
         self.assertIn(
-            "current canonical baseline record differs: macos/Resources/bridge.py",
+            "CURRENT v2 governed byte drift: macos/Resources/bridge.py",
             errors,
         )
 
     def test_candidate_identity_substitution_fails(self):
-        baseline = copy.deepcopy(self.current_baseline)
-        baseline["candidate"]["candidate_id"] = "candidate-v1-" + "0" * 64
-        errors = VALIDATOR.validate_current_canonical_baseline(baseline)
+        baseline = copy.deepcopy(self.current_product_baseline_v2)
+        baseline["records"][0]["candidate"]["candidate_id"] = "candidate-v1-" + "0" * 64
+        errors = VALIDATOR.validate_current(baseline, ROOT)
         self.assertIn(
-            "current canonical baseline candidate ID is not bound to identity hash",
+            "CURRENT v2 candidate ID is not bound to identity hash",
             errors,
         )
 
@@ -181,7 +185,7 @@ class GovernanceValidationTests(unittest.TestCase):
         native_before = native_path.read_bytes()
         ready_before = ready_path.read_bytes()
         self.assertEqual(
-            VALIDATOR.validate_current_canonical_baseline(self.current_baseline), []
+            VALIDATOR.validate_current(self.current_product_baseline_v2, ROOT), []
         )
         self.assertEqual(native_path.read_bytes(), native_before)
         self.assertEqual(ready_path.read_bytes(), ready_before)
