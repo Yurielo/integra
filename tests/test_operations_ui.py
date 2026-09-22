@@ -36,6 +36,10 @@ class OperationsUITests(unittest.TestCase):
         self.assertIn("performKeyEquivalent(with: event)", self.source)
         self.assertIn("#selector(NSApplication.terminate(_:))", self.source)
 
+    def test_failed_multi_source_run_keeps_completed_peer_results_visible(self):
+        render = self.source.split("private func renderOperationsSnapshot", 1)[1].split("private func startPolling", 1)[0]
+        self.assertIn('state == "COMPLETED" || state == "FAILED" { renderResultRows(run) }', render)
+
 
 if __name__ == "__main__":
     unittest.main()

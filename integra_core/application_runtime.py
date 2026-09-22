@@ -168,6 +168,15 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
     jobs_path=project_dir/"jobs.json"
     def refresh_record():
         return json.loads(path.read_bytes())
+    def failed_media_source(source: dict[str, Any], error: Exception) -> dict[str, Any]:
+        """Persist a source-scoped failure without manufacturing successful outputs."""
+        outputs: dict[str, str] = {}
+        from .seminartext_asr_runtime import ASRQualityError
+        if isinstance(error, ASRQualityError):
+            outputs = {"transcript_quality_report": error.artifacts["review_txt"],
+                       "transcript_asr_record": error.artifacts["record"]}
+        return {"source_id": source["source_id"], "display_name": source["display_name"],
+                "state": "FAILED", "outputs": outputs, "error": str(error)[:500]}
     try:
         if _is_run_cancelled(project_dir, run_id):
             record.update(state="CANCELLED",current_stage=None,cancelled_at=now()); atomic_json(path,record)
@@ -181,16 +190,29 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
             if not outputs:
                 record["source_results"].append({"source_id":source["source_id"],"display_name":source["display_name"],"state":"SKIPPED","outputs":{}}); record["completed_sources"]+=1; atomic_json(path,record); continue
             if source["kind"]=="MEDIA":
-                record["current_stage"]="media_preparation"; atomic_json(path,record)
-                imported=import_source(project_dir,Path(source["input"]))
-                if imported["source_id"] != source["source_id"]:
-                    raise ValueError("media source changed after plan creation")
-                job={"job_id":f"urn:integra:job:{uuid.uuid4()}","kind":"LOCAL_MEDIA_TRANSCRIPTION","state":"QUEUED","progress":0,"message":"Queued by source-first plan","created_at":now(),"source_id":imported["source_id"],"source_sha256":imported["content_sha256"],"owned_path":imported["owned_path"],"requested_outputs":outputs,"run_id":run_id}
-                jobs=json.loads(jobs_path.read_bytes())
-                jobs["jobs"].append(job); atomic_json(jobs_path,jobs); result=run_job(project_dir,job["job_id"])
-                record["source_results"].append({"source_id":source["source_id"],"display_name":source["display_name"],"state":result["state"],"outputs":result.get("outputs",{}),"job_id":job["job_id"]})
-                if result.get("asr_reuse"):
-                    record["source_results"][-1]["asr_reuse"] = result["asr_reuse"]
+                try:
+                    record["current_stage"]="media_preparation"; atomic_json(path,record)
+                    imported=import_source(project_dir,Path(source["input"]))
+                    if imported["source_id"] != source["source_id"]:
+                        raise ValueError("media source changed after plan creation")
+                    job={"job_id":f"urn:integra:job:{uuid.uuid4()}","kind":"LOCAL_MEDIA_TRANSCRIPTION","state":"QUEUED","progress":0,"message":"Queued by source-first plan","created_at":now(),"source_id":imported["source_id"],"source_sha256":imported["content_sha256"],"owned_path":imported["owned_path"],"requested_outputs":outputs,"run_id":run_id}
+                    jobs=json.loads(jobs_path.read_bytes())
+                    jobs["jobs"].append(job); atomic_json(jobs_path,jobs); result=run_job(project_dir,job["job_id"])
+                    record["source_results"].append({"source_id":source["source_id"],"display_name":source["display_name"],"state":result["state"],"outputs":result.get("outputs",{}),"job_id":job["job_id"]})
+                    if result.get("asr_reuse"):
+                        record["source_results"][-1]["asr_reuse"] = result["asr_reuse"]
+                except Exception as error:
+                    # A one-source request retains its established fail-closed
+                    # exception behavior.  In a local multi-source plan each
+                    # source owns an independent job/artifact directory, so a
+                    # failed peer is recorded and later selected peers can run.
+                    if _is_run_cancelled(project_dir, run_id) or len(plan["sources"]) == 1:
+                        raise
+                    record = refresh_record()
+                    record["source_results"].append(failed_media_source(source, error))
+                    record["current_stage"] = None
+                    atomic_json(path, record)
+                    continue
             elif source["kind"] == "URL" and source["source_type"] == "YOUTUBE_VIDEO":
                 record["current_stage"] = "youtube_ingest"; record["message"] = "Downloading selected YouTube video"; atomic_json(path, record)
                 downloaded = download_video(project_dir, source, run_id=run_id)
@@ -261,8 +283,15 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                 return record
             record["completed_sources"]+=1; atomic_json(path,record)
         record = refresh_record()
-        final_state = "CANCELLED" if _is_run_cancelled(project_dir, run_id) else "COMPLETED"
-        record.update(state=final_state,current_stage=None,completed_at=now()); atomic_json(path,record)
+        failed_sources = [item for item in record["source_results"] if item.get("state") == "FAILED"]
+        final_state = "CANCELLED" if _is_run_cancelled(project_dir, run_id) else ("FAILED" if failed_sources else "COMPLETED")
+        terminal_at = now()
+        record.update(state=final_state,current_stage=None)
+        if final_state == "FAILED":
+            record.update(error=f"{len(failed_sources)} selected source(s) failed; completed peer results are retained", failed_at=terminal_at)
+        else:
+            record.update(completed_at=terminal_at)
+        atomic_json(path,record)
         project_path=project_dir/"project.json"
         if project_path.is_file():
             project=json.loads(project_path.read_bytes()); project["source_count"]=len(plan["sources"]); project["status"]="READY"; atomic_json(project_path,project)

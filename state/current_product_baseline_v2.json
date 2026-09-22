@@ -1,6 +1,6 @@
 {
   "artifact_type": "integra.current_product_baseline",
-  "current_id": "current-v2-17f50c3788518c57b927f2d4f4ddcbc9ec52e8d121de07c24fe9b2bd1d202d26",
+  "current_id": "current-v2-589ef6063fd6d8b1bba248fce7fa1f8fa1494df17c4e930e7fc295f873686c1a",
   "records": [
     {
       "acceptance": {
@@ -117,6 +117,55 @@
       },
       "promotion": {
         "accepted_report_head": "aaed563524e7a618379f96b37c63c7663f7ae722",
+        "issue_159_ref": "superseded-by-next-owner-promotion",
+        "pull_160_ref": "superseded-by-next-owner-promotion"
+      },
+      "promotion_policy": "EXPLICIT_HUMAN_OWNER_AUTHORIZATION_REQUIRED",
+      "repository": "Yurielo/integra",
+      "status": "CURRENT"
+    },
+    {
+      "acceptance": {
+        "authority_ref": "Product Owner controlling conversation (2026-09-22): exact authorization headed PRODUCT OWNER AUTHORIZATION — PROMOTE MULTI-SOURCE BASELINE; proposal proposal-process-v1-multi-source-failure-isolation, source d93f0fa8dfda452a8817635c8cf58ee9ce93c330, Candidate candidate-v1-589ef6063fd6d8b1bba248fce7fa1f8fa1494df17c4e930e7fc295f873686c1a; baseline promotion only, not PROCESS V1 USER_ACCEPTED.",
+        "decision": "USER_ACCEPTED",
+        "scope": "owner-authorized proposed baseline promotion"
+      },
+      "baseline_id": "current-v2-589ef6063fd6d8b1bba248fce7fa1f8fa1494df17c4e930e7fc295f873686c1a",
+      "candidate": {
+        "bundle_digest": "9a902e47d83ef9e7e27f744d6438d885558cda53f8dba735d954544e100713a2",
+        "candidate_id": "candidate-v1-589ef6063fd6d8b1bba248fce7fa1f8fa1494df17c4e930e7fc295f873686c1a",
+        "identity_sha256": "589ef6063fd6d8b1bba248fce7fa1f8fa1494df17c4e930e7fc295f873686c1a"
+      },
+      "governed_files": [
+        {
+          "path": "integra_core/application_runtime.py",
+          "sha256": "7f0f7f32697f1bd51640190f1e97a4fc4c888b13de39ced2b0226279b9092f7a"
+        },
+        {
+          "path": "integra_core/shutdown_runtime.py",
+          "sha256": "cb7c4e7f3aab2fb66ed7c3cd3a53cf7f5a84385968a68a56d195855161e83edc"
+        },
+        {
+          "path": "macos/IntegraApp.swift",
+          "sha256": "5803c63f59261ad18ed9a3a88b22e0675a8a1337f5d4db9db5546ea5d708a86e"
+        },
+        {
+          "path": "macos/Resources/bridge.py",
+          "sha256": "dbcfae45b247acad40503399f96926ed514ecc863df7f44eea4363aa361d67ec"
+        }
+      ],
+      "historical_predecessors": [
+        {
+          "path": "state/history/current_product_baseline_v2-current-v2-17f50c3788518c57b927f2d4f4ddcbc9ec52e8d121de07c24fe9b2bd1d202d26.json",
+          "sha256": "74e0b40dfdc12a707475b7613d0c8b9188eb0489458f9a784844b94f6822fa2c"
+        }
+      ],
+      "main": {
+        "commit_sha": "def776562e8c6b78e1b26b82d55a97ab6e08e1c9",
+        "tree_sha": "8cda4438d8a431ae6b1e63ca59de4637304112cb"
+      },
+      "promotion": {
+        "accepted_report_head": "def776562e8c6b78e1b26b82d55a97ab6e08e1c9",
         "issue_159_ref": "superseded-by-next-owner-promotion",
         "pull_160_ref": "superseded-by-next-owner-promotion"
       },
