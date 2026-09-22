@@ -18,9 +18,12 @@ Recovery continuation, or product change was performed.
 **Workbook fact:** the filled `Process v1` sheet contains **51 `MUST`**,
 **5 `OPTIONAL`**, and **12 `LATER`** choices (68 rows). This differs from the
 instructional recount of 52 MUST. The file is authoritative, so this document
-freezes 51, not a fabricated 52. The five OPTIONAL rows are exactly four
-audio-analysis rows and History. The separate BookText sheet has 17 capability
-rows and every choice cell is blank; all 17 are therefore
+records 51, not a fabricated 52. The five OPTIONAL rows are exactly four
+audio-analysis rows and History. The subsequent explicit Product Owner domain
+correction moves Topic hierarchy to LATER, user-facing SRT and translated SRT
+to Studio, and Review TXT/Evidence interaction to Knowledge. The active Process
+scope is therefore 47 MUST, 5 OPTIONAL and 16 LATER/out-of-phase entries. The
+separate BookText sheet has 17 capability rows and every choice cell is blank; all 17 are therefore
 `OUT_OF_PROCESS_V1_PENDING_SEPARATE_DECISION`, not `LATER`.
 
 `CURRENT PARITY` preserves the published source row status, including `UNKNOWN`.
@@ -42,6 +45,10 @@ meaningful acceptance boundary. It does not override the owner's `MUST` choice.
 
 | Workbook # | Owner item |
 | --- | --- |
+| 9 | User-facing SRT subtitles — **Studio**; Process retains timing/SRT internally only where required for alignment, Word Timeline, provenance, or a downstream Studio consumer. |
+| 14 | Review TXT / Evidence interaction — **Knowledge**; Process retains readable cleaned text, while Evidence/Canonical Evidence and its human confirmation are frozen for Knowledge. |
+| 21 | User-facing translated SRT — **Studio**; Process retains translated text plus timing/provenance required downstream. |
+| 56 | Topic hierarchy |
 | 57 | Thematic video clips |
 | 58 | Blur |
 | 59 | Watermark |
@@ -56,8 +63,8 @@ meaningful acceptance boundary. It does not override the owner's `MUST` choice.
 | 68 | Learning / Assistant |
 
 These selections freeze Studio, Knowledge, publication, and downstream work
-out of this Process v1 proposal. Existing code and historical evidence are not
-removed or relabeled as missing.
+out of this Process v1 proposal. Existing code, internal timing/provenance
+artifacts, and historical evidence are not removed or relabeled as missing.
 
 ### OUT_OF_PROCESS_V1_PENDING_SEPARATE_DECISION — BookText sheet left blank
 
@@ -79,33 +86,29 @@ alter current governance or authorize work.
 
 | OWNER ITEM | PRIORITY | SOURCE CAPABILITY ID(S) | CURRENT PARITY | CURRENT INTEGRA PATH | REQUIRED ACTION | ACCEPTANCE EVIDENCE NEEDED |
 | --- | --- | --- | --- | --- | --- | --- |
-| Local video | MUST | S01, V03 | PARITY_PROVEN; PARITY_PROVEN | `app.execute_run → media.run_job → ASR/SRT` | NONE_ALREADY_PROVEN | P156 bounded Russian-video result; scope-bound owner acceptance. |
-| Local audio | MUST | S01, V01, V03 | PARITY_PROVEN; VERIFY_EXISTING; PARITY_PROVEN | Same local-media plan/ASR/SRT path | VERIFY_EXISTING | P for real local audio, TXT/SRT and provenance; no audio result inferred from video P156. |
+| Local video | MUST | S01, V03 | PARITY_PROVEN; PARITY_PROVEN | `app.execute_run → media.run_job → ASR` with internal timing/SRT where required | NONE_ALREADY_PROVEN | P156 bounded Russian-video result; scope-bound owner acceptance. |
+| Local audio | MUST | S01, V01, V03 | PARITY_PROVEN; VERIFY_EXISTING; PARITY_PROVEN | Same local-media plan/ASR path with internal timing/SRT where required | VERIFY_EXISTING | P for real local audio, readable TXT and provenance; no audio result inferred from video P156. |
 | Several video/audio files in one run | MUST | S06 | VERIFY_EXISTING | Source-first plan sequentially processes selected sources | VERIFY_EXISTING | P for ordered multi-file packaged run, per-source results and truthful partial failure. |
 | Folder with materials | MUST | S06 (partial only) | VERIFY_EXISTING | Current source selection/plan; no published generic-folder-discovery equivalence | OWNER_CLARIFICATION | C: select-files vs automatic discovery/selection rules; then P/I. |
 | Zoom folder | MUST | S07 | INTEGRATE_EXISTING | No Zoom-specific discovery in current planner | INTEGRATE_EXISTING | I for selected source discovery and GUI result; then P. |
 | YouTube — one video | MUST | S08 | VERIFY_EXISTING | `youtube_runtime.download_video → app.execute_run → media.run_job` | VERIFY_EXISTING | P for permissible real/non-private URL, source record and resulting artifacts. |
 | YouTube playlist | MUST | S08, S10 (partial only) | VERIFY_EXISTING; INTEGRATE_EXISTING | Current evidence covers one URL, not playlist expansion/completeness | OWNER_CLARIFICATION | C for membership/order/failure/completeness semantics; then I/P. |
 | Automatic transcript → TXT | MUST | S01 | PARITY_PROVEN | `seminartext_asr_runtime.transcribe → pinned CLI` | NONE_ALREADY_PROVEN | P156 bounded result; scope-bound owner acceptance. |
-| SRT subtitles | MUST | V03 | PARITY_PROVEN | `videotext_subtitles → bundled SRT service` | NONE_ALREADY_PROVEN | P156 persisted SRT; scope-bound owner acceptance. |
 | Word Timeline | MUST | S19 | VERIFY_EXISTING (aligned subset accepted; full Evidence linkage not) | `word_timeline_runtime → bundled alignment worker` | VERIFY_EXISTING | P for alignment, hash binding, reopen/navigation; no Canonical Evidence claim. |
 | Careful / enhanced ASR mode | MUST | S04 | INTEGRATE_EXISTING | Current adapter has no careful selector | INTEGRATE_EXISTING | I for bounded parameter/UI/output provenance; then P. |
 | Protective retry | MUST | S02 | VERIFY_EXISTING | Pinned SeminarText CLI quality gate/retry | VERIFY_EXISTING | P showing trigger → retry in packaged path; normal invocation is insufficient. |
 | Clean TXT | MUST | S03 | VERIFY_EXISTING | `media.run_job` persists cleaned transcript/quality report | VERIFY_EXISTING | P for readable derivative linked to source transcript. |
-| Review TXT | MUST | S03 | VERIFY_EXISTING | Same persisted transcript derivative/output actions | VERIFY_EXISTING | P for review artifact opening, provenance and no source replacement. |
 | Source-speech language choice | MUST | V02 | INTEGRATE_EXISTING | Generic media composition; source-language control not connected | INTEGRATE_EXISTING | I for supported selection and runtime provenance; then P. |
 | ASR quality settings | MUST | S04, V02 | INTEGRATE_EXISTING; INTEGRATE_EXISTING | Current normal path; no documented user quality control | INTEGRATE_EXISTING | I for bounded controls/config recording; then P. No default-semantics change implied. |
 | ASR quality diagnostics | MUST | V02, S02 | INTEGRATE_EXISTING; VERIFY_EXISTING | Existing quality/retry artifacts; source diagnostics not connected | INTEGRATE_EXISTING | I for user-readable diagnosis and exact status; then P. |
 | Transcript translation | MUST | S14, V05, V06 | INTEGRATE_EXISTING; VERIFY_EXISTING; INTEGRATE_EXISTING | VideoText worker, current target `en` JSON path | INTEGRATE_EXISTING | I for requested language/result boundary; then P. |
 | Translation-language choice | MUST | V06 | INTEGRATE_EXISTING | Worker parameter exists; GUI does not expose choice | INTEGRATE_EXISTING | I for selection, persisted target provenance and P. |
 | Translated TXT | MUST | V06 | INTEGRATE_EXISTING | Current worker saves JSON, not user-facing TXT | INTEGRATE_EXISTING | I for readable TXT, source association and P. |
-| Translated SRT | MUST | V06, V03 | INTEGRATE_EXISTING; PARITY_PROVEN | SRT service exists; translated-SRT composition/output absent | INTEGRATE_EXISTING | I for timing/language binding, then P. |
 | Topic translation | MUST | S15 | INTEGRATE_EXISTING | Topic translation not connected | INTEGRATE_EXISTING | I for translated headings/references with provisional authority, then P. |
 | Topics + timestamps | MUST | S12 | PARITY_PROVEN | `seminartext_topics_worker` after aligned transcript | NONE_ALREADY_PROVEN | P156 Topics/timestamps result; scope-bound owner acceptance. |
 | Summary of each Topic | MUST | S12 (partial), S13 | PARITY_PROVEN; INTEGRATE_EXISTING | Basic Topics path; no published selected summary/detail composition | INTEGRATE_EXISTING | I for defined summary field and source-span binding; then P. |
 | Topic detail selection | MUST | S13 | INTEGRATE_EXISTING | Detail selector not connected | INTEGRATE_EXISTING | I for bounded selection/config evidence; then P. |
 | Edit/confirm Topics | MUST | S20 | VERIFY_EXISTING | `prepare/apply-knowledge-review → topic review runtime` | VERIFY_EXISTING | P for dialog, exact-fragment decision and authority status. Owner MUST prevails over staged allocation only for this scope. |
-| Topic hierarchy | MUST | S23 | UNKNOWN | Current worker supports only low/basic output evidence | OWNER_CLARIFICATION | C for required hierarchy semantics; published evidence cannot choose VERIFY/INTEGRATE/IMPLEMENT. |
 | Ordered processing | MUST | S06 | VERIFY_EXISTING | Ordered source plan | VERIFY_EXISTING | P for configured order, result ordering and failure behavior. |
 | Combined transcript | MUST | S11 | INTEGRATE_EXISTING | ASR adapter calls single-source `--only video_001`; no combined-clear output | INTEGRATE_EXISTING | I for chronological output/input-completeness boundary; then P. |
 | Provenance in combined result | MUST | S11 | INTEGRATE_EXISTING | No combined manifest/output path | INTEGRATE_EXISTING | I for source/time links in combined artifact and P. |
@@ -115,7 +118,7 @@ alter current governance or authorize work.
 | Reopen after restart | MUST | V21 | VERIFY_EXISTING | Integra-owned project/run history and result records | VERIFY_EXISTING | P for close/relaunch/reopen without rerun and valid source binding. |
 | Reuse intermediate results | MUST | V21 | VERIFY_EXISTING | `asr_reuse` / governed job records | VERIFY_EXISTING | P for valid reuse and retained identity evidence. |
 | Invalidation after changes | MUST | V21 | VERIFY_EXISTING | Governed reuse/invalidation path | VERIFY_EXISTING | P for source/model/config mismatch invalidation, not a skipped test. |
-| Export results to ordinary files | MUST | S01, S03, V03 | PARITY_PROVEN; VERIFY_EXISTING; PARITY_PROVEN | Persisted TXT/SRT/derivatives and GUI output actions | VERIFY_EXISTING | P for owner-selected Process artifacts as ordinary files; not publication/BookText export. |
+| Export results to ordinary files | MUST | S01, S03 | PARITY_PROVEN; VERIFY_EXISTING | Persisted readable TXT/derivatives and GUI output actions | VERIFY_EXISTING | P for owner-selected readable Process artifacts as ordinary files; not publication/BookText export or Studio subtitle export. |
 | Cancel active processing | MUST | V21 | VERIFY_EXISTING | Run/job cancellation lifecycle | VERIFY_EXISTING | P for cancellation, final state, saved diagnostics and no false success. |
 | Retry after failure | MUST | V21, S02 | VERIFY_EXISTING; VERIFY_EXISTING | Lifecycle retry; S02 is narrower automatic quality retry | VERIFY_EXISTING | P for controlled failure → retry; distinguish user retry from S02. |
 | Next run without Integra restart | MUST | V21 | VERIFY_EXISTING | Reuse/shutdown/runtime lifecycle | VERIFY_EXISTING | P for controlled failure then subsequent same-session success. |
@@ -153,13 +156,13 @@ do not inflate the result.
 
 | MUST primary action | Count | Meaning |
 | --- | ---: | --- |
-| NONE_ALREADY_PROVEN | 4 | Local video; automatic TXT transcript; SRT; Topics/timestamps. Proof remains bounded to P156 and requires scope-bound owner acceptance. |
-| VERIFY_EXISTING | 26 | Existing selected/current path needs current packaged, exact-scope proof. |
-| INTEGRATE_EXISTING | 15 | Existing source functionality or bounded adapter/output/control needs connection. |
+| NONE_ALREADY_PROVEN | 3 | Local video; automatic TXT transcript; Topics/timestamps. Proof remains bounded to P156 and requires scope-bound owner acceptance. |
+| VERIFY_EXISTING | 25 | Existing selected/current path needs current packaged, exact-scope proof. |
+| INTEGRATE_EXISTING | 14 | Existing source functionality or bounded adapter/output/control needs connection. |
 | BOUNDED_ARCHITECTURAL_ISOLATION | 3 | Selected preflight, actionable missing dependencies, and truthful prior availability need the shared closure fix. |
 | IMPLEMENT_MISSING | 0 | No owner MUST is established as a missing source algorithm by published evidence. |
-| OWNER_CLARIFICATION | 3 | Generic folder behavior, playlist semantics, and hierarchy meaning lack an unambiguous published correspondence. |
-| **Total MUST in authoritative workbook** | **51** | Not 52; see §1. |
+| OWNER_CLARIFICATION | 2 | Generic folder behavior and playlist semantics lack an unambiguous published correspondence. |
+| **Total active Process MUST after owner scope corrections** | **47** | The original 51 workbook MUST rows are reduced by Topic hierarchy (LATER), user-facing SRT and translated SRT (Studio), and Review TXT/Evidence interaction (Knowledge). |
 
 All five OPTIONAL rows are `VERIFY_EXISTING`: four V13 audio-analysis views and
 V21 History. They do not change the MUST total.

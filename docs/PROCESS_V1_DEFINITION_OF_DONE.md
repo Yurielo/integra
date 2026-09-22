@@ -11,8 +11,8 @@ continuation, or product change was performed.
 ## Authority and execution progression
 
 The Product Definition remains the higher-level product authority; this document
-does not replace it. For Phase 1, the frozen scope is exactly 50 MUST, 5 OPTIONAL,
-13 LATER, and 17 BookText entries
+does not replace it. For Phase 1, the frozen scope is exactly 47 MUST, 5 OPTIONAL,
+16 LATER/out-of-phase entries, and 17 BookText entries
 `OUT_OF_PROCESS_V1_PENDING_PROCESS_DOCUMENTS`. #150, #151, #157 and earlier
 planning documents remain historical/decision evidence. They cannot independently
 expand this frozen Process v1 scope.
@@ -33,12 +33,18 @@ selected source; and reopen truthful provenance-bound results without Terminal
 or Codex.**
 
 For each selected source it creates an immutable, provenance-preserving
-ProcessedSource result with the requested transcript/SRT/Word Timeline,
-translation, basic Topics and permitted review output. It can process several
+ProcessedSource result with the requested readable transcript, cleaned text,
+translation, Word Timeline and basic Topics/timestamps. It can process several
 sources in a chosen order. Folder/playlist discovery requires preview and user
 confirmation. A failed playlist item does not automatically fail other selected
 items. Combined transcript/corpus are independent selected multi-source outputs,
 not an implied playlist side effect.
+
+SRT/timing artifacts may still be generated and retained internally where they
+are required for alignment, Word Timeline, provenance, or a downstream Studio
+consumer. They are not a primary user-facing Process v1 result or export gate.
+Evidence/Canonical Evidence and human Evidence review are frozen for Knowledge,
+not Process result actions in this phase.
 
 The app visibly reports required-runtime availability before execution, gives
 actionable errors, exposes progress and terminal states, preserves valid upstream
@@ -56,23 +62,47 @@ past accepted narrow Candidate do not alone establish that result.
 ### Counting rule
 
 The owner workbook contained 51 `MUST`, 5 `OPTIONAL`, and 12 `LATER` rows.
-The owner correction moves **Topic hierarchy** from MUST to LATER. Frozen scope
-therefore contains **50 owner-facing MUST**, **5 OPTIONAL**, and **13 LATER**
-rows. Three MUST rows about preflight/error/unavailable capabilities are one
-shared bounded requirement (§D), yielding 48 Board entries without silently
-removing any MUST.
+The earlier owner correction moved **Topic hierarchy** from MUST to LATER. The
+current owner correction additionally moves the user-facing **SRT subtitles**
+and **translated SRT** outcomes to Studio, and the Evidence-oriented **Review
+TXT** interaction to Knowledge. Frozen scope therefore contains **47
+owner-facing MUST**, **5 OPTIONAL**, and **16 LATER/out-of-phase** rows. Three
+MUST rows about preflight/error/unavailable capabilities are one shared bounded
+requirement (§D), yielding 45 Board entries without silently removing an active
+MUST.
 
 ### MUST — frozen Process v1 outcomes
 
 | Journey | Frozen MUST outcomes |
 | --- | --- |
 | Inputs and discovery | Local video; local audio; several video/audio files in one run; folder: select folder → discover supported files → preview/select → user confirmation → process; Zoom folder; one YouTube video; playlist URL → ordered discovery → preview/selection → process selected items independently. |
-| Transcript and structure | Automatic TXT transcript; SRT; Word Timeline; careful/enhanced ASR; protective retry; Clean TXT; Review TXT; source-speech language choice; ASR quality settings; ASR quality diagnostics; Topics/timestamps; Topic summary; Topic detail choice; edit/confirm Topics. |
-| Translation | Transcript translation; target-language choice; translated TXT; translated SRT; Topic translation. |
+| Transcript and structure | Automatic TXT transcript; Word Timeline; careful/enhanced ASR; protective retry; Clean TXT; source-speech language choice; ASR quality settings; ASR quality diagnostics; Topics/timestamps; Topic summary; Topic detail choice; edit/confirm Topics. |
+| Translation | Transcript translation; target-language choice; translated TXT; Topic translation. |
 | Multi-source | Ordered processing; combined transcript; combined-result provenance; corpus from several materials. Playlist does not imply combined corpus. |
 | Results and persistence | Unified results screen; open produced result; reopen after restart; reuse valid intermediates; invalidation after source/model/config change; export selected Process results to ordinary files. |
 | Reliability | Cancel; retry after failure; subsequent run without restart; timeout; no orphan workers; stale RUNNING reconciliation; preservation of valid upstream outputs after downstream failure. |
 | Normal app UX | GUI-only normal use; selected-capability runtime preflight; actionable missing-dependency error; real progress; clear Processing/Completed/Failed/Cancelled states; select outputs before execution; truthful unavailable functions before execution. |
+
+### Primary Process result surface
+
+The normal user-facing Process result surface is limited to source
+understanding. It contains only cards for outputs that actually exist:
+
+| Left | Right |
+| --- | --- |
+| Расшифровка — Открыть / Экспортировать | Очищенный текст — Открыть / Экспортировать |
+| Перевод — Открыть / Экспортировать | Темы и таймкоды — Открыть |
+
+It is two columns in a normal/wide desktop window and collapses to one column
+in a narrow window, without horizontal scrolling. **Открыть исходное
+видео/аудио с расшифровкой** remains a separate normal Process action because it
+verifies the incoming source rather than creating new media.
+
+Internal artifacts are preserved in a collapsed **Технические данные** area:
+SRT, Word Timeline, raw transcript JSON, Topics JSON, translation JSON, ASR
+diagnostics, model/runtime metadata and provenance. Component names do not
+define the primary result taxonomy. Evidence/Canonical Evidence actions are
+Knowledge; user-facing subtitle/translated-subtitle creation/export is Studio.
 
 ### OPTIONAL — non-blocking
 
@@ -82,9 +112,12 @@ the frozen MUST exit gate unless the Product Owner explicitly elevates them.
 
 ### LATER — frozen outside Process v1
 
-Topic hierarchy; thematic clips; blur; watermark; speed variants; filler mute;
-dereverb; dubbing/TTS; marketing material; Knowledge/Evidence/relations;
-Obsidian/OneDrive publication; social adapters; Learning/Assistant.
+Topic hierarchy; **user-facing SRT/subtitle export**; **user-facing translated
+SRT export**; **Evidence/Canonical Evidence and Review TXT interaction**;
+thematic clips; blur; watermark; speed variants; filler mute; dereverb;
+dubbing/TTS; marketing material; Knowledge/Evidence/relations;
+Obsidian/OneDrive publication; social adapters; Learning/Assistant. Internal
+SRT/timing artifacts remain available to Process and downstream consumers.
 
 ### OUT_OF_PROCESS_V1_PENDING_PROCESS_DOCUMENTS
 
@@ -116,19 +149,16 @@ Candidate proof. `NOT_DONE` means a required connection/output/control is absent
 | One YouTube video | DONE | S08; Issue #169 Candidate downloaded public non-private `jNQXAC9IVRw` through `youtube_runtime → app → media`, with owned media and hash-bound source record | Retain exact selected-video path | Packaged source record and owned downloaded-media hashes in `PROCESS_V1_WP1_EXISTING_PROOF_AND_RECOVERY.md`. |
 | YouTube playlist | NOT_DONE | S08 and S10 partial; owner now fixed semantics | Integrate ordered discovery, preview/selection and independent per-video ProcessedSources | Packaged playlist with one failed/unavailable item not falsely failing selected peers. |
 | Automatic TXT transcript | DONE | S01; P156 accepted bounded result | Retain pinned CLI path | Final Candidate representative transcript. |
-| SRT | DONE | V03; P156 persisted SRT | Retain selected SRT service | Final Candidate SRT bound to transcript/media. |
 | Word Timeline | DONE | P156 real aligned output; S19 composite row remains VERIFY only for Evidence linkage | Keep alignment/provenance separate from later Evidence | Final Candidate timeline hash/time navigation; no Canonical Evidence requirement. |
 | Careful ASR mode | NOT_DONE | S04 exists; selector absent | Integrate bounded mode selection/config recording | Selected mode in GUI, runtime record and result. |
 | Protective retry | IN_PROGRESS | S02 pinned CLI quality gate/retry | Verify packaged trigger → retry | Controlled contextual/fuzzy trigger with retry evidence. |
 | Clean TXT | DONE | S03; Issue #169 ordered Candidate run persisted readable `transcript_cleaned`, raw TXT, ASR record and source-linked SRT; all listed artifact hashes were reread by a fresh packaged bridge | Retain source-linked derivative route | Candidate artifact hashes in `PROCESS_V1_WP1_EXISTING_PROOF_AND_RECOVERY.md`; this does not assert human review or source replacement. |
-| Review TXT | IN_PROGRESS | S03 persisted derivative/output actions | Verify review artifact behavior | Candidate opening/provenance without source replacement. |
 | Source-speech language | NOT_DONE | V02 source capability; control not connected | Integrate supported source-language selection | GUI selection and recorded runtime configuration. |
 | ASR quality settings | NOT_DONE | S04/V02 exist; no documented control | Integrate bounded settings without changing defaults by implication | Selected settings and provenance in Candidate. |
 | ASR diagnostics | NOT_DONE | V02/S02 artifacts exist; diagnostics not connected | Integrate readable diagnosis/status | Packaged actionable diagnostics. |
 | Transcript translation | NOT_DONE | S14/V05/V06; current `en` JSON worker path | Integrate requested supported translation result | Selected translation in final Candidate. |
 | Translation-language choice | NOT_DONE | V06 worker parameter; no GUI choice | Integrate language control | Target language recorded and visible. |
 | Translated TXT | NOT_DONE | V06 JSON output only | Integrate readable TXT artifact | Linked translated TXT. |
-| Translated SRT | NOT_DONE | V06 + V03; no composed output | Integrate timed translated SRT | Linked source/target/timing output. |
 | Topic translation | NOT_DONE | S15 exists; not connected | Integrate provisional translated headings/references | Candidate output preserves review authority. |
 | Topics/timestamps | DONE | S12; P156 accepted bounded result | Retain selected Topic path | Final Candidate basic Topics/timestamps. |
 | Topic summary | NOT_DONE | S12 partial; S13 detail capability exists | Integrate defined summary output | Summary bound to source spans. |
@@ -138,12 +168,12 @@ Candidate proof. `NOT_DONE` means a required connection/output/control is absent
 | Combined transcript | NOT_DONE | S11 exists; current adapter uses single source | Integrate combined-clear output | Chronological output and completeness boundary. |
 | Combined provenance | NOT_DONE | S11 manifest/provenance exists; no app path | Integrate provenance output | Source/time trace for each combined passage. |
 | Multi-source corpus | NOT_DONE | S10 exists; queue is not corpus | Integrate explicit corpus membership | Corpus completeness/provenance proof. |
-| Unified results screen | IN_PROGRESS | Bounded P156 native result composition | Verify all selected Process results together | Packaged result view; unavailable outputs honestly labeled. |
-| Open result | IN_PROGRESS | S03/V03 output actions; P156 accessible results | Verify selected output access | Open actual produced Process artifacts from GUI. |
-| Reopen after restart | IN_PROGRESS | V21 project/run records | Verify no hidden rerun after relaunch | Candidate close/relaunch/reopen proof. |
+| Unified results screen | IN_PROGRESS | Bounded P156 native result composition; owner GUI test confirmed that the current screen aggregates results but exposes implementation/component artifacts as primary user actions | Repair the user-facing Process-results presentation | A packaged result view presents selected ordinary Process results cohesively and honestly labels unavailable outputs without treating component/provenance artifacts as the normal-user result experience. |
+| Open result | DONE | S03/V03 output actions; Product Owner, using exact Candidate `candidate-v1-6dd918b453e051e38422e81e05141ce0fcae02a6e2ce1c5b0f8df3ec551de611`, opened **Открыть расшифровку (TXT)** and confirmed the expected `transcript.txt` | Retain source-bound ordinary-file opening | Owner GUI evidence: the normal result action opened the correct persisted transcript for the processed source. |
+| Reopen after restart | DONE | V21 project/run records; Product Owner fully exited and normally relaunched the exact Candidate, then reopened **Обработанные материалы** | Retain persisted reopen route | Owner GUI evidence: `video1591534861.mp4` remained `COMPLETED` with its persisted result actions and no rerun. |
 | Reuse intermediates | DONE | V21 / `asr_reuse`; preserved Recovery evidence is 12/12 passed, 0 skipped and its relevant reuse implementation is byte-identical in Candidate source A; Candidate native retry additionally reports `REUSED` without a second ASR invocation | Retain governed cache route | Bound 12/12 ledger plus Candidate native retry recorded in `PROCESS_V1_WP1_EXISTING_PROOF_AND_RECOVERY.md`. |
 | Invalidation | DONE | V21 governed invalidation; preserved 12/12 Recovery matrix covers source/model/config mismatch with 0 skips, and the relevant implementation is byte-identical in Candidate source A | Retain governed invalidation route | Source-bound 12/12 matrix, exact Candidate source-A comparison, and no skipped scenario; no new rerun because runtime identity did not change. |
-| Ordinary-file export | IN_PROGRESS | S01/S03/V03 persisted files | Verify selected output export | Ordinary Process files, not publication. |
+| Ordinary-file export | IN_PROGRESS | S01/S03 persisted readable Process files and normal **Открыть …** actions; the current publication controls are Obsidian/OneDrive package publication, not export of selected ordinary Process files | Add a normal-user ordinary-file export action | Available readable transcript, cleaned-text and translation Process results can be exported/saved through a visible user action distinct from opening an internal project path or publishing a reviewed package. SRT is an internal/Studio artifact, not this Process gate. |
 | Cancel | DONE | V21 lifecycle; Candidate `candidate-v1-589ef…` native Operations proof invoked real Cancel from RUNNING, recorded CANCELLED and cleaned the owned worker without affecting an unrelated process | Retain exact lifecycle ownership route | `PROCESS_V1_RECOVERY_LIFECYCLE_PROOF.md`: candidate-bound native Operations evidence. |
 | Retry after failure | DONE | V21 plus narrower S02; Candidate `candidate-v1-589ef…` native failure → Retry proof recorded FAILED then a distinct COMPLETED retry | Retain user retry separately from protective retry | `PROCESS_V1_RECOVERY_LIFECYCLE_PROOF.md`: native retry evidence; this does not close S02 protective retry. |
 | Subsequent run without restart | DONE | V21; the same native Candidate process completed the retry without Integra restart and retained verified ASR reuse | Retain same-session recovery route | `PROCESS_V1_RECOVERY_LIFECYCLE_PROOF.md`: native retry evidence. |
@@ -151,9 +181,9 @@ Candidate proof. `NOT_DONE` means a required connection/output/control is absent
 | No orphan workers | DONE | Candidate `candidate-v1-6dd918b453e051e38422e81e05141ce0fcae02a6e2ce1c5b0f8df3ec551de611`; owned-tree, unrelated-process and upstream-artifact evidence | Candidate process audit verified | The owned session-escaping descendant is terminated; unrelated process and completed upstream artifacts survive. |
 | Reconcile stale RUNNING | DONE | V21 persisted state; Candidate `candidate-v1-589ef…` native startup changed controlled stale RUNNING to FAILED / STALE_RUNNING_RECONCILED without signalling the unrelated PID | Retain conservative stale reconciliation | `PROCESS_V1_RECOVERY_LIFECYCLE_PROOF.md`: candidate-bound native re-entry evidence. |
 | Preserve upstream result | DONE | Issue #169 controlled multi-input Candidate run preserved the completed first source's transcript/SRT/clean/review/ASR artifacts after the later source failed; a fresh packaged bridge reread their hashes | Retain persisted-output route | Candidate multi-input and fresh-reopen evidence in `PROCESS_V1_WP1_EXISTING_PROOF_AND_RECOVERY.md`. |
-| GUI-only normal use | IN_PROGRESS | P156 native bounded path | Verify complete selected scope via Finder-like GUI | No Terminal/Codex step in exit journey. |
+| GUI-only normal use | DONE | Product Owner completed the representative normal Process journey and later reopened its persisted result in the exact Candidate | Retain ordinary native route | Owner GUI evidence: the representative journey and reopen used Integra GUI only, without Terminal/Codex. |
 | Selected-Capability Runtime Closure (covers preflight, clear missing-dependency error, unavailable-before-run) | BLOCKED | Current registry has availability flags but eagerly probes broad runtimes; build/manifest includes broad closure | Bounded isolation retaining selected real dependencies, exact pins, Candidate integrity | Required selected dependencies only; honest unavailable state; actionable GUI error; no raw CLI/Python error; no integrity bypass. |
-| Real progress | IN_PROGRESS | Current job progress → bridge/UI path | Verify non-trivial selected run | Observable progress evidence. |
+| Real progress | DONE | Candidate `candidate-v1-6dd918b453e051e38422e81e05141ce0fcae02a6e2ce1c5b0f8df3ec551de611`; normal packaged GUI proof | Retain truthful progress/status path | A non-trivial GUI run visibly showed `Выполняется`, source count and `Расшифровка`, then a truthful terminal error. |
 | Clear statuses | DONE | V21 run/job state records; Candidate `candidate-v1-589ef…` native Operations and Retry proofs captured RUNNING, CANCELLED, FAILED and COMPLETED states | Retain existing status vocabulary | `PROCESS_V1_RECOVERY_LIFECYCLE_PROOF.md`: visible native controlled-state evidence. |
 | Select outputs before run | DONE | Issue #169 Candidate selected exactly `transcript, subtitles`; its stored plan contained only those requested outputs and the completed source emitted no Timeline/Topics/translation output | Retain selected-output planner | Candidate plan/result evidence in `PROCESS_V1_WP1_EXISTING_PROOF_AND_RECOVERY.md`. |
 
@@ -245,10 +275,11 @@ mutate the accepted Process artifact to fill missing fields.
 On one exact Candidate, a Product Owner can use ordinary Finder-like macOS GUI
 without Terminal/Codex to complete and inspect all frozen MUST outcomes:
 
-1. representative local video and local audio yield requested TXT/SRT/Word
-   Timeline/basic Topics, including protective retry where the defined trigger
-   occurs, clean/review outputs, selected mode/language/quality options and
-   readable diagnostics;
+1. representative local video and local audio yield requested TXT, cleaned
+   text, translated text where selected, Word Timeline/basic Topics, including
+   protective retry where the defined trigger occurs, selected
+   mode/language/quality options and readable diagnostics; internal SRT/timing
+   remains available where Process or downstream Studio needs it;
 2. folder and Zoom flows discover supported input, present preview/selection,
    require confirmation, and process only selected items; multiple local inputs
    retain chosen order;
