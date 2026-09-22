@@ -1,7 +1,8 @@
 # Process v1: Recovery lifecycle proof
 
-Date: 2026-09-22. Status: `BLOCKED` — proof-only verification found a bounded
-product defect; no repair is included here.
+Date: 2026-09-22. Status: `PROPOSED_BASELINE_VALID / AWAITING_OWNER_ACCEPTANCE`.
+The original proof found a bounded defect; the minimal candidate-bound repair
+below closes only timeout owned-descendant cleanup.
 
 ## Scope and identity
 
@@ -72,3 +73,29 @@ Board counts move only for the five exact PASS rows: **14 DONE / 16 IN_PROGRESS
 / 17 NOT_DONE / 1 BLOCKED** → **19 DONE / 11 IN_PROGRESS / 17 NOT_DONE / 1
 BLOCKED**. This is neither a Process v1 user-acceptance record nor a new
 implementation authorization.
+
+## Bounded timeout cleanup repair
+
+Product source A is `10dcb5573728073ef42eea37783c67e0da838d02`; Candidate is
+`candidate-v1-6dd918b453e051e38422e81e05141ce0fcae02a6e2ce1c5b0f8df3ec551de611`
+(bundle `2a3ef3269a31d9db726b8576f4a0f40df926c5b908d1fea195ed2b7cf46ac1d1`).
+The repair captures the current kernel-birth-verified subtree before the CLI
+leader is terminated, freezes and kills only that captured tree, and skips the
+old process-group fallback once that tree is confirmed gone. This avoids macOS
+`EPERM` masking the original watchdog timeout. It does not change ASR,
+component pins, multi-source behaviour, or Process scope.
+
+The final packaged probe used that one Candidate and a real packaged bridge
+plan. It recorded `FAILED / PROCESS_TIMEOUT` with `Processing exceeded bounded
+timeout (2s)`, terminated the session-escaping owned recognizer descendant,
+left a separately-created unrelated process alive, retained the completed
+upstream source outputs, and completed a same-session retry. Evidence JSON SHA-256:
+`b90159da22383daea1f2f62922777425607b3ca95ef2516c981121d7b8161824`.
+
+Affected regressions on the same Candidate passed: Native Cancel
+(`e67070e8df092db2bac67511dce1a8ebb640ad7e1024e8e24a48869ae250d239`),
+native failure→Retry (`a46cf8440de9cb85fcecd5c55adea0137a0835ce971f66939c5fbef4adba6746`),
+and Close/Quit/stale reconciliation (`23c7c389719aa72b3b6bd5d6268b6c865833b762e4e946b7c4c711c8a216619b`).
+Focused source lifecycle tests passed **18/18**. The five prior #172 rows are
+preserved; only Timeout and Background-process cleanup transition to DONE.
+The resulting Board is **21 DONE / 9 IN_PROGRESS / 17 NOT_DONE / 1 BLOCKED**.

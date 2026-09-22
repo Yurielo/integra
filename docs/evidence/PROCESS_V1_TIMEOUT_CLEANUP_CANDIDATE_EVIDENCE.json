@@ -1,0 +1,8 @@
+{
+  "artifact_type": "integra.candidate_evidence",
+  "bundle_digest": "2a3ef3269a31d9db726b8576f4a0f40df926c5b908d1fea195ed2b7cf46ac1d1",
+  "candidate_id": "candidate-v1-6dd918b453e051e38422e81e05141ce0fcae02a6e2ce1c5b0f8df3ec551de611",
+  "gates": {"candidate_manifest": "PASS", "focused_source_regressions": "18/18 PASS", "packaged_timeout_owned_descendant": "PASS", "native_cancel": "PASS", "native_failure_retry": "PASS", "native_shutdown_reconciliation": "PASS"},
+  "manifest_identity_sha256": "6dd918b453e051e38422e81e05141ce0fcae02a6e2ce1c5b0f8df3ec551de611",
+  "product_source": {"commit_sha": "10dcb5573728073ef42eea37783c67e0da838d02", "tree_sha": "bc5e8dce9deb51174e19a580f14f522f045c2d1f"}
+}
