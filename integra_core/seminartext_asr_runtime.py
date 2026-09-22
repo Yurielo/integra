@@ -117,7 +117,13 @@ def _stop(process: subprocess.Popen) -> None:
     # create its own session; after its direct parent exits it would otherwise
     # be reparented and no longer safely attributable to this app-owned Popen.
     from .shutdown_runtime import terminate_owned_subprocess_tree
-    terminate_owned_subprocess_tree(process.pid, timeout=4)
+    cleanup = terminate_owned_subprocess_tree(process.pid, timeout=4)
+    if cleanup["state"] == "TERMINATED":
+        # The identity-verified tree is gone.  Do not subsequently signal its
+        # former process group: on macOS a now-dead session leader can yield
+        # EPERM, which would mask the truthful watchdog timeout.
+        process.wait(timeout=5)
+        return
     for sig, timeout in ((signal.SIGTERM, 2), (signal.SIGKILL, 2)):
         try:
             os.killpg(process.pid, sig)
