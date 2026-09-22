@@ -109,7 +109,7 @@ Candidate proof. `NOT_DONE` means a required connection/output/control is absent
 | USER OUTCOME | CURRENT STATE | EXISTING CAPABILITY / EVIDENCE | REQUIRED TRANSITION | ACCEPTANCE GATE |
 | --- | --- | --- | --- | --- |
 | Local video | DONE | S01 + V03; P156 accepted bounded local Russian-video result | Retain exact path in frozen scope | Final Candidate includes representative local video. |
-| Local audio | IN_PROGRESS | S01/V01/V03 current local-media path; P156 is video only | Verify real audio TXT/SRT/provenance | Packaged audio journey. |
+| Local audio | DONE | S01/V01/V03 current local-media path; Issue #169 candidate `candidate-v1-17f50c…` completed public natural-Russian packaged audio with TXT/SRT, Word Timeline, Topics, and persisted navigation | Retain exact local-audio route in frozen scope | Packaged audio journey: Issue #169 result/evidence hashes in `PROCESS_V1_WP1_EXISTING_PROOF_AND_RECOVERY.md`. |
 | Several local files | IN_PROGRESS | S06 sequential source plan | Verify ordered multi-file behavior | Packaged ordered run, per-source state, partial-failure truth. |
 | Folder discovery/confirmation | NOT_DONE | S06 partial only; no generic folder discovery correspondence | Integrate selected folder discovery → preview/select → confirmation | Packaged folder journey with only confirmed supported files processed. |
 | Zoom folder | NOT_DONE | S07 source discovery exists; no current planner connection | Integrate bounded Zoom discovery | Packaged Zoom-folder discovery/selection journey. |
