@@ -1,4 +1,7 @@
 """Test-only subprocess fixtures; the production SeminarText script still runs."""
+import hashlib
+import json
+import os
 from pathlib import Path
 import sys
 import unittest
@@ -36,6 +39,31 @@ Path(prefix + '.srt').write_text('1\\n00:00:00,000 --> 00:00:01,250\\n' + {TRANS
 
 
 def require_asr_runtime():
+    candidate = os.environ.get("INTEGRA_CANDIDATE_APP")
+    if candidate:
+        # Candidate-bound native probes execute the bundled bridge, not this
+        # source worktree.  A clean source checkout is deliberately not a
+        # prerequisite when the exact Candidate runtime is available.
+        root = Path(candidate).resolve(strict=True) / "Contents/Resources/runtime/seminartext"
+        manifest = Path(candidate).resolve(strict=True) / "Contents/Resources/candidate-manifest.json"
+        try:
+            identity = json.loads(manifest.read_text(encoding="utf-8"))["candidate_id"]
+            expected = {
+                "seminartext": "f7f411bf106341ae970bc40d759e1e3c964273b977bdb12d0f1840e629def13a",
+                "SEMINARTEXT_VERSION": "e1d49c569ae09b2ede16e2d83820a3809b35eb6c44c13ba9b5330598d6b8f43c",
+            }
+            if not identity.startswith("candidate-v1-") or any(
+                not (root / name).is_file()
+                or hashlib.sha256((root / name).read_bytes()).hexdigest() != digest
+                for name, digest in expected.items()
+            ):
+                raise ValueError("Candidate bundled SeminarText runtime differs from pinned bytes")
+        except (OSError, ValueError, KeyError, json.JSONDecodeError) as error:
+            raise unittest.SkipTest(str(error)) from error
+        require_subtitle_runtime()
+        if not (Path.home() / "whisper-models/ggml-silero-v5.1.2.bin").is_file():
+            raise unittest.SkipTest("requires pinned Silero VAD model for real SeminarText CLI")
+        return
     from integra_core.seminartext_asr_runtime import _runtime, ASRError
     try:
         _runtime()
@@ -47,6 +75,19 @@ def require_asr_runtime():
 
 
 def require_subtitle_runtime():
+    candidate = os.environ.get("INTEGRA_CANDIDATE_APP")
+    if candidate:
+        worker = (
+            Path(candidate).resolve(strict=True)
+            / "Contents/Resources/runtime/videotext/translation-worker"
+        )
+        expected = "22ba7bbfd827a1f2937f3757070b74b2e5d4d1200ebea954c48c1eaac1162d28"
+        try:
+            if not worker.is_file() or hashlib.sha256(worker.read_bytes()).hexdigest() != expected:
+                raise ValueError("Candidate bundled VideoText runtime differs from pinned bytes")
+        except (OSError, ValueError) as error:
+            raise unittest.SkipTest(str(error)) from error
+        return
     from integra_core.videotext_subtitles import preflight
     try:
         return preflight()
