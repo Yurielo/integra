@@ -850,7 +850,10 @@ struct SidebarItem {
         add(stopButton)
       }
       if state == "FAILED" || state == "CANCELLED" { add(button("Повторить", #selector(retryRun), enabled: !retryPending)) }
-      if state == "COMPLETED" { renderResultRows(run) }
+      // A multi-source run can truthfully be FAILED while earlier or later
+      // independent sources completed.  Those persisted results remain
+      // user-visible; failed peers still have no successful output fabricated.
+      if state == "COMPLETED" || state == "FAILED" { renderResultRows(run) }
       if state == "FAILED" { renderFailedASRReports(run) }
       if let error = run["error"] as? String { status.stringValue = error }
       if ["COMPLETED", "FAILED", "CANCELLED"].contains(state) { timer?.invalidate(); timer = nil }

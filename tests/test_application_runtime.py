@@ -24,6 +24,35 @@ class ApplicationRuntimeTests(unittest.TestCase):
     def media_environment(self):
         return media_environment(self.root)
 
+    def local_media_plan(self, *names):
+        sources=[]
+        for name in names:
+            path=self.root/name; path.write_bytes(name.encode("utf-8"))
+            sources.append(detect_source(str(path)))
+        with patch("integra_core.capabilities.preflight",return_value={"state":"READY"}):
+            return build_plan(sources,["transcript"]), sources
+
+    def prepare_media_run(self, plan):
+        # The plan was built through the normal capability contract above;
+        # this focused runtime test intentionally avoids local model discovery.
+        with patch("integra_core.application_runtime.build_plan",return_value=plan):
+            return prepare_run(self.project,plan)
+
+    def source_job_runner(self, *, failed=(), cancelled=(), reused=()):
+        """Deterministic source-job boundary: no ASR/model runtime is invoked."""
+        calls=[]; artifacts=self.project/"test-artifacts"; artifacts.mkdir(exist_ok=True)
+        def run(_project, job_id):
+            job=json.loads((self.project/"jobs.json").read_bytes())["jobs"][-1]
+            self.assertEqual(job["job_id"],job_id)
+            source_id=job["source_id"]; calls.append(source_id)
+            if source_id in failed: raise ValueError("controlled corrupt-source failure")
+            if source_id in cancelled: return {"state":"CANCELLED","outputs":{}}
+            output=artifacts/(source_id.rsplit(":",1)[-1]+".txt"); output.write_text(source_id)
+            result={"state":"COMPLETED","outputs":{"transcript":str(output)}}
+            if source_id in reused: result["asr_reuse"]={"state":"REUSED"}
+            return result
+        return calls, run
+
     def youtube_downloader(self):
         downloader=self.root/"yt-dlp"
         downloader.write_text("#!/bin/sh\n"
@@ -350,6 +379,74 @@ class ApplicationRuntimeTests(unittest.TestCase):
         self.assertEqual(read_run(self.project,run["run_id"])["state"],"CANCELLED")
         self.assertEqual(result["completed_sources"],0)
         self.assertIsNone(result["current_stage"])
+
+    def test_multi_source_good_good_completes_in_selected_order(self):
+        plan,sources=self.local_media_plan("first.wav","second.wav")
+        calls,runner=self.source_job_runner()
+        with patch("integra_core.application_runtime.run_job",side_effect=runner):
+            run=self.prepare_media_run(plan); result=execute_run(self.project,run["run_id"])
+        self.assertEqual(result["state"],"COMPLETED")
+        self.assertEqual([item["source_id"] for item in result["source_results"]],[item["source_id"] for item in sources])
+        self.assertEqual(calls,[item["source_id"] for item in sources])
+        self.assertEqual([item["state"] for item in result["source_results"]],["COMPLETED","COMPLETED"])
+
+    def test_multi_source_good_corrupt_records_every_source_and_preserves_good_output(self):
+        plan,sources=self.local_media_plan("good.wav","corrupt.mp3")
+        calls,runner=self.source_job_runner(failed={sources[1]["source_id"]})
+        with patch("integra_core.application_runtime.run_job",side_effect=runner):
+            run=self.prepare_media_run(plan); result=execute_run(self.project,run["run_id"])
+        self.assertEqual(result["state"],"FAILED")
+        self.assertEqual(calls,[item["source_id"] for item in sources])
+        self.assertEqual([item["state"] for item in result["source_results"]],["COMPLETED","FAILED"])
+        self.assertTrue(Path(result["source_results"][0]["outputs"]["transcript"]).is_file())
+        self.assertEqual(result["source_results"][1]["outputs"],{})
+        self.assertIn("controlled corrupt-source failure",result["source_results"][1]["error"])
+
+    def test_multi_source_good_fail_good_continues_later_independent_source(self):
+        plan,sources=self.local_media_plan("first.wav","failed.mp3","later.wav")
+        calls,runner=self.source_job_runner(failed={sources[1]["source_id"]})
+        with patch("integra_core.application_runtime.run_job",side_effect=runner):
+            run=self.prepare_media_run(plan); result=execute_run(self.project,run["run_id"])
+        self.assertEqual(result["state"],"FAILED")
+        self.assertEqual(calls,[item["source_id"] for item in sources])
+        self.assertEqual([item["state"] for item in result["source_results"]],["COMPLETED","FAILED","COMPLETED"])
+        self.assertEqual(result["completed_sources"],2)
+
+    def test_multi_source_fail_good_is_truthfully_failed_but_runs_later_source(self):
+        plan,sources=self.local_media_plan("failed.mp3","later.wav")
+        calls,runner=self.source_job_runner(failed={sources[0]["source_id"]})
+        with patch("integra_core.application_runtime.run_job",side_effect=runner):
+            run=self.prepare_media_run(plan); result=execute_run(self.project,run["run_id"])
+        self.assertEqual(result["state"],"FAILED")
+        self.assertEqual(calls,[item["source_id"] for item in sources])
+        self.assertEqual([item["state"] for item in result["source_results"]],["FAILED","COMPLETED"])
+
+    def test_multi_source_retry_keeps_prior_success_artifacts_and_never_reuses_failed_success(self):
+        plan,sources=self.local_media_plan("good.wav","failed.mp3","later.wav")
+        first_calls,first_runner=self.source_job_runner(failed={sources[1]["source_id"]},reused={sources[0]["source_id"]})
+        with patch("integra_core.application_runtime.run_job",side_effect=first_runner):
+            first=self.prepare_media_run(plan); failed=execute_run(self.project,first["run_id"])
+        retained=Path(failed["source_results"][0]["outputs"]["transcript"])
+        self.assertTrue(retained.is_file())
+        self.assertNotIn("asr_reuse",failed["source_results"][1])
+        second_calls,second_runner=self.source_job_runner(reused={sources[0]["source_id"],sources[2]["source_id"]})
+        with patch("integra_core.application_runtime.run_job",side_effect=second_runner):
+            retry=self.prepare_media_run(plan); completed=execute_run(self.project,retry["run_id"])
+        self.assertEqual(completed["state"],"COMPLETED")
+        self.assertEqual(second_calls,[item["source_id"] for item in sources])
+        self.assertTrue(retained.is_file())
+        self.assertEqual(completed["source_results"][1]["state"],"COMPLETED")
+        self.assertEqual(first_calls,[item["source_id"] for item in sources])
+
+    def test_multi_source_cancellation_stops_remaining_sources_and_preserves_preceding_result(self):
+        plan,sources=self.local_media_plan("good.wav","cancel.wav","later.wav")
+        calls,runner=self.source_job_runner(cancelled={sources[1]["source_id"]})
+        with patch("integra_core.application_runtime.run_job",side_effect=runner):
+            run=self.prepare_media_run(plan); result=execute_run(self.project,run["run_id"])
+        self.assertEqual(result["state"],"CANCELLED")
+        self.assertEqual(calls,[item["source_id"] for item in sources[:2]])
+        self.assertEqual([item["state"] for item in result["source_results"]],["COMPLETED","CANCELLED"])
+        self.assertTrue(Path(result["source_results"][0]["outputs"]["transcript"]).is_file())
 
     def test_fails_closed_when_source_changes_after_plan_creation(self):
         source_path=self.root/"notes.md"; source_path.write_text("first")
