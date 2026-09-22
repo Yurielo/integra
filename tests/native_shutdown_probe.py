@@ -87,12 +87,13 @@ try:
     native = subprocess.Popen([str(binary)], env=environment)
     try:
         deadline = time.monotonic() + 30
-        while not failure.exists() and time.monotonic() < deadline and native.poll() is None: time.sleep(.05)
-        assert failure.exists(), "native shutdown failure was not visible"
-        assert native.poll() is None and not terminated.exists(), "native app exited without verified cancellation"
+        while not (failure.exists() or terminated.exists()) and time.monotonic() < deadline and native.poll() is None: time.sleep(.05)
         assert unrelated.poll() is None, "ambiguous PID was signalled"
-        assert json.loads(run_path.read_text())["state"] == "RUNNING", "ambiguous run was falsely cancelled"
-        print("INTEGRA_NATIVE_AMBIGUOUS_SHUTDOWN: PASS", flush=True)
+        reconciled = json.loads(run_path.read_text())
+        assert reconciled["state"] == "FAILED", reconciled
+        assert reconciled["recovery"]["classification"] == "STALE_RUNNING_RECONCILED", reconciled
+        assert terminated.exists() and not failure.exists(), "stale run was not safely reconciled before native quit"
+        print("INTEGRA_NATIVE_STALE_RUNNING_RECONCILED: PASS", flush=True)
     finally:
         # Only this test-owned UI process is terminated after the failure check.
         native.terminate(); native.wait(timeout=5)

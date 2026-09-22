@@ -254,6 +254,56 @@ def _signal_owned(identity: dict, sig: int) -> None:
             pass
 
 
+def terminate_owned_subprocess_tree(root_pid: int, *, timeout: float = 8) -> dict:
+    """Boundedly stop the live descendant tree of a known app-owned Popen root.
+
+    This is deliberately narrower than a process-name or process-group sweep:
+    every signalled PID must be captured through its current kernel birth
+    identity and ancestry from ``root_pid`` before the tree is frozen.
+    """
+    if not isinstance(root_pid, int) or root_pid <= 0:
+        raise ValueError("Owned subprocess PID is invalid")
+    timeout = float(timeout)
+    if timeout <= 0 or timeout != timeout or timeout == float("inf"):
+        raise ValueError("Owned subprocess cleanup timeout is invalid")
+    snapshot = process_snapshot()
+    root = snapshot.get(root_pid)
+    if root is None:
+        return {"state": "ROOT_NOT_LIVE", "terminated_pids": []}
+    owned = {root_pid: root}
+    stopped_by_us = {}
+    started = time.monotonic()
+    try:
+        while True:
+            snapshot = process_snapshot()
+            _descendants(snapshot, owned)
+            living = [(item, snapshot[item["pid"]]) for item in owned.values()
+                      if same_birth(item, snapshot.get(item["pid"]))]
+            if not living or all(current["stopped"] for _, current in living):
+                break
+            if time.monotonic() - started >= timeout:
+                raise ValueError("Owned subprocess tree did not freeze before cleanup timeout")
+            for item, current in living:
+                if not current["stopped"]:
+                    _signal_owned(item, signal.SIGSTOP)
+                    stopped_by_us[item["pid"]] = item
+            time.sleep(.01)
+        for item, _ in reversed(living):
+            _signal_owned(item, signal.SIGKILL)
+        while True:
+            snapshot = process_snapshot()
+            if not any(same_birth(item, snapshot.get(item["pid"])) for item in owned.values()):
+                return {"state": "TERMINATED", "terminated_pids": sorted(owned)}
+            if time.monotonic() - started >= timeout:
+                raise ValueError("Owned subprocess tree did not terminate before cleanup timeout")
+            time.sleep(.01)
+    finally:
+        # If a bounded cleanup cannot complete, never leave an exact captured
+        # process suspended. PID reuse protection remains inside _signal_owned.
+        for item in stopped_by_us.values():
+            _signal_owned(item, signal.SIGCONT)
+
+
 def cancel_run(project_dir: Path, run_id: str, *, timeout: float = 8) -> dict:
     from .application_runtime import run_path
     path = run_path(project_dir, run_id)

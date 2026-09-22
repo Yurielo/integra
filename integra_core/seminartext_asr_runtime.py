@@ -113,6 +113,17 @@ def preflight(ffmpeg: Path, whisper: Path, model: Path, vad_model: Path | None =
 
 
 def _stop(process: subprocess.Popen) -> None:
+    # Capture descendants before terminating the CLI session. A recognizer can
+    # create its own session; after its direct parent exits it would otherwise
+    # be reparented and no longer safely attributable to this app-owned Popen.
+    from .shutdown_runtime import terminate_owned_subprocess_tree
+    cleanup = terminate_owned_subprocess_tree(process.pid, timeout=4)
+    if cleanup["state"] == "TERMINATED":
+        # The identity-verified tree is gone.  Do not subsequently signal its
+        # former process group: on macOS a now-dead session leader can yield
+        # EPERM, which would mask the truthful watchdog timeout.
+        process.wait(timeout=5)
+        return
     for sig, timeout in ((signal.SIGTERM, 2), (signal.SIGKILL, 2)):
         try:
             os.killpg(process.pid, sig)
