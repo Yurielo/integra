@@ -16,7 +16,7 @@ from integra_core.publishing import preview_obsidian_export, publish_obsidian_ex
 from integra_core.user_media import _parse_srt, ffmpeg_preflight, import_source, preflight, run_job
 from integra_core.capabilities import build_plan, capability_registry, detect_source
 from integra_core.application_runtime import execute_run, prepare_run, read_run, run_path
-from integra_core.shutdown_runtime import cancel_run, register_worker, requires_shutdown
+from integra_core.shutdown_runtime import cancel_run, reconcile_stale_runs, register_worker, requires_shutdown, run_with_timeout
 from integra_core.seminartext_runtime import preflight as seminartext_preflight
 from integra_core.seminartext_evidence_runtime import prepare_transcript_review, apply_human_transcript_review, prepare_topic_review_input
 
@@ -119,6 +119,17 @@ def _spawn_plan(root, project_id, run_id):
         raise
     return record
 
+
+def _plan_timeout_seconds():
+    raw = os.environ.get("INTEGRA_PLAN_TIMEOUT_SECONDS", "1800")
+    try:
+        value = float(raw)
+    except (TypeError, ValueError) as error:
+        raise ValueError("plan timeout must be a finite positive number") from error
+    if value <= 0 or value != value or value == float("inf") or value > 7200:
+        raise ValueError("plan timeout must be a finite positive number no greater than 7200 seconds")
+    return value
+
 def _execute_plan(root,request):
     with _run_lifecycle(root, wait=False):
         plan=request.get("plan"); name=request.get("name") or "Новая обработка"
@@ -134,7 +145,13 @@ def _run_lifecycle(root, *, wait):
         except BlockingIOError as error: raise ValueError("Cannot start processing while shutdown is in progress") from error
         yield
 
+
+def _reconcile_stale(root):
+    with _run_lifecycle(root, wait=True):
+        return reconcile_stale_runs(root)
+
 def _run_action(root,request,action):
+    _reconcile_stale(root)
     project_id=request.get("project_id"); project_dir=_project_dir(root,_project(root,project_id)["project_id"]); record=read_run(project_dir,request.get("run_id"))
     if action=="status": return record
     if action=="cancel":
@@ -143,7 +160,9 @@ def _run_action(root,request,action):
     with _run_lifecycle(root, wait=False):
         new=prepare_run(project_dir,record["plan"]); return _spawn_plan(root,project_id,new["run_id"])
 
-def _recent_runs(root):
+def _recent_runs(root, *, reconcile=True):
+    if reconcile:
+        _reconcile_stale(root)
     result=[]
     for project in _projects(root):
         directory=_project_dir(root,project["project_id"])/"runs"
@@ -157,9 +176,10 @@ def _shutdown_active_runs(root):
         return _shutdown_active_runs_locked(root)
 
 def _shutdown_active_runs_locked(root):
+    reconcile_stale_runs(root)
     stopped=[]
     failures=[]
-    for item in _recent_runs(root):
+    for item in _recent_runs(root, reconcile=False):
         try:
             directory=_project_dir(root,item["project"]["project_id"])
             if not requires_shutdown(run_path(directory,item["run"]["run_id"]),item["run"]): continue
@@ -534,7 +554,11 @@ def main():
         elif operation == "capability-registry": result = capability_registry(request.get("sources", []))
         elif operation == "build-plan": result = build_plan(request.get("sources", []), request.get("selected_outputs", []))
         elif operation == "execute-plan": result = _execute_plan(root, request)
-        elif operation == "process-plan": result = execute_run(_project_dir(root, request.get("project_id")), request.get("run_id"))
+        elif operation == "process-plan":
+            result = run_with_timeout(
+                lambda: execute_run(_project_dir(root, request.get("project_id")), request.get("run_id")),
+                _plan_timeout_seconds(),
+            )
         elif operation == "run-status": result = _run_action(root, request, "status")
         elif operation == "recent-runs": result = _recent_runs(root)
         elif operation == "shutdown-active-runs": result = _shutdown_active_runs(root)

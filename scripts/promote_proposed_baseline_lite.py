@@ -27,7 +27,13 @@ def main() -> int:
     current_path = ROOT / "state/current_product_baseline_v2.json"
     current = load(current_path)
     proposal = load(args.proposal)
-    errors = validate_current(current, ROOT) + validate_proposal(proposal, current, ROOT) + verify_promotion_material(proposal, ROOT)
+    # CURRENT must be evaluated in the active PROPOSED context: the proposal
+    # verifier, not a historical CURRENT byte check, owns the declared A delta.
+    # Pass the actual record path as well, because material validation proves
+    # that the declaration commit contains only this file.
+    errors = (validate_current(current, ROOT, proposal)
+              + validate_proposal(proposal, current, ROOT)
+              + verify_promotion_material(proposal, ROOT, args.proposal))
     if errors:
         print("PROMOTION: FAIL")
         print("\n".join(f"- {item}" for item in errors))

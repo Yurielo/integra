@@ -1,0 +1,97 @@
+# Recovery WP — historical reconciled evidence
+
+> This record was created on the #162 lineage rooted at `2af7de5`. It preserves
+> reusable Recovery evidence and does not identify the current WP1/main baseline.
+> `PROCESS_V1_WP1_EXISTING_PROOF_AND_RECOVERY.md` is the current-main ledger.
+
+Status: `IN_PROGRESS`. This is technical evidence only; it does not create a
+CURRENT record, promote Recovery, or assert `USER_ACCEPTED`.
+
+## Reconciliation
+
+Recovery repair commit `242e70517bb345e74b84086994639a919daa511a` was replayed
+without semantic edits onto authoritative `main`
+`2af7de54964d267ff47267f9e43bb9c0b41973ac` as this branch's parent repair
+commit. The product diff remains exactly three files:
+
+- `integra_core/shutdown_runtime.py` — bounded plan timeout and stale-run
+  reconciliation;
+- `macos/Resources/bridge.py` — re-entry reconciliation and bounded wrapper;
+- `tests/test_recovery_contract.py` — deterministic lifecycle regressions.
+
+No ASR parameters, component pins, or Recovery contract semantics changed.
+
+## Governed runtime restoration and non-skipped reuse ledger
+
+The formerly skipped ASR reuse suite was run against the existing exact
+governed SeminarText checkout, without copying or modifying it:
+
+| Binding | Verified value |
+| --- | --- |
+| SeminarText checkout commit | `970bde598ddd649599295139986933e0e06cb9c0` |
+| `seminartext` SHA-256 | `f7f411bf106341ae970bc40d759e1e3c964273b977bdb12d0f1840e629def13a` |
+| Silero VAD SHA-256 | `29940d98d42b91fbd05ce489f3ecf7c72f0a42f027e4875919a28fb4c04ea2cf` |
+
+Command (with exact checkout, verified VAD, and an already governed bundled
+VideoText subtitle runtime supplied only for the production adapter preflight):
+
+```text
+python3 -m unittest tests.test_asr_reuse -v
+```
+
+Result: **12 run, 12 passed, 0 skipped**.
+
+Those cases prove exact-identity reuse; source/model/engine/config invalidation;
+tampered, missing, incomplete and symlinked cache rejection; downstream
+failure does not discard the valid upstream ASR; cancellation does not become
+success; and concurrent cache locking. They replace the prior incorrect use of
+skips as evidence. A final Candidate-bound rerun is still required before the
+Recovery proposal can be valid.
+
+## Candidate state
+
+An initial build attempt proved the old default local SeminarText path was the
+historical `a94936c…` checkout and was correctly rejected. The controlled
+attempt uses the exact checkout above and a clean detached VideoText checkout
+at its already pinned commit. No product source or pin was modified. The next
+section will record one fresh isolated build attempt and its complete result.
+
+## Controlled fresh candidate-build result
+
+One fresh isolated build was started at
+`/private/tmp/integra161-pty-candidate/Integra.app` using only explicit,
+verified inputs:
+
+- exact SeminarText checkout and SHA-256 tuple above;
+- clean detached VideoText checkout at
+  `2e098d1705b6815628bee1e023f4742718eabf02`, whose
+  `TranslationAdapter.swift` SHA-256 is the build-script expected
+  `83e55d3cb82522cb431ee20617510b0c39f79ae0fa5309daedf5c7ff9911a577`;
+- existing pinned BookText and Word Alignment locations.
+
+The build reached the VideoText `swiftc` invocation for the production
+`translation-worker`. The execution host then terminated the controlled PTY
+session before that compilation completed. The isolated app has neither
+`runtime/seminartext/runtime.json` nor `candidate-manifest.json`; it is not a
+Candidate and no identity/evidence is claimed from it. This is an environment
+interruption, not a Recovery defect or a failed pin/integrity check.
+
+Per Owner Direction, no second repair cycle was spent. A fresh host/session
+capable of allowing the bounded native compiler to complete is required before
+any Candidate gates, strict PROPOSED record, or owner handoff can be valid.
+
+## Gate ledger
+
+| Mandatory gate | Current state |
+| --- | --- |
+| non-skipped ASR reuse/invalidation | PASS — source-bound; final Candidate rerun pending |
+| recovery targeted matrix | pending final Candidate |
+| realistic cancellation/failure → success and orphan cleanup | pending final Candidate |
+| Finder-like deterministic and realistic primary journeys | pending final Candidate |
+| owner-derived Word Timeline regression | pending final Candidate |
+| native self-test | pending final Candidate |
+| strict PROPOSED validation | pending final Candidate evidence |
+
+No mandatory pending row is reported as PASS. The fresh candidate build could
+not finish, so this work stops `BLOCKED_ENVIRONMENT`, without consuming repair
+cycle 2.

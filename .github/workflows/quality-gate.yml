@@ -14,6 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Proposed Baseline Lite verifies exact CURRENT → A → B Git lineage.
+          fetch-depth: 0
+          # Validate the declared proposal commit, never GitHub's synthetic PR
+          # merge ref (which would alter the declaration-only parent check).
+          ref: ${{ github.event.pull_request.head.sha }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"

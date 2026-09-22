@@ -109,18 +109,18 @@ Candidate proof. `NOT_DONE` means a required connection/output/control is absent
 | USER OUTCOME | CURRENT STATE | EXISTING CAPABILITY / EVIDENCE | REQUIRED TRANSITION | ACCEPTANCE GATE |
 | --- | --- | --- | --- | --- |
 | Local video | DONE | S01 + V03; P156 accepted bounded local Russian-video result | Retain exact path in frozen scope | Final Candidate includes representative local video. |
-| Local audio | IN_PROGRESS | S01/V01/V03 current local-media path; P156 is video only | Verify real audio TXT/SRT/provenance | Packaged audio journey. |
-| Several local files | IN_PROGRESS | S06 sequential source plan | Verify ordered multi-file behavior | Packaged ordered run, per-source state, partial-failure truth. |
+| Local audio | DONE | S01/V01/V03 current local-media path; Issue #169 candidate `candidate-v1-17f50c…` completed public natural-Russian packaged audio with TXT/SRT, Word Timeline, Topics, and persisted navigation | Retain exact local-audio route in frozen scope | Packaged audio journey: Issue #169 result/evidence hashes in `PROCESS_V1_WP1_EXISTING_PROOF_AND_RECOVERY.md`. |
+| Several local files | NOT_DONE | S06 sequential source plan executes inputs in order, but Issue #169 Candidate evidence shows a completed first source followed by a run-level failure without a structured failed `source_result` for the second selected source | Repair bounded multi-source failure isolation; preserve existing sequential execution | Packaged ordered run with a truthful terminal state and a distinct state/result for every selected source, including a failed peer. |
 | Folder discovery/confirmation | NOT_DONE | S06 partial only; no generic folder discovery correspondence | Integrate selected folder discovery → preview/select → confirmation | Packaged folder journey with only confirmed supported files processed. |
 | Zoom folder | NOT_DONE | S07 source discovery exists; no current planner connection | Integrate bounded Zoom discovery | Packaged Zoom-folder discovery/selection journey. |
-| One YouTube video | IN_PROGRESS | S08; `youtube_runtime → app → media` path | Verify permissible URL journey | Packaged non-private URL source record and result. |
+| One YouTube video | DONE | S08; Issue #169 Candidate downloaded public non-private `jNQXAC9IVRw` through `youtube_runtime → app → media`, with owned media and hash-bound source record | Retain exact selected-video path | Packaged source record and owned downloaded-media hashes in `PROCESS_V1_WP1_EXISTING_PROOF_AND_RECOVERY.md`. |
 | YouTube playlist | NOT_DONE | S08 and S10 partial; owner now fixed semantics | Integrate ordered discovery, preview/selection and independent per-video ProcessedSources | Packaged playlist with one failed/unavailable item not falsely failing selected peers. |
 | Automatic TXT transcript | DONE | S01; P156 accepted bounded result | Retain pinned CLI path | Final Candidate representative transcript. |
 | SRT | DONE | V03; P156 persisted SRT | Retain selected SRT service | Final Candidate SRT bound to transcript/media. |
 | Word Timeline | DONE | P156 real aligned output; S19 composite row remains VERIFY only for Evidence linkage | Keep alignment/provenance separate from later Evidence | Final Candidate timeline hash/time navigation; no Canonical Evidence requirement. |
 | Careful ASR mode | NOT_DONE | S04 exists; selector absent | Integrate bounded mode selection/config recording | Selected mode in GUI, runtime record and result. |
 | Protective retry | IN_PROGRESS | S02 pinned CLI quality gate/retry | Verify packaged trigger → retry | Controlled contextual/fuzzy trigger with retry evidence. |
-| Clean TXT | IN_PROGRESS | S03 persisted derivative path | Verify output/opening/provenance | Candidate derivative linked to original transcript. |
+| Clean TXT | DONE | S03; Issue #169 ordered Candidate run persisted readable `transcript_cleaned`, raw TXT, ASR record and source-linked SRT; all listed artifact hashes were reread by a fresh packaged bridge | Retain source-linked derivative route | Candidate artifact hashes in `PROCESS_V1_WP1_EXISTING_PROOF_AND_RECOVERY.md`; this does not assert human review or source replacement. |
 | Review TXT | IN_PROGRESS | S03 persisted derivative/output actions | Verify review artifact behavior | Candidate opening/provenance without source replacement. |
 | Source-speech language | NOT_DONE | V02 source capability; control not connected | Integrate supported source-language selection | GUI selection and recorded runtime configuration. |
 | ASR quality settings | NOT_DONE | S04/V02 exist; no documented control | Integrate bounded settings without changing defaults by implication | Selected settings and provenance in Candidate. |
@@ -134,15 +134,15 @@ Candidate proof. `NOT_DONE` means a required connection/output/control is absent
 | Topic summary | NOT_DONE | S12 partial; S13 detail capability exists | Integrate defined summary output | Summary bound to source spans. |
 | Topic detail choice | NOT_DONE | S13 exists; selector absent | Integrate bounded detail selection | Selected detail config/results. |
 | Topic edit/confirm | IN_PROGRESS | S20 review path exists | Verify actual review dialog and exact decision behavior | Packaged human review with authority status. |
-| Ordered processing | IN_PROGRESS | S06 plan | Verify ordering/failure behavior | Candidate evidence for configured order. |
+| Ordered processing | NOT_DONE | Issue #169 Candidate plan retained configured order and preserved its first completed result, but stopped on the corrupted second input and omitted that source from `source_results` | Repair bounded multi-source failure isolation; do not replace the sequential planner | Candidate proof that each selected item has ordered, explicit completed/failed status and later selected items follow the defined failure policy. |
 | Combined transcript | NOT_DONE | S11 exists; current adapter uses single source | Integrate combined-clear output | Chronological output and completeness boundary. |
 | Combined provenance | NOT_DONE | S11 manifest/provenance exists; no app path | Integrate provenance output | Source/time trace for each combined passage. |
 | Multi-source corpus | NOT_DONE | S10 exists; queue is not corpus | Integrate explicit corpus membership | Corpus completeness/provenance proof. |
 | Unified results screen | IN_PROGRESS | Bounded P156 native result composition | Verify all selected Process results together | Packaged result view; unavailable outputs honestly labeled. |
 | Open result | IN_PROGRESS | S03/V03 output actions; P156 accessible results | Verify selected output access | Open actual produced Process artifacts from GUI. |
 | Reopen after restart | IN_PROGRESS | V21 project/run records | Verify no hidden rerun after relaunch | Candidate close/relaunch/reopen proof. |
-| Reuse intermediates | IN_PROGRESS | V21 / `asr_reuse` | Verify valid reuse | Candidate reuse identity evidence. |
-| Invalidation | IN_PROGRESS | V21 governed invalidation | Verify mismatch invalidation | Candidate source/model/config-change evidence; no skip. |
+| Reuse intermediates | DONE | V21 / `asr_reuse`; preserved Recovery evidence is 12/12 passed, 0 skipped and its relevant reuse implementation is byte-identical in Candidate source A; Candidate native retry additionally reports `REUSED` without a second ASR invocation | Retain governed cache route | Bound 12/12 ledger plus Candidate native retry recorded in `PROCESS_V1_WP1_EXISTING_PROOF_AND_RECOVERY.md`. |
+| Invalidation | DONE | V21 governed invalidation; preserved 12/12 Recovery matrix covers source/model/config mismatch with 0 skips, and the relevant implementation is byte-identical in Candidate source A | Retain governed invalidation route | Source-bound 12/12 matrix, exact Candidate source-A comparison, and no skipped scenario; no new rerun because runtime identity did not change. |
 | Ordinary-file export | IN_PROGRESS | S01/S03/V03 persisted files | Verify selected output export | Ordinary Process files, not publication. |
 | Cancel | IN_PROGRESS | V21 lifecycle | Verify controlled cancel | Terminal Cancelled state and diagnostics. |
 | Retry after failure | IN_PROGRESS | V21 plus narrower S02 | Verify user retry separately from protective retry | Controlled failure → retry. |
@@ -150,12 +150,12 @@ Candidate proof. `NOT_DONE` means a required connection/output/control is absent
 | Timeout | IN_PROGRESS | V21 lifecycle evidence | Verify bounded timeout | Timed-out worker has truthful terminal state. |
 | No orphan workers | IN_PROGRESS | V21 shutdown lifecycle | Verify cleanup across completion/failure/cancel | Candidate process audit after each case. |
 | Reconcile stale RUNNING | IN_PROGRESS | V21 persisted state | Verify relaunch reconciliation | No false completion/lost artifact. |
-| Preserve upstream result | IN_PROGRESS | V21 persisted output path | Verify downstream-failure preservation | Existing valid upstream artifact remains reopenable/reusable. |
+| Preserve upstream result | DONE | Issue #169 controlled multi-input Candidate run preserved the completed first source's transcript/SRT/clean/review/ASR artifacts after the later source failed; a fresh packaged bridge reread their hashes | Retain persisted-output route | Candidate multi-input and fresh-reopen evidence in `PROCESS_V1_WP1_EXISTING_PROOF_AND_RECOVERY.md`. |
 | GUI-only normal use | IN_PROGRESS | P156 native bounded path | Verify complete selected scope via Finder-like GUI | No Terminal/Codex step in exit journey. |
 | Selected-Capability Runtime Closure (covers preflight, clear missing-dependency error, unavailable-before-run) | BLOCKED | Current registry has availability flags but eagerly probes broad runtimes; build/manifest includes broad closure | Bounded isolation retaining selected real dependencies, exact pins, Candidate integrity | Required selected dependencies only; honest unavailable state; actionable GUI error; no raw CLI/Python error; no integrity bypass. |
 | Real progress | IN_PROGRESS | Current job progress → bridge/UI path | Verify non-trivial selected run | Observable progress evidence. |
 | Clear statuses | IN_PROGRESS | V21 run/job state records | Verify all terminal/intermediate states | Processing/Completed/Failed/Cancelled controlled paths. |
-| Select outputs before run | IN_PROGRESS | `capabilities.build_plan → app.execute_run` | Verify selected closure only | Selection/config/result evidence. |
+| Select outputs before run | DONE | Issue #169 Candidate selected exactly `transcript, subtitles`; its stored plan contained only those requested outputs and the completed source emitted no Timeline/Topics/translation output | Retain selected-output planner | Candidate plan/result evidence in `PROCESS_V1_WP1_EXISTING_PROOF_AND_RECOVERY.md`. |
 
 ## D. Cross-cutting blockers
 

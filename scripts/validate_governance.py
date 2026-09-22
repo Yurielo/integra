@@ -2708,6 +2708,83 @@ def _historical_hash_is_superseded(
     return False
 
 
+def _proposal_declares_current_delta(
+    proposal: dict | None, path: str, current_sha256: str | None,
+) -> bool:
+    """Accept only a verified PROPOSED product byte, never a broad exemption.
+
+    ``verify_promotion_material`` independently proves the CURRENT→product-source
+    delta and that the evidence overlay has no product/runtime bytes.  This helper
+    merely lets immutable historical R12/R13 remain historical when that exact
+    declared byte is under the active proposal review.
+    """
+    if not isinstance(proposal, dict) or not isinstance(current_sha256, str):
+        return False
+    return any(isinstance(item, dict) and item.get("path") == path
+               and item.get("after_sha256") == current_sha256
+               for item in proposal.get("delta", []))
+
+
+def _promoted_current_v2_supersedes_historical_hash(
+    current: dict | None, root: Path, path: str, historical_sha256: str, current_sha256: str | None,
+) -> bool:
+    """Accept only a hash-closed CURRENT v2 successor of historical bytes.
+
+    A PROPOSED record is intentionally retired at promotion.  The active
+    CURRENT must therefore carry the same exact successor byte and an
+    immutable, hash-verified predecessor whose active record carried the
+    historical byte.  This is not a broad historical exemption.
+    """
+    if not isinstance(current, dict) or not isinstance(current_sha256, str):
+        return False
+    records = current.get("records")
+    active_id = current.get("current_id")
+    if not isinstance(records, list) or not isinstance(active_id, str):
+        return False
+    active = [item for item in records if isinstance(item, dict) and item.get("baseline_id") == active_id]
+    if len(active) != 1:
+        return False
+    active_record = active[0]
+    if not any(isinstance(item, dict) and item.get("path") == path and item.get("sha256") == current_sha256
+               for item in active_record.get("governed_files", [])):
+        return False
+    seen: set[str] = set()
+
+    def historical_payload_contains(payload: dict) -> bool:
+        """Follow only hash-verified predecessor links to the R12/R13 bytes."""
+        if payload.get("artifact_type") == "integra.current_product_baseline":
+            records = payload.get("records"); selected = payload.get("current_id")
+            if not isinstance(records, list) or not isinstance(selected, str):
+                return False
+            matches = [item for item in records if isinstance(item, dict) and item.get("baseline_id") == selected]
+            if len(matches) != 1:
+                return False
+            predecessors = matches[0].get("historical_predecessors")
+            if not isinstance(predecessors, list) or not predecessors:
+                return False
+            for predecessor in predecessors:
+                if not isinstance(predecessor, dict) or set(predecessor) != {"path", "sha256"}:
+                    continue
+                relative = predecessor.get("path")
+                if not isinstance(relative, str) or relative.startswith("/") or ".." in Path(relative).parts or relative in seen:
+                    continue
+                history_path = root / relative
+                try:
+                    if sha256_file(history_path) != predecessor.get("sha256"):
+                        continue
+                    seen.add(relative)
+                    prior = json.loads(history_path.read_bytes())
+                except (OSError, json.JSONDecodeError):
+                    continue
+                if isinstance(prior, dict) and historical_payload_contains(prior):
+                    return True
+            return False
+        return any(isinstance(item, dict) and item.get("path") == path and item.get("sha256") == historical_sha256
+                   for item in payload.get("implementation", []))
+
+    return historical_payload_contains(current)
+
+
 def validate_current_canonical_baseline(baseline: dict, root: Path = ROOT) -> list[str]:
     """Validate the current candidate-bound supersession contract.
 
@@ -2812,6 +2889,8 @@ def validate_native_macos_app_evidence(
     evidence: dict,
     root: Path = ROOT,
     current_baseline: dict | None = None,
+    proposal: dict | None = None,
+    current_product_baseline: dict | None = None,
 ) -> list[str]:
     errors: list[str] = []
     expected_fields = {"schema_version", "status", "issue", "dependencies", "implementation", "acceptance", "reference_mac", "safety", "limitations"}
@@ -2827,9 +2906,10 @@ def validate_native_macos_app_evidence(
             errors.append("R12 implementation reference differs"); continue
         paths.append(item["path"]); path = root / item["path"]
         current_sha = sha256_file(path) if path.is_file() else None
-        if current_sha != item["sha256"] and not _historical_hash_is_superseded(
+        if current_sha != item["sha256"] and not (_historical_hash_is_superseded(
             current_baseline, item["path"], item["sha256"], current_sha
-        ):
+        ) or _proposal_declares_current_delta(proposal, item["path"], current_sha)
+             or _promoted_current_v2_supersedes_historical_hash(current_product_baseline, root, item["path"], item["sha256"], current_sha)):
             errors.append(f"R12 implementation hash differs: {item['path']}")
     if set(paths) != EXPECTED_NATIVE_MACOS_APP_IMPLEMENTATION or len(paths) != len(set(paths)):
         errors.append("R12 implementation inventory must be exact")
@@ -2871,6 +2951,8 @@ def validate_ready_app_evidence(
     evidence: dict,
     root: Path = ROOT,
     current_baseline: dict | None = None,
+    proposal: dict | None = None,
+    current_product_baseline: dict | None = None,
 ) -> list[str]:
     errors=[]
     fields={"schema_version","status","issue","dependencies","implementation","acceptance","safety","limitations"}
@@ -2882,9 +2964,11 @@ def validate_ready_app_evidence(
         if not isinstance(item,dict) or set(item)!={"path","sha256"}: errors.append("R13 implementation reference differs"); continue
         paths.append(item["path"]); path=root/item["path"]
         current_sha = sha256_file(path) if path.is_file() else None
-        if current_sha != item["sha256"] and not _historical_hash_is_superseded(
+        if current_sha != item["sha256"] and not (_historical_hash_is_superseded(
             current_baseline, item["path"], item["sha256"], current_sha
-        ): errors.append(f"R13 implementation hash differs: {item['path']}")
+        ) or _proposal_declares_current_delta(proposal, item["path"], current_sha)
+             or _promoted_current_v2_supersedes_historical_hash(current_product_baseline, root, item["path"], item["sha256"], current_sha)):
+            errors.append(f"R13 implementation hash differs: {item['path']}")
     if set(paths)!=EXPECTED_READY_APP_IMPLEMENTATION or len(paths)!=len(set(paths)): errors.append("R13 implementation inventory must be exact")
     expected_acceptance={"backup_verification":True,"bridge_path_redaction":True,"bundle_identifier_final":True,"dependency_preflight":True,"local_ad_hoc_seal_verified":True,"minimum_macos_declared":True,"reproducible_tree_hash":True,"self_test_passed":True}
     if evidence.get("acceptance")!=expected_acceptance: errors.append("R13 acceptance differs")
@@ -2921,6 +3005,9 @@ def main() -> int:
     current_canonical_baseline = load_json(CURRENT_CANONICAL_BASELINE_PATH)
     current_product_baseline_v2 = load_json(CURRENT_PRODUCT_BASELINE_V2_PATH)
     proposed_baseline_path = os.environ.get("INTEGRA_PROPOSED_BASELINE")
+    default_proposal_path = ROOT / "state" / "proposed_baseline_lite_v1.json"
+    if proposed_baseline_path is None and default_proposal_path.is_file():
+        proposed_baseline_path = str(default_proposal_path)
     proposed_baseline = load_json(Path(proposed_baseline_path)) if proposed_baseline_path else None
     load_json(SCHEMA_PATH)
     load_json(BASELINES_SCHEMA_PATH)
@@ -2969,6 +3056,13 @@ def main() -> int:
     load_json(ROOT / "schemas/youtube_playlist_checkpoint_v1.schema.json")
     load_json(ROOT / "schemas/youtube_playlist_refresh_v1.schema.json")
     load_json(ROOT / "schemas/document_extraction_v1.schema.json")
+    proposal_status = None
+    proposal_errors: list[str] = []
+    if proposed_baseline is not None:
+        proposal_status, proposal_errors = proposal_state(proposed_baseline, current_product_baseline_v2, ROOT)
+        proposal_errors += verify_promotion_material(
+            proposed_baseline, ROOT, Path(proposed_baseline_path)
+        )
     errors = (
         validate_state(state)
         + validate_component_baselines(baselines)
@@ -2993,14 +3087,11 @@ def main() -> int:
         + validate_onedrive_publication_evidence(onedrive_publication)
         # v1 remains immutable historical R12/R13 supersession evidence. v2
         # is the active CURRENT byte contract.
-        + validate_current(current_product_baseline_v2, ROOT)
-        + validate_native_macos_app_evidence(native_macos_app, current_baseline=current_canonical_baseline)
-        + validate_ready_app_evidence(ready_app, current_baseline=current_canonical_baseline)
+        + validate_current(current_product_baseline_v2, ROOT, proposed_baseline)
+        + validate_native_macos_app_evidence(native_macos_app, current_baseline=current_canonical_baseline, proposal=proposed_baseline, current_product_baseline=current_product_baseline_v2)
+        + validate_ready_app_evidence(ready_app, current_baseline=current_canonical_baseline, proposal=proposed_baseline, current_product_baseline=current_product_baseline_v2)
+        + proposal_errors
     )
-    proposal_status = None
-    if proposed_baseline is not None:
-        proposal_status, proposal_errors = proposal_state(proposed_baseline, current_product_baseline_v2, ROOT)
-        errors += proposal_errors + verify_promotion_material(proposed_baseline, ROOT)
     if errors:
         print("INTEGRA_GOVERNANCE_VALIDATION: FAIL")
         for error in errors:
