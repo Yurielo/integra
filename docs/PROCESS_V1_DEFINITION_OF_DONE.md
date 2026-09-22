@@ -1,12 +1,28 @@
 # Process v1: canonical Definition of Done and Completion Board
 
-Date: 2026-09-22. Status: `PROCESS_V1_DOD_READY_FOR_OWNER_APPROVAL`.
-This is the canonical proposal for Product Owner review, not an implementation
-authorization, a change to Product Definition/CURRENT/roadmap, or an acceptance
-record. It uses the owner workbook, the published source-parity inventory,
-staged architecture review, and Process scope map only. No new capability audit,
-build, test, Candidate, GUI run, Recovery continuation, or product change was
-performed.
+Date: 2026-09-22. Status: `PROCESS_V1_DOD_FINALIZED`.
+This is the active vertical planning authority for **Phase 1 / Process v1**.
+It is not an implementation authorization, a change to Product Definition/
+CURRENT/roadmap, or an acceptance record. It uses the owner workbook, the
+published source-parity inventory, staged architecture review, and Process scope
+map only. No new capability audit, build, test, Candidate, GUI run, Recovery
+continuation, or product change was performed.
+
+## Authority and execution progression
+
+The Product Definition remains the higher-level product authority; this document
+does not replace it. For Phase 1, the frozen scope is exactly 50 MUST, 5 OPTIONAL,
+13 LATER, and 17 BookText entries
+`OUT_OF_PROCESS_V1_PENDING_PROCESS_DOCUMENTS`. #150, #151, #157 and earlier
+planning documents remain historical/decision evidence. They cannot independently
+expand this frozen Process v1 scope.
+
+Only a new explicit Product Owner decision may change the Process v1 scope. The
+next implementation WP must be selected from the Completion Board. No WP2/WP3 is
+created in advance: after each coherent WP, update the Board from evidence and
+only then select the next WP. The first next WP after this document is merged is
+**Existing Process Proof + Recovery Closure**, prioritizing `VERIFY_EXISTING`
+while preserving the already obtained #161/#162 evidence.
 
 ## A. Product outcome
 
