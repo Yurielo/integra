@@ -193,6 +193,35 @@ class ShutdownRuntimeTests(unittest.TestCase):
         finally:
             original(child_identity, signal.SIGKILL)
 
+    def test_known_subprocess_tree_stops_session_escaping_descendant_only(self):
+        child_pid = self.root / "timeout-child.pid"
+        code = (
+            "import os, subprocess, sys, time; from pathlib import Path; "
+            f"child=subprocess.Popen([sys.executable,'-c','import time; time.sleep(30)'],start_new_session=True); "
+            f"Path({str(child_pid)!r}).write_text(str(child.pid)); time.sleep(30)"
+        )
+        root = subprocess.Popen([sys.executable, "-c", code], start_new_session=True)
+        unrelated = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"],
+                                     start_new_session=True)
+        try:
+            self.wait_for_file(child_pid)
+            child = int(child_pid.read_text())
+            self.assertIn(root.pid, shutdown.process_snapshot())
+            self.assertIn(child, shutdown.process_snapshot())
+            result = shutdown.terminate_owned_subprocess_tree(root.pid)
+            self.assertEqual(result["state"], "TERMINATED")
+            self.assertIn(child, result["terminated_pids"])
+            root.wait(timeout=5)
+            self.assertNotIn(child, shutdown.process_snapshot())
+            self.assertIsNone(unrelated.poll())
+        finally:
+            if root.poll() is None:
+                root.kill()
+                root.wait(timeout=5)
+            if unrelated.poll() is None:
+                unrelated.kill()
+                unrelated.wait(timeout=5)
+
     def test_bridge_rejects_new_run_while_shutdown_lock_is_held(self):
         app_data = self.root / "app-data"; app_data.mkdir()
         bridge = Path(__file__).resolve().parents[1] / "macos/Resources/bridge.py"
