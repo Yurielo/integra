@@ -52,6 +52,30 @@ attempt uses the exact checkout above and a clean detached VideoText checkout
 at its already pinned commit. No product source or pin was modified. The next
 section will record one fresh isolated build attempt and its complete result.
 
+## Controlled fresh candidate-build result
+
+One fresh isolated build was started at
+`/private/tmp/integra161-pty-candidate/Integra.app` using only explicit,
+verified inputs:
+
+- exact SeminarText checkout and SHA-256 tuple above;
+- clean detached VideoText checkout at
+  `2e098d1705b6815628bee1e023f4742718eabf02`, whose
+  `TranslationAdapter.swift` SHA-256 is the build-script expected
+  `83e55d3cb82522cb431ee20617510b0c39f79ae0fa5309daedf5c7ff9911a577`;
+- existing pinned BookText and Word Alignment locations.
+
+The build reached the VideoText `swiftc` invocation for the production
+`translation-worker`. The execution host then terminated the controlled PTY
+session before that compilation completed. The isolated app has neither
+`runtime/seminartext/runtime.json` nor `candidate-manifest.json`; it is not a
+Candidate and no identity/evidence is claimed from it. This is an environment
+interruption, not a Recovery defect or a failed pin/integrity check.
+
+Per Owner Direction, no second repair cycle was spent. A fresh host/session
+capable of allowing the bounded native compiler to complete is required before
+any Candidate gates, strict PROPOSED record, or owner handoff can be valid.
+
 ## Gate ledger
 
 | Mandatory gate | Current state |
@@ -64,6 +88,6 @@ section will record one fresh isolated build attempt and its complete result.
 | native self-test | pending final Candidate |
 | strict PROPOSED validation | pending final Candidate evidence |
 
-No mandatory pending row is reported as PASS. If the fresh candidate build
-cannot finish, this work stops `BLOCKED_ENVIRONMENT`, without consuming repair
+No mandatory pending row is reported as PASS. The fresh candidate build could
+not finish, so this work stops `BLOCKED_ENVIRONMENT`, without consuming repair
 cycle 2.
