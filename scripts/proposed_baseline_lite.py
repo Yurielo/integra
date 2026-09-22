@@ -362,7 +362,10 @@ def next_current(current: dict[str, Any], proposal: dict[str, Any], owner_accept
         "acceptance": {"authority_ref": owner_acceptance_ref, "scope": "owner-authorized proposed baseline promotion", "decision": "USER_ACCEPTED"},
         "promotion_policy": "EXPLICIT_HUMAN_OWNER_AUTHORIZATION_REQUIRED",
         "promotion": {"issue_159_ref": "superseded-by-next-owner-promotion", "pull_160_ref": "superseded-by-next-owner-promotion", "accepted_report_head": proposal["proposed_head"]["commit_sha"]},
-        "historical_predecessors": [{"path": previous_current_path, "sha256": hashlib.sha256(json.dumps(current, sort_keys=True, separators=(",", ":")).encode()).hexdigest()}],
+        # Match the exact pretty-printed bytes the promotion helper writes to
+        # the immutable history file; hashing a different serialization would
+        # make a legitimate next CURRENT fail closed after preparation.
+        "historical_predecessors": [{"path": previous_current_path, "sha256": hashlib.sha256((json.dumps(current, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode()).hexdigest()}],
         "governed_files": [{"path": item["path"], "sha256": item["after_sha256"]} for item in proposal["delta"]],
     }
     result = json.loads(json.dumps(current))

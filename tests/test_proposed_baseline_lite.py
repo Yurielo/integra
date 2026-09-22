@@ -20,6 +20,7 @@ from proposed_baseline_lite import (  # noqa: E402
     validate_proposal,
     verify_promotion_material,
 )
+from validate_governance import _promoted_current_v2_supersedes_historical_hash  # noqa: E402
 
 
 class ProposedBaselineLiteTests(unittest.TestCase):
@@ -109,6 +110,27 @@ class ProposedBaselineLiteTests(unittest.TestCase):
         self.assertEqual(len(result["records"]), 2)
         self.assertEqual(result["current_id"], "current-v2-" + "3" * 64)
         self.assertEqual(result["records"][0], self.current["records"][0])
+
+    def test_promoted_current_history_hash_matches_written_bytes(self):
+        proposal = self.proposal()
+        result = next_current(self.current, proposal, "owner-ref", previous_current_path="state/history.json")
+        expected = json.dumps(self.current, ensure_ascii=False, sort_keys=True, indent=2).encode() + b"\n"
+        self.assertEqual(result["records"][-1]["historical_predecessors"][0]["sha256"],
+                         hashlib.sha256(expected).hexdigest())
+
+    def test_promoted_current_exactly_supersedes_hash_closed_history(self):
+        active = self.current["records"][0]
+        governed = active["governed_files"][0]
+        actual = hashlib.sha256((ROOT / governed["path"]).read_bytes()).hexdigest()
+        proposal = self.proposal()
+        proposal["delta"] = [{"path": governed["path"], "before_sha256": governed["sha256"], "after_sha256": actual}]
+        result = next_current(self.current, proposal, "owner-ref", previous_current_path="state/history.json")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); (root / "state").mkdir()
+            history = root / "state/history.json"
+            history.write_text(json.dumps(self.current, ensure_ascii=False, sort_keys=True, indent=2) + "\n")
+            self.assertTrue(_promoted_current_v2_supersedes_historical_hash(
+                result, root, governed["path"], governed["sha256"], actual))
 
     def test_branch_name_and_generic_technical_claim_are_not_authority_fields(self):
         proposal = self.proposal(); proposal["branch"] = "main"
