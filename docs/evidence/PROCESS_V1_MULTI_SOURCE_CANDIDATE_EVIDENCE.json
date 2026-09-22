@@ -1,0 +1,21 @@
+{
+  "artifact_type": "integra.candidate_evidence",
+  "candidate_id": "candidate-v1-589ef6063fd6d8b1bba248fce7fa1f8fa1494df17c4e930e7fc295f873686c1a",
+  "manifest_identity_sha256": "589ef6063fd6d8b1bba248fce7fa1f8fa1494df17c4e930e7fc295f873686c1a",
+  "bundle_digest": "9a902e47d83ef9e7e27f744d6438d885558cda53f8dba735d954544e100713a2",
+  "product_source": {
+    "commit_sha": "d93f0fa8dfda452a8817635c8cf58ee9ce93c330",
+    "tree_sha": "5d4f03a752e9e00136a6049161845b369d2588ba"
+  },
+  "gates": {
+    "candidate_manifest": "PASS",
+    "native_self_test": "PASS",
+    "deterministic_multi_source_matrix": "6/6 PASS; 0 skipped",
+    "focused_runtime_bridge_reuse_recovery_ui": "51 run; 20 environment skips; no required multi-source scenario skipped",
+    "packaged_finder_like_multi_source_failure_isolation": "PASS"
+  },
+  "evidence_hashes": {
+    "manifest": "9e0583a8f67b2631f635ab1544890374b204687670b0306926a08922fe2778e1",
+    "packaged_probe": "28c3e745bcc4e7c2b3c65aed5c2ca095a3d5dd39816f4aa7e27993c99f3b30d2"
+  }
+}
