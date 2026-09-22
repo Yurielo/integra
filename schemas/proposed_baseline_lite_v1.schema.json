@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Integra Proposed Baseline Lite v1",
+  "type": "object",
+  "required": ["schema_version", "artifact_type", "proposal_id", "status", "base_current_id", "base_main", "proposed_source", "proposed_head", "intended_scope", "candidate", "delta", "gates", "evidence", "owner_acceptance", "allowed_overlay_paths"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "artifact_type": {"const": "integra.proposed_product_baseline"},
+    "proposal_id": {"type": "string", "minLength": 1},
+    "status": {"const": "PROPOSED_BASELINE_VALID"},
+    "base_current_id": {"type": "string", "minLength": 1},
+    "base_main": {"type": "object"},
+    "proposed_source": {"type": "object"},
+    "proposed_head": {"type": "object"},
+    "intended_scope": {"type": "object"},
+    "candidate": {"type": "object"},
+    "delta": {"type": "array", "minItems": 1},
+    "gates": {"type": "array", "minItems": 1},
+    "evidence": {"type": "object"},
+    "owner_acceptance": {"type": "null"},
+    "allowed_overlay_paths": {"type": "array", "minItems": 1}
+  },
+  "additionalProperties": false
+}

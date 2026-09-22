@@ -4,12 +4,14 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "scripts"))
 
 from integra_core.benchmark import (  # noqa: E402
     BenchmarkValidationError,
@@ -66,6 +68,7 @@ from integra_core.multi_source_alignment import (  # noqa: E402
 from integra_core.identity import derive_imported_id  # noqa: E402
 from integra_core.protocol import content_sha256  # noqa: E402
 from scripts.check_agents import load_registry, validate_agent_team  # noqa: E402
+from proposed_baseline_lite import proposal_state, validate_current, verify_promotion_material  # noqa: E402
 
 
 STATE_PATH = ROOT / "state" / "integra_state_v1.json"
@@ -133,6 +136,9 @@ READY_APP_PATH = ROOT / "state" / "ready_app_v1.json"
 READY_APP_SCHEMA_PATH = ROOT / "schemas" / "ready_app_v1_evidence.schema.json"
 CURRENT_CANONICAL_BASELINE_PATH = ROOT / "state" / "current_canonical_baseline_v1.json"
 CURRENT_CANONICAL_BASELINE_SCHEMA_PATH = ROOT / "schemas" / "current_canonical_baseline_v1.schema.json"
+CURRENT_PRODUCT_BASELINE_V2_PATH = ROOT / "state" / "current_product_baseline_v2.json"
+CURRENT_PRODUCT_BASELINE_V2_SCHEMA_PATH = ROOT / "schemas" / "current_product_baseline_v2.schema.json"
+PROPOSED_BASELINE_LITE_SCHEMA_PATH = ROOT / "schemas" / "proposed_baseline_lite_v1.schema.json"
 CURRENT_CANONICAL_BASELINE_PARENT_MAIN = "8fce7a625cac3d57f0d197e2ea610241821452f5"
 CURRENT_CANONICAL_BASELINE_SOURCE_COMMIT = "573c27b5c32646e83250e8c93b204867f4fee3e4"
 CURRENT_CANONICAL_BASELINE_FILES = {
@@ -2913,6 +2919,9 @@ def main() -> int:
     native_macos_app = load_json(NATIVE_MACOS_APP_PATH)
     ready_app = load_json(READY_APP_PATH)
     current_canonical_baseline = load_json(CURRENT_CANONICAL_BASELINE_PATH)
+    current_product_baseline_v2 = load_json(CURRENT_PRODUCT_BASELINE_V2_PATH)
+    proposed_baseline_path = os.environ.get("INTEGRA_PROPOSED_BASELINE")
+    proposed_baseline = load_json(Path(proposed_baseline_path)) if proposed_baseline_path else None
     load_json(SCHEMA_PATH)
     load_json(BASELINES_SCHEMA_PATH)
     load_json(OWNERSHIP_SCHEMA_PATH)
@@ -2953,6 +2962,8 @@ def main() -> int:
     load_json(NATIVE_MACOS_APP_SCHEMA_PATH)
     load_json(READY_APP_SCHEMA_PATH)
     load_json(CURRENT_CANONICAL_BASELINE_SCHEMA_PATH)
+    load_json(CURRENT_PRODUCT_BASELINE_V2_SCHEMA_PATH)
+    load_json(PROPOSED_BASELINE_LITE_SCHEMA_PATH)
     load_json(ROOT / "schemas/youtube_playlist_snapshot_v1.schema.json")
     load_json(ROOT / "schemas/youtube_playlist_plan_v1.schema.json")
     load_json(ROOT / "schemas/youtube_playlist_checkpoint_v1.schema.json")
@@ -2980,16 +2991,25 @@ def main() -> int:
         + validate_cross_navigation_evidence(cross_navigation)
         + validate_obsidian_export_evidence(obsidian_export)
         + validate_onedrive_publication_evidence(onedrive_publication)
-        + validate_current_canonical_baseline(current_canonical_baseline)
+        # v1 remains immutable historical R12/R13 supersession evidence. v2
+        # is the active CURRENT byte contract.
+        + validate_current(current_product_baseline_v2, ROOT)
         + validate_native_macos_app_evidence(native_macos_app, current_baseline=current_canonical_baseline)
         + validate_ready_app_evidence(ready_app, current_baseline=current_canonical_baseline)
     )
+    proposal_status = None
+    if proposed_baseline is not None:
+        proposal_status, proposal_errors = proposal_state(proposed_baseline, current_product_baseline_v2, ROOT)
+        errors += proposal_errors + verify_promotion_material(proposed_baseline, ROOT)
     if errors:
         print("INTEGRA_GOVERNANCE_VALIDATION: FAIL")
         for error in errors:
             print(f"- {error}")
         return 1
     print("INTEGRA_GOVERNANCE_VALIDATION: PASS")
+    print("BASELINE_STATE: CURRENT_VALID")
+    if proposal_status is not None:
+        print(f"BASELINE_PROPOSAL_STATE: {proposal_status}")
     print(f"ROADMAP_ITEMS: {len(state['roadmap'])}")
     print(f"DELIVERY_TARGET: {state['delivery_target']['id']}")
     print(f"REQUIRED_MODULES: {len(state['release_scope']['required_modules'])}")
