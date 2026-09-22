@@ -928,7 +928,7 @@ struct SidebarItem {
       if outputs["subtitles"] as? String != nil,
         let projectID = projectID, let runID = runID, let sourceID = result["source_id"] as? String
       {
-        let control = button("Открыть видео/аудио с расшифровкой", #selector(showMediaNavigation(_:)))
+        let control = button("Открыть источник с расшифровкой", #selector(showMediaNavigation(_:)))
         control.toolTip = "\(projectID)\n\(runID)\n\(sourceID)"
         add(control)
       }
@@ -1532,9 +1532,6 @@ struct SidebarItem {
     } else {
       add(NSTextField(labelWithString: "Готовых материалов в текущей сессии нет"))
     }
-    add(section("ПУБЛИКАЦИЯ ПРОВЕРЕННОГО PACKAGE"))
-    add(button("Экспортировать в Obsidian", #selector(publishObsidian)))
-    add(button("Опубликовать в папку OneDrive", #selector(publishOneDrive)))
   }
   @objc private func publishObsidian() { publication(kind: "obsidian") }
   @objc private func publishOneDrive() { publication(kind: "onedrive") }

@@ -18,7 +18,7 @@ class ProcessResultsSurfaceTests(unittest.TestCase):
         self.assertIn('grid.widthAnchor.constraint(equalTo: content.widthAnchor, constant: -76)', self.source)
         for label in ("Расшифровка", "Очищенный текст", "Перевод", "Темы и таймкоды"):
             self.assertIn(f'processCard("{label}"', self.source)
-        self.assertIn('button("Открыть видео/аудио с расшифровкой"', self.source)
+        self.assertIn('button("Открыть источник с расшифровкой"', self.source)
 
     def test_only_readable_translation_or_topics_can_be_primary(self):
         surface = self.source.split("private func renderPrimaryProcessResults", 1)[1].split(
@@ -36,6 +36,18 @@ class ProcessResultsSurfaceTests(unittest.TestCase):
         self.assertNotIn("Подготовить темы к проверке", render)
         self.assertIn("final class TechnicalDisclosure", self.source)
         self.assertIn('checkboxWithTitle: "Технические данные"', self.source)
+
+    def test_publication_actions_are_not_rendered_in_process_results(self):
+        outputs = self.source.split("private func renderOutputs()", 1)[1].split(
+            "@objc private func publishObsidian", 1)[0]
+        self.assertNotIn("ПУБЛИКАЦИЯ ПРОВЕРЕННОГО PACKAGE", outputs)
+        self.assertNotIn("Экспортировать в Obsidian", outputs)
+        self.assertNotIn("Опубликовать в папку OneDrive", outputs)
+        # The underlying reviewed-package implementation remains available to
+        # its future Knowledge/Studio surface; this bounded Process change
+        # only removes its normal-results entry point.
+        self.assertIn("@objc private func publishObsidian", self.source)
+        self.assertIn("@objc private func publishOneDrive", self.source)
 
     def test_export_uses_native_save_panel_and_never_mutates_managed_source(self):
         export = self.source.split("private func exportManagedFile", 1)[1].split(
