@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.proposed_product_baseline",
+  "proposal_id": "proposal-process-v1-multi-source-failure-isolation",
+  "status": "PROPOSED_BASELINE_VALID",
+  "base_current_id": "current-v2-17f50c3788518c57b927f2d4f4ddcbc9ec52e8d121de07c24fe9b2bd1d202d26",
+  "base_main": {"commit_sha": "aaed563524e7a618379f96b37c63c7663f7ae722", "tree_sha": "82baae0b331fbb810825824a00f4674ee91c7aa2"},
+  "proposed_source": {"commit_sha": "d93f0fa8dfda452a8817635c8cf58ee9ce93c330", "tree_sha": "5d4f03a752e9e00136a6049161845b369d2588ba"},
+  "proposed_head": {"commit_sha": "def776562e8c6b78e1b26b82d55a97ab6e08e1c9", "tree_sha": "8cda4438d8a431ae6b1e63ca59de4637304112cb"},
+  "intended_scope": {"wp": "Process v1 bounded multi-source failure isolation", "journey": "Several local files and ordered processing with partial failure preservation"},
+  "candidate": {"candidate_id": "candidate-v1-589ef6063fd6d8b1bba248fce7fa1f8fa1494df17c4e930e7fc295f873686c1a", "identity_sha256": "589ef6063fd6d8b1bba248fce7fa1f8fa1494df17c4e930e7fc295f873686c1a", "manifest_digest": "9e0583a8f67b2631f635ab1544890374b204687670b0306926a08922fe2778e1", "bundle_digest": "9a902e47d83ef9e7e27f744d6438d885558cda53f8dba735d954544e100713a2"},
+  "delta": [
+    {"path": "integra_core/application_runtime.py", "before_sha256": "ac29994d6718708d8bfdd1a1367e37d7cca87bbfde1ba5a2e82f8d754c64b541", "after_sha256": "7f0f7f32697f1bd51640190f1e97a4fc4c888b13de39ced2b0226279b9092f7a"},
+    {"path": "macos/IntegraApp.swift", "before_sha256": "594d307ada7811eca22cdc6547a4142a48244a6e1ef8a0edf7888f8ddeb430ee", "after_sha256": "5803c63f59261ad18ed9a3a88b22e0675a8a1337f5d4db9db5546ea5d708a86e"}
+  ],
+  "gates": [
+    {"name": "candidate-manifest-and-native-self-test", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_MULTI_SOURCE_CANDIDATE_EVIDENCE.json"},
+    {"name": "multi-source-failure-isolation-regressions", "result": "PASS", "evidence_ref": "tests/test_application_runtime.py"},
+    {"name": "packaged-finder-like-multi-source-proof", "result": "PASS", "evidence_ref": "docs/PROCESS_V1_MULTI_SOURCE_FAILURE_ISOLATION.md"},
+    {"name": "proposed-overlay-anti-bypass-regressions", "result": "PASS", "evidence_ref": "tests/test_proposed_baseline_lite.py"}
+  ],
+  "evidence": {
+    "candidate_manifest": {"path": "docs/evidence/PROCESS_V1_MULTI_SOURCE_CANDIDATE_MANIFEST.json", "sha256": "9e0583a8f67b2631f635ab1544890374b204687670b0306926a08922fe2778e1"},
+    "candidate_evidence": {"path": "docs/evidence/PROCESS_V1_MULTI_SOURCE_CANDIDATE_EVIDENCE.json", "sha256": "cdb61e941a8b4a02fc0d5ed90fab60b6afd9894d2dcc94f480380945d4958dcf"},
+    "report": {"path": "docs/PROCESS_V1_MULTI_SOURCE_FAILURE_ISOLATION.md", "sha256": "091d2074d221bff565c0026cc494123939c299adac866f8f2cceed0cdcd96ea3"}
+  },
+  "owner_acceptance": null,
+  "allowed_overlay_paths": [
+    "docs/PROCESS_V1_DEFINITION_OF_DONE.md",
+    "docs/PROCESS_V1_MULTI_SOURCE_FAILURE_ISOLATION.md",
+    "docs/evidence/PROCESS_V1_MULTI_SOURCE_CANDIDATE_EVIDENCE.json",
+    "docs/evidence/PROCESS_V1_MULTI_SOURCE_CANDIDATE_MANIFEST.json",
+    "tests/packaged_multi_source_failure_probe.py",
+    "scripts/proposed_baseline_lite.py",
+    "tests/test_proposed_baseline_lite.py",
+    "tests/test_governance.py"
+  ]
+}
