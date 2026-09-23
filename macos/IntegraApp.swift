@@ -117,6 +117,58 @@ final class FlippedStackView: NSStackView {
   override var isFlipped: Bool { true }
 }
 
+final class ResponsiveResultsGrid: NSStackView {
+  static let wideBreakpoint: CGFloat = 720
+  let leftColumn = NSStackView()
+  let rightColumn = NSStackView()
+
+  override init(frame frameRect: NSRect) {
+    super.init(frame: frameRect)
+    for column in [leftColumn, rightColumn] {
+      column.orientation = .vertical
+      column.alignment = .leading
+      column.spacing = 12
+      addArrangedSubview(column)
+    }
+    alignment = .top
+    distribution = .fillEqually
+    spacing = 16
+    updateColumns()
+  }
+  required init?(coder: NSCoder) { fatalError() }
+  override func layout() {
+    super.layout()
+    updateColumns()
+  }
+  private func updateColumns() {
+    let target: NSUserInterfaceLayoutOrientation = bounds.width >= Self.wideBreakpoint ? .horizontal : .vertical
+    if orientation != target { orientation = target }
+  }
+}
+
+final class TechnicalDisclosure: NSStackView {
+  private let toggle = NSButton(checkboxWithTitle: "Технические данные", target: nil, action: nil)
+  let details = NSStackView()
+
+  override init(frame frameRect: NSRect) {
+    super.init(frame: frameRect)
+    orientation = .vertical
+    alignment = .leading
+    spacing = 8
+    toggle.target = self
+    toggle.action = #selector(setExpanded(_:))
+    toggle.state = .off
+    details.orientation = .vertical
+    details.alignment = .leading
+    details.spacing = 6
+    details.isHidden = true
+    addArrangedSubview(toggle)
+    addArrangedSubview(details)
+  }
+  required init?(coder: NSCoder) { fatalError() }
+  @objc private func setExpanded(_ sender: NSButton) { details.isHidden = sender.state != .on }
+}
+
 struct SidebarItem {
   let title: String
   let id: String
@@ -867,129 +919,106 @@ struct SidebarItem {
   private func renderResultRows(_ run: [String: Any]) {
     add(section("ГОТОВЫЕ РЕЗУЛЬТАТЫ"))
     for result in (run["source_results"] as? [[String: Any]]) ?? [] {
-      add(
-        row(
-          result["display_name"] as? String ?? "Источник",
-          detail: result["state"] as? String ?? "UNKNOWN"))
+      add(row(result["display_name"] as? String ?? "Источник", detail: result["state"] as? String ?? "UNKNOWN"))
       let outputs = result["outputs"] as? [String: Any] ?? [:]
       if let reuse = result["asr_reuse"] as? [String: Any], reuse["state"] as? String == "REUSED" {
         add(row("Расшифровка использована повторно", detail: "Исходник, модель, настройки и файлы проверены. Повторное распознавание не запускалось."))
       }
-      for (kind, path) in outputs.sorted(by: { $0.key < $1.key }) {
-        let title: String
-        switch kind {
-        case "transcript": title = "Открыть расшифровку (TXT)"
-        case "transcript_cleaned": title = "Открыть очищенный текст SeminarText (производная версия)"
-        case "transcript_quality_report": title = "Открыть отчёт проверки расшифровки"
-        case "transcript_asr_record": title = "Открыть сведения о распознавании SeminarText"
-        case "canonical_evidence": title = "Открыть Canonical Evidence SeminarText (JSON)"
-        case "transcript_review_result": title = "Открыть подтверждение проверки TXT (JSON)"
-        case "topic_review_drafts": title = "Открыть входные данные проверки тем SeminarText (JSON)"
-        case "canonical_knowledge": title = "Открыть проверенные знания (JSON)"
-        case "knowledge_markdown": title = "Открыть проверенные темы и цитаты"
-        case "topic_review_package": title = "Открыть пакет проверки тем"
-        case "topic_review_decisions": title = "Открыть сохранённые решения"
-        case "reviewed_topics": title = "Открыть проверенные фрагменты (JSON)"
-        case "reviewed_topics_markdown": title = "Открыть проверенные фрагменты и цитаты"
-        case "subtitles": title = "Открыть субтитры (SRT)"
-        case "word_timeline": title = "Открыть Word Timeline (JSON)"
-        case "translation": title = "Открыть перевод VideoText (JSON)"
-        case "downloaded_media": title = "Открыть загруженное видео/аудио YouTube"
-        case "youtube_source_record": title = "Открыть сведения о загрузке YouTube (JSON)"
-        case "playlist_snapshot": title = "Открыть фактический состав плейлиста YouTube (JSON)"
-        case "playlist_discovery": title = "Открыть provenance плейлиста YouTube (JSON)"
-        case "playlist_plan": title = "Открыть план обработки плейлиста (JSON)"
-        case "playlist_checkpoint": title = "Открыть checkpoint плейлиста (JSON)"
-        case "playlist_downloads": title = "Открыть записи скачанных элементов (JSON)"
-        case "playlist_artifacts_directory": title = "Открыть загруженные элементы плейлиста"
-        case "topics": title = "Открыть черновики тем SeminarText (JSON)"
-        case "burned_video": title = "Открыть видео со встроенными субтитрами"
-        case "clips_manifest": title = "Открыть список созданных клипов (JSON)"
-        case "enhanced_audio": title = "Открыть улучшенный звук (M4A)"
-        case "audio_enhancement_record": title = "Открыть сведения об улучшении звука (JSON)"
-        case "text": title = "Открыть текстовый документ (TXT)"
-        case "document_record": title = "Открыть контракт документа (JSON)"
-        case "document_structure": title = "Открыть структуру документа (JSON)"
-        case "discover_images": title = "Открыть встроенные изображения (JSON)"
-        case "embedded_images_directory": title = "Открыть извлечённые изображения"
-        case "embedded_images_manifest": title = "Открыть манифест извлечённых изображений (JSON)"
-        case "booktext_text": title = "Открыть OCR-текст BookText (TXT)"
-        case "booktext_markdown": title = "Открыть OCR-документ BookText (Markdown)"
-        case "booktext_record": title = "Открыть OCR-результат BookText (JSON)"
-        case "booktext_manifest": title = "Открыть манифест Integra / BookText (JSON)"
-        case "booktext_review": title = "Открыть очередь проверки OCR (TXT)"
-        case "booktext_review_json": title = "Открыть очередь проверки OCR (JSON)"
-        case "booktext_searchable_pdf": title = "Открыть поисковый PDF BookText"
-        case "booktext_pages": title = "Открыть обработанные страницы BookText"
-        case "booktext_surya_raw": title = "Открыть исходный вывод Surya OCR"
-        case "booktext_vision_qa": title = "Открыть Apple Vision QA"
-        case "selected_ocr_pages": title = "Открыть выбранные OCR-страницы с исходной нумерацией"
-        case "audio_analysis": title = "Открыть анализ звука VideoText"
-        case "speed_video": title = "Открыть видео 1,25×"
-        case "machine_evidence_record": title = "Открыть происхождение машинного Evidence"
-        case "transcript_json":
-          title = "Открыть сырую расшифровку (JSON)"
-        case "package_dir": title = "Открыть управляемый package (для публикации)"
-        case "package_id": title = "Открыть package id (metadata)"
-        default: title = "Открыть: \(kind)"
-        }
-        if kind == "transcript", let projectID = projectID, let runID = runID,
-          let sourceID = result["source_id"] as? String {
-          let control = button(title, #selector(openTranscript(_:)))
-          control.toolTip = "\(projectID)\n\(runID)\n\(sourceID)"
-          add(control)
-          continue
-        }
-        let control = button(title, #selector(openOutput(_:)))
-        control.toolTip = path as? String
-        add(control)
-      }
-      if outputs["topic_review_decisions"] as? String != nil,
-        let projectID = projectID, let runID = runID, let sourceID = result["source_id"] as? String
-      {
-        let control = button("Подготовить проверенный пакет для Obsidian / OneDrive", #selector(buildReviewedPackage(_:)))
-        control.toolTip = "\(projectID)\n\(runID)\n\(sourceID)"
-        add(control)
-      }
+      renderPrimaryProcessResults(outputs, result: result)
       if outputs["subtitles"] as? String != nil,
         let projectID = projectID, let runID = runID, let sourceID = result["source_id"] as? String
       {
-        let control = button("Открыть видео/аудио с расшифровкой", #selector(showMediaNavigation(_:)))
+        let control = button("Открыть источник с расшифровкой", #selector(showMediaNavigation(_:)))
         control.toolTip = "\(projectID)\n\(runID)\n\(sourceID)"
         add(control)
       }
-      if outputs["transcript"] as? String != nil, outputs["word_timeline"] as? String != nil,
-        let projectID = projectID, let runID = runID, let sourceID = result["source_id"] as? String
-      {
-        let hasEvidenceDependents = ["topic_review_drafts", "topic_review_package", "topic_review_decisions",
-          "reviewed_topics", "canonical_knowledge", "package_dir"].contains { outputs[$0] != nil }
-        let control = button(hasEvidenceDependents ? "Повторная проверка TXT — нужен новый запуск" : "Проверить TXT и создать Evidence",
-          #selector(showTranscriptReview(_:)), enabled: !hasEvidenceDependents)
-        control.toolTip = "\(projectID)\n\(runID)\n\(sourceID)"
-        add(control)
-        if outputs["canonical_evidence"] == nil {
-          let machine = button("Продолжить с машинным текстом → Evidence", #selector(createMachineEvidence(_:)))
-          machine.toolTip = "\(projectID)\n\(runID)\n\(sourceID)"
-          add(machine)
-        }
-        add(row("Canonical Evidence", detail: "Полная проверка TXT необязательна. Машинный текст остаётся непроверенным; принятие тем — отдельное явное решение."))
-      }
-      if outputs["reviewed_topics"] == nil, outputs["canonical_knowledge"] == nil, outputs["canonical_evidence"] as? String != nil, outputs["topics"] as? String != nil,
-        let projectID = projectID, let runID = runID, let sourceID = result["source_id"] as? String
-      {
-        let control = button("Подготовить темы к проверке", #selector(prepareTopicReview(_:)))
-        control.toolTip = "\(projectID)\n\(runID)\n\(sourceID)"
-        add(control)
-        add(row("Проверка тем", detail: "Проверьте цитаты и явно примите или отклоните каждую тему."))
-      }
+      renderTechnicalData(outputs)
     }
-    add(section("СЛЕДУЮЩИЕ ДЕЙСТВИЯ"))
-    for title in [
-      "Редактор границ тем", "Редактор связей знаний", "Тематические клипы", "Учебные материалы",
-      "Маркетинговые материалы", "Другие форматы публикации",
-    ] {
-      add(button("\(title) — В разработке", #selector(unavailableAction), enabled: false))
+  }
+  private func renderPrimaryProcessResults(_ outputs: [String: Any], result: [String: Any]) {
+    let grid = ResponsiveResultsGrid()
+    var left = 0
+    var right = 0
+    func addCard(_ card: NSView, toLeft: Bool) {
+      if toLeft { grid.leftColumn.addArrangedSubview(card); left += 1 }
+      else { grid.rightColumn.addArrangedSubview(card); right += 1 }
     }
+    if outputs["transcript"] is String, let projectID, let runID, let sourceID = result["source_id"] as? String {
+      let ids = "\(projectID)\n\(runID)\n\(sourceID)"
+      let open = button("Открыть", #selector(openTranscript(_:))); open.toolTip = ids
+      let export = button("Экспортировать…", #selector(exportTranscript(_:))); export.toolTip = ids
+      addCard(processCard("Расшифровка", controls: [open, export]), toLeft: true)
+    }
+    if let path = outputs["transcript_cleaned"] as? String {
+      addCard(processCard("Очищенный текст", controls: outputControls(path)), toLeft: false)
+    }
+    // A translation JSON record is technical data. Only a future readable TXT
+    // representation may enter this user-facing card.
+    if let path = readableOutput(outputs, keys: ["translation_txt", "translated_txt"]) {
+      addCard(processCard("Перевод", controls: outputControls(path)), toLeft: left <= right)
+    }
+    // Topics JSON remains technical data until a readable Process representation
+    // exists. This avoids relabelling an implementation artifact as a result.
+    if let path = readableOutput(outputs, keys: ["topics_txt", "topics_markdown"]) {
+      let open = button("Открыть", #selector(openOutput(_:))); open.toolTip = path
+      addCard(processCard("Темы и таймкоды", controls: [open]), toLeft: left <= right)
+    }
+    if left + right > 0 {
+      add(grid)
+      // `content` aligns arranged subviews to the leading edge.  Give the grid
+      // the available result-surface width so its responsive breakpoint is
+      // based on the actual window, rather than on one card's intrinsic width.
+      grid.widthAnchor.constraint(equalTo: content.widthAnchor, constant: -76).isActive = true
+    }
+  }
+  private func readableOutput(_ outputs: [String: Any], keys: [String]) -> String? {
+    for key in keys {
+      if let value = outputs[key] as? String, URL(fileURLWithPath: value).pathExtension.lowercased() != "json" { return value }
+    }
+    return nil
+  }
+  private func processCard(_ title: String, controls: [NSButton]) -> NSBox {
+    let card = NSBox()
+    card.boxType = .custom
+    card.isTransparent = false
+    card.cornerRadius = 8
+    card.borderColor = .separatorColor
+    let stack = NSStackView()
+    stack.orientation = .vertical
+    stack.alignment = .leading
+    stack.spacing = 10
+    stack.edgeInsets = NSEdgeInsets(top: 14, left: 14, bottom: 14, right: 14)
+    let heading = NSTextField(labelWithString: title)
+    heading.font = .systemFont(ofSize: 16, weight: .semibold)
+    stack.addArrangedSubview(heading)
+    let actions = NSStackView(views: controls)
+    actions.orientation = .horizontal
+    actions.spacing = 8
+    stack.addArrangedSubview(actions)
+    card.contentView = stack
+    return card
+  }
+  private func outputControls(_ path: String) -> [NSButton] {
+    let open = button("Открыть", #selector(openOutput(_:))); open.toolTip = path
+    let export = button("Экспортировать…", #selector(exportOutput(_:))); export.toolTip = path
+    return [open, export]
+  }
+  private func renderTechnicalData(_ outputs: [String: Any]) {
+    let technical = outputs.compactMap { key, value -> (String, String)? in
+      guard let path = value as? String else { return nil }
+      switch key {
+      case "transcript", "transcript_cleaned", "translation_txt", "translated_txt", "topics_txt", "topics_markdown": return nil
+      default: return (key, path)
+      }
+    }.sorted { $0.0 < $1.0 }
+    guard !technical.isEmpty else { return }
+    let disclosure = TechnicalDisclosure()
+    for (kind, path) in technical {
+      let control = button("Открыть технические данные: \(kind)", #selector(openOutput(_:)))
+      control.toolTip = path
+      disclosure.details.addArrangedSubview(control)
+    }
+    add(disclosure)
   }
   private func renderFailedASRReports(_ run: [String: Any]) {
     for result in (run["source_results"] as? [[String: Any]]) ?? [] {
@@ -1211,6 +1240,49 @@ struct SidebarItem {
       }
     } catch {
       status.textColor = .systemRed; status.stringValue = error.localizedDescription
+    }
+  }
+  @objc private func exportTranscript(_ sender: NSButton) {
+    let identifiers = sender.toolTip?.split(separator: "\n", maxSplits: 2).map(String.init) ?? []
+    guard identifiers.count == 3 else { return }
+    do {
+      let result = try bridge.json("transcript-text", request: ["project_id": identifiers[0],
+        "run_id": identifiers[1], "source_id": identifiers[2]])["result"] as? [String: Any]
+      guard let path = result?["path"] as? String else { throw BridgeError.invalidResponse }
+      exportManagedFile(path)
+    } catch {
+      status.textColor = .systemRed
+      status.stringValue = error.localizedDescription
+    }
+  }
+  @objc private func exportOutput(_ sender: NSButton) {
+    guard let path = sender.toolTip else { return }
+    exportManagedFile(path)
+  }
+  private func exportManagedFile(_ sourcePath: String) {
+    let source = URL(fileURLWithPath: sourcePath)
+    guard FileManager.default.fileExists(atPath: source.path), !source.hasDirectoryPath else {
+      status.textColor = .systemRed
+      status.stringValue = "Результат для экспорта недоступен."
+      return
+    }
+    let panel = NSSavePanel()
+    panel.title = "Экспортировать результат"
+    panel.nameFieldStringValue = source.lastPathComponent
+    panel.canCreateDirectories = true
+    guard panel.runModal() == .OK, let destination = panel.url else { return }
+    guard !FileManager.default.fileExists(atPath: destination.path) else {
+      status.textColor = .systemRed
+      status.stringValue = "Файл с таким именем уже существует. Выберите другое имя; управляемый результат не изменён."
+      return
+    }
+    do {
+      try FileManager.default.copyItem(at: source, to: destination)
+      status.textColor = .labelColor
+      status.stringValue = "Результат экспортирован: \(destination.lastPathComponent)"
+    } catch {
+      status.textColor = .systemRed
+      status.stringValue = "Не удалось экспортировать результат: \(error.localizedDescription)"
     }
   }
   @objc private func showMediaNavigation(_ sender: NSButton) {
@@ -1460,9 +1532,6 @@ struct SidebarItem {
     } else {
       add(NSTextField(labelWithString: "Готовых материалов в текущей сессии нет"))
     }
-    add(section("ПУБЛИКАЦИЯ ПРОВЕРЕННОГО PACKAGE"))
-    add(button("Экспортировать в Obsidian", #selector(publishObsidian)))
-    add(button("Опубликовать в папку OneDrive", #selector(publishOneDrive)))
   }
   @objc private func publishObsidian() { publication(kind: "obsidian") }
   @objc private func publishOneDrive() { publication(kind: "onedrive") }

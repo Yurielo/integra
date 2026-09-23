@@ -1,0 +1,82 @@
+{
+  "completed_at" : "2026-09-22T20:05:24Z",
+  "completed_sources" : 1,
+  "created_at" : "2026-09-22T20:05:23Z",
+  "current_stage" : null,
+  "plan" : {
+    "plan_id" : "urn:integra:plan:74eb6200901c30411ec0eddb86e444d047d24cc8a2a0dff278ba4b1b55000b08",
+    "schema_version" : "1.0",
+    "selected_outputs" : [
+      "word_timeline"
+    ],
+    "source_plans" : [
+      {
+        "display_name" : "synthetic.wav",
+        "outputs" : [
+          "word_timeline"
+        ],
+        "source_id" : "urn:integra:source:92668107-716a-58c0-a1d5-822ce9b4f0be",
+        "source_type" : "LOCAL_AUDIO"
+      }
+    ],
+    "sources" : [
+      {
+        "display_name" : "synthetic.wav",
+        "input" : "\/private\/tmp\/integra-pr174-owner-final-proof.nErrx9\/synthetic.wav",
+        "kind" : "MEDIA",
+        "properties" : {
+          "content_sha256" : "cc7ab025477a5fd0074703df1e7f681c1a2f1e045e4a78006b03840fa9af2ca7",
+          "media_kind" : "AUDIO"
+        },
+        "source_id" : "urn:integra:source:92668107-716a-58c0-a1d5-822ce9b4f0be",
+        "source_type" : "LOCAL_AUDIO"
+      }
+    ],
+    "stages" : [
+      {
+        "id" : "media_preparation",
+        "technical" : true,
+        "title" : "Подготовка медиа"
+      },
+      {
+        "id" : "transcript",
+        "technical" : false,
+        "title" : "Расшифровка"
+      },
+      {
+        "id" : "word_timeline",
+        "technical" : false,
+        "title" : "Word Timeline"
+      }
+    ],
+    "state" : "READY_TO_EXECUTE"
+  },
+  "run_id" : "urn:integra:run:36556b3c-9dfd-43e6-bbc1-55249579198f",
+  "schema_version" : "1.0",
+  "source_results" : [
+    {
+      "asr_reuse" : {
+        "cache_key" : "82fb8b1843cbde88eb685007f09d70159258466fc4d19b21f16c37e5c3b98eb5",
+        "manifest_path" : "\/private\/tmp\/integra-pr174-owner-final-proof.nErrx9\/app-data\/projects\/ed403c20-6f0a-490b-945a-5f336cb28b4d\/asr-cache-v1\/82fb8b1843cbde88eb685007f09d70159258466fc4d19b21f16c37e5c3b98eb5-c8324a3c374f4761afaf1fe119748a26.json",
+        "state" : "REUSED"
+      },
+      "display_name" : "synthetic.wav",
+      "job_id" : "urn:integra:job:4b835072-a612-42a8-b396-23300e0384ae",
+      "outputs" : {
+        "subtitles" : "\/private\/tmp\/integra-pr174-owner-final-proof.nErrx9\/app-data\/projects\/ed403c20-6f0a-490b-945a-5f336cb28b4d\/artifacts\/a50875ce-fd34-43dc-b602-3a350cd2e340\/seminartext-asr\/transcript.srt",
+        "transcript" : "\/private\/tmp\/integra-pr174-owner-final-proof.nErrx9\/app-data\/projects\/ed403c20-6f0a-490b-945a-5f336cb28b4d\/artifacts\/4b835072-a612-42a8-b396-23300e0384ae\/transcript.txt",
+        "transcript_asr_record" : "\/private\/tmp\/integra-pr174-owner-final-proof.nErrx9\/app-data\/projects\/ed403c20-6f0a-490b-945a-5f336cb28b4d\/artifacts\/a50875ce-fd34-43dc-b602-3a350cd2e340\/seminartext-asr\/provenance.json",
+        "transcript_cleaned" : "\/private\/tmp\/integra-pr174-owner-final-proof.nErrx9\/app-data\/projects\/ed403c20-6f0a-490b-945a-5f336cb28b4d\/artifacts\/a50875ce-fd34-43dc-b602-3a350cd2e340\/seminartext-asr\/project\/transcript\/video_001\/transcript_clean.txt",
+        "transcript_json" : "\/private\/tmp\/integra-pr174-owner-final-proof.nErrx9\/app-data\/projects\/ed403c20-6f0a-490b-945a-5f336cb28b4d\/artifacts\/4b835072-a612-42a8-b396-23300e0384ae\/transcript.json",
+        "transcript_quality_report" : "\/private\/tmp\/integra-pr174-owner-final-proof.nErrx9\/app-data\/projects\/ed403c20-6f0a-490b-945a-5f336cb28b4d\/artifacts\/a50875ce-fd34-43dc-b602-3a350cd2e340\/seminartext-asr\/project\/transcript\/video_001\/transcript_review.txt",
+        "word_timeline" : "\/private\/tmp\/integra-pr174-owner-final-proof.nErrx9\/app-data\/projects\/ed403c20-6f0a-490b-945a-5f336cb28b4d\/artifacts\/4b835072-a612-42a8-b396-23300e0384ae\/word_timeline.json"
+      },
+      "source_id" : "urn:integra:source:92668107-716a-58c0-a1d5-822ce9b4f0be",
+      "state" : "COMPLETED"
+    }
+  ],
+  "started_at" : "2026-09-22T20:05:23Z",
+  "state" : "COMPLETED",
+  "total_sources" : 1,
+  "worker_pid" : 2893
+}

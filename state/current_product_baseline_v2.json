@@ -1,6 +1,6 @@
 {
   "artifact_type": "integra.current_product_baseline",
-  "current_id": "current-v2-6dd918b453e051e38422e81e05141ce0fcae02a6e2ce1c5b0f8df3ec551de611",
+  "current_id": "current-v2-f7f0fd92b37ce8e8b172a6cfedba5c2b98d968f201de0f10c9cff06c61673777",
   "records": [
     {
       "acceptance": {
@@ -219,6 +219,63 @@
       },
       "promotion": {
         "accepted_report_head": "a718efc6b58745524f86f53b2d020e760fb7e15a",
+        "issue_159_ref": "superseded-by-next-owner-promotion",
+        "pull_160_ref": "superseded-by-next-owner-promotion"
+      },
+      "promotion_policy": "EXPLICIT_HUMAN_OWNER_AUTHORIZATION_REQUIRED",
+      "repository": "Yurielo/integra",
+      "status": "CURRENT"
+    },
+    {
+      "acceptance": {
+        "authority_ref": "Product Owner controlling conversation (2026-09-23): exact authorization headed PRODUCT OWNER AUTHORIZATION — PROMOTE PR #174 RESULTS UX BASELINE; proposal proposal-process-v1-results-ux-export, source 2eade0c58d5e162bdbb36442c6874a6c21b03967, Candidate candidate-v1-f7f0fd92b37ce8e8b172a6cfedba5c2b98d968f201de0f10c9cff06c61673777; baseline promotion only, not PROCESS V1 USER_ACCEPTED.",
+        "decision": "USER_ACCEPTED",
+        "scope": "owner-authorized proposed baseline promotion"
+      },
+      "baseline_id": "current-v2-f7f0fd92b37ce8e8b172a6cfedba5c2b98d968f201de0f10c9cff06c61673777",
+      "candidate": {
+        "bundle_digest": "2ae73aa6e301c503d4ed6881c0b499d0b11b23c5d091cbf77d60225114409b30",
+        "candidate_id": "candidate-v1-f7f0fd92b37ce8e8b172a6cfedba5c2b98d968f201de0f10c9cff06c61673777",
+        "identity_sha256": "f7f0fd92b37ce8e8b172a6cfedba5c2b98d968f201de0f10c9cff06c61673777"
+      },
+      "governed_files": [
+        {
+          "path": "integra_core/application_runtime.py",
+          "sha256": "7f0f7f32697f1bd51640190f1e97a4fc4c888b13de39ced2b0226279b9092f7a"
+        },
+        {
+          "path": "integra_core/seminartext_asr_runtime.py",
+          "sha256": "6097f392f6a151efd68cc1409abb5e27375f419029216464031b0c5ba487f6cc"
+        },
+        {
+          "path": "integra_core/shutdown_runtime.py",
+          "sha256": "0dc2bc03c25bae4e8c124c613a1be12b9b1c5227652291704ceca088f2f01192"
+        },
+        {
+          "path": "macos/IntegraApp.swift",
+          "sha256": "995fa3946f43fba215d6fec90985e5fce1c49350c3b4eedb145ddcdc508b6507"
+        },
+        {
+          "path": "macos/Resources/bridge.py",
+          "sha256": "dbcfae45b247acad40503399f96926ed514ecc863df7f44eea4363aa361d67ec"
+        },
+        {
+          "path": "tests/test_macos_app.py",
+          "sha256": "ddb2ec1700a77abbe1a3efdda5c8f17927e85a543fb09fe6a891537bcc3fad17"
+        }
+      ],
+      "historical_predecessors": [
+        {
+          "path": "state/history/current_product_baseline_v2-current-v2-6dd918b453e051e38422e81e05141ce0fcae02a6e2ce1c5b0f8df3ec551de611.json",
+          "sha256": "781c098c1be3e382bde4a26d75bca8c32a9f031992c570fbf6211fdd3b7b14f7"
+        }
+      ],
+      "main": {
+        "commit_sha": "0b4644bd9dc57692231aecc4345f6f72f2f19502",
+        "tree_sha": "03809264e3a8e7e01154d6c14ab75f4d4ea9a4e7"
+      },
+      "promotion": {
+        "accepted_report_head": "0b4644bd9dc57692231aecc4345f6f72f2f19502",
         "issue_159_ref": "superseded-by-next-owner-promotion",
         "pull_160_ref": "superseded-by-next-owner-promotion"
       },

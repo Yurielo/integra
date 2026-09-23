@@ -1,0 +1,22 @@
+{
+  "artifact_type": "integra.candidate_evidence",
+  "candidate_id": "candidate-v1-f7f0fd92b37ce8e8b172a6cfedba5c2b98d968f201de0f10c9cff06c61673777",
+  "manifest_identity_sha256": "f7f0fd92b37ce8e8b172a6cfedba5c2b98d968f201de0f10c9cff06c61673777",
+  "bundle_digest": "2ae73aa6e301c503d4ed6881c0b499d0b11b23c5d091cbf77d60225114409b30",
+  "product_source": {
+    "commit_sha": "2eade0c58d5e162bdbb36442c6874a6c21b03967",
+    "tree_sha": "b112309d14fb65de1a6eece0a34c79b0b658b9e6"
+  },
+  "gates": {
+    "candidate_manifest": "PASS",
+    "native_self_test": "PASS",
+    "focused_results_surface_regressions": "29 passed; 6 environment skips; no Results UX assertion passed through a skip",
+    "swift_typecheck": "PASS",
+    "packaged_finder_like_results_surface": "PASS"
+  },
+  "evidence_hashes": {
+    "manifest": "55c96ecde3e8f53bfb648a81dc0ef12abb586b35dbd3037b5c15530508e251d0",
+    "native_run": "f3fa436ab69a9d9f6ec8a57094552633f181965fe2ea666a24f7c9ee483127a3",
+    "results_screenshot": "33d6a74a258b464b5f4a617a43f60a5fdcf762ed1b529bce40f5d914166d3d45"
+  }
+}

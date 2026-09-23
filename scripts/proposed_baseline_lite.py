@@ -27,7 +27,11 @@ CURRENT_RECORD_FIELDS = {
 }
 PROPOSAL_FIELDS = {
     "schema_version", "artifact_type", "proposal_id", "status", "base_current_id", "base_main", "proposed_source", "proposed_head", "intended_scope",
-    "candidate", "delta", "gates", "evidence", "owner_acceptance", "allowed_overlay_paths",
+    "candidate", "delta", "historical_test_successors", "gates", "evidence", "owner_acceptance", "allowed_overlay_paths",
+}
+HISTORICAL_TEST_AUTHORITIES = {
+    "R12": "state/native_macos_app_v1.json",
+    "R13": "state/ready_app_v1.json",
 }
 
 
@@ -68,6 +72,91 @@ def _changed_paths(root: Path, left: str, right: str) -> list[str]:
 def _valid_relative_path(value: object) -> bool:
     return (isinstance(value, str) and bool(value) and not value.startswith("/")
             and ".." not in Path(value).parts)
+
+
+def _historical_test_hash(root: Path, authority: str, path: str) -> str | None:
+    """Return an immutable R12/R13 implementation hash for one exact test."""
+    state_path = HISTORICAL_TEST_AUTHORITIES.get(authority)
+    if state_path is None:
+        return None
+    try:
+        payload = json.loads((root / state_path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    matches = [item.get("sha256") for item in payload.get("implementation", [])
+               if isinstance(item, dict) and item.get("path") == path]
+    return matches[0] if len(matches) == 1 and isinstance(matches[0], str) else None
+
+
+def _historical_test_paths(root: Path) -> dict[str, set[str]]:
+    """Return only exact test paths named by the immutable R12/R13 records."""
+    result: dict[str, set[str]] = {}
+    for authority in HISTORICAL_TEST_AUTHORITIES:
+        try:
+            payload = json.loads((root / HISTORICAL_TEST_AUTHORITIES[authority]).read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        for item in payload.get("implementation", []):
+            if isinstance(item, dict) and isinstance(item.get("path"), str) and item["path"].startswith("tests/"):
+                result.setdefault(item["path"], set()).add(authority)
+    return result
+
+
+def _historical_test_successor_errors(successors: object, root: Path) -> list[str]:
+    if not isinstance(successors, list):
+        return ["PROPOSED historical test successors are invalid"]
+    errors: list[str] = []
+    seen: set[tuple[str, str]] = set()
+    expected_fields = {"path", "historical_authority", "before_sha256", "after_sha256", "reason"}
+    for successor in successors:
+        if not isinstance(successor, dict) or set(successor) != expected_fields:
+            errors.append("PROPOSED historical test successor fields are invalid")
+            continue
+        path = successor.get("path")
+        authority = successor.get("historical_authority")
+        before = successor.get("before_sha256")
+        after = successor.get("after_sha256")
+        reason = successor.get("reason")
+        if (not _valid_relative_path(path) or not isinstance(path, str) or not path.startswith("tests/")
+                or any(token in path for token in ("*", "?", "[", "]"))):
+            errors.append("PROPOSED historical test successor path is not an exact test path")
+            continue
+        if not isinstance(authority, str) or authority not in HISTORICAL_TEST_AUTHORITIES:
+            errors.append("PROPOSED historical test successor authority is invalid")
+            continue
+        if not _is_sha(before) or not _is_sha(after) or before == after:
+            errors.append("PROPOSED historical test successor hashes are invalid")
+        if not isinstance(reason, str) or not reason.strip():
+            errors.append("PROPOSED historical test successor reason is invalid")
+        key = (authority, path)
+        if key in seen:
+            errors.append("PROPOSED historical test successors must be unique")
+        seen.add(key)
+        historical = _historical_test_hash(root, authority, path)
+        if historical is None:
+            errors.append("PROPOSED historical test successor is not in immutable authority inventory")
+        elif before != historical:
+            errors.append("PROPOSED historical test successor before hash differs from immutable authority")
+    return errors
+
+
+def proposal_declares_historical_test_successor(
+    proposal: dict | None, authority: str, path: str, historical_sha256: str, current_sha256: str | None,
+) -> bool:
+    """Recognize only one exact R12/R13 test successor under active proposal review."""
+    if not isinstance(proposal, dict) or not isinstance(current_sha256, str):
+        return False
+    successors = proposal.get("historical_test_successors")
+    if not isinstance(successors, list):
+        return False
+    return any(
+        isinstance(item, dict)
+        and item.get("historical_authority") == authority
+        and item.get("path") == path
+        and item.get("before_sha256") == historical_sha256
+        and item.get("after_sha256") == current_sha256
+        for item in successors
+    )
 
 
 def _candidate_errors(candidate: object, label: str, *, require_manifest_digest: bool = False) -> list[str]:
@@ -230,6 +319,7 @@ def validate_proposal(proposal: object, current: dict[str, Any], root: Path) -> 
             previous = active_hashes.get(item.get("path"))
             if previous is not None and item.get("before_sha256") != previous:
                 errors.append("PROPOSED baseline delta does not start from active CURRENT hash")
+    errors.extend(_historical_test_successor_errors(proposal.get("historical_test_successors"), root))
     gates = proposal.get("gates")
     if not isinstance(gates, list) or not gates or any(not isinstance(item, dict) or set(item) != {"name", "result", "evidence_ref"} or item.get("result") != "PASS" or not isinstance(item.get("evidence_ref"), str) or not item["evidence_ref"] for item in gates):
         errors.append("PROPOSED baseline mandatory gates are not all PASS with evidence")
@@ -315,6 +405,40 @@ def verify_promotion_material(proposal: dict[str, Any], root: Path, proposal_pat
         if hashlib.sha256(before).hexdigest() != item["before_sha256"] or hashlib.sha256(after).hexdigest() != item["after_sha256"]:
             errors.append(f"promotion declared delta differs: {path_text}")
 
+    successors = proposal.get("historical_test_successors", [])
+    declared_successors = {
+        (item["historical_authority"], item["path"]): item
+        for item in successors if isinstance(item, dict)
+        and {"path", "historical_authority", "before_sha256", "after_sha256", "reason"} == set(item)
+    }
+    historical_test_paths = _historical_test_paths(root)
+    changed_historical_tests: set[tuple[str, str]] = set()
+    for path_text, authorities in historical_test_paths.items():
+        try:
+            before = subprocess.run(["git", "-C", str(root), "show", f"{base_commit}:{path_text}"], check=True, capture_output=True).stdout
+            after = subprocess.run(["git", "-C", str(root), "show", f"{source['commit_sha']}:{path_text}"], check=True, capture_output=True).stdout
+        except (OSError, subprocess.CalledProcessError):
+            errors.append(f"promotion historical test path is unavailable: {path_text}")
+            continue
+        if before == after:
+            continue
+        for authority in authorities:
+            changed_historical_tests.add((authority, path_text))
+    if set(declared_successors) != changed_historical_tests:
+        errors.append("promotion historical test drift is undeclared or overstated")
+    for (authority, path_text), item in declared_successors.items():
+        historical = _historical_test_hash(root, authority, path_text)
+        try:
+            before = subprocess.run(["git", "-C", str(root), "show", f"{base_commit}:{path_text}"], check=True, capture_output=True).stdout
+            after = subprocess.run(["git", "-C", str(root), "show", f"{source['commit_sha']}:{path_text}"], check=True, capture_output=True).stdout
+        except (OSError, subprocess.CalledProcessError):
+            errors.append(f"promotion historical test successor is unavailable: {path_text}")
+            continue
+        if (historical is None or hashlib.sha256(before).hexdigest() != historical
+                or hashlib.sha256(before).hexdigest() != item["before_sha256"]
+                or hashlib.sha256(after).hexdigest() != item["after_sha256"]):
+            errors.append(f"promotion historical test successor differs: {path_text}")
+
     try:
         overlay_changes = _changed_paths(root, source["commit_sha"], overlay["commit_sha"])
     except (OSError, subprocess.CalledProcessError):
@@ -325,6 +449,8 @@ def verify_promotion_material(proposal: dict[str, Any], root: Path, proposal_pat
         errors.append("promotion evidence overlay contains undeclared paths")
     if any(_governed_product_path(path) for path in overlay_changes):
         errors.append("promotion evidence overlay contains product/runtime bytes")
+    if any(path in historical_test_paths for path in overlay_changes):
+        errors.append("promotion evidence overlay contains historical test bytes")
     evidence = proposal["evidence"]
     def read_record(label: str) -> dict[str, Any] | None:
         path = root / evidence[label]["path"]
@@ -379,6 +505,19 @@ def next_current(current: dict[str, Any], proposal: dict[str, Any], owner_accept
         path = item["path"]
         if path in governed and item["before_sha256"] != governed[path]:
             raise ValueError("PROPOSED baseline delta does not start from active CURRENT hash")
+        governed[path] = item["after_sha256"]
+    # A historical test successor is not executable product delta, but it is
+    # an exact current byte that supersedes an immutable R12/R13 test hash.
+    # Retiring its PROPOSED record would otherwise erase the only active
+    # hash-closed link the historical validator can follow.
+    for item in proposal.get("historical_test_successors", []):
+        if not isinstance(item, dict) or set(item) != {
+            "path", "historical_authority", "before_sha256", "after_sha256", "reason",
+        }:
+            raise ValueError("PROPOSED historical test successor is invalid")
+        path = item["path"]
+        if path in governed and item["before_sha256"] != governed[path]:
+            raise ValueError("PROPOSED historical test successor does not start from active CURRENT hash")
         governed[path] = item["after_sha256"]
     new_id = "current-v2-" + proposal["candidate"]["identity_sha256"]
     new_record = {
