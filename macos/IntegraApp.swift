@@ -957,11 +957,16 @@ struct SidebarItem {
     if let path = readableOutput(outputs, keys: ["translation_txt", "translated_txt"]) {
       addCard(processCard("Перевод", controls: outputControls(path)), toLeft: left <= right)
     }
-    // Topics JSON remains technical data until a readable Process representation
-    // exists. This avoids relabelling an implementation artifact as a result.
-    if let path = readableOutput(outputs, keys: ["topics_txt", "topics_markdown"]) {
-      let open = button("Открыть", #selector(openOutput(_:))); open.toolTip = path
-      addCard(processCard("Темы и таймкоды", controls: [open]), toLeft: left <= right)
+    // The raw Topics JSON remains technical data.  A completed source with
+    // topics has an existing, human-reviewable Process representation instead:
+    // the review package is prepared only after the user explicitly asks to
+    // review it, and it retains the unreviewed machine authority until then.
+    if outputs["topics"] is String,
+      let projectID, let runID, let sourceID = result["source_id"] as? String
+    {
+      let review = button("Проверить темы", #selector(prepareTopicReview(_:)))
+      review.toolTip = "\(projectID)\n\(runID)\n\(sourceID)"
+      addCard(processCard("Темы и таймкоды", controls: [review]), toLeft: left <= right)
     }
     if left + right > 0 {
       add(grid)
@@ -1073,11 +1078,16 @@ struct SidebarItem {
     let bridge = self.bridge!
     serviceQueue.async {
       do {
+        // Keep machine evidence strictly machine/unreviewed.  This existing
+        // operation is idempotent and supplies the canonical evidence required
+        // by the existing Topic-review package; it never accepts a topic.
+        _ = try bridge.json("create-machine-evidence", request: [
+          "project_id": identifiers[0], "run_id": identifiers[1], "source_id": identifiers[2]])
         let result = try bridge.json("prepare-knowledge-review", request: [
           "project_id": identifiers[0], "run_id": identifiers[1], "source_id": identifiers[2]])["result"] as? [String: Any] ?? [:]
         guard result["status"] as? String == "REVIEW_REQUIRED" else { throw BridgeError.invalidResponse }
         DispatchQueue.main.async {
-          sender.title = "Подготовить темы к проверке"; sender.isEnabled = true
+          sender.title = "Проверить темы"; sender.isEnabled = true
           self.presentTopicReview(result, identifiers: identifiers)
         }
       } catch {
