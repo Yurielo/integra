@@ -33,10 +33,10 @@ class ProcessResultsSurfaceTests(unittest.TestCase):
         review = self.source.split("@objc private func prepareTopicReview", 1)[1].split(
             "private func presentTopicReview", 1)[0]
         self.assertIn('bridge.json("prepare-process-topic-review"', review)
-        self.assertIn('result["status"] as? String == "PROCESS_TOPIC_REVIEW_REQUIRED"', review)
+        self.assertIn('reviewStatus == "PROCESS_TOPIC_REVIEW_REQUIRED" || reviewStatus == "PROCESS_TOPIC_REVIEWED"', review)
         self.assertNotIn("create-machine-evidence", review)
         self.assertNotIn("knowledge-review", review)
-        self.assertIn('self.presentTopicReview(result, identifiers: identifiers)', review)
+        self.assertIn('self.presentTopicReview(result, identifiers: identifiers, readOnly: reviewStatus == "PROCESS_TOPIC_REVIEWED")', review)
         self.assertIn('sender.title = "Проверить темы"', review)
 
     def test_process_topic_dialog_uses_pinned_actions_without_knowledge_wording(self):
@@ -46,6 +46,8 @@ class ProcessResultsSurfaceTests(unittest.TestCase):
         self.assertIn('bridge.json("apply-process-topic-review"', dialog)
         self.assertIn("Проверка тем", dialog)
         self.assertIn('selectedAction == "ACCEPT" && edited ? "RENAME" : selectedAction', dialog)
+        self.assertIn('Сохранённые решения человека для этого источника.', dialog)
+        self.assertIn('title.isEditable = false; summary.isEditable = false', dialog)
         self.assertNotIn("Идентификатор проверяющего", dialog)
         self.assertNotIn('"reviewer_id": reviewerID', dialog)
         for forbidden in ("Canonical Knowledge", "Включить фрагмент в знания", "Evidence", "семантическ"):

@@ -561,3 +561,60 @@ def apply_process_topic_review(project_dir, *, source_id, expected_package_sha25
             if _sha256(path) != result[key + "_sha256"]: raise ValueError("persisted Process Topic review artifact changed")
             result[key + "_path"] = str(path)
         return result | {"decisions_path": str(decision_path), "review_result_path": str(result_dir / "result.json")}
+
+
+def load_persisted_process_topic_review(project_dir, *, source_id, reviewed_topics_contract_path,
+                                        receipt_path, decisions_path):
+    """Materialize an already-saved Process review without returning to machine topics.
+
+    The reviewed contract is the sole user-facing authority after an explicit
+    Process-human decision.  All three persisted artifacts are cross-checked
+    before their titles are shown again; a partial or tampered saved review is
+    an error, never a reason to silently fall back to the machine draft.
+    """
+    root = Path(project_dir).resolve(strict=True)
+    contract_path = _inside(Path(reviewed_topics_contract_path), root, "reviewed Process Topics")
+    receipt_path = _inside(Path(receipt_path), root, "Process Topic review receipt")
+    decisions_path = _inside(Path(decisions_path), root, "Process Topic decisions")
+    contract = json.loads(contract_path.read_text(encoding="utf-8"))
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    decisions = json.loads(decisions_path.read_text(encoding="utf-8"))
+    if (contract.get("artifact_type") != "seminartext.project_knowledge_input"
+            or receipt.get("artifact_type") != "integra.process_reviewed_topics"
+            or receipt.get("authority") != PROCESS_TOPIC_AUTHORITY
+            or receipt.get("automatic_acceptance") is not False
+            or receipt.get("source_id") != source_id):
+        raise ValueError("persisted Process Topic review has an invalid authority")
+    if receipt.get("reviewed_topics_contract", {}).get("sha256") != _sha256(contract_path):
+        raise ValueError("persisted reviewed Topics changed")
+    if receipt.get("review_decisions", {}).get("sha256") != _sha256(decisions_path):
+        raise ValueError("persisted Process Topic decisions changed")
+    package_sha256 = receipt.get("review_package_sha256")
+    if (not isinstance(package_sha256, str) or re.fullmatch(r"[0-9a-f]{64}", package_sha256) is None
+            or decisions.get("review_package_sha256") != package_sha256):
+        raise ValueError("persisted Process Topic review package is invalid")
+    result_path = _inside(contract_path.parent / "result.json", root, "Process Topic review result")
+    result = json.loads(result_path.read_text(encoding="utf-8"))
+    if (result.get("status") != "PROCESS_REVIEWED_TOPICS_CREATED"
+            or result.get("authority") != PROCESS_TOPIC_AUTHORITY
+            or result.get("package_sha256") != package_sha256
+            or result.get("reviewed_topics_contract_sha256") != _sha256(contract_path)
+            or result.get("process_topic_review_receipt_sha256") != _sha256(receipt_path)
+            or result.get("decisions_sha256") != _sha256(decisions_path)):
+        raise ValueError("persisted Process Topic review result changed")
+    topics = contract.get("topics")
+    if not isinstance(topics, list) or not topics:
+        raise ValueError("persisted Process Topic review has no Topics")
+    presented = []
+    for topic in topics:
+        scope = topic.get("temporal_scope") if isinstance(topic, dict) else None
+        if (not isinstance(topic.get("id"), str) or not isinstance(topic.get("title"), str)
+                or not isinstance(topic.get("summary"), str) or not isinstance(scope, dict)
+                or not isinstance(scope.get("start_seconds"), (int, float))
+                or not isinstance(scope.get("end_seconds"), (int, float))):
+            raise ValueError("persisted Process Topic review has an invalid Topic")
+        presented.append({"id": topic["id"], "title": topic["title"], "summary": topic["summary"],
+                          "start_seconds": scope["start_seconds"], "end_seconds": scope["end_seconds"]})
+    return {"status": "PROCESS_TOPIC_REVIEWED", "authority": PROCESS_TOPIC_AUTHORITY,
+            "automatic_acceptance": False, "read_only": True, "package_sha256": package_sha256,
+            "topics": presented, "actions": receipt.get("topic_actions", {})}

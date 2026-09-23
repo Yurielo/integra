@@ -51,6 +51,14 @@ class ProcessTopicReviewBridgeTests(unittest.TestCase):
             self.assertTrue(Path(persisted["process_topic_review_receipt"]).is_file())
             ledger = json.loads(Path(persisted["process_topic_review_decisions"]).read_text())
             self.assertEqual(ledger["reviewer"], {"actor_type": "product_owner", "actor_id": "integra-process-local-human"})
+            # Reopen must materialize the reviewed contract, not call prepare
+            # against the unchanged machine topics artifact.
+            reopened = call("prepare-process-topic-review", request)
+            self.assertEqual(reopened["status"], "PROCESS_TOPIC_REVIEWED")
+            self.assertTrue(reopened["read_only"])
+            self.assertEqual(reopened["authority"], "PROCESS_HUMAN_TOPIC_REVIEW")
+            self.assertEqual(reopened["topics"][0]["title"], "Переименована")
+            self.assertEqual(json.loads((project / "artifacts/topics.json").read_text())["topics"][0]["title"], "Первая")
 
 
 if __name__ == "__main__":

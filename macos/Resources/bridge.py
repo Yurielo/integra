@@ -361,7 +361,8 @@ def _process_topic_review(root, request, apply=False):
     the Process review package, never a user-facing authority transition.
     """
     from integra_core.seminartext_topic_review_runtime import (
-        apply_process_topic_review, prepare_process_topic_review,
+        apply_process_topic_review, load_persisted_process_topic_review,
+        prepare_process_topic_review,
     )
     values = _review_inputs(root, request)
     run_id = request.get("run_id")
@@ -384,6 +385,21 @@ def _process_topic_review(root, request, apply=False):
             "process_topic_review_decisions": result["decisions_path"],
         }
     else:
+        persisted_keys = ("process_reviewed_topics", "process_topic_review_receipt",
+                          "process_topic_review_decisions")
+        persisted = {key: outputs.get(key) for key in persisted_keys}
+        if any(value is not None for value in persisted.values()):
+            if not all(isinstance(value, str) for value in persisted.values()):
+                raise ValueError("persisted Process Topic review is incomplete")
+            resolved = {key: str(resolve_persisted_project_path(values["project_dir"], value, key))
+                        for key, value in persisted.items()}
+            # Do not prepare a new package from the machine topic artifact once
+            # a human Process review exists.  The runtime verifies the receipt,
+            # decisions and reviewed contract before materializing it.
+            return load_persisted_process_topic_review(values["project_dir"], source_id=values["source_id"],
+                reviewed_topics_contract_path=resolved["process_reviewed_topics"],
+                receipt_path=resolved["process_topic_review_receipt"],
+                decisions_path=resolved["process_topic_review_decisions"])
         result = prepare_process_topic_review(values["project_dir"], source_id=values["source_id"],
             media_path=values["media_path"], transcript_path=values["transcript_path"],
             word_timeline_path=values["word_timeline_path"], topics_path=outputs["topics"])

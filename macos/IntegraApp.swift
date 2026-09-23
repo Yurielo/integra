@@ -1081,10 +1081,11 @@ struct SidebarItem {
       do {
         let result = try bridge.json("prepare-process-topic-review", request: [
           "project_id": identifiers[0], "run_id": identifiers[1], "source_id": identifiers[2]])["result"] as? [String: Any] ?? [:]
-        guard result["status"] as? String == "PROCESS_TOPIC_REVIEW_REQUIRED" else { throw BridgeError.invalidResponse }
+        guard let reviewStatus = result["status"] as? String,
+              reviewStatus == "PROCESS_TOPIC_REVIEW_REQUIRED" || reviewStatus == "PROCESS_TOPIC_REVIEWED" else { throw BridgeError.invalidResponse }
         DispatchQueue.main.async {
           sender.title = "Проверить темы"; sender.isEnabled = true
-          self.presentTopicReview(result, identifiers: identifiers)
+          self.presentTopicReview(result, identifiers: identifiers, readOnly: reviewStatus == "PROCESS_TOPIC_REVIEWED")
         }
       } catch {
         DispatchQueue.main.async {
@@ -1097,12 +1098,14 @@ struct SidebarItem {
   }
   // Process v1 subset of the pinned Topic contract: confirmation, rename,
   // reject and defer.  It never asks the user to classify Knowledge.
-  private func presentTopicReview(_ package: [String: Any], identifiers: [String]) {
+  private func presentTopicReview(_ package: [String: Any], identifiers: [String], readOnly: Bool = false) {
     guard let topics = package["topics"] as? [[String: Any]], !topics.isEmpty,
       let hash = package["package_sha256"] as? String else { status.stringValue = "Нет тем для проверки"; return }
     let alert = NSAlert()
     alert.messageText = "Проверка тем"
-    alert.informativeText = "Подтвердите или отредактируйте каждую машинную тему. Решения сохраняются в результатах обработки источника."
+    alert.informativeText = readOnly
+      ? "Сохранённые решения человека для этого источника."
+      : "Подтвердите или отредактируйте каждую машинную тему. Решения сохраняются в результатах обработки источника."
     let stack = FlippedStackView()
     stack.orientation = .vertical; stack.alignment = .leading; stack.spacing = 12
     var choices: [(String, String, String, NSPopUpButton, NSTextField, NSTextField)] = []
@@ -1117,13 +1120,26 @@ struct SidebarItem {
       let summary = NSTextField(string: topic["summary"] as? String ?? "")
       summary.placeholderString = "Краткое описание"; summary.widthAnchor.constraint(equalToConstant: 560).isActive = true; stack.addArrangedSubview(summary)
       let choice = NSPopUpButton()
-      choice.addItems(withTitles: ["Выберите решение", "Подтвердить тему", "Переименовать", "Отклонить", "Отложить"])
+      if readOnly {
+        title.isEditable = false; summary.isEditable = false
+        let actions = package["actions"] as? [String: String] ?? [:]
+        let labels = ["ACCEPT": "Подтверждено", "RENAME": "Переименовано", "REJECT": "Отклонено", "DEFER": "Отложено"]
+        choice.addItem(withTitle: labels[actions[id] ?? ""] ?? "Сохранённое решение")
+        choice.isEnabled = false
+      } else {
+        choice.addItems(withTitles: ["Выберите решение", "Подтвердить тему", "Переименовать", "Отклонить", "Отложить"])
+      }
       stack.addArrangedSubview(choice)
       choices.append((id, title.stringValue, summary.stringValue, choice, title, summary))
     }
     let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 590, height: 420))
     scroll.hasVerticalScroller = true; scroll.documentView = stack
     stack.setFrameSize(NSSize(width: 570, height: stack.fittingSize.height)); alert.accessoryView = scroll
+    if readOnly {
+      alert.addButton(withTitle: "Готово")
+      _ = alert.runModal()
+      return
+    }
     alert.addButton(withTitle: "Сохранить проверенные темы"); alert.addButton(withTitle: "Отмена")
     while true {
       guard alert.runModal() == .alertFirstButtonReturn else { return }

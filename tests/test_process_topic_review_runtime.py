@@ -7,7 +7,8 @@ import unittest
 from unittest.mock import patch
 
 from integra_core.seminartext_topic_review_runtime import (
-    PROCESS_TOPIC_AUTHORITY as AUTHORITY, apply_process_topic_review, prepare_process_topic_review,
+    PROCESS_TOPIC_AUTHORITY as AUTHORITY, apply_process_topic_review, load_persisted_process_topic_review,
+    prepare_process_topic_review,
 )
 from integra_core.seminartext_evidence_runtime import prepare_topic_review_input
 
@@ -67,6 +68,22 @@ class ProcessTopicReviewRuntimeTests(unittest.TestCase):
         self.assertFalse(list(self.project.rglob("canonical_knowledge.json")))
         self.assertEqual(apply_process_topic_review(self.project, source_id=self.args["source_id"],
             expected_package_sha256=package["package_sha256"], reviewer_id="fixture-owner", decisions=decisions), result)
+
+        reopened = load_persisted_process_topic_review(self.project, source_id=self.args["source_id"],
+            reviewed_topics_contract_path=result["reviewed_topics_contract_path"],
+            receipt_path=result["process_topic_review_receipt_path"], decisions_path=result["decisions_path"])
+        self.assertEqual(reopened["status"], "PROCESS_TOPIC_REVIEWED")
+        self.assertTrue(reopened["read_only"])
+        self.assertEqual(reopened["topics"][0]["title"], "Переименованная тема")
+        self.assertEqual(json.loads((self.project / "topics.json").read_text())["topics"][0]["title"], "Первая тема")
+
+        tampered = json.loads(Path(result["reviewed_topics_contract_path"]).read_text())
+        tampered["topics"][0]["title"] = "Подмена"
+        Path(result["reviewed_topics_contract_path"]).write_text(json.dumps(tampered), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "persisted reviewed Topics changed"):
+            load_persisted_process_topic_review(self.project, source_id=self.args["source_id"],
+                reviewed_topics_contract_path=result["reviewed_topics_contract_path"],
+                receipt_path=result["process_topic_review_receipt_path"], decisions_path=result["decisions_path"])
 
     def test_unsupported_split_is_not_faked_by_process_v1_surface(self):
         package = prepare_process_topic_review(self.project, **self.args)
