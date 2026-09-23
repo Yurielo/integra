@@ -29,14 +29,24 @@ class ProcessResultsSurfaceTests(unittest.TestCase):
         self.assertNotIn('outputs["translation"] as? String', surface)
         self.assertNotIn('outputs["topics"] as? String', surface)
 
-    def test_reviewable_topics_use_the_existing_machine_evidence_and_review_path(self):
+    def test_reviewable_topics_use_process_only_review_path(self):
         review = self.source.split("@objc private func prepareTopicReview", 1)[1].split(
             "private func presentTopicReview", 1)[0]
-        self.assertIn('bridge.json("create-machine-evidence"', review)
-        self.assertIn('bridge.json("prepare-knowledge-review"', review)
-        self.assertIn('result["status"] as? String == "REVIEW_REQUIRED"', review)
+        self.assertIn('bridge.json("prepare-process-topic-review"', review)
+        self.assertIn('result["status"] as? String == "PROCESS_TOPIC_REVIEW_REQUIRED"', review)
+        self.assertNotIn("create-machine-evidence", review)
+        self.assertNotIn("knowledge-review", review)
         self.assertIn('self.presentTopicReview(result, identifiers: identifiers)', review)
         self.assertIn('sender.title = "Проверить темы"', review)
+
+    def test_process_topic_dialog_uses_pinned_actions_without_knowledge_wording(self):
+        dialog = self.source.split("private func presentTopicReview", 1)[1].split(
+            "private func presentProcessTopicReviewLegacy", 1)[0]
+        self.assertIn('"ACCEPT", "RENAME", "REJECT", "DEFER"', dialog)
+        self.assertIn('bridge.json("apply-process-topic-review"', dialog)
+        self.assertIn("Проверка тем", dialog)
+        for forbidden in ("Canonical Knowledge", "Включить фрагмент в знания", "Evidence", "семантическ"):
+            self.assertNotIn(forbidden, dialog)
 
     def test_technical_artifacts_are_secondary_and_knowledge_actions_are_not_primary(self):
         render = self.source.split("private func renderResultRows", 1)[1].split(

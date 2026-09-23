@@ -28,6 +28,7 @@ final class Bridge: @unchecked Sendable {
       "obsidian-preview", "transcript-text",
       "onedrive-preview",
       "prepare-transcript-review", "apply-transcript-review", "prepare-topic-review",
+      "prepare-process-topic-review", "apply-process-topic-review",
       "prepare-knowledge-review", "apply-knowledge-review", "create-machine-evidence",
       "shutdown-active-runs",
     ]
@@ -1074,34 +1075,87 @@ struct SidebarItem {
   @objc private func prepareTopicReview(_ sender: NSButton) {
     let identifiers = sender.toolTip?.split(separator: "\n", maxSplits: 2).map(String.init) ?? []
     guard identifiers.count == 3 else { return }
-    sender.isEnabled = false; sender.title = "Подготавливаю review input…"
+    sender.isEnabled = false; sender.title = "Подготавливаю темы…"
     let bridge = self.bridge!
     serviceQueue.async {
       do {
-        // Keep machine evidence strictly machine/unreviewed.  This existing
-        // operation is idempotent and supplies the canonical evidence required
-        // by the existing Topic-review package; it never accepts a topic.
-        _ = try bridge.json("create-machine-evidence", request: [
-          "project_id": identifiers[0], "run_id": identifiers[1], "source_id": identifiers[2]])
-        let result = try bridge.json("prepare-knowledge-review", request: [
+        let result = try bridge.json("prepare-process-topic-review", request: [
           "project_id": identifiers[0], "run_id": identifiers[1], "source_id": identifiers[2]])["result"] as? [String: Any] ?? [:]
-        guard result["status"] as? String == "REVIEW_REQUIRED" else { throw BridgeError.invalidResponse }
+        guard result["status"] as? String == "PROCESS_TOPIC_REVIEW_REQUIRED" else { throw BridgeError.invalidResponse }
         DispatchQueue.main.async {
           sender.title = "Проверить темы"; sender.isEnabled = true
           self.presentTopicReview(result, identifiers: identifiers)
         }
       } catch {
         DispatchQueue.main.async {
-          let incompatible = error.localizedDescription.contains("BenchmarkSegments")
-          sender.title = incompatible ? "Эти границы тем — В разработке" : "Повторить подготовку тем"
-          sender.isEnabled = !incompatible
+          sender.title = "Повторить подготовку тем"; sender.isEnabled = true
           self.status.textColor = .systemRed
-          self.status.stringValue = incompatible ? "Границы этих тем пока не поддерживаются компонентом знаний. Решения не запрошены, знания не созданы." : error.localizedDescription
+          self.status.stringValue = error.localizedDescription
         }
       }
     }
   }
+  // Process v1 subset of the pinned Topic contract: confirmation, rename,
+  // reject and defer.  It never asks the user to classify Knowledge.
   private func presentTopicReview(_ package: [String: Any], identifiers: [String]) {
+    guard let topics = package["topics"] as? [[String: Any]], !topics.isEmpty,
+      let hash = package["package_sha256"] as? String else { status.stringValue = "Нет тем для проверки"; return }
+    let alert = NSAlert()
+    alert.messageText = "Проверка тем"
+    alert.informativeText = "Подтвердите или отредактируйте каждую машинную тему. Решения сохраняются в результатах обработки источника."
+    let stack = FlippedStackView()
+    stack.orientation = .vertical; stack.alignment = .leading; stack.spacing = 12
+    var choices: [(String, NSPopUpButton, NSTextField, NSTextField)] = []
+    for topic in topics {
+      guard let id = topic["id"] as? String else { return }
+      let start = topic["start_seconds"] as? Double ?? 0
+      let end = topic["end_seconds"] as? Double ?? 0
+      let span = NSTextField(wrappingLabelWithString: String(format: "Источник: %.3f–%.3f с", start, end))
+      span.widthAnchor.constraint(equalToConstant: 560).isActive = true; stack.addArrangedSubview(span)
+      let title = NSTextField(string: topic["title"] as? String ?? "Тема")
+      title.placeholderString = "Название темы"; title.widthAnchor.constraint(equalToConstant: 560).isActive = true; stack.addArrangedSubview(title)
+      let summary = NSTextField(string: topic["summary"] as? String ?? "")
+      summary.placeholderString = "Краткое описание"; summary.widthAnchor.constraint(equalToConstant: 560).isActive = true; stack.addArrangedSubview(summary)
+      let choice = NSPopUpButton()
+      choice.addItems(withTitles: ["Выберите решение", "Подтвердить тему", "Переименовать", "Отклонить", "Отложить"])
+      stack.addArrangedSubview(choice); choices.append((id, choice, title, summary))
+    }
+    let reviewer = NSTextField(frame: NSRect(x: 0, y: 0, width: 560, height: 24))
+    reviewer.placeholderString = "Идентификатор проверяющего"; stack.addArrangedSubview(reviewer)
+    let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 590, height: 420))
+    scroll.hasVerticalScroller = true; scroll.documentView = stack
+    stack.setFrameSize(NSSize(width: 570, height: stack.fittingSize.height)); alert.accessoryView = scroll
+    alert.addButton(withTitle: "Сохранить проверенные темы"); alert.addButton(withTitle: "Отмена")
+    while true {
+      guard alert.runModal() == .alertFirstButtonReturn else { return }
+      if choices.allSatisfy({ $0.1.indexOfSelectedItem > 0 }) && !reviewer.stringValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { break }
+      alert.informativeText = "Выберите решение для КАЖДОЙ темы и укажите идентификатор проверяющего."
+    }
+    let actions = ["ACCEPT", "RENAME", "REJECT", "DEFER"]
+    let decisions: [[String: Any]] = choices.map { choice in
+      let action = actions[choice.1.indexOfSelectedItem - 1]
+      return ["topic_id": choice.0, "action": action, "reason": "Explicit Process Topic decision in Integra macOS review",
+              "new_title": action == "RENAME" ? choice.2.stringValue : NSNull(),
+              "new_summary": action == "RENAME" ? choice.3.stringValue : NSNull()]
+    }
+    let reviewerID = reviewer.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+    status.stringValue = "Сохраняю проверенные темы…"
+    let bridge = self.bridge!
+    serviceQueue.async {
+      do {
+        let response = try bridge.json("apply-process-topic-review", request: [
+          "project_id": identifiers[0], "run_id": identifiers[1], "source_id": identifiers[2],
+          "expected_package_sha256": hash, "reviewer_id": reviewerID, "decisions": decisions])
+        guard (response["result"] as? [String: Any])?["status"] as? String == "PROCESS_REVIEWED_TOPICS_CREATED" else { throw BridgeError.invalidResponse }
+        DispatchQueue.main.async { self.renderOutputs(); self.status.stringValue = "Проверенные темы сохранены." }
+      } catch {
+        DispatchQueue.main.async { self.status.textColor = .systemRed; self.status.stringValue = error.localizedDescription }
+      }
+    }
+  }
+  // Legacy Knowledge review remains available to its future Knowledge surface;
+  // the Process results action above never calls this view or its operations.
+  private func presentProcessTopicReviewLegacy(_ package: [String: Any], identifiers: [String]) {
     guard let topics = package["topics"] as? [[String: Any]], !topics.isEmpty,
       let hash = package["package_sha256"] as? String else { status.stringValue = "Нет тем для проверки"; return }
     NSSound.beep()
