@@ -430,3 +430,132 @@ def apply_topic_review(project_dir, *, source_id, expected_package_sha256, revie
             raise ValueError("knowledge Markdown changed")
         result["knowledge_markdown_path"] = str(markdown)
         return result | {"decisions_path": str(decision_path), "review_result_path": str(result_dir / "result.json")}
+
+
+# Process v1 deliberately reuses the exact pinned Topic contract but stops
+# before the Knowledge compiler.  The separate authority is persisted below.
+PROCESS_V1_ACTIONS = ("ACCEPT", "RENAME", "REJECT", "DEFER")
+PROCESS_TOPIC_AUTHORITY = "PROCESS_HUMAN_TOPIC_REVIEW"
+
+
+def prepare_process_topic_review(project_dir, *, source_id, media_path, transcript_path,
+                                 word_timeline_path, topics_path):
+    """Prepare Process Topic review without recording an Evidence/Knowledge output."""
+    from .seminartext_evidence_runtime import create_machine_evidence
+    root = Path(project_dir).resolve(strict=True)
+    # Technical machine-bound input is private to the review package; no run
+    # output claims Evidence or Knowledge authority.
+    machine = create_machine_evidence(root, source_id=source_id, media_path=media_path,
+                                      transcript_path=transcript_path, word_timeline_path=word_timeline_path)
+    package = prepare_topic_review(root, source_id=source_id,
+                                   canonical_evidence_path=machine["canonical_evidence_path"], topics_path=topics_path)
+    current_topics = _inside(Path(topics_path), root, "machine Topics")
+    return {"status": "PROCESS_TOPIC_REVIEW_REQUIRED", "authority": PROCESS_TOPIC_AUTHORITY,
+            "automatic_acceptance": False, "package_path": package["package_path"],
+            "package_sha256": package["package_sha256"], "topics": package["topics"],
+            "machine_topics_path": str(current_topics), "machine_topics_sha256": _sha256(current_topics)}
+
+
+def _process_choices(package, reviewer_id, decisions):
+    if not isinstance(reviewer_id, str) or re.fullmatch(r"[a-z][a-z0-9._:-]{2,127}", reviewer_id) is None:
+        raise ValueError("reviewer identifier must be a stable lowercase identifier")
+    if not isinstance(decisions, list) or not decisions:
+        raise ValueError("explicit Topic decisions are required")
+    topics = {item["id"]: item for item in package["topics"]}; selected = {}
+    for value in decisions:
+        if not isinstance(value, dict) or set(value) != {"topic_id", "action", "reason", "new_title", "new_summary"}:
+            raise ValueError("each Topic decision has invalid fields")
+        topic_id, action = value["topic_id"], value["action"]
+        if not isinstance(topic_id, str) or topic_id not in topics or topic_id in selected:
+            raise ValueError("unknown or duplicate Topic decision")
+        if action not in PROCESS_V1_ACTIONS:
+            raise ValueError("unsupported Process Topic action")
+        if not isinstance(value["reason"], str) or not value["reason"].strip():
+            raise ValueError("each Topic decision requires a reason")
+        if action == "RENAME":
+            if not isinstance(value["new_title"], str) or not value["new_title"].strip() or not isinstance(value["new_summary"], str):
+                raise ValueError("a Topic rename requires title and summary")
+        elif value["new_title"] is not None or value["new_summary"] is not None:
+            raise ValueError("only a Topic rename may change title or summary")
+        selected[topic_id] = dict(value)
+    if set(selected) != set(topics):
+        raise ValueError("every displayed Topic requires an explicit decision")
+    return [selected[key] for key in sorted(selected)]
+
+
+def _process_ledger(package, package_sha256, reviewer_id, choices):
+    key = content_sha256({"package": package_sha256, "reviewer": reviewer_id, "choices": choices,
+                          "authority": PROCESS_TOPIC_AUTHORITY})
+    indexed = {item["id"]: item for item in package["topics"]}; records = []
+    for choice in choices:
+        topic = indexed[choice["topic_id"]]
+        records.append({"id": "decision_" + hashlib.sha256(choice["topic_id"].encode()).hexdigest(),
+                        "action": choice["action"], "target_ids": [choice["topic_id"]], "result_topics": [],
+                        "reason": choice["reason"].strip(), "timestamp": _now(),
+                        "expected_topics": [{"topic_id": choice["topic_id"], "topic_sha256": topic["topic_sha256"]}],
+                        "new_title": choice["new_title"].strip() if choice["action"] == "RENAME" else None,
+                        "new_summary": choice["new_summary"] if choice["action"] == "RENAME" else None})
+    return {"schema_version": "1.0.0", "artifact_type": "seminartext.topic_review_decisions",
+            "artifact_id": "review_decisions_" + key, "review_package_id": package["artifact_id"],
+            "review_package_sha256": package_sha256,
+            "reviewer": {"actor_type": "product_owner", "actor_id": reviewer_id}, "decisions": records}
+
+
+def _same_process_decisions(left, right):
+    def normalized(value):
+        copied = json.loads(json.dumps(value))
+        for decision in copied.get("decisions", []): decision.pop("timestamp", None)
+        return copied
+    return normalized(left) == normalized(right)
+
+
+def apply_process_topic_review(project_dir, *, source_id, expected_package_sha256, reviewer_id, decisions):
+    runtime = preflight()["runtime"]; root = Path(project_dir).resolve(strict=True)
+    if not isinstance(expected_package_sha256, str) or re.fullmatch(r"[0-9a-f]{64}", expected_package_sha256) is None:
+        raise ValueError("the displayed Topic review package hash is required")
+    with _locked(root, source_id) as directory:
+        package_dir = directory / expected_package_sha256
+        package_path = _inside(package_dir / "review/review_package.json", root, "Topic review package")
+        if _sha256(package_path) != expected_package_sha256: raise ValueError("Topic review package changed")
+        binding = _resolve_binding_paths(root, json.loads(_inside(package_dir / "binding.json", root, "Topic review binding").read_text(encoding="utf-8")))
+        if binding.get("source_id") != source_id or binding.get("package_sha256") != expected_package_sha256:
+            raise ValueError("Topic review package belongs to another source")
+        for name in ("evidence", "topics"):
+            if _sha256(_inside(Path(binding[name + "_path"]), root, name)) != binding[name + "_sha256"]:
+                raise ValueError(f"{name} changed after Topic review preparation")
+        package = json.loads(package_path.read_text(encoding="utf-8")); choices = _process_choices(package, reviewer_id, decisions)
+        ledger = _process_ledger(package, expected_package_sha256, reviewer_id, choices); decision_path = package_dir / "process_topic_decisions.json"
+        if decision_path.exists():
+            existing = json.loads(_inside(decision_path, root, "persisted Topic decisions").read_text(encoding="utf-8"))
+            if not _same_process_decisions(existing, ledger): raise ValueError("this Topic review package already has different persisted decisions")
+            ledger = existing
+        else:
+            temporary = package_dir / "process_topic_decisions.tmp"; _write(temporary, ledger); os.replace(temporary, decision_path)
+        result_dir = package_dir / "process-result"
+        if not result_dir.exists():
+            with tempfile.TemporaryDirectory(prefix=".process-apply-", dir=package_dir) as temporary:
+                stage = Path(temporary); component = stage / "project"; shutil.copytree(package_dir / "project", component)
+                contract = stage / "reviewed_topics_contract.json"
+                applied = _invoke(runtime, REVIEW_TOOL, "apply", component, "--package", package_path, "--decisions", decision_path, "--output", contract)
+                if applied.get("status") != "PASS": raise ValueError("SeminarText Topic review did not pass")
+                payload = json.loads(contract.read_text(encoding="utf-8")); actions = {item["target_ids"][0]: item["action"] for item in ledger["decisions"]}
+                receipt = {"schema_version": "1.0", "artifact_type": "integra.process_reviewed_topics", "authority": PROCESS_TOPIC_AUTHORITY,
+                           "automatic_acceptance": False, "source_id": source_id, "review_package_sha256": expected_package_sha256,
+                           "machine_topics": {"path": binding["topics_path"], "sha256": binding["topics_sha256"]},
+                           "review_decisions": {"path": str(decision_path), "sha256": _sha256(decision_path)},
+                           "reviewed_topics_contract": {"sha256": _sha256(contract), "topic_count": len(payload.get("topics", []))},
+                           "topic_actions": actions,
+                           "limitations": ["Process Topic review only; no Evidence acceptance or Knowledge inclusion occurred."]}
+                _write(stage / "process_topic_review_receipt.json", receipt)
+                result = {"status": "PROCESS_REVIEWED_TOPICS_CREATED", "authority": PROCESS_TOPIC_AUTHORITY, "automatic_acceptance": False,
+                          "package_sha256": expected_package_sha256, "decisions_sha256": _sha256(decision_path),
+                          "reviewed_topics_contract_sha256": _sha256(contract), "process_topic_review_receipt_sha256": _sha256(stage / "process_topic_review_receipt.json"), "actions": actions}
+                _write(stage / "result.json", result); os.rename(stage, result_dir)
+        result = json.loads(_inside(result_dir / "result.json", root, "Process Topic review result").read_text(encoding="utf-8"))
+        if result.get("decisions_sha256") != _sha256(decision_path) or result.get("status") != "PROCESS_REVIEWED_TOPICS_CREATED":
+            raise ValueError("persisted Process Topic review changed")
+        for key, name in (("reviewed_topics_contract", "reviewed_topics_contract.json"), ("process_topic_review_receipt", "process_topic_review_receipt.json")):
+            path = _inside(result_dir / name, root, key)
+            if _sha256(path) != result[key + "_sha256"]: raise ValueError("persisted Process Topic review artifact changed")
+            result[key + "_path"] = str(path)
+        return result | {"decisions_path": str(decision_path), "review_result_path": str(result_dir / "result.json")}

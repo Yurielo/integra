@@ -20,10 +20,12 @@ class TranscriptReviewUITests(unittest.TestCase):
         self.assertNotIn("Knowledge Base", process_results)
         self.assertIn('bridge.json("prepare-transcript-review"', source)
         self.assertIn('bridge.json("apply-transcript-review"', source)
-        self.assertIn('bridge.json("prepare-knowledge-review"', source)
-        self.assertIn('bridge.json("apply-knowledge-review"', source)
+        # Knowledge operations remain registered for their later surface but
+        # are not invoked by the Process Topic-review action.
+        self.assertIn('bridge.json("prepare-process-topic-review"', source)
+        self.assertIn('bridge.json("apply-process-topic-review"', source)
         allowed = source.split("let allowed = [", 1)[1].split("]", 1)[0]
-        for operation in ("prepare-transcript-review", "apply-transcript-review", "prepare-knowledge-review", "apply-knowledge-review"):
+        for operation in ("prepare-transcript-review", "apply-transcript-review", "prepare-knowledge-review", "apply-knowledge-review", "prepare-process-topic-review", "apply-process-topic-review"):
             self.assertIn('"' + operation + '"', allowed)
 
     def test_build_packages_the_exact_pinned_evidence_component(self):
