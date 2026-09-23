@@ -43,12 +43,14 @@ class ProcessTopicReviewBridgeTests(unittest.TestCase):
             package = call("prepare-process-topic-review", request)
             self.assertEqual(package["status"], "PROCESS_TOPIC_REVIEW_REQUIRED")
             decisions = [{"topic_id": topic["id"], "action": "RENAME" if index == 0 else "ACCEPT", "reason": "bridge fixture", "new_title": "Переименована" if index == 0 else None, "new_summary": "Изменена" if index == 0 else None} for index, topic in enumerate(package["topics"])]
-            applied = call("apply-process-topic-review", request | {"expected_package_sha256": package["package_sha256"], "reviewer_id": "bridge-owner", "decisions": decisions})
+            applied = call("apply-process-topic-review", request | {"expected_package_sha256": package["package_sha256"], "decisions": decisions})
             self.assertEqual(applied["status"], "PROCESS_REVIEWED_TOPICS_CREATED")
             persisted = json.loads(run_path.read_text())["source_results"][0]["outputs"]
             self.assertEqual(set(persisted) & {"canonical_evidence", "canonical_knowledge"}, set())
             self.assertTrue(Path(persisted["process_reviewed_topics"]).is_file())
             self.assertTrue(Path(persisted["process_topic_review_receipt"]).is_file())
+            ledger = json.loads(Path(persisted["process_topic_review_decisions"]).read_text())
+            self.assertEqual(ledger["reviewer"], {"actor_type": "product_owner", "actor_id": "integra-process-local-human"})
 
 
 if __name__ == "__main__":

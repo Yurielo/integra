@@ -1120,16 +1120,14 @@ struct SidebarItem {
       choice.addItems(withTitles: ["Выберите решение", "Подтвердить тему", "Переименовать", "Отклонить", "Отложить"])
       stack.addArrangedSubview(choice); choices.append((id, choice, title, summary))
     }
-    let reviewer = NSTextField(frame: NSRect(x: 0, y: 0, width: 560, height: 24))
-    reviewer.placeholderString = "Идентификатор проверяющего"; stack.addArrangedSubview(reviewer)
     let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 590, height: 420))
     scroll.hasVerticalScroller = true; scroll.documentView = stack
     stack.setFrameSize(NSSize(width: 570, height: stack.fittingSize.height)); alert.accessoryView = scroll
     alert.addButton(withTitle: "Сохранить проверенные темы"); alert.addButton(withTitle: "Отмена")
     while true {
       guard alert.runModal() == .alertFirstButtonReturn else { return }
-      if choices.allSatisfy({ $0.1.indexOfSelectedItem > 0 }) && !reviewer.stringValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { break }
-      alert.informativeText = "Выберите решение для КАЖДОЙ темы и укажите идентификатор проверяющего."
+      if choices.allSatisfy({ $0.1.indexOfSelectedItem > 0 }) { break }
+      alert.informativeText = "Выберите решение для КАЖДОЙ темы."
     }
     let actions = ["ACCEPT", "RENAME", "REJECT", "DEFER"]
     let decisions: [[String: Any]] = choices.map { choice in
@@ -1138,14 +1136,13 @@ struct SidebarItem {
               "new_title": action == "RENAME" ? choice.2.stringValue : NSNull(),
               "new_summary": action == "RENAME" ? choice.3.stringValue : NSNull()]
     }
-    let reviewerID = reviewer.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
     status.stringValue = "Сохраняю проверенные темы…"
     let bridge = self.bridge!
     serviceQueue.async {
       do {
         let response = try bridge.json("apply-process-topic-review", request: [
           "project_id": identifiers[0], "run_id": identifiers[1], "source_id": identifiers[2],
-          "expected_package_sha256": hash, "reviewer_id": reviewerID, "decisions": decisions])
+          "expected_package_sha256": hash, "decisions": decisions])
         guard (response["result"] as? [String: Any])?["status"] as? String == "PROCESS_REVIEWED_TOPICS_CREATED" else { throw BridgeError.invalidResponse }
         DispatchQueue.main.async { self.renderOutputs(); self.status.stringValue = "Проверенные темы сохранены." }
       } catch {
