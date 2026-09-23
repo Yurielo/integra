@@ -15,6 +15,36 @@ BRIDGE = Path(os.environ.get("INTEGRA_TEST_BRIDGE", ROOT / "macos" / "Resources"
 
 
 class TranscriptReviewBridgeTests(unittest.TestCase):
+    def test_review_inputs_rebase_only_same_project_after_data_root_relocation(self):
+        bridge = runpy.run_path(str(BRIDGE))
+        with tempfile.TemporaryDirectory() as directory:
+            project_uuid = uuid.uuid4(); project_id = f"urn:integra:project:{project_uuid}"
+            run_id = f"urn:integra:run:{uuid.uuid4()}"; source_id = f"urn:integra:source:{uuid.uuid4()}"
+            old_project = Path(directory) / "old-app-data" / "projects" / str(project_uuid)
+            project = Path(directory) / "current-app-data" / "projects" / str(project_uuid)
+            for root in (old_project, project):
+                (root / "artifacts").mkdir(parents=True); (root / "sources").mkdir()
+            names = {"transcript": "transcript.txt", "word_timeline": "word_timeline.json", "media": "source.mp4"}
+            (project / "artifacts" / names["transcript"]).write_text("Проверка\n", encoding="utf-8")
+            (project / "artifacts" / names["word_timeline"]).write_text(json.dumps({"words": []}))
+            (project / "sources" / names["media"]).write_bytes(b"owned media")
+            for path in (old_project / "artifacts" / names["transcript"], old_project / "artifacts" / names["word_timeline"], old_project / "sources" / names["media"]):
+                path.write_bytes(b"historical path placeholder")
+            (project / "project.json").write_text(json.dumps({"project_id": project_id, "name": "Moved", "status": "READY"}))
+            job_id = f"urn:integra:job:{uuid.uuid4()}"
+            (project / "jobs.json").write_text(json.dumps({"jobs": [{"job_id": job_id, "source_id": source_id,
+                "owned_path": str(old_project / "sources" / names["media"])}]}))
+            (project / "runs").mkdir()
+            (project / "runs" / (run_id.removeprefix("urn:integra:run:") + ".json")).write_text(json.dumps({"run_id": run_id,
+                "source_results": [{"source_id": source_id, "state": "COMPLETED", "job_id": job_id, "outputs": {
+                    "transcript": str(old_project / "artifacts" / names["transcript"]),
+                    "word_timeline": str(old_project / "artifacts" / names["word_timeline"]),
+                }}]}))
+            values = bridge["_review_inputs"](project.parents[1], {"project_id": project_id, "run_id": run_id, "source_id": source_id})
+            self.assertEqual(values["media_path"], str((project / "sources" / names["media"]).resolve()))
+            self.assertEqual(values["transcript_path"], str((project / "artifacts" / names["transcript"]).resolve()))
+            self.assertEqual(values["word_timeline_path"], str((project / "artifacts" / names["word_timeline"]).resolve()))
+
     def test_concurrent_source_output_updates_preserve_both_sources(self):
         bridge = runpy.run_path(str(BRIDGE))
         with tempfile.TemporaryDirectory() as directory:

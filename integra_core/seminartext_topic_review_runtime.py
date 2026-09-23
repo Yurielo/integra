@@ -22,6 +22,7 @@ from .protocol import canonical_json, content_sha256
 from .seminartext_evidence_runtime import (
     _inside, _now, _review_root, _runtime_root, _sha256, prepare_topic_review_input,
 )
+from .transcript_output import resolve_persisted_project_path
 
 
 RUNTIME_FILES = {
@@ -89,6 +90,26 @@ def _invoke(runtime, tool, *arguments):
 
 def _write(path, value):
     path.write_bytes(canonical_json(value) + b"\n")
+
+
+def _resolve_binding_paths(root, binding):
+    """Use current project locations for legacy absolute binding references.
+
+    The binding itself remains an immutable record in a content-addressed review
+    package.  Only this in-memory view is rebased through the same strict
+    project-identity rule used by all persisted output paths.
+    """
+    if not isinstance(binding, dict):
+        raise ValueError("review binding is invalid")
+    resolved = dict(binding)
+    for name, label in (("evidence", "Canonical Evidence"), ("topics", "topic drafts"),
+                        ("timeline", "Word Timeline")):
+        key = name + "_path"
+        if key in resolved:
+            if not isinstance(resolved[key], str):
+                raise ValueError(f"review binding {name} path is invalid")
+            resolved[key] = str(resolve_persisted_project_path(root, resolved[key], label))
+    return resolved
 
 
 @contextmanager
@@ -190,7 +211,8 @@ def prepare_topic_review(project_dir, *, source_id, canonical_evidence_path, top
             _write(stage / "binding.json", binding)
             if target.exists():
                 prior = _inside(target / "review/review_package.json", root, "review package")
-                prior_binding = json.loads(_inside(target / "binding.json", root, "review binding").read_text())
+                prior_binding = _resolve_binding_paths(root, json.loads(
+                    _inside(target / "binding.json", root, "review binding").read_text()))
                 prior_binding["review_mode"] = _bound_mode(prior_binding, json.loads(prior.read_text()),
                     _inside(target / "project/evidence/canonical_bundle.json", root, "Evidence snapshot"))
                 if _sha256(prior) != digest or prior_binding != binding:
@@ -318,7 +340,8 @@ def apply_topic_review(project_dir, *, source_id, expected_package_sha256, revie
         package_path = _inside(package_dir / "review/review_package.json", root, "review package")
         if _sha256(package_path) != expected_package_sha256:
             raise ValueError("review package changed")
-        binding = json.loads(_inside(package_dir / "binding.json", root, "review binding").read_text())
+        binding = _resolve_binding_paths(root, json.loads(
+            _inside(package_dir / "binding.json", root, "review binding").read_text()))
         if binding["source_id"] != source_id or binding["package_sha256"] != expected_package_sha256:
             raise ValueError("review package belongs to another source")
         for name in ("evidence", "topics"):
