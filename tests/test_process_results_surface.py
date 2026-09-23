@@ -20,13 +20,23 @@ class ProcessResultsSurfaceTests(unittest.TestCase):
             self.assertIn(f'processCard("{label}"', self.source)
         self.assertIn('button("Открыть источник с расшифровкой"', self.source)
 
-    def test_only_readable_translation_or_topics_can_be_primary(self):
+    def test_only_readable_translation_or_reviewable_topics_can_be_primary(self):
         surface = self.source.split("private func renderPrimaryProcessResults", 1)[1].split(
             "private func readableOutput", 1)[0]
         self.assertIn('keys: ["translation_txt", "translated_txt"]', surface)
-        self.assertIn('keys: ["topics_txt", "topics_markdown"]', surface)
+        self.assertIn('outputs["topics"] is String', surface)
+        self.assertIn('button("Проверить темы", #selector(prepareTopicReview(_:)))', surface)
         self.assertNotIn('outputs["translation"] as? String', surface)
         self.assertNotIn('outputs["topics"] as? String', surface)
+
+    def test_reviewable_topics_use_the_existing_machine_evidence_and_review_path(self):
+        review = self.source.split("@objc private func prepareTopicReview", 1)[1].split(
+            "private func presentTopicReview", 1)[0]
+        self.assertIn('bridge.json("create-machine-evidence"', review)
+        self.assertIn('bridge.json("prepare-knowledge-review"', review)
+        self.assertIn('result["status"] as? String == "REVIEW_REQUIRED"', review)
+        self.assertIn('self.presentTopicReview(result, identifiers: identifiers)', review)
+        self.assertIn('sender.title = "Проверить темы"', review)
 
     def test_technical_artifacts_are_secondary_and_knowledge_actions_are_not_primary(self):
         render = self.source.split("private func renderResultRows", 1)[1].split(
