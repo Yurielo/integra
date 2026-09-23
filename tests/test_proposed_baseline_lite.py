@@ -164,6 +164,14 @@ class ProposedBaselineLiteTests(unittest.TestCase):
         self.assertEqual(result["records"][-1]["historical_predecessors"][0]["sha256"],
                          hashlib.sha256(expected).hexdigest())
 
+    def test_promoted_current_retains_exact_historical_test_successor(self):
+        proposal = self.proposal()
+        successor = self._r12_test_successor()
+        proposal["historical_test_successors"] = [successor]
+        result = next_current(self.current, proposal, "owner-ref", previous_current_path="state/history.json")
+        governed = {item["path"]: item["sha256"] for item in result["records"][-1]["governed_files"]}
+        self.assertEqual(governed[successor["path"]], successor["after_sha256"])
+
     def _sequential_current(self, governed):
         current = copy.deepcopy(self.current)
         active = current["records"][0]

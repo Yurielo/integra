@@ -506,6 +506,19 @@ def next_current(current: dict[str, Any], proposal: dict[str, Any], owner_accept
         if path in governed and item["before_sha256"] != governed[path]:
             raise ValueError("PROPOSED baseline delta does not start from active CURRENT hash")
         governed[path] = item["after_sha256"]
+    # A historical test successor is not executable product delta, but it is
+    # an exact current byte that supersedes an immutable R12/R13 test hash.
+    # Retiring its PROPOSED record would otherwise erase the only active
+    # hash-closed link the historical validator can follow.
+    for item in proposal.get("historical_test_successors", []):
+        if not isinstance(item, dict) or set(item) != {
+            "path", "historical_authority", "before_sha256", "after_sha256", "reason",
+        }:
+            raise ValueError("PROPOSED historical test successor is invalid")
+        path = item["path"]
+        if path in governed and item["before_sha256"] != governed[path]:
+            raise ValueError("PROPOSED historical test successor does not start from active CURRENT hash")
+        governed[path] = item["after_sha256"]
     new_id = "current-v2-" + proposal["candidate"]["identity_sha256"]
     new_record = {
         "baseline_id": new_id,
