@@ -6,20 +6,60 @@ from pathlib import Path
 import tempfile
 
 
-def _owned(path, root):
+def _owned(path, root, label="transcript"):
     path = Path(path)
     if not path.is_absolute():
-        raise ValueError("transcript path must be absolute")
-    resolved = path.resolve(strict=True)
-    resolved.relative_to(root)
+        raise ValueError(f"{label} path must be absolute")
+    root = Path(root).resolve(strict=True)
+    try:
+        resolved = path.resolve(strict=True)
+        resolved.relative_to(root)
+    except (OSError, ValueError) as error:
+        raise ValueError(f"{label} must be owned by this Integra project") from error
     current = path
-    while not current.samefile(root):
+    while True:
         if current.is_symlink():
-            raise ValueError("transcript path must not contain symlinks")
+            raise ValueError(f"{label} path must not contain symlinks")
+        if current.samefile(root):
+            break
         current = current.parent
     if not path.is_file():
-        raise ValueError("transcript file is unavailable")
+        raise ValueError(f"{label} file is unavailable")
     return resolved
+
+
+def resolve_persisted_project_path(project_dir, persisted_path, label):
+    """Resolve a stored project artifact after a project-root relocation.
+
+    A persisted path is accepted directly only when it is currently owned.  A
+    legacy absolute path may be rebased only through its unique lexical
+    ``projects/<this-project-uuid>`` anchor; relative paths, traversal, paths
+    for another project, symlinks, and external paths stay fail-closed.
+    """
+    root = Path(project_dir).resolve(strict=True)
+    path = Path(persisted_path) if isinstance(persisted_path, str) else None
+    if path is None or not path.is_absolute():
+        raise ValueError(f"{label} path must be absolute")
+    if ".." in path.parts:
+        raise ValueError(f"{label} path must not contain traversal")
+    try:
+        return _owned(path, root, label)
+    except ValueError as direct_error:
+        # A path already lexically under the current root is never a legacy
+        # reference. Preserve its strict containment/symlink failure instead
+        # of attempting a relocation fallback.
+        try:
+            path.relative_to(root)
+        except ValueError:
+            pass
+        else:
+            raise direct_error
+        parts = path.parts
+        anchors = [index for index in range(len(parts) - 1)
+                   if parts[index] == "projects" and parts[index + 1] == root.name]
+        if len(anchors) != 1 or anchors[0] + 2 >= len(parts):
+            raise ValueError(f"{label} must be owned by this Integra project")
+        return _owned(root.joinpath(*parts[anchors[0] + 2:]), root, label)
 
 
 def resolve_transcript_text(project_dir, source_id, transcript_path):
@@ -27,7 +67,7 @@ def resolve_transcript_text(project_dir, source_id, transcript_path):
     if not isinstance(source_id, str) or not source_id:
         raise ValueError("transcript source identity is required")
     root = Path(project_dir).resolve(strict=True)
-    source = _owned(transcript_path, root)
+    source = resolve_persisted_project_path(root, transcript_path, "transcript")
     if source.suffix.lower() == ".txt":
         source.read_text(encoding="utf-8")
         return str(source)

@@ -56,7 +56,7 @@ Therefore: 51 original MUST − 4 approved transfers = 47 current Process MUST. 
 | 23 | Topics + timestamps | MUST | PROCESS | MUST | Topics/timestamps | DONE | Retained. |
 | 24 | Summary каждой темы | MUST | PROCESS | MUST | Topic summary | NOT_DONE | Retained. |
 | 25 | Выбор детализации Topics | MUST | PROCESS | MUST | Topic detail choice | NOT_DONE | Retained. |
-| 26 | Редактирование/подтверждение Topics | MUST | PROCESS | MUST | Topic edit/confirm | IN_PROGRESS | Retained as Topic review, not Evidence review. |
+| 26 | Редактирование/подтверждение Topics | MUST | PROCESS | MUST | Topic edit/confirm | DONE | Retained as Topic review, not Evidence review; owner accepted rename/save/reopen on the bound Candidate. |
 | 27 | Иерархия тем | MUST | KNOWLEDGE | LATER | — | N/A | Owner correction: mandatory hierarchy deferred to later/Knowledge. |
 | 28 | Ordered processing | MUST | PROCESS | MUST | Ordered processing | DONE | Retained; distinct from several local files. |
 | 29 | Объединённая расшифровка | MUST | PROCESS | MUST | Combined transcript | NOT_DONE | Retained; playlist does not imply it. |
@@ -102,7 +102,7 @@ Therefore: 51 original MUST − 4 approved transfers = 47 current Process MUST. 
 
 ## Board reconciliation
 
-The active Board has 45 rows. Its states sum exactly: 27 DONE + 1 IN_PROGRESS + 16 NOT_DONE + 1 BLOCKED = 45.
+The active Board has 45 rows. Its states sum exactly: 28 DONE + 0 IN_PROGRESS + 16 NOT_DONE + 1 BLOCKED = 45.
 
 One explicit DoD aggregation explains the distinct denominators:
 
