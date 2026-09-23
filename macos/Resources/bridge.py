@@ -218,10 +218,9 @@ def _media_navigation(root, request):
     if not isinstance(job, dict) or job.get("source_id") != source_id: raise ValueError("owned media job is unavailable")
     outputs = result.get("outputs")
     if not isinstance(outputs, dict) or not isinstance(outputs.get("subtitles"), str): raise ValueError("timed subtitles are unavailable")
-    media = Path(job.get("owned_path", "")); subtitles = Path(outputs["subtitles"])
-    if media.is_symlink() or subtitles.is_symlink() or not media.is_file() or not subtitles.is_file():
-        raise ValueError("owned media or subtitles are unavailable")
-    media = media.resolve(strict=True); subtitles = subtitles.resolve(strict=True)
+    from integra_core.transcript_output import resolve_persisted_project_path
+    media = resolve_persisted_project_path(project_dir, job.get("owned_path"), "owned media")
+    subtitles = resolve_persisted_project_path(project_dir, outputs["subtitles"], "timed subtitles")
     segments = _parse_srt(subtitles.read_text(encoding="utf-8", errors="replace"), source_id)
     if not segments: raise ValueError("timed subtitles contain no navigable speech")
     return {"source_id":source_id,"media_path":str(media),"subtitles_path":str(subtitles),"segments":segments}
@@ -239,9 +238,12 @@ def _review_inputs(root, request):
     if not isinstance(job,dict) or job.get("source_id")!=source_id: raise ValueError("owned media job is unavailable")
     for key in ("transcript","word_timeline"):
         if not isinstance(outputs.get(key),str): raise ValueError("Transcript review requires the real TXT transcript and Word Timeline")
-    from integra_core.transcript_output import resolve_transcript_text
+    from integra_core.transcript_output import resolve_persisted_project_path, resolve_transcript_text
     transcript = resolve_transcript_text(project_dir, source_id, outputs["transcript"])
-    return {"project_dir":project_dir,"source_id":source_id,"media_path":job.get("owned_path"),"transcript_path":transcript,"word_timeline_path":outputs["word_timeline"]}
+    return {"project_dir":project_dir,"source_id":source_id,
+            "media_path":str(resolve_persisted_project_path(project_dir, job.get("owned_path"), "owned media")),
+            "transcript_path":transcript,
+            "word_timeline_path":str(resolve_persisted_project_path(project_dir, outputs["word_timeline"], "Word Timeline"))}
 
 def _transcript_text(root, request):
     from integra_core.transcript_output import resolve_transcript_text
@@ -264,7 +266,7 @@ def _create_machine_evidence(root, request):
     values = _review_inputs(root, request)
     result = create_machine_evidence(**values)
     _record_review_outputs(values["project_dir"], request.get("run_id"), values["source_id"], {
-        "canonical_evidence": result["seminartext"]["canonical_evidence_path"],
+        "canonical_evidence": result["canonical_evidence_path"],
         "machine_evidence_record": result["evidence_result_path"],
     }, preserve_existing_evidence=True)
     return result
@@ -285,6 +287,18 @@ def _record_review_outputs(project_dir, run_id, source_id, updates, *, preserve_
         if not isinstance(source, dict) or source.get("state") != "COMPLETED":
             raise ValueError("completed source result is unavailable")
         outputs = source.setdefault("outputs", {})
+        from integra_core.transcript_output import resolve_persisted_project_path
+        for key, value in tuple(outputs.items()):
+            if isinstance(value, str) and Path(value).is_absolute() and key in {"topics", "canonical_evidence", "machine_evidence_record", "topic_review_drafts",
+                                                   "topic_review_package", "topic_review_decisions", "reviewed_topics",
+                                                   "reviewed_topics_markdown", "canonical_knowledge", "knowledge_markdown",
+                                                   "package_dir"}:
+                outputs[key] = str(resolve_persisted_project_path(project_dir, value, key))
+        if expected_outputs is not None:
+            expected_outputs = dict(expected_outputs)
+            for key, value in tuple(expected_outputs.items()):
+                if isinstance(value, str) and Path(value).is_absolute():
+                    expected_outputs[key] = str(resolve_persisted_project_path(project_dir, value, key))
         if expected_outputs is not None and any(outputs.get(key) != value for key, value in expected_outputs.items()):
             raise ValueError("Review inputs changed during processing; refresh the source results")
         if preserve_existing_evidence and outputs.get("canonical_evidence") not in (None, updates.get("canonical_evidence")):
@@ -323,6 +337,11 @@ def _prepare_topic_review(root, request):
     outputs=source_result.get("outputs") if isinstance(source_result,dict) else None
     if not isinstance(outputs,dict) or not isinstance(outputs.get("canonical_evidence"),str) or not isinstance(outputs.get("topics"),str):
         raise ValueError("Topic review requires Canonical Evidence and real SeminarText topic drafts")
+    from integra_core.transcript_output import resolve_persisted_project_path
+    if Path(outputs["canonical_evidence"]).is_absolute():
+        outputs["canonical_evidence"] = str(resolve_persisted_project_path(values["project_dir"], outputs["canonical_evidence"], "Canonical Evidence"))
+    if Path(outputs["topics"]).is_absolute():
+        outputs["topics"] = str(resolve_persisted_project_path(values["project_dir"], outputs["topics"], "topic drafts"))
     expected = {key: outputs.get(key) for key in ("canonical_evidence", "topics")}
     result=prepare_topic_review_input(values["project_dir"],source_id=values["source_id"],canonical_evidence_path=outputs["canonical_evidence"],topics_path=outputs["topics"])
     outputs["topic_review_drafts"]=result["topic_drafts_path"]
@@ -336,6 +355,11 @@ def _knowledge_review(root, request, apply=False):
     run = read_run(values["project_dir"], request.get("run_id"))
     source = next(item for item in run["source_results"] if item.get("source_id") == values["source_id"])
     outputs = source["outputs"]
+    from integra_core.transcript_output import resolve_persisted_project_path
+    for key, label in (("canonical_evidence", "Canonical Evidence"), ("topics", "topic drafts"),
+                       ("topic_review_package", "topic review package")):
+        if isinstance(outputs.get(key), str) and Path(outputs[key]).is_absolute():
+            outputs[key] = str(resolve_persisted_project_path(values["project_dir"], outputs[key], label))
     expected = {key: outputs.get(key) for key in ("canonical_evidence", "topics", "topic_review_package")}
     if apply:
         result = apply_topic_review(values["project_dir"], source_id=values["source_id"],
