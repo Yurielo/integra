@@ -276,6 +276,7 @@ OPERATIONS.add("create-machine-evidence")
 _EVIDENCE_DEPENDENTS = ("topic_review_drafts", "topic_review_package", "topic_review_decisions",
                         "reviewed_topics", "process_topic_review_package", "process_topic_review_decisions",
                         "process_reviewed_topics", "process_topic_review_receipt", "canonical_knowledge", "package_dir")
+PROCESS_LOCAL_HUMAN_REVIEWER_ID = "integra-process-local-human"
 
 def _record_review_outputs(project_dir, run_id, source_id, updates, *, preserve_existing_evidence=False,
                            expected_outputs=None):
@@ -376,7 +377,7 @@ def _process_topic_review(root, request, apply=False):
     if apply:
         result = apply_process_topic_review(values["project_dir"], source_id=values["source_id"],
             expected_package_sha256=request.get("expected_package_sha256"),
-            reviewer_id=request.get("reviewer_id"), decisions=request.get("decisions"))
+            reviewer_id=request.get("reviewer_id", PROCESS_LOCAL_HUMAN_REVIEWER_ID), decisions=request.get("decisions"))
         updates = {
             "process_reviewed_topics": result["reviewed_topics_contract_path"],
             "process_topic_review_receipt": result["process_topic_review_receipt_path"],

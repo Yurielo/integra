@@ -45,6 +45,8 @@ class ProcessResultsSurfaceTests(unittest.TestCase):
         self.assertIn('"ACCEPT", "RENAME", "REJECT", "DEFER"', dialog)
         self.assertIn('bridge.json("apply-process-topic-review"', dialog)
         self.assertIn("Проверка тем", dialog)
+        self.assertNotIn("Идентификатор проверяющего", dialog)
+        self.assertNotIn('"reviewer_id": reviewerID', dialog)
         for forbidden in ("Canonical Knowledge", "Включить фрагмент в знания", "Evidence", "семантическ"):
             self.assertNotIn(forbidden, dialog)
 
