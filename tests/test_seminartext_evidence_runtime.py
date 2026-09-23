@@ -122,6 +122,7 @@ class SeminarTextEvidenceRuntimeTests(unittest.TestCase):
                 {"id": "transcript_fixture_r1:word:000000", "source_id": "source_fixture", "transcript_revision_id": "transcript_fixture_r1", "sequence": 0, "start_seconds": 0.1, "end_seconds": 0.3},
                 {"id": "transcript_fixture_r1:word:000001", "source_id": "source_fixture", "transcript_revision_id": "transcript_fixture_r1", "sequence": 1, "start_seconds": 0.35, "end_seconds": 0.75},
             ],
+            "benchmark_segments": [{"id": "benchmark_fixture_000000", "transcript_revision_id": "transcript_fixture_r1", "sequence": 0, "word_start_id": "transcript_fixture_r1:word:000000", "word_end_id": "transcript_fixture_r1:word:000001"}],
         }, ensure_ascii=False), encoding="utf-8")
         evidence_path.write_text(evidence_path.read_text().replace("source_fixture", "source_source_" + hashlib.sha256(b"urn:integra:source:fixture").hexdigest()[:24]))
         topics = self.project / "topics.json"
