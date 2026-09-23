@@ -6,7 +6,7 @@ Date: 2026-09-23. Status: traceability only. This document reconciles the comple
 
 Workbook authority: /Users/yurielokhin/Documents/integra/Integra_Process_v1_scope_selection.xlsx, SHA-256 22ddb5c5c46c850a2c5923607bab0b3ad5faef3de5ef20019255ba70c5718137. The Process v1 sheet has 68 selected rows. The BookText — отдельно sheet has 17 rows and every selection cell is blank.
 
-Current scope authority: PROCESS_V1_DEFINITION_OF_DONE.md §§B–C, read with the canonical Process / Knowledge / Studio boundary document. No capability audit, build, test, Candidate, or Board-state change was performed. N/A in CURRENT BOARD STATE means that the selection is not an active Process MUST Board row; it was not lost.
+Current scope authority: PROCESS_V1_DEFINITION_OF_DONE.md §§B–C, read with the canonical Process / Knowledge / Studio boundary document. This traceability document does not itself authorize a capability audit, build, Candidate, or Board-state change; the states below reflect separately recorded canonical evidence. N/A in CURRENT BOARD STATE means that the selection is not an active Process MUST Board row; it was not lost.
 
 | Workbook selection read from file | Count |
 | --- | ---: |
@@ -42,7 +42,7 @@ Therefore: 51 original MUST − 4 approved transfers = 47 current Process MUST. 
 | 9 | SRT-субтитры | MUST | STUDIO | LATER | — | N/A | Owner correction: user-facing SRT is Studio; internal timing/SRT remains Process dependency. |
 | 10 | Word Timeline | MUST | PROCESS | MUST | Word Timeline | DONE | Retained; timing/provenance is Process. |
 | 11 | Careful / повышенный режим ASR | MUST | PROCESS | MUST | Careful ASR mode | NOT_DONE | Retained. |
-| 12 | Protective retry | MUST | PROCESS | MUST | Protective retry | IN_PROGRESS | Retained; distinct from user retry. |
+| 12 | Protective retry | MUST | PROCESS | MUST | Protective retry | DONE | Retained; distinct from user retry; controlled packaged proof is recorded in `PROCESS_V1_PROTECTIVE_RETRY_PROOF.md`. |
 | 13 | Clean TXT | MUST | PROCESS | MUST | Clean TXT | DONE | Retained. |
 | 14 | Review TXT | MUST | KNOWLEDGE | LATER | — | N/A | Owner correction: Review TXT / Evidence interaction is Knowledge; Clean TXT remains Process. |
 | 15 | Выбор языка исходной речи | MUST | PROCESS | MUST | Source-speech language | NOT_DONE | Retained. |
@@ -102,7 +102,7 @@ Therefore: 51 original MUST − 4 approved transfers = 47 current Process MUST. 
 
 ## Board reconciliation
 
-The active Board has 45 rows. Its states sum exactly: 26 DONE + 2 IN_PROGRESS + 16 NOT_DONE + 1 BLOCKED = 45.
+The active Board has 45 rows. Its states sum exactly: 27 DONE + 1 IN_PROGRESS + 16 NOT_DONE + 1 BLOCKED = 45.
 
 One explicit DoD aggregation explains the distinct denominators:
 
