@@ -1105,7 +1105,7 @@ struct SidebarItem {
     alert.informativeText = "Подтвердите или отредактируйте каждую машинную тему. Решения сохраняются в результатах обработки источника."
     let stack = FlippedStackView()
     stack.orientation = .vertical; stack.alignment = .leading; stack.spacing = 12
-    var choices: [(String, NSPopUpButton, NSTextField, NSTextField)] = []
+    var choices: [(String, String, String, NSPopUpButton, NSTextField, NSTextField)] = []
     for topic in topics {
       guard let id = topic["id"] as? String else { return }
       let start = topic["start_seconds"] as? Double ?? 0
@@ -1118,7 +1118,8 @@ struct SidebarItem {
       summary.placeholderString = "Краткое описание"; summary.widthAnchor.constraint(equalToConstant: 560).isActive = true; stack.addArrangedSubview(summary)
       let choice = NSPopUpButton()
       choice.addItems(withTitles: ["Выберите решение", "Подтвердить тему", "Переименовать", "Отклонить", "Отложить"])
-      stack.addArrangedSubview(choice); choices.append((id, choice, title, summary))
+      stack.addArrangedSubview(choice)
+      choices.append((id, title.stringValue, summary.stringValue, choice, title, summary))
     }
     let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 590, height: 420))
     scroll.hasVerticalScroller = true; scroll.documentView = stack
@@ -1126,15 +1127,20 @@ struct SidebarItem {
     alert.addButton(withTitle: "Сохранить проверенные темы"); alert.addButton(withTitle: "Отмена")
     while true {
       guard alert.runModal() == .alertFirstButtonReturn else { return }
-      if choices.allSatisfy({ $0.1.indexOfSelectedItem > 0 }) { break }
+      if choices.allSatisfy({ $0.3.indexOfSelectedItem > 0 }) { break }
       alert.informativeText = "Выберите решение для КАЖДОЙ темы."
     }
     let actions = ["ACCEPT", "RENAME", "REJECT", "DEFER"]
     let decisions: [[String: Any]] = choices.map { choice in
-      let action = actions[choice.1.indexOfSelectedItem - 1]
+      let selectedAction = actions[choice.3.indexOfSelectedItem - 1]
+      // The pinned v1 contract permits one decision per Topic.  A title or
+      // summary edit confirmed as "ACCEPT" is therefore represented truthfully
+      // as its v1 RENAME decision, rather than silently dropping the edit.
+      let edited = choice.4.stringValue != choice.1 || choice.5.stringValue != choice.2
+      let action = selectedAction == "ACCEPT" && edited ? "RENAME" : selectedAction
       return ["topic_id": choice.0, "action": action, "reason": "Explicit Process Topic decision in Integra macOS review",
-              "new_title": action == "RENAME" ? choice.2.stringValue : NSNull(),
-              "new_summary": action == "RENAME" ? choice.3.stringValue : NSNull()]
+              "new_title": action == "RENAME" ? choice.4.stringValue : NSNull(),
+              "new_summary": action == "RENAME" ? choice.5.stringValue : NSNull()]
     }
     status.stringValue = "Сохраняю проверенные темы…"
     let bridge = self.bridge!

@@ -9,6 +9,7 @@ from unittest.mock import patch
 from integra_core.seminartext_topic_review_runtime import (
     PROCESS_TOPIC_AUTHORITY as AUTHORITY, apply_process_topic_review, prepare_process_topic_review,
 )
+from integra_core.seminartext_evidence_runtime import prepare_topic_review_input
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -74,6 +75,62 @@ class ProcessTopicReviewRuntimeTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unsupported Process Topic action"):
             apply_process_topic_review(self.project, source_id=self.args["source_id"],
                 expected_package_sha256=package["package_sha256"], reviewer_id="fixture-owner", decisions=decisions)
+
+    def test_owner_observed_partial_alignment_maps_to_complete_benchmark_segment(self):
+        """The real owner failure had aligned words 0–8 inside segment 0–13."""
+        words = [f"слово{index}" for index in range(14)]
+        (self.project / "transcript.txt").write_text(" ".join(words), encoding="utf-8")
+        timeline = []
+        for index, word in enumerate(words):
+            item = {"text": word, "score": 1.0}
+            if index < 9:
+                item.update(start_seconds=index + .1, end_seconds=index + .8, alignment_status="ALIGNED")
+            else:
+                item.update(alignment_status="UNALIGNED")
+            timeline.append(item)
+        (self.project / "timeline.json").write_text(json.dumps({
+            "model": {"id": "fixture", "revision": "fixture", "weights_sha256": "0" * 64},
+            "aligner": {"name": "fixture", "version": "1"}, "words": timeline,
+        }), encoding="utf-8")
+        (self.project / "topics.json").write_text(json.dumps({"component": "seminartext", "topics": [{
+            "title": "Проверка распознавания речи", "summary": "Проверка", "start_seconds": 0.0,
+            "end_seconds": 14.0, "start_segment_id": 1, "evidence_start_id": 1,
+            "evidence_end_id": 2, "semantic_status": "REVIEW_REQUIRED",
+        }]}, ensure_ascii=False), encoding="utf-8")
+        package = prepare_process_topic_review(self.project, **self.args)
+        review_package = json.loads(Path(package["package_path"]).read_text())
+        reviewed_topic = review_package["topics"][0]
+        self.assertEqual(reviewed_topic["word_start_sequence"], 0)
+        self.assertEqual(reviewed_topic["word_end_sequence"], 13)
+        review_dir = Path(package["package_path"]).parent.parent
+        binding = json.loads((review_dir / "binding.json").read_text())
+        mapping = binding["boundary_mappings"][0]
+        self.assertEqual(mapping["aligned_overlap"]["word_end_sequence"], 8)
+        self.assertEqual(mapping["review_span"]["word_end_sequence"], 13)
+        decision = [{"topic_id": reviewed_topic["id"], "action": "RENAME", "reason": "owner edit",
+                     "new_title": "Тестирование распознавания речи", "new_summary": "Проверка"}]
+        result = apply_process_topic_review(self.project, source_id=self.args["source_id"],
+            expected_package_sha256=package["package_sha256"], reviewer_id="fixture-owner", decisions=decision)
+        contract = json.loads(Path(result["reviewed_topics_contract_path"]).read_text())
+        self.assertEqual(contract["topic_sources"][0]["word_start_id"], reviewed_topic["word_start_id"])
+        self.assertEqual(contract["topic_sources"][0]["word_end_id"], reviewed_topic["word_end_id"])
+        self.assertEqual(contract["topics"][0]["title"], "Тестирование распознавания речи")
+        receipt = json.loads(Path(result["process_topic_review_receipt_path"]).read_text())
+        self.assertEqual(receipt["authority"], AUTHORITY)
+        self.assertEqual(receipt["boundary_mappings"], binding["boundary_mappings"])
+
+    def test_unmappable_topic_fails_closed_before_review_package_exists(self):
+        package = prepare_process_topic_review(self.project, **self.args)
+        review_dir = Path(package["package_path"]).parent.parent
+        binding = json.loads((review_dir / "binding.json").read_text())
+        evidence = Path(binding["evidence_path"])
+        invalid = json.loads(evidence.read_text())
+        invalid["benchmark_segments"] = []
+        invalid_path = self.project / "invalid-canonical-evidence.json"
+        invalid_path.write_text(json.dumps(invalid), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "complete BenchmarkSegment"):
+            prepare_topic_review_input(self.project, source_id=self.args["source_id"],
+                canonical_evidence_path=str(invalid_path), topics_path=self.args["topics_path"])
 
 
 if __name__ == "__main__":

@@ -430,7 +430,8 @@ def prepare_topic_review_input(project_dir: Path, *, source_id: str, canonical_e
     if topic_output.get("component") != "seminartext" or not isinstance(topic_output.get("topics"), list):
         raise ValueError("SeminarText topic output is unavailable")
     sources = evidence.get("sources"); revisions = evidence.get("transcript_revisions"); words = evidence.get("words")
-    if not all(isinstance(value, list) for value in (sources, revisions, words)):
+    benchmark_segments = evidence.get("benchmark_segments")
+    if not all(isinstance(value, list) for value in (sources, revisions, words, benchmark_segments)):
         raise ValueError("Canonical Evidence has no source Word Timeline")
     # The pinned Evidence contract contains canonical IDs, not registry IDs.
     canonical_id = "source_source_" + hashlib.sha256(source_id.encode("utf-8")).hexdigest()[:24]
@@ -450,8 +451,10 @@ def prepare_topic_review_input(project_dir: Path, *, source_id: str, canonical_e
         raise ValueError("Canonical Evidence has an invalid project")
     token = hashlib.sha256((source_id + _sha256(topics_file)).encode("utf-8")).hexdigest()[:20]
     seminar_id = f"seminar_{token}"
+    words_by_id = {item.get("id"): item for item in timeline if isinstance(item.get("id"), str)}
     evidence_items: list[dict[str, Any]] = []
     draft_topics: list[dict[str, Any]] = []
+    boundary_mappings: list[dict[str, Any]] = []
     for sequence, proposal in enumerate(topic_output["topics"]):
         if not isinstance(proposal, dict) or proposal.get("semantic_status") != "REVIEW_REQUIRED":
             raise ValueError("every SeminarText topic must remain REVIEW_REQUIRED")
@@ -465,9 +468,29 @@ def prepare_topic_review_input(project_dir: Path, *, source_id: str, canonical_e
                     and item["end_seconds"] > start and item["start_seconds"] < end]
         if not selected:
             raise ValueError("SeminarText topic cannot be bound to exact reviewed words")
-        first, last = selected[0], selected[-1]
+        aligned_first, aligned_last = selected[0], selected[-1]
+        selected_segments = sorted((segment for segment in benchmark_segments if isinstance(segment, dict)
+                                    and segment.get("transcript_revision_id") == revision["id"]
+                                    and segment.get("word_start_id") in words_by_id
+                                    and segment.get("word_end_id") in words_by_id
+                                    and words_by_id[segment["word_end_id"]].get("sequence", -1) >= aligned_first.get("sequence", -1)
+                                    and words_by_id[segment["word_start_id"]].get("sequence", -1) <= aligned_last.get("sequence", -1)),
+                                   key=lambda segment: segment.get("sequence", -1))
+        if not selected_segments:
+            raise ValueError("SeminarText topic cannot be mapped to a complete BenchmarkSegment")
+        first, last = words_by_id[selected_segments[0]["word_start_id"]], words_by_id[selected_segments[-1]["word_end_id"]]
         if not isinstance(first.get("id"), str) or not isinstance(last.get("id"), str):
             raise ValueError("Canonical Evidence Word Timeline has invalid IDs")
+        expected = first.get("sequence")
+        if not isinstance(expected, int):
+            raise ValueError("Canonical Evidence Word Timeline has invalid sequences")
+        for segment in selected_segments:
+            segment_first, segment_last = words_by_id[segment["word_start_id"]], words_by_id[segment["word_end_id"]]
+            if segment_first.get("sequence") != expected or not isinstance(segment_last.get("sequence"), int):
+                raise ValueError("BenchmarkSegment mapping is not a complete contiguous source span")
+            expected = segment_last["sequence"] + 1
+        if expected != last.get("sequence", -2) + 1:
+            raise ValueError("BenchmarkSegment mapping has an invalid final boundary")
         evidence_id = f"evidence_topic_{token}_{sequence:04d}"
         evidence_items.append({"id": evidence_id, "claim": "Source passage selected for human topic review.",
                                "source_id": canonical_source_id, "transcript_revision_id": revision["id"],
@@ -479,6 +502,19 @@ def prepare_topic_review_input(project_dir: Path, *, source_id: str, canonical_e
                              "proposed_title": title.strip(), "proposed_summary": summary.strip(),
                              "evidence_refs": [evidence_id], "semantic_origin": "machine_assisted",
                              "lifecycle_status": "REVIEW_REQUIRED"})
+        boundary_mappings.append({
+            "topic_draft_id": f"topic_draft_{token}_{sequence:04d}",
+            "mapping": "COMPLETE_BENCHMARK_SEGMENTS",
+            "machine_topic": {"index": sequence, "start_seconds": start, "end_seconds": end,
+                              "start_segment_id": proposal.get("start_segment_id"),
+                              "evidence_start_id": proposal.get("evidence_start_id"),
+                              "evidence_end_id": proposal.get("evidence_end_id")},
+            "aligned_overlap": {"word_start_id": aligned_first["id"], "word_end_id": aligned_last["id"],
+                                "word_start_sequence": aligned_first["sequence"], "word_end_sequence": aligned_last["sequence"]},
+            "review_span": {"benchmark_segment_ids": [segment.get("id") for segment in selected_segments],
+                            "word_start_id": first["id"], "word_end_id": last["id"],
+                            "word_start_sequence": first["sequence"], "word_end_sequence": last["sequence"]},
+        })
     if not draft_topics:
         raise ValueError("SeminarText produced no topics for review")
     drafts = {"schema_version": "1.0.0", "artifact_type": "seminartext.topic_drafts",
@@ -497,4 +533,4 @@ def prepare_topic_review_input(project_dir: Path, *, source_id: str, canonical_e
         temporary = path.with_suffix(".tmp"); temporary.write_bytes(canonical_json(drafts) + b"\n"); os.replace(temporary, path)
     return {"status": "REVIEW_REQUIRED", "semantic_authority": "MACHINE_OUTPUT_REQUIRES_HUMAN_DECISION",
             "topic_drafts_path": str(path), "topic_drafts_sha256": drafts_sha, "topic_count": len(draft_topics),
-            "automatic_acceptance": False}
+            "automatic_acceptance": False, "boundary_mappings": boundary_mappings}

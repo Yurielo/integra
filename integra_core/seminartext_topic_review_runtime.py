@@ -184,6 +184,7 @@ def prepare_topic_review(project_dir, *, source_id, canonical_evidence_path, top
                    "topics_path": str(topics), "topics_sha256": _sha256(topics)}
         drafts = prepare_topic_review_input(root, source_id=source_id,
                                            canonical_evidence_path=str(evidence), topics_path=str(topics))
+        binding["boundary_mappings"] = drafts["boundary_mappings"]
         with tempfile.TemporaryDirectory(prefix=".prepare-", dir=directory) as temporary:
             stage = Path(temporary)
             component = stage / "project"
@@ -542,6 +543,7 @@ def apply_process_topic_review(project_dir, *, source_id, expected_package_sha25
                 receipt = {"schema_version": "1.0", "artifact_type": "integra.process_reviewed_topics", "authority": PROCESS_TOPIC_AUTHORITY,
                            "automatic_acceptance": False, "source_id": source_id, "review_package_sha256": expected_package_sha256,
                            "machine_topics": {"path": binding["topics_path"], "sha256": binding["topics_sha256"]},
+                           "boundary_mappings": binding["boundary_mappings"],
                            "review_decisions": {"path": str(decision_path), "sha256": _sha256(decision_path)},
                            "reviewed_topics_contract": {"sha256": _sha256(contract), "topic_count": len(payload.get("topics", []))},
                            "topic_actions": actions,
