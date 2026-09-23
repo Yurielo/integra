@@ -1,7 +1,8 @@
 # Process v1: bounded Results UX and ordinary-file export
 
-Status: technical proposal evidence only. This document does not change
-`CURRENT`, the Completion Board, or claim `PROCESS V1 USER_ACCEPTED`.
+Status: technical proposal evidence plus a scoped Product Owner acceptance of
+the Results UX and ordinary-file export outcome. It does not change `CURRENT`,
+authorize baseline promotion, or claim `PROCESS V1 USER_ACCEPTED`.
 
 ## Bound source and Candidate
 
@@ -47,6 +48,42 @@ The native evidence uses a non-private synthetic audio fixture. It confirms the
 implemented visual surface and packaged runtime binding; it does not replace
 the separate final minimal Product Owner visual check.
 
+## Final Product Owner GUI acceptance
+
+The Product Owner opened the exact final Candidate above after correcting an
+earlier accidental check of an old build, and explicitly accepted the final
+Results UX + ordinary-file export outcome: **«В новой сборке всё хорошо.»**
+
+The final owner-visible screenshot and the prior accepted normal GUI flow
+confirm all of the following for this exact Candidate:
+
+- no `ПУБЛИКАЦИЯ ПРОВЕРЕННОГО PACKAGE` block, Obsidian action, or OneDrive
+  publication action on the normal Process results surface;
+- `Открыть источник с расшифровкой` is the source-navigation action;
+- the approved wide two-column Transcript and Cleaned Text cards are present;
+- `Технические данные` remains secondary/collapsed;
+- Transcript Open works; persisted/reopened Process results work; and native
+  ordinary-file Export opens the normal macOS Save dialog with the correct
+  Transcript/export mapping;
+- normal use required neither Terminal nor Codex.
+
+This is a scoped owner acceptance of only the Board rows **Unified results
+screen** and **Ordinary-file export**. It is not an owner authorization to
+promote `proposal-process-v1-results-ux-export`, and it is not whole-Process
+v1 acceptance.
+
+## Completion Board transition
+
+Before this scoped owner acceptance: **24 DONE / 4 IN_PROGRESS / 16 NOT_DONE /
+1 BLOCKED**.
+
+After: **26 DONE / 2 IN_PROGRESS / 16 NOT_DONE / 1 BLOCKED**.
+
+Only these two rows transition:
+
+- `Unified results screen`: `IN_PROGRESS → DONE`;
+- `Ordinary-file export`: `IN_PROGRESS → DONE`.
+
 ## Proposal boundary
 
 The only governed product/runtime path changed from CURRENT base to source A is
@@ -56,6 +93,5 @@ The only governed product/runtime path changed from CURRENT base to source A is
 | --- | --- | --- |
 | `macos/IntegraApp.swift` | `5803c63f59261ad18ed9a3a88b22e0675a8a1337f5d4db9db5546ea5d708a86e` | `995fa3946f43fba215d6fec90985e5fce1c49350c3b4eedb145ddcdc508b6507` |
 
-The evidence overlay contains only this report and candidate-bound evidence;
-it contains no product/runtime byte. The Completion Board remains unchanged
-pending final owner visual acceptance.
+The evidence/governance overlay contains no product/runtime byte. The scoped
+Board transition above is evidence-backed and does not change `CURRENT`.
