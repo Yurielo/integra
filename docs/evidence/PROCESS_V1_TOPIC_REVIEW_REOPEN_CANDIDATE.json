@@ -1,0 +1,44 @@
+{
+  "candidate_id": "candidate-v1-65bf72d1262146c9137aca433b51ae3974d98bc4c8ed37042db13b46e0318a1d",
+  "manifest_identity_sha256": "65bf72d1262146c9137aca433b51ae3974d98bc4c8ed37042db13b46e0318a1d",
+  "candidate_manifest_sha256": "c59d18552b8b860019852a420d4b7d6337e32408196df0615c8599179d44a2a5",
+  "bundle_digest": "044594f1a632f1c140af28bb7de8e4acf782daca9863d84b9c5d77edb731fdf8",
+  "product_source": {
+    "commit_sha": "ba94b39ac75517f6f5fb485e5a0fb93927895e40",
+    "tree_sha": "372746238da4825ca5061fd0c3a5a3d1a8a697aa"
+  },
+  "pins": {
+    "seminartext_commit": "970bde598ddd649599295139986933e0e06cb9c0",
+    "seminartext_cli_sha256": "f7f411bf106341ae970bc40d759e1e3c964273b977bdb12d0f1840e629def13a"
+  },
+  "gates": [
+    {"name": "native-self-test", "result": "PASS"},
+    {"name": "candidate-manifest", "result": "PASS"},
+    {"name": "process-topic-review-reopen-regressions", "result": "PASS", "tests": 15},
+    {"name": "saved-review-integrity-regression", "result": "PASS"}
+  ],
+  "reopen_proof": {
+    "write_state": "PROCESS_REVIEWED_TOPICS_CREATED",
+    "reopen_state": "PROCESS_TOPIC_REVIEWED",
+    "authority": "PROCESS_HUMAN_TOPIC_REVIEW",
+    "machine_title": "Первая",
+    "reviewed_title": "Переименована"
+  },
+  "owner_acceptance": {
+    "result": "PASS",
+    "scope": "Process Topic edit/confirm only; not whole-Process acceptance",
+    "candidate_id": "candidate-v1-65bf72d1262146c9137aca433b51ae3974d98bc4c8ed37042db13b46e0318a1d",
+    "project_id": "urn:integra:project:c0b7a120-c257-4514-b077-7b6a6fce0c15",
+    "run_id": "urn:integra:run:e95bfc37-7134-4ad5-b675-93de9cf8bf4c",
+    "source_id": "urn:integra:source:f8f2239a-599c-5f4a-98de-ae7f60436efa",
+    "topic_id": "topic_draft_61ab8781638758f2c941_0000",
+    "reviewed_title": "Тест распознавания речи",
+    "action": "RENAME",
+    "authority": "PROCESS_HUMAN_TOPIC_REVIEW",
+    "reviewed_contract_sha256": "0cb9d0e1b73ca5f067c4f9bec6785b108ed3b22553849e0865ba3f1f63111832",
+    "review_decisions_sha256": "71c9652602b4f8a19d216419d0252211d028a70ac6d9ef83c07b3e0288e30df0",
+    "receipt_sha256": "a7bd86372d622e37762d586bb4f364fed7a76489bdbab531020b5ad18b18cb7a",
+    "knowledge_or_evidence_acceptance": false,
+    "benchmark_mapping": "COMPLETE_BENCHMARK_SEGMENTS"
+  }
+}
