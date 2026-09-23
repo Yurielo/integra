@@ -6,7 +6,7 @@ import tempfile
 import unittest
 import uuid
 
-from integra_core.transcript_output import resolve_transcript_text
+from integra_core.transcript_output import resolve_persisted_project_path, resolve_transcript_text
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -69,6 +69,28 @@ class TranscriptOutputTests(unittest.TestCase):
         directory.symlink_to(self.root, target_is_directory=True)
         with self.assertRaisesRegex(ValueError, "unsafe"):
             self.resolve()
+
+    def test_relocated_persisted_path_rebases_only_same_project_identity(self):
+        project_id = str(uuid.uuid4())
+        old_root = self.root / "old-data" / "projects" / project_id
+        current_root = self.root / "current-data" / "projects" / project_id
+        old_path = old_root / "artifacts" / "result.txt"
+        current_path = current_root / "artifacts" / "result.txt"
+        old_path.parent.mkdir(parents=True); current_path.parent.mkdir(parents=True)
+        old_path.write_text("historical absolute reference")
+        current_path.write_text("restored project artifact")
+        self.assertEqual(resolve_persisted_project_path(current_root, str(old_path), "artifact"), current_path.resolve())
+        self.assertEqual(resolve_persisted_project_path(current_root, str(current_path), "artifact"), current_path.resolve())
+
+    def test_relocated_path_rejects_external_relative_and_other_project(self):
+        project_id = str(uuid.uuid4())
+        current_root = self.root / "current-data" / "projects" / project_id
+        current_root.mkdir(parents=True)
+        other = self.root / "old-data" / "projects" / str(uuid.uuid4()) / "artifact.txt"
+        other.parent.mkdir(parents=True); other.write_text("external")
+        for path in ("artifact.txt", str(other), str(current_root / ".." / "escape.txt")):
+            with self.assertRaises(ValueError):
+                resolve_persisted_project_path(current_root, path, "artifact")
 
     def test_bridge_resolves_completed_legacy_result(self):
         project_id = "urn:integra:project:" + str(uuid.uuid4())

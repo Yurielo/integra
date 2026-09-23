@@ -24,6 +24,7 @@ from typing import Any
 
 from .protocol import canonical_json, content_sha256
 from .seminartext_runtime import PINNED_COMMIT
+from .transcript_output import resolve_persisted_project_path
 
 
 EVIDENCE_ENTRYPOINT = Path("seminartext_modules/evidence_foundation.py")
@@ -393,13 +394,19 @@ def create_machine_evidence(project_dir: Path, *, source_id: str, media_path: st
         if (result.get("input_identity") != identity or result.get("result_sha256") != content_sha256(
                 {key: value for key, value in result.items() if key != "result_sha256"})):
             raise ValueError("persisted machine Evidence result changed")
-        bundle = _inside(Path(result["seminartext"]["canonical_evidence_path"]), target, "machine Evidence bundle")
+        # ``result.json`` is content-addressed evidence and retains the original
+        # absolute location as part of its signed payload.  Resolve that stored
+        # reference against the current project before applying the narrower
+        # target containment check; never rewrite the historical result.
+        bundle = resolve_persisted_project_path(root, result["seminartext"]["canonical_evidence_path"],
+                                                "machine Evidence bundle")
+        bundle = _inside(bundle, target, "machine Evidence bundle")
         if _sha256(bundle) != result["seminartext"]["canonical_evidence_sha256"]:
             raise ValueError("persisted machine Evidence bundle changed")
         _validate_machine_assurance(bundle)
         if any(_sha256(path) != identity[name + "_sha256"] for name, path in paths.items()):
             raise ValueError("machine Evidence inputs changed during processing")
-        return result | {"evidence_result_path": str(result_path)}
+        return result | {"evidence_result_path": str(result_path), "canonical_evidence_path": str(bundle)}
 
 
 def prepare_topic_review_input(project_dir: Path, *, source_id: str, canonical_evidence_path: str,
