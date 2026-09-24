@@ -433,6 +433,10 @@ def verify_promotion_material(proposal: dict[str, Any], root: Path, proposal_pat
     historical_test_paths = _historical_test_paths(root)
     changed_historical_tests: set[tuple[str, str]] = set()
     for path_text, authorities in historical_test_paths.items():
+        # An executable/product delta is governed by the stricter exact delta
+        # path above; it must not be duplicated as a test successor.
+        if path_text in declared:
+            continue
         try:
             before = subprocess.run(["git", "-C", str(root), "show", f"{base_commit}:{path_text}"], check=True, capture_output=True).stdout
             after = subprocess.run(["git", "-C", str(root), "show", f"{source['commit_sha']}:{path_text}"], check=True, capture_output=True).stdout
