@@ -27,7 +27,7 @@ class TempArtifactLifecycleTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             base = Path(directory); receipt = base / "root.txt"
             command = [str(WRAPPER), "--purpose", "success", "--", "sh", "-c",
-                       'printf "%s" "$INTEGRA_TEMP_ARTIFACT_ROOT" > "$1"; dd if=/dev/zero of="$INTEGRA_TEMP_ARTIFACT_ROOT/candidate.bin" bs=1m count=4 status=none',
+                       'printf "%s" "$INTEGRA_TEMP_ARTIFACT_ROOT" > "$1"; dd if=/dev/zero of="$INTEGRA_TEMP_ARTIFACT_ROOT/candidate.bin" bs=1M count=4 status=none',
                        "sh", str(receipt)]
             subprocess.run(command, check=True, env=os.environ | {"TMPDIR": str(base)})
             root = Path(receipt.read_text())
@@ -37,7 +37,7 @@ class TempArtifactLifecycleTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             base = Path(directory); receipt = base / "root.txt"
             command = [str(WRAPPER), "--purpose", "failure", "--", "sh", "-c",
-                       'printf "%s" "$INTEGRA_TEMP_ARTIFACT_ROOT" > "$1"; dd if=/dev/zero of="$INTEGRA_TEMP_ARTIFACT_ROOT/candidate.bin" bs=1m count=4 status=none; exit 23',
+                       'printf "%s" "$INTEGRA_TEMP_ARTIFACT_ROOT" > "$1"; dd if=/dev/zero of="$INTEGRA_TEMP_ARTIFACT_ROOT/candidate.bin" bs=1M count=4 status=none; exit 23',
                        "sh", str(receipt)]
             result = subprocess.run(command, check=False, env=os.environ | {"TMPDIR": str(base)})
             self.assertEqual(result.returncode, 23)
