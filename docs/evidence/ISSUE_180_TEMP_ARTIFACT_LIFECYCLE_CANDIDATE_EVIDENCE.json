@@ -1,0 +1,21 @@
+{
+  "artifact_type": "integra.candidate_evidence",
+  "bundle_digest": "044594f1a632f1c140af28bb7de8e4acf782daca9863d84b9c5d77edb731fdf8",
+  "candidate_id": "candidate-v1-288ba11ba1b2b850fb186f94b4ab9eba7a1fbbd8d10b910b4b390095c3dc729a",
+  "gates": {
+    "candidate_manifest": "PASS",
+    "native_self_test": "PASS",
+    "owned_root_cleanup_after_full_build": "PASS",
+    "sequential_full_builds": "2/2 PASS"
+  },
+  "manifest_identity_sha256": "288ba11ba1b2b850fb186f94b4ab9eba7a1fbbd8d10b910b4b390095c3dc729a",
+  "product_source": {
+    "commit_sha": "5f10a09626868c5dbcccc02866d395ff00f591cb",
+    "tree_sha": "f9c374c6522174d5e86747f718d53a7a63751521"
+  },
+  "temporary_artifact_result": {
+    "remaining_marker_owned_roots": 0,
+    "remaining_marker_owned_bytes": 0,
+    "peak_owned_root_size": "2.1 GiB"
+  }
+}

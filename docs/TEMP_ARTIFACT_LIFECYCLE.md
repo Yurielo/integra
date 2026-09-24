@@ -5,7 +5,7 @@ not authorize removal of existing directories or retention-governed evidence.
 
 ## Audit and root cause
 
-| Path | Creates large artifact? | Prior behavior | Lifecycle now |
+| Path | Creates large artifact? | Prior behavior → lifecycle now |
 | --- | --- | --- |
 | `scripts/build_macos_app.sh OUTPUT_ROOT` | Yes: one self-contained `Integra.app` (about 2.1–2.2 GiB) | Caller-selected `/private/tmp/integra…` roots were deliberately left behind. The build remains an explicit-output primitive: disposable callers use the marker wrapper; retained Candidates use a non-temporary destination. |
 | `scripts/test_macos_app.sh` | Yes: one test bundle plus probes | Anonymous `mktemp -d` was cleaned only on ordinary shell exit. It now creates a marker root and traps success, failure, `SIGINT`, and `SIGTERM`. |
