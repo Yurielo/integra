@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.proposed_product_baseline",
+  "proposal_id": "proposal-issue-181-temp-lifecycle",
+  "status": "PROPOSED_BASELINE_VALID",
+  "base_current_id": "current-v2-65bf72d1262146c9137aca433b51ae3974d98bc4c8ed37042db13b46e0318a1d",
+  "base_main": {"commit_sha": "16a854e848f0d79f72ba77e0b6b92b5cb588e9d2", "tree_sha": "83106fbbc6544b2ac3831d2fa0408f8d0fa83ec1"},
+  "proposed_source": {"commit_sha": "0fa50284b1a7c1bb63c040972d14e3f885097aed", "tree_sha": "7d3e96aa0beb06de1dad453f3bd6e4fb2872e4a6"},
+  "proposed_head": {"commit_sha": "d632ed6bea8cce52c96718ed20f04cbfde158a82", "tree_sha": "239b3561b8164e3d0f58c30bcc033b0288fd3de0"},
+  "intended_scope": {"wp": "Issue #181 owned temporary build/test artifact lifecycle", "journey": "Disposable native Candidate and test runs create, use and remove only their marker-bound scratch root without retaining full-size temporary bundles."},
+  "candidate": {"candidate_id": "candidate-v1-f4673faeb53b6d4ca3b71dda9cb383a175cb01c24519f907ec2e9d2cbea5eafc", "identity_sha256": "f4673faeb53b6d4ca3b71dda9cb383a175cb01c24519f907ec2e9d2cbea5eafc", "manifest_digest": "7016c1aa36eec9959c8df78609eb3c5006d94de204dd1902b5636fab64c2c485", "bundle_digest": "044594f1a632f1c140af28bb7de8e4acf782daca9863d84b9c5d77edb731fdf8"},
+  "delta": [{"path": "scripts/build_macos_app.sh", "before_sha256": "f2c7577b3afcde75e00828e8a9d0303a9370eac517902d7c49a87cce65237623", "after_sha256": "9770c26e312adae3bbec104445f2fc67cb2e3f973aa10f1179dc5c48ab5a48de"}],
+  "historical_test_successors": [{"path": "scripts/test_macos_app.sh", "historical_authority": "R12", "before_sha256": "efb95b9041a3c010680affe1551e2c0e11b535bbaa7ae7ee41ffa62549e887eb", "after_sha256": "a84137c2dee548f78a78d670a3ec1eb0d04a21903bcb96bcb60e6914bac71e96", "reason": "Issue #181 replaces anonymous temporary test roots with exact marker-owned cleanup and signal traps."}],
+  "gates": [{"name": "focused-temporary-lifecycle-regressions", "result": "PASS", "evidence_ref": "docs/ISSUE_181_TEMP_LIFECYCLE_REPORT.md"}, {"name": "candidate-manifest-and-native-self-test", "result": "PASS", "evidence_ref": "docs/evidence/ISSUE_181_CANDIDATE_EVIDENCE.json"}],
+  "evidence": {"candidate_manifest": {"path": "docs/evidence/ISSUE_181_CANDIDATE_MANIFEST.json", "sha256": "7016c1aa36eec9959c8df78609eb3c5006d94de204dd1902b5636fab64c2c485"}, "candidate_evidence": {"path": "docs/evidence/ISSUE_181_CANDIDATE_EVIDENCE.json", "sha256": "ed2094b16a87dd877280e73e213826d3dcd84ef9842ed92a511de4955a086ac8"}, "report": {"path": "docs/ISSUE_181_TEMP_LIFECYCLE_REPORT.md", "sha256": "04b9bab43b3999937cf989f60c8d65bdf2bde025308d858932d089f6a1069c51"}},
+  "owner_acceptance": null,
+  "allowed_overlay_paths": ["docs/ISSUE_181_TEMP_LIFECYCLE_REPORT.md", "docs/evidence/ISSUE_181_CANDIDATE_EVIDENCE.json", "docs/evidence/ISSUE_181_CANDIDATE_MANIFEST.json"]
+}
