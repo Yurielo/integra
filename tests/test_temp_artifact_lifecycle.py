@@ -43,7 +43,7 @@ class TempArtifactLifecycleTests(unittest.TestCase):
             self.assertEqual(result.returncode, 23)
             self.assertFalse(Path(receipt.read_text()).exists())
 
-    def test_sigterm_removes_only_terminated_wrapper_root(self):
+    def test_interrupt_and_termination_remove_only_their_own_roots(self):
         with tempfile.TemporaryDirectory() as directory:
             base = Path(directory); first_receipt = base / "first.txt"; second_receipt = base / "second.txt"
             def start(purpose, receipt):
@@ -55,7 +55,7 @@ class TempArtifactLifecycleTests(unittest.TestCase):
                 if first_receipt.exists() and second_receipt.exists(): break
                 time.sleep(.02)
             first_root, second_root = Path(first_receipt.read_text()), Path(second_receipt.read_text())
-            first.send_signal(signal.SIGTERM); first.wait(timeout=10)
+            first.send_signal(signal.SIGINT); first.wait(timeout=10)
             self.assertFalse(first_root.exists())
             self.assertTrue(second_root.is_dir())
             second.send_signal(signal.SIGTERM); second.wait(timeout=10)
