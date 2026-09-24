@@ -46,7 +46,7 @@ trap 'interrupt 143' TERM
 INTEGRA_TEMP_ARTIFACT_ROOT="$root" python3 "$repo_root/scripts/process_group_exec.py" "$@" &
 child_pid="$!"
 if [[ -n "$timeout_seconds" ]]; then
-  ( sleep "$timeout_seconds"; kill -0 "$child_pid" 2>/dev/null && kill -TERM -- "-$child_pid" 2>/dev/null && exit 124 ) &
+  python3 "$repo_root/scripts/process_group_watchdog.py" "$child_pid" "$timeout_seconds" &
   watchdog_pid="$!"
 fi
 set +e
