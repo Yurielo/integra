@@ -87,6 +87,29 @@ class TempArtifactLifecycleTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertEqual((canonical / "sentinel").read_text(), "canonical")
 
+    def test_cleanup_is_idempotent_and_low_disk_preflight_creates_nothing(self):
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            result = subprocess.run(["python3", str(LIFECYCLE), "create", "--base", str(base),
+                                     "--purpose", "no-space", "--required-bytes", str(1 << 62),
+                                     "--reserve-bytes", "1"], capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(list(base.iterdir()), [])
+            root = self.create(base, "idempotent", os.getpid())
+            subprocess.run(["python3", str(LIFECYCLE), "cleanup", "--root", str(root), "--allow-live-owner"], check=True)
+            again = subprocess.run(["python3", str(LIFECYCLE), "cleanup", "--root", str(root), "--allow-live-owner"], capture_output=True)
+            self.assertNotEqual(again.returncode, 0)
+
+    def test_wrapper_timeout_terminates_its_process_group_and_removes_root(self):
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory); receipt = base / "root.txt"; child = base / "child.txt"
+            command = [str(WRAPPER), "--purpose", "timeout", "--timeout-seconds", "1", "--", "sh", "-c",
+                       'printf "%s" "$INTEGRA_TEMP_ARTIFACT_ROOT" > "$1"; sh -c "echo $$ > $2; sleep 30" & wait',
+                       "sh", str(receipt), str(child)]
+            result = subprocess.run(command, check=False, env=os.environ | {"TMPDIR": str(base)}, timeout=15)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse(Path(receipt.read_text()).exists())
+
     def test_macos_harness_uses_marker_bound_cleanup(self):
         source = (ROOT / "scripts" / "test_macos_app.sh").read_text(encoding="utf-8")
         self.assertIn("temp_artifact_lifecycle.py\" create --purpose macos-app-test", source)

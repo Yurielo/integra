@@ -82,6 +82,14 @@ def create(args: argparse.Namespace) -> int:
         raise ValueError("temporary base is unsafe")
     if args.policy not in POLICIES:
         raise ValueError("invalid cleanup policy")
+    if args.required_bytes:
+        free = shutil.disk_usage(base).free
+        required = args.required_bytes + args.reserve_bytes
+        if free < required:
+            raise ValueError(
+                f"insufficient free space for owned build: need {required} bytes "
+                f"({args.required_bytes} build + {args.reserve_bytes} reserve), have {free}"
+            )
     pid = args.owner_pid if args.owner_pid is not None else os.getppid()
     token = _process_token(pid)
     if token is None:
@@ -138,6 +146,8 @@ def main() -> int:
     create_parser.add_argument("--policy", default="AUTO_CLEANUP", choices=sorted(POLICIES))
     create_parser.add_argument("--base")
     create_parser.add_argument("--owner-pid", type=int)
+    create_parser.add_argument("--required-bytes", type=int, default=0)
+    create_parser.add_argument("--reserve-bytes", type=int, default=0)
     create_parser.set_defaults(handler=create)
     cleanup_parser = sub.add_parser("cleanup")
     cleanup_parser.add_argument("--root", required=True)
