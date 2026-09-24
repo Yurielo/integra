@@ -57,9 +57,9 @@ the one isolated bundle required for reproducible validation.
 
 ## Candidate-bound evidence and disk measurement
 
-Two sequential marker-owned full native Candidate builds were completed during
-this Issue. Each reached `INTEGRA_MACOS_SELF_TEST: PASS`, and the second also
-ran `candidate_manifest.py validate`. The measured live scratch root was
+Three sequential marker-owned full native Candidate builds were completed during
+this Issue; the final two used the final product source. Each reached
+`INTEGRA_MACOS_SELF_TEST: PASS` and `candidate_manifest.py validate`. The measured live scratch root was
 **2.1 GiB** before its wrapper cleanup. After each wrapper exited, its exact
 scratch root no longer existed; the remaining marker-owned candidate scratch
 space was **0 bytes / 0 roots**. No pre-existing `/private/tmp/integra*`
@@ -68,9 +68,9 @@ directory was manually removed.
 The second run's immutable manifest is copied as evidence at
 `docs/evidence/ISSUE_180_TEMP_ARTIFACT_LIFECYCLE_CANDIDATE_MANIFEST.json`:
 
-- Candidate: `candidate-v1-288ba11ba1b2b850fb186f94b4ab9eba7a1fbbd8d10b910b4b390095c3dc729a`
-- product source commit: `5f10a09626868c5dbcccc02866d395ff00f591cb`
-- product source tree: `f9c374c6522174d5e86747f718d53a7a63751521`
+- Candidate: `candidate-v1-7a254e707443a278606ffa956cc76e8374f5c20115077351e093230547f8bd62`
+- product source commit: `3ea6f9883a4f09052a672abdfd9b0c4c0aa99171`
+- product source tree: `bc35fa1289785225e7a908bc7b91ee21d7238018`
 - bundle digest: `044594f1a632f1c140af28bb7de8e4acf782daca9863d84b9c5d77edb731fdf8`
 
 ## Focused regression results
