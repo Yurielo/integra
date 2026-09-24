@@ -91,3 +91,25 @@ The second run's immutable manifest is copied as evidence at
 
 Native candidate evidence above adds the production-equivalent build,
 self-test, manifest-validation, and post-cleanup proof.
+
+## Fail-closed governance result
+
+The lifecycle patch correctly reaches the existing native harness, but the
+final governance validation is **BLOCKED** by a pre-existing R12/CURRENT
+provenance gap rather than by an artifact-cleanup failure:
+
+- immutable R12 records `scripts/test_macos_app.sh` as
+  `efb95b9041a3c010680affe1551e2c0e11b535bbaa7ae7ee41ffa62549e887eb`;
+- the active CURRENT base (`16a854e848f0d79f72ba77e0b6b92b5cb588e9d2`)
+  already contains `09bf6703b0cbd205b214e8361ce9242b33fc465ce57913177b71944361db5039`;
+- Issue #180's final source has
+  `a84137c2dee548f78a78d670a3ec1eb0d04a21903bcb96bcb60e6914bac71e96`.
+
+The existing Proposal Lite validator permits a historical-test successor only
+for its defined exact test-path category. It rejects this R12 shell harness as
+not an exact test path, and its material verifier also correctly refuses to
+pretend that the active CURRENT-base hash is the immutable R12 hash. No
+validator rule, R12/R13 record, CURRENT record, or test file was altered to
+bypass that contradiction. A separate owner-governed baseline provenance
+decision is required before this Candidate-backed lifecycle proposal can pass
+the repository Quality Gate.
