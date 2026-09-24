@@ -98,6 +98,10 @@ class TempArtifactLifecycleTests(unittest.TestCase):
         self.assertIn("retained Candidate output must not be under temporary storage", source)
         self.assertIn("candidate_manifest.py\" validate", source)
 
+    def test_build_stdout_contract_leaves_diagnostics_on_stderr(self):
+        source = (ROOT / "scripts" / "build_macos_app.sh").read_text(encoding="utf-8")
+        self.assertIn('package_review_runtime.py" "$seminartext_checkout" "$app/Contents/Resources" >&2', source)
+
 
 if __name__ == "__main__":
     unittest.main()
