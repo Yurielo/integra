@@ -29,6 +29,11 @@ class ProcessResultsSurfaceTests(unittest.TestCase):
         self.assertNotIn('outputs["translation"] as? String', surface)
         self.assertNotIn('outputs["topics"] as? String', surface)
 
+    def test_translation_target_is_explicit_and_bound_to_the_plan(self):
+        self.assertIn('private var translationTargetLanguage = "en"', self.source)
+        self.assertIn('add(row("Язык перевода"', self.source)
+        self.assertIn('request["translation_target_language"] = translationTargetLanguage', self.source)
+
     def test_reviewable_topics_use_process_only_review_path(self):
         review = self.source.split("@objc private func prepareTopicReview", 1)[1].split(
             "private func presentTopicReview", 1)[0]

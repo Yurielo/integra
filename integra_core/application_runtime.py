@@ -22,7 +22,8 @@ def _runs(project_dir: Path) -> Path:
 
 
 def prepare_run(project_dir: Path, plan: dict[str,Any]) -> dict[str,Any]:
-    verified=build_plan(plan.get("sources",[]),plan.get("selected_outputs",[]))
+    verified=build_plan(plan.get("sources",[]),plan.get("selected_outputs",[]),
+                        translation_target_language=plan.get("translation_target_language"))
     if verified["plan_id"]!=plan.get("plan_id"): raise ValueError("execution plan identity differs")
     run_id=f"urn:integra:run:{uuid.uuid4()}"
     record={"schema_version":"1.0","run_id":run_id,"plan":verified,"state":"QUEUED","current_stage":None,
@@ -196,6 +197,8 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                     if imported["source_id"] != source["source_id"]:
                         raise ValueError("media source changed after plan creation")
                     job={"job_id":f"urn:integra:job:{uuid.uuid4()}","kind":"LOCAL_MEDIA_TRANSCRIPTION","state":"QUEUED","progress":0,"message":"Queued by source-first plan","created_at":now(),"source_id":imported["source_id"],"source_sha256":imported["content_sha256"],"owned_path":imported["owned_path"],"requested_outputs":outputs,"run_id":run_id}
+                    if "translation" in outputs:
+                        job["translation_target_language"] = source_plan["translation_target_language"]
                     jobs=json.loads(jobs_path.read_bytes())
                     jobs["jobs"].append(job); atomic_json(jobs_path,jobs); result=run_job(project_dir,job["job_id"])
                     record["source_results"].append({"source_id":source["source_id"],"display_name":source["display_name"],"state":result["state"],"outputs":result.get("outputs",{}),"job_id":job["job_id"]})
@@ -226,6 +229,8 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                 else:
                     record["current_stage"] = "media_preparation"; atomic_json(path, record)
                     job = {"job_id": f"urn:integra:job:{uuid.uuid4()}", "kind": "YOUTUBE_MEDIA_TRANSCRIPTION", "state": "QUEUED", "progress": 0, "message": "Queued after YouTube download", "created_at": now(), "source_id": source["source_id"], "source_sha256": downloaded["content_sha256"], "owned_path": downloaded["downloaded_path"], "requested_outputs": downstream, "run_id": run_id, "youtube_source_record": downloaded["record_path"]}
+                    if "translation" in downstream:
+                        job["translation_target_language"] = source_plan["translation_target_language"]
                     jobs = json.loads(jobs_path.read_bytes())
                     jobs["jobs"].append(job); atomic_json(jobs_path, jobs); result = run_job(project_dir, job["job_id"])
                     record["source_results"].append({"source_id": source["source_id"], "display_name": source["display_name"], "state": result["state"], "outputs": downloaded_outputs | result.get("outputs", {}), "job_id": job["job_id"]})

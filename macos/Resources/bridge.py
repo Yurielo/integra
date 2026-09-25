@@ -636,7 +636,9 @@ def main():
         elif operation == "project-view": result = _project_view(root, request.get("project_id"))
         elif operation == "detect-sources": result = [detect_source(value) for value in request.get("inputs", [])]
         elif operation == "capability-registry": result = capability_registry(request.get("sources", []))
-        elif operation == "build-plan": result = build_plan(request.get("sources", []), request.get("selected_outputs", []))
+        elif operation == "build-plan": result = build_plan(
+            request.get("sources", []), request.get("selected_outputs", []),
+            translation_target_language=request.get("translation_target_language"))
         elif operation == "execute-plan": result = _execute_plan(root, request)
         elif operation == "process-plan":
             result = run_with_timeout(
