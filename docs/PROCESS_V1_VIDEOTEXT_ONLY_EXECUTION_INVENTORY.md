@@ -101,6 +101,31 @@ artifacts, but it is **not** the current Process runtime:
 It must therefore be treated as a source-level implementation asset, not as
 proof of current user integration and not as a component to enable wholesale.
 
+## Initial source-component run on the prior fuzzy-loop media
+
+An exploratory, isolated source-component run used the pinned VideoText commit
+`2e098d1705b6815628bee1e023f4742718eabf02` and the historical media identity
+`9faa1c03460aad1e8867593d28db1f140d0c839879a569ac362cb6a5eaf6ce6c`
+(`140.885333` seconds). The input was copied to a disposable private scratch
+root; no owner source, current Candidate or Process record was altered.
+
+The first completed VideoText project produced:
+
+- 18 numbered SRT cues and a 184-word Russian TXT transcript;
+- the formerly missing presentation/life-expectancy passage, including the
+  approximately 71/76-year facts;
+- no occurrence of the four-times-repeated SeminarText anchor phrase in the
+  preserved failing transcript;
+- a VideoText `transcription_quality.json` state of `ready` with zero review
+  tasks.
+
+This is positive evidence that VideoText's normal ASR can avoid the observed
+failure on that media and that its native SRT boundary is usable. It is **not**
+protective-retry equivalence: no loop occurred in this run, the quality report
+did not reject it, and no retry ran. It is also not a packaged Candidate or an
+Integra Process execution. The deterministic fuzzy-loop regression and the
+three-video Candidate-bound shadow route remain mandatory.
+
 ## Phase 1 conclusion
 
 The VideoText-only direction is technically plausible, but it is **not yet
