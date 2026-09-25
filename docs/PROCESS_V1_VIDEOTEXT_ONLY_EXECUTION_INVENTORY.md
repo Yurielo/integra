@@ -87,11 +87,14 @@ not be carried into a VideoText-native route.
 
 1. **No hidden SeminarText invocation.** Candidate-bound process/provenance
    evidence must show a normal selected Process journey invokes no SeminarText
-   executable or module.
-2. **Quality is not word count.** VideoText-native ASR must reproduce the
-   known fuzzy-loop failure class or establish an evidence-backed equivalent
-   detection/retry. A missing block of speech may never be “fixed” by deduping
-   repeated text.
+   executable or module. First prove actual VideoText execution in an isolated
+   project with no transcript/result cache; a later warm run proves reuse.
+   Historical SeminarText outputs may not satisfy the fresh-execution proof.
+2. **Quality is not word count.** Separate artificial looping, genuine spoken
+   repetitions, bounded retry/safe failure and successful recovery. The old
+   repeated-speech fixture proves the retry control path, not detector accuracy
+   or a requirement to reject correct speech. Apply the proof plan's evidence
+   matrix. A missing block of speech may never be “fixed” by deduping text.
 3. **Existing Process guarantees survive.** Reuse/invalidation and controlled
    failure → subsequent success must be repeated after an ASR executor change;
    historical SeminarText-backed PASS cannot be inherited.
@@ -161,11 +164,13 @@ three-video Candidate-bound shadow route remain mandatory.
 ## Phase 1 conclusion
 
 The VideoText-only direction is technically plausible, but it is **not yet
-proven**. The smallest first technical proof is a VideoText-native ASR shadow
-route that may reuse the narrow artifact-production portion of the historical
-worker, but emits the current Integra transcript/SRT provenance contract and is
-run against the three already-compared real Russian videos plus the known
-fuzzy-loop regression. It must not replace the existing Process path or remove
-SeminarText. The result decides whether the next bounded change is an adapter,
-a fuzzy-loop quality/retry implementation, or a stop due to missing
-equivalence.
+proven**. Follow Stage A of the
+[proof plan](PROCESS_V1_VIDEOTEXT_ONLY_PROOF_GATE.md): first specify the result
+mapping and minimum dependency closure, then reuse the historical worker's
+narrow artifact-production path for fresh native ASR proof on the original
+three videos and distinct quality controls. A warm rerun and bounded topic
+compatibility probe complete feasibility evidence. No whole WorkflowEngine or
+second project/job owner is imported. Neither this stage nor absence of a
+SeminarText process alone proves completion of Process. The explicit checkpoint
+selects bounded Stage B integration or reports missing equivalence; it cannot
+replace the user's app or authorize source retirement.
