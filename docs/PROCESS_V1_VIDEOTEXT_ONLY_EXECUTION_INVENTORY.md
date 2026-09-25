@@ -51,7 +51,7 @@ not be carried into a VideoText-native route.
 | Source import, hashes, plan, run/job records | Integra | Integra | Reuse unchanged. |
 | Transcript reuse/invalidation identity and lifecycle | Integra `asr_reuse`, with SeminarText executor identity | Integra, with a VideoText executor identity | Keep cache/lifecycle semantics; replace only executor-specific identity and artifacts. |
 | ASR, VAD, segmentation, raw TXT, timed SRT | SeminarText CLI | VideoText `SegmentedWhisperTranscriber` and `SRTService` | VideoText source capability exists; native Process path absent. |
-| Fuzzy/contextual loop quality gate and protective retry | SeminarText CLI | VideoText or an explicit Integra quality layer | No proven equivalent. This is a required implementation/proof boundary. |
+| Fuzzy/contextual loop quality gate and protective retry | SeminarText CLI | VideoText or an explicit Integra quality layer | VideoText has a different local retry for low-confidence and implausible-text-rate review tasks. It does not detect the known fuzzy/contextual loop class, so there is no proven equivalent. This is a required implementation/proof boundary. |
 | Clean and review text derivatives | SeminarText CLI | VideoText output plus minimal Integra derivative adapter if needed | No proven VideoText-equivalent current Process artifact. |
 | SRT serialization | SeminarText output then VideoText normalization | VideoText only | Native VideoText SRT removes the failing cross-component handoff. |
 | Word Timeline | Integra WhisperX adapter | Integra WhisperX adapter | Reuse unchanged once given VideoText SRT. |
@@ -81,12 +81,34 @@ not be carried into a VideoText-native route.
    consumed by translation, Word Timeline, burn and media operations. The raw
    ASR artifact and any compatibility form must remain hash-linked.
 
+## Existing but non-production VideoText transcript worker
+
+`workers/videotext_transcript_worker.swift` was introduced by the historical
+Core Alpha real-stage certification (commit `05e7760822c91f8aad99d5d8d627f7ebcbb9b04b`).
+It compiles pinned VideoText sources and can emit a machine-unverified source
+transcript checkpoint with native numbered SRT, TXT and Whisper JSON. This is
+useful evidence that the pinned source component can produce the primary ASR
+artifacts, but it is **not** the current Process runtime:
+
+- it is invoked only by the historical Core Alpha harness;
+- it is not packaged by `scripts/build_macos_app.sh` and is not selected by
+  `user_media.run_job`;
+- its contract stops at `SOURCE_TRANSCRIPT` and has no Integra reuse,
+  Process-result persistence or current Candidate provenance integration;
+- VideoText's `LocalWhisperRetryService` only retries tasks marked
+  `low-confidence` or `implausible-text-rate`; it is not a fuzzy-loop detector.
+
+It must therefore be treated as a source-level implementation asset, not as
+proof of current user integration and not as a component to enable wholesale.
+
 ## Phase 1 conclusion
 
 The VideoText-only direction is technically plausible, but it is **not yet
 proven**. The smallest first technical proof is a VideoText-native ASR shadow
-route that emits the current Integra transcript/SRT provenance contract and is
+route that may reuse the narrow artifact-production portion of the historical
+worker, but emits the current Integra transcript/SRT provenance contract and is
 run against the three already-compared real Russian videos plus the known
 fuzzy-loop regression. It must not replace the existing Process path or remove
 SeminarText. The result decides whether the next bounded change is an adapter,
-a quality/retry implementation, or a stop due to missing equivalence.
+a fuzzy-loop quality/retry implementation, or a stop due to missing
+equivalence.
