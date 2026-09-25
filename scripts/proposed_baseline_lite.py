@@ -61,17 +61,111 @@ def _git(root: Path, *args: str) -> str:
 
 
 def _commit_identity(root: Path, commit: str) -> dict[str, str]:
+    if not _is_git_sha(commit) or _git(root, "cat-file", "-t", commit) != "commit":
+        raise ValueError("Git identity is not an exact commit")
     return {"commit_sha": _git(root, "rev-parse", commit),
             "tree_sha": _git(root, "rev-parse", f"{commit}^{{tree}}")}
 
 
 def _changed_paths(root: Path, left: str, right: str) -> list[str]:
-    return _git(root, "diff", "--name-only", left, right).splitlines()
+    result = subprocess.run(["git", "-C", str(root), "diff", "--no-renames", "--name-only", "-z", left, right],
+                            check=True, capture_output=True).stdout
+    return [item.decode("utf-8") for item in result.split(b"\0") if item]
 
 
 def _valid_relative_path(value: object) -> bool:
-    return (isinstance(value, str) and bool(value) and not value.startswith("/")
-            and ".." not in Path(value).parts)
+    return (isinstance(value, str) and bool(value) and "\\" not in value
+            and all(part not in {"", ".", ".."} for part in value.split("/"))
+            and not any(ord(character) < 32 or ord(character) == 127 for character in value))
+
+
+def _regular_blob_hash(root: Path, commit: str, path: str) -> str | None:
+    """Return None only for an absent literal path in a verified commit tree."""
+    if not _is_git_sha(commit) or not _valid_relative_path(path):
+        raise ValueError("invalid commit or canonical path")
+    if _git(root, "cat-file", "-t", commit) != "commit":
+        raise ValueError("Git object is not a commit")
+    tree = _git(root, "rev-parse", f"{commit}^{{tree}}")
+    parts = path.split("/")
+    for index, part in enumerate(parts):
+        result = subprocess.run(["git", "--literal-pathspecs", "-C", str(root),
+                                 "ls-tree", "-z", tree, "--", part],
+                                check=True, capture_output=True).stdout
+        if not result:
+            return None
+        entries = result.split(b"\0")
+        if len(entries) != 2 or entries[-1] != b"":
+            raise ValueError("Git tree lookup is not exact")
+        header, name = entries[0].split(b"\t", 1)
+        mode, kind, object_id = header.decode("ascii").split()
+        if name != part.encode("utf-8") or not _is_git_sha(object_id):
+            raise ValueError("Git tree entry differs from literal path")
+        if index < len(parts) - 1:
+            if (mode, kind) != ("040000", "tree"):
+                raise ValueError("Git path ancestor is not a directory")
+            tree = object_id
+        else:
+            if mode not in {"100644", "100755"} or kind != "blob":
+                raise ValueError("Git path is not a regular blob")
+            blob = subprocess.run(["git", "-C", str(root), "cat-file", "blob", object_id],
+                                  check=True, capture_output=True).stdout
+            return hashlib.sha256(blob).hexdigest()
+    raise ValueError("empty Git path")
+
+
+def _delta_errors(delta: object) -> list[str]:
+    if not isinstance(delta, list) or not delta:
+        return ["PROPOSED baseline exact delta is required"]
+    errors: list[str] = []
+    paths: set[str] = set()
+    for item in delta:
+        if (not isinstance(item, dict) or set(item) != {"path", "before_sha256", "after_sha256"}
+                or not _valid_relative_path(item.get("path"))
+                or (item["before_sha256"] is not None and not _is_sha(item["before_sha256"]))
+                or not _is_sha(item["after_sha256"])):
+            errors.append("PROPOSED baseline delta record is invalid")
+            continue
+        if item["path"] in paths:
+            errors.append("PROPOSED baseline delta paths must be unique")
+        paths.add(item["path"])
+    return errors
+
+
+def _addition_errors(proposal: dict, current: dict, root: Path) -> list[str]:
+    additions = [item for item in proposal["delta"] if item["before_sha256"] is None]
+    if not additions:
+        return []
+    active = current_record(current)
+    base = proposal.get("base_main")
+    source = proposal.get("proposed_source")
+    if (active is None or proposal.get("base_current_id") != active.get("baseline_id")
+            or not isinstance(base, dict) or base != active.get("main")
+            or not isinstance(source, dict)):
+        return ["PROPOSED addition does not bind active CURRENT"]
+    inventory = active.get("governed_files")
+    if not isinstance(inventory, list) or not inventory or any(
+        not isinstance(item, dict) or set(item) != {"path", "sha256"}
+        or not _valid_relative_path(item.get("path")) or not _is_sha(item.get("sha256"))
+        for item in inventory
+    ):
+        return ["PROPOSED addition CURRENT inventory is invalid"]
+    paths = [item["path"] for item in inventory]
+    if len(paths) != len(set(paths)):
+        return ["PROPOSED addition CURRENT inventory is invalid"]
+    errors: list[str] = []
+    try:
+        if (_commit_identity(root, base["commit_sha"]) != base
+                or _commit_identity(root, source["commit_sha"]) != source):
+            return ["PROPOSED addition Git identity differs"]
+        for item in additions:
+            path = item["path"]
+            if path in paths or _regular_blob_hash(root, base["commit_sha"], path) is not None:
+                errors.append(f"PROPOSED addition is not absent from CURRENT: {path}")
+            if _regular_blob_hash(root, source["commit_sha"], path) != item["after_sha256"]:
+                errors.append(f"PROPOSED addition after hash differs: {path}")
+    except (OSError, subprocess.CalledProcessError, ValueError, KeyError, TypeError):
+        errors.append("PROPOSED addition Git absence/blob proof is unavailable or invalid")
+    return errors
 
 
 def _historical_test_hash(root: Path, authority: str, path: str) -> str | None:
@@ -236,17 +330,15 @@ def validate_current(current: object, root: Path, proposal: dict | None = None) 
             errors.append("CURRENT v2 governed file record is invalid")
             continue
         path_text = item["path"]
-        if path_text in seen or path_text.startswith("/") or ".." in Path(path_text).parts:
+        if path_text in seen or not _valid_relative_path(path_text):
             errors.append("CURRENT v2 governed file path is invalid")
             continue
         seen.add(path_text)
         path = root / path_text
         if proposal is not None and isinstance(main, dict) and _is_git_sha(main.get("commit_sha")):
             try:
-                actual = subprocess.run(["git", "-C", str(root), "show", f"{main['commit_sha']}:{path_text}"],
-                                        check=True, capture_output=True).stdout
-                matches = hashlib.sha256(actual).hexdigest() == item["sha256"]
-            except (OSError, subprocess.CalledProcessError):
+                matches = _regular_blob_hash(root, main["commit_sha"], path_text) == item["sha256"]
+            except (OSError, subprocess.CalledProcessError, ValueError):
                 matches = False
         else:
             matches = path.is_file() and sha256_file(path) == item["sha256"]
@@ -295,30 +387,22 @@ def validate_proposal(proposal: object, current: dict[str, Any], root: Path) -> 
         errors.append("PROPOSED baseline intended WP/journey scope is invalid")
     errors.extend(_candidate_errors(proposal.get("candidate"), "PROPOSED baseline", require_manifest_digest=True))
     delta = proposal.get("delta")
-    if not isinstance(delta, list) or not delta:
-        errors.append("PROPOSED baseline exact delta is required")
-    else:
-        paths: set[str] = set()
-        for item in delta:
-            if not isinstance(item, dict) or set(item) != {"path", "before_sha256", "after_sha256"} or not _valid_relative_path(item.get("path")) or not _is_sha(item.get("before_sha256")) or not _is_sha(item.get("after_sha256")):
-                errors.append("PROPOSED baseline delta record is invalid")
-                continue
-            if item["path"] in paths:
-                errors.append("PROPOSED baseline delta paths must be unique")
-            paths.add(item["path"])
+    delta_errors = _delta_errors(delta)
+    errors.extend(delta_errors)
+    if not delta_errors:
         active = current_record(current)
+        inventory = (active or {}).get("governed_files")
         active_hashes = {
             item.get("path"): item.get("sha256")
-            for item in (active or {}).get("governed_files", [])
+            for item in (inventory if isinstance(inventory, list) else [])
             if isinstance(item, dict) and isinstance(item.get("path"), str)
             and isinstance(item.get("sha256"), str)
         }
         for item in delta:
-            if not isinstance(item, dict):
-                continue
             previous = active_hashes.get(item.get("path"))
             if previous is not None and item.get("before_sha256") != previous:
                 errors.append("PROPOSED baseline delta does not start from active CURRENT hash")
+        errors.extend(_addition_errors(proposal, current, root))
     errors.extend(_historical_test_successor_errors(proposal.get("historical_test_successors"), root))
     gates = proposal.get("gates")
     if not isinstance(gates, list) or not gates or any(not isinstance(item, dict) or set(item) != {"name", "result", "evidence_ref"} or item.get("result") != "PASS" or not isinstance(item.get("evidence_ref"), str) or not item["evidence_ref"] for item in gates):
@@ -351,6 +435,9 @@ def verify_promotion_material(proposal: dict[str, Any], root: Path, proposal_pat
     for the owner reference.
     """
     errors: list[str] = []
+    delta_errors = _delta_errors(proposal.get("delta"))
+    if delta_errors:
+        return delta_errors
     try:
         commit = _git(root, "rev-parse", "HEAD")
         tree = _git(root, "rev-parse", "HEAD^{tree}")
@@ -358,17 +445,20 @@ def verify_promotion_material(proposal: dict[str, Any], root: Path, proposal_pat
         return ["promotion source Git identity is unavailable"]
     source = proposal.get("proposed_source", {})
     overlay = proposal.get("proposed_head", {})
-    base_commit = proposal.get("base_main", {}).get("commit_sha")
+    base = proposal.get("base_main")
+    base_commit = base.get("commit_sha") if isinstance(base, dict) else None
     if not isinstance(source, dict) or not isinstance(overlay, dict) or not isinstance(base_commit, str):
         return ["promotion proposal identities are unavailable"]
     try:
+        if _commit_identity(root, base_commit) != proposal.get("base_main"):
+            errors.append("promotion CURRENT base Git identity differs")
         if _commit_identity(root, source["commit_sha"]) != source:
             errors.append("promotion product source identity differs from PROPOSED baseline")
         if _commit_identity(root, overlay["commit_sha"]) != overlay:
             errors.append("promotion evidence overlay identity differs from PROPOSED baseline")
         subprocess.run(["git", "-C", str(root), "merge-base", "--is-ancestor", base_commit, source["commit_sha"]], check=True)
         subprocess.run(["git", "-C", str(root), "merge-base", "--is-ancestor", source["commit_sha"], overlay["commit_sha"]], check=True)
-    except (OSError, subprocess.CalledProcessError, KeyError):
+    except (OSError, subprocess.CalledProcessError, KeyError, ValueError, TypeError):
         errors.append("promotion source/overlay lineage is invalid")
         return errors
     # The persisted proposal cannot name its own commit/tree without a Git blob
@@ -387,6 +477,12 @@ def verify_promotion_material(proposal: dict[str, Any], root: Path, proposal_pat
         errors.append("promotion declaration overlay must contain only the PROPOSED record")
 
     declared = {item["path"]: item for item in proposal["delta"]}
+    if any(item["before_sha256"] is None for item in declared.values()):
+        try:
+            current = json.loads((root / "state/current_product_baseline_v2.json").read_text(encoding="utf-8"))
+            errors.extend(_addition_errors(proposal, current, root))
+        except (OSError, ValueError, TypeError):
+            errors.append("promotion addition active CURRENT is unavailable or invalid")
     try:
         product_changes = [path for path in _changed_paths(root, base_commit, source["commit_sha"])
                            if _governed_product_path(path)]
@@ -397,12 +493,12 @@ def verify_promotion_material(proposal: dict[str, Any], root: Path, proposal_pat
         errors.append("promotion governed CURRENT-to-source delta is undeclared or overstated")
     for path_text, item in declared.items():
         try:
-            before = subprocess.run(["git", "-C", str(root), "show", f"{base_commit}:{path_text}"], check=True, capture_output=True).stdout
-            after = subprocess.run(["git", "-C", str(root), "show", f"{source['commit_sha']}:{path_text}"], check=True, capture_output=True).stdout
-        except (OSError, subprocess.CalledProcessError):
+            before = _regular_blob_hash(root, base_commit, path_text)
+            after = _regular_blob_hash(root, source["commit_sha"], path_text)
+        except (OSError, subprocess.CalledProcessError, ValueError):
             errors.append(f"promotion declared delta is unavailable: {path_text}")
             continue
-        if hashlib.sha256(before).hexdigest() != item["before_sha256"] or hashlib.sha256(after).hexdigest() != item["after_sha256"]:
+        if before != item["before_sha256"] or after != item["after_sha256"]:
             errors.append(f"promotion declared delta differs: {path_text}")
 
     successors = proposal.get("historical_test_successors", [])
@@ -482,7 +578,8 @@ def verify_promotion_material(proposal: dict[str, Any], root: Path, proposal_pat
     return errors
 
 
-def next_current(current: dict[str, Any], proposal: dict[str, Any], owner_acceptance_ref: str, *, previous_current_path: str) -> dict[str, Any]:
+def next_current(current: dict[str, Any], proposal: dict[str, Any], owner_acceptance_ref: str, *, previous_current_path: str,
+                 root: Path | None = None) -> dict[str, Any]:
     """Construct, but do not write, the next CURRENT record after explicit owner input."""
     if not isinstance(owner_acceptance_ref, str) or not owner_acceptance_ref.strip():
         raise ValueError("explicit owner acceptance reference is required")
@@ -491,6 +588,11 @@ def next_current(current: dict[str, Any], proposal: dict[str, Any], owner_accept
     record = current_record(current)
     if record is None:
         raise ValueError("CURRENT record is invalid")
+    errors = _delta_errors(proposal.get("delta"))
+    if not errors:
+        errors = _addition_errors(proposal, current, root if root is not None else Path(__file__).resolve().parents[1])
+    if errors:
+        raise ValueError("; ".join(errors))
     # A successor is cumulative: it retains every previously governed byte
     # unless an exact proposal delta explicitly replaces that path.  Dropping a
     # path would sever the hash-verified historical chain for R12/R13.
