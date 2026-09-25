@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0",
+  "candidate_id": "candidate-v1-9c969dab6d8aab30458bd202dd792d709e1faea8db207306e3ccb46c886c1e98",
+  "manifest_identity_sha256": "9c969dab6d8aab30458bd202dd792d709e1faea8db207306e3ccb46c886c1e98",
+  "bundle_digest": "e6ab2fd5867acc58837a08bf65cce5d176a26ad5885253fec9774733d36aa1a0",
+  "product_source": {
+    "commit_sha": "43378a9c26ddc755d1f309c7c6c8ad7e93484651",
+    "tree_sha": "0fe9f29ab1bc9f03acce5bc46b1f95e0470599ef"
+  },
+  "checks": [
+    {
+      "name": "candidate-manifest-validation",
+      "result": "PASS",
+      "detail": "The isolated Integra.app manifest validated against the exact clean product source."
+    },
+    {
+      "name": "bundled-videotext-russian-to-english",
+      "result": "PASS",
+      "detail": "The bundled pinned VideoText worker translated a Russian SRT into readable English and retained MACHINE_TRANSLATION_REVIEW_REQUIRED."
+    },
+    {
+      "name": "focused-process-translation-regressions",
+      "result": "PASS",
+      "detail": "56 focused tests passed; 19 runtime-dependent tests were explicitly skipped by their existing test guards."
+    },
+    {
+      "name": "native-swift-typecheck",
+      "result": "PASS",
+      "detail": "macos/IntegraApp.swift passed swiftc -parse-as-library -typecheck."
+    }
+  ]
+}
