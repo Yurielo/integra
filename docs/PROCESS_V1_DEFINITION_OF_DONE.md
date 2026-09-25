@@ -18,11 +18,12 @@ planning documents remain historical/decision evidence. They cannot independentl
 expand this frozen Process v1 scope.
 
 Only a new explicit Product Owner decision may change the Process v1 scope. The
-next implementation WP must be selected from the Completion Board. No WP2/WP3 is
-created in advance: after each coherent WP, update the Board from evidence and
-only then select the next WP. The first next WP after this document is merged is
-**Existing Process Proof + Recovery Closure**, prioritizing `VERIFY_EXISTING`
-while preserving the already obtained #161/#162 evidence.
+next implementation WP must be selected from the Completion Board. After each
+coherent WP, update evidence and select the next bounded WP. The original
+**Existing Process Proof + Recovery Closure** sequence is historical; for #187,
+the owner-authorized correction establishes the two-stage sequence in section E.
+Previously obtained #161/#162 evidence is preserved, not automatically inherited
+by a changed executor. No implementation WP is created by this document update.
 
 ## A. Product outcome
 
@@ -229,25 +230,36 @@ Candidate proof. `NOT_DONE` means a required connection/output/control is absent
 
 ## E. Minimal execution order
 
-The ordering is intentionally `VERIFY_EXISTING → INTEGRATE_EXISTING → BOUNDED
-ISOLATION → IMPLEMENT_MISSING`. There is currently no frozen-MUST
-`IMPLEMENT_MISSING` item.
+The active #187 order is the two-stage
+[VideoText-only proof plan](PROCESS_V1_VIDEOTEXT_ONLY_PROOF_GATE.md), corrected
+after the owner's critical review. Reuse existing capabilities first; do not
+repeat proof of the outgoing executor as a prerequisite to the bounded probe.
 
-1. **Verify existing user journeys and preserve Recovery evidence.** Verify the
-   existing local audio/multi-file/one-YouTube/ASR retry/text derivatives/Word
-   Timeline/Topic review/results/persistence/lifecycle paths against exact
-   selected outputs. Record candidate-bound, non-skipped evidence. Do not repeat
-   source audits or create a new Recovery program.
-2. **Integrate frozen existing capabilities in coherent journeys.** One journey
-   for folder/Zoom/playlist discovery; one for ASR modes/languages/diagnostics;
-   one for translation; one for Topics summary/detail/review; one for combined
-   multi-source outputs/corpus. Use existing pinned source capabilities and
-   prove only affected Process regression/contract paths after each group.
-3. **Apply bounded isolation and finalize the Process boundary.** Implement the
-   Selected-Capability Runtime Closure and ProcessedSource v1; then produce one
-   exact Candidate for the complete §H exit gate. If a later frozen-MUST fact
-   proves truly missing behavior, stop for explicit Product Owner/implementation
-   authority rather than expanding this DoD.
+1. **Stage A: contracts, minimum isolation and feasibility.** Specify the
+   versioned result mapping and actual selected dependencies before adapters.
+   Prove new VideoText execution in isolated cold projects, separately prove
+   warm reuse, and probe hybrid-topic/review compatibility. Freeze the finite
+   case/repair budget and quality/performance criteria before running. Record
+   an explicit proceed/not-yet-proven/blocked decision before broad integration.
+2. **Stage B: integrate and complete.** Implement the future ProcessedSource
+   boundary before dependent consumers; integrate ASR and topics separately,
+   with affected recovery checks. Reuse existing translation/discovery/ASR
+   controls/multi-source implementations and implement only bounded missing
+   replacement behavior. Extend selected dependency closure with each output.
+3. **Whole Process exit gate.** Verify all 47 MUST outcomes on one exact
+   Candidate under §H. Stage A alone is neither full proof nor app replacement,
+   source retirement or user acceptance. Documents/Knowledge remain the next
+   product priority after Process, not additional #187 scope.
+
+The former statement that there are no `IMPLEMENT_MISSING` items described the
+old executor inventory. A missing adapter or retry mechanism needed to preserve
+an existing MUST on a new executor is not a new user-facing capability. Define
+its owner and bounded Issue under #187; new product scope, altered semantic or
+acceptance policy, protected source changes and unresolved architecture choices
+still require the applicable explicit authority. Historical Board statuses stay
+unchanged until replacement-specific evidence is recorded. The existing retry
+DONE row proves trigger/retry/safe failure, not guaranteed speech recovery;
+use the separate evidence criteria in the proof plan without rewriting history.
 
 ## F. Recovery position
 
@@ -335,12 +347,12 @@ Product Owner decision before it can enter the Board or gate.
 
 ## Proposed next execution packages — not created
 
-1. **Existing Process proof and Recovery ledger:** candidate-bound verification
-   of frozen existing paths and recorded reliability scenarios.
-2. **Selected Process integrations:** folder/Zoom/playlist discovery, ASR and
-   translation controls/outputs, Topic outputs/review, and multi-source results.
-3. **Process closure and final acceptance:** Selected-Capability Runtime Closure,
-   ProcessedSource v1, one final Candidate, whole §H gate and owner acceptance.
+1. **Stage A feasibility:** contract/dependency checkpoint, fresh ASR execution,
+   separate reuse and topic compatibility proof, then a bounded decision.
+2. **Stage B integrations:** ProcessedSource, ASR/topics and affected recovery,
+   followed by remaining frozen selected-output journeys using existing work.
+3. **Final acceptance:** complete selected dependency verification, one exact
+   Candidate, whole §H gate and owner acceptance.
 
 No merge, deployment, implementation Issue, build, test, Candidate, or Recovery
 continuation is created by this document.

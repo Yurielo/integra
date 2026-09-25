@@ -34,8 +34,9 @@ existing media journey is reliable.
   Do not silently advance the integrated pin or inherit source-product PASS.
 
 These decisions do not change the 47 MUST count or mark any Completion Board
-row DONE. This documentation PR references #187; it does not complete or close
-the runtime-proof Issue.
+row DONE. PR #188 recorded the initial plan. The owner's subsequent instruction
+to correct it after critical review establishes the two-stage sequence below.
+Documentation updates reference #187; they do not complete or close it.
 
 ## Current factual baseline
 
@@ -73,7 +74,7 @@ than one requirement.
 | --- | --- | --- | --- | --- |
 | Local video; local audio; automatic TXT; timed SRT | SeminarText `project-transcribe` via `seminartext_asr_runtime` | VideoText `SegmentedWhisperTranscriber` + `SRTService`; Integra persists the existing output contract | `REUSE_VIDEOTEXT` | One VideoText-native Process route on the same three real Russian videos; numbered SRT, readable TXT, hashes and no SeminarText process/module call. |
 | Careful ASR mode; source language; ASR settings and diagnostics | SeminarText CLI defaults; controls incomplete | VideoText source language/quality/review diagnostics, exposed only where frozen Process requires them | `REUSE_VIDEOTEXT` | Exact supported controls, recorded selection and an actionable result/diagnostic; no invented “careful” equivalence. |
-| Protective retry against contextual/fuzzy Whisper looping | SeminarText `quality_check` + protective retry; prior real failure-class proof | Equivalent detection and retry may live in VideoText or an Integra-owned quality layer | `IMPLEMENT_IN_VIDEOTEXT_OR_INTEGRA` | Reproduce the known deterministic fuzzy-loop class, demonstrate that the retry/recovery preserves the missing speech, and prove no post-hoc dedup is substituted for recovery. |
+| Protective retry against contextual/fuzzy Whisper looping | SeminarText `quality_check` + protective retry; bounded trigger/retry/failure proof, not recovery accuracy | Reuse VideoText detection; name exactly one retry owner at the Stage A contract checkpoint | `IMPLEMENT_IN_VIDEOTEXT_OR_INTEGRA` | Distinguish detector accuracy, bounded retry, safe failure and successful recovery using the evidence matrix below. Genuine spoken repetitions must not become a required rejection oracle; no dedup as a substitute for lost speech. |
 | Clean TXT; raw/review derivative provenance | SeminarText clean/review derivatives | VideoText transcript plus an Integra-owned, source-linked readable derivative if VideoText has no equivalent | `BOUNDED_ADAPTER` | Defined clean-text contract, source/ASR linkage, and packaged readable result. |
 | Word Timeline and timed source navigation | WhisperX adapter consumes SeminarText SRT | Preserve WhisperX as an Integra-owned alignment adapter consuming VideoText numbered SRT | `INTEGRA_OWNED_REUSE` | Same real Russian alignment proof, exact source/SRT hashes and navigation, with no SeminarText dependency. |
 | Basic topics/timestamps; topic summary/detail | SeminarText Topic Engine | VideoText `HybridTopicAdapter` / `OllamaTopicProvider` output, mapped to the existing Process draft contract | `REUSE_VIDEOTEXT` | Prove normal-quality default, only selected granularity/language, no draft fallback, source cue IDs/times and `REVIEW_REQUIRED` semantics in a packaged route. |
@@ -85,72 +86,119 @@ than one requirement.
 | Unified results; open/export; persistence/reopen; progress/status; selected outputs | Integra UI/application runtime | No component change | `INTEGRA_OWNED_REUSE` | Regression-only proof on the final VideoText-only Candidate. |
 | Selected-Capability Runtime Closure | Current cross-cutting blocked Board row | Integra capability/runtime closure, reusing existing planning infrastructure | `IMPLEMENT_IN_VIDEOTEXT_OR_INTEGRA` | Not completed reuse: implement/prove selected dependency resolution across preflight, imports and packaged workers. A VideoText-only selection may not eagerly require SeminarText; missing selected dependencies must be shown before execution with an actionable reason. |
 
-## Gate sequence
+## Execution authority and ordering
 
-1. **Execution inventory — no product change.** Enumerate every process/module
-   invoked by the selected normal Process route and establish the exact
-   VideoText/Integra replacement boundary.  The three-video comparison and
-   known fuzzy-loop evidence are inputs, not acceptance by themselves.
-2. **VideoText-native ASR proof.** In an isolated candidate, run the same
-   three real local Russian videos and the deterministic fuzzy-loop regression.
-   Record transcript, SRT, quality/retry, source hashes, runtime identity and
-   the absence of SeminarText invocation.
-3. **Bounded replacement only where the matrix requires it.** Do not duplicate
-   SeminarText wholesale.  Preserve Integra-owned recovery and Process review;
-   add only the adapters or implementations explicitly marked above.
-4. **Whole selected Process proof.** Run the frozen Process entry gate on one
-   Candidate: normal GUI, outputs, translation, topics/review, persistence,
-   controlled failure/recovery and no Terminal/Codex use.
+For the #187 executor transition, this sequence and DoD section E describe the
+same active order. It supersedes the former instruction to finish verification
+of the outgoing runtime before investigating the new one. Historical Board
+evidence remains unchanged. Missing implementation for a replacement executor
+is not automatically a new product requirement: reuse first, then define a
+bounded adapter/repair under the existing MUST. New capabilities, source-product
+changes or altered semantic/acceptance policy still require exact authority.
 
-If any required row lacks a credible equivalent, the result is
-`VIDEOTEXT_ONLY_PROCESS_NOT_YET_PROVEN`, not a forced migration.
+Stage A answers whether a bounded VideoText transition is viable. Stage B
+finishes and proves all 47 MUST outcomes. Stage A cannot close #187, replace
+the user's app, remove SeminarText, or claim full Process acceptance. Select
+one next bounded Issue from evidence; this plan does not start implementation.
 
-## Dependency-ordered implementation plan
+## Stage A: bounded feasibility proof
 
-This is sequencing within the existing scope, not new pre-created work packages
-or authority to bypass the Completion Board. Select one bounded next Issue
-from evidence after each coherent change.
+1. **Freeze contracts and inputs before adapters.** Record exact commits,
+   models/configs, the same three Russian control videos and existing loop
+   fixtures. Keep Gold and user projects unchanged. Specify a versioned worker
+   result mapping for source identity, TXT/SRT, quality, output hashes, actual
+   executor and errors/progress. Integra owns jobs, leases and cancellation;
+   name one owner for protective retry and its attempt/time budget to prevent
+   nested retry loops. Reuse existing storage; ProcessedSource is a target to
+   implement, not an already completed immutable result contract.
+2. **Minimum real dependency closure.** Before the first packaged ASR proof,
+   specify and test the selected worker's imports, preflight and bundle/runtime
+   requirements. No unrelated SeminarText probe or integrity bypass may be
+   necessary to execute it. Keep the old route available and preserve its known
+   SRT limitation. Review relevant lifecycle work in #183 against this proof's
+   needs; do not make completion of every draft change a prerequisite. Record
+   exact rollback and owned-process cleanup before expensive runs.
+3. **Fresh ASR proof, then reuse.** Reuse VideoText's existing transcriber and
+   quality services through the narrow adapter. Each control input first runs
+   in an isolated test project with no transcript or result cache: record
+   actual VideoText execution, raw numbered SRT/TXT and hash-linked outputs.
+   Model/embedding downloads are not transcript caches. No SeminarText calls
+   and no pre-existing SeminarText artifacts may satisfy this first proof.
+   A separate unchanged-input run must demonstrate valid reuse with no ASR.
+   Never delete the user's cache to obtain a cold test.
+4. **Bounded topic compatibility probe.** On a fresh, validated transcript,
+   map existing HybridTopicAdapter output to Process topics with actual cue
+   IDs/times and the normal-quality, selected-only variant. Verify a minimal
+   review/save/reopen round trip without losing machine provenance. This
+   checks the second replacement boundary; it is not full topic acceptance.
+5. **Decision checkpoint.** Before starting runs, record the finite case list,
+   maximum retry attempts/time per case, one repair-and-rerun budget and the
+   acceptance comparison rules. Exhaustion returns an evidence package, not
+   unlimited tuning. Proceed to Stage B only when fresh execution, valid
+   output mapping, safe lifecycle and topic compatibility are demonstrated
+   and remaining gaps have bounded owners/solutions. A technical pass is
+   permission to select the next authorized implementation item, not a new
+   mandatory human approval stop. Missing equivalence returns
+   `VIDEOTEXT_ONLY_PROCESS_NOT_YET_PROVEN`; an authority/architecture conflict
+   returns `BLOCKED` for the appropriate decision. Do not force the migration.
 
-1. **Freeze proof inputs and lifecycle prerequisites.** Record exact Integra,
-   VideoText, model/config and control-media identities. Review the relevant
-   temporary-Candidate ownership/cleanup work in PR #183 before expensive
-   proof runs; it is still draft work, not inherited acceptance. Preserve the
-   current route and owner projects. Use the same three Russian videos and the
-   deterministic fuzzy-loop regression, including short/long and VAD/no-VAD
-   behavior where applicable. No Gold rewriting.
-2. **Isolated native ASR adapter.** Reuse VideoText's transcriber and quality
-   services, not only a bare whisper command. Prove numbered SRT, readable TXT,
-   quality rejection and bounded recovery without deleting repeated speech as
-   a substitute. Preserve raw artifacts and exact executor provenance; no
-   hidden SeminarText executable or module.
-3. **Integra result contract and recovery.** Bind reuse to source/revision,
-   executor/version, model, language and configuration. Keep old results and
-   receipts; reuse them only through explicit compatibility, never relabeling.
-   Retain Integra-owned Clean TXT derivatives, Russian WhisperX alignment and
-   immutable ProcessedSource/provenance contracts. Rerun failure, cancel,
-   timeout, reopen, invalidation and subsequent-success checks after the swap.
-4. **Hybrid topics and Process human review.** Map real SRT cue IDs/times to
-   existing Process topics, with normal-quality default and selected variant
-   only. Prove summaries, review edits, save/close/reopen and preserved machine
-   provenance. Applicable Gold regression does not inherit PASS from a different
-   algorithm; Process review never creates Knowledge acceptance.
-5. **Close remaining MUST gaps.** Reuse relevant translation work in PR #186
-   after review/proof rather than rebuilding it; complete Topic translation
-   separately. Verify actual ASR controls, folder/Zoom/playlist discovery with
-   preview/confirmation, ordered inputs, partial failures, combined transcript
-   and corpus with per-passage provenance. No hidden SeminarText corpus command.
-6. **Selected dependency closure and final proof.** Prove preflight, import
-   and bundle dependencies for the chosen outputs. Run the full 47-MUST exit
-   matrix for the first RU journey on one exact packaged Candidate, with
-   independent QA/review and two consecutive real short-video E2E passes on
-   that same Candidate. Include the known SRT mismatch and fuzzy-loop regression;
-   standalone VideoText tests are not Integra native-UI proof. Expensive local
-   model/build runs are serialized. Technical proof, human acceptance, runtime
-   promotion and permission to remove SeminarText are separate events.
+## Stage B: integration and full Process completion
 
-The gate records `VIDEOTEXT_ONLY_PROCESS_PROVEN`,
-`VIDEOTEXT_ONLY_PROCESS_NOT_YET_PROVEN`, or `BLOCKED`, with exact evidence and
-remaining gaps. None alone means `PROCESS V1 USER_ACCEPTED`.
+1. **Implement the result boundary before downstream consumers.** Create the
+   minimal immutable ProcessedSource projection over existing artifacts per
+   DoD section G, with revision/predecessor and atomic completeness. Do not
+   replace the database. Define compatibility for old results explicitly;
+   preserve their executor labels and human edits. Invalidation is per derived
+   output: changing topic detail/model must not require ASR; changing source
+   or transcript revision invalidates dependent topics/alignment/translation,
+   retaining old reviewed versions without silently rebasing them.
+2. **Integrate ASR, then topics in separate reviewable changes.** Preserve
+   Integra Clean TXT derivatives and Russian WhisperX alignment. Prove fresh
+   execution and warm reuse, source/model/config invalidation, failure, cancel,
+   timeout, reopen and subsequent success. For topics, prove summaries,
+   selected detail/language only, no draft fallback, real source spans and
+   human edits surviving restart. Apply compatible Gold checks without
+   changing Gold or inheriting a different algorithm's PASS. Process review
+   does not create Knowledge acceptance.
+3. **Finish remaining frozen MUST journeys using existing work.** Review and
+   reuse relevant #186 translation implementation; prove Topic translation
+   separately. Connect truthful ASR controls, folder/Zoom/playlist preview and
+   confirmation, ordered sources, partial failure, combined transcript and
+   corpus with per-passage provenance. Never hide a SeminarText corpus call.
+   Complete selected dependency closure incrementally with each output,
+   rather than postponing its design to final QA.
+4. **Full exact-Candidate verification.** Map each of the 47 MUST outcomes to
+   its actual native action, produced artifact/state, negative case, test and
+   evidence on one packaged Candidate. Repeat two short-video native E2E runs
+   on those same bytes for stability, alongside long-media and fault cases;
+   these repetitions do not replace the full matrix. Independent QA/review,
+   applicable non-skipped runtime proofs, regression and integrity gates must
+   pass before user acceptance. Serialize expensive local model/build runs.
+
+Only the whole matrix supports `VIDEOTEXT_ONLY_PROCESS_PROVEN`. Technical
+proof, human `PROCESS V1 USER_ACCEPTED`, runtime promotion and authority to
+remove SeminarText remain separate events.
+
+## Evidence and acceptance matrix
+
+Freeze checks before execution, not after seeing output. A proof record binds
+input/hash, exact Candidate/runtime/model/config, cold/warm state, expected
+outcome, actual result and artifact/log evidence. Numerical semantic/performance
+thresholds must be justified from the control material and measured baseline;
+none are invented by this documentation update. Unspecified criteria mean
+NOT_READY to start the relevant proof, not permission to choose post-hoc limits.
+
+| Evidence | What it proves and required interpretation |
+| --- | --- |
+| Same three real Russian videos, including long-media/chunk boundaries | Fresh executor integration, numbered valid SRT, preserved source identity and inspected speech coverage. Without a reference transcript report observations, not ASR accuracy percentages. Include short/long and VAD/no-VAD cases where the paths differ; preserve the original controls. |
+| Artificial ASR-loop regression | Detector and bounded automatic retry are exercised. A suspicious retry stays failed/review-required as the supported contract specifies; it is never a completed valid transcript. |
+| Genuine spoken repetitions | False-positive control: preserve the words. The old repeated-speech fixture proved a trigger/retry/failure path, not that rejecting correct repeated speech is desirable. Record false positives independently; do not turn the old rejection into a mandatory quality oracle. |
+| Recoverable failure case | Compare retry output to known source speech and prove recovery separately. Safe failure is not recovery. Do not require every acoustic failure to recover; do not strengthen the historical safety-only Board claim silently. |
+| Topic quality | On an authorized compatible reference, fix boundary matching tolerance, missed/spurious-boundary and title/summary review criteria before comparison. Valid JSON/cue IDs prove structure, not semantic quality. No Gold edits or fabricated new reference labels. |
+| Model/worker failures | Cover malformed/truncated JSON, unavailability, timeout, cancellation and retry exhaustion. Verify valid upstream artifacts survive and the next run works without restart. |
+| Performance | Record cold/warm wall time, time per media minute, peak memory, temporary disk and model request/variant counts on the reference Mac. Define allowed regression limits before running. Only requested topic detail/language executes. |
+| Full 47-MUST matrix | Product completeness on the exact packaged Candidate, not inherited component tests or historical DONE counts. |
+| Two consecutive short-video native E2E runs | Repeatability of the declared GUI workflow/outputs on the same Candidate; not long-media quality, all MUST outcomes or installation proof. Record actual packaged entrypoint, actions and expected files before running. |
 
 ## Explicit non-permission
 
