@@ -41,6 +41,7 @@ or Studio code changed.
 | Focused Process translation, results-surface, capability, runtime and ASR-reuse tests | PASS | `56` passed; `19` explicit runtime-dependent skips |
 | Native UI typecheck | PASS | `swiftc -parse-as-library -typecheck macos/IntegraApp.swift` |
 | Candidate manifest | PASS | Exact manifest copied in `docs/evidence/PROCESS_V1_TRANSLATION_CANDIDATE_MANIFEST.json` |
+| Packaged bridge plan | PASS | The bridge inside the exact Candidate accepted `translation_target_language=ru`, retained it in the plan identity and applicable source plan, and scheduled `media_preparation → transcript → translation`. |
 | Real bundled VideoText translation | PASS | The Candidate's bundled worker translated `Привет. Это проверка перевода в Integra.` to `Hello. This is a translation check in Integra.` with `source_language=ru`, `target_language=en`, and `MACHINE_TRANSLATION_REVIEW_REQUIRED`. JSON SHA-256 `baf78016de53f53765a547a9f5ccf88a3b548327b00c4a6221353a7eb9f8da09`; TXT SHA-256 `614befb5da1afce575d749c901dbf6614185022fa684646cbb09fe44b37a768e`. |
 
 ## Explicit non-claim: Topic translation

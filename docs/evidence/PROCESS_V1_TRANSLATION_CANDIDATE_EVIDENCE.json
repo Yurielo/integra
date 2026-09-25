@@ -14,6 +14,11 @@
       "detail": "The isolated Integra.app manifest validated against the exact clean product source."
     },
     {
+      "name": "packaged-bridge-translation-plan",
+      "result": "PASS",
+      "detail": "The bridge inside the exact Candidate accepted the Russian target, bound it to the plan and source plan, and scheduled media_preparation, transcript and translation."
+    },
+    {
       "name": "bundled-videotext-russian-to-english",
       "result": "PASS",
       "detail": "The bundled pinned VideoText worker translated a Russian SRT into readable English and retained MACHINE_TRANSLATION_REVIEW_REQUIRED."
