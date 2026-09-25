@@ -1,0 +1,89 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.proposed_product_baseline",
+  "proposal_id": "proposal-process-v1-translation-integration",
+  "status": "PROPOSED_BASELINE_VALID",
+  "base_current_id": "current-v2-65bf72d1262146c9137aca433b51ae3974d98bc4c8ed37042db13b46e0318a1d",
+  "base_main": {
+    "commit_sha": "16a854e848f0d79f72ba77e0b6b92b5cb588e9d2",
+    "tree_sha": "83106fbbc6544b2ac3831d2fa0408f8d0fa83ec1"
+  },
+  "proposed_source": {
+    "commit_sha": "43378a9c26ddc755d1f309c7c6c8ad7e93484651",
+    "tree_sha": "0fe9f29ab1bc9f03acce5bc46b1f95e0470599ef"
+  },
+  "proposed_head": {
+    "commit_sha": "4fba0542b129a4aa5aa3bda5d3702637002d14ac",
+    "tree_sha": "bf27d6ffb73adbd06f88acb3647f4d933b011c00"
+  },
+  "intended_scope": {
+    "wp": "Issue #185 Process v1 translation integration",
+    "journey": "A user selects the existing VideoText translation output and a supported target language, then receives a persisted readable, source-linked translated TXT while machine-translation provenance remains review-required."
+  },
+  "candidate": {
+    "candidate_id": "candidate-v1-9c969dab6d8aab30458bd202dd792d709e1faea8db207306e3ccb46c886c1e98",
+    "identity_sha256": "9c969dab6d8aab30458bd202dd792d709e1faea8db207306e3ccb46c886c1e98",
+    "manifest_digest": "202410de6ec447dd5dcd429a6ad5dc715241bf4e6f26175c57ea685b86f150d5",
+    "bundle_digest": "e6ab2fd5867acc58837a08bf65cce5d176a26ad5885253fec9774733d36aa1a0"
+  },
+  "delta": [
+    {
+      "path": "integra_core/application_runtime.py",
+      "before_sha256": "7f0f7f32697f1bd51640190f1e97a4fc4c888b13de39ced2b0226279b9092f7a",
+      "after_sha256": "72a6f37b9e5e12afccf1a7c448c9c64842741216303675699462b7ec26a46e75"
+    },
+    {
+      "path": "integra_core/capabilities.py",
+      "before_sha256": "b07fc4cad27000feb0a46d2240f79b5ab8685afe84e40128c01052f1f6cc355c",
+      "after_sha256": "ad5b555089d22812505a47ce783c460db9effd7392ce7a4e30d8c362220c4950"
+    },
+    {
+      "path": "integra_core/user_media.py",
+      "before_sha256": "a9ef63b02aa7da43c99f4c0d427d4e71239c3adb390ccc25f45a378f558e9e9c",
+      "after_sha256": "4115e3725cce457b1944e2cc2340f06c33e1739fdbb7a3255485a22ae8b6a02e"
+    },
+    {
+      "path": "macos/IntegraApp.swift",
+      "before_sha256": "e1a318675caa3142f2e2250efe298d28c7ef86824a0e31007cdff93972b90b87",
+      "after_sha256": "f86f29ab65f920245de82e89d5ec2f595eb3cd07b8a36ad9c9b23364f7d0f330"
+    },
+    {
+      "path": "macos/Resources/bridge.py",
+      "before_sha256": "d06a6fb2c2e98d322ad6542107c56f8a2f4a44ba1f31727997b356a24422f926",
+      "after_sha256": "5b9f8199630ea4d6b1558784852723d0a7cd2504885fea96f43dd173bb9871dd"
+    }
+  ],
+  "historical_test_successors": [],
+  "gates": [
+    {
+      "name": "focused-process-translation-regressions",
+      "result": "PASS",
+      "evidence_ref": "docs/PROCESS_V1_TRANSLATION_INTEGRATION_PROOF.md"
+    },
+    {
+      "name": "candidate-manifest-and-bundled-translation",
+      "result": "PASS",
+      "evidence_ref": "docs/evidence/PROCESS_V1_TRANSLATION_CANDIDATE_EVIDENCE.json"
+    }
+  ],
+  "evidence": {
+    "candidate_manifest": {
+      "path": "docs/evidence/PROCESS_V1_TRANSLATION_CANDIDATE_MANIFEST.json",
+      "sha256": "202410de6ec447dd5dcd429a6ad5dc715241bf4e6f26175c57ea685b86f150d5"
+    },
+    "candidate_evidence": {
+      "path": "docs/evidence/PROCESS_V1_TRANSLATION_CANDIDATE_EVIDENCE.json",
+      "sha256": "2ccd1213d23328c8c758ca5d54ab16ca64e6c27863e10ef4601c1aa6fa9a9dc2"
+    },
+    "report": {
+      "path": "docs/PROCESS_V1_TRANSLATION_INTEGRATION_PROOF.md",
+      "sha256": "9a121848b539d184fd04f8186c5d34076de7729b6218aca0f6c0aa3257e23d72"
+    }
+  },
+  "owner_acceptance": null,
+  "allowed_overlay_paths": [
+    "docs/PROCESS_V1_TRANSLATION_INTEGRATION_PROOF.md",
+    "docs/evidence/PROCESS_V1_TRANSLATION_CANDIDATE_EVIDENCE.json",
+    "docs/evidence/PROCESS_V1_TRANSLATION_CANDIDATE_MANIFEST.json"
+  ]
+}
