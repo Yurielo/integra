@@ -51,7 +51,7 @@ not be carried into a VideoText-native route.
 | Source import, hashes, plan, run/job records | Integra | Integra | Reuse unchanged. |
 | Transcript reuse/invalidation identity and lifecycle | Integra `asr_reuse`, with SeminarText executor identity | Integra, with a VideoText executor identity | Keep cache/lifecycle semantics; replace only executor-specific identity and artifacts. |
 | ASR, VAD, segmentation, raw TXT, timed SRT | SeminarText CLI | VideoText `SegmentedWhisperTranscriber` and `SRTService` | VideoText source capability exists; native Process path absent. |
-| Fuzzy/contextual loop quality gate and protective retry | SeminarText CLI | VideoText or an explicit Integra quality layer | VideoText has a different local retry for low-confidence and implausible-text-rate review tasks. It does not detect the known fuzzy/contextual loop class, so there is no proven equivalent. This is a required implementation/proof boundary. |
+| Fuzzy/contextual loop quality gate and protective retry | SeminarText CLI | VideoText or an explicit Integra quality layer | VideoText detects exact/catastrophic repeats and adjacent progressive repetitions, but has no local fuzzy-semantic detector for the known class. Its local retry is eligible only for low-confidence and implausible-text-rate tasks, not repetition findings. There is no proven equivalent. This is a required implementation/proof boundary. |
 | Clean and review text derivatives | SeminarText CLI | VideoText output plus minimal Integra derivative adapter if needed | No proven VideoText-equivalent current Process artifact. |
 | SRT serialization | SeminarText output then VideoText normalization | VideoText only | Native VideoText SRT removes the failing cross-component handoff. |
 | Word Timeline | Integra WhisperX adapter | Integra WhisperX adapter | Reuse unchanged once given VideoText SRT. |
@@ -95,8 +95,10 @@ artifacts, but it is **not** the current Process runtime:
   `user_media.run_job`;
 - its contract stops at `SOURCE_TRANSCRIPT` and has no Integra reuse,
   Process-result persistence or current Candidate provenance integration;
-- VideoText's `LocalWhisperRetryService` only retries tasks marked
-  `low-confidence` or `implausible-text-rate`; it is not a fuzzy-loop detector.
+- VideoText's `TranscriptionQualityService` detects exact/catastrophic and
+  adjacent progressive repetition, while `LocalWhisperRetryService` retries
+  only `low-confidence` or `implausible-text-rate` tasks; together they are not
+  a fuzzy-loop detection-and-recovery contract.
 
 It must therefore be treated as a source-level implementation asset, not as
 proof of current user integration and not as a component to enable wholesale.
