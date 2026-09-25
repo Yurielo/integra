@@ -11,6 +11,26 @@ from capability selection through persistence. It uses source paths and the
 frozen Process v1 Definition of Done; it does not infer product integration
 from a registry entry or a component unit test.
 
+### Baseline and source update (2026-09-25)
+
+The execution inventory below describes Integra main
+`745a95d01c59d1b1b66c52c7a764f8ef3760620c`, whose VideoText pin is
+`2e098d1705b6815628bee1e023f4742718eabf02`. Source review also inspected
+VideoText 0.6.8, build `2026.09.25.1`, commit
+`c4d851c9b39b2aeb696a12aa357d1ae0df350cd3`. This newer commit is a
+**proposed proof input**, not an integrated pin or accepted Integra runtime.
+It belongs to [VideoText PR #2](https://github.com/Yurielo/videotext/pull/2);
+source review and exact revision selection precede any pin change.
+
+The newer source adds contextual/fuzzy repetition detection at chunk acceptance,
+cache validation, merged-transcript validation and existing-SRT reuse. It also
+contains strict hybrid-topic validation, model-response handling and generation
+of only the selected language/detail variant. These are source capabilities,
+not evidence that Integra executes them today. Protective retry equivalence is
+still unproven: local retry eligibility remains low confidence/text rate, long
+media segmentation and VAD/no-VAD paths differ, and rejection alone is not
+speech recovery. The earlier no-fuzzy-detector finding applies to the old pin.
+
 ## Current selected local media route
 
 ```text
@@ -51,7 +71,7 @@ not be carried into a VideoText-native route.
 | Source import, hashes, plan, run/job records | Integra | Integra | Reuse unchanged. |
 | Transcript reuse/invalidation identity and lifecycle | Integra `asr_reuse`, with SeminarText executor identity | Integra, with a VideoText executor identity | Keep cache/lifecycle semantics; replace only executor-specific identity and artifacts. |
 | ASR, VAD, segmentation, raw TXT, timed SRT | SeminarText CLI | VideoText `SegmentedWhisperTranscriber` and `SRTService` | VideoText source capability exists; native Process path absent. |
-| Fuzzy/contextual loop quality gate and protective retry | SeminarText CLI | VideoText or an explicit Integra quality layer | VideoText detects exact/catastrophic repeats and adjacent progressive repetitions, but has no local fuzzy-semantic detector for the known class. Its local retry is eligible only for low-confidence and implausible-text-rate tasks, not repetition findings. There is no proven equivalent. This is a required implementation/proof boundary. |
+| Fuzzy/contextual loop quality gate and protective retry | SeminarText CLI | VideoText or an explicit Integra quality layer | Old pin: no local fuzzy-semantic detector for the known class. Proposed 0.6.8 source: contextual/fuzzy detection exists, but protective retry/recovery equivalence is not proven. This remains a required implementation/proof boundary; do not reimplement the detector without testing the existing one. |
 | Clean and review text derivatives | SeminarText CLI | VideoText output plus minimal Integra derivative adapter if needed | No proven VideoText-equivalent current Process artifact. |
 | SRT serialization | SeminarText output then VideoText normalization | VideoText only | Native VideoText SRT removes the failing cross-component handoff. |
 | Word Timeline | Integra WhisperX adapter | Integra WhisperX adapter | Reuse unchanged once given VideoText SRT. |
@@ -99,6 +119,15 @@ artifacts, but it is **not** the current Process runtime:
   adjacent progressive repetition, while `LocalWhisperRetryService` retries
   only `low-confidence` or `implausible-text-rate` tasks; together they are not
   a fuzzy-loop detection-and-recovery contract.
+
+This worker assessment describes the pinned revision, not the additional
+detection capabilities in the proposed 0.6.8 source described above.
+
+The Word Timeline worker's historical `seminartext` filename/component label
+does not make its WhisperX implementation a SeminarText runtime dependency.
+Audit actual imports/processes and correct future attribution under a versioned
+provenance contract; do not rewrite historical receipts or claim independence
+from a filename-only change.
 
 It must therefore be treated as a source-level implementation asset, not as
 proof of current user integration and not as a component to enable wholesale.

@@ -26,6 +26,25 @@ while preserving the already obtained #161/#162 evidence.
 
 ## A. Product outcome
 
+### Owner clarification recorded 2026-09-25
+
+The first completed Process v1 journey prioritizes **Russian source speech**.
+A complete English-source ASR/alignment/topics journey may follow separately
+and does not block that first version. Supported language controls must remain
+truthful; unsupported English alignment must not be presented as available.
+This does not remove any of the 47 MUST outcomes: transcript translation,
+target-language choice, translated TXT and **Topic translation** remain required.
+English text as a translation target is distinct from English source speech.
+
+The VideoText-only direction follows the bounded
+[proof gate](PROCESS_V1_VIDEOTEXT_ONLY_PROOF_GATE.md) under #187, not automatic
+replacement of the current runtime or promotion of a new component pin.
+Completion Board statuses below remain evidence-bound and unchanged by this
+planning clarification. After Process, Documents and Knowledge take priority
+over full Studio; they do not enter this frozen Process v1 scope.
+
+### Required journey
+
 **Process v1 is one normal native macOS Integra.app journey that lets a user
 select supported local media, folders/Zoom folders, a YouTube video or playlist;
 select required outputs; review the discovered selection; confirm; process each
