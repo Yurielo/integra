@@ -1,6 +1,7 @@
 # Process v1 — VideoText-only execution inventory
 
-**Issue:** #187  
+**Issue:** #187
+
 **Status:** Phase 1 factual inventory. No product/runtime byte is changed by
 this document. It is evidence for the proof gate, not implementation approval.
 
