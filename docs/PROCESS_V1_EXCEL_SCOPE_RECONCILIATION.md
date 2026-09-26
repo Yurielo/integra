@@ -41,7 +41,7 @@ Therefore: 51 original MUST − 4 approved transfers = 47 current Process MUST. 
 | 8 | Автоматическая расшифровка → TXT | MUST | PROCESS | MUST | Automatic TXT transcript | DONE | Retained. |
 | 9 | SRT-субтитры | MUST | STUDIO | LATER | — | N/A | Owner correction: user-facing SRT is Studio; internal timing/SRT remains Process dependency. |
 | 10 | Word Timeline | MUST | PROCESS | MUST | Word Timeline | DONE | Retained; timing/provenance is Process. |
-| 11 | Careful / повышенный режим ASR | MUST | PROCESS | MUST | Careful ASR mode | NOT_DONE | Retained. |
+| 11 | Careful / повышенный режим ASR | MUST | PROCESS | MUST | Careful ASR mode | DONE | Candidate `candidate-v1-3348b6fc8ed525632d7d0abed1337f2e37b66404f0d6f4488cb3c012c3afca83`: neutral selector, persisted requested/executed mode and provenance; evidence is pending only the explicit baseline-acceptance gate. |
 | 12 | Protective retry | MUST | PROCESS | MUST | Protective retry | DONE | Retained; distinct from user retry; controlled packaged proof is recorded in `PROCESS_V1_PROTECTIVE_RETRY_PROOF.md`. |
 | 13 | Clean TXT | MUST | PROCESS | MUST | Clean TXT | DONE | Retained. |
 | 14 | Review TXT | MUST | KNOWLEDGE | LATER | — | N/A | Owner correction: Review TXT / Evidence interaction is Knowledge; Clean TXT remains Process. |
