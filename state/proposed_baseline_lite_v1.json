@@ -75,7 +75,12 @@
       "sha256": "4c319484166e6a05f68fe20282cf6cee75398127d4bf17b6b6938649f9e374a1"
     }
   },
-  "owner_acceptance": null,
+  "owner_acceptance": {
+    "decision": "PILOT_ACCEPTED",
+    "authority_ref": "Product Owner controlling conversation (2026-09-26): exact authorization headed PRODUCT OWNER AUTHORIZATION — ACCEPT_PILOT_BASELINE proposal-process-executor-isolation-pilot.",
+    "scope": "Accepted only: the bounded architecture pilot process.timed_transcript.normalize.v1, Source A 2e2403ac7ae41c2104371902b3c56a0319dfe4ff, Candidate candidate-v1-2fe375cc31b3a57d74ad0f994894bd610442deae3adfff033cdc5f3cf400fcd3, bundle 47befb29a6c221db7cb79262fc949f29248095e31dceba7fc4d46e78ab06c39e, executor integra.timed-transcript-normalizer.v1 and pinned VideoText provider 2e098d1705b6815628bee1e023f4742718eabf02. This accepts evidence that an Integra-owned neutral Process contract can use an isolated private adapter while Integra retains validation, lifecycle, result, publication and provenance. It does not authorize CURRENT promotion, PR merge, routing switch, VideoText exclusivity, SeminarText retirement, any other capability, Stage B, installation, deployment, replacement of Integra.app, PROCESS V1 USER_ACCEPTED, Knowledge or Studio work.",
+    "promotion_authorized": false
+  },
   "allowed_overlay_paths": [
     "docs/PROCESS_EXECUTOR_PILOT_REPORT.md",
     "docs/evidence/PROCESS_EXECUTOR_PILOT_CANDIDATE_MANIFEST.json",
