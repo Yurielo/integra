@@ -149,7 +149,11 @@ def capability_registry(sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return result
 
 
-def build_plan(sources: list[dict[str, Any]], selected: list[str]) -> dict[str, Any]:
+TRANSLATION_TARGETS = ("en", "ru")
+
+
+def build_plan(sources: list[dict[str, Any]], selected: list[str],
+               *, translation_target_language: str | None = None) -> dict[str, Any]:
     if not sources: raise ValueError("add at least one source")
     for source in sources:
         if source.get("booktext_pages") or source.get("booktext_exclude_pages"):
@@ -163,6 +167,13 @@ def build_plan(sources: list[dict[str, Any]], selected: list[str]) -> dict[str, 
         if not cap: raise ValueError(f"capability does not apply: {identifier}")
         if cap["implementation_state"]!="IMPLEMENTED" or not cap["runtime_available"]:
             raise ValueError(f"capability is not executable: {cap['title']} — {cap['ui_state']}")
+    target = None
+    if "translation" in selected:
+        target = translation_target_language or "en"
+        if target not in TRANSLATION_TARGETS:
+            raise ValueError("translation target language is unsupported")
+    elif translation_target_language is not None:
+        raise ValueError("translation target language requires translation output")
     stages=[]
     def add(identifier: str) -> None:
         if identifier in {"media_preparation","document_analysis"}:
@@ -183,9 +194,17 @@ def build_plan(sources: list[dict[str, Any]], selected: list[str]) -> dict[str, 
     source_plans=[]
     for source in sources:
         applicable=[identifier for identifier in selected if source["source_type"] in registry[identifier]["source_types"] or not registry[identifier]["source_types"]]
-        source_plans.append({"source_id":source["source_id"],"display_name":source["display_name"],"source_type":source["source_type"],"outputs":applicable})
+        source_plan={"source_id":source["source_id"],"display_name":source["display_name"],"source_type":source["source_type"],"outputs":applicable}
+        if "translation" in applicable:
+            source_plan["translation_target_language"] = target
+        source_plans.append(source_plan)
     identity={"sources":[item["source_id"] for item in sources],"selected_outputs":selected,"stages":[item["id"] for item in stages]}
+    if target is not None:
+        identity["translation_target_language"] = target
     selections = [{key: item[key] for key in ("booktext_pages", "booktext_exclude_pages") if item.get(key)} for item in sources]
     if any(selections): identity["booktext_selection"] = selections
-    return {"schema_version":"1.0","plan_id":f"urn:integra:plan:{content_sha256(identity)}","sources":sources,
+    result = {"schema_version":"1.0","plan_id":f"urn:integra:plan:{content_sha256(identity)}","sources":sources,
             "selected_outputs":selected,"stages":stages,"source_plans":source_plans,"state":"READY_TO_EXECUTE"}
+    if target is not None:
+        result["translation_target_language"] = target
+    return result

@@ -185,6 +185,7 @@ struct SidebarItem {
     status = NSTextField(labelWithString: "")
   private var sources = [[String: Any]](), capabilities = [[String: Any]](),
     selected = Set<String>(), plan: [String: Any]?
+  private var translationTargetLanguage = "en"
   private var projectID: String?, runID: String?, timer: Timer?
   private var mediaPlayer: AVPlayer?, mediaWindow: NSWindow?
   private var reviewPlayer: AVPlayer?
@@ -546,6 +547,15 @@ struct SidebarItem {
       check.state = selected.contains(id) ? .on : .off
       add(check)
     }
+    if selected.contains("translation") {
+      add(row("Язык перевода", detail: "Выбор сохраняется в плане обработки и в результате перевода."))
+      let target = NSPopUpButton()
+      target.addItems(withTitles: ["Английский", "Русский"])
+      target.selectItem(at: translationTargetLanguage == "ru" ? 1 : 0)
+      target.target = self
+      target.action = #selector(changeTranslationTarget(_:))
+      add(target)
+    }
     if let plan = plan {
       add(section("ПЛАН ВЫПОЛНЕНИЯ"))
       for (index, stage) in ((plan["stages"] as? [[String: Any]]) ?? []).enumerated() {
@@ -645,7 +655,7 @@ struct SidebarItem {
             self.plan =
               try? self.bridge.json(
                 "build-plan",
-                request: ["sources": detected, "selected_outputs": Array(self.selected).sorted()]
+                request: self.planRequest(sources: detected)
               )["result"] as? [String: Any]
           } else {
             self.selected = []
@@ -670,8 +680,24 @@ struct SidebarItem {
         selected.isEmpty
         ? nil
         : try bridge.json(
-          "build-plan", request: ["sources": sources, "selected_outputs": Array(selected).sorted()])[
-            "result"] as? [String: Any]
+          "build-plan", request: planRequest()
+        )["result"] as? [String: Any]
+      renderNew()
+    } catch {
+      plan = nil
+      status.stringValue = error.localizedDescription
+    }
+  }
+  private func planRequest(sources requestSources: [[String: Any]]? = nil) -> [String: Any] {
+    let sourceValues = requestSources ?? sources
+    var request: [String: Any] = ["sources": sourceValues, "selected_outputs": Array(selected).sorted()]
+    if selected.contains("translation") { request["translation_target_language"] = translationTargetLanguage }
+    return request
+  }
+  @objc private func changeTranslationTarget(_ sender: NSPopUpButton) {
+    translationTargetLanguage = sender.indexOfSelectedItem == 1 ? "ru" : "en"
+    do {
+      plan = try bridge.json("build-plan", request: planRequest())["result"] as? [String: Any]
       renderNew()
     } catch {
       plan = nil

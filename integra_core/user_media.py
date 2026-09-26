@@ -236,6 +236,25 @@ def _provisional_topics(segments: list[dict[str, Any]], source_id: str) -> list[
     return result
 
 
+def _translation_text(value: dict[str, Any]) -> str:
+    """Materialize the pinned VideoText cue output as a readable Process file."""
+    if value.get("component") != "videotext" or value.get("capability") != "translation":
+        raise ValueError("translation output is invalid")
+    source = value.get("source_language")
+    target = value.get("target_language")
+    cues = value.get("cues")
+    if not isinstance(source, str) or not isinstance(target, str) or source == target:
+        raise ValueError("translation target must differ from the detected source language")
+    if not isinstance(cues, list) or not cues:
+        raise ValueError("translation output has no readable cues")
+    text = []
+    for cue in cues:
+        if not isinstance(cue, dict) or not isinstance(cue.get("text"), str) or not cue["text"].strip():
+            raise ValueError("translation output contains an invalid cue")
+        text.append(cue["text"].strip())
+    return "\n".join(text) + "\n"
+
+
 def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
     jobs_path = project_dir / "jobs.json"
     jobs = json.loads(jobs_path.read_bytes())
@@ -316,8 +335,12 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
         if requested and "translation" in requested_outputs:
             checkpoint("RUNNING", 84, "Translating subtitles with VideoText", run_stage="translation")
             translation_path = work / "translation.json"
-            translate_videotext(subtitles, translation_path)
+            translation = translate_videotext(subtitles, translation_path,
+                                               target=job.get("translation_target_language", "en"))
+            translation_txt = work / "translation.txt"
+            translation_txt.write_text(_translation_text(translation), encoding="utf-8")
             job["outputs"]["translation"] = str(translation_path)
+            job["outputs"]["translation_txt"] = str(translation_txt)
         if requested and requested_outputs & {"word_timeline", "topics"}:
             checkpoint("RUNNING", 85, "Aligning transcript words with WhisperX", run_stage="word_timeline")
             wav = work / "audio.wav"
