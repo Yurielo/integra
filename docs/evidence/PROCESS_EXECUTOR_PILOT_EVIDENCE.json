@@ -1,0 +1,261 @@
+{
+  "schema_version": "1.0",
+  "candidate_id": "candidate-v1-2fe375cc31b3a57d74ad0f994894bd610442deae3adfff033cdc5f3cf400fcd3",
+  "manifest_identity_sha256": "2fe375cc31b3a57d74ad0f994894bd610442deae3adfff033cdc5f3cf400fcd3",
+  "bundle_digest": "47befb29a6c221db7cb79262fc949f29248095e31dceba7fc4d46e78ab06c39e",
+  "product_source": {
+    "commit_sha": "2e2403ac7ae41c2104371902b3c56a0319dfe4ff",
+    "tree_sha": "bd205716e186560b340c696a8855db3ce64dd15d"
+  },
+  "capability_id": "process.timed_transcript.normalize.v1",
+  "mode": "ISOLATED_SYNTHETIC_NOT_AUTHORITATIVE",
+  "real_provider_runs": [
+    {
+      "result": {
+        "schema_version": "1.0",
+        "capability_id": "process.timed_transcript.normalize.v1",
+        "attempt_id": "81b1b5dcf55544fb87c716c9f97224fc",
+        "request_sha256": "314c9467c4f6188fde5fe981349c88f0a8d7d509af35df5a7ff7efea6dbf68e3",
+        "status": "COMPLETED",
+        "error": null,
+        "artifacts": [
+          {
+            "artifact_id": "sha256:b13fcaac3c6271eefc0f2c474fc2d2caba2c5d75e3addf3b8d5cdb19a0959534",
+            "path": "transcript.srt",
+            "format": "srt",
+            "sha256": "b13fcaac3c6271eefc0f2c474fc2d2caba2c5d75e3addf3b8d5cdb19a0959534",
+            "size_bytes": 139,
+            "cue_count": 2,
+            "cue_labels": "POSITIONAL_ORDINALS",
+            "derived_from": {
+              "artifact_id": "synthetic-transcript",
+              "format": "srt",
+              "sha256": "533c6a028cb5414e80ae7a341d31a675111a34c405a1b168a0e60ecf36361220"
+            }
+          }
+        ],
+        "semantic_authority": "MACHINE_UNVERIFIED",
+        "project_id": "pilot-project",
+        "run_id": "pilot-run",
+        "source": {
+          "revision": "1",
+          "source_id": "synthetic-source"
+        }
+      },
+      "evidence": {
+        "schema_version": "1.0",
+        "mode": "ISOLATED_PILOT",
+        "attempt_id": "81b1b5dcf55544fb87c716c9f97224fc",
+        "executor_sha256": "be67ac4d71efe8ed345effde6ea53e9ea2f38c722f1de550d056bd9063e7eb92",
+        "adapter_sha256": "57eaeaf175edcd15e2d0ec15869c8f06cf0e50ef0dc6de9199c2d5b48df7532f",
+        "canonical_routing_changed": false,
+        "request": {
+          "capability_id": "process.timed_transcript.normalize.v1",
+          "input": {
+            "artifact_id": "synthetic-transcript",
+            "format": "srt",
+            "sha256": "533c6a028cb5414e80ae7a341d31a675111a34c405a1b168a0e60ecf36361220"
+          },
+          "options": {
+            "media_duration_ms": 301250
+          },
+          "project_id": "pilot-project",
+          "run_id": "pilot-run",
+          "schema_version": "1.0",
+          "source": {
+            "revision": "1",
+            "source_id": "synthetic-source"
+          }
+        },
+        "request_sha256": "314c9467c4f6188fde5fe981349c88f0a8d7d509af35df5a7ff7efea6dbf68e3",
+        "runtime": {
+          "executor_id": "integra.timed-transcript-normalizer.v1",
+          "provider": "videotext",
+          "provider_commit": "2e098d1705b6815628bee1e023f4742718eabf02",
+          "service_sha256": "417017a6a3becc395e88e2554e8d7c2dca51b09de9743e8c5c0cf81ac9ba6205",
+          "worker_sha256": "22ba7bbfd827a1f2937f3757070b74b2e5d4d1200ebea954c48c1eaac1162d28",
+          "worker": "/private/tmp/integra-process-pilot-candidate.vr9Gq5/Integra.app/Contents/Resources/runtime/videotext/translation-worker",
+          "runtime_manifest_sha256": "c3ab98271d27548e3c8b15451c254cefecc7f50ca75952fb979243fa59c35786",
+          "candidate_id": "candidate-v1-2fe375cc31b3a57d74ad0f994894bd610442deae3adfff033cdc5f3cf400fcd3",
+          "bundle_digest": "47befb29a6c221db7cb79262fc949f29248095e31dceba7fc4d46e78ab06c39e"
+        },
+        "input_sha256": "533c6a028cb5414e80ae7a341d31a675111a34c405a1b168a0e60ecf36361220",
+        "output_sha256": "b13fcaac3c6271eefc0f2c474fc2d2caba2c5d75e3addf3b8d5cdb19a0959534",
+        "result_sha256": "768e1c50298eac411b16a6f1a65d6d4707a6755336d8c10624089aa7a5e89d8a"
+      },
+      "attempt_path": "/var/folders/q9/rprrsl95265b7h21d3_mp2fr0000gn/T/integra-process-pilot-tohb14oy"
+    },
+    {
+      "result": {
+        "schema_version": "1.0",
+        "capability_id": "process.timed_transcript.normalize.v1",
+        "attempt_id": "973b8188e1084fa3a64e69b686b4815a",
+        "request_sha256": "314c9467c4f6188fde5fe981349c88f0a8d7d509af35df5a7ff7efea6dbf68e3",
+        "status": "COMPLETED",
+        "error": null,
+        "artifacts": [
+          {
+            "artifact_id": "sha256:b13fcaac3c6271eefc0f2c474fc2d2caba2c5d75e3addf3b8d5cdb19a0959534",
+            "path": "transcript.srt",
+            "format": "srt",
+            "sha256": "b13fcaac3c6271eefc0f2c474fc2d2caba2c5d75e3addf3b8d5cdb19a0959534",
+            "size_bytes": 139,
+            "cue_count": 2,
+            "cue_labels": "POSITIONAL_ORDINALS",
+            "derived_from": {
+              "artifact_id": "synthetic-transcript",
+              "format": "srt",
+              "sha256": "533c6a028cb5414e80ae7a341d31a675111a34c405a1b168a0e60ecf36361220"
+            }
+          }
+        ],
+        "semantic_authority": "MACHINE_UNVERIFIED",
+        "project_id": "pilot-project",
+        "run_id": "pilot-run",
+        "source": {
+          "revision": "1",
+          "source_id": "synthetic-source"
+        }
+      },
+      "evidence": {
+        "schema_version": "1.0",
+        "mode": "ISOLATED_PILOT",
+        "attempt_id": "973b8188e1084fa3a64e69b686b4815a",
+        "executor_sha256": "be67ac4d71efe8ed345effde6ea53e9ea2f38c722f1de550d056bd9063e7eb92",
+        "adapter_sha256": "57eaeaf175edcd15e2d0ec15869c8f06cf0e50ef0dc6de9199c2d5b48df7532f",
+        "canonical_routing_changed": false,
+        "request": {
+          "capability_id": "process.timed_transcript.normalize.v1",
+          "input": {
+            "artifact_id": "synthetic-transcript",
+            "format": "srt",
+            "sha256": "533c6a028cb5414e80ae7a341d31a675111a34c405a1b168a0e60ecf36361220"
+          },
+          "options": {
+            "media_duration_ms": 301250
+          },
+          "project_id": "pilot-project",
+          "run_id": "pilot-run",
+          "schema_version": "1.0",
+          "source": {
+            "revision": "1",
+            "source_id": "synthetic-source"
+          }
+        },
+        "request_sha256": "314c9467c4f6188fde5fe981349c88f0a8d7d509af35df5a7ff7efea6dbf68e3",
+        "runtime": {
+          "executor_id": "integra.timed-transcript-normalizer.v1",
+          "provider": "videotext",
+          "provider_commit": "2e098d1705b6815628bee1e023f4742718eabf02",
+          "service_sha256": "417017a6a3becc395e88e2554e8d7c2dca51b09de9743e8c5c0cf81ac9ba6205",
+          "worker_sha256": "22ba7bbfd827a1f2937f3757070b74b2e5d4d1200ebea954c48c1eaac1162d28",
+          "worker": "/private/tmp/integra-process-pilot-candidate.vr9Gq5/Integra.app/Contents/Resources/runtime/videotext/translation-worker",
+          "runtime_manifest_sha256": "c3ab98271d27548e3c8b15451c254cefecc7f50ca75952fb979243fa59c35786",
+          "candidate_id": "candidate-v1-2fe375cc31b3a57d74ad0f994894bd610442deae3adfff033cdc5f3cf400fcd3",
+          "bundle_digest": "47befb29a6c221db7cb79262fc949f29248095e31dceba7fc4d46e78ab06c39e"
+        },
+        "input_sha256": "533c6a028cb5414e80ae7a341d31a675111a34c405a1b168a0e60ecf36361220",
+        "output_sha256": "b13fcaac3c6271eefc0f2c474fc2d2caba2c5d75e3addf3b8d5cdb19a0959534",
+        "result_sha256": "4db9f624ed0148ac0ae23ef2d1d55bab571e08c429ba19cf9b56d0d336a08237"
+      },
+      "attempt_path": "/var/folders/q9/rprrsl95265b7h21d3_mp2fr0000gn/T/integra-process-pilot-xgcp43on"
+    }
+  ],
+  "strict_duration_failure": {
+    "result": {
+      "schema_version": "1.0",
+      "capability_id": "process.timed_transcript.normalize.v1",
+      "attempt_id": "a6a8998d92304d7db9c9cf499ae12b5c",
+      "request_sha256": "ee43916e4f5f4eadea6440106ceca561acae63efd3828d15fe8addd5869629ae",
+      "status": "FAILED",
+      "error": {
+        "code": "INVALID_TIMELINE",
+        "message": "Формат или временная шкала расшифровки некорректны."
+      },
+      "artifacts": [],
+      "semantic_authority": "MACHINE_UNVERIFIED",
+      "project_id": "pilot-project",
+      "run_id": "pilot-run",
+      "source": {
+        "revision": "1",
+        "source_id": "synthetic-source"
+      }
+    },
+    "evidence": {
+      "schema_version": "1.0",
+      "mode": "ISOLATED_PILOT",
+      "attempt_id": "a6a8998d92304d7db9c9cf499ae12b5c",
+      "executor_sha256": "be67ac4d71efe8ed345effde6ea53e9ea2f38c722f1de550d056bd9063e7eb92",
+      "adapter_sha256": "57eaeaf175edcd15e2d0ec15869c8f06cf0e50ef0dc6de9199c2d5b48df7532f",
+      "canonical_routing_changed": false,
+      "request": {
+        "capability_id": "process.timed_transcript.normalize.v1",
+        "input": {
+          "artifact_id": "synthetic-transcript",
+          "format": "srt",
+          "sha256": "533c6a028cb5414e80ae7a341d31a675111a34c405a1b168a0e60ecf36361220"
+        },
+        "options": {
+          "media_duration_ms": 301249
+        },
+        "project_id": "pilot-project",
+        "run_id": "pilot-run",
+        "schema_version": "1.0",
+        "source": {
+          "revision": "1",
+          "source_id": "synthetic-source"
+        }
+      },
+      "request_sha256": "ee43916e4f5f4eadea6440106ceca561acae63efd3828d15fe8addd5869629ae",
+      "result_sha256": "fcabe256d02cc7887e509c88318d87e38bd469dee7f78466d01d6e8452a85494"
+    },
+    "attempt_path": "/var/folders/q9/rprrsl95265b7h21d3_mp2fr0000gn/T/integra-process-pilot-5ih0nodj"
+  },
+  "independent_expected_bytes_sha256": "b13fcaac3c6271eefc0f2c474fc2d2caba2c5d75e3addf3b8d5cdb19a0959534",
+  "differential_existing_adapter": "PASS",
+  "canonical_route_hashes_unchanged": {
+    "integra_core/user_media.py": "a9ef63b02aa7da43c99f4c0d427d4e71239c3adb390ccc25f45a378f558e9e9c",
+    "integra_core/asr_reuse.py": "cf7a08dd8c1757aead9090b8ab1dac65b6561be1fe541fe615d4d572572f68a9",
+    "integra_core/application_runtime.py": "7f0f7f32697f1bd51640190f1e97a4fc4c888b13de39ced2b0226279b9092f7a",
+    "integra_core/capabilities.py": "b07fc4cad27000feb0a46d2240f79b5ab8685afe84e40128c01052f1f6cc355c",
+    "integra_core/seminartext_asr_runtime.py": "6097f392f6a151efd68cc1409abb5e27375f419029216464031b0c5ba487f6cc",
+    "integra_core/seminartext_runtime.py": "c8fee9826fba8b423c6d52194e7e83814ccbca7daa36bea4e1f323d8bd128919",
+    "integra_core/seminartext_topic_review_runtime.py": "06ebcd56f2ff4a7646458d619c1060c67ba461c5894aba2956673383d2ba9cd4",
+    "integra_core/word_timeline_runtime.py": "b6db3f9b8dadec104e1215cb6caf88ea993dcd835d95d320961a32065858f700",
+    "integra_core/videotext_subtitles.py": "7d80c4debc344c8cb9ddf0ebf6b7cf5ea4eb72d539b2844341a85b6972c5cd09",
+    "integra_core/videotext_runtime.py": "e5bb1b07228fa4870e25ad3e4c2403ce60870d4b733c3b5f19eacac1c40dcc41",
+    "integra_core/shutdown_runtime.py": "0dc2bc03c25bae4e8c124c613a1be12b9b1c5227652291704ceca088f2f01192",
+    "macos/IntegraApp.swift": "e1a318675caa3142f2e2250efe298d28c7ef86824a0e31007cdff93972b90b87",
+    "macos/Resources/bridge.py": "d06a6fb2c2e98d322ad6542107c56f8a2f4a44ba1f31727997b356a24422f926",
+    "scripts/build_macos_app.sh": "f2c7577b3afcde75e00828e8a9d0303a9370eac517902d7c49a87cce65237623",
+    "scripts/build_videotext_worker.sh": "a2dabc48dbf01879e61f3e86c7362aba1102bc37e1a8f870986a4e4363b0ead9"
+  },
+  "current_record_sha256": "e7138dde52c4ad70fc73cb3f68af90b0775b05ced6426464f2238fc93d7e8db4",
+  "current_candidate_id": "candidate-v1-65bf72d1262146c9137aca433b51ae3974d98bc4c8ed37042db13b46e0318a1d",
+  "candidate_logical_bytes_excluding_bytecode": 2201496430,
+  "runtime_inventory": {
+    "component_logical_bytes": {
+      "booktext": 266841,
+      "review-python": 1799603,
+      "seminartext": 489572,
+      "videotext": 4156890,
+      "word-alignment": 2190889170
+    },
+    "duplicate_binary_groups": {},
+    "binary_files_inspected": 426,
+    "method": "sha256 of regular .so/.dylib and named provider executables; not dynamic-loader proof",
+    "pilot_additional_worker_count": 0
+  },
+  "component_identity_matches_current": {
+    "booktext": true,
+    "seminartext": true,
+    "videotext": true
+  },
+  "execution_identity_differences_from_current": {},
+  "current_logical_bytes_excluding_bytecode": null,
+  "delta_vs_current_bytes": null,
+  "size_comparison": "BLOCKED_MISSING_CURRENT_BUNDLE",
+  "semantic_acceptance": false,
+  "routing_switched": false,
+  "models_executed": false
+}
