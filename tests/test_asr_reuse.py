@@ -31,17 +31,18 @@ class ASRReuseTests(unittest.TestCase):
         environment.start(); self.addCleanup(environment.stop)
         self.source = self.root / "audio.wav"; self.source.write_bytes(b"test audio")
 
-    def job(self, outputs=("transcript",), source=None):
+    def job(self, outputs=("transcript",), source=None, recognition_mode="normal"):
         imported = import_source(self.project, source or self.source)
         job = {"job_id": f"urn:integra:job:{uuid.uuid4()}", "state": "QUEUED",
                "source_id": imported["source_id"], "source_sha256": imported["content_sha256"],
-               "owned_path": imported["owned_path"], "requested_outputs": list(outputs)}
+               "owned_path": imported["owned_path"], "requested_outputs": list(outputs),
+               "recognition_mode": recognition_mode}
         jobs = json.loads(self.jobs_path.read_bytes()); jobs["jobs"].append(job)
         self.jobs_path.write_text(json.dumps(jobs))
         return job
 
-    def execute(self, outputs=("transcript",), source=None):
-        job = self.job(outputs, source)
+    def execute(self, outputs=("transcript",), source=None, recognition_mode="normal"):
+        job = self.job(outputs, source, recognition_mode)
         return run_job(self.project, job["job_id"])
 
     def calls(self):
@@ -58,6 +59,16 @@ class ASRReuseTests(unittest.TestCase):
         transcript = json.loads(Path(second["outputs"]["transcript_json"]).read_bytes())
         self.assertEqual(transcript["assurance"], "MACHINE_TRANSCRIPT_UNREVIEWED")
         self.assertEqual(transcript["asr_reuse"]["state"], "REUSED")
+
+    def test_careful_mode_is_a_distinct_verified_reuse_binding(self):
+        normal = self.execute()
+        careful = self.execute(recognition_mode="careful")
+        careful_reused = self.execute(("subtitles",), recognition_mode="careful")
+        self.assertEqual(self.calls(), 2)
+        self.assertEqual(normal["asr_reuse"]["state"], "CREATED")
+        self.assertEqual(careful["asr_reuse"]["state"], "CREATED")
+        self.assertEqual(careful_reused["asr_reuse"]["state"], "REUSED")
+        self.assertEqual(careful["recognition"]["executed_mode"], "careful")
 
     def test_downstream_failure_does_not_discard_successful_asr(self):
         with patch("integra_core.user_media.translate_videotext", side_effect=ValueError("downstream unavailable")):

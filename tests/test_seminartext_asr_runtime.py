@@ -15,7 +15,7 @@ from tests.asr_tools import media_environment, TRANSCRIPT, require_subtitle_runt
 
 class SeminarTextASRTests(unittest.TestCase):
     def test_active_cli_pin_is_the_final_seminartext_artifact(self):
-        self.assertEqual(asr.ENTRYPOINT_SHA256, "f7f411bf106341ae970bc40d759e1e3c964273b977bdb12d0f1840e629def13a")
+        self.assertEqual(asr.ENTRYPOINT_SHA256, "30d8c1bd6f5ca717391b168cba71228a030009feaec4eb443bb1e76dab230a6c")
 
     def test_native_failed_run_surfaces_quality_report_in_both_views(self):
         swift=(Path(__file__).resolve().parents[1]/"macos/IntegraApp.swift").read_text()
@@ -116,6 +116,23 @@ Path(prefix + '.srt').write_text('1\\n00:00:00,000 --> 00:00:01,250\\n' + text +
             provenance = json.loads(Path(result['record']).read_text())
             self.assertEqual(provenance['suspicious_chunks'], 0)
             self.assertEqual(provenance['artifact_sha256']['raw_txt'], hashlib.sha256(Path(result['raw_txt']).read_bytes()).hexdigest())
+
+    def test_careful_mode_uses_project_cli_and_persists_executed_mode(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); source, work, args = self.fixture(root)
+            calls = self.scripted_whisper(root, args["whisper"], recover=True)
+            result = asr.transcribe(source, work, **args, recognition_mode="careful")
+            attempts = [json.loads(line) for line in calls.read_text().splitlines()]
+            self.assertEqual(len(attempts), 2)
+            self.assertEqual(attempts[0][attempts[0].index("-bo") + 1], "8")
+            self.assertEqual(attempts[0][attempts[0].index("-bs") + 1], "8")
+            self.assertEqual(attempts[0][attempts[0].index("-vt") + 1], "0.45")
+            self.assertEqual(attempts[0][attempts[0].index("-vsd") + 1], "700")
+            self.assertEqual(attempts[1][attempts[1].index("-bo") + 1], "3")
+            self.assertEqual(attempts[1][attempts[1].index("-bs") + 1], "3")
+            self.assertEqual(attempts[1][attempts[1].index("-vt") + 1], "0.68")
+            self.assertEqual(attempts[1][attempts[1].index("-vsd") + 1], "350")
+            self.assertEqual(json.loads(Path(result["record"]).read_text())["mode"], "careful")
 
     def test_persistent_repetition_is_quality_error_not_success(self):
         with tempfile.TemporaryDirectory() as directory:

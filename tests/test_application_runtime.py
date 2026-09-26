@@ -32,11 +32,31 @@ class ApplicationRuntimeTests(unittest.TestCase):
         with patch("integra_core.capabilities.preflight",return_value={"state":"READY"}):
             return build_plan(sources,["transcript"]), sources
 
-    def prepare_media_run(self, plan):
+    def prepare_media_run(self, plan, *, recognition_mode="normal"):
         # The plan was built through the normal capability contract above;
         # this focused runtime test intentionally avoids local model discovery.
         with patch("integra_core.application_runtime.build_plan",return_value=plan):
-            return prepare_run(self.project,plan)
+            return prepare_run(self.project,plan,recognition_mode=recognition_mode)
+
+    def test_careful_recognition_mode_is_validated_and_persisted_to_media_jobs(self):
+        plan, sources = self.local_media_plan("careful.wav")
+        run = self.prepare_media_run(plan)
+        self.assertEqual(run["recognition"]["requested_mode"], "normal")
+        careful = self.prepare_media_run(plan, recognition_mode="careful")
+        observed = []
+        def runner(_project, job_id):
+            job = json.loads((self.project / "jobs.json").read_bytes())["jobs"][-1]
+            self.assertEqual(job["job_id"], job_id)
+            observed.append(job)
+            return {"state": "COMPLETED", "outputs": {}, "recognition": {
+                "requested_mode": "careful", "executed_mode": "careful", "runtime": {"component": "test"}}}
+        with patch("integra_core.application_runtime.run_job", side_effect=runner):
+            completed = execute_run(self.project, careful["run_id"])
+        self.assertEqual(observed[0]["recognition_mode"], "careful")
+        self.assertEqual(completed["recognition"]["requested_mode"], "careful")
+        self.assertEqual(completed["source_results"][0]["recognition"]["executed_mode"], "careful")
+        with self.assertRaisesRegex(ValueError, "recognition mode"):
+            self.prepare_media_run(plan, recognition_mode="draft")
 
     def source_job_runner(self, *, failed=(), cancelled=(), reused=()):
         """Deterministic source-job boundary: no ASR/model runtime is invoked."""
@@ -138,7 +158,8 @@ class ApplicationRuntimeTests(unittest.TestCase):
         source_path=self.root/"audio.wav"; source_path.write_bytes(b"audio")
         overrides=self.media_environment(); old={key:os.environ.get(key) for key in overrides}
 
-        def timeline_drafts(_audio, _subtitles, output):
+        def timeline_drafts(_audio, _subtitles, output, *, diagnostic_context):
+            self.assertEqual(diagnostic_context["stage"], "word_timeline")
             output.write_text(json.dumps({"capability":"word_timeline", "words":[{"alignment_status":"ALIGNED"}]}))
             return json.loads(output.read_text())
 
