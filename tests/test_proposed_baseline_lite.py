@@ -143,7 +143,22 @@ class ProposedBaselineLiteTests(unittest.TestCase):
 
     def test_technical_green_never_self_accepts_or_promotes(self):
         proposal = self.proposal(); proposal["owner_acceptance"] = "ci-green"
-        self.assertIn("PROPOSED baseline must await a separate explicit owner acceptance reference", validate_proposal(proposal, self.current, ROOT))
+        self.assertIn("PROPOSED baseline pilot acceptance is invalid", validate_proposal(proposal, self.current, ROOT))
+        with self.assertRaisesRegex(ValueError, "explicit owner acceptance reference"):
+            next_current(self.current, self.proposal(), "", previous_current_path="state/history.json")
+
+    def test_pilot_acceptance_is_not_current_promotion(self):
+        proposal = self.proposal()
+        proposal["owner_acceptance"] = {
+            "decision": "PILOT_ACCEPTED",
+            "authority_ref": "Product Owner test authority",
+            "scope": "bounded pilot only",
+            "promotion_authorized": False,
+        }
+        self.assertEqual(validate_proposal(proposal, self.current, ROOT), [])
+        state, errors = proposal_state(proposal, self.current, ROOT)
+        self.assertEqual(errors, [])
+        self.assertEqual(state, "PILOT_ACCEPTED / AWAITING_CURRENT_PROMOTION_AUTHORIZATION")
         with self.assertRaisesRegex(ValueError, "explicit owner acceptance reference"):
             next_current(self.current, self.proposal(), "", previous_current_path="state/history.json")
         current = copy.deepcopy(self.current)

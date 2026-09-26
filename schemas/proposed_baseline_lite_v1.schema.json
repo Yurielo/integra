@@ -18,7 +18,22 @@
     "historical_test_successors": {"type": "array"},
     "gates": {"type": "array", "minItems": 1},
     "evidence": {"type": "object"},
-    "owner_acceptance": {"type": "null"},
+    "owner_acceptance": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "required": ["decision", "authority_ref", "scope", "promotion_authorized"],
+          "properties": {
+            "decision": {"const": "PILOT_ACCEPTED"},
+            "authority_ref": {"type": "string", "minLength": 1},
+            "scope": {"type": "string", "minLength": 1},
+            "promotion_authorized": {"const": false}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
     "allowed_overlay_paths": {"type": "array", "minItems": 1}
   },
   "additionalProperties": false

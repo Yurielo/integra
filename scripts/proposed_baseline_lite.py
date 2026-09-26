@@ -33,6 +33,9 @@ HISTORICAL_TEST_AUTHORITIES = {
     "R12": "state/native_macos_app_v1.json",
     "R13": "state/ready_app_v1.json",
 }
+PILOT_ACCEPTANCE_FIELDS = {
+    "decision", "authority_ref", "scope", "promotion_authorized",
+}
 
 
 def sha256_file(path: Path) -> str:
@@ -129,6 +132,20 @@ def _delta_errors(delta: object) -> list[str]:
             errors.append("PROPOSED baseline delta paths must be unique")
         paths.add(item["path"])
     return errors
+
+
+def _pilot_acceptance_errors(value: object) -> list[str]:
+    """Accept a durable pilot decision without treating it as promotion authority."""
+    if value is None:
+        return []
+    if not isinstance(value, dict) or set(value) != PILOT_ACCEPTANCE_FIELDS:
+        return ["PROPOSED baseline pilot acceptance is invalid"]
+    if (value.get("decision") != "PILOT_ACCEPTED"
+            or value.get("promotion_authorized") is not False
+            or not isinstance(value.get("authority_ref"), str) or not value["authority_ref"].strip()
+            or not isinstance(value.get("scope"), str) or not value["scope"].strip()):
+        return ["PROPOSED baseline pilot acceptance is invalid"]
+    return []
 
 
 def _addition_errors(proposal: dict, current: dict, root: Path) -> list[str]:
@@ -412,10 +429,9 @@ def validate_proposal(proposal: object, current: dict[str, Any], root: Path) -> 
         errors.append("PROPOSED baseline candidate-bound evidence is invalid")
     elif any(not isinstance(value, dict) or set(value) != {"path", "sha256"} or not isinstance(value.get("path"), str) or not value["path"] or not _is_sha(value.get("sha256")) for value in evidence.values()):
         errors.append("PROPOSED baseline candidate-bound evidence is invalid")
-    # A proposal can never carry an inferred decision.  The empty field is the
-    # only valid pre-promotion state.
-    if proposal.get("owner_acceptance") is not None:
-        errors.append("PROPOSED baseline must await a separate explicit owner acceptance reference")
+    # A pilot acceptance is durable evidence, not promotion authority. The
+    # distinct promotion helper still needs a new explicit owner reference.
+    errors.extend(_pilot_acceptance_errors(proposal.get("owner_acceptance")))
     overlays = proposal.get("allowed_overlay_paths")
     if not isinstance(overlays, list) or not overlays or len(overlays) != len(set(overlays)) or any(not _valid_relative_path(item) for item in overlays):
         errors.append("PROPOSED baseline overlay paths are invalid")
@@ -424,7 +440,11 @@ def validate_proposal(proposal: object, current: dict[str, Any], root: Path) -> 
 
 def proposal_state(proposal: object, current: dict[str, Any], root: Path) -> tuple[str, list[str]]:
     errors = validate_proposal(proposal, current, root)
-    return ("PROPOSED_BASELINE_VALID / AWAITING_OWNER_ACCEPTANCE", []) if not errors else ("FAIL", errors)
+    if errors:
+        return "FAIL", errors
+    if proposal.get("owner_acceptance") is not None:
+        return "PILOT_ACCEPTED / AWAITING_CURRENT_PROMOTION_AUTHORIZATION", []
+    return "PROPOSED_BASELINE_VALID / AWAITING_OWNER_ACCEPTANCE", []
 
 
 def verify_promotion_material(proposal: dict[str, Any], root: Path, proposal_path: Path | None = None) -> list[str]:
@@ -471,10 +491,53 @@ def verify_promotion_material(proposal: dict[str, Any], root: Path, proposal_pat
         errors.append("promotion proposal record path is invalid")
         relative_proposal = None
         parent = ""
-    if parent != overlay.get("commit_sha"):
-        errors.append("promotion proposal record is not directly atop evidence overlay")
-    if relative_proposal is None or _changed_paths(root, parent, commit) != [relative_proposal]:
-        errors.append("promotion declaration overlay must contain only the PROPOSED record")
+    acceptance = proposal.get("owner_acceptance")
+    if acceptance is None:
+        if parent != overlay.get("commit_sha"):
+            errors.append("promotion proposal record is not directly atop evidence overlay")
+        if relative_proposal is None or _changed_paths(root, parent, commit) != [relative_proposal]:
+            errors.append("promotion declaration overlay must contain only the PROPOSED record")
+    else:
+        # A durable pilot acceptance is a one-file amendment of the original
+        # declaration. Governance code may have advanced between those two
+        # records, but the declaration itself must remain byte-identical.
+        try:
+            expected_prior = json.loads(json.dumps(proposal))
+            expected_prior["owner_acceptance"] = None
+            revisions = _git(root, "rev-list", "--first-parent", "--reverse",
+                             f"{overlay['commit_sha']}..HEAD").splitlines()
+        except (OSError, subprocess.CalledProcessError, ValueError, TypeError):
+            errors.append("promotion pilot acceptance predecessor is unavailable")
+        else:
+            declaration = None
+            acceptance_commit = None
+            for revision in revisions:
+                try:
+                    record = json.loads(_git(root, "show", f"{revision}:{relative_proposal}"))
+                except (OSError, subprocess.CalledProcessError, ValueError, TypeError):
+                    continue
+                if record == expected_prior and declaration is None:
+                    declaration = revision
+                if record == proposal:
+                    acceptance_commit = revision
+            if declaration is None or acceptance_commit is None:
+                errors.append("promotion pilot acceptance declaration history is unavailable")
+            else:
+                try:
+                    declaration_parent = _git(root, "rev-parse", f"{declaration}^")
+                    acceptance_parent = _git(root, "rev-parse", f"{acceptance_commit}^")
+                    prior = json.loads(_git(root, "show", f"{acceptance_parent}:{relative_proposal}"))
+                except (OSError, subprocess.CalledProcessError, ValueError, TypeError):
+                    errors.append("promotion pilot acceptance predecessor is unavailable")
+                else:
+                    if declaration_parent != overlay.get("commit_sha"):
+                        errors.append("promotion proposal declaration is not directly atop evidence overlay")
+                    if _changed_paths(root, declaration_parent, declaration) != [relative_proposal]:
+                        errors.append("promotion declaration overlay must contain only the PROPOSED record")
+                    if prior != expected_prior:
+                        errors.append("promotion pilot acceptance changed proposal bytes beyond acceptance")
+                    if _changed_paths(root, acceptance_parent, acceptance_commit) != [relative_proposal]:
+                        errors.append("promotion pilot acceptance overlay must contain only the PROPOSED record")
 
     declared = {item["path"]: item for item in proposal["delta"]}
     if any(item["before_sha256"] is None for item in declared.values()):
