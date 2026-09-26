@@ -1,0 +1,62 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.proposed_product_baseline",
+  "proposal_id": "proposal-process-v1-careful-asr-mode",
+  "status": "PROPOSED_BASELINE_VALID",
+  "base_current_id": "current-v2-2fe375cc31b3a57d74ad0f994894bd610442deae3adfff033cdc5f3cf400fcd3",
+  "base_main": {
+    "commit_sha": "0285eece9890d6036363a2737551a188a4158410",
+    "tree_sha": "45a086ea4dc7cfeb58d833cf89639df3cd435475"
+  },
+  "proposed_source": {
+    "commit_sha": "f411d93669831aec4c8511b32c03a96a3a3b842b",
+    "tree_sha": "bd7b49892371d6cbee3fb51d540f3ae2edfcfd78"
+  },
+  "proposed_head": {
+    "commit_sha": "99688084e1d88fb761439d9fb33e8bc713767535",
+    "tree_sha": "7cf0fdce9d39030642cecc53d7f1d63ada01dd4e"
+  },
+  "intended_scope": {
+    "wp": "Excel #11 / S04 Careful ASR mode",
+    "journey": "bounded neutral normal/careful ASR selection, exact execution/provenance persistence and preserved protective retry; no routing, Stage B, installation or deployment change"
+  },
+  "candidate": {
+    "candidate_id": "candidate-v1-726f3a48f66879bce611096db2ffe934727d1ef0372d8a5487db5a7ad69685a5",
+    "identity_sha256": "726f3a48f66879bce611096db2ffe934727d1ef0372d8a5487db5a7ad69685a5",
+    "manifest_digest": "7ce0867ceb519afbd9ac9ff2fe367633d067ba91a26b6eaba2135cef6570ec29",
+    "bundle_digest": "448e5ee02ed22c2c77837b25934278750ea9a4a08a9d7f02e70c372886a83d7a"
+  },
+  "delta": [
+    {"path": "integra_core/application_runtime.py", "before_sha256": "7f0f7f32697f1bd51640190f1e97a4fc4c888b13de39ced2b0226279b9092f7a", "after_sha256": "7bc6a762f57719ac1328bc25104dd4ad963f514cb5394fa0c2128cbf25173b19"},
+    {"path": "integra_core/asr_reuse.py", "before_sha256": "cf7a08dd8c1757aead9090b8ab1dac65b6561be1fe541fe615d4d572572f68a9", "after_sha256": "53abead06ca2e9856c1cc6e533ddda2e47ec75640b66bc1bd67fda8bc621f1c6"},
+    {"path": "integra_core/seminartext_asr_runtime.py", "before_sha256": "6097f392f6a151efd68cc1409abb5e27375f419029216464031b0c5ba487f6cc", "after_sha256": "3489a5125a0c66babe2c45ea1e9f33f5050049713e68f266a24587b9a8e003bf"},
+    {"path": "integra_core/seminartext_runtime.py", "before_sha256": "c8fee9826fba8b423c6d52194e7e83814ccbca7daa36bea4e1f323d8bd128919", "after_sha256": "b0ceb605fb6bfbaf1c786fc0760921f1f4723332d93e5627bc752b7678286343"},
+    {"path": "integra_core/user_media.py", "before_sha256": "a9ef63b02aa7da43c99f4c0d427d4e71239c3adb390ccc25f45a378f558e9e9c", "after_sha256": "7dc9e7ab2013a7c0f67b66f23a7d28d93e8af5d49cf8e689f4e8b8c22b14a945"},
+    {"path": "macos/IntegraApp.swift", "before_sha256": "e1a318675caa3142f2e2250efe298d28c7ef86824a0e31007cdff93972b90b87", "after_sha256": "fedf964337911cd65df3e0f7c8ee0d7453f9537cbc3d2c89f3351d450b2d99fc"},
+    {"path": "macos/Resources/bridge.py", "before_sha256": "d06a6fb2c2e98d322ad6542107c56f8a2f4a44ba1f31727997b356a24422f926", "after_sha256": "8f573b4ec5653b1680d7748d18049b33d2971d9ab7e51382645ff80b28d225b8"},
+    {"path": "scripts/build_macos_app.sh", "before_sha256": "f2c7577b3afcde75e00828e8a9d0303a9370eac517902d7c49a87cce65237623", "after_sha256": "ad81f7a08a2fbcb93b57788e64d2f028697f7f5f086bb8fa75e9eac758dc4507"},
+    {"path": "scripts/test_macos_app.sh", "before_sha256": "09bf6703b0cbd205b214e8361ce9242b33fc465ce57913177b71944361db5039", "after_sha256": "1648671bac009e76169b26c039de42a1f769b4d422014d83e850dd87810ce359"},
+    {"path": "tests/test_macos_app.py", "before_sha256": "ddb2ec1700a77abbe1a3efdda5c8f17927e85a543fb09fe6a891537bcc3fad17", "after_sha256": "4bfe42740f3cf5d99bf751278db03a4ac69feeb2ee79f6afac26d63c20b82f83"}
+  ],
+  "historical_test_successors": [],
+  "gates": [
+    {"name": "candidate-manifest", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_CAREFUL_ASR_CANDIDATE_MANIFEST.json"},
+    {"name": "candidate-archive", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_CAREFUL_ASR_CANDIDATE_ARCHIVE.json"},
+    {"name": "packaged-careful-asr-e2e", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_CAREFUL_ASR_EVIDENCE.json"},
+    {"name": "focused-runtime-and-macos-suite", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_CAREFUL_ASR_FOCUSED_TESTS.txt"}
+  ],
+  "evidence": {
+    "candidate_manifest": {"path": "docs/evidence/PROCESS_V1_CAREFUL_ASR_CANDIDATE_MANIFEST.json", "sha256": "7ce0867ceb519afbd9ac9ff2fe367633d067ba91a26b6eaba2135cef6570ec29"},
+    "candidate_evidence": {"path": "docs/evidence/PROCESS_V1_CAREFUL_ASR_EVIDENCE.json", "sha256": "a43949eff4191ae042c53adc7098405b08440d3a42ccc550e0281f22dd9a6ac8"},
+    "report": {"path": "docs/PROCESS_V1_CAREFUL_ASR_MODE_PROOF.md", "sha256": "6cf99ec1ba802b13c11e4ba0a816d58160b9c04fef80bf6a14d765c3381cac0c"}
+  },
+  "owner_acceptance": null,
+  "allowed_overlay_paths": [
+    "docs/PROCESS_V1_CAREFUL_ASR_MODE_PROOF.md",
+    "docs/PROCESS_V1_DEFINITION_OF_DONE.md",
+    "docs/PROCESS_V1_EXCEL_SCOPE_RECONCILIATION.md",
+    "docs/evidence/PROCESS_V1_CAREFUL_ASR_CANDIDATE_ARCHIVE.json",
+    "docs/evidence/PROCESS_V1_CAREFUL_ASR_CANDIDATE_MANIFEST.json",
+    "docs/evidence/PROCESS_V1_CAREFUL_ASR_EVIDENCE.json"
+  ]
+}
