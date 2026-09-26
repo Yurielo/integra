@@ -24,13 +24,13 @@ details remain behind the adapter boundary.
 
 | Field | Value |
 | --- | --- |
-| Product source A | `f411d93669831aec4c8511b32c03a96a3a3b842b` / tree `bd7b49892371d6cbee3fb51d540f3ae2edfcfd78` |
-| Candidate | `candidate-v1-726f3a48f66879bce611096db2ffe934727d1ef0372d8a5487db5a7ad69685a5` |
+| Product source A | `5635bf1573e642c041ade4ad888fb79e5f5f6889` / tree `6c6783858dbd030aa7024a84d7f11d2418cda2ff` |
+| Candidate | `candidate-v1-f9ef07f48ff155645239f9c72b454732f53fecabdbf9379ad4d25b1a5acbdc9a` |
 | Bundle digest | `448e5ee02ed22c2c77837b25934278750ea9a4a08a9d7f02e70c372886a83d7a` |
-| Manifest digest | `7ce0867ceb519afbd9ac9ff2fe367633d067ba91a26b6eaba2135cef6570ec29` |
+| Manifest digest | `5f4de8d844aaf6ba42c2839b8462f79c0e9862b09ec6e513f8ec9b327fc7c40f` |
 | Private adapter provider pin | SeminarText `13644d262776aacdf36221b9a9fc7ebd0a7c0737` |
 | Provider CLI digest | `30d8c1bd6f5ca717391b168cba71228a030009feaec4eb443bb1e76dab230a6c` |
-| Candidate archive | `~/Library/Application Support/Integra/Build Archive/candidate-v1-726f3a48f66879bce611096db2ffe934727d1ef0372d8a5487db5a7ad69685a5/448e5ee02ed22c2c77837b25934278750ea9a4a08a9d7f02e70c372886a83d7a` |
+| Candidate archive | `~/Library/Application Support/Integra/Build Archive/candidate-v1-f9ef07f48ff155645239f9c72b454732f53fecabdbf9379ad4d25b1a5acbdc9a/448e5ee02ed22c2c77837b25934278750ea9a4a08a9d7f02e70c372886a83d7a` |
 
 The archived Candidate was independently rehashed after copying. Its archive
 receipt covers 29,604 files and 2,201,500,380 application bytes.
