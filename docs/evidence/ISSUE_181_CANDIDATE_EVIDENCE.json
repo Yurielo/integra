@@ -1,0 +1,16 @@
+{
+  "artifact_type": "integra.candidate_evidence",
+  "candidate_id": "candidate-v1-f4673faeb53b6d4ca3b71dda9cb383a175cb01c24519f907ec2e9d2cbea5eafc",
+  "manifest_identity_sha256": "f4673faeb53b6d4ca3b71dda9cb383a175cb01c24519f907ec2e9d2cbea5eafc",
+  "bundle_digest": "044594f1a632f1c140af28bb7de8e4acf782daca9863d84b9c5d77edb731fdf8",
+  "product_source": {
+    "commit_sha": "0fa50284b1a7c1bb63c040972d14e3f885097aed",
+    "tree_sha": "7d3e96aa0beb06de1dad453f3bd6e4fb2872e4a6"
+  },
+  "gates": {
+    "native_self_test": "PASS",
+    "candidate_manifest": "PASS",
+    "owned_scratch_cleanup": "PASS",
+    "focused_lifecycle_regressions": "10/10 PASS"
+  }
+}

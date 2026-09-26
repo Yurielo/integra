@@ -200,7 +200,11 @@ def _historical_test_hash(root: Path, authority: str, path: str) -> str | None:
 
 
 def _historical_test_paths(root: Path) -> dict[str, set[str]]:
-    """Return only exact test paths named by the immutable R12/R13 records."""
+    """Return exact immutable implementation paths, never a caller pattern.
+
+    Historical records include shell build harnesses as well as Python tests.
+    A successor remains legal only when its exact path is in R12/R13.
+    """
     result: dict[str, set[str]] = {}
     for authority in HISTORICAL_TEST_AUTHORITIES:
         try:
@@ -208,7 +212,7 @@ def _historical_test_paths(root: Path) -> dict[str, set[str]]:
         except (OSError, json.JSONDecodeError):
             continue
         for item in payload.get("implementation", []):
-            if isinstance(item, dict) and isinstance(item.get("path"), str) and item["path"].startswith("tests/"):
+            if isinstance(item, dict) and isinstance(item.get("path"), str):
                 result.setdefault(item["path"], set()).add(authority)
     return result
 
@@ -228,9 +232,9 @@ def _historical_test_successor_errors(successors: object, root: Path) -> list[st
         before = successor.get("before_sha256")
         after = successor.get("after_sha256")
         reason = successor.get("reason")
-        if (not _valid_relative_path(path) or not isinstance(path, str) or not path.startswith("tests/")
+        if (not _valid_relative_path(path) or not isinstance(path, str)
                 or any(token in path for token in ("*", "?", "[", "]"))):
-            errors.append("PROPOSED historical test successor path is not an exact test path")
+            errors.append("PROPOSED historical test successor path is not an exact immutable path")
             continue
         if not isinstance(authority, str) or authority not in HISTORICAL_TEST_AUTHORITIES:
             errors.append("PROPOSED historical test successor authority is invalid")
@@ -249,6 +253,21 @@ def _historical_test_successor_errors(successors: object, root: Path) -> list[st
         elif before != historical:
             errors.append("PROPOSED historical test successor before hash differs from immutable authority")
     return errors
+
+
+def _canonical_historical_bridge(root: Path, path: str, authority: str, historical: str, base_sha: str) -> bool:
+    """Accept a predecessor only through the hash-closed current canonical record."""
+    try:
+        current = json.loads((root / "state/current_canonical_baseline_v1.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    for item in current.get("files", []):
+        if not isinstance(item, dict) or item.get("path") != path or item.get("current_sha256") != base_sha:
+            continue
+        expected_state = HISTORICAL_TEST_AUTHORITIES.get(authority)
+        return any(isinstance(ref, dict) and ref.get("state_path") == expected_state and ref.get("sha256") == historical
+                   for ref in item.get("historical_refs", []))
+    return False
 
 
 def proposal_declares_historical_test_successor(
@@ -573,6 +592,10 @@ def verify_promotion_material(proposal: dict[str, Any], root: Path, proposal_pat
     historical_test_paths = _historical_test_paths(root)
     changed_historical_tests: set[tuple[str, str]] = set()
     for path_text, authorities in historical_test_paths.items():
+        # An executable/product delta is governed by the stricter exact delta
+        # path above; it must not be duplicated as a test successor.
+        if path_text in declared:
+            continue
         try:
             before = subprocess.run(["git", "-C", str(root), "show", f"{base_commit}:{path_text}"], check=True, capture_output=True).stdout
             after = subprocess.run(["git", "-C", str(root), "show", f"{source['commit_sha']}:{path_text}"], check=True, capture_output=True).stdout
@@ -593,8 +616,9 @@ def verify_promotion_material(proposal: dict[str, Any], root: Path, proposal_pat
         except (OSError, subprocess.CalledProcessError):
             errors.append(f"promotion historical test successor is unavailable: {path_text}")
             continue
-        if (historical is None or hashlib.sha256(before).hexdigest() != historical
-                or hashlib.sha256(before).hexdigest() != item["before_sha256"]
+        before_sha = hashlib.sha256(before).hexdigest()
+        if (historical is None or (before_sha != historical and not _canonical_historical_bridge(root, path_text, authority, historical, before_sha))
+                or item["before_sha256"] != historical
                 or hashlib.sha256(after).hexdigest() != item["after_sha256"]):
             errors.append(f"promotion historical test successor differs: {path_text}")
 
