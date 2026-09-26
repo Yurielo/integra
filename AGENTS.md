@@ -51,3 +51,15 @@ authority, scope, write ownership, acceptance criteria, actual verification,
 and the next technical owner or genuine gate. Jira and Confluence names are
 compatibility role IDs only; GitHub and repository documentation are the
 defaults unless an exact instruction authorizes another external system.
+
+## Candidate retention
+
+Follow `docs/CANDIDATE_RETENTION.md` before building, promoting or cleaning up
+Candidates. Build only into a fresh owned output directory: the low-level
+historical builder overwrites an existing application. Never use an archive
+as a build output. Accepted and review-pending Candidates require a completed,
+verified permanent archive of the actual application bytes. A manifest or Git
+commit alone is not a backup. Temporary cleanup must preserve these Candidates
+until that archive is verified. The promotion helper requires exact archives
+of both the proposed and outgoing CURRENT applications in addition to the
+existing owner-acceptance and proposal checks.

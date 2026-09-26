@@ -1,0 +1,26 @@
+{
+  "bytecode_note": "Existing identity contract excludes __pycache__ and .pyc; recovery does not claim bytecode identity.",
+  "current_record_modified": false,
+  "installed_app_modified": false,
+  "logical_bytes_excluding_bytecode": {
+    "current": 2201478232,
+    "pilot": 2201496430
+  },
+  "manifest_sha256": "c59d18552b8b860019852a420d4b7d6337e32408196df0615c8599179d44a2a5",
+  "method": "exact_bundle_reconstruction_from_verified_superset",
+  "pilot_delta_bytes": 18198,
+  "recovered_bundle_digest": "044594f1a632f1c140af28bb7de8e4acf782daca9863d84b9c5d77edb731fdf8",
+  "recovered_candidate": "candidate-v1-65bf72d1262146c9137aca433b51ae3974d98bc4c8ed37042db13b46e0318a1d",
+  "removed_only_from_recovery_copy": [
+    {
+      "path": "integra_core/_timed_transcript_provider.py",
+      "sha256": "57eaeaf175edcd15e2d0ec15869c8f06cf0e50ef0dc6de9199c2d5b48df7532f"
+    },
+    {
+      "path": "integra_core/process_executor_pilot.py",
+      "sha256": "be67ac4d71efe8ed345effde6ea53e9ea2f38c722f1de550d056bd9063e7eb92"
+    }
+  ],
+  "result": "EXACT_RECORDED_BUNDLE_AND_MANIFEST_RECOVERED",
+  "source_candidate": "candidate-v1-2fe375cc31b3a57d74ad0f994894bd610442deae3adfff033cdc5f3cf400fcd3"
+}

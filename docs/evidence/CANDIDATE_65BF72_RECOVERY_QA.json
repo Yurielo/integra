@@ -1,0 +1,155 @@
+{
+  "qa_root": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/qa-recovery-945vhbjv",
+  "app": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/recovered-current-65bf72/Integra.app",
+  "scope": "RECOVERED_CURRENT_IDENTITY_AND_ISOLATED_NATIVE_PROBES",
+  "checks": {
+    "historical_manifest_hash": true,
+    "validate_bundle_before": true,
+    "candidate_expected": true,
+    "bundle_digest_expected": true,
+    "manifest_exact_bytes": true,
+    "archived_pilot_identity": true,
+    "pilot_projection_digest": true,
+    "only_two_removed_modules": true,
+    "removed_module_hashes": true,
+    "logical_sizes": true,
+    "delta": true,
+    "executable_permission": true,
+    "verifier_matches_archived_app": true,
+    "validate_bundle_after": true,
+    "manifest_unchanged_after": true,
+    "executable_unchanged_after": true,
+    "logical_size_unchanged_after": true,
+    "current_record_unchanged": true,
+    "verifier_unchanged": true,
+    "validate_bundle_after_all_probes": true,
+    "manifest_unchanged_after_all_probes": true,
+    "executable_unchanged_after_all_probes": true,
+    "current_record_unchanged_after_all_probes": true,
+    "native_probe_script_unchanged": true,
+    "validator_unchanged_after_all_probes": true,
+    "logical_size_unchanged_after_all_probes": true
+  },
+  "probes": [
+    {
+      "name": "self-test",
+      "argv": [
+        "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/recovered-current-65bf72/Integra.app/Contents/MacOS/Integra",
+        "--self-test"
+      ],
+      "environment": {
+        "INTEGRA_APP_DATA_ROOT": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/qa-recovery-945vhbjv/self-test/app-data",
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "exit_code": 0,
+      "timed_out": false,
+      "pid": 96821,
+      "process_group_residue": [],
+      "marker": "",
+      "stdout": "INTEGRA_MACOS_SELF_TEST: PASS\n",
+      "stderr": "",
+      "duration_seconds": 9.376,
+      "passed": true
+    },
+    {
+      "name": "launch",
+      "argv": [
+        "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/recovered-current-65bf72/Integra.app/Contents/MacOS/Integra"
+      ],
+      "environment": {
+        "INTEGRA_APP_DATA_ROOT": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/qa-recovery-945vhbjv/launch/app-data",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "INTEGRA_LAUNCH_PROBE": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/qa-recovery-945vhbjv/launch/marker.txt"
+      },
+      "exit_code": 0,
+      "timed_out": false,
+      "pid": 96890,
+      "process_group_residue": [],
+      "marker": "LAUNCHED visible=true workflow=source-first title=Integra — Новая обработка\n",
+      "stdout": "",
+      "stderr": "",
+      "duration_seconds": 0.805,
+      "passed": true
+    },
+    {
+      "name": "close",
+      "argv": [
+        "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/recovered-current-65bf72/Integra.app/Contents/MacOS/Integra"
+      ],
+      "environment": {
+        "INTEGRA_APP_DATA_ROOT": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/qa-recovery-945vhbjv/close/app-data",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "INTEGRA_CLOSE_PROBE": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/qa-recovery-945vhbjv/close/marker.txt"
+      },
+      "exit_code": 0,
+      "timed_out": false,
+      "pid": 96900,
+      "process_group_residue": [],
+      "marker": "TERMINATED_AFTER_LAST_WINDOW_CLOSED\n",
+      "stdout": "",
+      "stderr": "",
+      "duration_seconds": 0.475,
+      "passed": true
+    },
+    {
+      "name": "native-workflow",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/recovery-repository/tests/native_workflow_probe.py",
+        "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/recovered-current-65bf72/Integra.app",
+        "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/qa-recovery-945vhbjv/native-workflow"
+      ],
+      "log": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/qa-recovery-945vhbjv/native-workflow.log",
+      "exit_code": 0,
+      "timed_out": false,
+      "process_group_residue": [],
+      "duration_seconds": 8.045,
+      "probe_script_sha256": "030fe9a0b56285bb7b8c831c21f0e2effc9241c389c71408b04659af5098717c",
+      "app_data_root": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/qa-recovery-945vhbjv/native-workflow/app-data",
+      "passed": true,
+      "run_state": "COMPLETED",
+      "output_keys": [
+        "audio_analysis",
+        "audio_analysis_record",
+        "speed_video",
+        "speed_video_record"
+      ],
+      "no_transcript_output": true,
+      "synthetic_source_sha256": "98ad9e2e170fdc0ee839c2cf5b7546e817e102acd9c4fb93f93a689e1fd2b07a",
+      "speed_video_duration_seconds": 1.64
+    }
+  ],
+  "source_commit": "7b919c182cfd62d384cd8494e3c8b9d8e4740883",
+  "candidate_id": "candidate-v1-65bf72d1262146c9137aca433b51ae3974d98bc4c8ed37042db13b46e0318a1d",
+  "bundle_digest": "044594f1a632f1c140af28bb7de8e4acf782daca9863d84b9c5d77edb731fdf8",
+  "manifest_sha256": "c59d18552b8b860019852a420d4b7d6337e32408196df0615c8599179d44a2a5",
+  "validate_before_seconds": 8.286,
+  "logical_bytes_excluding_bytecode": {
+    "current": 2201478232,
+    "pilot": 2201496430
+  },
+  "delta_bytes": 18198,
+  "executable": {
+    "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/recovered-current-65bf72/Integra.app/Contents/MacOS/Integra",
+    "mode": "0o755",
+    "sha256": "26079e3f0a93b40a97b67f7c4ecfcfbdad4147ec71b0aa1bc2a305bc6b5a7ac3",
+    "executable": true
+  },
+  "existing_contract_excludes": [
+    "__pycache__",
+    ".pyc",
+    "candidate-manifest.json (separately verified)"
+  ],
+  "observations": {
+    "source_clean_before": false,
+    "initial_prelaunch_stop": "Concurrent parent retention edits; source cleanliness is not required to probe an independently validated archived app.",
+    "source_status_before_probes": " M AGENTS.md\n M docs/PROPOSED_BASELINE_LITE_IMPLEMENTATION.md\n M scripts/promote_proposed_baseline_lite.py\n?? docs/CANDIDATE_RETENTION.md\n?? docs/evidence/CANDIDATE_65BF72_RECOVERY.json\n?? scripts/candidate_archive.py\n?? tests/test_promotion_archive_gate.py\n",
+    "source_status_after_probes": " M AGENTS.md\n M docs/PROPOSED_BASELINE_LITE_IMPLEMENTATION.md\n M scripts/promote_proposed_baseline_lite.py\n?? docs/CANDIDATE_RETENTION.md\n?? docs/evidence/CANDIDATE_65BF72_RECOVERY.json\n?? scripts/candidate_archive.py\n?? tests/test_promotion_archive_gate.py\n",
+    "source_status_after_all_probes": " M AGENTS.md\n M docs/PROPOSED_BASELINE_LITE_IMPLEMENTATION.md\n M scripts/promote_proposed_baseline_lite.py\n?? docs/CANDIDATE_RETENTION.md\n?? docs/evidence/CANDIDATE_65BF72_RECOVERY.json\n?? scripts/candidate_archive.py\n?? tests/test_candidate_archive.py\n?? tests/test_promotion_archive_gate.py\n"
+  },
+  "current_record_sha256": "e7138dde52c4ad70fc73cb3f68af90b0775b05ced6426464f2238fc93d7e8db4",
+  "validate_after_seconds": 8.85,
+  "result": "PASS",
+  "failed_checks": [],
+  "validate_after_all_probes_seconds": 10.495
+}
