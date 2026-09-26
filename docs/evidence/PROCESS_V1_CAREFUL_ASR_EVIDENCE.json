@@ -2,12 +2,12 @@
   "schema_version": "1.0",
   "artifact_type": "integra.process_v1.careful_asr_candidate_evidence",
   "status": "PASS",
-  "candidate_id": "candidate-v1-3348b6fc8ed525632d7d0abed1337f2e37b66404f0d6f4488cb3c012c3afca83",
-  "manifest_identity_sha256": "3348b6fc8ed525632d7d0abed1337f2e37b66404f0d6f4488cb3c012c3afca83",
+  "candidate_id": "candidate-v1-726f3a48f66879bce611096db2ffe934727d1ef0372d8a5487db5a7ad69685a5",
+  "manifest_identity_sha256": "726f3a48f66879bce611096db2ffe934727d1ef0372d8a5487db5a7ad69685a5",
   "bundle_digest": "448e5ee02ed22c2c77837b25934278750ea9a4a08a9d7f02e70c372886a83d7a",
   "product_source": {
-    "commit_sha": "d5e7c42bbf3b534a72032acd6d1a1dc178001d3f",
-    "tree_sha": "bf34fda470c5e5703d55aa7ccc731be7a4061508"
+    "commit_sha": "f411d93669831aec4c8511b32c03a96a3a3b842b",
+    "tree_sha": "bd7b49892371d6cbee3fb51d540f3ae2edfcfd78"
   },
   "capability": "process.careful_asr_mode.v1",
   "selection": {

@@ -24,16 +24,16 @@ details remain behind the adapter boundary.
 
 | Field | Value |
 | --- | --- |
-| Product source A | `d5e7c42bbf3b534a72032acd6d1a1dc178001d3f` / tree `bf34fda470c5e5703d55aa7ccc731be7a4061508` |
-| Candidate | `candidate-v1-3348b6fc8ed525632d7d0abed1337f2e37b66404f0d6f4488cb3c012c3afca83` |
+| Product source A | `f411d93669831aec4c8511b32c03a96a3a3b842b` / tree `bd7b49892371d6cbee3fb51d540f3ae2edfcfd78` |
+| Candidate | `candidate-v1-726f3a48f66879bce611096db2ffe934727d1ef0372d8a5487db5a7ad69685a5` |
 | Bundle digest | `448e5ee02ed22c2c77837b25934278750ea9a4a08a9d7f02e70c372886a83d7a` |
-| Manifest digest | `a9a9c6bc19238bbfc215dc1b40d618c3e2afd74c0c10f99b3ec410d0a5253cf1` |
+| Manifest digest | `7ce0867ceb519afbd9ac9ff2fe367633d067ba91a26b6eaba2135cef6570ec29` |
 | Private adapter provider pin | SeminarText `13644d262776aacdf36221b9a9fc7ebd0a7c0737` |
 | Provider CLI digest | `30d8c1bd6f5ca717391b168cba71228a030009feaec4eb443bb1e76dab230a6c` |
-| Candidate archive | `~/Library/Application Support/Integra/Build Archive/candidate-v1-3348b6fc8ed525632d7d0abed1337f2e37b66404f0d6f4488cb3c012c3afca83/448e5ee02ed22c2c77837b25934278750ea9a4a08a9d7f02e70c372886a83d7a` |
+| Candidate archive | `~/Library/Application Support/Integra/Build Archive/candidate-v1-726f3a48f66879bce611096db2ffe934727d1ef0372d8a5487db5a7ad69685a5/448e5ee02ed22c2c77837b25934278750ea9a4a08a9d7f02e70c372886a83d7a` |
 
 The archived Candidate was independently rehashed after copying. Its archive
-receipt covers 29,647 files and 2,202,970,969 application bytes.
+receipt covers 29,604 files and 2,201,500,380 application bytes.
 
 ## Runtime semantics and proof
 
@@ -62,14 +62,11 @@ Candidate's independent short-video workflow passed and is not a skipped proof.
 
 ## Packaging note
 
-The final archive is 1,474,539 bytes larger than the prior retained CURRENT
-Candidate. No extra provider or duplicate runtime was added. The difference is
-42 Python bytecode cache files created while packaging the already pinned review
-runtime. Candidate logical bundle identity deliberately excludes `__pycache__`
-and `.pyc` files; the immutable archive inventory nonetheless covers every byte
-of this exact Candidate. This is a packaging reproducibility risk to address in
-a separate bounded maintenance task, not a reason to conflate this Candidate
-with the prior one.
+The final archive is 3,950 bytes larger than the prior retained CURRENT
+Candidate. No extra provider or duplicate runtime was added. Candidate logical
+bundle identity deliberately excludes `__pycache__` and `.pyc` files; the
+immutable archive inventory nonetheless covers every byte of this exact
+Candidate.
 
 ## Scope result
 
