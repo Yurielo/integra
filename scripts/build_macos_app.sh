@@ -80,7 +80,9 @@ cp "$seminartext_module" "$app/Contents/Resources/runtime/seminartext/seminartex
 cp "$seminartext_evidence_module" "$app/Contents/Resources/runtime/seminartext/seminartext_modules/evidence_foundation.py"
 mkdir -p "$app/Contents/Resources/runtime/seminartext/schemas"
 cp "$seminartext_evidence_validator" "$app/Contents/Resources/runtime/seminartext/schemas/validate_canonical_evidence_v1.py"
-python3 "$repo_root/scripts/package_review_runtime.py" "$seminartext_checkout" "$app/Contents/Resources"
+# This script's stdout is the sole machine-readable app path. Keep packaging
+# diagnostics on stderr so callers can safely capture that path.
+python3 "$repo_root/scripts/package_review_runtime.py" "$seminartext_checkout" "$app/Contents/Resources" >&2
 printf '{"component":"seminartext","commit_sha":"%s","entrypoint_sha256":"%s","evidence_foundation_sha256":"%s","evidence_validator_sha256":"%s","personal_use_only":true}\n' "$seminartext_commit" "$seminartext_cli_sha256" "$seminartext_evidence_sha256" "$seminartext_evidence_validator_sha256" > "$app/Contents/Resources/runtime/seminartext/runtime.json"
 mkdir -p "$app/Contents/Resources/runtime/word-alignment/site-packages" "$app/Contents/Resources/runtime/word-alignment/model"
 rsync -aL --exclude '__pycache__' --exclude '*.pyc' "$alignment_packages/" "$app/Contents/Resources/runtime/word-alignment/site-packages/"
