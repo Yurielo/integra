@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.process_v1.careful_asr_quality_gate",
+  "proposal_id": "proposal-process-v1-careful-asr-mode",
+  "pull_request": "https://github.com/Yurielo/integra/pull/194",
+  "workflow_run": "https://github.com/Yurielo/integra/actions/runs/36276646422/job/108500578763",
+  "head_commit": "2b5286b5ad1a90faf2f33334b24fd8987a1d84e6",
+  "check": "governance",
+  "result": "PASS"
+}

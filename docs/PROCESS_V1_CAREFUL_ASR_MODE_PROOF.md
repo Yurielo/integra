@@ -60,6 +60,12 @@ focused suite recorded **63 passed, 3 skipped**. The skips are VideoText media
 runtime tests unavailable in the source-tree test environment; the packaged
 Candidate's independent short-video workflow passed and is not a skipped proof.
 
+The full local suite passed **794 tests** with **83 environment-declared
+skips** for unavailable external source runtimes. GitHub PR #194's governance
+Quality Gate passed on the Proposal Lite declaration commit. The full native
+Candidate gate remains separate evidence and was executed against the archived
+Candidate with its pinned runtime sources.
+
 ## Packaging note
 
 The final archive is 3,950 bytes larger than the prior retained CURRENT
