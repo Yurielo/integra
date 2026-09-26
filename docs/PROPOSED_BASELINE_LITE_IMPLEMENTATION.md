@@ -60,13 +60,20 @@ Those records remain historical certification; they are not rewritten.
   `PROPOSED_BASELINE_VALID / AWAITING_OWNER_ACCEPTANCE`. It remains a proposal;
   it cannot mutate CURRENT.
 - `scripts/promote_proposed_baseline_lite.py` validates both contracts and
-  refuses to run without `--owner-acceptance-ref`. It re-resolves HEAD/tree,
+  refuses to run without `--owner-acceptance-ref`, `--candidate-archive`, and
+  `--current-archive`. The proposed archive must match
+  all three proposal identifiers: Candidate ID, bundle digest, and manifest
+  digest. The outgoing CURRENT archive must match its recorded Candidate ID
+  and bundle digest. Missing, altered or metadata-only archives block all
+  output writes. Output paths inside either archive are rejected.
+  See [Candidate retention](CANDIDATE_RETENTION.md). It re-resolves HEAD/tree,
   each declared before/after Git blob, the candidate manifest/bundle tuple,
   candidate evidence and named gate/report hashes before writing an explicit
   output requested by the caller rather than replacing repository state. It
   also requires a repository-relative history-output path and writes the
   prior CURRENT record there before producing CURRENT(next), so promotion does
-  not erase the prior record.
+  not erase the prior record. Both outputs must be distinct new files;
+  existing outputs are never overwritten.
 
 The proposal record binds a source commit/tree and an exact delta. The bounded
 overlay list is only for proposal metadata/report paths; it is not a broad
