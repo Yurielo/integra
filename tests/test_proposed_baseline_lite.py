@@ -5,6 +5,7 @@ import copy
 import hashlib
 import json
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -142,7 +143,22 @@ class ProposedBaselineLiteTests(unittest.TestCase):
 
     def test_technical_green_never_self_accepts_or_promotes(self):
         proposal = self.proposal(); proposal["owner_acceptance"] = "ci-green"
-        self.assertIn("PROPOSED baseline must await a separate explicit owner acceptance reference", validate_proposal(proposal, self.current, ROOT))
+        self.assertIn("PROPOSED baseline pilot acceptance is invalid", validate_proposal(proposal, self.current, ROOT))
+        with self.assertRaisesRegex(ValueError, "explicit owner acceptance reference"):
+            next_current(self.current, self.proposal(), "", previous_current_path="state/history.json")
+
+    def test_pilot_acceptance_is_not_current_promotion(self):
+        proposal = self.proposal()
+        proposal["owner_acceptance"] = {
+            "decision": "PILOT_ACCEPTED",
+            "authority_ref": "Product Owner test authority",
+            "scope": "bounded pilot only",
+            "promotion_authorized": False,
+        }
+        self.assertEqual(validate_proposal(proposal, self.current, ROOT), [])
+        state, errors = proposal_state(proposal, self.current, ROOT)
+        self.assertEqual(errors, [])
+        self.assertEqual(state, "PILOT_ACCEPTED / AWAITING_CURRENT_PROMOTION_AUTHORIZATION")
         with self.assertRaisesRegex(ValueError, "explicit owner acceptance reference"):
             next_current(self.current, self.proposal(), "", previous_current_path="state/history.json")
         current = copy.deepcopy(self.current)
@@ -275,7 +291,8 @@ class ProposedOverlayLineageTests(unittest.TestCase):
         return self._git(root, "rev-parse", "HEAD")
 
     def _lineage(self, *, overlay_product=False, historical_test_drift=False,
-                 extra_historical_test_drift=False, declare_historical_test_successor=False):
+                 extra_historical_test_drift=False, declare_historical_test_successor=False,
+                 base_setup=None, source_setup=None, extra_delta=None):
         temporary = tempfile.TemporaryDirectory(); self.addCleanup(temporary.cleanup)
         root = Path(temporary.name)
         self._git(root, "init", "-q")
@@ -288,8 +305,23 @@ class ProposedOverlayLineageTests(unittest.TestCase):
             {"path": "tests/other_historical.py", "sha256": hashlib.sha256(second_historical_test.read_bytes()).hexdigest()},
         ]}
         (root / "state/native_macos_app_v1.json").write_text(json.dumps(r12))
+        if base_setup:
+            base_setup(root)
         base = self._commit(root, "base")
+        base_id = {"commit_sha": base, "tree_sha": self._git(root, "rev-parse", f"{base}^{{tree}}")}
+        stored = json.loads((ROOT / "state/current_product_baseline_v2.json").read_text())
+        active = copy.deepcopy(stored["records"][0])
+        active.update({"baseline_id": "current-test", "main": base_id,
+                       "governed_files": [{"path": "integra_core/runtime.py",
+                                           "sha256": hashlib.sha256(b"base\n").hexdigest()}],
+                       "historical_predecessors": [{"path": "state/native_macos_app_v1.json",
+                                                   "sha256": hashlib.sha256((root / "state/native_macos_app_v1.json").read_bytes()).hexdigest()}]})
+        current = {"schema_version": "2.0", "artifact_type": "integra.current_product_baseline",
+                   "current_id": "current-test", "records": [active]}
+        (root / "state/current_product_baseline_v2.json").write_text(json.dumps(current))
         product.write_text("recovery\n")
+        if source_setup:
+            source_setup(root)
         if historical_test_drift:
             historical_test.write_text("new\n")
         if extra_historical_test_drift:
@@ -317,12 +349,12 @@ class ProposedOverlayLineageTests(unittest.TestCase):
         proposal = {
             "schema_version": "1.0", "artifact_type": "integra.proposed_product_baseline",
             "proposal_id": "test", "status": "PROPOSED_BASELINE_VALID",
-            "base_current_id": "current-test", "base_main": {"commit_sha": base, "tree_sha": self._git(root, "rev-parse", f"{base}^{{tree}}")},
+            "base_current_id": "current-test", "base_main": base_id,
             "proposed_source": source_id, "proposed_head": overlay_id,
             "intended_scope": {"wp": "test", "journey": "test"},
             "candidate": {"candidate_id": manifest["candidate_id"], "identity_sha256": "a" * 64,
                           "manifest_digest": hashlib.sha256(manifest_path.read_bytes()).hexdigest(), "bundle_digest": "b" * 64},
-            "delta": [{"path": "integra_core/runtime.py", "before_sha256": before, "after_sha256": after}],
+            "delta": [{"path": "integra_core/runtime.py", "before_sha256": before, "after_sha256": after}] + (extra_delta or []),
             "historical_test_successors": ([{
                 "path": "tests/historical.py", "historical_authority": "R12",
                 "before_sha256": hashlib.sha256(b"old\n").hexdigest(),
@@ -389,6 +421,193 @@ class ProposedOverlayLineageTests(unittest.TestCase):
                                              declare_historical_test_successor=True)
         self.assertIn("promotion historical test drift is undeclared or overstated",
                       verify_promotion_material(proposal, root, path))
+
+    def _entry(self, root, path, kind):
+        target = root / path
+        if target.is_symlink() or target.is_file():
+            target.unlink()
+        elif target.is_dir():
+            shutil.rmtree(target)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if kind == "absent":
+            return
+        if kind == "symlink":
+            target.symlink_to("runtime.py")
+        elif kind in {"directory", "gitlink"}:
+            target.mkdir()
+            (target / "child.py").write_bytes(b"new\x00bytes\n")
+            if kind == "gitlink":
+                self._git(target, "init", "-q")
+                self._commit(target, "nested repository")
+        else:
+            target.write_bytes(b"new\x00bytes\n")
+            target.chmod(0o755 if kind == "executable" else 0o644)
+
+    def _addition_lineage(self, *, path="integra_core/new.py", base_kind="absent", after_kind="regular"):
+        delta = {"path": path, "before_sha256": None,
+                 "after_sha256": hashlib.sha256(b"new\x00bytes\n").hexdigest()}
+        return self._lineage(base_setup=lambda root: self._entry(root, path, base_kind),
+                             source_setup=lambda root: self._entry(root, path, after_kind),
+                             extra_delta=[delta])
+
+    def _current(self, root):
+        return json.loads((root / "state/current_product_baseline_v2.json").read_text())
+
+    def _assert_addition_rejected(self, root, proposal, path, current=None):
+        current = self._current(root) if current is None else current
+        self.assertTrue(validate_proposal(proposal, current, root))
+        self.assertTrue(verify_promotion_material(proposal, root, path))
+        with self.assertRaises(ValueError):
+            next_current(current, proposal, "fixture-owner-only", previous_current_path="state/history.json", root=root)
+
+    def test_regular_and_executable_additions_pass_entire_chain_without_writes(self):
+        for kind in ("regular", "executable"):
+            with self.subTest(kind=kind):
+                root, proposal, path = self._addition_lineage(after_kind=kind)
+                current = self._current(root)
+                prior = copy.deepcopy(current)
+                current_path = root / "state/current_product_baseline_v2.json"
+                before_bytes = current_path.read_bytes()
+                before_head = self._git(root, "rev-parse", "HEAD")
+                self.assertEqual(validate_current(current, root, proposal), [])
+                self.assertEqual(validate_proposal(proposal, current, root), [])
+                self.assertEqual(verify_promotion_material(proposal, root, path), [])
+                self.assertIn("CURRENT v2 unaccounted governed path: integra_core/new.py",
+                              validate_current(current, root))
+                result = next_current(current, proposal, "fixture-owner-only",
+                                      previous_current_path="state/history.json", root=root)
+                inventory = {item["path"]: item["sha256"] for item in result["records"][-1]["governed_files"]}
+                self.assertEqual(inventory, {item["path"]: item["after_sha256"] for item in proposal["delta"]})
+                self.assertEqual(result["records"][-1]["main"], proposal["proposed_head"])
+                self.assertEqual(current, prior)
+                self.assertEqual(current_path.read_bytes(), before_bytes)
+                self.assertFalse((root / "state/history.json").exists())
+                self.assertEqual(self._git(root, "rev-parse", "HEAD"), before_head)
+                self.assertEqual(self._git(root, "status", "--porcelain"), "")
+
+    def test_addition_paths_are_literal_including_git_pathspec_characters(self):
+        for path in ("integra_core/new [a]*?.py", "integra_core/:(glob)new.py", "integra_core/nested/new.py"):
+            with self.subTest(path=path):
+                root, proposal, declaration = self._addition_lineage(path=path)
+                self.assertEqual(validate_proposal(proposal, self._current(root), root), [])
+                self.assertEqual(verify_promotion_material(proposal, root, declaration), [])
+
+    def test_malformed_addition_deltas_fail_all_entry_points(self):
+        root, proposal, path = self._addition_lineage()
+        item = proposal["delta"][-1]
+        bad_deltas = [None, {}, [], [None], ["unknown"],
+                      [{**item, "unknown": True}], [{key: value for key, value in item.items() if key != "before_sha256"}],
+                      [{**item, "before_sha256": ""}], [{**item, "before_sha256": False}],
+                      [{**item, "after_sha256": None}], [{**item, "after_sha256": ""}],
+                      [{**item, "after_sha256": 1}], [item, copy.deepcopy(item)]]
+        for bad in bad_deltas:
+            with self.subTest(delta=bad):
+                changed = copy.deepcopy(proposal); changed["delta"] = bad
+                self._assert_addition_rejected(root, changed, path)
+        for bad in ("", "/integra_core/new.py", "integra_core//new.py", "integra_core/./new.py",
+                    "integra_core/../new.py", "integra_core/new.py/", "integra_core\\new.py", "integra_core/new\n.py", None, []):
+            with self.subTest(path=bad):
+                changed = copy.deepcopy(proposal); changed["delta"][-1]["path"] = bad
+                self._assert_addition_rejected(root, changed, path)
+
+    def test_forged_absence_existing_in_base_but_not_inventory_fails(self):
+        root, proposal, path = self._addition_lineage(base_kind="regular")
+        self.assertNotIn("integra_core/new.py", [item["path"] for item in self._current(root)["records"][0]["governed_files"]])
+        self._assert_addition_rejected(root, proposal, path)
+
+    def test_forged_absence_existing_in_inventory_but_not_base_fails(self):
+        root, proposal, path = self._addition_lineage()
+        current = self._current(root)
+        current["records"][0]["governed_files"].append({"path": "integra_core/new.py", "sha256": "a" * 64})
+        (root / "state/current_product_baseline_v2.json").write_text(json.dumps(current))
+        self._assert_addition_rejected(root, proposal, path, current)
+
+    def test_nonregular_base_and_after_entries_are_not_additions(self):
+        for side in ("base_kind", "after_kind"):
+            for kind in ("directory", "symlink", "gitlink"):
+                with self.subTest(side=side, kind=kind):
+                    root, proposal, path = self._addition_lineage(**{side: kind})
+                    self._assert_addition_rejected(root, proposal, path)
+
+    def test_non_tree_ancestor_is_not_absence(self):
+        for kind in ("regular", "symlink", "gitlink"):
+            with self.subTest(kind=kind):
+                def base_setup(root):
+                    self._entry(root, "integra_core/parent", kind)
+
+                def source_setup(root):
+                    self._entry(root, "integra_core/parent", "absent")
+                    self._entry(root, "integra_core/parent/new.py", "regular")
+
+                root, proposal, path = self._lineage(base_setup=base_setup, source_setup=source_setup,
+                    extra_delta=[{"path": "integra_core/parent/new.py", "before_sha256": None,
+                                  "after_sha256": hashlib.sha256(b"new\x00bytes\n").hexdigest()}])
+                self._assert_addition_rejected(root, proposal, path)
+
+    def test_missing_or_mismatched_git_identities_do_not_prove_absence(self):
+        root, proposal, path = self._addition_lineage()
+        for identity in ("base_main", "proposed_source"):
+            for field, value in (("commit_sha", "0" * 40), ("commit_sha", "HEAD"),
+                                 ("commit_sha", proposal["proposed_source"]["tree_sha"]),
+                                 ("tree_sha", "0" * 40)):
+                with self.subTest(identity=identity, field=field, value=value):
+                    changed = copy.deepcopy(proposal); changed[identity][field] = value
+                    current = self._current(root)
+                    if identity == "base_main":
+                        current["records"][0]["main"] = changed[identity]
+                    self._assert_addition_rejected(root, changed, path, current)
+        changed = copy.deepcopy(proposal); changed["base_main"] = None
+        self._assert_addition_rejected(root, changed, path)
+
+    def test_missing_current_and_invalid_inventory_cannot_authorize_addition(self):
+        root, proposal, path = self._addition_lineage()
+        original = self._current(root)
+        for inventory in (None, [], [{}], [original["records"][0]["governed_files"][0]] * 2):
+            with self.subTest(inventory=inventory):
+                current = copy.deepcopy(original); current["records"][0]["governed_files"] = inventory
+                (root / "state/current_product_baseline_v2.json").write_text(json.dumps(current))
+                self._assert_addition_rejected(root, proposal, path, current)
+        (root / "state/current_product_baseline_v2.json").unlink()
+        self.assertTrue(verify_promotion_material(proposal, root, path))
+
+    def test_wrong_after_hash_and_missing_after_blob_fail(self):
+        root, proposal, path = self._addition_lineage()
+        proposal["delta"][-1]["after_sha256"] = "0" * 64
+        self._assert_addition_rejected(root, proposal, path)
+        root, proposal, path = self._addition_lineage(after_kind="absent")
+        self._assert_addition_rejected(root, proposal, path)
+
+    def test_unreadable_base_tree_or_source_blob_is_not_absence(self):
+        for side, suffix in (("base_main", "integra_core"), ("proposed_source", "integra_core/new.py")):
+            with self.subTest(side=side):
+                root, proposal, path = self._addition_lineage()
+                object_id = self._git(root, "rev-parse", f"{proposal[side]['commit_sha']}:{suffix}")
+                (root / ".git/objects" / object_id[:2] / object_id[2:]).unlink()
+                self._assert_addition_rejected(root, proposal, path)
+
+    def test_rename_cannot_hide_unsupported_deletion(self):
+        def source_setup(root):
+            # Identical bytes make Git's default rename detection applicable.
+            (root / "integra_core/runtime.py").write_bytes(b"base\n")
+            (root / "integra_core/runtime.py").rename(root / "integra_core/renamed.py")
+
+        root, proposal, path = self._lineage(source_setup=source_setup,
+            extra_delta=[{"path": "integra_core/renamed.py", "before_sha256": None,
+                          "after_sha256": hashlib.sha256(b"base\n").hexdigest()}])
+        proposal["delta"].pop(0)
+        self.assertIn("promotion governed CURRENT-to-source delta is undeclared or overstated",
+                      verify_promotion_material(proposal, root, path))
+
+    def test_omitted_addition_and_deletion_remain_unaccounted(self):
+        root, proposal, path = self._addition_lineage()
+        proposal["delta"].pop()
+        self.assertIn("promotion governed CURRENT-to-source delta is undeclared or overstated",
+                      verify_promotion_material(proposal, root, path))
+        root, proposal, path = self._lineage(source_setup=lambda root: (root / "integra_core/runtime.py").unlink())
+        self.assertIn("promotion declared delta differs: integra_core/runtime.py",
+                      verify_promotion_material(proposal, root, path))
+        proposal["delta"][0]["after_sha256"] = None
+        self._assert_addition_rejected(root, proposal, path)
 
 
 if __name__ == "__main__":

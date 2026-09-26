@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.process_executor_pilot.size_recovery",
+  "status": "PASS",
+  "scope": "Issue #190 Stage A isolated Process timed-transcript normalizer pilot",
+  "historical_checkpoint": {
+    "path": "docs/PROCESS_EXECUTOR_PILOT_REPORT.md",
+    "status": "BLOCKED_AT_EVIDENCE_OVERLAY_B",
+    "reason": "The exact CURRENT package was unavailable when overlay B was created."
+  },
+  "recovery": {
+    "pull_request": "https://github.com/Yurielo/integra/pull/193",
+    "main_commit": "448d710d263c1cceca50b28d74fccc121116bd72",
+    "method": "Hash-verified retention recovery from the pilot runtime superset; no replacement baseline was used."
+  },
+  "current": {
+    "candidate_id": "candidate-v1-65bf72d1262146c9137aca433b51ae3974d98bc4c8ed37042db13b46e0318a1d",
+    "bundle_digest": "044594f1a632f1c140af28bb7de8e4acf782daca9863d84b9c5d77edb731fdf8",
+    "manifest_sha256": "c59d18552b8b860019852a420d4b7d6337e32408196df0615c8599179d44a2a5",
+    "logical_bytes_excluding_bytecode": 2201478232
+  },
+  "pilot_candidate": {
+    "candidate_id": "candidate-v1-2fe375cc31b3a57d74ad0f994894bd610442deae3adfff033cdc5f3cf400fcd3",
+    "bundle_digest": "47befb29a6c221db7cb79262fc949f29248095e31dceba7fc4d46e78ab06c39e",
+    "manifest_sha256": "8b050aeba19f06972b43fb680e5a5706d443ff0f48ef8b357c4f61cbaa0c9647",
+    "logical_bytes_excluding_bytecode": 2201496430
+  },
+  "comparison": {
+    "delta_vs_current_bytes": 18198,
+    "comparison_status": "PASS",
+    "interpretation": "The candidate exceeds the recovered exact CURRENT logical-byte inventory by 18,198 bytes."
+  },
+  "boundaries": {
+    "does_not_promote_current": true,
+    "does_not_authorize_merge_or_install": true,
+    "does_not_change_canonical_routing": true
+  }
+}

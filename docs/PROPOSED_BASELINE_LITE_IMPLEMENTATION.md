@@ -80,6 +80,32 @@ overlay list is only for proposal metadata/report paths; it is not a broad
 branch or whole-tree exception. The next promotion must be reviewed and merged
 as its own governed transaction.
 
+## Add-only delta proof
+
+A delta still has exactly `path`, `before_sha256`, and `after_sha256`.
+Existing replacements retain their before/after SHA-256 strings. An addition
+uses JSON `null` for `before_sha256` only when the canonical, literal path is
+absent from both the verified BASE commit tree and the active CURRENT governed
+inventory. Empty strings, missing fields, lookup errors, unavailable commits,
+directories, symlinks, gitlinks, and non-directory ancestors are not absence.
+The source A entry must be a regular Git blob (`100644` or `100755`), and its
+exact bytes must match the non-null `after_sha256`. Deletions are unsupported.
+
+The lookup walks exact tree components with literal pathspecs, checking each
+entry's mode and object type. BASE and A must resolve as the exact declared
+commit/tree identities. Proposal validation, material verification, and the
+in-memory `next_current` constructor all enforce addition proofs; the latter
+accepts an explicit repository `root` for isolated fixtures and otherwise uses
+this helper's repository. No CURRENT file is written by these checks.
+
+The complete governed BASE-to-A changed-path set must still equal the declared
+delta. Rename detection is disabled so a removed path cannot hide behind an
+addition. Candidate source A, evidence overlay B, and proposal-only declaration
+C retain their existing identity, lineage, evidence, and approval checks.
+This bounded addition support does not authorize a promotion or relax any
+Candidate/READY gate, including evidence that requires an available baseline
+bundle. Missing baseline size evidence must remain blocked, not estimated.
+
 ## Anti-bypass coverage
 
 `tests/test_proposed_baseline_lite.py` covers: missing/malformed CURRENT,
@@ -89,6 +115,13 @@ or base-main mismatch, malformed/duplicate delta, failed/skipped gate,
 unbound evidence, inferred owner acceptance, branch-name injection, technical
 green masquerading as owner acceptance, missing explicit owner reference, and
 preservation of the prior CURRENT record during a prepared promotion.
+
+Temporary Git BASE-to-A-to-B-to-C fixtures additionally cover regular and
+executable additions, literal pathspec characters, unavailable/mismatched Git
+identities, forged absence in either authority, invalid entry types and path
+ancestors, malformed/null/duplicate delta fields, omitted changes, unsupported
+deletions, exact binary-byte hashes, and in-memory successor construction
+without CURRENT writes. These focused tests do not build or launch an app.
 
 ## Recovery #162 test accounting (classification only)
 
