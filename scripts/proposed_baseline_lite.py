@@ -54,7 +54,11 @@ def _governed_product_path(path: str) -> bool:
     """The v2 scope is executable primary-journey code, not docs/governance."""
     return (
         path.startswith(("integra_core/", "macos/", "workers/"))
-        or path in {"scripts/build_macos_app.sh", "scripts/candidate_manifest.py", "schemas/candidate_manifest_v1.schema.json"}
+        or path in {
+            "scripts/build_macos_app.sh", "scripts/candidate_manifest.py",
+            "schemas/candidate_manifest_v1.schema.json", "scripts/test_macos_app.sh",
+            "tests/test_macos_app.py",
+        }
     )
 
 
@@ -579,7 +583,7 @@ def verify_promotion_material(proposal: dict[str, Any], root: Path, proposal_pat
         except (OSError, subprocess.CalledProcessError):
             errors.append(f"promotion historical test path is unavailable: {path_text}")
             continue
-        if before == after:
+        if before == after or path_text in declared:
             continue
         for authority in authorities:
             changed_historical_tests.add((authority, path_text))
