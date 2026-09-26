@@ -3,6 +3,17 @@ from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
 
+def macos_build_runtime_available():
+    seminartext = Path(os.environ.get("INTEGRA_SEMINARTEXT_BUILD_CHECKOUT", ROOT / ".runtime-components/seminartext-pinned"))
+    videotext = Path(os.environ.get("INTEGRA_VIDEOTEXT_BUILD_CHECKOUT", ROOT / ".runtime-components/videotext-pinned"))
+    booktext = Path(os.environ.get("INTEGRA_BOOKTEXT_BUILD_CHECKOUT", ROOT / ".runtime-components/booktext-pinned"))
+    packages = Path(os.environ.get("INTEGRA_WORD_ALIGNMENT_SITE_PACKAGES", ROOT / ".runtime-word-alignment/lib/python3.13/site-packages"))
+    model = Path(os.environ.get("INTEGRA_WORD_ALIGNMENT_MODEL_DIR", "/Users/yurielokhin/.cache/huggingface/hub/models--jonatasgrosman--wav2vec2-large-xlsr-53-russian/snapshots/2329100508896c6d9b157019803ab5601e6f3406"))
+    python = Path(os.environ.get("INTEGRA_WORD_ALIGNMENT_PYTHON", "/opt/homebrew/opt/python@3.13/bin/python3.13"))
+    return all(((seminartext / ".git").exists(), (videotext / ".git").exists(),
+                (booktext / ".git").exists(), (packages / "whisperx").is_dir(),
+                (model / "pytorch_model.bin").is_file(), os.access(python, os.X_OK)))
+
 def tree_hash(root):
     value=hashlib.sha256()
     for path in sorted(root.rglob("*")):
@@ -25,7 +36,10 @@ class ReadyAppTests(unittest.TestCase):
         result=subprocess.run(["python3",str(bridge),"package-preview"],input='{"package_dir":"'+str(Path.home()/"secret/path")+'","target_dir":"/tmp"}',capture_output=True,text=True)
         self.assertNotEqual(result.returncode,0); self.assertNotIn(str(Path.home()),result.stdout)
 
-    @unittest.skipUnless(platform.system()=="Darwin","READY_APP packaging requires macOS")
+    @unittest.skipUnless(
+        platform.system()=="Darwin" and macos_build_runtime_available(),
+        "READY_APP packaging requires the pinned external runtime sources",
+    )
     def test_local_candidate_is_reproducible_signed_and_launchable(self):
         script=ROOT/"scripts/package_ready_app.sh"
         with tempfile.TemporaryDirectory() as directory:
