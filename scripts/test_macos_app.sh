@@ -2,11 +2,13 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
-test_root="$(mktemp -d)"
+test_root="$(python3 "$repo_root/scripts/temp_artifact_lifecycle.py" create --purpose macos-app-test --owner-pid "$$")"
 cleanup() {
-  rm -rf "$test_root"
+  python3 "$repo_root/scripts/temp_artifact_lifecycle.py" cleanup --root "$test_root" --allow-live-owner >/dev/null || true
 }
 trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 app="$($repo_root/scripts/build_macos_app.sh "$test_root")"
 
 test "$(plutil -extract CFBundleIconFile raw "$app/Contents/Info.plist")" = "Integra.icns"

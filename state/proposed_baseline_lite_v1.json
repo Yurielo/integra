@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.proposed_product_baseline",
+  "proposal_id": "proposal-issue-180-temp-artifact-lifecycle",
+  "status": "PROPOSED_BASELINE_VALID",
+  "base_current_id": "current-v2-65bf72d1262146c9137aca433b51ae3974d98bc4c8ed37042db13b46e0318a1d",
+  "base_main": {
+    "commit_sha": "16a854e848f0d79f72ba77e0b6b92b5cb588e9d2",
+    "tree_sha": "83106fbbc6544b2ac3831d2fa0408f8d0fa83ec1"
+  },
+  "proposed_source": {
+    "commit_sha": "3ea6f9883a4f09052a672abdfd9b0c4c0aa99171",
+    "tree_sha": "bc35fa1289785225e7a908bc7b91ee21d7238018"
+  },
+  "proposed_head": {
+    "commit_sha": "642c15f9f5fe5804fd6d50ccf2b1ad1cdba31b05",
+    "tree_sha": "a71bf4859c20dc7b7db4dc4a25565216a62e5803"
+  },
+  "intended_scope": {
+    "wp": "Issue #180",
+    "journey": "owned temporary macOS Candidate and test artifact lifecycle"
+  },
+  "candidate": {
+    "candidate_id": "candidate-v1-7a254e707443a278606ffa956cc76e8374f5c20115077351e093230547f8bd62",
+    "identity_sha256": "7a254e707443a278606ffa956cc76e8374f5c20115077351e093230547f8bd62",
+    "manifest_digest": "637c96cc0a969e75545e98a9c6d4bac45888b02bf681e35b600a27db2a1b34f0",
+    "bundle_digest": "044594f1a632f1c140af28bb7de8e4acf782daca9863d84b9c5d77edb731fdf8"
+  },
+  "delta": [
+    {
+      "path": "scripts/build_macos_app.sh",
+      "before_sha256": "f2c7577b3afcde75e00828e8a9d0303a9370eac517902d7c49a87cce65237623",
+      "after_sha256": "9770c26e312adae3bbec104445f2fc67cb2e3f973aa10f1179dc5c48ab5a48de"
+    }
+  ],
+  "historical_test_successors": [
+    {
+      "path": "scripts/test_macos_app.sh",
+      "historical_authority": "R12",
+      "before_sha256": "efb95b9041a3c010680affe1551e2c0e11b535bbaa7ae7ee41ffa62549e887eb",
+      "after_sha256": "a84137c2dee548f78a78d670a3ec1eb0d04a21903bcb96bcb60e6914bac71e96",
+      "reason": "Issue #180 replaces anonymous temporary-root cleanup with an ownership-bound marker, signal traps, and conservative stale recovery."
+    }
+  ],
+  "gates": [
+    {
+      "name": "temp-artifact-lifecycle-regressions",
+      "result": "PASS",
+      "evidence_ref": "docs/ISSUE_180_TEMP_ARTIFACT_LIFECYCLE_REPORT.md"
+    },
+    {
+      "name": "native-candidate-self-test-and-manifest",
+      "result": "PASS",
+      "evidence_ref": "docs/evidence/ISSUE_180_TEMP_ARTIFACT_LIFECYCLE_CANDIDATE_EVIDENCE.json"
+    }
+  ],
+  "evidence": {
+    "candidate_manifest": {
+      "path": "docs/evidence/ISSUE_180_TEMP_ARTIFACT_LIFECYCLE_CANDIDATE_MANIFEST.json",
+      "sha256": "637c96cc0a969e75545e98a9c6d4bac45888b02bf681e35b600a27db2a1b34f0"
+    },
+    "candidate_evidence": {
+      "path": "docs/evidence/ISSUE_180_TEMP_ARTIFACT_LIFECYCLE_CANDIDATE_EVIDENCE.json",
+      "sha256": "aa66cc372a7be22f4ff99309ef84b0a33558ab920c70895fb58d66f435554772"
+    },
+    "report": {
+      "path": "docs/ISSUE_180_TEMP_ARTIFACT_LIFECYCLE_REPORT.md",
+      "sha256": "011237e7c6163bacc43409f2932917a66f9043641021b2b62e7d633dcc68db66"
+    }
+  },
+  "owner_acceptance": null,
+  "allowed_overlay_paths": [
+    "docs/ISSUE_180_TEMP_ARTIFACT_LIFECYCLE_REPORT.md",
+    "docs/evidence/ISSUE_180_TEMP_ARTIFACT_LIFECYCLE_CANDIDATE_EVIDENCE.json",
+    "docs/evidence/ISSUE_180_TEMP_ARTIFACT_LIFECYCLE_CANDIDATE_MANIFEST.json"
+  ]
+}
