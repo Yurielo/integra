@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.proposed_product_baseline",
+  "proposal_id": "proposal-process-v1-translated-txt",
+  "status": "PROPOSED_BASELINE_VALID",
+  "base_current_id": "current-v2-6545998b95e0f2d84abc7cd82baaea79bf8aa3c80cdd6d76840f47e87a42f996",
+  "base_main": {"commit_sha": "daa85afb5bc0518b8fe2297857ae8269b9793352", "tree_sha": "36933efc24291a74803b5ae84d67df6a3def4388"},
+  "proposed_source": {"commit_sha": "9f7122bb1d823e82db93eaede08e6a90c98775b6", "tree_sha": "cdf024f5c2ea77203bd28ce8cbbc58c7970f8a91"},
+  "proposed_head": {"commit_sha": "17c5b911dd9a66e48c849c97b01cf2f1f1dd9339", "tree_sha": "08fced24cacf8cc83fa97f5a744d06929f7ad49a"},
+  "intended_scope": {"wp": "Excel #20 / V06", "journey": "publish a managed readable UTF-8 translated TXT from the accepted completed Russian-to-English translation result; render it through normal Results Open/Export controls and recover only evidence-bound legacy translation JSON/provenance without provider execution; no translated SRT, topic translation, language expansion, routing switch, Stage B, Knowledge, Studio, installation or deployment"},
+  "candidate": {"candidate_id": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583", "identity_sha256": "a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583", "bundle_digest": "2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8", "manifest_digest": "4c9027d2fb65ef921bbb9c20878ccef61fca34c999c1f606f37da9e2a44a3161"},
+  "delta": [
+    {"path": "integra_core/application_runtime.py", "before_sha256": "a28084c1dd3a4501c4596ff36ed8c48c07a349241794d2a7f76f56dd2bd73893", "after_sha256": "42f4094a8ecc00d65eb808b55aa560b92ce298c71bb5f1f46f7d9aa5560164b7"},
+    {"path": "integra_core/user_media.py", "before_sha256": "9d6b273c501a1f4b539119514607281f8d7c6daa45c176f7245b598b2349b788", "after_sha256": "afd24a700c19c34424797b2cd16b6553bc349d564be12c4539f9a4a5b4a26946"},
+    {"path": "macos/IntegraApp.swift", "before_sha256": "4ec747453e95e8ec56b06a1bd332174c2f995f159c93437f134524ad7e28dc69", "after_sha256": "37c60aee4e12598f79a4eed4bb1ec8171722913f7c7af9d85be45fb5a4860901"}
+  ],
+  "historical_test_successors": [],
+  "gates": [
+    {"name": "candidate-manifest", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_TRANSLATED_TXT_CANDIDATE_MANIFEST.json"},
+    {"name": "candidate-archive", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_TRANSLATED_TXT_CANDIDATE_ARCHIVE.json"},
+    {"name": "packaged-translated-text", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_TRANSLATED_TXT_E2E.json"},
+    {"name": "focused-process-regressions", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_TRANSLATED_TXT_FOCUSED_TESTS.txt"},
+    {"name": "full-supported-regressions", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_TRANSLATED_TXT_FULL_TESTS.txt"}
+  ],
+  "evidence": {
+    "candidate_manifest": {"path": "docs/evidence/PROCESS_V1_TRANSLATED_TXT_CANDIDATE_MANIFEST.json", "sha256": "4c9027d2fb65ef921bbb9c20878ccef61fca34c999c1f606f37da9e2a44a3161"},
+    "candidate_evidence": {"path": "docs/evidence/PROCESS_V1_TRANSLATED_TXT_E2E.json", "sha256": "36d374bba6a581fc526d2dded02723b38cf94d5a9b3e9db78ca2e53af862462f"},
+    "report": {"path": "docs/PROCESS_V1_TRANSLATED_TXT_PROOF.md", "sha256": "47b7553375eee84131482276ad77872659bf6f38c3ddd5b58b4d937e2c42128a"}
+  },
+  "owner_acceptance": null,
+  "allowed_overlay_paths": ["docs/PROCESS_V1_DEFINITION_OF_DONE.md", "docs/PROCESS_V1_OWNER_SCOPE_AND_COMPLETION_MAP.md", "docs/PROCESS_V1_TRANSLATED_TXT_PROOF.md", "docs/evidence/PROCESS_V1_TRANSLATED_TXT_CANDIDATE_ARCHIVE.json", "docs/evidence/PROCESS_V1_TRANSLATED_TXT_CANDIDATE_MANIFEST.json", "docs/evidence/PROCESS_V1_TRANSLATED_TXT_E2E.json", "docs/evidence/PROCESS_V1_TRANSLATED_TXT_FOCUSED_TESTS.txt", "docs/evidence/PROCESS_V1_TRANSLATED_TXT_FULL_TESTS.txt"]
+}
