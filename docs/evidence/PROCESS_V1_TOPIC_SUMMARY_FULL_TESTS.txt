@@ -1,0 +1,18 @@
+Command:
+INTEGRA_REVIEW_PYTHON=/opt/homebrew/bin/python3.14 \
+PYTHONPATH="/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages" \
+INTEGRA_TEST_SEMINARTEXT_CHECKOUT=/private/tmp/seminartext-build-13644 \
+python3 -m unittest discover -s tests -v
+
+Result:
+Ran 813 tests in 49.770s
+OK (skipped=87)
+
+The suite ran in a separate disposable governed-check worktree containing the
+same product source, Candidate-bound evidence and a one-file temporary Proposal
+declaration directly above that evidence. It validated `CURRENT_VALID` and
+`PROPOSED_BASELINE_VALID / AWAITING_OWNER_ACCEPTANCE` before the test run.
+
+The 87 skips are declared pre-existing environment-dependent tests for optional
+real pinned ASR/media runtimes. They are not suppressed failures and no test
+failed.
