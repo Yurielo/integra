@@ -20,21 +20,26 @@ class ProcessResultsSurfaceTests(unittest.TestCase):
             self.assertIn(f'processCard("{label}"', self.source)
         self.assertIn('button("Открыть источник с расшифровкой"', self.source)
 
-    def test_translation_opens_a_managed_result_without_closing_translated_txt(self):
+    def test_translation_uses_managed_text_for_normal_open_and_export(self):
         surface = self.source.split("private func renderPrimaryProcessResults", 1)[1].split(
             "private func readableOutput", 1)[0]
-        self.assertIn('outputs["translation"] as? String', surface)
-        self.assertIn('#selector(openTranslation(_:))', surface)
+        self.assertIn('outputs["translation_txt"] as? String', surface)
+        self.assertIn('outputs["translation_provenance"] as? String', surface)
+        self.assertIn('outputControls(path)', surface)
+        self.assertNotIn('#selector(openTranslation(_:))', surface)
         self.assertIn('#selector(translateTranscript(_:))', surface)
         self.assertIn('NSTextField(labelWithString: "Язык перевода")', surface)
         self.assertIn('#selector(changeTranslationTarget(_:))', surface)
         self.assertIn('picker.translationButton?.targetLanguage = target', self.source)
         self.assertIn('translation_target_language', self.source)
-        self.assertIn('languageName(target)', self.source)
+        self.assertIn('translationLanguageName(from: provenancePath, key: "target_language")', surface)
         self.assertNotIn('target.uppercased()', self.source)
         self.assertIn('outputs["topics"] is String', surface)
         self.assertIn('button("Проверить темы", #selector(prepareTopicReview(_:)))', surface)
         self.assertNotIn('outputs["topics"] as? String', surface)
+        technical = self.source.split("private func renderTechnicalData", 1)[1].split(
+            "@objc private func runSelected", 1)[0]
+        self.assertNotIn('case "translation"', technical)
 
     def test_reviewable_topics_use_process_only_review_path(self):
         review = self.source.split("@objc private func prepareTopicReview", 1)[1].split(

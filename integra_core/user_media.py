@@ -331,6 +331,33 @@ def _translation_provenance(
     }
 
 
+def _materialize_translation_txt(translation_path: Path, output_path: Path,
+                                 provenance: dict[str, Any]) -> None:
+    """Derive the ordinary user-facing text from the verified translation file."""
+    try:
+        payload = json.loads(translation_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError, json.JSONDecodeError) as error:
+        raise ValueError("translated result cannot be materialized as text") from error
+    cues = payload.get("cues") if isinstance(payload, dict) else None
+    if (not isinstance(cues, list) or len(cues) != provenance.get("translated_cue_count") or
+        payload.get("source_language") != provenance.get("source_language") or
+        payload.get("target_language") != provenance.get("executed_target_language")):
+        raise ValueError("translated result does not match its verified provenance")
+    paragraphs = []
+    for cue in cues:
+        text = cue.get("text") if isinstance(cue, dict) else None
+        if not isinstance(text, str) or not text.strip():
+            raise ValueError("translated result contains an invalid text cue")
+        paragraphs.append(text.strip())
+    temporary = output_path.with_name(f".{output_path.name}.{uuid.uuid4().hex}.tmp")
+    try:
+        temporary.write_text("\n\n".join(paragraphs) + "\n", encoding="utf-8")
+        os.replace(temporary, output_path)
+    except OSError as error:
+        temporary.unlink(missing_ok=True)
+        raise ValueError("translated text could not be saved") from error
+
+
 def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
     jobs_path = project_dir / "jobs.json"
     jobs = json.loads(jobs_path.read_bytes())
@@ -441,8 +468,11 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
                 runtime=translation_runtime,
             )
             atomic_json(work / "translation_provenance.json", provenance)
+            translation_txt = work / "translation.txt"
+            _materialize_translation_txt(translation_path, translation_txt, provenance)
             job["outputs"]["translation"] = str(translation_path)
             job["outputs"]["translation_provenance"] = str(work / "translation_provenance.json")
+            job["outputs"]["translation_txt"] = str(translation_txt)
         if requested and requested_outputs & {"word_timeline", "topics"}:
             checkpoint("RUNNING", 85, "Aligning transcript words with WhisperX", run_stage="word_timeline")
             wav = work / "audio.wav"
