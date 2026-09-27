@@ -20,13 +20,14 @@ class ProcessResultsSurfaceTests(unittest.TestCase):
             self.assertIn(f'processCard("{label}"', self.source)
         self.assertIn('button("Открыть источник с расшифровкой"', self.source)
 
-    def test_only_readable_translation_or_reviewable_topics_can_be_primary(self):
+    def test_translation_opens_a_managed_result_without_closing_translated_txt(self):
         surface = self.source.split("private func renderPrimaryProcessResults", 1)[1].split(
             "private func readableOutput", 1)[0]
-        self.assertIn('keys: ["translation_txt", "translated_txt"]', surface)
+        self.assertIn('outputs["translation"] as? String', surface)
+        self.assertIn('#selector(openTranslation(_:))', surface)
+        self.assertIn('#selector(translateTranscript(_:))', surface)
         self.assertIn('outputs["topics"] is String', surface)
         self.assertIn('button("Проверить темы", #selector(prepareTopicReview(_:)))', surface)
-        self.assertNotIn('outputs["translation"] as? String', surface)
         self.assertNotIn('outputs["topics"] as? String', surface)
 
     def test_reviewable_topics_use_process_only_review_path(self):

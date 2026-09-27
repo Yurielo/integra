@@ -149,6 +149,9 @@ def capability_registry(sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return result
 
 
+TRANSLATION_TARGET_LANGUAGE = "en"
+
+
 def build_plan(sources: list[dict[str, Any]], selected: list[str]) -> dict[str, Any]:
     if not sources: raise ValueError("add at least one source")
     for source in sources:
@@ -183,9 +186,17 @@ def build_plan(sources: list[dict[str, Any]], selected: list[str]) -> dict[str, 
     source_plans=[]
     for source in sources:
         applicable=[identifier for identifier in selected if source["source_type"] in registry[identifier]["source_types"] or not registry[identifier]["source_types"]]
-        source_plans.append({"source_id":source["source_id"],"display_name":source["display_name"],"source_type":source["source_type"],"outputs":applicable})
+        source_plan={"source_id":source["source_id"],"display_name":source["display_name"],"source_type":source["source_type"],"outputs":applicable}
+        # Transcript translation currently has one frozen production target.
+        # A user-selectable target belongs to the separately governed #19 outcome.
+        if "translation" in applicable:
+            source_plan["translation_target_language"] = TRANSLATION_TARGET_LANGUAGE
+        source_plans.append(source_plan)
     identity={"sources":[item["source_id"] for item in sources],"selected_outputs":selected,"stages":[item["id"] for item in stages]}
     selections = [{key: item[key] for key in ("booktext_pages", "booktext_exclude_pages") if item.get(key)} for item in sources]
     if any(selections): identity["booktext_selection"] = selections
-    return {"schema_version":"1.0","plan_id":f"urn:integra:plan:{content_sha256(identity)}","sources":sources,
+    result = {"schema_version":"1.0","plan_id":f"urn:integra:plan:{content_sha256(identity)}","sources":sources,
             "selected_outputs":selected,"stages":stages,"source_plans":source_plans,"state":"READY_TO_EXECUTE"}
+    if "translation" in selected:
+        result["translation_target_language"] = TRANSLATION_TARGET_LANGUAGE
+    return result

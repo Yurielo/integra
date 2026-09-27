@@ -20,7 +20,7 @@ from .protocol import canonical_json, content_sha256
 from .publishing import sha256_bytes, validate_package
 from .seminartext_runtime import generate_topics
 from .word_timeline_runtime import generate_word_timeline
-from .videotext_runtime import translate as translate_videotext
+from .videotext_runtime import preflight as videotext_translation_preflight, translate as translate_videotext
 from . import seminartext_asr_runtime as asr
 from . import videotext_media_runtime as videotext_media
 from . import asr_reuse
@@ -274,6 +274,55 @@ def _provisional_topics(segments: list[dict[str, Any]], source_id: str) -> list[
     return result
 
 
+def _translation_provenance(
+    value: dict[str, Any], *, source_id: str, transcript_path: Path,
+    subtitles: Path, translation_path: Path, expected_source_language: str,
+    expected_target_language: str, runtime: dict[str, Any],
+) -> dict[str, Any]:
+    """Validate the provider payload and retain only Integra-owned result facts."""
+    if not isinstance(value, dict):
+        raise ValueError("translation did not return a valid result")
+    source_language = value.get("source_language")
+    target_language = value.get("target_language")
+    cues = value.get("cues")
+    if (value.get("component") != "videotext" or value.get("capability") != "translation" or
+        source_language != expected_source_language or target_language != expected_target_language or
+        source_language == target_language or not isinstance(cues, list) or not cues):
+        raise ValueError("translation result does not match the requested languages")
+    source_cues = _parse_srt(subtitles.read_text(encoding="utf-8"), source_id)
+    if len(cues) != len(source_cues):
+        raise ValueError("translation result does not match the source transcript")
+    for translated, original in zip(cues, source_cues):
+        if (not isinstance(translated, dict) or not isinstance(translated.get("text"), str) or
+            not translated["text"].strip() or translated.get("id") != original["segment_id"].rsplit(":", 1)[-1] or
+            translated.get("start_seconds") != original["start_seconds"] or
+            translated.get("end_seconds") != original["end_seconds"]):
+            raise ValueError("translation timing does not match the source transcript")
+    if all(translated["text"].strip() == original["text"].strip()
+           for translated, original in zip(cues, source_cues)):
+        raise ValueError("translation result duplicates the source transcript")
+    if value.get("model") != runtime["model"]:
+        raise ValueError("translation runtime did not execute the selected model")
+    return {
+        "schema_version": "1.0",
+        "status": "COMPLETED",
+        "source_id": source_id,
+        "source_transcript_sha256": hashlib.sha256(transcript_path.read_bytes()).hexdigest(),
+        "source_subtitles_sha256": hashlib.sha256(subtitles.read_bytes()).hexdigest(),
+        "source_language": source_language,
+        "target_language": target_language,
+        "translated_cue_count": len(cues),
+        "output_sha256": hashlib.sha256(translation_path.read_bytes()).hexdigest(),
+        "semantic_status": "MACHINE_TRANSLATION_REVIEW_REQUIRED",
+        "runtime": {
+            "component": "videotext",
+            "commit_sha": runtime["commit_sha"],
+            "adapter_sha256": runtime["adapter_sha256"],
+            "model": runtime["model"],
+        },
+    }
+
+
 def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
     jobs_path = project_dir / "jobs.json"
     jobs = json.loads(jobs_path.read_bytes())
@@ -368,10 +417,23 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
                         "transcript_asr_record":recognized["record"]})
         job["outputs"] = outputs
         if requested and "translation" in requested_outputs:
-            checkpoint("RUNNING", 84, "Translating subtitles with VideoText", run_stage="translation")
+            checkpoint("RUNNING", 84, "Перевожу расшифровку", run_stage="translation")
             translation_path = work / "translation.json"
-            translate_videotext(subtitles, translation_path)
+            target_language = job.get("translation_target_language", "en")
+            if target_language != "en":
+                raise ValueError("translation target language is unsupported")
+            translation_runtime = videotext_translation_preflight()
+            translation = translate_videotext(
+                subtitles, translation_path, target=target_language, runtime=translation_runtime)
+            provenance = _translation_provenance(
+                translation, source_id=job["source_id"], transcript_path=work / "transcript.json",
+                subtitles=subtitles, translation_path=translation_path,
+                expected_source_language=source_speech_language, expected_target_language=target_language,
+                runtime=translation_runtime,
+            )
+            atomic_json(work / "translation_provenance.json", provenance)
             job["outputs"]["translation"] = str(translation_path)
+            job["outputs"]["translation_provenance"] = str(work / "translation_provenance.json")
         if requested and requested_outputs & {"word_timeline", "topics"}:
             checkpoint("RUNNING", 85, "Aligning transcript words with WhisperX", run_stage="word_timeline")
             wav = work / "audio.wav"

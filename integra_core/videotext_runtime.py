@@ -19,8 +19,8 @@ def preflight() -> dict[str,Any]:
     if not model: raise ValueError("VideoText translation model is unavailable")
     return {"state":"READY","component":"videotext","commit_sha":COMMIT,"adapter_sha256":ADAPTER_SHA256,"worker":str(worker.resolve()),"model":model}
 
-def translate(subtitles:Path,output:Path,target:str="en")->dict[str,Any]:
-    runtime=preflight(); output.parent.mkdir(parents=True,exist_ok=True)
+def translate(subtitles:Path,output:Path,target:str="en", *, runtime: dict[str, Any] | None = None)->dict[str,Any]:
+    runtime=runtime or preflight(); output.parent.mkdir(parents=True,exist_ok=True)
     result=subprocess.run([runtime["worker"],"--srt",str(subtitles),"--target",target,"--output",str(output)],capture_output=True,text=True,timeout=900)
     if result.returncode or output.is_symlink() or not output.is_file(): raise ValueError("VideoText translation did not produce a validated output")
     value=json.loads(output.read_bytes())
