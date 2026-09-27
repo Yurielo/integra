@@ -53,7 +53,12 @@
     "candidate_evidence": {"path": "docs/evidence/PROCESS_V1_CAREFUL_ASR_EVIDENCE.json", "sha256": "aceeddd850afe956470abdfb75195959821b5197490d5099bbc175dd29600647"},
     "report": {"path": "docs/PROCESS_V1_CAREFUL_ASR_MODE_PROOF.md", "sha256": "07c42654e7cf053ab7111969598448b36a5ae54b3605ae6757f7c01804671a62"}
   },
-  "owner_acceptance": null,
+  "owner_acceptance": {
+    "decision": "PILOT_ACCEPTED",
+    "authority_ref": "PRODUCT OWNER AUTHORIZATION: ACCEPT_PROPOSED_BASELINE proposal-process-v1-careful-asr-mode candidate-v1-f9ef07f48ff155645239f9c72b454732f53fecabdbf9379ad4d25b1a5acbdc9a",
+    "scope": "Careful ASR mode — Excel #11 / S04 bounded baseline acceptance only",
+    "promotion_authorized": false
+  },
   "allowed_overlay_paths": [
     "docs/PROCESS_V1_CAREFUL_ASR_MODE_PROOF.md",
     "docs/PROCESS_V1_DEFINITION_OF_DONE.md",
