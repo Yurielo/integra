@@ -316,6 +316,8 @@ def _translation_provenance(
         "source_transcript_sha256": hashlib.sha256(transcript_path.read_bytes()).hexdigest(),
         "source_subtitles_sha256": hashlib.sha256(subtitles.read_bytes()).hexdigest(),
         "source_language": source_language,
+        "requested_target_language": expected_target_language,
+        "executed_target_language": target_language,
         "target_language": target_language,
         "translated_cue_count": len(cues),
         "output_sha256": hashlib.sha256(translation_path.read_bytes()).hexdigest(),
@@ -426,8 +428,9 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
             checkpoint("RUNNING", 84, "Перевожу расшифровку", run_stage="translation")
             translation_path = work / "translation.json"
             target_language = job.get("translation_target_language", "en")
-            if target_language != "en":
-                raise ValueError("translation target language is unsupported")
+            if (not isinstance(target_language, str) or target_language not in {"ru", "en"} or
+                    target_language == source_speech_language):
+                raise ValueError("Выбранный язык перевода не поддерживается.")
             translation_runtime = videotext_translation_preflight()
             translation = translate_videotext(
                 subtitles, translation_path, target=target_language, runtime=translation_runtime)

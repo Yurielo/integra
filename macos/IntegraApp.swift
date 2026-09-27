@@ -25,7 +25,7 @@ final class Bridge: @unchecked Sendable {
       "cancel-job", "resume-job", "import-media", "media-preflight", "seminartext-preflight", "project-view",
       "detect-sources", "capability-registry", "build-plan", "execute-plan", "run-status",
       "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "build-reviewed-package", "package-preview", "package-publish",
-      "obsidian-preview", "transcript-text",
+      "obsidian-preview", "transcript-text", "translate-transcript",
       "onedrive-preview",
       "prepare-transcript-review", "apply-transcript-review", "prepare-topic-review",
       "prepare-process-topic-review", "apply-process-topic-review",
@@ -116,6 +116,17 @@ final class DropBox: NSBox {
 
 final class FlippedStackView: NSStackView {
   override var isFlipped: Bool { true }
+}
+
+final class TranslationButton: NSButton {
+  var projectID = ""
+  var sourceRunID = ""
+  var sourceID = ""
+  var targetLanguage = ""
+}
+
+final class TranslationTargetPicker: NSPopUpButton {
+  weak var translationButton: TranslationButton?
 }
 
 final class ResponsiveResultsGrid: NSStackView {
@@ -1020,13 +1031,27 @@ struct SidebarItem {
     }
     if let path = outputs["translation"] as? String {
       let open = button("Открыть", #selector(openTranslation(_:))); open.toolTip = path
-      addCard(processCard("Перевод", controls: [open]), toLeft: left <= right)
+      let translatedTo = translationLanguageName(from: path, key: "target_language")
+      let target = NSTextField(labelWithString: "Язык перевода: \(translatedTo)")
+      target.textColor = .secondaryLabelColor
+      addCard(processCard("Перевод", controls: [target, open]), toLeft: left <= right)
     } else if outputs["transcript"] is String,
       let projectID, let runID, let sourceID = result["source_id"] as? String
     {
-      let translate = button("Перевести", #selector(translateTranscript(_:)))
-      translate.toolTip = "\(projectID)\n\(runID)\n\(sourceID)"
-      addCard(processCard("Перевод", controls: [translate]), toLeft: left <= right)
+      let sourceLanguage = translationSourceLanguage(result)
+      let targetLanguage = sourceLanguage == "ru" ? "en" : "ru"
+      let label = NSTextField(labelWithString: "Язык перевода")
+      let target = TranslationTargetPicker()
+      target.addItem(withTitle: languageName(targetLanguage))
+      target.item(at: 0)?.representedObject = targetLanguage
+      target.selectItem(at: 0)
+      target.target = self; target.action = #selector(changeTranslationTarget(_:))
+      let translate = TranslationButton(title: "Перевести", target: self, action: #selector(translateTranscript(_:)))
+      translate.bezelStyle = .rounded
+      translate.projectID = projectID; translate.sourceRunID = runID; translate.sourceID = sourceID
+      translate.targetLanguage = targetLanguage
+      target.translationButton = translate
+      addCard(processCard("Перевод", controls: [label, target, translate]), toLeft: left <= right)
     }
     // The raw Topics JSON remains technical data.  A completed source with
     // topics has an existing, human-reviewable Process representation instead:
@@ -1054,6 +1079,9 @@ struct SidebarItem {
     return nil
   }
   private func processCard(_ title: String, controls: [NSButton]) -> NSBox {
+    processCard(title, controls: controls.map { $0 as NSView })
+  }
+  private func processCard(_ title: String, controls: [NSView]) -> NSBox {
     let card = NSBox()
     card.boxType = .custom
     card.isTransparent = false
@@ -1073,6 +1101,31 @@ struct SidebarItem {
     stack.addArrangedSubview(actions)
     card.contentView = stack
     return card
+  }
+  private func languageName(_ code: String) -> String {
+    switch code {
+    case "ru": return "Русский"
+    case "en": return "Английский"
+    default: return "Недоступен"
+    }
+  }
+  private func translationSourceLanguage(_ result: [String: Any]) -> String {
+    let language = result["source_speech_language"] as? [String: Any]
+    return language?["executed"] as? String ?? language?["requested"] as? String ?? "ru"
+  }
+  private func translationLanguageName(from path: String, key: String) -> String {
+    guard let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
+      let payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+      let code = payload[key] as? String
+    else { return "Не определён" }
+    return languageName(code)
+  }
+  @objc private func changeTranslationTarget(_ sender: NSPopUpButton) {
+    guard let picker = sender as? TranslationTargetPicker,
+      let target = picker.selectedItem?.representedObject as? String,
+      ["ru", "en"].contains(target)
+    else { return }
+    picker.translationButton?.targetLanguage = target
   }
   private func outputControls(_ path: String) -> [NSButton] {
     let open = button("Открыть", #selector(openOutput(_:))); open.toolTip = path
@@ -1383,14 +1436,17 @@ struct SidebarItem {
     }
   }
   @objc private func translateTranscript(_ sender: NSButton) {
-    let identifiers = sender.toolTip?.split(separator: "\n", maxSplits: 2).map(String.init) ?? []
-    guard identifiers.count == 3 else { return }
+    guard let request = sender as? TranslationButton,
+      !request.projectID.isEmpty, !request.sourceRunID.isEmpty, !request.sourceID.isEmpty,
+      ["ru", "en"].contains(request.targetLanguage)
+    else { return }
     sender.isEnabled = false; sender.title = "Перевожу…"
     let service = bridge!
     serviceQueue.async {
       do {
         let result = try service.json("translate-transcript", request: [
-          "project_id": identifiers[0], "run_id": identifiers[1], "source_id": identifiers[2]])["result"] as? [String: Any]
+          "project_id": request.projectID, "run_id": request.sourceRunID, "source_id": request.sourceID,
+          "translation_target_language": request.targetLanguage])["result"] as? [String: Any]
         let run = result?["run"] as? [String: Any]
         guard let newRunID = run?["run_id"] as? String else { throw BridgeError.invalidResponse }
         DispatchQueue.main.async {
@@ -1418,7 +1474,7 @@ struct SidebarItem {
     guard !text.isEmpty else { status.stringValue = "Сохранённый перевод не содержит текста."; return }
     let alert = NSAlert()
     alert.messageText = "Перевод расшифровки"
-    alert.informativeText = "Исходный язык: \(source.uppercased()) · язык перевода: \(target.uppercased()). Машинный перевод требует проверки."
+    alert.informativeText = "Исходный язык: \(languageName(source)) · язык перевода: \(languageName(target)). Машинный перевод требует проверки."
     let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 620, height: 360))
     scroll.hasVerticalScroller = true
     let view = NSTextView(frame: scroll.bounds)

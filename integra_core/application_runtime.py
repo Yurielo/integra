@@ -9,7 +9,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from .capabilities import build_plan
+from .capabilities import TRANSLATION_TARGET_LANGUAGE, build_plan, validate_translation_target_language
 from .documents import extract_document, materialize_embedded_media
 from .booktext_runtime import run_ocr as run_booktext_ocr
 from .user_media import atomic_json, build_asr_diagnostics, import_source, now, run_job, _is_run_cancelled
@@ -38,7 +38,10 @@ def _source_speech_language(value: Any) -> str:
 
 def prepare_run(project_dir: Path, plan: dict[str,Any], *, recognition_mode: str = "normal",
                 source_speech_language: str = "ru") -> dict[str,Any]:
-    verified=build_plan(plan.get("sources",[]),plan.get("selected_outputs",[]))
+    selected_outputs = plan.get("selected_outputs", [])
+    target_language = plan.get("translation_target_language", TRANSLATION_TARGET_LANGUAGE)
+    verified=build_plan(plan.get("sources",[]), selected_outputs,
+                        translation_target_language=target_language)
     if verified["plan_id"]!=plan.get("plan_id"): raise ValueError("execution plan identity differs")
     recognition_mode = _recognition_mode(recognition_mode)
     source_speech_language = _source_speech_language(source_speech_language)
@@ -50,8 +53,9 @@ def prepare_run(project_dir: Path, plan: dict[str,Any], *, recognition_mode: str
     atomic_json(_runs(project_dir)/(run_id.removeprefix("urn:integra:run:")+".json"),record); return record
 
 
-def prepare_transcript_translation_run(project_dir: Path, run_id: str, source_id: str) -> dict[str, Any]:
-    """Start #18 from an already completed source without inventing a transcript."""
+def prepare_transcript_translation_run(project_dir: Path, run_id: str, source_id: str,
+                                       target_language: str = TRANSLATION_TARGET_LANGUAGE) -> dict[str, Any]:
+    """Start translation from a completed source without inventing a transcript."""
     previous = read_run(project_dir, run_id)
     source = next((item for item in previous.get("plan", {}).get("sources", [])
                    if item.get("source_id") == source_id), None)
@@ -62,9 +66,15 @@ def prepare_transcript_translation_run(project_dir: Path, run_id: str, source_id
     outputs = completed.get("outputs", {})
     if not isinstance(outputs.get("transcript"), str) or not isinstance(outputs.get("subtitles"), str):
         raise ValueError("completed transcript is unavailable")
-    plan = build_plan([source], ["translation"])
+    target_language = validate_translation_target_language(target_language)
     mode = previous.get("recognition", {}).get("requested_mode", "normal")
-    language = previous.get("source_speech_language", {}).get("requested", "ru")
+    completed_language = completed.get("source_speech_language", {})
+    language = completed_language.get("executed") if isinstance(completed_language, dict) else None
+    language = language or previous.get("source_speech_language", {}).get("executed")
+    language = language or previous.get("source_speech_language", {}).get("requested", "ru")
+    if target_language == language:
+        raise ValueError("Язык перевода должен отличаться от языка исходной речи.")
+    plan = build_plan([source], ["translation"], translation_target_language=target_language)
     return prepare_run(project_dir, plan, recognition_mode=mode, source_speech_language=language)
 
 
@@ -239,7 +249,7 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                     imported=import_source(project_dir,Path(source["input"]))
                     if imported["source_id"] != source["source_id"]:
                         raise ValueError("media source changed after plan creation")
-                    job={"job_id":f"urn:integra:job:{uuid.uuid4()}","kind":"LOCAL_MEDIA_TRANSCRIPTION","state":"QUEUED","progress":0,"message":"Queued by source-first plan","created_at":now(),"source_id":imported["source_id"],"source_sha256":imported["content_sha256"],"owned_path":imported["owned_path"],"requested_outputs":outputs,"recognition_mode":recognition_mode,"source_speech_language":source_speech_language,"run_id":run_id}
+                    job={"job_id":f"urn:integra:job:{uuid.uuid4()}","kind":"LOCAL_MEDIA_TRANSCRIPTION","state":"QUEUED","progress":0,"message":"Queued by source-first plan","created_at":now(),"source_id":imported["source_id"],"source_sha256":imported["content_sha256"],"owned_path":imported["owned_path"],"requested_outputs":outputs,"recognition_mode":recognition_mode,"source_speech_language":source_speech_language,"translation_target_language":source_plan.get("translation_target_language"),"run_id":run_id}
                     jobs=json.loads(jobs_path.read_bytes())
                     jobs["jobs"].append(job); atomic_json(jobs_path,jobs); result=run_job(project_dir,job["job_id"])
                     record["source_results"].append({"source_id":source["source_id"],"display_name":source["display_name"],"state":result["state"],"outputs":result.get("outputs",{}),"job_id":job["job_id"]})
@@ -276,7 +286,7 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                     record["source_results"].append({"source_id": source["source_id"], "display_name": source["display_name"], "state": "COMPLETED", "outputs": downloaded_outputs})
                 else:
                     record["current_stage"] = "media_preparation"; atomic_json(path, record)
-                    job = {"job_id": f"urn:integra:job:{uuid.uuid4()}", "kind": "YOUTUBE_MEDIA_TRANSCRIPTION", "state": "QUEUED", "progress": 0, "message": "Queued after YouTube download", "created_at": now(), "source_id": source["source_id"], "source_sha256": downloaded["content_sha256"], "owned_path": downloaded["downloaded_path"], "requested_outputs": downstream, "recognition_mode": recognition_mode, "source_speech_language": source_speech_language, "run_id": run_id, "youtube_source_record": downloaded["record_path"]}
+                    job = {"job_id": f"urn:integra:job:{uuid.uuid4()}", "kind": "YOUTUBE_MEDIA_TRANSCRIPTION", "state": "QUEUED", "progress": 0, "message": "Queued after YouTube download", "created_at": now(), "source_id": source["source_id"], "source_sha256": downloaded["content_sha256"], "owned_path": downloaded["downloaded_path"], "requested_outputs": downstream, "recognition_mode": recognition_mode, "source_speech_language": source_speech_language, "translation_target_language": source_plan.get("translation_target_language"), "run_id": run_id, "youtube_source_record": downloaded["record_path"]}
                     jobs = json.loads(jobs_path.read_bytes())
                     jobs["jobs"].append(job); atomic_json(jobs_path, jobs); result = run_job(project_dir, job["job_id"])
                     record["source_results"].append({"source_id": source["source_id"], "display_name": source["display_name"], "state": result["state"], "outputs": downloaded_outputs | result.get("outputs", {}), "job_id": job["job_id"]})
