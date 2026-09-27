@@ -40,10 +40,11 @@ runtime internally. The normal result card shows only Russian product wording.
 
 Focused Process translation, Results UX, ASR reuse, Topic Review and
 application regressions pass: 86 tests with 41 declared environment skips.
-Native Swift type checking, Python bytecode compilation and diff validation
-pass. The broad suite reaches its deliberate governance barrier until this
-Candidate and its Proposal Lite are recorded; it reports only CURRENT byte
-drift for the five changed governed files.
+The full supported suite passes: 804 tests with 91 declared
+environment-dependent skips. Native Swift type checking, Python bytecode
+compilation and diff validation pass. Before the Candidate and Proposal Lite
+were recorded, the broad suite's only failures were its deliberate CURRENT
+byte-drift guard for the five changed governed files.
 
 This is still machine translation marked review-required. It does not accept
 semantic correctness, add translated TXT or translate topics. It also does not
