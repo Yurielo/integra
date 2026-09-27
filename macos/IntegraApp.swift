@@ -28,7 +28,7 @@ final class Bridge: @unchecked Sendable {
       "obsidian-preview", "transcript-text", "translate-transcript",
       "onedrive-preview",
       "prepare-transcript-review", "apply-transcript-review", "prepare-topic-review",
-      "prepare-process-topic-review", "apply-process-topic-review",
+      "prepare-process-topic-review", "apply-process-topic-review", "process-topics",
       "prepare-knowledge-review", "apply-knowledge-review", "create-machine-evidence",
       "shutdown-active-runs",
     ]
@@ -1053,16 +1053,17 @@ struct SidebarItem {
       target.translationButton = translate
       addCard(processCard("Перевод", controls: [label, target, translate]), toLeft: left <= right)
     }
-    // The raw Topics JSON remains technical data.  A completed source with
-    // topics has an existing, human-reviewable Process representation instead:
-    // the review package is prepared only after the user explicitly asks to
-    // review it, and it retains the unreviewed machine authority until then.
+    // The raw Topics JSON remains technical data. The normal Process view
+    // reads the same persisted source-bound Topic result; review remains an
+    // explicit and separate human decision.
     if outputs["topics"] is String,
       let projectID, let runID, let sourceID = result["source_id"] as? String
     {
+      let open = button("Открыть темы", #selector(showProcessTopics(_:)))
+      open.toolTip = "\(projectID)\n\(runID)\n\(sourceID)"
       let review = button("Проверить темы", #selector(prepareTopicReview(_:)))
       review.toolTip = "\(projectID)\n\(runID)\n\(sourceID)"
-      addCard(processCard("Темы и таймкоды", controls: [review]), toLeft: left <= right)
+      addCard(processCard("Темы и таймкоды", controls: [open, review]), toLeft: left <= right)
     }
     if left + right > 0 {
       add(grid)
@@ -1205,6 +1206,59 @@ struct SidebarItem {
         }
       }
     }
+  }
+  @objc private func showProcessTopics(_ sender: NSButton) {
+    let identifiers = sender.toolTip?.split(separator: "\n", maxSplits: 2).map(String.init) ?? []
+    guard identifiers.count == 3 else { return }
+    sender.isEnabled = false; sender.title = "Открываю темы…"
+    let bridge = self.bridge!
+    serviceQueue.async {
+      do {
+        let result = try bridge.json("process-topics", request: [
+          "project_id": identifiers[0], "run_id": identifiers[1], "source_id": identifiers[2]])["result"] as? [String: Any] ?? [:]
+        guard let topicStatus = result["status"] as? String,
+              topicStatus == "PROCESS_MACHINE_TOPICS" || topicStatus == "PROCESS_TOPIC_REVIEWED" else { throw BridgeError.invalidResponse }
+        DispatchQueue.main.async {
+          sender.title = "Открыть темы"; sender.isEnabled = true
+          self.presentProcessTopics(result, reviewed: topicStatus == "PROCESS_TOPIC_REVIEWED")
+        }
+      } catch {
+        DispatchQueue.main.async {
+          sender.title = "Открыть темы"; sender.isEnabled = true
+          self.status.textColor = .systemRed
+          self.status.stringValue = error.localizedDescription
+        }
+      }
+    }
+  }
+  private func presentProcessTopics(_ result: [String: Any], reviewed: Bool) {
+    guard let topics = result["topics"] as? [[String: Any]], !topics.isEmpty else {
+      status.stringValue = "Нет сохранённых тем"; return
+    }
+    let alert = NSAlert()
+    alert.messageText = "Темы и таймкоды"
+    alert.informativeText = reviewed
+      ? "Сохранённые проверенные темы для этого источника."
+      : "Машинные темы. Перед использованием их можно проверить."
+    let stack = FlippedStackView()
+    stack.orientation = .vertical; stack.alignment = .leading; stack.spacing = 10
+    for topic in topics {
+      let start = topic["start_seconds"] as? Double ?? 0
+      let end = topic["end_seconds"] as? Double ?? 0
+      let timing = NSTextField(labelWithString: String(format: "Время: %.3f–%.3f с", start, end))
+      timing.textColor = .secondaryLabelColor; timing.widthAnchor.constraint(equalToConstant: 560).isActive = true
+      stack.addArrangedSubview(timing)
+      let title = NSTextField(wrappingLabelWithString: "Тема: \(topic["title"] as? String ?? "")")
+      title.font = .systemFont(ofSize: 14, weight: .semibold); title.widthAnchor.constraint(equalToConstant: 560).isActive = true
+      stack.addArrangedSubview(title)
+      let summary = NSTextField(wrappingLabelWithString: "Краткое содержание: \(topic["summary"] as? String ?? "")")
+      summary.widthAnchor.constraint(equalToConstant: 560).isActive = true; stack.addArrangedSubview(summary)
+    }
+    let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 590, height: 420))
+    scroll.hasVerticalScroller = true; scroll.documentView = stack
+    stack.setFrameSize(NSSize(width: 570, height: stack.fittingSize.height)); alert.accessoryView = scroll
+    alert.addButton(withTitle: "Готово")
+    _ = alert.runModal()
   }
   // Process v1 subset of the pinned Topic contract: confirmation, rename,
   // reject and defer.  It never asks the user to classify Knowledge.
