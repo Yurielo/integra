@@ -72,6 +72,7 @@ class ProcessTranslationTests(unittest.TestCase):
     def test_translation_accepts_json_timestamp_roundoff_within_half_millisecond(self):
         def rounded_translation(subtitles, output, *, target, runtime):
             payload = self._translation(subtitles, output, target=target, runtime=runtime)
+            payload["cues"][0]["id"] = 1
             payload["cues"][0]["end_seconds"] = 1.2499999999999998
             output.write_text(json.dumps(payload), encoding="utf-8")
             return payload

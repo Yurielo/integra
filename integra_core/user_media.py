@@ -300,7 +300,7 @@ def _translation_provenance(
 
     for translated, original in zip(cues, source_cues):
         if (not isinstance(translated, dict) or not isinstance(translated.get("text"), str) or
-            not translated["text"].strip() or translated.get("id") != original["segment_id"].rsplit(":", 1)[-1] or
+            not translated["text"].strip() or str(translated.get("id")) != original["segment_id"].rsplit(":", 1)[-1] or
             not has_same_timestamp(translated.get("start_seconds"), original["start_seconds"]) or
             not has_same_timestamp(translated.get("end_seconds"), original["end_seconds"])):
             raise ValueError("translation timing does not match the source transcript")
