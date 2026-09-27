@@ -139,6 +139,21 @@ Path(prefix + '.srt').write_text('1\\n00:00:00,000 --> 00:00:01,250\\n' + text +
             self.assertEqual(attempts[1][attempts[1].index("-vsd") + 1], "350")
             self.assertEqual(json.loads(Path(result["record"]).read_text())["mode"], "careful")
 
+    def test_normal_mode_uses_default_quality_profile_and_persists_executed_mode(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); source, work, args = self.fixture(root)
+            calls = self.scripted_whisper(root, args["whisper"], recover=True)
+            result = asr.transcribe(source, work, **args)
+            attempts = [json.loads(line) for line in calls.read_text().splitlines()]
+            self.assertEqual(len(attempts), 2)
+            self.assertEqual(attempts[0][attempts[0].index("-bo") + 1], "5")
+            self.assertEqual(attempts[0][attempts[0].index("-bs") + 1], "5")
+            self.assertEqual(attempts[0][attempts[0].index("-vt") + 1], "0.55")
+            self.assertEqual(attempts[0][attempts[0].index("-vsd") + 1], "550")
+            self.assertEqual(attempts[1][attempts[1].index("-bo") + 1], "3")
+            self.assertEqual(attempts[1][attempts[1].index("-bs") + 1], "3")
+            self.assertEqual(json.loads(Path(result["record"]).read_text())["mode"], "normal")
+
     def test_persistent_repetition_is_quality_error_not_success(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory); source, work, args = self.fixture(root)

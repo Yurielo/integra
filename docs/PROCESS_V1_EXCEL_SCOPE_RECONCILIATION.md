@@ -46,7 +46,7 @@ Therefore: 51 original MUST − 4 approved transfers = 47 current Process MUST. 
 | 13 | Clean TXT | MUST | PROCESS | MUST | Clean TXT | DONE | Retained. |
 | 14 | Review TXT | MUST | KNOWLEDGE | LATER | — | N/A | Owner correction: Review TXT / Evidence interaction is Knowledge; Clean TXT remains Process. |
 | 15 | Выбор языка исходной речи | MUST | PROCESS | MUST | Source-speech language | DONE | Candidate `candidate-v1-43bdfe7b93052a3f2f9b5b6b089179580ef5387ebe82d0e96ef69e612257b0cd` proves the supported Russian-only V02 GUI selection and `ru → ru` provenance; no detection or additional languages are claimed. |
-| 16 | Настройки качества распознавания | MUST | PROCESS | MUST | ASR quality settings | NOT_DONE | Retained. |
+| 16 | Настройки качества распознавания | MUST | PROCESS | MUST | ASR quality settings | DONE | The single normal/careful selector already is the bounded quality setting; requested/executed provenance and default are proven in `PROCESS_V1_ASR_QUALITY_SETTINGS_PROOF.md`. |
 | 17 | Диагностика качества распознавания | MUST | PROCESS | MUST | ASR diagnostics | NOT_DONE | Retained. |
 | 18 | Перевод расшифровки | MUST | PROCESS | MUST | Transcript translation | NOT_DONE | Retained; readable translation is Process. |
 | 19 | Выбор языка перевода | MUST | PROCESS | MUST | Translation-language choice | NOT_DONE | Retained. |
@@ -102,7 +102,7 @@ Therefore: 51 original MUST − 4 approved transfers = 47 current Process MUST. 
 
 ## Board reconciliation
 
-The active Board has 45 rows. Its states sum exactly: 30 DONE + 0 IN_PROGRESS + 14 NOT_DONE + 1 BLOCKED = 45.
+The active Board has 45 rows. Its states sum exactly: 31 DONE + 0 IN_PROGRESS + 13 NOT_DONE + 1 BLOCKED = 45.
 
 One explicit DoD aggregation explains the distinct denominators:
 
