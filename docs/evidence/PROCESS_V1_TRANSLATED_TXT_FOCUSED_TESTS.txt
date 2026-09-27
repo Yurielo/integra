@@ -1,0 +1,12 @@
+Command:
+python3 -m unittest tests.test_translated_txt tests.test_process_translation tests.test_process_results_surface -v
+
+Result:
+Ran 20 tests in 0.033s
+OK (skipped=8)
+
+The eight skips are existing environment-dependent pinned SeminarText runtime
+tests. The new deterministic tests passed: new UTF-8 TXT publication, legacy
+reopen without provider invocation, fail-closed source-hash mismatch, and
+materialization failure isolation. Swift type-checking, Python compilation and
+git diff --check also passed.

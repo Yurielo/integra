@@ -1,0 +1,43 @@
+{
+  "artifact_type": "integra.process_translated_txt_e2e",
+  "candidate_id": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583",
+  "manifest_identity_sha256": "a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583",
+  "bundle_digest": "2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8",
+  "product_source": {
+    "commit_sha": "9f7122bb1d823e82db93eaede08e6a90c98775b6",
+    "tree_sha": "cdf024f5c2ea77203bd28ce8cbbc58c7970f8a91"
+  },
+  "state": "PASS",
+  "scenario": "A packaged Candidate reopened a real completed Russian-to-English translation created by the prior accepted Process route and materialized its managed text without a provider invocation.",
+  "source_speech_language": "ru",
+  "requested_target_language": "en",
+  "executed_target_language": "en",
+  "translated_text": {
+    "encoding": "UTF-8",
+    "bytes": 51,
+    "sha256": "215ff874d7580fefff1265ecc06661ab4d7aab406b85e0395d78a71c1ebfb269"
+  },
+  "reopen": {
+    "state": "COMPLETED",
+    "sha256_unchanged": true,
+    "provider_invocation": "NONE"
+  },
+  "export": {
+    "byte_equal": true,
+    "sha256": "215ff874d7580fefff1265ecc06661ab4d7aab406b85e0395d78a71c1ebfb269"
+  },
+  "failure_isolation": {
+    "tampered_source_hash": "REJECTED_BEFORE_TEXT_PUBLICATION",
+    "translation_fallback": "NONE"
+  },
+  "assertions": [
+    "The result is a managed UTF-8 TXT derived only from persisted translation JSON and matching Integra provenance.",
+    "Project, source identifier, transcript hash, subtitle hash, translation hash, requested language and executed language bind before materialization.",
+    "The normal Results card uses the existing Open and Export controls; raw translation JSON remains technical data.",
+    "Reopening an accepted legacy translation does not rerun translation and preserves its original translation JSON."
+  ],
+  "limitations": [
+    "This outcome exposes readable translated TXT only; it does not add translated SRT, topic translation, another language, semantic acceptance, Stage B, Knowledge or Studio work.",
+    "Translation remains a review-required machine result."
+  ]
+}
