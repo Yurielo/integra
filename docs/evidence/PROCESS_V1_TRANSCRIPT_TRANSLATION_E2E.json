@@ -1,0 +1,29 @@
+{
+  "artifact_type": "integra.process_translation_e2e",
+  "candidate_id": "candidate-v1-de25ee770d537b88eafd805249769e50694f7f5b56daab2f0771ec2c7706fd3d",
+  "bundle_digest": "3506954cab9fc7a4bd92f681e638fad2974042981f47af24bb2433cbf2cc215a",
+  "source_commit": "7150d711f127a4aeaecf519c65b91f88fda64447",
+  "state": "PASS",
+  "scenario": "Completed Russian ASR result reopened through the normal Process translation action.",
+  "source_speech_language": "ru",
+  "target_language": "en",
+  "asr_reuse": "REUSED",
+  "translated_cue_count": 1,
+  "translation_output_sha256": "96958e705a40d80b86ba8f9be266d1a356189d9ab4bba87d1f895a08e2145401",
+  "provenance": {
+    "component": "videotext",
+    "commit_sha": "2e098d1705b6815628bee1e023f4742718eabf02",
+    "adapter_sha256": "83e55d3cb82522cb431ee20617510b0c39f79ae0fa5309daedf5c7ff9911a577",
+    "model": "qwen3:8b"
+  },
+  "assertions": [
+    "The completed source transcript and SRT were reused without another ASR execution.",
+    "The persisted result contains translation.json and Integra-owned translation_provenance.json.",
+    "The result preserves cue count and source timing, declares ru to en, and binds the output digest.",
+    "The normal result surface opens readable translated cue text; provider metadata remains technical data."
+  ],
+  "limitations": [
+    "This bounded proof does not add a target-language selector.",
+    "This bounded proof does not create translated TXT or translate topics."
+  ]
+}
