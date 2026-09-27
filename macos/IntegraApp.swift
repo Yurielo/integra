@@ -460,7 +460,7 @@ struct SidebarItem {
     case "transcript": return "Расшифровка"
     case "subtitles": return "Субтитры"
     case "word_timeline": return "Word Timeline"
-    case "translation": return "Перевод VideoText"
+    case "translation": return "Перевод"
     case "topics": return "Темы и таймкоды"
     case "audio_enhancement": return "Улучшение звука"
     case "document_analysis": return "Анализ документа"
@@ -1018,10 +1018,15 @@ struct SidebarItem {
     if let path = outputs["transcript_cleaned"] as? String {
       addCard(processCard("Очищенный текст", controls: outputControls(path)), toLeft: false)
     }
-    // A translation JSON record is technical data. Only a future readable TXT
-    // representation may enter this user-facing card.
-    if let path = readableOutput(outputs, keys: ["translation_txt", "translated_txt"]) {
-      addCard(processCard("Перевод", controls: outputControls(path)), toLeft: left <= right)
+    if let path = outputs["translation"] as? String {
+      let open = button("Открыть", #selector(openTranslation(_:))); open.toolTip = path
+      addCard(processCard("Перевод", controls: [open]), toLeft: left <= right)
+    } else if outputs["transcript"] is String,
+      let projectID, let runID, let sourceID = result["source_id"] as? String
+    {
+      let translate = button("Перевести", #selector(translateTranscript(_:)))
+      translate.toolTip = "\(projectID)\n\(runID)\n\(sourceID)"
+      addCard(processCard("Перевод", controls: [translate]), toLeft: left <= right)
     }
     // The raw Topics JSON remains technical data.  A completed source with
     // topics has an existing, human-reviewable Process representation instead:
@@ -1078,7 +1083,7 @@ struct SidebarItem {
     let technical = outputs.compactMap { key, value -> (String, String)? in
       guard let path = value as? String else { return nil }
       switch key {
-      case "transcript", "transcript_cleaned", "translation_txt", "translated_txt", "topics_txt", "topics_markdown": return nil
+      case "transcript", "transcript_cleaned", "topics_txt", "topics_markdown": return nil
       default: return (key, path)
       }
     }.sorted { $0.0 < $1.0 }
@@ -1376,6 +1381,51 @@ struct SidebarItem {
     } catch {
       status.textColor = .systemRed; status.stringValue = error.localizedDescription
     }
+  }
+  @objc private func translateTranscript(_ sender: NSButton) {
+    let identifiers = sender.toolTip?.split(separator: "\n", maxSplits: 2).map(String.init) ?? []
+    guard identifiers.count == 3 else { return }
+    sender.isEnabled = false; sender.title = "Перевожу…"
+    let service = bridge!
+    serviceQueue.async {
+      do {
+        let result = try service.json("translate-transcript", request: [
+          "project_id": identifiers[0], "run_id": identifiers[1], "source_id": identifiers[2]])["result"] as? [String: Any]
+        let run = result?["run"] as? [String: Any]
+        guard let newRunID = run?["run_id"] as? String else { throw BridgeError.invalidResponse }
+        DispatchQueue.main.async {
+          self.runID = newRunID
+          self.renderOperations()
+        }
+      } catch {
+        DispatchQueue.main.async {
+          sender.isEnabled = true; sender.title = "Перевести"
+          self.status.textColor = .systemRed
+          self.status.stringValue = error.localizedDescription
+        }
+      }
+    }
+  }
+  @objc private func openTranslation(_ sender: NSButton) {
+    guard let path = sender.toolTip,
+      let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
+      let payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+      let cues = payload["cues"] as? [[String: Any]],
+      let source = payload["source_language"] as? String,
+      let target = payload["target_language"] as? String
+    else { status.stringValue = "Сохранённый перевод недоступен."; return }
+    let text = cues.compactMap { $0["text"] as? String }.joined(separator: "\n\n")
+    guard !text.isEmpty else { status.stringValue = "Сохранённый перевод не содержит текста."; return }
+    let alert = NSAlert()
+    alert.messageText = "Перевод расшифровки"
+    alert.informativeText = "Исходный язык: \(source.uppercased()) · язык перевода: \(target.uppercased()). Машинный перевод требует проверки."
+    let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 620, height: 360))
+    scroll.hasVerticalScroller = true
+    let view = NSTextView(frame: scroll.bounds)
+    view.isEditable = false; view.string = text
+    scroll.documentView = view; alert.accessoryView = scroll
+    alert.addButton(withTitle: "Готово")
+    alert.runModal()
   }
   @objc private func exportTranscript(_ sender: NSButton) {
     let identifiers = sender.toolTip?.split(separator: "\n", maxSplits: 2).map(String.init) ?? []

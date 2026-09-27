@@ -50,6 +50,24 @@ def prepare_run(project_dir: Path, plan: dict[str,Any], *, recognition_mode: str
     atomic_json(_runs(project_dir)/(run_id.removeprefix("urn:integra:run:")+".json"),record); return record
 
 
+def prepare_transcript_translation_run(project_dir: Path, run_id: str, source_id: str) -> dict[str, Any]:
+    """Start #18 from an already completed source without inventing a transcript."""
+    previous = read_run(project_dir, run_id)
+    source = next((item for item in previous.get("plan", {}).get("sources", [])
+                   if item.get("source_id") == source_id), None)
+    completed = next((item for item in previous.get("source_results", [])
+                      if item.get("source_id") == source_id and item.get("state") == "COMPLETED"), None)
+    if not isinstance(source, dict) or not isinstance(completed, dict):
+        raise ValueError("completed transcript source is unavailable")
+    outputs = completed.get("outputs", {})
+    if not isinstance(outputs.get("transcript"), str) or not isinstance(outputs.get("subtitles"), str):
+        raise ValueError("completed transcript is unavailable")
+    plan = build_plan([source], ["translation"])
+    mode = previous.get("recognition", {}).get("requested_mode", "normal")
+    language = previous.get("source_speech_language", {}).get("requested", "ru")
+    return prepare_run(project_dir, plan, recognition_mode=mode, source_speech_language=language)
+
+
 def run_path(project_dir:Path,run_id:str)->Path:
     try: token=str(uuid.UUID(run_id.removeprefix("urn:integra:run:")))
     except (AttributeError,ValueError) as error: raise ValueError("invalid run ID") from error
@@ -354,5 +372,18 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                           error="Расшифровка не прошла проверку качества. Проверьте аудио и повторите обработку.",
                           failed_at=now())
         else:
-            latest.update(state="FAILED", error=str(error)[:500], failed_at=now())
+            # A downstream translation failure must not hide a durable source
+            # transcript behind a raw provider message.  The completed job's
+            # upstream outputs remain available from this failed run.
+            prior_job = next((item for item in reversed(json.loads(jobs_path.read_bytes()).get("jobs", []))
+                              if item.get("run_id") == run_id and item.get("source_id") == source.get("source_id")), None)
+            if isinstance(prior_job, dict) and isinstance(prior_job.get("outputs"), dict) and prior_job["outputs"]:
+                latest["source_results"].append({"source_id": source["source_id"],
+                    "display_name": source["display_name"], "state": "FAILED",
+                    "outputs": prior_job["outputs"], "job_id": prior_job.get("job_id")})
+            selected = latest.get("plan", {}).get("selected_outputs", [])
+            message = ("Перевод расшифровки не выполнен. Исходная расшифровка сохранена; "
+                       "повторите попытку после проверки локальной обработки."
+                       if "translation" in selected else str(error)[:500])
+            latest.update(state="FAILED", error=message, failed_at=now())
         atomic_json(path,latest); raise

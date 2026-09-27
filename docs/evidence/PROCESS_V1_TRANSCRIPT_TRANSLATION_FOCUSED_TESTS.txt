@@ -1,0 +1,14 @@
+Focused Process translation regressions
+
+Command:
+python3 -m unittest tests.test_process_translation tests.test_asr_reuse tests.test_process_results_surface tests.test_capabilities tests.test_videotext_runtime tests.test_application_runtime
+swiftc -parse-as-library -typecheck macos/IntegraApp.swift
+git diff --check
+
+Result:
+63 tests run, 0 failures, 0 errors, 23 declared runtime-dependent skips.
+
+Full supported discovery before the Proposal Lite overlay:
+802 tests run, 89 declared skips; 3 expected governance failures because the
+new governed product paths had no Proposal Lite declaration yet. No product
+test failed.
