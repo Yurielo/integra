@@ -44,7 +44,12 @@
     "candidate_evidence": {"path": "docs/evidence/PROCESS_V1_ASR_DIAGNOSTICS_E2E.json", "sha256": "406daf082bcc6756af83554dad5b611cda58ae5cdbb4e415c8940b63f7514f82"},
     "report": {"path": "docs/PROCESS_V1_ASR_DIAGNOSTICS_PROOF.md", "sha256": "74ab4a4d7a3667fe61ac01ed3d700ad77dece71492c857d6b36b48ec7d83fd7f"}
   },
-  "owner_acceptance": null,
+  "owner_acceptance": {
+    "decision": "PILOT_ACCEPTED",
+    "authority_ref": "PRODUCT OWNER AUTHORIZATION: ACCEPT_PROPOSED_BASELINE proposal-process-v1-asr-diagnostics candidate-v1-ec1ae4eaccc5a2af225490135dc6385920c5f26ee0433059311be9074f6a2e57",
+    "scope": "ASR diagnostics — Excel #17 / V02 + S02 bounded baseline acceptance only",
+    "promotion_authorized": false
+  },
   "allowed_overlay_paths": [
     "docs/PROCESS_V1_ASR_DIAGNOSTICS_PROOF.md",
     "docs/PROCESS_V1_OWNER_SCOPE_AND_COMPLETION_MAP.md",
