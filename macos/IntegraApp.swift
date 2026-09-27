@@ -186,6 +186,7 @@ struct SidebarItem {
   private var sources = [[String: Any]](), capabilities = [[String: Any]](),
     selected = Set<String>(), plan: [String: Any]?
   private var recognitionMode = "normal"
+  private var sourceSpeechLanguage = "ru"
   private var projectID: String?, runID: String?, timer: Timer?
   private var mediaPlayer: AVPlayer?, mediaWindow: NSWindow?
   private var reviewPlayer: AVPlayer?
@@ -521,6 +522,13 @@ struct SidebarItem {
     if sources.contains(where: { ($0["kind"] as? String) == "MEDIA" || ($0["source_type"] as? String) == "YOUTUBE_VIDEO" }) {
       let mode = NSSegmentedControl(labels: ["Обычный", "Тщательный"], trackingMode: .selectOne, target: self, action: #selector(changeRecognitionMode(_:)))
       mode.selectedSegment = recognitionMode == "careful" ? 1 : 0
+      let language = NSPopUpButton()
+      language.addItem(withTitle: "Русский")
+      language.selectItem(at: 0)
+      language.target = self
+      language.action = #selector(changeSourceSpeechLanguage(_:))
+      add(row("Язык исходной речи", detail: "Русский — единственный язык, поддерживаемый текущим режимом распознавания."))
+      add(language)
       add(row("Режим распознавания", detail: "Выберите тщательный режим, когда важнее полнота распознавания, чем скорость."))
       add(mode)
     }
@@ -618,6 +626,9 @@ struct SidebarItem {
   @objc private func changeRecognitionMode(_ sender: NSSegmentedControl) {
     recognitionMode = sender.selectedSegment == 1 ? "careful" : "normal"
   }
+  @objc private func changeSourceSpeechLanguage(_ sender: NSPopUpButton) {
+    sourceSpeechLanguage = sender.indexOfSelectedItem == 0 ? "ru" : ""
+  }
   @objc private func addYouTube() {
     let alert = NSAlert()
     alert.messageText = "YouTube"
@@ -647,6 +658,7 @@ struct SidebarItem {
         DispatchQueue.main.async {
           self.sources = detected
           self.recognitionMode = "normal"
+          self.sourceSpeechLanguage = "ru"
           self.capabilities = caps
           if let index = CommandLine.arguments.firstIndex(of: "--ui-probe-output"),
             CommandLine.arguments.indices.contains(index + 1)
@@ -697,10 +709,11 @@ struct SidebarItem {
     let bridge = self.bridge!
     let name = sources.first?["display_name"] as? String ?? "Новая обработка"
     let recognitionMode = self.recognitionMode
+    let sourceSpeechLanguage = self.sourceSpeechLanguage
     serviceQueue.async {
       do {
         let result =
-          try bridge.json("execute-plan", request: ["plan": plan, "name": name, "recognition_mode": recognitionMode])["result"]
+          try bridge.json("execute-plan", request: ["plan": plan, "name": name, "recognition_mode": recognitionMode, "source_speech_language": sourceSpeechLanguage])["result"]
           as? [String: Any]
         let project = result?["project"] as? [String: Any]
         let run = result?["run"] as? [String: Any]
@@ -909,6 +922,13 @@ struct SidebarItem {
       add(row("Состояние: \(names[state] ?? state)", detail: "Готово источников: \(done) из \(total)"))
       if let recognition = run["recognition"] as? [String: Any], let mode = recognition["requested_mode"] as? String {
         add(row("Режим распознавания", detail: mode == "careful" ? "Тщательный" : "Обычный"))
+      }
+      if let language = run["source_speech_language"] as? [String: Any],
+        let requested = language["requested"] as? String
+      {
+        let executed = language["executed"] as? String
+        let detail = (executed ?? requested) == "ru" ? "Русский" : "Не поддерживается"
+        add(row("Язык исходной речи", detail: detail))
       }
       if state == "RUNNING" || state == "QUEUED" {
         if !detail.isEmpty { add(row("Подробности", detail: detail)) }

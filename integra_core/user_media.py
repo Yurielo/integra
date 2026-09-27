@@ -184,9 +184,10 @@ def ffmpeg_preflight() -> dict[str, str]:
     return {"state": "READY", "ffmpeg": ffmpeg}
 
 
-def preflight(*, hash_model: bool = True) -> dict[str, Any]:
+def preflight(*, hash_model: bool = True, source_speech_language: str = "ru") -> dict[str, Any]:
     ffmpeg, whisper, model = _tools()
-    asr_runtime = asr.preflight(Path(ffmpeg), Path(whisper), Path(model))
+    asr_runtime = asr.preflight(Path(ffmpeg), Path(whisper), Path(model),
+                                source_speech_language=source_speech_language)
     result={"state":"READY", "ffmpeg":ffmpeg, "whisper_cli":whisper,
             "model":model, "supported_extensions":sorted(SUPPORTED), "asr_runtime":asr_runtime}
     if hash_model: result["model_sha256"]=hashlib.sha256(Path(model).read_bytes()).hexdigest()
@@ -292,19 +293,25 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
             return job
         _, whisper, model = _tools()
         recognition_mode = job.get("recognition_mode", "normal")
+        source_speech_language = job.get("source_speech_language", "ru")
         checkpoint("RUNNING", 25, "Проверяю возможность повторного использования расшифровки", run_stage="transcript")
         recognized = asr_reuse.transcribe_or_reuse(project_dir, source, work, ffmpeg=Path(ffmpeg), whisper=Path(whisper), model=Path(model),
             expected_source_sha256=job["source_sha256"],
             cancelled=lambda: _is_run_cancelled(project_dir, job.get("run_id")),
             progress=lambda message: checkpoint("RUNNING", 25, message, run_stage="transcript"),
-            recognition_mode=recognition_mode)
+            recognition_mode=recognition_mode, source_speech_language=source_speech_language)
         if recognized["provenance"].get("mode") != recognition_mode:
             raise ValueError("ASR runtime executed a different recognition mode")
+        if recognized["provenance"].get("executed_source_speech_language") != source_speech_language:
+            raise ValueError("ASR runtime executed a different source-speech language")
         job["asr_reuse"] = recognized["reuse"]
         job["recognition"] = {"requested_mode": recognition_mode,
                               "executed_mode": recognized["provenance"]["mode"],
                               "runtime": {key: recognized["provenance"][key] for key in
                                           ("component", "commit_sha", "entrypoint_sha256", "whisper_sha256", "model_sha256")}}
+        job["source_speech_language"] = {"requested": source_speech_language,
+                                          "executed": recognized["provenance"]["executed_source_speech_language"],
+                                          "mode": recognized["provenance"]["source_speech_language_mode"]}
         subtitles = Path(recognized["srt"])
         segments = _parse_srt(subtitles.read_text(encoding="utf-8"), job["source_id"])
         if not segments: raise ValueError("transcription produced no timed speech segments")

@@ -1,0 +1,83 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.process_v1.source_speech_language_candidate_evidence",
+  "status": "PASS",
+  "candidate_id": "candidate-v1-43bdfe7b93052a3f2f9b5b6b089179580ef5387ebe82d0e96ef69e612257b0cd",
+  "manifest_identity_sha256": "43bdfe7b93052a3f2f9b5b6b089179580ef5387ebe82d0e96ef69e612257b0cd",
+  "bundle_digest": "306e3301484b24f1933c3b3ef51583ab4c786263b4ac3ecea241060177aa5eb1",
+  "product_source": {
+    "commit_sha": "ccdc8bf1f63280df889483904720a9fb2d618345",
+    "tree_sha": "e71db703513b66ebe17148bfaeb671586bf21e7f"
+  },
+  "capability": "process.source_speech_language.v02",
+  "user_experience": {
+    "label": "Язык исходной речи",
+    "supported_display_values": ["Русский"],
+    "provider_names_or_codes_in_normal_gui": false,
+    "automatic_detection_claimed": false
+  },
+  "runtime_contract": {
+    "provider": "seminartext",
+    "provider_commit": "13644d262776aacdf36221b9a9fc7ebd0a7c0737",
+    "entrypoint_sha256": "30d8c1bd6f5ca717391b168cba71228a030009feaec4eb443bb1e76dab230a6c",
+    "supported_requested_value": "ru",
+    "executed_value": "ru",
+    "language_mode": "FIXED",
+    "automatic_detection": false
+  },
+  "packaged_real_asr": {
+    "fixture": "short synthetic Russian speech generated locally; no user media",
+    "normal": {
+      "state": "COMPLETED",
+      "recognition_mode": "normal",
+      "requested_executed_language": {"requested": "ru", "executed": "ru", "mode": "FIXED"},
+      "transcript_size_bytes": 124,
+      "subtitles_size_bytes": 156
+    },
+    "careful": {
+      "state": "COMPLETED",
+      "recognition_mode": "careful",
+      "requested_executed_language": {"requested": "ru", "executed": "ru", "mode": "FIXED"},
+      "transcript_size_bytes": 124,
+      "subtitles_size_bytes": 156
+    },
+    "persistence": {
+      "run": "source_speech_language.requested/executed/mode",
+      "source_result": "source_speech_language.requested/executed/mode",
+      "provider_provenance": "executed_source_speech_language and source_speech_language_mode"
+    }
+  },
+  "failure_truthfulness": {
+    "candidate_bridge_request": "en",
+    "result": "source-speech language is unsupported",
+    "asr_run_created": false,
+    "fallback_to_ru": false
+  },
+  "candidate_checks": [
+    "candidate manifest validation: PASS",
+    "native self-test: PASS",
+    "packaged normal ASR E2E with bundled bridge: PASS",
+    "packaged careful ASR E2E with bundled bridge: PASS",
+    "packaged unsupported-language rejection before ASR: PASS",
+    "focused Process, Results, Topic Review, recovery and multi-source suite: 95 passed, 31 environment-declared skips"
+  ],
+  "archive": {
+    "receipt": "docs/evidence/PROCESS_V1_SOURCE_SPEECH_LANGUAGE_CANDIDATE_ARCHIVE.json",
+    "verification": "ARCHIVAL_BYTE_INTEGRITY"
+  },
+  "boundaries": {
+    "normal_asr_semantics_changed": false,
+    "careful_asr_semantics_changed": false,
+    "canonical_process_routing_changed": false,
+    "seminartext_not_removed": true,
+    "videotext_not_selected_as_asr_provider": true,
+    "stage_b_not_started": true,
+    "knowledge_and_studio_not_changed": true,
+    "installation_or_deployment_performed": false,
+    "process_v1_user_accepted": false
+  },
+  "limitations": [
+    "The exact pinned production provider supports only Russian; no automatic detection or additional language is claimed.",
+    "A visual accessibility capture could not be completed because the Mac screen locked after native launch; source-level UI tests, native self-test and packaged bridge E2E passed."
+  ]
+}

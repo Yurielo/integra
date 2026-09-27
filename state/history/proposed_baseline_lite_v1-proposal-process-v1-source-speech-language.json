@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.proposed_product_baseline",
+  "proposal_id": "proposal-process-v1-source-speech-language",
+  "status": "PROPOSED_BASELINE_VALID",
+  "base_current_id": "current-v2-f9ef07f48ff155645239f9c72b454732f53fecabdbf9379ad4d25b1a5acbdc9a",
+  "base_main": {
+    "commit_sha": "e30a3922e01587033817faba3a689a5a934c60e3",
+    "tree_sha": "5265735b2301bce521ea09466f96d7d697c6222a"
+  },
+  "proposed_source": {
+    "commit_sha": "ccdc8bf1f63280df889483904720a9fb2d618345",
+    "tree_sha": "e71db703513b66ebe17148bfaeb671586bf21e7f"
+  },
+  "proposed_head": {
+    "commit_sha": "a78453d1c88acecd3f856fafef975ce7e7281562",
+    "tree_sha": "d01ce0d7986383d7060e76e5841bb4affbaac023"
+  },
+  "intended_scope": {
+    "wp": "Excel #15 / V02 Source-speech language",
+    "journey": "bounded normal Process source-language selection for the currently supported Russian ASR contract, with truthful requested/executed provenance and Normal/Careful compatibility; no automatic detection, provider migration, routing change, Stage B, installation or deployment"
+  },
+  "candidate": {
+    "candidate_id": "candidate-v1-43bdfe7b93052a3f2f9b5b6b089179580ef5387ebe82d0e96ef69e612257b0cd",
+    "identity_sha256": "43bdfe7b93052a3f2f9b5b6b089179580ef5387ebe82d0e96ef69e612257b0cd",
+    "manifest_digest": "4e50d4156dca216d9b3fd90d8dfb72112f02d3889b90b101af6511ee1fb9d019",
+    "bundle_digest": "306e3301484b24f1933c3b3ef51583ab4c786263b4ac3ecea241060177aa5eb1"
+  },
+  "delta": [
+    {"path": "integra_core/application_runtime.py", "before_sha256": "7bc6a762f57719ac1328bc25104dd4ad963f514cb5394fa0c2128cbf25173b19", "after_sha256": "772c5ee3811d520d3ee198c87d3a7858a173d03136d034c1d209a207a0db124c"},
+    {"path": "integra_core/asr_reuse.py", "before_sha256": "53abead06ca2e9856c1cc6e533ddda2e47ec75640b66bc1bd67fda8bc621f1c6", "after_sha256": "693487657888b92370c23cd26f361e753127abc94416a37ea314b0a547de3e85"},
+    {"path": "integra_core/seminartext_asr_runtime.py", "before_sha256": "3489a5125a0c66babe2c45ea1e9f33f5050049713e68f266a24587b9a8e003bf", "after_sha256": "955d59582001e02fca3c7e79d05e9075562d2667e042b91013f246d8d66c3d6e"},
+    {"path": "integra_core/user_media.py", "before_sha256": "7dc9e7ab2013a7c0f67b66f23a7d28d93e8af5d49cf8e689f4e8b8c22b14a945", "after_sha256": "71663cf3bb69e0406bb3ee023b1fd13402cacb1cc031907a4e5aafcbda9b4c7b"},
+    {"path": "macos/IntegraApp.swift", "before_sha256": "fedf964337911cd65df3e0f7c8ee0d7453f9537cbc3d2c89f3351d450b2d99fc", "after_sha256": "5e27857b75cbc3173ef39462eb5d900269242595e90bddd75800cacdb4dc3edf"},
+    {"path": "macos/Resources/bridge.py", "before_sha256": "8f573b4ec5653b1680d7748d18049b33d2971d9ab7e51382645ff80b28d225b8", "after_sha256": "69037bc9e878a9d82e9ec96ad15535120b07b8eab0531cac8e6bbcc4b169155d"},
+    {"path": "tests/test_macos_app.py", "before_sha256": "54d3636c977b969f5c57160d7e13730c95ed080fca4a4439493ae5a0f6856d6a", "after_sha256": "4dbf55e5798dec1da4e2582f3e78c33d90a56104b0da10fc9741bdadd16e8537"}
+  ],
+  "historical_test_successors": [],
+  "gates": [
+    {"name": "candidate-manifest", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_SOURCE_SPEECH_LANGUAGE_CANDIDATE_MANIFEST.json"},
+    {"name": "candidate-archive", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_SOURCE_SPEECH_LANGUAGE_CANDIDATE_ARCHIVE.json"},
+    {"name": "packaged-normal-and-careful-asr", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_SOURCE_SPEECH_LANGUAGE_EVIDENCE.json"},
+    {"name": "focused-process-regressions", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_SOURCE_SPEECH_LANGUAGE_FOCUSED_TESTS.txt"}
+  ],
+  "evidence": {
+    "candidate_manifest": {"path": "docs/evidence/PROCESS_V1_SOURCE_SPEECH_LANGUAGE_CANDIDATE_MANIFEST.json", "sha256": "4e50d4156dca216d9b3fd90d8dfb72112f02d3889b90b101af6511ee1fb9d019"},
+    "candidate_evidence": {"path": "docs/evidence/PROCESS_V1_SOURCE_SPEECH_LANGUAGE_EVIDENCE.json", "sha256": "2200d0c6edba4599d3f973952701e0268e15c51b1214b945f78fc7f42220b87d"},
+    "report": {"path": "docs/PROCESS_V1_SOURCE_SPEECH_LANGUAGE_PROOF.md", "sha256": "27bb92f5110b851f2e60877b8336aa25e2bd83acd1f8b82fa2f7176f6c9eead1"}
+  },
+  "owner_acceptance": {
+    "decision": "PILOT_ACCEPTED",
+    "authority_ref": "PRODUCT OWNER AUTHORIZATION: ACCEPT_PROPOSED_BASELINE proposal-process-v1-source-speech-language candidate-v1-43bdfe7b93052a3f2f9b5b6b089179580ef5387ebe82d0e96ef69e612257b0cd",
+    "scope": "Source-speech language — Excel #15 / V02 bounded baseline acceptance only",
+    "promotion_authorized": false
+  },
+  "allowed_overlay_paths": [
+    "docs/PROCESS_V1_SOURCE_SPEECH_LANGUAGE_PROOF.md",
+    "docs/evidence/PROCESS_V1_SOURCE_SPEECH_LANGUAGE_CANDIDATE_ARCHIVE.json",
+    "docs/evidence/PROCESS_V1_SOURCE_SPEECH_LANGUAGE_CANDIDATE_MANIFEST.json",
+    "docs/evidence/PROCESS_V1_SOURCE_SPEECH_LANGUAGE_EVIDENCE.json",
+    "docs/evidence/PROCESS_V1_SOURCE_SPEECH_LANGUAGE_FOCUSED_TESTS.txt"
+  ]
+}

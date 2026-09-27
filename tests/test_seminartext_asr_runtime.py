@@ -17,6 +17,11 @@ class SeminarTextASRTests(unittest.TestCase):
     def test_active_cli_pin_is_the_final_seminartext_artifact(self):
         self.assertEqual(asr.ENTRYPOINT_SHA256, "30d8c1bd6f5ca717391b168cba71228a030009feaec4eb443bb1e76dab230a6c")
 
+    def test_source_speech_language_is_limited_to_the_pinned_runtime_contract(self):
+        self.assertEqual(asr._source_speech_language("ru"), "ru")
+        with self.assertRaisesRegex(asr.ASRError, "Source-speech language"):
+            asr._source_speech_language("en")
+
     def test_native_failed_run_surfaces_quality_report_in_both_views(self):
         swift=(Path(__file__).resolve().parents[1]/"macos/IntegraApp.swift").read_text()
         self.assertIn('if state == "FAILED" { renderFailedASRReports(run) }',swift)

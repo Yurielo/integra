@@ -32,11 +32,12 @@ class ApplicationRuntimeTests(unittest.TestCase):
         with patch("integra_core.capabilities.preflight",return_value={"state":"READY"}):
             return build_plan(sources,["transcript"]), sources
 
-    def prepare_media_run(self, plan, *, recognition_mode="normal"):
+    def prepare_media_run(self, plan, *, recognition_mode="normal", source_speech_language="ru"):
         # The plan was built through the normal capability contract above;
         # this focused runtime test intentionally avoids local model discovery.
         with patch("integra_core.application_runtime.build_plan",return_value=plan):
-            return prepare_run(self.project,plan,recognition_mode=recognition_mode)
+            return prepare_run(self.project,plan,recognition_mode=recognition_mode,
+                               source_speech_language=source_speech_language)
 
     def test_careful_recognition_mode_is_validated_and_persisted_to_media_jobs(self):
         plan, sources = self.local_media_plan("careful.wav")
@@ -57,6 +58,25 @@ class ApplicationRuntimeTests(unittest.TestCase):
         self.assertEqual(completed["source_results"][0]["recognition"]["executed_mode"], "careful")
         with self.assertRaisesRegex(ValueError, "recognition mode"):
             self.prepare_media_run(plan, recognition_mode="draft")
+
+    def test_source_speech_language_is_validated_persisted_and_sent_to_media_jobs(self):
+        plan, _ = self.local_media_plan("language.wav")
+        run = self.prepare_media_run(plan, source_speech_language="ru")
+        self.assertEqual(run["source_speech_language"], {"requested": "ru"})
+        observed = []
+        def runner(_project, job_id):
+            job = json.loads((self.project / "jobs.json").read_bytes())["jobs"][-1]
+            self.assertEqual(job["job_id"], job_id)
+            observed.append(job)
+            return {"state": "COMPLETED", "outputs": {}, "source_speech_language": {
+                "requested": "ru", "executed": "ru", "mode": "FIXED"}}
+        with patch("integra_core.application_runtime.run_job", side_effect=runner):
+            completed = execute_run(self.project, run["run_id"])
+        self.assertEqual(observed[0]["source_speech_language"], "ru")
+        self.assertEqual(completed["source_speech_language"]["executed"], "ru")
+        self.assertEqual(completed["source_results"][0]["source_speech_language"]["executed"], "ru")
+        with self.assertRaisesRegex(ValueError, "source-speech language"):
+            self.prepare_media_run(plan, source_speech_language="en")
 
     def source_job_runner(self, *, failed=(), cancelled=(), reused=()):
         """Deterministic source-job boundary: no ASR/model runtime is invoked."""
