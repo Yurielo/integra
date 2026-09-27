@@ -1,0 +1,45 @@
+{
+  "artifact_type": "integra.process_translation_language_choice_e2e",
+  "candidate_id": "candidate-v1-6545998b95e0f2d84abc7cd82baaea79bf8aa3c80cdd6d76840f47e87a42f996",
+  "manifest_identity_sha256": "6545998b95e0f2d84abc7cd82baaea79bf8aa3c80cdd6d76840f47e87a42f996",
+  "bundle_digest": "a344385ab7ab27812752c92530bb682313018b420363f9f3c91ae48500003faf",
+  "product_source": {
+    "commit_sha": "df45022bd4dbd68ccc7a770e969418d35452bca3",
+    "tree_sha": "0956c40a662b13d9805a459dc0798e7abc329d7a"
+  },
+  "state": "PASS",
+  "scenario": "A completed Russian Process transcript was reopened through the normal translation action with the visible English target selected.",
+  "source_speech_language": "ru",
+  "requested_target_language": "en",
+  "executed_target_language": "en",
+  "asr_reuse": "REUSED",
+  "translated_cue_count": 1,
+  "translation_output_sha256": "12141f5949e92336b413a4b17ca09bf184d2ee34a3f92b523080502b7ec3644a",
+  "translation_provenance_sha256": "95dc79baf53da1781b4a0d6a171a2a2861d58d8c6cae79adcf51e8015da7df4f",
+  "source_artifact_validation": {
+    "transcript_sha256": "12a29103bf43ad2a28292b8400323bd6f66bd04990e3daaadf4f721519f24697",
+    "subtitles_sha256": "989767237516c2c87c90c5d21631ad490e1f491383e1e2b894e07c76d9bad096"
+  },
+  "provenance": {
+    "component": "videotext",
+    "commit_sha": "2e098d1705b6815628bee1e023f4742718eabf02",
+    "adapter_sha256": "83e55d3cb82522cb431ee20617510b0c39f79ae0fa5309daedf5c7ff9911a577",
+    "model": "qwen3:8b"
+  },
+  "failure_isolation": {
+    "attempted_target_language": "ru",
+    "result": "REJECTED_BEFORE_EXECUTION",
+    "message": "Язык перевода должен отличаться от языка исходной речи.",
+    "fallback": "NONE"
+  },
+  "assertions": [
+    "The normal bridge route preserves the selected target in both the plan and the spawned job.",
+    "The packaged worker executed the requested target and the persisted Integra provenance records requested and executed target language separately.",
+    "The reusable source transcript and SRT hashes match the persisted provenance after success and after the rejected target request.",
+    "The normal user surface labels the target in Russian and keeps provider metadata out of the primary result card."
+  ],
+  "limitations": [
+    "The current Process source-speech contract is Russian-only, so the one currently valid user-visible target is English.",
+    "This outcome does not add English source-speech recognition, translated TXT, translated SRT, topic translation, or provider substitutability."
+  ]
+}

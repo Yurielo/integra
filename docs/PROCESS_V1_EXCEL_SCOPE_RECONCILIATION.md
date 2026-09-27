@@ -49,7 +49,7 @@ Therefore: 51 original MUST − 4 approved transfers = 47 current Process MUST. 
 | 16 | Настройки качества распознавания | MUST | PROCESS | MUST | ASR quality settings | DONE | The single normal/careful selector already is the bounded quality setting; requested/executed provenance and default are proven in `PROCESS_V1_ASR_QUALITY_SETTINGS_PROOF.md`. |
 | 17 | Диагностика качества распознавания | MUST | PROCESS | MUST | ASR diagnostics | DONE | Candidate `candidate-v1-ec1ae4eaccc5a2af225490135dc6385920c5f26ee0433059311be9074f6a2e57` proves readable persisted diagnostics for recovered and failed protective retry, with actual mode/language and no silent fallback. |
 | 18 | Перевод расшифровки | MUST | PROCESS | MUST | Transcript translation | DONE | Candidate `candidate-v1-de25ee770d537b88eafd805249769e50694f7f5b56daab2f0771ec2c7706fd3d` proves fixed `ru` to `en` translation from a reusable completed transcript with persisted review-required provenance and readable cue result. |
-| 19 | Выбор языка перевода | MUST | PROCESS | MUST | Translation-language choice | NOT_DONE | Retained. |
+| 19 | Выбор языка перевода | MUST | PROCESS | MUST | Translation-language choice | DONE | Candidate `candidate-v1-6545998b95e0f2d84abc7cd82baaea79bf8aa3c80cdd6d76840f47e87a42f996` proves the supported Russian-source to English-target control and truthful requested/executed target-language provenance; no broader multilingual capability is claimed. |
 | 20 | Переведённый TXT | MUST | PROCESS | MUST | Translated TXT | NOT_DONE | Retained. |
 | 21 | Переведённый SRT | MUST | STUDIO | LATER | — | N/A | Owner correction: user-facing translated SRT is Studio. |
 | 22 | Перевод Topics | MUST | PROCESS | MUST | Topic translation | NOT_DONE | Retained as provisional Process output. |
@@ -102,7 +102,7 @@ Therefore: 51 original MUST − 4 approved transfers = 47 current Process MUST. 
 
 ## Board reconciliation
 
-The active Board has 45 rows. Its states sum exactly: 33 DONE + 0 IN_PROGRESS + 11 NOT_DONE + 1 BLOCKED = 45.
+The active Board has 45 rows. Its states sum exactly: 34 DONE + 0 IN_PROGRESS + 10 NOT_DONE + 1 BLOCKED = 45.
 
 One explicit DoD aggregation explains the distinct denominators:
 

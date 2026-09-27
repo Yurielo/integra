@@ -140,7 +140,8 @@ def _translate_transcript(root, request):
     with _run_lifecycle(root, wait=False):
         project_id = request.get("project_id")
         project_dir = _project_dir(root, _project(root, project_id)["project_id"])
-        run = prepare_transcript_translation_run(project_dir, request.get("run_id"), request.get("source_id"))
+        run = prepare_transcript_translation_run(project_dir, request.get("run_id"), request.get("source_id"),
+                                                 request.get("translation_target_language", "en"))
         return {"project": _project(root, project_id), "run": _spawn_plan(root, project_id, run["run_id"])}
 
 @contextmanager

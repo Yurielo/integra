@@ -1,0 +1,12 @@
+PROCESS V1 Translation-language choice full supported regression
+
+Command:
+python3 -m unittest discover -s tests -q
+
+Result:
+INTEGRA_BACKUP_VERIFICATION: PASS
+Ran 804 tests in 48.129s
+OK (skipped=91)
+
+The declared skips are existing environment-dependent checks. No test failure,
+error or unexpected skip was reported.

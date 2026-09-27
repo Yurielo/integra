@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.proposed_product_baseline",
+  "proposal_id": "proposal-process-v1-translation-language-choice",
+  "status": "PROPOSED_BASELINE_VALID",
+  "base_current_id": "current-v2-de25ee770d537b88eafd805249769e50694f7f5b56daab2f0771ec2c7706fd3d",
+  "base_main": {
+    "commit_sha": "5892e5092ee6aff23198e9a9f944da2d88d4a801",
+    "tree_sha": "c069c1cfaf7133b6224f0c25f4f09df62172afe0"
+  },
+  "proposed_source": {
+    "commit_sha": "df45022bd4dbd68ccc7a770e969418d35452bca3",
+    "tree_sha": "0956c40a662b13d9805a459dc0798e7abc329d7a"
+  },
+  "proposed_head": {
+    "commit_sha": "daa85afb5bc0518b8fe2297857ae8269b9793352",
+    "tree_sha": "36933efc24291a74803b5ae84d67df6a3def4388"
+  },
+  "intended_scope": {
+    "wp": "Excel #19 / V06",
+    "journey": "extend the canonical completed-transcript translation route with the normal Russian UI control `Язык перевода`; preserve the current Russian-source/English-target boundary, bind the selected target through plan, job, worker result and Integra provenance, and show the persisted target without provider terminology; no translated TXT, translated SRT, topic translation, routing switch, Stage B, Knowledge, Studio, installation or deployment"
+  },
+  "candidate": {
+    "candidate_id": "candidate-v1-6545998b95e0f2d84abc7cd82baaea79bf8aa3c80cdd6d76840f47e87a42f996",
+    "identity_sha256": "6545998b95e0f2d84abc7cd82baaea79bf8aa3c80cdd6d76840f47e87a42f996",
+    "manifest_digest": "328934fc8ea1a2b2fb7b2a1bcc57aadff00add18eb516310de1e6e517cddab65",
+    "bundle_digest": "a344385ab7ab27812752c92530bb682313018b420363f9f3c91ae48500003faf"
+  },
+  "delta": [
+    {"path": "integra_core/application_runtime.py", "before_sha256": "9d75df2f5cc8db70a6a0fd09380b84b304fbd62fe5653567589d18cdc341b26a", "after_sha256": "a28084c1dd3a4501c4596ff36ed8c48c07a349241794d2a7f76f56dd2bd73893"},
+    {"path": "integra_core/capabilities.py", "before_sha256": "70f38b7e6cdcd35edb2f35df0bad25efff69310ba84e3bd8a5e6e384ab6fecea", "after_sha256": "3f50ba49e9ff453f9251201303fe53f45c13bedbc8212fe62985695f07e4d8fb"},
+    {"path": "integra_core/user_media.py", "before_sha256": "c1ddd7514e7e004ca64b79e39975c6bacb6956897ed6bd3f6abf85e005297988", "after_sha256": "9d6b273c501a1f4b539119514607281f8d7c6daa45c176f7245b598b2349b788"},
+    {"path": "macos/IntegraApp.swift", "before_sha256": "c90eb6d80b195820d9f47929841297d3d226571d6447136ed8c9dd087b819028", "after_sha256": "4ec747453e95e8ec56b06a1bd332174c2f995f159c93437f134524ad7e28dc69"},
+    {"path": "macos/Resources/bridge.py", "before_sha256": "db2d2156fbe3502db9a2a07842aab17476a69cf07407f4cc29eb3dc3d0261c14", "after_sha256": "d6f0a762f4ad011e36fbe7d8095cbea07a9a2104569371297ab34d5d61d9c575"}
+  ],
+  "historical_test_successors": [],
+  "gates": [
+    {"name": "candidate-manifest", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_TRANSLATION_LANGUAGE_CHOICE_CANDIDATE_MANIFEST.json"},
+    {"name": "candidate-archive", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_TRANSLATION_LANGUAGE_CHOICE_CANDIDATE_ARCHIVE.json"},
+    {"name": "packaged-translation-language-choice", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_TRANSLATION_LANGUAGE_CHOICE_E2E.json"},
+    {"name": "focused-process-regressions", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_TRANSLATION_LANGUAGE_CHOICE_FOCUSED_TESTS.txt"},
+    {"name": "full-supported-regressions", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_TRANSLATION_LANGUAGE_CHOICE_FULL_TESTS.txt"}
+  ],
+  "evidence": {
+    "candidate_manifest": {"path": "docs/evidence/PROCESS_V1_TRANSLATION_LANGUAGE_CHOICE_CANDIDATE_MANIFEST.json", "sha256": "328934fc8ea1a2b2fb7b2a1bcc57aadff00add18eb516310de1e6e517cddab65"},
+    "candidate_evidence": {"path": "docs/evidence/PROCESS_V1_TRANSLATION_LANGUAGE_CHOICE_E2E.json", "sha256": "44526499f262425669f0b56e6d96efee3095781227fbd0086d0db1a9b905ae6b"},
+    "report": {"path": "docs/PROCESS_V1_TRANSLATION_LANGUAGE_CHOICE_PROOF.md", "sha256": "a02eff31f4ff42b9882f54bf5e6c5f14cd4171036e39ab44ababc34d55dc90a6"}
+  },
+  "owner_acceptance": {
+    "decision": "PILOT_ACCEPTED",
+    "authority_ref": "PRODUCT OWNER AUTHORIZATION: ACCEPT_PROPOSED_BASELINE proposal-process-v1-translation-language-choice candidate-v1-6545998b95e0f2d84abc7cd82baaea79bf8aa3c80cdd6d76840f47e87a42f996",
+    "scope": "Translation-language choice — Excel #19 / V06 proposed baseline acceptance only",
+    "promotion_authorized": false
+  },
+  "allowed_overlay_paths": [
+    "docs/PROCESS_V1_DEFINITION_OF_DONE.md",
+    "docs/PROCESS_V1_OWNER_SCOPE_AND_COMPLETION_MAP.md",
+    "docs/PROCESS_V1_TRANSLATION_LANGUAGE_CHOICE_PROOF.md",
+    "docs/evidence/PROCESS_V1_TRANSLATION_LANGUAGE_CHOICE_CANDIDATE_ARCHIVE.json",
+    "docs/evidence/PROCESS_V1_TRANSLATION_LANGUAGE_CHOICE_FULL_TESTS.txt",
+    "docs/evidence/PROCESS_V1_TRANSLATION_LANGUAGE_CHOICE_CANDIDATE_MANIFEST.json",
+    "docs/evidence/PROCESS_V1_TRANSLATION_LANGUAGE_CHOICE_E2E.json",
+    "docs/evidence/PROCESS_V1_TRANSLATION_LANGUAGE_CHOICE_FOCUSED_TESTS.txt"
+  ]
+}

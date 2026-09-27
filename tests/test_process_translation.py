@@ -10,7 +10,7 @@ import unittest
 import uuid
 from unittest.mock import patch
 
-from integra_core.application_runtime import prepare_run, prepare_transcript_translation_run
+from integra_core.application_runtime import execute_run, prepare_run, prepare_transcript_translation_run
 from integra_core.capabilities import TRANSLATION_TARGET_LANGUAGE, build_plan
 from integra_core.user_media import import_source, run_job
 from tests.asr_tools import media_environment
@@ -27,12 +27,13 @@ class ProcessTranslationTests(unittest.TestCase):
         self.environment = media_environment(self.root)
         self.patch = patch.dict(os.environ, self.environment); self.patch.start(); self.addCleanup(self.patch.stop)
 
-    def _job(self, outputs):
+    def _job(self, outputs, *, target_language="en", source_language="ru"):
         imported = import_source(self.project, self.source)
         job = {"job_id": f"urn:integra:job:{uuid.uuid4()}", "state": "QUEUED",
                "source_id": imported["source_id"], "source_sha256": imported["content_sha256"],
                "owned_path": imported["owned_path"], "requested_outputs": list(outputs),
-               "source_speech_language": "ru"}
+               "source_speech_language": source_language,
+               "translation_target_language": target_language}
         jobs = json.loads((self.project / "jobs.json").read_bytes()); jobs["jobs"].append(job)
         (self.project / "jobs.json").write_text(json.dumps(jobs), encoding="utf-8")
         return job
@@ -65,6 +66,8 @@ class ProcessTranslationTests(unittest.TestCase):
         record = json.loads(Path(outputs["translation_provenance"]).read_bytes())
         self.assertEqual(record["source_id"], result["source_id"])
         self.assertEqual(record["source_language"], "ru")
+        self.assertEqual(record["requested_target_language"], "en")
+        self.assertEqual(record["executed_target_language"], "en")
         self.assertEqual(record["target_language"], "en")
         self.assertEqual(record["runtime"]["commit_sha"], "pinned")
         self.assertEqual(record["output_sha256"], hashlib.sha256(Path(outputs["translation"]).read_bytes()).hexdigest())
@@ -107,7 +110,7 @@ class ProcessTranslationTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "duplicates"):
                 run_job(self.project, job["job_id"])
 
-    def test_completed_transcript_starts_fixed_target_translation_without_a_language_control(self):
+    def test_completed_transcript_starts_selected_target_translation_and_preserves_default(self):
         source = {"source_id": "source", "display_name": "source.wav", "source_type": "LOCAL_AUDIO",
                   "kind": "MEDIA", "input": str(self.source), "properties": {}}
         registry = [{"id": "translation", "title": "Перевод", "implementation_state": "IMPLEMENTED",
@@ -123,13 +126,57 @@ class ProcessTranslationTests(unittest.TestCase):
         run = prepare_run(self.project, plan)
         run["state"] = "COMPLETED"
         run["source_results"] = [{"source_id": "source", "state": "COMPLETED",
-                                  "outputs": {"transcript": "/managed/transcript.txt", "subtitles": "/managed/full.srt"}}]
+                                  "outputs": {"transcript": "/managed/transcript.txt", "subtitles": "/managed/full.srt"},
+                                  "source_speech_language": {"requested": "ru", "executed": "ru"}}]
         run_path = self.project / "runs" / (run["run_id"].removeprefix("urn:integra:run:") + ".json")
         run_path.write_text(json.dumps(run), encoding="utf-8")
         with patch("integra_core.application_runtime.build_plan", return_value=plan):
             next_run = prepare_transcript_translation_run(self.project, run["run_id"], "source")
         self.assertEqual(next_run["plan"]["selected_outputs"], ["translation"])
         self.assertEqual(next_run["plan"]["translation_target_language"], "en")
+
+    def test_unsupported_or_same_language_target_fails_without_fallback(self):
+        job = self._job(("translation",), target_language="ru")
+        with patch("integra_core.user_media.videotext_translation_preflight") as preflight, \
+             self.assertRaisesRegex(ValueError, "не поддерживается"):
+            run_job(self.project, job["job_id"])
+        preflight.assert_not_called()
+
+        source = {"source_id": "source", "display_name": "source.wav", "source_type": "LOCAL_AUDIO",
+                  "kind": "MEDIA", "input": str(self.source), "properties": {}}
+        registry = [{"id": "translation", "title": "Перевод", "implementation_state": "IMPLEMENTED",
+                     "runtime_available": True, "dependencies": ["transcript"], "source_types": ["LOCAL_AUDIO"]},
+                    {"id": "transcript", "title": "Расшифровка", "implementation_state": "IMPLEMENTED",
+                     "runtime_available": True, "dependencies": ["media_preparation"], "source_types": ["LOCAL_AUDIO"]}]
+        with patch("integra_core.capabilities.capability_registry", return_value=registry):
+            plan = build_plan([source], ["translation"], translation_target_language="ru")
+        run = prepare_run(self.project, plan)
+        run["state"] = "COMPLETED"
+        run["source_results"] = [{"source_id": "source", "state": "COMPLETED",
+                                  "outputs": {"transcript": "/managed/transcript.txt", "subtitles": "/managed/full.srt"},
+                                  "source_speech_language": {"requested": "ru", "executed": "ru"}}]
+        run_path = self.project / "runs" / (run["run_id"].removeprefix("urn:integra:run:") + ".json")
+        run_path.write_text(json.dumps(run), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "должен отличаться"):
+            prepare_transcript_translation_run(self.project, run["run_id"], "source", "ru")
+
+    def test_selected_target_is_carried_from_plan_to_execution_job(self):
+        source = {"source_id": "source", "display_name": "source.wav", "source_type": "LOCAL_AUDIO",
+                  "kind": "MEDIA", "input": str(self.source), "properties": {}}
+        registry = [{"id": "translation", "title": "Перевод", "implementation_state": "IMPLEMENTED",
+                     "runtime_available": True, "dependencies": ["transcript"], "source_types": ["LOCAL_AUDIO"]},
+                    {"id": "transcript", "title": "Расшифровка", "implementation_state": "IMPLEMENTED",
+                     "runtime_available": True, "dependencies": ["media_preparation"], "source_types": ["LOCAL_AUDIO"]}]
+        imported = {"source_id": "source", "content_sha256": "sha", "owned_path": str(self.source)}
+        with patch("integra_core.capabilities.capability_registry", return_value=registry), \
+             patch("integra_core.application_runtime.import_source", return_value=imported), \
+             patch("integra_core.application_runtime.run_job", return_value={"state": "COMPLETED", "outputs": {}}) as run:
+            plan = build_plan([source], ["translation"], translation_target_language="en")
+            prepared = prepare_run(self.project, plan)
+            execute_run(self.project, prepared["run_id"])
+        run.assert_called_once()
+        jobs = json.loads((self.project / "jobs.json").read_bytes())["jobs"]
+        self.assertEqual(jobs[0]["translation_target_language"], "en")
 
 
 if __name__ == "__main__":
