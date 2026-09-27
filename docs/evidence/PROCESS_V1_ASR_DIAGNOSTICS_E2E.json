@@ -49,5 +49,11 @@
       "has_transcript": false,
       "reopen_state": "FAILED"
     }
-  ]
+  ],
+  "manifest_identity_sha256": "ec1ae4eaccc5a2af225490135dc6385920c5f26ee0433059311be9074f6a2e57",
+  "bundle_digest": "4794bca8031cf6ff0d6a8c019e5492646604ba9e66b3e591167c0c9e63929ffd",
+  "product_source": {
+    "commit_sha": "3576de15c915dba90ac8cff30e3f18a47ed858a8",
+    "tree_sha": "e17d2ea714da0f4af1c8aa0be4038a257d5bd3b3"
+  }
 }
