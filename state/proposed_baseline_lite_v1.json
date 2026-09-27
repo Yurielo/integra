@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.proposed_product_baseline",
+  "proposal_id": "proposal-process-v1-transcript-translation",
+  "status": "PROPOSED_BASELINE_VALID",
+  "base_current_id": "current-v2-ec1ae4eaccc5a2af225490135dc6385920c5f26ee0433059311be9074f6a2e57",
+  "base_main": {"commit_sha": "d61e4c4b65e4e367718f9451a8b1cb90366fe549", "tree_sha": "73149d1d7e1d56fad3e40fdaceba910c444e653d"},
+  "proposed_source": {"commit_sha": "7150d711f127a4aeaecf519c65b91f88fda64447", "tree_sha": "65f759f0391962c5337f67b30aab24e76e27ce7b"},
+  "proposed_head": {"commit_sha": "5892e5092ee6aff23198e9a9f944da2d88d4a801", "tree_sha": "c069c1cfaf7133b6224f0c25f4f09df62172afe0"},
+  "intended_scope": {
+    "wp": "Excel #18 / S14 + V05",
+    "journey": "bounded normal Process transcript translation: reuse a completed Russian timed transcript, create a fixed English review-required translation, persist Integra-owned provenance and present readable cue text; no target-language selection, translated TXT, topic translation, provider migration, routing switch, Stage B, installation, deployment, Knowledge or Studio work"
+  },
+  "candidate": {
+    "candidate_id": "candidate-v1-de25ee770d537b88eafd805249769e50694f7f5b56daab2f0771ec2c7706fd3d",
+    "identity_sha256": "de25ee770d537b88eafd805249769e50694f7f5b56daab2f0771ec2c7706fd3d",
+    "manifest_digest": "d12b83c2206fd584cca2afc12aae2c172539e3ab9c9f6ed2b98794e3125d10a1",
+    "bundle_digest": "3506954cab9fc7a4bd92f681e638fad2974042981f47af24bb2433cbf2cc215a"
+  },
+  "delta": [
+    {"path": "integra_core/application_runtime.py", "before_sha256": "5c63930be21cc32fc98e1a26a0d9a488b3f9d70f7b5f722ca445391bd60f806b", "after_sha256": "9d75df2f5cc8db70a6a0fd09380b84b304fbd62fe5653567589d18cdc341b26a"},
+    {"path": "integra_core/capabilities.py", "before_sha256": "b07fc4cad27000feb0a46d2240f79b5ab8685afe84e40128c01052f1f6cc355c", "after_sha256": "70f38b7e6cdcd35edb2f35df0bad25efff69310ba84e3bd8a5e6e384ab6fecea"},
+    {"path": "integra_core/user_media.py", "before_sha256": "8b101465f3e605687cb291ddfe5218e051a74c0f43b083c187da63d401b9a3e4", "after_sha256": "c1ddd7514e7e004ca64b79e39975c6bacb6956897ed6bd3f6abf85e005297988"},
+    {"path": "integra_core/videotext_runtime.py", "before_sha256": "e5bb1b07228fa4870e25ad3e4c2403ce60870d4b733c3b5f19eacac1c40dcc41", "after_sha256": "27b6996c0c3fccc2f57c066aac11163260ab3238e9e126218a260d168cff7b19"},
+    {"path": "macos/IntegraApp.swift", "before_sha256": "82b976639f4b196ecce7bf6dda3b20139e29d8592755a2712196eb1e8c0f2ba0", "after_sha256": "c90eb6d80b195820d9f47929841297d3d226571d6447136ed8c9dd087b819028"},
+    {"path": "macos/Resources/bridge.py", "before_sha256": "69037bc9e878a9d82e9ec96ad15535120b07b8eab0531cac8e6bbcc4b169155d", "after_sha256": "db2d2156fbe3502db9a2a07842aab17476a69cf07407f4cc29eb3dc3d0261c14"}
+  ],
+  "historical_test_successors": [],
+  "gates": [
+    {"name": "candidate-manifest", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_TRANSCRIPT_TRANSLATION_CANDIDATE_MANIFEST.json"},
+    {"name": "candidate-archive", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_TRANSCRIPT_TRANSLATION_CANDIDATE_ARCHIVE.json"},
+    {"name": "packaged-transcript-translation", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_TRANSCRIPT_TRANSLATION_E2E.json"},
+    {"name": "focused-process-regressions", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_TRANSCRIPT_TRANSLATION_FOCUSED_TESTS.txt"}
+  ],
+  "evidence": {
+    "candidate_manifest": {"path": "docs/evidence/PROCESS_V1_TRANSCRIPT_TRANSLATION_CANDIDATE_MANIFEST.json", "sha256": "d12b83c2206fd584cca2afc12aae2c172539e3ab9c9f6ed2b98794e3125d10a1"},
+    "candidate_evidence": {"path": "docs/evidence/PROCESS_V1_TRANSCRIPT_TRANSLATION_E2E.json", "sha256": "b8826842e51f39929f9638fc2225124451da2ba6b8b383736918805dbda77e81"},
+    "report": {"path": "docs/PROCESS_V1_TRANSCRIPT_TRANSLATION_PROOF.md", "sha256": "11b90e03a0c204a1772620a39063223a8377e4d7bce080cdfbd704b70c3d98bd"}
+  },
+  "owner_acceptance": null,
+  "allowed_overlay_paths": [
+    "docs/PROCESS_V1_DEFINITION_OF_DONE.md",
+    "docs/PROCESS_V1_OWNER_SCOPE_AND_COMPLETION_MAP.md",
+    "docs/PROCESS_V1_TRANSCRIPT_TRANSLATION_PROOF.md",
+    "docs/evidence/PROCESS_V1_TRANSCRIPT_TRANSLATION_CANDIDATE_ARCHIVE.json",
+    "docs/evidence/PROCESS_V1_TRANSCRIPT_TRANSLATION_CANDIDATE_MANIFEST.json",
+    "docs/evidence/PROCESS_V1_TRANSCRIPT_TRANSLATION_E2E.json",
+    "docs/evidence/PROCESS_V1_TRANSCRIPT_TRANSLATION_FOCUSED_TESTS.txt"
+  ]
+}
