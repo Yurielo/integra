@@ -12,7 +12,7 @@ from typing import Any
 from .capabilities import build_plan
 from .documents import extract_document, materialize_embedded_media
 from .booktext_runtime import run_ocr as run_booktext_ocr
-from .user_media import atomic_json, import_source, now, run_job, _is_run_cancelled
+from .user_media import atomic_json, build_asr_diagnostics, import_source, now, run_job, _is_run_cancelled
 from .youtube_runtime import download_video
 from .youtube_playlist_runtime import execute_playlist
 
@@ -197,8 +197,12 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
         if isinstance(error, ASRQualityError):
             outputs = {"transcript_quality_report": error.artifacts["review_txt"],
                        "transcript_asr_record": error.artifacts["record"]}
-        return {"source_id": source["source_id"], "display_name": source["display_name"],
-                "state": "FAILED", "outputs": outputs, "error": str(error)[:500]}
+        result = {"source_id": source["source_id"], "display_name": source["display_name"],
+                  "state": "FAILED", "outputs": outputs, "error": str(error)[:500]}
+        if isinstance(error, ASRQualityError):
+            result["asr_diagnostics"] = build_asr_diagnostics(
+                error.artifacts["provenance"], recognition_mode, source_speech_language)
+        return result
     try:
         if _is_run_cancelled(project_dir, run_id):
             record.update(state="CANCELLED",current_stage=None,cancelled_at=now()); atomic_json(path,record)
@@ -228,6 +232,8 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                     if result.get("source_speech_language"):
                         record["source_results"][-1]["source_speech_language"] = result["source_speech_language"]
                         record["source_speech_language"] = result["source_speech_language"]
+                    if result.get("asr_diagnostics"):
+                        record["source_results"][-1]["asr_diagnostics"] = result["asr_diagnostics"]
                 except Exception as error:
                     # A one-source request retains its established fail-closed
                     # exception behavior.  In a local multi-source plan each
@@ -263,6 +269,8 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                     if result.get("source_speech_language"):
                         record["source_results"][-1]["source_speech_language"] = result["source_speech_language"]
                         record["source_speech_language"] = result["source_speech_language"]
+                    if result.get("asr_diagnostics"):
+                        record["source_results"][-1]["asr_diagnostics"] = result["asr_diagnostics"]
             elif source["kind"] == "URL" and source["source_type"] == "YOUTUBE_PLAYLIST":
                 if outputs != ["youtube_playlist_ingest"]:
                     raise ValueError("playlist plan has unsupported outputs")
@@ -339,5 +347,12 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
             latest["source_results"].append({"source_id":source["source_id"],
                 "display_name":source["display_name"], "state":"FAILED",
                 "outputs":{"transcript_quality_report":error.artifacts["review_txt"],
-                           "transcript_asr_record":error.artifacts["record"]}})
-        latest.update(state="FAILED",error=str(error)[:500],failed_at=now()); atomic_json(path,latest); raise
+                           "transcript_asr_record":error.artifacts["record"]},
+                "asr_diagnostics": build_asr_diagnostics(
+                    error.artifacts["provenance"], recognition_mode, source_speech_language)})
+            latest.update(state="FAILED",
+                          error="Расшифровка не прошла проверку качества. Проверьте аудио и повторите обработку.",
+                          failed_at=now())
+        else:
+            latest.update(state="FAILED", error=str(error)[:500], failed_at=now())
+        atomic_json(path,latest); raise

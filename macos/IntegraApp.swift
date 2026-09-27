@@ -942,7 +942,6 @@ struct SidebarItem {
       // independent sources completed.  Those persisted results remain
       // user-visible; failed peers still have no successful output fabricated.
       if state == "COMPLETED" || state == "FAILED" { renderResultRows(run) }
-      if state == "FAILED" { renderFailedASRReports(run) }
       if let error = run["error"] as? String { status.stringValue = error }
       if ["COMPLETED", "FAILED", "CANCELLED"].contains(state) { timer?.invalidate(); timer = nil }
   }
@@ -957,6 +956,7 @@ struct SidebarItem {
     for result in (run["source_results"] as? [[String: Any]]) ?? [] {
       add(row(result["display_name"] as? String ?? "Источник", detail: result["state"] as? String ?? "UNKNOWN"))
       let outputs = result["outputs"] as? [String: Any] ?? [:]
+      renderASRDiagnostics(result)
       if let reuse = result["asr_reuse"] as? [String: Any], reuse["state"] as? String == "REUSED" {
         add(row("Расшифровка использована повторно", detail: "Исходник, модель, настройки и файлы проверены. Повторное распознавание не запускалось."))
       }
@@ -969,6 +969,36 @@ struct SidebarItem {
         add(control)
       }
       renderTechnicalData(outputs)
+    }
+  }
+  private func renderASRDiagnostics(_ result: [String: Any]) {
+    guard let diagnostics = result["asr_diagnostics"] as? [String: Any],
+      let status = diagnostics["status"] as? String,
+      let suspicious = diagnostics["suspicious_chunks"] as? Int,
+      let retries = diagnostics["protective_retry_count"] as? Int,
+      let recovered = diagnostics["recovered_after_retry_count"] as? Int,
+      let recognition = diagnostics["recognition"] as? [String: Any],
+      let executedMode = recognition["executed_mode"] as? String,
+      let language = diagnostics["source_speech_language"] as? [String: Any],
+      let executedLanguage = language["executed"] as? String
+    else { return }
+    add(section("ПРОВЕРКА РАСШИФРОВКИ"))
+    if status == "PASSED" {
+      let detail = retries == 0
+        ? "Пройдена. Подозрительных фрагментов не найдено."
+        : "Пройдена после дополнительной проверки фрагментов: \(recovered)."
+      add(row("Проверка качества", detail: detail))
+    } else {
+      add(row("Проверка качества", detail: "Не пройдена после повторной проверки. Требуется проверить аудио."))
+    }
+    add(row("Режим распознавания", detail: executedMode == "careful" ? "Тщательный" : "Обычный"))
+    add(row("Язык исходной речи", detail: executedLanguage == "ru" ? "Русский" : "Не поддерживается"))
+    if retries == 0 {
+      add(row("Повторная проверка", detail: "Не потребовалась."))
+    } else if status == "PASSED" {
+      add(row("Повторная проверка", detail: "Выполнена для \(retries) фрагм.; итоговая расшифровка принята."))
+    } else {
+      add(row("Повторная проверка", detail: "Не устранила проблемы в \(suspicious) фрагм.; нужна проверка аудио."))
     }
   }
   private func renderPrimaryProcessResults(_ outputs: [String: Any], result: [String: Any]) {
@@ -1060,19 +1090,6 @@ struct SidebarItem {
       disclosure.details.addArrangedSubview(control)
     }
     add(disclosure)
-  }
-  private func renderFailedASRReports(_ run: [String: Any]) {
-    for result in (run["source_results"] as? [[String: Any]]) ?? [] {
-      guard result["state"] as? String == "FAILED",
-        let outputs = result["outputs"] as? [String: Any],
-        let report = outputs["transcript_quality_report"] as? String else { continue }
-      add(section("РАСШИФРОВКА НЕ ПРОШЛА ПРОВЕРКУ КАЧЕСТВА"))
-      add(row(result["display_name"] as? String ?? "Источник",
-              detail: "Подозрительные фрагменты сохранены для проверки. Темы и знания из них не создавались."))
-      let control = button("Открыть отчёт проверки расшифровки", #selector(openOutput(_:)))
-      control.toolTip = report
-      add(control)
-    }
   }
   @objc private func unavailableAction() {}
   @objc private func createMachineEvidence(_ sender: NSButton) {
@@ -1642,7 +1659,7 @@ struct SidebarItem {
           renderResultRows(run)
         } else if run["state"] as? String == "FAILED" {
           add(NSTextField(labelWithString: "Обработка завершилась ошибкой"))
-          renderFailedASRReports(run)
+          renderResultRows(run)
         } else {
           add(NSTextField(labelWithString: "Текущая обработка ещё не завершена"))
         }
