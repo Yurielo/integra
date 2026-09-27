@@ -47,7 +47,12 @@
     "candidate_evidence": {"path": "docs/evidence/PROCESS_V1_SOURCE_SPEECH_LANGUAGE_EVIDENCE.json", "sha256": "2200d0c6edba4599d3f973952701e0268e15c51b1214b945f78fc7f42220b87d"},
     "report": {"path": "docs/PROCESS_V1_SOURCE_SPEECH_LANGUAGE_PROOF.md", "sha256": "27bb92f5110b851f2e60877b8336aa25e2bd83acd1f8b82fa2f7176f6c9eead1"}
   },
-  "owner_acceptance": null,
+  "owner_acceptance": {
+    "decision": "PILOT_ACCEPTED",
+    "authority_ref": "PRODUCT OWNER AUTHORIZATION: ACCEPT_PROPOSED_BASELINE proposal-process-v1-source-speech-language candidate-v1-43bdfe7b93052a3f2f9b5b6b089179580ef5387ebe82d0e96ef69e612257b0cd",
+    "scope": "Source-speech language — Excel #15 / V02 bounded baseline acceptance only",
+    "promotion_authorized": false
+  },
   "allowed_overlay_paths": [
     "docs/PROCESS_V1_SOURCE_SPEECH_LANGUAGE_PROOF.md",
     "docs/evidence/PROCESS_V1_SOURCE_SPEECH_LANGUAGE_CANDIDATE_ARCHIVE.json",
