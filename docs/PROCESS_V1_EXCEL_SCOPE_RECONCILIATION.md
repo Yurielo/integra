@@ -54,7 +54,7 @@ Therefore: 51 original MUST − 4 approved transfers = 47 current Process MUST. 
 | 21 | Переведённый SRT | MUST | STUDIO | LATER | — | N/A | Owner correction: user-facing translated SRT is Studio. |
 | 22 | Перевод Topics | MUST | PROCESS | MUST | Topic translation | NOT_DONE | Retained as provisional Process output. |
 | 23 | Topics + timestamps | MUST | PROCESS | MUST | Topics/timestamps | DONE | Retained. |
-| 24 | Summary каждой темы | MUST | PROCESS | MUST | Topic summary | NOT_DONE | Retained. |
+| 24 | Summary каждой темы | MUST | PROCESS | MUST | Topic summary | DONE | Candidate-bound normal Process result; title, summary and timing remain source-bound and review stays separate. |
 | 25 | Выбор детализации Topics | MUST | PROCESS | MUST | Topic detail choice | NOT_DONE | Retained. |
 | 26 | Редактирование/подтверждение Topics | MUST | PROCESS | MUST | Topic edit/confirm | DONE | Retained as Topic review, not Evidence review; owner accepted rename/save/reopen on the bound Candidate. |
 | 27 | Иерархия тем | MUST | KNOWLEDGE | LATER | — | N/A | Owner correction: mandatory hierarchy deferred to later/Knowledge. |
@@ -102,7 +102,7 @@ Therefore: 51 original MUST − 4 approved transfers = 47 current Process MUST. 
 
 ## Board reconciliation
 
-The active Board has 45 rows. Its states sum exactly: 35 DONE + 0 IN_PROGRESS + 9 NOT_DONE + 1 BLOCKED = 45.
+The active Board has 45 rows. Its states sum exactly: 36 DONE + 0 IN_PROGRESS + 8 NOT_DONE + 1 BLOCKED = 45.
 
 One explicit DoD aggregation explains the distinct denominators:
 
