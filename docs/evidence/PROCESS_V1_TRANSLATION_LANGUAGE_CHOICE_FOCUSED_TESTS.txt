@@ -1,0 +1,15 @@
+PROCESS V1 Translation-language choice focused validation
+
+Command:
+python3 -m unittest tests.test_process_translation tests.test_process_results_surface tests.test_capabilities tests.test_application_runtime tests.test_asr_reuse tests.test_operations_ui tests.test_transcript_review_ui tests.test_process_topic_review_bridge tests.test_process_topic_review_runtime tests.test_seminartext_topic_review_runtime -q
+
+Result:
+Ran 86 tests in 1.235s
+OK (skipped=41)
+
+Additional checks:
+- Python bytecode compilation: PASS
+- Native Swift type check: PASS
+- git diff --check: PASS
+- Packaged Candidate manifest validation: PASS
+- Packaged real translation E2E: PASS
