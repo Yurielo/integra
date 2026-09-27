@@ -1,0 +1,27 @@
+Command:
+INTEGRA_REVIEW_PYTHON=/opt/homebrew/bin/python3.14 \
+PYTHONPATH="/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages" \
+INTEGRA_TEST_SEMINARTEXT_CHECKOUT=/private/tmp/seminartext-build-13644 \
+python3 -m unittest \
+  tests.test_process_topic_summary \
+  tests.test_process_topic_review_runtime \
+  tests.test_process_topic_review_bridge \
+  tests.test_process_results_surface \
+  tests.test_translated_txt \
+  tests.test_application_runtime -q
+
+Result:
+Ran 46 tests in 4.313s
+OK (skipped=5)
+
+The five skips are pre-existing environment-dependent tests of optional pinned
+runtime features. The suite covers Topic summary source/time-span/digest
+binding, missing-summary fail-closed behavior, read-only bridge reopening,
+Process Topic Review reopening, Results UI wording, translated TXT preservation
+and application lifecycle behavior.
+
+Additional checks:
+python3 -m py_compile integra_core/seminartext_topic_review_runtime.py macos/Resources/bridge.py
+swiftc -parse-as-library -typecheck macos/IntegraApp.swift
+
+Result: PASS

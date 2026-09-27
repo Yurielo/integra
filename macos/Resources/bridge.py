@@ -20,7 +20,7 @@ from integra_core.shutdown_runtime import cancel_run, reconcile_stale_runs, regi
 from integra_core.seminartext_runtime import preflight as seminartext_preflight
 from integra_core.seminartext_evidence_runtime import prepare_transcript_review, apply_human_transcript_review, prepare_topic_review_input
 
-OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "import-media", "media-preflight", "seminartext-preflight", "process-media-job", "project-view", "detect-sources", "capability-registry", "build-plan", "execute-plan", "translate-transcript", "process-plan", "run-status", "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "prepare-transcript-review", "apply-transcript-review", "prepare-topic-review", "prepare-process-topic-review", "apply-process-topic-review", "package-preview", "package-publish", "obsidian-preview", "onedrive-preview"}
+OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "import-media", "media-preflight", "seminartext-preflight", "process-media-job", "project-view", "detect-sources", "capability-registry", "build-plan", "execute-plan", "translate-transcript", "process-plan", "run-status", "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "prepare-transcript-review", "apply-transcript-review", "prepare-topic-review", "prepare-process-topic-review", "apply-process-topic-review", "process-topics", "package-preview", "package-publish", "obsidian-preview", "onedrive-preview"}
 
 OPERATIONS.add("build-reviewed-package")
 OPERATIONS.add("transcript-text")
@@ -418,6 +418,36 @@ def _process_topic_review(root, request, apply=False):
                            expected_outputs=expected)
     return result
 
+
+def _process_topics(root, request):
+    """Read one persisted Process Topic result without preparing a review."""
+    from integra_core.seminartext_topic_review_runtime import (
+        load_persisted_process_topic_review,
+        present_machine_process_topics,
+    )
+    values = _review_inputs(root, request)
+    run = read_run(values["project_dir"], request.get("run_id"))
+    source = next((item for item in run.get("source_results", []) if item.get("source_id") == values["source_id"]), None)
+    outputs = source.get("outputs") if isinstance(source, dict) else None
+    if not isinstance(outputs, dict) or not isinstance(outputs.get("topics"), str):
+        raise ValueError("real machine Topics are required")
+    from integra_core.transcript_output import resolve_persisted_project_path
+    topics_path = str(resolve_persisted_project_path(values["project_dir"], outputs["topics"], "machine Topics"))
+    persisted_keys = ("process_reviewed_topics", "process_topic_review_receipt", "process_topic_review_decisions")
+    persisted = {key: outputs.get(key) for key in persisted_keys}
+    if any(value is not None for value in persisted.values()):
+        if not all(isinstance(value, str) for value in persisted.values()):
+            raise ValueError("persisted Process Topic review is incomplete")
+        resolved = {key: str(resolve_persisted_project_path(values["project_dir"], value, key))
+                    for key, value in persisted.items()}
+        return load_persisted_process_topic_review(
+            values["project_dir"], source_id=values["source_id"],
+            reviewed_topics_contract_path=resolved["process_reviewed_topics"],
+            receipt_path=resolved["process_topic_review_receipt"],
+            decisions_path=resolved["process_topic_review_decisions"],
+        )
+    return present_machine_process_topics(values["project_dir"], source_id=values["source_id"], topics_path=topics_path)
+
 def _knowledge_review(root, request, apply=False):
     from integra_core.seminartext_topic_review_runtime import prepare_topic_review, apply_topic_review
     values = _review_inputs(root, request)
@@ -461,7 +491,7 @@ def _knowledge_review(root, request, apply=False):
     return result
 
 OPERATIONS.update({"prepare-knowledge-review", "apply-knowledge-review"})
-OPERATIONS.update({"prepare-process-topic-review", "apply-process-topic-review"})
+OPERATIONS.update({"prepare-process-topic-review", "apply-process-topic-review", "process-topics"})
 
 def _create_media_clip(root, request):
     """Render one owned local clip bounded by persisted SRT cue edges."""
@@ -666,6 +696,7 @@ def main():
         elif operation == "prepare-topic-review": result = _prepare_topic_review(root, request)
         elif operation == "prepare-process-topic-review": result = _process_topic_review(root, request)
         elif operation == "apply-process-topic-review": result = _process_topic_review(root, request, True)
+        elif operation == "process-topics": result = _process_topics(root, request)
         elif operation == "prepare-knowledge-review": result = _knowledge_review(root, request)
         elif operation == "apply-knowledge-review": result = _knowledge_review(root, request, True)
         elif operation == "cancel-run": result = _run_action(root, request, "cancel")

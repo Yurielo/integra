@@ -146,6 +146,59 @@ def _presentation(package_path):
                         "end_seconds": item["locator"]["end_seconds"]} for item in package["topics"]]}
 
 
+def present_machine_process_topics(project_dir, *, source_id, topics_path):
+    """Return the persisted machine Topic result as a Process-only view.
+
+    This is deliberately a reader, not a second Topic generator or a review
+    operation.  A non-empty summary is required before the normal result
+    surface may present it as one: an absent source summary must remain an
+    honest unavailable result rather than being replaced by a title or quote.
+    """
+    root = Path(project_dir).resolve(strict=True)
+    topics_file = _inside(Path(topics_path), root, "machine Topics")
+    try:
+        payload = json.loads(topics_file.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError("saved machine Topics are invalid") from error
+    topics = payload.get("topics") if isinstance(payload, dict) else None
+    if payload.get("component") != "seminartext" or not isinstance(topics, list) or not topics:
+        raise ValueError("saved machine Topics are unavailable")
+    digest = _sha256(topics_file)
+    presented = []
+    for sequence, topic in enumerate(topics):
+        if not isinstance(topic, dict) or topic.get("semantic_status") != "REVIEW_REQUIRED":
+            raise ValueError("saved machine Topics have invalid review authority")
+        title = topic.get("title")
+        summary = topic.get("summary")
+        start = topic.get("start_seconds")
+        end = topic.get("end_seconds")
+        if (not isinstance(title, str) or not title.strip() or not isinstance(summary, str)
+                or not summary.strip() or not isinstance(start, (int, float))
+                or not isinstance(end, (int, float)) or end <= start):
+            raise ValueError("a saved Topic has no usable source summary")
+        presented.append({
+            "id": f"machine-topic-{digest[:20]}-{sequence:04d}",
+            "title": title.strip(),
+            "summary": summary.strip(),
+            "start_seconds": start,
+            "end_seconds": end,
+            "source_span": {
+                "start_segment_id": topic.get("start_segment_id"),
+                "evidence_start_id": topic.get("evidence_start_id"),
+                "evidence_end_id": topic.get("evidence_end_id"),
+            },
+        })
+    return {
+        "status": "PROCESS_MACHINE_TOPICS",
+        "authority": "MACHINE_OUTPUT_REQUIRES_HUMAN_DECISION",
+        "automatic_acceptance": False,
+        "read_only": True,
+        "source_id": source_id,
+        "topics_sha256": digest,
+        "topics": presented,
+    }
+
+
 def _review_mode(package, evidence):
     """Select a real compatible component path without changing source ranges."""
     words = {item["id"]: item for item in evidence["words"]}

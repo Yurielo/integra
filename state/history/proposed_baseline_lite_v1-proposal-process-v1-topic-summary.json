@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.proposed_product_baseline",
+  "proposal_id": "proposal-process-v1-topic-summary",
+  "status": "PROPOSED_BASELINE_VALID",
+  "base_current_id": "current-v2-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583",
+  "base_main": {"commit_sha": "17c5b911dd9a66e48c849c97b01cf2f1f1dd9339", "tree_sha": "08fced24cacf8cc83fa97f5a744d06929f7ad49a"},
+  "proposed_source": {"commit_sha": "5301527da6d447e474ec0df9ed657b836ef7d1a1", "tree_sha": "da2856e0cc27caaec2572492fefe7135974a6c60"},
+  "proposed_head": {"commit_sha": "32723bd6ce6e97c8af1ce28627fe173b2cd43ad0", "tree_sha": "08bf6da2a5f0f9d87c31cbb94afceb7edcda8a69"},
+  "intended_scope": {"wp": "Excel #24 / S12 partial + S13", "journey": "expose each persisted source-bound Topic summary with title and timing through the normal Process Results surface; preserve the existing independent Process review route; fail closed for absent or malformed source summaries; no new Topic engine, Topic detail or translation, Knowledge, Evidence routing, provider selection, Process routing switch, Stage B, installation or deployment"},
+  "candidate": {"candidate_id": "candidate-v1-a52cd2b257c55f0c50251ec21c253a3370de9d72f16148459650243c5fb3b669", "identity_sha256": "a52cd2b257c55f0c50251ec21c253a3370de9d72f16148459650243c5fb3b669", "bundle_digest": "afc07aee895fe1e4cefd882eafae1956ce44a5bf6f62d38fe676f5d84928c925", "manifest_digest": "e1c067bacffe06198f927d1e8010312d7d6b7e48d489944b94ad33f10d50195c"},
+  "delta": [
+    {"path": "integra_core/seminartext_topic_review_runtime.py", "before_sha256": "06ebcd56f2ff4a7646458d619c1060c67ba461c5894aba2956673383d2ba9cd4", "after_sha256": "79ddc3b7f23b23b04cf5ede2365e94ea0e26d3fbfb0d9963e31eae0760412f1a"},
+    {"path": "macos/IntegraApp.swift", "before_sha256": "37c60aee4e12598f79a4eed4bb1ec8171722913f7c7af9d85be45fb5a4860901", "after_sha256": "cb5511e8a4a1dc31468c258b387ac9b666edc68196ca27a40aab87efc242a915"},
+    {"path": "macos/Resources/bridge.py", "before_sha256": "d6f0a762f4ad011e36fbe7d8095cbea07a9a2104569371297ab34d5d61d9c575", "after_sha256": "25af8140828d954b5b28884c1af3e16e8a5c48d0b7e2e3943a12dbf87a58e56c"}
+  ],
+  "historical_test_successors": [],
+  "gates": [
+    {"name": "candidate-manifest", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_TOPIC_SUMMARY_CANDIDATE_MANIFEST.json"},
+    {"name": "candidate-archive", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_TOPIC_SUMMARY_CANDIDATE_ARCHIVE.json"},
+    {"name": "packaged-topic-summary", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_TOPIC_SUMMARY_E2E.json"},
+    {"name": "focused-process-regressions", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_TOPIC_SUMMARY_FOCUSED_TESTS.txt"},
+    {"name": "full-supported-regressions", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_TOPIC_SUMMARY_FULL_TESTS.txt"}
+  ],
+  "evidence": {
+    "candidate_manifest": {"path": "docs/evidence/PROCESS_V1_TOPIC_SUMMARY_CANDIDATE_MANIFEST.json", "sha256": "e1c067bacffe06198f927d1e8010312d7d6b7e48d489944b94ad33f10d50195c"},
+    "candidate_evidence": {"path": "docs/evidence/PROCESS_V1_TOPIC_SUMMARY_E2E.json", "sha256": "80797a798f77294b0ac403a8c2fb50de8faf015dce0f8f6f06454cea8c30c098"},
+    "report": {"path": "docs/PROCESS_V1_TOPIC_SUMMARY_PROOF.md", "sha256": "a7312756895939539684aad50fd7106032d92f33e1264e7662401b081af54b66"}
+  },
+  "owner_acceptance": {"decision": "PILOT_ACCEPTED", "authority_ref": "PRODUCT OWNER AUTHORIZATION: ACCEPT_PROPOSED_BASELINE proposal-process-v1-topic-summary candidate-v1-a52cd2b257c55f0c50251ec21c253a3370de9d72f16148459650243c5fb3b669", "scope": "Topic summary — Excel #24 / S12 partial + S13 proposed baseline acceptance only", "promotion_authorized": false},
+  "allowed_overlay_paths": ["docs/PROCESS_V1_DEFINITION_OF_DONE.md", "docs/PROCESS_V1_EXCEL_SCOPE_RECONCILIATION.md", "docs/PROCESS_V1_OWNER_SCOPE_AND_COMPLETION_MAP.md", "docs/PROCESS_V1_TOPIC_SUMMARY_PROOF.md", "docs/evidence/PROCESS_V1_TOPIC_SUMMARY_CANDIDATE_ARCHIVE.json", "docs/evidence/PROCESS_V1_TOPIC_SUMMARY_CANDIDATE_MANIFEST.json", "docs/evidence/PROCESS_V1_TOPIC_SUMMARY_E2E.json", "docs/evidence/PROCESS_V1_TOPIC_SUMMARY_FOCUSED_TESTS.txt", "docs/evidence/PROCESS_V1_TOPIC_SUMMARY_FULL_TESTS.txt"]
+}

@@ -35,6 +35,7 @@ class ProcessResultsSurfaceTests(unittest.TestCase):
         self.assertIn('translationLanguageName(from: provenancePath, key: "target_language")', surface)
         self.assertNotIn('target.uppercased()', self.source)
         self.assertIn('outputs["topics"] is String', surface)
+        self.assertIn('button("Открыть темы", #selector(showProcessTopics(_:)))', surface)
         self.assertIn('button("Проверить темы", #selector(prepareTopicReview(_:)))', surface)
         self.assertNotIn('outputs["topics"] as? String', surface)
         technical = self.source.split("private func renderTechnicalData", 1)[1].split(
@@ -50,6 +51,19 @@ class ProcessResultsSurfaceTests(unittest.TestCase):
         self.assertNotIn("knowledge-review", review)
         self.assertIn('self.presentTopicReview(result, identifiers: identifiers, readOnly: reviewStatus == "PROCESS_TOPIC_REVIEWED")', review)
         self.assertIn('sender.title = "Проверить темы"', review)
+
+    def test_normal_topics_surface_shows_title_summary_and_timing_without_review(self):
+        shown = self.source.split("@objc private func showProcessTopics", 1)[1].split(
+            "private func presentProcessTopics", 1)[0]
+        self.assertIn('bridge.json("process-topics"', shown)
+        self.assertIn('PROCESS_MACHINE_TOPICS', shown)
+        self.assertIn('PROCESS_TOPIC_REVIEWED', shown)
+        dialog = self.source.split("private func presentProcessTopics", 1)[1].split(
+            "// Process v1 subset", 1)[0]
+        for label in ("Темы и таймкоды", "Время:", "Тема:", "Краткое содержание:"):
+            self.assertIn(label, dialog)
+        for forbidden in ("Knowledge", "Evidence", "S12", "S13"):
+            self.assertNotIn(forbidden, dialog)
 
     def test_process_topic_dialog_uses_pinned_actions_without_knowledge_wording(self):
         dialog = self.source.split("private func presentTopicReview", 1)[1].split(
