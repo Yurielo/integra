@@ -292,11 +292,17 @@ def _translation_provenance(
     source_cues = _parse_srt(subtitles.read_text(encoding="utf-8"), source_id)
     if len(cues) != len(source_cues):
         raise ValueError("translation result does not match the source transcript")
+    def has_same_timestamp(value: Any, expected: float) -> bool:
+        # JSON writers may expose harmless IEEE-754 round-off (for example,
+        # 3.17 as 3.1699999999999999). Preserve the SRT millisecond contract.
+        return (isinstance(value, (int, float)) and not isinstance(value, bool) and
+                abs(float(value) - expected) <= 0.0005)
+
     for translated, original in zip(cues, source_cues):
         if (not isinstance(translated, dict) or not isinstance(translated.get("text"), str) or
             not translated["text"].strip() or translated.get("id") != original["segment_id"].rsplit(":", 1)[-1] or
-            translated.get("start_seconds") != original["start_seconds"] or
-            translated.get("end_seconds") != original["end_seconds"]):
+            not has_same_timestamp(translated.get("start_seconds"), original["start_seconds"]) or
+            not has_same_timestamp(translated.get("end_seconds"), original["end_seconds"])):
             raise ValueError("translation timing does not match the source transcript")
     if all(translated["text"].strip() == original["text"].strip()
            for translated, original in zip(cues, source_cues)):

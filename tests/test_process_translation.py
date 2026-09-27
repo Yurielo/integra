@@ -69,6 +69,20 @@ class ProcessTranslationTests(unittest.TestCase):
         self.assertEqual(record["runtime"]["commit_sha"], "pinned")
         self.assertEqual(record["output_sha256"], hashlib.sha256(Path(outputs["translation"]).read_bytes()).hexdigest())
 
+    def test_translation_accepts_json_timestamp_roundoff_within_half_millisecond(self):
+        def rounded_translation(subtitles, output, *, target, runtime):
+            payload = self._translation(subtitles, output, target=target, runtime=runtime)
+            payload["cues"][0]["end_seconds"] = 1.2499999999999998
+            output.write_text(json.dumps(payload), encoding="utf-8")
+            return payload
+
+        job = self._job(("translation",))
+        with patch("integra_core.user_media.videotext_translation_preflight", side_effect=self._runtime), \
+             patch("integra_core.user_media.translate_videotext", side_effect=rounded_translation):
+            result = run_job(self.project, job["job_id"])
+
+        self.assertEqual(result["state"], "COMPLETED")
+
     def test_translation_failure_preserves_verified_transcript_for_a_later_retry(self):
         job = self._job(("translation",))
         with patch("integra_core.user_media.videotext_translation_preflight", side_effect=self._runtime), \
