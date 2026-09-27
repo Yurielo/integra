@@ -67,6 +67,43 @@ def _is_run_cancelled(project_dir: Path, run_id: str | None) -> bool:
     return record.get("state") == "CANCELLED"
 
 
+def build_asr_diagnostics(provenance: dict[str, Any], recognition_mode: str,
+                          source_speech_language: str) -> dict[str, Any]:
+    """Build the persisted, Integra-owned ASR diagnostic contract."""
+    if not isinstance(provenance, dict):
+        raise ValueError("ASR quality diagnostics are unavailable")
+    quality = provenance.get("quality_diagnostics")
+    if not isinstance(quality, dict):
+        raise ValueError("ASR quality diagnostics are unavailable")
+    status = quality.get("status")
+    suspicious = quality.get("suspicious_chunks")
+    retries = quality.get("protective_retry_count")
+    recovered = quality.get("recovered_after_retry_count")
+    if (status not in {"PASSED", "REQUIRES_ATTENTION"} or
+        any(type(value) is not int or value < 0 for value in (suspicious, retries, recovered)) or
+        retries != recovered + suspicious or
+        (status == "PASSED") != (suspicious == 0)):
+        raise ValueError("ASR quality diagnostics cannot be verified")
+    executed_mode = provenance.get("mode")
+    executed_language = provenance.get("executed_source_speech_language")
+    language_mode = provenance.get("source_speech_language_mode")
+    if executed_mode != recognition_mode or executed_language != source_speech_language or language_mode != "FIXED":
+        raise ValueError("ASR diagnostics do not match the requested execution")
+    return {
+        "schema_version": "1.0",
+        "status": status,
+        "suspicious_chunks": suspicious,
+        "protective_retry_count": retries,
+        "recovered_after_retry_count": recovered,
+        "recognition": {"requested_mode": recognition_mode, "executed_mode": executed_mode},
+        "source_speech_language": {
+            "requested": source_speech_language,
+            "executed": executed_language,
+            "mode": language_mode,
+        },
+    }
+
+
 def _run_with_cancellation(
     command: list[str],
     project_dir: Path,
@@ -312,6 +349,8 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
         job["source_speech_language"] = {"requested": source_speech_language,
                                           "executed": recognized["provenance"]["executed_source_speech_language"],
                                           "mode": recognized["provenance"]["source_speech_language_mode"]}
+        job["asr_diagnostics"] = build_asr_diagnostics(
+            recognized["provenance"], recognition_mode, source_speech_language)
         subtitles = Path(recognized["srt"])
         segments = _parse_srt(subtitles.read_text(encoding="utf-8"), job["source_id"])
         if not segments: raise ValueError("transcription produced no timed speech segments")
@@ -372,6 +411,11 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
         if isinstance(error, asr.ASRQualityError):
             job["outputs"] = {"transcript_quality_report":error.artifacts["review_txt"],
                               "transcript_asr_record":error.artifacts["record"]}
+            job["asr_diagnostics"] = build_asr_diagnostics(
+                error.artifacts["provenance"],
+                job.get("recognition_mode", "normal"),
+                job.get("source_speech_language", "ru"),
+            )
         job.update(state="FAILED", message=str(error)[:300], updated_at=now())
         atomic_json(jobs_path, jobs); raise
 

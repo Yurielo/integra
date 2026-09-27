@@ -1,0 +1,61 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.proposed_product_baseline",
+  "proposal_id": "proposal-process-v1-asr-diagnostics",
+  "status": "PROPOSED_BASELINE_VALID",
+  "base_current_id": "current-v2-43bdfe7b93052a3f2f9b5b6b089179580ef5387ebe82d0e96ef69e612257b0cd",
+  "base_main": {
+    "commit_sha": "a78453d1c88acecd3f856fafef975ce7e7281562",
+    "tree_sha": "d01ce0d7986383d7060e76e5841bb4affbaac023"
+  },
+  "proposed_source": {
+    "commit_sha": "3576de15c915dba90ac8cff30e3f18a47ed858a8",
+    "tree_sha": "e17d2ea714da0f4af1c8aa0be4038a257d5bd3b3"
+  },
+  "proposed_head": {
+    "commit_sha": "d61e4c4b65e4e367718f9451a8b1cb90366fe549",
+    "tree_sha": "73149d1d7e1d56fad3e40fdaceba910c444e653d"
+  },
+  "intended_scope": {
+    "wp": "Excel #17 / V02 + S02 ASR diagnostics",
+    "journey": "bounded normal Process ASR quality diagnosis: persist verified retry outcomes, show a readable non-provider result with executed mode and source language, and retain truthful failed-source evidence; no provider migration, routing switch, Stage B, installation, deployment, Knowledge, Studio, translation, or topic work"
+  },
+  "candidate": {
+    "candidate_id": "candidate-v1-ec1ae4eaccc5a2af225490135dc6385920c5f26ee0433059311be9074f6a2e57",
+    "identity_sha256": "ec1ae4eaccc5a2af225490135dc6385920c5f26ee0433059311be9074f6a2e57",
+    "manifest_digest": "df330c430ff6862f97d7db12d6bcc0362b3241b80989a7ec1935372e7fa2a7df",
+    "bundle_digest": "4794bca8031cf6ff0d6a8c019e5492646604ba9e66b3e591167c0c9e63929ffd"
+  },
+  "delta": [
+    {"path": "integra_core/application_runtime.py", "before_sha256": "772c5ee3811d520d3ee198c87d3a7858a173d03136d034c1d209a207a0db124c", "after_sha256": "5c63930be21cc32fc98e1a26a0d9a488b3f9d70f7b5f722ca445391bd60f806b"},
+    {"path": "integra_core/seminartext_asr_runtime.py", "before_sha256": "955d59582001e02fca3c7e79d05e9075562d2667e042b91013f246d8d66c3d6e", "after_sha256": "f296ba0f885fe0503eeb7f0cf4c178668014ebd7354fc8ef3d1a643791a3c4c1"},
+    {"path": "integra_core/user_media.py", "before_sha256": "71663cf3bb69e0406bb3ee023b1fd13402cacb1cc031907a4e5aafcbda9b4c7b", "after_sha256": "8b101465f3e605687cb291ddfe5218e051a74c0f43b083c187da63d401b9a3e4"},
+    {"path": "macos/IntegraApp.swift", "before_sha256": "5e27857b75cbc3173ef39462eb5d900269242595e90bddd75800cacdb4dc3edf", "after_sha256": "82b976639f4b196ecce7bf6dda3b20139e29d8592755a2712196eb1e8c0f2ba0"}
+  ],
+  "historical_test_successors": [],
+  "gates": [
+    {"name": "candidate-manifest", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_ASR_DIAGNOSTICS_CANDIDATE_MANIFEST.json"},
+    {"name": "candidate-archive", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_ASR_DIAGNOSTICS_CANDIDATE_ARCHIVE.json"},
+    {"name": "packaged-asr-diagnostics", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_ASR_DIAGNOSTICS_E2E.json"},
+    {"name": "focused-process-regressions", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_ASR_DIAGNOSTICS_FOCUSED_TESTS.txt"}
+  ],
+  "evidence": {
+    "candidate_manifest": {"path": "docs/evidence/PROCESS_V1_ASR_DIAGNOSTICS_CANDIDATE_MANIFEST.json", "sha256": "df330c430ff6862f97d7db12d6bcc0362b3241b80989a7ec1935372e7fa2a7df"},
+    "candidate_evidence": {"path": "docs/evidence/PROCESS_V1_ASR_DIAGNOSTICS_E2E.json", "sha256": "406daf082bcc6756af83554dad5b611cda58ae5cdbb4e415c8940b63f7514f82"},
+    "report": {"path": "docs/PROCESS_V1_ASR_DIAGNOSTICS_PROOF.md", "sha256": "74ab4a4d7a3667fe61ac01ed3d700ad77dece71492c857d6b36b48ec7d83fd7f"}
+  },
+  "owner_acceptance": {
+    "decision": "PILOT_ACCEPTED",
+    "authority_ref": "PRODUCT OWNER AUTHORIZATION: ACCEPT_PROPOSED_BASELINE proposal-process-v1-asr-diagnostics candidate-v1-ec1ae4eaccc5a2af225490135dc6385920c5f26ee0433059311be9074f6a2e57",
+    "scope": "ASR diagnostics — Excel #17 / V02 + S02 bounded baseline acceptance only",
+    "promotion_authorized": false
+  },
+  "allowed_overlay_paths": [
+    "docs/PROCESS_V1_ASR_DIAGNOSTICS_PROOF.md",
+    "docs/PROCESS_V1_OWNER_SCOPE_AND_COMPLETION_MAP.md",
+    "docs/evidence/PROCESS_V1_ASR_DIAGNOSTICS_CANDIDATE_ARCHIVE.json",
+    "docs/evidence/PROCESS_V1_ASR_DIAGNOSTICS_CANDIDATE_MANIFEST.json",
+    "docs/evidence/PROCESS_V1_ASR_DIAGNOSTICS_E2E.json",
+    "docs/evidence/PROCESS_V1_ASR_DIAGNOSTICS_FOCUSED_TESTS.txt"
+  ]
+}

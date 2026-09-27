@@ -388,7 +388,11 @@ class ApplicationRuntimeTests(unittest.TestCase):
             overrides=self.media_environment()
         report=self.project/"quality.txt"; report.write_text("Suspicious chunk requires audio review")
         record=self.project/"asr.json"; record.write_text('{"suspicious_chunks":1}')
-        error=ASRQualityError("Suspicious ASR", {"review_txt":str(report), "record":str(record)})
+        error=ASRQualityError("Suspicious ASR", {"review_txt":str(report), "record":str(record),
+            "provenance":{"mode":"normal", "executed_source_speech_language":"ru",
+            "source_speech_language_mode":"FIXED", "quality_diagnostics":{
+                "status":"REQUIRES_ATTENTION", "suspicious_chunks":1,
+                "protective_retry_count":1, "recovered_after_retry_count":0}}})
         with patch.dict(os.environ, overrides), \
              patch("integra_core.user_media.asr.preflight",return_value={"state":"READY"}), \
              patch("integra_core.capabilities.seminartext_preflight",return_value={"state":"READY"}), \
@@ -402,9 +406,11 @@ class ApplicationRuntimeTests(unittest.TestCase):
         alignment.assert_not_called(); topics.assert_not_called()
         persisted=read_run(self.project,run["run_id"])
         self.assertEqual(persisted["state"],"FAILED")
+        self.assertEqual(persisted["error"], "Расшифровка не прошла проверку качества. Проверьте аудио и повторите обработку.")
         outputs=persisted["source_results"][0]["outputs"]
         self.assertEqual(outputs,{"transcript_quality_report":str(report),"transcript_asr_record":str(record)})
         self.assertNotIn("transcript",outputs)
+        self.assertEqual(persisted["source_results"][0]["asr_diagnostics"]["status"], "REQUIRES_ATTENTION")
 
     def test_cancelled_media_result_never_promotes_run_to_completed(self):
         source=self.root/"audio.wav"; source.write_bytes(b"audio")

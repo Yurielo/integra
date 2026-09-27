@@ -172,6 +172,33 @@ def _number_srt(source: Path, target: Path) -> dict:
         raise ASRError(str(error)) from error
 
 
+def _quality_diagnostics(log: Path, suspicious_chunks: int) -> dict[str, Any]:
+    """Derive a small, verified quality summary from the owned execution log."""
+    if type(suspicious_chunks) is not int or suspicious_chunks < 0:
+        raise ASRError("SeminarText quality result cannot be verified")
+    if log.is_symlink() or not log.is_file():
+        raise ASRError("SeminarText quality trace cannot be verified")
+    retries = 0
+    recovered = 0
+    try:
+        with log.open(encoding="utf-8", errors="replace") as stream:
+            for line in stream:
+                if line.rstrip("\r\n") == "Обнаружено возможное зацикливание; повторяю с защитными параметрами.":
+                    retries += 1
+                elif line.rstrip("\r\n") == "Повторная расшифровка фрагмента успешна.":
+                    recovered += 1
+    except OSError as error:
+        raise ASRError("SeminarText quality trace cannot be verified") from error
+    if retries != recovered + suspicious_chunks:
+        raise ASRError("SeminarText quality trace conflicts with its final result")
+    return {
+        "status": "PASSED" if suspicious_chunks == 0 else "REQUIRES_ATTENTION",
+        "suspicious_chunks": suspicious_chunks,
+        "protective_retry_count": retries,
+        "recovered_after_retry_count": recovered,
+    }
+
+
 def transcribe(source: Path, work: Path, *, ffmpeg: Path, whisper: Path, model: Path,
                vad_model: Path | None = None, cancelled: Callable[[], bool] | None = None,
                progress: Callable[[str], None] | None = None, recognition_mode: str = "normal",
@@ -274,6 +301,8 @@ def transcribe(source: Path, work: Path, *, ffmpeg: Path, whisper: Path, model: 
     if len(matches) != 1:
         raise ASRError("SeminarText quality result cannot be verified")
     identity["suspicious_chunks"] = int(matches[0])
+    identity["quality_diagnostics"] = _quality_diagnostics(log, identity["suspicious_chunks"])
+    artifacts["diagnostics"] = identity["quality_diagnostics"]
     identity["model_sha256"] = _sha(Path(identity["model"]))
     identity["source_sha256"] = _sha(source)
     identity["whisper_sha256"] = _sha(Path(identity["whisper"]))

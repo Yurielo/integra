@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0",
+  "candidate_id": "candidate-v1-ec1ae4eaccc5a2af225490135dc6385920c5f26ee0433059311be9074f6a2e57",
+  "source": "isolated synthetic WAV; no user media",
+  "scenarios": [
+    {
+      "scenario": "Recovered diagnostics",
+      "run_state": "COMPLETED",
+      "run_error": null,
+      "diagnostics": {
+        "protective_retry_count": 1,
+        "recognition": {
+          "executed_mode": "careful",
+          "requested_mode": "careful"
+        },
+        "recovered_after_retry_count": 1,
+        "schema_version": "1.0",
+        "source_speech_language": {
+          "executed": "ru",
+          "mode": "FIXED",
+          "requested": "ru"
+        },
+        "status": "PASSED",
+        "suspicious_chunks": 0
+      },
+      "has_transcript": true,
+      "reopen_state": "COMPLETED"
+    },
+    {
+      "scenario": "Failed diagnostics",
+      "run_state": "FAILED",
+      "run_error": "Расшифровка не прошла проверку качества. Проверьте аудио и повторите обработку.",
+      "diagnostics": {
+        "protective_retry_count": 1,
+        "recognition": {
+          "executed_mode": "normal",
+          "requested_mode": "normal"
+        },
+        "recovered_after_retry_count": 0,
+        "schema_version": "1.0",
+        "source_speech_language": {
+          "executed": "ru",
+          "mode": "FIXED",
+          "requested": "ru"
+        },
+        "status": "REQUIRES_ATTENTION",
+        "suspicious_chunks": 1
+      },
+      "has_transcript": false,
+      "reopen_state": "FAILED"
+    }
+  ],
+  "manifest_identity_sha256": "ec1ae4eaccc5a2af225490135dc6385920c5f26ee0433059311be9074f6a2e57",
+  "bundle_digest": "4794bca8031cf6ff0d6a8c019e5492646604ba9e66b3e591167c0c9e63929ffd",
+  "product_source": {
+    "commit_sha": "3576de15c915dba90ac8cff30e3f18a47ed858a8",
+    "tree_sha": "e17d2ea714da0f4af1c8aa0be4038a257d5bd3b3"
+  }
+}

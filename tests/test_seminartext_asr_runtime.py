@@ -22,15 +22,17 @@ class SeminarTextASRTests(unittest.TestCase):
         with self.assertRaisesRegex(asr.ASRError, "Source-speech language"):
             asr._source_speech_language("en")
 
-    def test_native_failed_run_surfaces_quality_report_in_both_views(self):
+    def test_native_run_surfaces_owned_diagnostics_in_both_views(self):
         swift=(Path(__file__).resolve().parents[1]/"macos/IntegraApp.swift").read_text()
-        self.assertIn('if state == "FAILED" { renderFailedASRReports(run) }',swift)
+        rows=swift.split('private func renderResultRows',1)[1].split('private func renderPrimaryProcessResults',1)[0]
+        self.assertIn('renderASRDiagnostics(result)', rows)
         outputs=swift.split('private func renderOutputs()',1)[1]
         self.assertIn('else if run["state"] as? String == "FAILED"',outputs)
-        self.assertIn('renderFailedASRReports(run)',outputs)
-        helper=swift.split('private func renderFailedASRReports',1)[1].split('@objc',1)[0]
-        self.assertIn('outputs["transcript_quality_report"]',helper)
-        self.assertIn('#selector(openOutput(_:))',helper)
+        self.assertIn('renderResultRows(run)',outputs)
+        helper=swift.split('private func renderASRDiagnostics',1)[1].split('private func renderPrimaryProcessResults',1)[0]
+        self.assertIn('Проверка качества',helper)
+        self.assertIn('Повторная проверка',helper)
+        self.assertNotIn('SeminarText',helper)
 
     def test_rejects_unverifiable_component(self):
         with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {"INTEGRA_SEMINARTEXT_CHECKOUT": directory}):
@@ -120,6 +122,10 @@ Path(prefix + '.srt').write_text('1\\n00:00:00,000 --> 00:00:01,250\\n' + text +
             self.assertEqual(source.read_bytes(), original)
             provenance = json.loads(Path(result['record']).read_text())
             self.assertEqual(provenance['suspicious_chunks'], 0)
+            self.assertEqual(provenance['quality_diagnostics'], {
+                'status': 'PASSED', 'suspicious_chunks': 0,
+                'protective_retry_count': 1, 'recovered_after_retry_count': 1,
+            })
             self.assertEqual(provenance['artifact_sha256']['raw_txt'], hashlib.sha256(Path(result['raw_txt']).read_bytes()).hexdigest())
 
     def test_careful_mode_uses_project_cli_and_persists_executed_mode(self):
@@ -165,6 +171,10 @@ Path(prefix + '.srt').write_text('1\\n00:00:00,000 --> 00:00:01,250\\n' + text +
             self.assertTrue(Path(artifacts['raw_txt']).is_file())
             self.assertTrue(Path(artifacts['review_txt']).is_file())
             self.assertEqual(artifacts['provenance']['suspicious_chunks'], 1)
+            self.assertEqual(artifacts['diagnostics'], {
+                'status': 'REQUIRES_ATTENTION', 'suspicious_chunks': 1,
+                'protective_retry_count': 1, 'recovered_after_retry_count': 0,
+            })
 
     def test_numbered_subtitles_preserve_chunk_offsets_and_original_bytes(self):
         with tempfile.TemporaryDirectory() as directory:
