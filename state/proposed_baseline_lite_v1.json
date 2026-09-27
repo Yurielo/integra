@@ -35,12 +35,7 @@
     "candidate_evidence": {"path": "docs/evidence/PROCESS_V1_TRANSLATED_TXT_E2E.json", "sha256": "36d374bba6a581fc526d2dded02723b38cf94d5a9b3e9db78ca2e53af862462f"},
     "report": {"path": "docs/PROCESS_V1_TRANSLATED_TXT_PROOF.md", "sha256": "47b7553375eee84131482276ad77872659bf6f38c3ddd5b58b4d937e2c42128a"}
   },
-  "owner_acceptance": {
-    "decision": "PILOT_ACCEPTED",
-    "authority_ref": "PRODUCT OWNER AUTHORIZATION: ACCEPT_PROPOSED_BASELINE proposal-process-v1-translated-txt candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583",
-    "scope": "Translated TXT — Excel #20 / V06 proposed baseline acceptance only",
-    "promotion_authorized": false
-  },
+  "owner_acceptance": null,
   "allowed_overlay_paths": [
     "docs/PROCESS_V1_DEFINITION_OF_DONE.md",
     "docs/PROCESS_V1_OWNER_SCOPE_AND_COMPLETION_MAP.md",
