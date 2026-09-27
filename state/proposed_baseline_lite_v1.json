@@ -27,6 +27,6 @@
     "candidate_evidence": {"path": "docs/evidence/PROCESS_V1_TOPIC_SUMMARY_E2E.json", "sha256": "80797a798f77294b0ac403a8c2fb50de8faf015dce0f8f6f06454cea8c30c098"},
     "report": {"path": "docs/PROCESS_V1_TOPIC_SUMMARY_PROOF.md", "sha256": "a7312756895939539684aad50fd7106032d92f33e1264e7662401b081af54b66"}
   },
-  "owner_acceptance": null,
+  "owner_acceptance": {"decision": "PILOT_ACCEPTED", "authority_ref": "PRODUCT OWNER AUTHORIZATION: ACCEPT_PROPOSED_BASELINE proposal-process-v1-topic-summary candidate-v1-a52cd2b257c55f0c50251ec21c253a3370de9d72f16148459650243c5fb3b669", "scope": "Topic summary — Excel #24 / S12 partial + S13 proposed baseline acceptance only", "promotion_authorized": false},
   "allowed_overlay_paths": ["docs/PROCESS_V1_DEFINITION_OF_DONE.md", "docs/PROCESS_V1_EXCEL_SCOPE_RECONCILIATION.md", "docs/PROCESS_V1_OWNER_SCOPE_AND_COMPLETION_MAP.md", "docs/PROCESS_V1_TOPIC_SUMMARY_PROOF.md", "docs/evidence/PROCESS_V1_TOPIC_SUMMARY_CANDIDATE_ARCHIVE.json", "docs/evidence/PROCESS_V1_TOPIC_SUMMARY_CANDIDATE_MANIFEST.json", "docs/evidence/PROCESS_V1_TOPIC_SUMMARY_E2E.json", "docs/evidence/PROCESS_V1_TOPIC_SUMMARY_FOCUSED_TESTS.txt", "docs/evidence/PROCESS_V1_TOPIC_SUMMARY_FULL_TESTS.txt"]
 }
