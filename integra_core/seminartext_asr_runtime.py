@@ -29,6 +29,10 @@ VAD_SHA256 = "29940d98d42b91fbd05ce489f3ecf7c72f0a42f027e4875919a28fb4c04ea2cf"
 BUNDLED_RUNTIME_ROOT = Path(__file__).resolve().parents[1] / "runtime" / "seminartext"
 OWNED_CHECKOUT = Path(__file__).resolve().parents[1] / ".runtime-components" / "seminartext-pinned"
 RECOGNITION_MODES = frozenset({"normal", "careful"})
+# The pinned SeminarText production CLI invokes whisper-cli with ``-l ru``.
+# Keep the product-facing selection bound to that exact supported contract;
+# automatic detection and other languages are not implemented by this runtime.
+SOURCE_SPEECH_LANGUAGES = frozenset({"ru"})
 
 
 class ASRError(ValueError):
@@ -69,6 +73,12 @@ def _recognition_mode(mode: str) -> str:
     return mode
 
 
+def _source_speech_language(language: str) -> str:
+    if not isinstance(language, str) or language not in SOURCE_SPEECH_LANGUAGES:
+        raise ASRError("Source-speech language is unsupported by the pinned ASR runtime")
+    return language
+
+
 def _runtime() -> Path:
     configured = os.environ.get("INTEGRA_SEMINARTEXT_CHECKOUT")
     root = Path(configured).expanduser() if configured else (
@@ -91,8 +101,9 @@ def _runtime() -> Path:
 
 
 def preflight(ffmpeg: Path, whisper: Path, model: Path, vad_model: Path | None = None,
-              recognition_mode: str = "normal") -> dict[str, Any]:
+              recognition_mode: str = "normal", source_speech_language: str = "ru") -> dict[str, Any]:
     recognition_mode = _recognition_mode(recognition_mode)
+    source_speech_language = _source_speech_language(source_speech_language)
     root = _runtime()
     ffmpeg = _file(ffmpeg, "ffmpeg", True)
     whisper = _file(whisper, "whisper-cli", True)
@@ -117,7 +128,9 @@ def preflight(ffmpeg: Path, whisper: Path, model: Path, vad_model: Path | None =
             "version_sha256": VERSION_SHA256, "ffmpeg": str(ffmpeg), "ffprobe": str(probe),
             "whisper": str(whisper), "model": str(model), "vad_model": str(vad),
             "vad_sha256": VAD_SHA256, "chunk_seconds": 300,
-            "language": "ru", "mode": recognition_mode, "cleaned_text_authority": "DERIVED_UNVERIFIED",
+            "language": source_speech_language, "executed_source_speech_language": source_speech_language,
+            "source_speech_language_mode": "FIXED", "mode": recognition_mode,
+            "cleaned_text_authority": "DERIVED_UNVERIFIED",
             "subtitle_runtime": subtitle_runtime}
 
 
@@ -161,10 +174,11 @@ def _number_srt(source: Path, target: Path) -> dict:
 
 def transcribe(source: Path, work: Path, *, ffmpeg: Path, whisper: Path, model: Path,
                vad_model: Path | None = None, cancelled: Callable[[], bool] | None = None,
-               progress: Callable[[str], None] | None = None, recognition_mode: str = "normal") -> dict[str, Any]:
+               progress: Callable[[str], None] | None = None, recognition_mode: str = "normal",
+               source_speech_language: str = "ru") -> dict[str, Any]:
     if threading.current_thread() is not threading.main_thread():
         raise ASRError("SeminarText ASR must run in its owned worker main thread")
-    identity = preflight(ffmpeg, whisper, model, vad_model, recognition_mode)
+    identity = preflight(ffmpeg, whisper, model, vad_model, recognition_mode, source_speech_language)
     source = _file(source, "ASR source")
     work = Path(work).resolve(strict=True)
     if not work.is_dir():

@@ -109,7 +109,8 @@ def _load(root: Path, manifest_path: Path, binding: dict, cancelled=None) -> dic
 
 def transcribe_or_reuse(project_dir: Path, source: Path, work: Path, *, ffmpeg: Path,
                        whisper: Path, model: Path, expected_source_sha256: str,
-                       cancelled=None, progress=None, recognition_mode: str = "normal") -> dict:
+                       cancelled=None, progress=None, recognition_mode: str = "normal",
+                       source_speech_language: str = "ru") -> dict:
     project_dir = Path(project_dir)
     if project_dir.is_symlink():
         raise ValueError("ASR cache project root is unsafe")
@@ -118,7 +119,8 @@ def transcribe_or_reuse(project_dir: Path, source: Path, work: Path, *, ffmpeg: 
     _check_cancelled(cancelled)
     if progress:
         progress("Проверяю сохранённую расшифровку и версии компонентов")
-    runtime = asr.preflight(ffmpeg, whisper, model, recognition_mode=recognition_mode)
+    runtime = asr.preflight(ffmpeg, whisper, model, recognition_mode=recognition_mode,
+                            source_speech_language=source_speech_language)
     binding = _binding(source, runtime, cancelled)
     if binding["source_sha256"] != expected_source_sha256:
         raise ValueError("Owned ASR source changed after import")
@@ -145,7 +147,8 @@ def transcribe_or_reuse(project_dir: Path, source: Path, work: Path, *, ffmpeg: 
                 # Never repair, overwrite, or delete untrusted/old artifacts.
                 continue
             _check_cancelled(cancelled)
-            if _binding(source, asr.preflight(ffmpeg, whisper, model, recognition_mode=recognition_mode), cancelled) != binding:
+            if _binding(source, asr.preflight(ffmpeg, whisper, model, recognition_mode=recognition_mode,
+                                              source_speech_language=source_speech_language), cancelled) != binding:
                 raise ValueError("ASR source or runtime changed while validating reuse")
             if progress:
                 progress("Использую проверенную сохранённую расшифровку — повторное ASR не требуется")
@@ -153,10 +156,12 @@ def transcribe_or_reuse(project_dir: Path, source: Path, work: Path, *, ffmpeg: 
             recognized["reuse"] = {"state": "REUSED", "cache_key": key, "manifest_path": str(candidate.resolve())}
             return recognized
         recognized = asr.transcribe(source, work, ffmpeg=ffmpeg, whisper=whisper, model=model,
-                                   cancelled=cancelled, progress=progress, recognition_mode=recognition_mode)
+                                   cancelled=cancelled, progress=progress, recognition_mode=recognition_mode,
+                                   source_speech_language=source_speech_language)
         _check_cancelled(cancelled)
         # Detect tool, model, source or configuration drift during execution.
-        if _binding(source, asr.preflight(ffmpeg, whisper, model, recognition_mode=recognition_mode), cancelled) != binding:
+        if _binding(source, asr.preflight(ffmpeg, whisper, model, recognition_mode=recognition_mode,
+                                          source_speech_language=source_speech_language), cancelled) != binding:
             raise ValueError("ASR source or runtime changed during transcription; cache was not published")
         files = {}
         for name in FILE_KEYS:

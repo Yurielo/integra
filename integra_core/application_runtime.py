@@ -17,6 +17,7 @@ from .youtube_runtime import download_video
 from .youtube_playlist_runtime import execute_playlist
 
 RECOGNITION_MODES = frozenset({"normal", "careful"})
+SOURCE_SPEECH_LANGUAGES = frozenset({"ru"})
 
 
 def _runs(project_dir: Path) -> Path:
@@ -29,13 +30,22 @@ def _recognition_mode(value: Any) -> str:
     return value
 
 
-def prepare_run(project_dir: Path, plan: dict[str,Any], *, recognition_mode: str = "normal") -> dict[str,Any]:
+def _source_speech_language(value: Any) -> str:
+    if not isinstance(value, str) or value not in SOURCE_SPEECH_LANGUAGES:
+        raise ValueError("source-speech language is unsupported")
+    return value
+
+
+def prepare_run(project_dir: Path, plan: dict[str,Any], *, recognition_mode: str = "normal",
+                source_speech_language: str = "ru") -> dict[str,Any]:
     verified=build_plan(plan.get("sources",[]),plan.get("selected_outputs",[]))
     if verified["plan_id"]!=plan.get("plan_id"): raise ValueError("execution plan identity differs")
     recognition_mode = _recognition_mode(recognition_mode)
+    source_speech_language = _source_speech_language(source_speech_language)
     run_id=f"urn:integra:run:{uuid.uuid4()}"
     record={"schema_version":"1.0","run_id":run_id,"plan":verified,"state":"QUEUED","current_stage":None,
-            "recognition":{"requested_mode":recognition_mode},"completed_sources":0,
+            "recognition":{"requested_mode":recognition_mode},
+            "source_speech_language":{"requested":source_speech_language},"completed_sources":0,
             "total_sources":len(verified["sources"]),"source_results":[],"created_at":now()}
     atomic_json(_runs(project_dir)/(run_id.removeprefix("urn:integra:run:")+".json"),record); return record
 
@@ -176,6 +186,7 @@ def _booktext_outputs(result: dict[str, Any], output_dir: Path) -> dict[str, str
 def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
     path=run_path(project_dir,run_id); record=json.loads(path.read_bytes()); plan=record["plan"]
     recognition_mode = _recognition_mode(record.get("recognition", {}).get("requested_mode", "normal"))
+    source_speech_language = _source_speech_language(record.get("source_speech_language", {}).get("requested", "ru"))
     jobs_path=project_dir/"jobs.json"
     def refresh_record():
         return json.loads(path.read_bytes())
@@ -206,7 +217,7 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                     imported=import_source(project_dir,Path(source["input"]))
                     if imported["source_id"] != source["source_id"]:
                         raise ValueError("media source changed after plan creation")
-                    job={"job_id":f"urn:integra:job:{uuid.uuid4()}","kind":"LOCAL_MEDIA_TRANSCRIPTION","state":"QUEUED","progress":0,"message":"Queued by source-first plan","created_at":now(),"source_id":imported["source_id"],"source_sha256":imported["content_sha256"],"owned_path":imported["owned_path"],"requested_outputs":outputs,"recognition_mode":recognition_mode,"run_id":run_id}
+                    job={"job_id":f"urn:integra:job:{uuid.uuid4()}","kind":"LOCAL_MEDIA_TRANSCRIPTION","state":"QUEUED","progress":0,"message":"Queued by source-first plan","created_at":now(),"source_id":imported["source_id"],"source_sha256":imported["content_sha256"],"owned_path":imported["owned_path"],"requested_outputs":outputs,"recognition_mode":recognition_mode,"source_speech_language":source_speech_language,"run_id":run_id}
                     jobs=json.loads(jobs_path.read_bytes())
                     jobs["jobs"].append(job); atomic_json(jobs_path,jobs); result=run_job(project_dir,job["job_id"])
                     record["source_results"].append({"source_id":source["source_id"],"display_name":source["display_name"],"state":result["state"],"outputs":result.get("outputs",{}),"job_id":job["job_id"]})
@@ -214,6 +225,9 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                         record["source_results"][-1]["asr_reuse"] = result["asr_reuse"]
                     if result.get("recognition"):
                         record["source_results"][-1]["recognition"] = result["recognition"]
+                    if result.get("source_speech_language"):
+                        record["source_results"][-1]["source_speech_language"] = result["source_speech_language"]
+                        record["source_speech_language"] = result["source_speech_language"]
                 except Exception as error:
                     # A one-source request retains its established fail-closed
                     # exception behavior.  In a local multi-source plan each
@@ -238,7 +252,7 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                     record["source_results"].append({"source_id": source["source_id"], "display_name": source["display_name"], "state": "COMPLETED", "outputs": downloaded_outputs})
                 else:
                     record["current_stage"] = "media_preparation"; atomic_json(path, record)
-                    job = {"job_id": f"urn:integra:job:{uuid.uuid4()}", "kind": "YOUTUBE_MEDIA_TRANSCRIPTION", "state": "QUEUED", "progress": 0, "message": "Queued after YouTube download", "created_at": now(), "source_id": source["source_id"], "source_sha256": downloaded["content_sha256"], "owned_path": downloaded["downloaded_path"], "requested_outputs": downstream, "recognition_mode": recognition_mode, "run_id": run_id, "youtube_source_record": downloaded["record_path"]}
+                    job = {"job_id": f"urn:integra:job:{uuid.uuid4()}", "kind": "YOUTUBE_MEDIA_TRANSCRIPTION", "state": "QUEUED", "progress": 0, "message": "Queued after YouTube download", "created_at": now(), "source_id": source["source_id"], "source_sha256": downloaded["content_sha256"], "owned_path": downloaded["downloaded_path"], "requested_outputs": downstream, "recognition_mode": recognition_mode, "source_speech_language": source_speech_language, "run_id": run_id, "youtube_source_record": downloaded["record_path"]}
                     jobs = json.loads(jobs_path.read_bytes())
                     jobs["jobs"].append(job); atomic_json(jobs_path, jobs); result = run_job(project_dir, job["job_id"])
                     record["source_results"].append({"source_id": source["source_id"], "display_name": source["display_name"], "state": result["state"], "outputs": downloaded_outputs | result.get("outputs", {}), "job_id": job["job_id"]})
@@ -246,6 +260,9 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                         record["source_results"][-1]["asr_reuse"] = result["asr_reuse"]
                     if result.get("recognition"):
                         record["source_results"][-1]["recognition"] = result["recognition"]
+                    if result.get("source_speech_language"):
+                        record["source_results"][-1]["source_speech_language"] = result["source_speech_language"]
+                        record["source_speech_language"] = result["source_speech_language"]
             elif source["kind"] == "URL" and source["source_type"] == "YOUTUBE_PLAYLIST":
                 if outputs != ["youtube_playlist_ingest"]:
                     raise ValueError("playlist plan has unsupported outputs")
