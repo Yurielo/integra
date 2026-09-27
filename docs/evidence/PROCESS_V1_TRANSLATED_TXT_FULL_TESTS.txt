@@ -1,0 +1,6 @@
+/var/folders/q9/rprrsl95265b7h21d3_mp2fr0000gn/T/tmpi469mhfl/macos/Resources/Integra.icns
+INTEGRA_BACKUP_VERIFICATION: PASS
+----------------------------------------------------------------------
+Ran 809 tests in 43.145s
+
+OK (skipped=92)

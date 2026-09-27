@@ -12,7 +12,15 @@ from typing import Any
 from .capabilities import TRANSLATION_TARGET_LANGUAGE, build_plan, validate_translation_target_language
 from .documents import extract_document, materialize_embedded_media
 from .booktext_runtime import run_ocr as run_booktext_ocr
-from .user_media import atomic_json, build_asr_diagnostics, import_source, now, run_job, _is_run_cancelled
+from .user_media import (
+    _is_run_cancelled,
+    _materialize_translation_txt,
+    atomic_json,
+    build_asr_diagnostics,
+    import_source,
+    now,
+    run_job,
+)
 from .youtube_runtime import download_video
 from .youtube_playlist_runtime import execute_playlist
 
@@ -86,7 +94,70 @@ def run_path(project_dir:Path,run_id:str)->Path:
     return path
 
 
-def read_run(project_dir:Path,run_id:str)->dict[str,Any]: return json.loads(run_path(project_dir,run_id).read_bytes())
+def _owned_artifact(project_dir: Path, value: Any) -> Path:
+    """Resolve one saved result path without trusting a persisted string."""
+    if not isinstance(value, str):
+        raise ValueError("saved translation artifact path is invalid")
+    path = Path(value)
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("saved translation artifact is unavailable")
+    try:
+        resolved = path.resolve(strict=True)
+        resolved.relative_to((project_dir / "artifacts").resolve(strict=True))
+    except (OSError, ValueError) as error:
+        raise ValueError("saved translation artifact is outside the project") from error
+    return resolved
+
+
+def _recover_saved_translation_text(project_dir: Path, record: dict[str, Any]) -> bool:
+    """Materialize legacy translated text only when its saved evidence still binds."""
+    if record.get("state") != "COMPLETED":
+        return False
+    changed = False
+    for result in record.get("source_results", []):
+        if not isinstance(result, dict) or result.get("state") != "COMPLETED":
+            continue
+        outputs = result.get("outputs")
+        if not isinstance(outputs, dict) or "translation_txt" in outputs:
+            continue
+        required = ("translation", "translation_provenance", "transcript_json", "subtitles")
+        if not all(name in outputs for name in required):
+            continue
+        translation = _owned_artifact(project_dir, outputs["translation"])
+        provenance_path = _owned_artifact(project_dir, outputs["translation_provenance"])
+        transcript = _owned_artifact(project_dir, outputs["transcript_json"])
+        subtitles = _owned_artifact(project_dir, outputs["subtitles"])
+        try:
+            provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError, json.JSONDecodeError) as error:
+            raise ValueError("saved translation provenance is invalid") from error
+        source_id = result.get("source_id")
+        if (not isinstance(provenance, dict) or provenance.get("status") != "COMPLETED" or
+            provenance.get("source_id") != source_id or
+            provenance.get("source_transcript_sha256") != hashlib.sha256(transcript.read_bytes()).hexdigest() or
+            provenance.get("source_subtitles_sha256") != hashlib.sha256(subtitles.read_bytes()).hexdigest() or
+            provenance.get("output_sha256") != hashlib.sha256(translation.read_bytes()).hexdigest() or
+            provenance.get("source_language") != "ru" or
+            provenance.get("requested_target_language") != "en" or
+            provenance.get("executed_target_language") != "en"):
+            raise ValueError("saved translation does not match its source evidence")
+        target = translation.parent / "translation.txt"
+        if target.exists() or target.is_symlink():
+            raise ValueError("saved translated text has an ambiguous state")
+        _materialize_translation_txt(translation, target, provenance)
+        outputs["translation_txt"] = str(target)
+        changed = True
+    return changed
+
+
+def read_run(project_dir:Path,run_id:str)->dict[str,Any]:
+    path = run_path(project_dir, run_id)
+    record = json.loads(path.read_bytes())
+    if not isinstance(record, dict):
+        raise ValueError("saved run is invalid")
+    if _recover_saved_translation_text(project_dir, record):
+        atomic_json(path, record)
+    return record
 
 
 def _copy_document(project_dir:Path,source:dict[str,Any])->Path:

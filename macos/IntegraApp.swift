@@ -1029,12 +1029,12 @@ struct SidebarItem {
     if let path = outputs["transcript_cleaned"] as? String {
       addCard(processCard("Очищенный текст", controls: outputControls(path)), toLeft: false)
     }
-    if let path = outputs["translation"] as? String {
-      let open = button("Открыть", #selector(openTranslation(_:))); open.toolTip = path
-      let translatedTo = translationLanguageName(from: path, key: "target_language")
+    if let path = outputs["translation_txt"] as? String {
+      let provenancePath = outputs["translation_provenance"] as? String ?? ""
+      let translatedTo = translationLanguageName(from: provenancePath, key: "target_language")
       let target = NSTextField(labelWithString: "Язык перевода: \(translatedTo)")
       target.textColor = .secondaryLabelColor
-      addCard(processCard("Перевод", controls: [target, open]), toLeft: left <= right)
+      addCard(processCard("Перевод", controls: [target] + outputControls(path)), toLeft: left <= right)
     } else if outputs["transcript"] is String,
       let projectID, let runID, let sourceID = result["source_id"] as? String
     {
@@ -1461,27 +1461,6 @@ struct SidebarItem {
         }
       }
     }
-  }
-  @objc private func openTranslation(_ sender: NSButton) {
-    guard let path = sender.toolTip,
-      let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
-      let payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-      let cues = payload["cues"] as? [[String: Any]],
-      let source = payload["source_language"] as? String,
-      let target = payload["target_language"] as? String
-    else { status.stringValue = "Сохранённый перевод недоступен."; return }
-    let text = cues.compactMap { $0["text"] as? String }.joined(separator: "\n\n")
-    guard !text.isEmpty else { status.stringValue = "Сохранённый перевод не содержит текста."; return }
-    let alert = NSAlert()
-    alert.messageText = "Перевод расшифровки"
-    alert.informativeText = "Исходный язык: \(languageName(source)) · язык перевода: \(languageName(target)). Машинный перевод требует проверки."
-    let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 620, height: 360))
-    scroll.hasVerticalScroller = true
-    let view = NSTextView(frame: scroll.bounds)
-    view.isEditable = false; view.string = text
-    scroll.documentView = view; alert.accessoryView = scroll
-    alert.addButton(withTitle: "Готово")
-    alert.runModal()
   }
   @objc private func exportTranscript(_ sender: NSButton) {
     let identifiers = sender.toolTip?.split(separator: "\n", maxSplits: 2).map(String.init) ?? []

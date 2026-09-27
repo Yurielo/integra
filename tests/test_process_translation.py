@@ -44,7 +44,7 @@ class ProcessTranslationTests(unittest.TestCase):
                    "source_language": "ru", "target_language": target, "model": runtime["model"],
                    "semantic_status": "MACHINE_TRANSLATION_REVIEW_REQUIRED", "issues": [],
                    "cues": [{"id": "1", "start_seconds": 0.0, "end_seconds": 1.25,
-                             "text": "Переведённый текст для проверки Integra."}]}
+                             "text": "Translated text for Integra verification."}]}
         output.write_text(json.dumps(payload), encoding="utf-8")
         return payload
 
@@ -62,7 +62,10 @@ class ProcessTranslationTests(unittest.TestCase):
         self.assertEqual(translated.call_args.kwargs["target"], "en")
         outputs = result["outputs"]
         self.assertIn("translation", outputs)
-        self.assertNotIn("translation_txt", outputs)
+        self.assertIn("translation_txt", outputs)
+        translated_text = Path(outputs["translation_txt"])
+        self.assertEqual(translated_text.read_text(encoding="utf-8"),
+                         "Translated text for Integra verification.\n")
         record = json.loads(Path(outputs["translation_provenance"]).read_bytes())
         self.assertEqual(record["source_id"], result["source_id"])
         self.assertEqual(record["source_language"], "ru")
@@ -71,6 +74,9 @@ class ProcessTranslationTests(unittest.TestCase):
         self.assertEqual(record["target_language"], "en")
         self.assertEqual(record["runtime"]["commit_sha"], "pinned")
         self.assertEqual(record["output_sha256"], hashlib.sha256(Path(outputs["translation"]).read_bytes()).hexdigest())
+        reopened = json.loads((self.project / "jobs.json").read_bytes())["jobs"][0]
+        self.assertEqual(reopened["outputs"]["translation_txt"], outputs["translation_txt"])
+        self.assertEqual(Path(reopened["outputs"]["translation_txt"]).read_bytes(), translated_text.read_bytes())
 
     def test_translation_accepts_json_timestamp_roundoff_within_half_millisecond(self):
         def rounded_translation(subtitles, output, *, target, runtime):
@@ -97,6 +103,20 @@ class ProcessTranslationTests(unittest.TestCase):
         self.assertEqual(failed["state"], "FAILED")
         self.assertTrue(Path(failed["outputs"]["transcript"]).is_file())
         self.assertTrue(Path(failed["outputs"]["subtitles"]).is_file())
+        self.assertNotIn("translation_txt", failed["outputs"])
+
+    def test_text_materialization_failure_does_not_publish_translation_outputs(self):
+        job = self._job(("translation",))
+        with patch("integra_core.user_media.videotext_translation_preflight", side_effect=self._runtime), \
+             patch("integra_core.user_media.translate_videotext", side_effect=self._translation), \
+             patch("integra_core.user_media._materialize_translation_txt", side_effect=ValueError("disk unavailable")):
+            with self.assertRaisesRegex(ValueError, "disk unavailable"):
+                run_job(self.project, job["job_id"])
+        failed = json.loads((self.project / "jobs.json").read_bytes())["jobs"][0]
+        self.assertEqual(failed["state"], "FAILED")
+        self.assertNotIn("translation", failed["outputs"])
+        self.assertNotIn("translation_txt", failed["outputs"])
+        self.assertTrue(Path(failed["outputs"]["transcript"]).is_file())
 
     def test_translation_rejects_a_source_duplicate_or_runtime_substitution(self):
         job = self._job(("translation",))
