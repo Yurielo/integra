@@ -32,7 +32,7 @@ printf '#!/bin/sh\nprintf "NAME ID SIZE MODIFIED\\ngemma3:4b id size now\\n"\n' 
 chmod 755 "$fake_ollama"
 (
   cd "$test_root"
-  PATH="$test_root:$PATH" PYTHONPATH="$app/Contents/Resources" python3 -c 'from integra_core.seminartext_runtime import preflight; value=preflight(); assert value["origin"] == "BUNDLED_PERSONAL_RUNTIME"; assert value["commit_sha"] == "970bde598ddd649599295139986933e0e06cb9c0"'
+  env -u INTEGRA_SEMINARTEXT_CHECKOUT PATH="$test_root:$PATH" PYTHONPATH="$app/Contents/Resources" python3 -c 'from integra_core.seminartext_runtime import preflight; value=preflight(); assert value["origin"] == "BUNDLED_PERSONAL_RUNTIME"; assert value["commit_sha"] == "13644d262776aacdf36221b9a9fc7ebd0a7c0737"'
 )
 echo "INTEGRA_BUNDLED_SEMINARTEXT_PREFLIGHT: PASS"
 (
@@ -57,10 +57,10 @@ INTEGRA_APP_DATA_ROOT="$test_root/app-data" INTEGRA_CLOSE_PROBE="$close_marker" 
 grep -q '^TERMINATED_AFTER_LAST_WINDOW_CLOSED$' "$close_marker"
 echo "INTEGRA_MACOS_CLOSE_TEST: PASS"
 
-python3 "$repo_root/tests/native_workflow_probe.py" "$app" "$test_root/native-workflow"
-python3 "$repo_root/tests/native_shutdown_probe.py" "$app" "$test_root/native-shutdown"
-python3 "$repo_root/tests/native_asr_retry_probe.py" "$app" "$test_root/native-asr-retry"
-python3 "$repo_root/tests/native_operations_probe.py" "$app" "$test_root/native-operations"
+INTEGRA_CANDIDATE_APP="$app" python3 "$repo_root/tests/native_workflow_probe.py" "$app" "$test_root/native-workflow"
+INTEGRA_CANDIDATE_APP="$app" python3 "$repo_root/tests/native_shutdown_probe.py" "$app" "$test_root/native-shutdown"
+INTEGRA_CANDIDATE_APP="$app" python3 "$repo_root/tests/native_asr_retry_probe.py" "$app" "$test_root/native-asr-retry"
+INTEGRA_CANDIDATE_APP="$app" python3 "$repo_root/tests/native_operations_probe.py" "$app" "$test_root/native-operations"
 
 test -z "$(find "$app" -type l -print -quit)"
 test -f "$app/Contents/Resources/integra_core/publishing.py"

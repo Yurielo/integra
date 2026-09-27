@@ -49,7 +49,7 @@ def require_asr_runtime():
         try:
             identity = json.loads(manifest.read_text(encoding="utf-8"))["candidate_id"]
             expected = {
-                "seminartext": "f7f411bf106341ae970bc40d759e1e3c964273b977bdb12d0f1840e629def13a",
+                "seminartext": "30d8c1bd6f5ca717391b168cba71228a030009feaec4eb443bb1e76dab230a6c",
                 "SEMINARTEXT_VERSION": "e1d49c569ae09b2ede16e2d83820a3809b35eb6c44c13ba9b5330598d6b8f43c",
             }
             if not identity.startswith("candidate-v1-") or any(

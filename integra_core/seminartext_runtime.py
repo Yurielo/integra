@@ -11,7 +11,7 @@ from typing import Any
 
 from .ollama_runtime import listed_models
 
-PINNED_COMMIT = "970bde598ddd649599295139986933e0e06cb9c0"
+PINNED_COMMIT = "13644d262776aacdf36221b9a9fc7ebd0a7c0737"
 ENTRYPOINT = Path("seminartext_modules/seminartext_topics.py")
 ENTRYPOINT_SHA256 = "d8a14e83b877024c3e016a33e594af17d512741a77735ff3d8c7d1262628c8db"
 BUNDLED_RUNTIME_ROOT = Path(__file__).resolve().parents[1] / "runtime" / "seminartext"

@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.process_v1.careful_asr_candidate_evidence",
+  "status": "PASS",
+  "candidate_id": "candidate-v1-f9ef07f48ff155645239f9c72b454732f53fecabdbf9379ad4d25b1a5acbdc9a",
+  "manifest_identity_sha256": "f9ef07f48ff155645239f9c72b454732f53fecabdbf9379ad4d25b1a5acbdc9a",
+  "bundle_digest": "448e5ee02ed22c2c77837b25934278750ea9a4a08a9d7f02e70c372886a83d7a",
+  "product_source": {
+    "commit_sha": "5635bf1573e642c041ade4ad888fb79e5f5f6889",
+    "tree_sha": "6c6783858dbd030aa7024a84d7f11d2418cda2ff"
+  },
+  "capability": "process.careful_asr_mode.v1",
+  "selection": {
+    "ui_labels": ["Обычный", "Тщательный"],
+    "default_mode": "normal",
+    "requested_mode": "careful",
+    "executed_mode": "careful"
+  },
+  "provider_boundary": {
+    "provider": "seminartext",
+    "provider_commit": "13644d262776aacdf36221b9a9fc7ebd0a7c0737",
+    "entrypoint_sha256": "30d8c1bd6f5ca717391b168cba71228a030009feaec4eb443bb1e76dab230a6c",
+    "source_change": "Yurielo/seminartext PR #126",
+    "careful_invocation": ["project-transcribe", "--careful"],
+    "verified_first_attempt_settings": {
+      "beam_size": 8,
+      "best_of": 8,
+      "vad_threshold": 0.45,
+      "vad_min_silence_ms": 700
+    },
+    "protective_retry_preserved": {
+      "beam_size": 3,
+      "best_of": 3,
+      "vad_threshold": 0.68,
+      "vad_min_silence_ms": 350
+    }
+  },
+  "persistence": {
+    "run": "recognition.requested_mode",
+    "job": "recognition_mode",
+    "result": "recognition.requested_mode and recognition.executed_mode",
+    "asr_provenance": "mode plus runtime identity",
+    "cache_binding": "mode is part of the ASR reuse binding"
+  },
+  "candidate_checks": [
+    "candidate manifest validation: PASS",
+    "native self-test: PASS",
+    "native short-video workflow: PASS",
+    "native cancellation, quit, stale-running, protective-retry and operation checks: PASS",
+    "packaged careful-ASR E2E with bundled bridge and short audio fixture: PASS"
+  ],
+  "archive": {
+    "receipt": "docs/evidence/PROCESS_V1_CAREFUL_ASR_CANDIDATE_ARCHIVE.json",
+    "verification": "ARCHIVAL_BYTE_INTEGRITY"
+  },
+  "boundaries": {
+    "normal_mode_command_unchanged": true,
+    "canonical_process_routing_changed": false,
+    "videotext_not_selected_as_asr_provider": true,
+    "seminartext_not_removed": true,
+    "stage_b_not_started": true,
+    "knowledge_and_studio_not_changed": true,
+    "installation_or_deployment_performed": false,
+    "process_v1_user_accepted": false
+  }
+}

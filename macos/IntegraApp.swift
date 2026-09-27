@@ -185,6 +185,7 @@ struct SidebarItem {
     status = NSTextField(labelWithString: "")
   private var sources = [[String: Any]](), capabilities = [[String: Any]](),
     selected = Set<String>(), plan: [String: Any]?
+  private var recognitionMode = "normal"
   private var projectID: String?, runID: String?, timer: Timer?
   private var mediaPlayer: AVPlayer?, mediaWindow: NSWindow?
   private var reviewPlayer: AVPlayer?
@@ -517,6 +518,12 @@ struct SidebarItem {
           "\(source["display_name"] ?? "Источник")", detail: "\(source["source_type"] ?? "UNKNOWN")"
         ))
     }
+    if sources.contains(where: { ($0["kind"] as? String) == "MEDIA" || ($0["source_type"] as? String) == "YOUTUBE_VIDEO" }) {
+      let mode = NSSegmentedControl(labels: ["Обычный", "Тщательный"], trackingMode: .selectOne, target: self, action: #selector(changeRecognitionMode(_:)))
+      mode.selectedSegment = recognitionMode == "careful" ? 1 : 0
+      add(row("Режим распознавания", detail: "Выберите тщательный режим, когда важнее полнота распознавания, чем скорость."))
+      add(mode)
+    }
     if sources.contains(where: { $0["source_type"] as? String == "PDF" }) {
       add(button("Страницы OCR BookText…", #selector(configureOCRPages)))
       if let source = sources.first(where: { $0["source_type"] as? String == "PDF" }) {
@@ -608,6 +615,9 @@ struct SidebarItem {
     guard panel.runModal() == .OK else { return }
     detect(panel.urls.map(\.path))
   }
+  @objc private func changeRecognitionMode(_ sender: NSSegmentedControl) {
+    recognitionMode = sender.selectedSegment == 1 ? "careful" : "normal"
+  }
   @objc private func addYouTube() {
     let alert = NSAlert()
     alert.messageText = "YouTube"
@@ -636,6 +646,7 @@ struct SidebarItem {
           as? [[String: Any]] ?? []
         DispatchQueue.main.async {
           self.sources = detected
+          self.recognitionMode = "normal"
           self.capabilities = caps
           if let index = CommandLine.arguments.firstIndex(of: "--ui-probe-output"),
             CommandLine.arguments.indices.contains(index + 1)
@@ -685,10 +696,11 @@ struct SidebarItem {
     status.stringValue = "Создаю проект и ставлю реальную обработку в очередь…"
     let bridge = self.bridge!
     let name = sources.first?["display_name"] as? String ?? "Новая обработка"
+    let recognitionMode = self.recognitionMode
     serviceQueue.async {
       do {
         let result =
-          try bridge.json("execute-plan", request: ["plan": plan, "name": name])["result"]
+          try bridge.json("execute-plan", request: ["plan": plan, "name": name, "recognition_mode": recognitionMode])["result"]
           as? [String: Any]
         let project = result?["project"] as? [String: Any]
         let run = result?["run"] as? [String: Any]
@@ -895,6 +907,9 @@ struct SidebarItem {
       let total = run["total_sources"] as? Int ?? 0
       let names = ["QUEUED": "В очереди", "RUNNING": "Выполняется", "COMPLETED": "Готово", "FAILED": "Ошибка", "CANCELLED": "Отменено"]
       add(row("Состояние: \(names[state] ?? state)", detail: "Готово источников: \(done) из \(total)"))
+      if let recognition = run["recognition"] as? [String: Any], let mode = recognition["requested_mode"] as? String {
+        add(row("Режим распознавания", detail: mode == "careful" ? "Тщательный" : "Обычный"))
+      }
       if state == "RUNNING" || state == "QUEUED" {
         if !detail.isEmpty { add(row("Подробности", detail: detail)) }
         if let stage = run["current_stage"] as? String { add(row("Текущий этап", detail: stageLabel(stage))) }

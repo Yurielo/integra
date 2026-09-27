@@ -23,11 +23,12 @@ from . import videotext_subtitles
 
 # Active CLI bytes from the final accepted SeminarText pin. Historical evidence
 # retains its old hashes; this fail-closed runtime check does not.
-ENTRYPOINT_SHA256 = "f7f411bf106341ae970bc40d759e1e3c964273b977bdb12d0f1840e629def13a"
+ENTRYPOINT_SHA256 = "30d8c1bd6f5ca717391b168cba71228a030009feaec4eb443bb1e76dab230a6c"
 VERSION_SHA256 = "e1d49c569ae09b2ede16e2d83820a3809b35eb6c44c13ba9b5330598d6b8f43c"
 VAD_SHA256 = "29940d98d42b91fbd05ce489f3ecf7c72f0a42f027e4875919a28fb4c04ea2cf"
 BUNDLED_RUNTIME_ROOT = Path(__file__).resolve().parents[1] / "runtime" / "seminartext"
 OWNED_CHECKOUT = Path(__file__).resolve().parents[1] / ".runtime-components" / "seminartext-pinned"
+RECOGNITION_MODES = frozenset({"normal", "careful"})
 
 
 class ASRError(ValueError):
@@ -62,6 +63,12 @@ def _file(path: Path, label: str, executable: bool = False) -> Path:
     return result
 
 
+def _recognition_mode(mode: str) -> str:
+    if not isinstance(mode, str) or mode not in RECOGNITION_MODES:
+        raise ASRError("Recognition mode is unsupported")
+    return mode
+
+
 def _runtime() -> Path:
     configured = os.environ.get("INTEGRA_SEMINARTEXT_CHECKOUT")
     root = Path(configured).expanduser() if configured else (
@@ -83,7 +90,9 @@ def _runtime() -> Path:
     return root.resolve()
 
 
-def preflight(ffmpeg: Path, whisper: Path, model: Path, vad_model: Path | None = None) -> dict[str, Any]:
+def preflight(ffmpeg: Path, whisper: Path, model: Path, vad_model: Path | None = None,
+              recognition_mode: str = "normal") -> dict[str, Any]:
+    recognition_mode = _recognition_mode(recognition_mode)
     root = _runtime()
     ffmpeg = _file(ffmpeg, "ffmpeg", True)
     whisper = _file(whisper, "whisper-cli", True)
@@ -108,7 +117,7 @@ def preflight(ffmpeg: Path, whisper: Path, model: Path, vad_model: Path | None =
             "version_sha256": VERSION_SHA256, "ffmpeg": str(ffmpeg), "ffprobe": str(probe),
             "whisper": str(whisper), "model": str(model), "vad_model": str(vad),
             "vad_sha256": VAD_SHA256, "chunk_seconds": 300,
-            "language": "ru", "mode": "normal", "cleaned_text_authority": "DERIVED_UNVERIFIED",
+            "language": "ru", "mode": recognition_mode, "cleaned_text_authority": "DERIVED_UNVERIFIED",
             "subtitle_runtime": subtitle_runtime}
 
 
@@ -152,10 +161,10 @@ def _number_srt(source: Path, target: Path) -> dict:
 
 def transcribe(source: Path, work: Path, *, ffmpeg: Path, whisper: Path, model: Path,
                vad_model: Path | None = None, cancelled: Callable[[], bool] | None = None,
-               progress: Callable[[str], None] | None = None) -> dict[str, Any]:
+               progress: Callable[[str], None] | None = None, recognition_mode: str = "normal") -> dict[str, Any]:
     if threading.current_thread() is not threading.main_thread():
         raise ASRError("SeminarText ASR must run in its owned worker main thread")
-    identity = preflight(ffmpeg, whisper, model, vad_model)
+    identity = preflight(ffmpeg, whisper, model, vad_model, recognition_mode)
     source = _file(source, "ASR source")
     work = Path(work).resolve(strict=True)
     if not work.is_dir():
@@ -181,7 +190,7 @@ def transcribe(source: Path, work: Path, *, ffmpeg: Path, whisper: Path, model: 
            "SEMINARTEXT_VAD_MODEL": identity["vad_model"], "SEMINARTEXT_CHUNK_SECONDS": "300"}
     log = owned / "adapter.log"
     if progress:
-        progress("Распознавание SeminarText: независимые фрагменты, VAD и проверка повторов")
+        progress("Распознавание речи: независимые фрагменты, VAD и проверка повторов")
     terminated = False
 
     def requested_stop(signum: int, frame: Any) -> None:
@@ -196,8 +205,11 @@ def transcribe(source: Path, work: Path, *, ffmpeg: Path, whisper: Path, model: 
         with log.open("wb") as stream:
             if terminated:
                 raise ASRCancelled("Transcription cancelled")
-            process = subprocess.Popen(["/bin/bash", identity["entrypoint"], "project-transcribe",
-                                        str(project), "--only", "video_001"],
+            command = ["/bin/bash", identity["entrypoint"], "project-transcribe",
+                       str(project), "--only", "video_001"]
+            if identity["mode"] == "careful":
+                command.append("--careful")
+            process = subprocess.Popen(command,
                                        cwd=owned, env=env, stdin=subprocess.DEVNULL,
                                        stdout=stream, stderr=subprocess.STDOUT, start_new_session=True)
             last_chunk = ""
@@ -211,7 +223,7 @@ def transcribe(source: Path, work: Path, *, ffmpeg: Path, whisper: Path, model: 
                         tail = observed.read().decode("utf-8", errors="replace")
                     chunks = re.findall(r"^--- Фрагмент (\d+) из (\d+) ---$", tail, re.M)
                     if chunks:
-                        chunk = f"Распознавание SeminarText: фрагмент {chunks[-1][0]} из {chunks[-1][1]}"
+                        chunk = f"Распознавание речи: фрагмент {chunks[-1][0]} из {chunks[-1][1]}"
                         if chunk != last_chunk:
                             progress(chunk)
                             last_chunk = chunk

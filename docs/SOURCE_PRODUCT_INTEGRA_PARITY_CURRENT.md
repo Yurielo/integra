@@ -34,7 +34,7 @@ H132 включён потому, что на него прямо ссылает
 
 | Source product | Pin в #129 | Current consumed pin | Correspondence |
 | --- | --- | --- | --- |
-| SeminarText | `a94936cd77cde13561c97c804ece1ac1134e01a6` | `970bde598ddd649599295139986933e0e06cb9c0` | CLI изменён; Topic/Evidence/review/knowledge modules и schemas между этими commits byte-identical. |
+| SeminarText | `a94936cd77cde13561c97c804ece1ac1134e01a6` | `13644d262776aacdf36221b9a9fc7ebd0a7c0737` | CLI изменён; Topic/Evidence/review/knowledge modules и schemas remain outside the Careful-ASR repair boundary. |
 | VideoText | `2e098d1705b6815628bee1e023f4742718eabf02` | `2e098d1705b6815628bee1e023f4742718eabf02` | Source inventory #129 остаётся применимым к тому же pin. |
 | BookText | `46396649214275eb18054b670a842bace02d02e1` | `46396649214275eb18054b670a842bace02d02e1` | Source inventory #129 остаётся применимым к тому же pin. |
 
@@ -42,7 +42,7 @@ Current identities проверены в [build script](../scripts/build_macos_a
 runtime modules. Сравнение **git objects** старого/нового SeminarText выявило
 ровно пять изменённых файлов: CLI `seminartext`, README и три test files.
 CLI SHA-256 вычислен из pinned Git object и совпадает с current build/runtime contract:
-`f7f411bf106341ae970bc40d759e1e3c964273b977bdb12d0f1840e629def13a`.
+`30d8c1bd6f5ca717391b168cba71228a030009feaec4eb443bb1e76dab230a6c`.
 Область — pinned versions, не произвольные последние upstream branches.
 
 Новые source возможности относительно #129:
@@ -57,6 +57,10 @@ CLI SHA-256 вычислен из pinned Git object и совпадает с cur
   создаёт single-source project и вызывает `--only video_001`.
 - SeminarText PR #125: headless execution controls. Это execution property,
   не дополнительный пользовательский output; в capability counts не добавлен.
+- SeminarText PR #126: минимально разрешает `project-transcribe --careful`,
+  сохраняя существующие careful-настройки и protective retry. В Integra это
+  используется только за нейтральным выбором `Тщательный`; точное Candidate
+  evidence записано в `PROCESS_V1_CAREFUL_ASR_MODE_PROOF.md`.
 
 На стороне Integra diff от merge #131 до current main сохраняет byte-identical
 `capabilities.py`, BookText runtime/worker, VideoText media/subtitle workers,

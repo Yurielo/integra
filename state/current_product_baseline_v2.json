@@ -1,6 +1,6 @@
 {
   "artifact_type": "integra.current_product_baseline",
-  "current_id": "current-v2-2fe375cc31b3a57d74ad0f994894bd610442deae3adfff033cdc5f3cf400fcd3",
+  "current_id": "current-v2-f9ef07f48ff155645239f9c72b454732f53fecabdbf9379ad4d25b1a5acbdc9a",
   "records": [
     {
       "acceptance": {
@@ -422,6 +422,107 @@
       },
       "promotion": {
         "accepted_report_head": "0285eece9890d6036363a2737551a188a4158410",
+        "issue_159_ref": "superseded-by-next-owner-promotion",
+        "pull_160_ref": "superseded-by-next-owner-promotion"
+      },
+      "promotion_policy": "EXPLICIT_HUMAN_OWNER_AUTHORIZATION_REQUIRED",
+      "repository": "Yurielo/integra",
+      "status": "CURRENT"
+    },
+    {
+      "acceptance": {
+        "authority_ref": "PROMOTE_CURRENT proposal-process-v1-careful-asr-mode candidate-v1-f9ef07f48ff155645239f9c72b454732f53fecabdbf9379ad4d25b1a5acbdc9a",
+        "decision": "USER_ACCEPTED",
+        "scope": "owner-authorized proposed baseline promotion"
+      },
+      "baseline_id": "current-v2-f9ef07f48ff155645239f9c72b454732f53fecabdbf9379ad4d25b1a5acbdc9a",
+      "candidate": {
+        "bundle_digest": "448e5ee02ed22c2c77837b25934278750ea9a4a08a9d7f02e70c372886a83d7a",
+        "candidate_id": "candidate-v1-f9ef07f48ff155645239f9c72b454732f53fecabdbf9379ad4d25b1a5acbdc9a",
+        "identity_sha256": "f9ef07f48ff155645239f9c72b454732f53fecabdbf9379ad4d25b1a5acbdc9a"
+      },
+      "governed_files": [
+        {
+          "path": "integra_core/_timed_transcript_provider.py",
+          "sha256": "57eaeaf175edcd15e2d0ec15869c8f06cf0e50ef0dc6de9199c2d5b48df7532f"
+        },
+        {
+          "path": "integra_core/application_runtime.py",
+          "sha256": "7bc6a762f57719ac1328bc25104dd4ad963f514cb5394fa0c2128cbf25173b19"
+        },
+        {
+          "path": "integra_core/asr_reuse.py",
+          "sha256": "53abead06ca2e9856c1cc6e533ddda2e47ec75640b66bc1bd67fda8bc621f1c6"
+        },
+        {
+          "path": "integra_core/process_executor_pilot.py",
+          "sha256": "be67ac4d71efe8ed345effde6ea53e9ea2f38c722f1de550d056bd9063e7eb92"
+        },
+        {
+          "path": "integra_core/seminartext_asr_runtime.py",
+          "sha256": "3489a5125a0c66babe2c45ea1e9f33f5050049713e68f266a24587b9a8e003bf"
+        },
+        {
+          "path": "integra_core/seminartext_evidence_runtime.py",
+          "sha256": "8e7c33cd7602c562b56caae9742cd000189bf712dbaddf24805260ff9a1b2140"
+        },
+        {
+          "path": "integra_core/seminartext_runtime.py",
+          "sha256": "b0ceb605fb6bfbaf1c786fc0760921f1f4723332d93e5627bc752b7678286343"
+        },
+        {
+          "path": "integra_core/seminartext_topic_review_runtime.py",
+          "sha256": "06ebcd56f2ff4a7646458d619c1060c67ba461c5894aba2956673383d2ba9cd4"
+        },
+        {
+          "path": "integra_core/shutdown_runtime.py",
+          "sha256": "0dc2bc03c25bae4e8c124c613a1be12b9b1c5227652291704ceca088f2f01192"
+        },
+        {
+          "path": "integra_core/transcript_output.py",
+          "sha256": "35c7aaad4f63d3e760e106f10cb078f8e4eaaaa759ee27b56a98d2ca48f6bcad"
+        },
+        {
+          "path": "integra_core/user_media.py",
+          "sha256": "7dc9e7ab2013a7c0f67b66f23a7d28d93e8af5d49cf8e689f4e8b8c22b14a945"
+        },
+        {
+          "path": "macos/IntegraApp.swift",
+          "sha256": "fedf964337911cd65df3e0f7c8ee0d7453f9537cbc3d2c89f3351d450b2d99fc"
+        },
+        {
+          "path": "macos/Resources/bridge.py",
+          "sha256": "8f573b4ec5653b1680d7748d18049b33d2971d9ab7e51382645ff80b28d225b8"
+        },
+        {
+          "path": "scripts/build_macos_app.sh",
+          "sha256": "ad81f7a08a2fbcb93b57788e64d2f028697f7f5f086bb8fa75e9eac758dc4507"
+        },
+        {
+          "path": "scripts/test_macos_app.sh",
+          "sha256": "1648671bac009e76169b26c039de42a1f769b4d422014d83e850dd87810ce359"
+        },
+        {
+          "path": "tests/test_macos_app.py",
+          "sha256": "54d3636c977b969f5c57160d7e13730c95ed080fca4a4439493ae5a0f6856d6a"
+        },
+        {
+          "path": "tests/test_ready_app.py",
+          "sha256": "87ec31ae4a6cb6df38d2787ba5d92479dcde766c639ebfc86944b4eca2b7f3e7"
+        }
+      ],
+      "historical_predecessors": [
+        {
+          "path": "state/history/current_product_baseline_v2-current-v2-2fe375cc31b3a57d74ad0f994894bd610442deae3adfff033cdc5f3cf400fcd3.json",
+          "sha256": "f7f11ed789ce0bfcbc396ced0e2347234c00dbb721e8e18057783a43ee5002cc"
+        }
+      ],
+      "main": {
+        "commit_sha": "e30a3922e01587033817faba3a689a5a934c60e3",
+        "tree_sha": "5265735b2301bce521ea09466f96d7d697c6222a"
+      },
+      "promotion": {
+        "accepted_report_head": "e30a3922e01587033817faba3a689a5a934c60e3",
         "issue_159_ref": "superseded-by-next-owner-promotion",
         "pull_160_ref": "superseded-by-next-owner-promotion"
       },

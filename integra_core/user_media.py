@@ -291,12 +291,20 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
             atomic_json(jobs_path, jobs)
             return job
         _, whisper, model = _tools()
+        recognition_mode = job.get("recognition_mode", "normal")
         checkpoint("RUNNING", 25, "Проверяю возможность повторного использования расшифровки", run_stage="transcript")
         recognized = asr_reuse.transcribe_or_reuse(project_dir, source, work, ffmpeg=Path(ffmpeg), whisper=Path(whisper), model=Path(model),
             expected_source_sha256=job["source_sha256"],
             cancelled=lambda: _is_run_cancelled(project_dir, job.get("run_id")),
-            progress=lambda message: checkpoint("RUNNING", 25, message, run_stage="transcript"))
+            progress=lambda message: checkpoint("RUNNING", 25, message, run_stage="transcript"),
+            recognition_mode=recognition_mode)
+        if recognized["provenance"].get("mode") != recognition_mode:
+            raise ValueError("ASR runtime executed a different recognition mode")
         job["asr_reuse"] = recognized["reuse"]
+        job["recognition"] = {"requested_mode": recognition_mode,
+                              "executed_mode": recognized["provenance"]["mode"],
+                              "runtime": {key: recognized["provenance"][key] for key in
+                                          ("component", "commit_sha", "entrypoint_sha256", "whisper_sha256", "model_sha256")}}
         subtitles = Path(recognized["srt"])
         segments = _parse_srt(subtitles.read_text(encoding="utf-8"), job["source_id"])
         if not segments: raise ValueError("transcription produced no timed speech segments")

@@ -17,6 +17,43 @@ from integra_core.onedrive import build_onedrive_package
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def macos_build_runtime_available():
+    seminartext = Path(os.environ.get(
+        "INTEGRA_SEMINARTEXT_BUILD_CHECKOUT",
+        ROOT / ".runtime-components/seminartext-pinned",
+    ))
+    videotext = Path(os.environ.get(
+        "INTEGRA_VIDEOTEXT_BUILD_CHECKOUT",
+        ROOT / ".runtime-components/videotext-pinned",
+    ))
+    booktext = Path(os.environ.get(
+        "INTEGRA_BOOKTEXT_BUILD_CHECKOUT",
+        ROOT / ".runtime-components/booktext-pinned",
+    ))
+    packages = Path(os.environ.get(
+        "INTEGRA_WORD_ALIGNMENT_SITE_PACKAGES",
+        ROOT / ".runtime-word-alignment/lib/python3.13/site-packages",
+    ))
+    model = Path(os.environ.get(
+        "INTEGRA_WORD_ALIGNMENT_MODEL_DIR",
+        "/Users/yurielokhin/.cache/huggingface/hub/"
+        "models--jonatasgrosman--wav2vec2-large-xlsr-53-russian/"
+        "snapshots/2329100508896c6d9b157019803ab5601e6f3406",
+    ))
+    python = Path(os.environ.get(
+        "INTEGRA_WORD_ALIGNMENT_PYTHON",
+        "/opt/homebrew/opt/python@3.13/bin/python3.13",
+    ))
+    return all((
+        (seminartext / ".git").exists(),
+        (videotext / ".git").exists(),
+        (booktext / ".git").exists(),
+        (packages / "whisperx").is_dir(),
+        (model / "pytorch_model.bin").is_file(),
+        os.access(python, os.X_OK),
+    ))
+
+
 class MacOSApplicationTests(unittest.TestCase):
     def test_approved_app_icon_assets_are_exact(self):
         catalog = ROOT / "macos/Assets.xcassets/AppIcon.appiconset"
@@ -76,7 +113,10 @@ class MacOSApplicationTests(unittest.TestCase):
             self.assertFalse(payload["cloud_verified"])
             self.assertEqual(len(payload["domain_contract_sha256"]), 64)
 
-    @unittest.skipUnless(platform.system() == "Darwin", "native macOS build requires Darwin")
+    @unittest.skipUnless(
+        platform.system() == "Darwin" and macos_build_runtime_available(),
+        "native macOS rebuild requires the pinned external runtime sources",
+    )
     def test_reproducible_build_and_launch_probe(self):
         with tempfile.TemporaryDirectory() as directory:
             result = subprocess.run([str(ROOT / "scripts/test_macos_app.sh")], check=True,
@@ -171,6 +211,11 @@ class MacOSApplicationTests(unittest.TestCase):
         self.assertIn("Одиночное видео или плейлист будут загружены в проект", source)
         self.assertIn("скачивает элементы последовательно с checkpoint", source)
         self.assertIn("ЧТО НУЖНО ПОЛУЧИТЬ?", source)
+        self.assertIn("Режим распознавания", source)
+        self.assertIn("Обычный", source)
+        self.assertIn("Тщательный", source)
+        self.assertIn('"recognition_mode": recognitionMode', source)
+        self.assertNotIn("SeminarText: фрагмент", source)
         self.assertIn("Выполнить", source)
         self.assertIn("Перетащите файлы сюда", source)
         self.assertIn('bridge.json("recent-runs")', source)

@@ -134,7 +134,7 @@ def _execute_plan(root,request):
     with _run_lifecycle(root, wait=False):
         plan=request.get("plan"); name=request.get("name") or "Новая обработка"
         project=_create(root,{"name":name}); project_dir=_project_dir(root,project["project_id"])
-        run=prepare_run(project_dir,plan); return {"project":project,"run":_spawn_plan(root,project["project_id"],run["run_id"])}
+        run=prepare_run(project_dir,plan,recognition_mode=request.get("recognition_mode","normal")); return {"project":project,"run":_spawn_plan(root,project["project_id"],run["run_id"])}
 
 @contextmanager
 def _run_lifecycle(root, *, wait):
@@ -158,7 +158,8 @@ def _run_action(root,request,action):
         return cancel_run(project_dir, record["run_id"])
     if record["state"] not in {"FAILED","CANCELLED"}: raise ValueError("run cannot be retried from current state")
     with _run_lifecycle(root, wait=False):
-        new=prepare_run(project_dir,record["plan"]); return _spawn_plan(root,project_id,new["run_id"])
+        mode=record.get("recognition",{}).get("requested_mode","normal")
+        new=prepare_run(project_dir,record["plan"],recognition_mode=mode); return _spawn_plan(root,project_id,new["run_id"])
 
 def _recent_runs(root, *, reconcile=True):
     if reconcile:

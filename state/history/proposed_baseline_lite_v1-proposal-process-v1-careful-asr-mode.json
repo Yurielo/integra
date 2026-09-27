@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.proposed_product_baseline",
+  "proposal_id": "proposal-process-v1-careful-asr-mode",
+  "status": "PROPOSED_BASELINE_VALID",
+  "base_current_id": "current-v2-2fe375cc31b3a57d74ad0f994894bd610442deae3adfff033cdc5f3cf400fcd3",
+  "base_main": {
+    "commit_sha": "0285eece9890d6036363a2737551a188a4158410",
+    "tree_sha": "45a086ea4dc7cfeb58d833cf89639df3cd435475"
+  },
+  "proposed_source": {
+    "commit_sha": "5635bf1573e642c041ade4ad888fb79e5f5f6889",
+    "tree_sha": "6c6783858dbd030aa7024a84d7f11d2418cda2ff"
+  },
+  "proposed_head": {
+    "commit_sha": "e30a3922e01587033817faba3a689a5a934c60e3",
+    "tree_sha": "5265735b2301bce521ea09466f96d7d697c6222a"
+  },
+  "intended_scope": {
+    "wp": "Excel #11 / S04 Careful ASR mode",
+    "journey": "bounded neutral normal/careful ASR selection, exact execution/provenance persistence and preserved protective retry; no routing, Stage B, installation or deployment change"
+  },
+  "candidate": {
+    "candidate_id": "candidate-v1-f9ef07f48ff155645239f9c72b454732f53fecabdbf9379ad4d25b1a5acbdc9a",
+    "identity_sha256": "f9ef07f48ff155645239f9c72b454732f53fecabdbf9379ad4d25b1a5acbdc9a",
+    "manifest_digest": "5f4de8d844aaf6ba42c2839b8462f79c0e9862b09ec6e513f8ec9b327fc7c40f",
+    "bundle_digest": "448e5ee02ed22c2c77837b25934278750ea9a4a08a9d7f02e70c372886a83d7a"
+  },
+  "delta": [
+    {"path": "integra_core/application_runtime.py", "before_sha256": "7f0f7f32697f1bd51640190f1e97a4fc4c888b13de39ced2b0226279b9092f7a", "after_sha256": "7bc6a762f57719ac1328bc25104dd4ad963f514cb5394fa0c2128cbf25173b19"},
+    {"path": "integra_core/asr_reuse.py", "before_sha256": "cf7a08dd8c1757aead9090b8ab1dac65b6561be1fe541fe615d4d572572f68a9", "after_sha256": "53abead06ca2e9856c1cc6e533ddda2e47ec75640b66bc1bd67fda8bc621f1c6"},
+    {"path": "integra_core/seminartext_asr_runtime.py", "before_sha256": "6097f392f6a151efd68cc1409abb5e27375f419029216464031b0c5ba487f6cc", "after_sha256": "3489a5125a0c66babe2c45ea1e9f33f5050049713e68f266a24587b9a8e003bf"},
+    {"path": "integra_core/seminartext_runtime.py", "before_sha256": "c8fee9826fba8b423c6d52194e7e83814ccbca7daa36bea4e1f323d8bd128919", "after_sha256": "b0ceb605fb6bfbaf1c786fc0760921f1f4723332d93e5627bc752b7678286343"},
+    {"path": "integra_core/user_media.py", "before_sha256": "a9ef63b02aa7da43c99f4c0d427d4e71239c3adb390ccc25f45a378f558e9e9c", "after_sha256": "7dc9e7ab2013a7c0f67b66f23a7d28d93e8af5d49cf8e689f4e8b8c22b14a945"},
+    {"path": "macos/IntegraApp.swift", "before_sha256": "e1a318675caa3142f2e2250efe298d28c7ef86824a0e31007cdff93972b90b87", "after_sha256": "fedf964337911cd65df3e0f7c8ee0d7453f9537cbc3d2c89f3351d450b2d99fc"},
+    {"path": "macos/Resources/bridge.py", "before_sha256": "d06a6fb2c2e98d322ad6542107c56f8a2f4a44ba1f31727997b356a24422f926", "after_sha256": "8f573b4ec5653b1680d7748d18049b33d2971d9ab7e51382645ff80b28d225b8"},
+    {"path": "scripts/build_macos_app.sh", "before_sha256": "f2c7577b3afcde75e00828e8a9d0303a9370eac517902d7c49a87cce65237623", "after_sha256": "ad81f7a08a2fbcb93b57788e64d2f028697f7f5f086bb8fa75e9eac758dc4507"},
+    {"path": "scripts/test_macos_app.sh", "before_sha256": "09bf6703b0cbd205b214e8361ce9242b33fc465ce57913177b71944361db5039", "after_sha256": "1648671bac009e76169b26c039de42a1f769b4d422014d83e850dd87810ce359"},
+    {"path": "tests/test_macos_app.py", "before_sha256": "ddb2ec1700a77abbe1a3efdda5c8f17927e85a543fb09fe6a891537bcc3fad17", "after_sha256": "54d3636c977b969f5c57160d7e13730c95ed080fca4a4439493ae5a0f6856d6a"}
+  ],
+  "historical_test_successors": [
+    {"historical_authority": "R13", "path": "tests/test_ready_app.py", "before_sha256": "fe56fef87b3fc51d92881243c740c9d071f8e7852397847a9c66b3919f839c3b", "after_sha256": "87ec31ae4a6cb6df38d2787ba5d92479dcde766c639ebfc86944b4eca2b7f3e7", "reason": "Full READY_APP rebuild now skips only when all pinned external runtime sources are unavailable; exact Candidate-native verification remains required evidence."}
+  ],
+  "gates": [
+    {"name": "candidate-manifest", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_CAREFUL_ASR_CANDIDATE_MANIFEST.json"},
+    {"name": "candidate-archive", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_CAREFUL_ASR_CANDIDATE_ARCHIVE.json"},
+    {"name": "packaged-careful-asr-e2e", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_CAREFUL_ASR_EVIDENCE.json"},
+    {"name": "focused-runtime-and-macos-suite", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_CAREFUL_ASR_FOCUSED_TESTS.txt"},
+    {"name": "github-quality-gate", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_CAREFUL_ASR_QUALITY_GATE.json"}
+  ],
+  "evidence": {
+    "candidate_manifest": {"path": "docs/evidence/PROCESS_V1_CAREFUL_ASR_CANDIDATE_MANIFEST.json", "sha256": "5f4de8d844aaf6ba42c2839b8462f79c0e9862b09ec6e513f8ec9b327fc7c40f"},
+    "candidate_evidence": {"path": "docs/evidence/PROCESS_V1_CAREFUL_ASR_EVIDENCE.json", "sha256": "aceeddd850afe956470abdfb75195959821b5197490d5099bbc175dd29600647"},
+    "report": {"path": "docs/PROCESS_V1_CAREFUL_ASR_MODE_PROOF.md", "sha256": "07c42654e7cf053ab7111969598448b36a5ae54b3605ae6757f7c01804671a62"}
+  },
+  "owner_acceptance": {
+    "decision": "PILOT_ACCEPTED",
+    "authority_ref": "PRODUCT OWNER AUTHORIZATION: ACCEPT_PROPOSED_BASELINE proposal-process-v1-careful-asr-mode candidate-v1-f9ef07f48ff155645239f9c72b454732f53fecabdbf9379ad4d25b1a5acbdc9a",
+    "scope": "Careful ASR mode — Excel #11 / S04 bounded baseline acceptance only",
+    "promotion_authorized": false
+  },
+  "allowed_overlay_paths": [
+    "docs/PROCESS_V1_CAREFUL_ASR_MODE_PROOF.md",
+    "docs/PROCESS_V1_DEFINITION_OF_DONE.md",
+    "docs/PROCESS_V1_EXCEL_SCOPE_RECONCILIATION.md",
+    "docs/evidence/PROCESS_V1_CAREFUL_ASR_CANDIDATE_ARCHIVE.json",
+    "docs/evidence/PROCESS_V1_CAREFUL_ASR_CANDIDATE_MANIFEST.json",
+    "docs/evidence/PROCESS_V1_CAREFUL_ASR_EVIDENCE.json",
+    "docs/evidence/PROCESS_V1_CAREFUL_ASR_QUALITY_GATE.json"
+  ]
+}
