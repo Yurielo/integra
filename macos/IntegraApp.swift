@@ -512,6 +512,7 @@ struct SidebarItem {
     actions.addArrangedSubview(button("Видео или аудио с Mac", #selector(chooseMedia)))
     actions.addArrangedSubview(button("Документ с Mac", #selector(chooseDocument)))
     actions.addArrangedSubview(button("Несколько файлов", #selector(chooseMultiple)))
+    actions.addArrangedSubview(button("Папка с Mac", #selector(chooseFolder)))
     actions.addArrangedSubview(button("YouTube", #selector(addYouTube)))
     add(actions)
     let drop = DropBox(frame: NSRect(x: 0, y: 0, width: 760, height: 92))
@@ -641,6 +642,47 @@ struct SidebarItem {
     guard panel.runModal() == .OK else { return }
     detect(panel.urls.map(\.path))
   }
+  @objc private func chooseFolder() {
+    let panel = NSOpenPanel()
+    panel.title = "Выберите папку с материалами"
+    panel.canChooseFiles = false
+    panel.canChooseDirectories = true
+    panel.allowsMultipleSelection = false
+    guard panel.runModal() == .OK, let folder = panel.url?.path else { return }
+    status.textColor = .secondaryLabelColor
+    status.stringValue = "Ищу поддерживаемые источники в папке…"
+    let bridge = self.bridge!
+    serviceQueue.async {
+      do {
+        let discovery = try bridge.json("discover-folder-sources", request: ["folder": folder])["result"] as? [String: Any] ?? [:]
+        DispatchQueue.main.async { self.confirmFolderDiscovery(discovery) }
+      } catch {
+        DispatchQueue.main.async {
+          self.status.textColor = .systemRed
+          self.status.stringValue = error.localizedDescription
+        }
+      }
+    }
+  }
+  private func confirmFolderDiscovery(_ discovery: [String: Any]) {
+    let discovered = discovery["sources"] as? [[String: Any]] ?? []
+    let folder = (discovery["folder"] as? [String: Any])?["name"] as? String ?? "выбранной папке"
+    let ignored = discovery["ignored"] as? [[String: Any]] ?? []
+    guard !discovered.isEmpty else {
+      status.textColor = .systemRed
+      status.stringValue = "В папке «\(folder)» не найдено поддерживаемых файлов."
+      return
+    }
+    let names = discovered.prefix(12).map { $0["display_name"] as? String ?? "Источник" }
+    let tail = discovered.count > names.count ? "\nи ещё \(discovered.count - names.count)." : ""
+    let alert = NSAlert()
+    alert.messageText = "Подтвердите источники"
+    alert.informativeText = "Папка «\(folder)». Будут добавлены \(discovered.count) файлов в этом порядке:\n\(names.joined(separator: "\n"))\(tail)\n\nНе поддерживаются или исключены: \(ignored.count)."
+    alert.addButton(withTitle: "Добавить \(discovered.count) источников")
+    alert.addButton(withTitle: "Отмена")
+    guard alert.runModal() == .alertFirstButtonReturn else { return }
+    applyDetected(discovered)
+  }
   @objc private func changeRecognitionMode(_ sender: NSSegmentedControl) {
     recognitionMode = sender.selectedSegment == 1 ? "careful" : "normal"
   }
@@ -677,27 +719,7 @@ struct SidebarItem {
           try bridge.json("capability-registry", request: ["sources": detected])["result"]
           as? [[String: Any]] ?? []
         DispatchQueue.main.async {
-          self.sources = detected
-          self.recognitionMode = "normal"
-          self.sourceSpeechLanguage = "ru"
-          self.topicDetail = "auto"
-          self.capabilities = caps
-          if let index = CommandLine.arguments.firstIndex(of: "--ui-probe-output"),
-            CommandLine.arguments.indices.contains(index + 1)
-          {
-            self.selected = Set(
-              CommandLine.arguments[index + 1].split(separator: ",").map(String.init))
-            self.plan =
-              try? self.bridge.json(
-                "build-plan",
-                request: ["sources": detected, "selected_outputs": Array(self.selected).sorted()]
-              )["result"] as? [String: Any]
-          } else {
-            self.selected = []
-            self.plan = nil
-          }
-          self.renderNew()
-          self.runNativeSmokeIfRequested()
+          self.applyDetected(detected, capabilities: caps)
         }
       } catch {
         DispatchQueue.main.async {
@@ -706,6 +728,24 @@ struct SidebarItem {
         }
       }
     }
+  }
+  private func applyDetected(_ detected: [[String: Any]], capabilities supplied: [[String: Any]]? = nil) {
+    sources = detected
+    recognitionMode = "normal"
+    sourceSpeechLanguage = "ru"
+    topicDetail = "auto"
+    capabilities = supplied ?? (try? bridge?.json("capability-registry", request: ["sources": detected])["result"] as? [[String: Any]]) ?? []
+    if let index = CommandLine.arguments.firstIndex(of: "--ui-probe-output"),
+      CommandLine.arguments.indices.contains(index + 1)
+    {
+      selected = Set(CommandLine.arguments[index + 1].split(separator: ",").map(String.init))
+      plan = try? bridge?.json("build-plan", request: ["sources": detected, "selected_outputs": Array(selected).sorted()])["result"] as? [String: Any]
+    } else {
+      selected = []
+      plan = nil
+    }
+    renderNew()
+    runNativeSmokeIfRequested()
   }
   @objc private func toggleCapability(_ sender: NSButton) {
     guard let id = sender.identifier?.rawValue else { return }

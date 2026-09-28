@@ -9,8 +9,10 @@ import struct
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 
 from tests.test_publishing import fixtures
+from integra_core.capabilities import build_plan
 from integra_core.onedrive import build_onedrive_package
 
 
@@ -168,6 +170,31 @@ class MacOSApplicationTests(unittest.TestCase):
             )
             self.assertEqual(len(json.loads(jobs.stdout)["result"]), 1)
 
+    def test_bridge_discovers_a_folder_before_the_existing_plan_is_built(self):
+        bridge = ROOT / "macos/Resources/bridge.py"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            folder = root / "materials"; folder.mkdir()
+            (folder / "b.wav").write_bytes(b"b")
+            (folder / "A.mp3").write_bytes(b"a")
+            (folder / "ignored.zip").write_bytes(b"zip")
+            (folder / ".hidden.wav").write_bytes(b"hidden")
+            environment = {**__import__("os").environ, "INTEGRA_APP_DATA_ROOT": str(root / "app-data")}
+            discovered = subprocess.run(
+                ["python3", str(bridge), "discover-folder-sources"],
+                input=json.dumps({"folder": str(folder)}), check=True,
+                capture_output=True, text=True, env=environment,
+            )
+            result = json.loads(discovered.stdout)["result"]
+            self.assertEqual([item["display_name"] for item in result["sources"]], ["A.mp3", "b.wav"])
+            self.assertEqual({item["reason"] for item in result["ignored"]}, {"HIDDEN", "UNSUPPORTED"})
+            with patch("integra_core.capabilities.preflight", return_value={"state": "READY"}):
+                plan = build_plan(result["sources"], ["transcript"])
+            self.assertEqual(plan["sources"], result["sources"])
+            self.assertEqual([item["source_id"] for item in plan["source_plans"]], [
+                item["source_id"] for item in result["sources"]
+            ])
+
     def test_bridge_executes_youtube_playlist_through_source_first_runtime(self):
         bridge = ROOT / "macos/Resources/bridge.py"
         with tempfile.TemporaryDirectory() as directory:
@@ -212,9 +239,12 @@ class MacOSApplicationTests(unittest.TestCase):
 
     def test_native_source_exposes_source_first_real_actions(self):
         source = (ROOT / "macos/IntegraApp.swift").read_text()
-        for operation in ("detect-sources", "capability-registry", "build-plan", "execute-plan", "run-status", "media-navigation", "seminartext-preflight", "package-preview", "package-publish"):
+        for operation in ("detect-sources", "discover-folder-sources", "capability-registry", "build-plan", "execute-plan", "run-status", "media-navigation", "seminartext-preflight", "package-preview", "package-publish"):
             self.assertIn(operation, source)
         self.assertIn("NSOpenPanel", source)
+        self.assertIn("Папка с Mac", source)
+        self.assertIn("Подтвердите источники", source)
+        self.assertIn("Добавить \\(discovered.count) источников", source)
         self.assertIn("Одиночное видео или плейлист будут загружены в проект", source)
         self.assertIn("скачивает элементы последовательно с checkpoint", source)
         self.assertIn("ЧТО НУЖНО ПОЛУЧИТЬ?", source)
