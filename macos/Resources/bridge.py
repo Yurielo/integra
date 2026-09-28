@@ -134,7 +134,7 @@ def _execute_plan(root,request):
     with _run_lifecycle(root, wait=False):
         plan=request.get("plan"); name=request.get("name") or "Новая обработка"
         project=_create(root,{"name":name}); project_dir=_project_dir(root,project["project_id"])
-        run=prepare_run(project_dir,plan,recognition_mode=request.get("recognition_mode","normal"),source_speech_language=request.get("source_speech_language","ru")); return {"project":project,"run":_spawn_plan(root,project["project_id"],run["run_id"])}
+        run=prepare_run(project_dir,plan,recognition_mode=request.get("recognition_mode","normal"),source_speech_language=request.get("source_speech_language","ru"),topic_detail=request.get("topic_detail","auto")); return {"project":project,"run":_spawn_plan(root,project["project_id"],run["run_id"])}
 
 def _translate_transcript(root, request):
     with _run_lifecycle(root, wait=False):
@@ -168,7 +168,8 @@ def _run_action(root,request,action):
     with _run_lifecycle(root, wait=False):
         mode=record.get("recognition",{}).get("requested_mode","normal")
         language=record.get("source_speech_language",{}).get("requested","ru")
-        new=prepare_run(project_dir,record["plan"],recognition_mode=mode,source_speech_language=language); return _spawn_plan(root,project_id,new["run_id"])
+        detail=record.get("topic_detail",{}).get("requested","auto")
+        new=prepare_run(project_dir,record["plan"],recognition_mode=mode,source_speech_language=language,topic_detail=detail); return _spawn_plan(root,project_id,new["run_id"])
 
 def _recent_runs(root, *, reconcile=True):
     if reconcile:
@@ -363,6 +364,20 @@ def _prepare_topic_review(root, request):
         {"topic_review_drafts": result["topic_drafts_path"]}, expected_outputs=expected)
     return result
 
+
+def _persisted_topic_detail(topics_path: str) -> dict:
+    """Read only trustworthy detail provenance from a saved Topics artifact."""
+    payload = json.loads(Path(topics_path).read_text(encoding="utf-8"))
+    detail = payload.get("topic_detail") if isinstance(payload, dict) else None
+    if detail is None:
+        # Pre-S13 results are usable, but their original selection was never
+        # persisted and must not be reconstructed from a later default.
+        return {"status": "UNAVAILABLE_LEGACY"}
+    if (not isinstance(detail, dict) or detail.get("requested") not in {"low", "auto", "high"}
+            or detail.get("executed") != detail.get("requested")):
+        raise ValueError("saved machine Topics have invalid detail provenance")
+    return detail
+
 def _process_topic_review(root, request, apply=False):
     """Bridge the Process UI to the pinned Topic review contract only.
 
@@ -406,17 +421,20 @@ def _process_topic_review(root, request, apply=False):
             # Do not prepare a new package from the machine topic artifact once
             # a human Process review exists.  The runtime verifies the receipt,
             # decisions and reviewed contract before materializing it.
-            return load_persisted_process_topic_review(values["project_dir"], source_id=values["source_id"],
+            result = load_persisted_process_topic_review(values["project_dir"], source_id=values["source_id"],
                 reviewed_topics_contract_path=resolved["process_reviewed_topics"],
                 receipt_path=resolved["process_topic_review_receipt"],
                 decisions_path=resolved["process_topic_review_decisions"])
+            topics_path = str(resolve_persisted_project_path(values["project_dir"], outputs["topics"], "machine Topics"))
+            return result | {"topic_detail": _persisted_topic_detail(topics_path)}
         result = prepare_process_topic_review(values["project_dir"], source_id=values["source_id"],
             media_path=values["media_path"], transcript_path=values["transcript_path"],
             word_timeline_path=values["word_timeline_path"], topics_path=outputs["topics"])
         updates = {"process_topic_review_package": result["package_path"]}
     _record_review_outputs(values["project_dir"], run_id, values["source_id"], updates,
                            expected_outputs=expected)
-    return result
+    topics_path = str(resolve_persisted_project_path(values["project_dir"], outputs["topics"], "machine Topics"))
+    return result | {"topic_detail": _persisted_topic_detail(topics_path)}
 
 
 def _process_topics(root, request):
@@ -440,13 +458,15 @@ def _process_topics(root, request):
             raise ValueError("persisted Process Topic review is incomplete")
         resolved = {key: str(resolve_persisted_project_path(values["project_dir"], value, key))
                     for key, value in persisted.items()}
-        return load_persisted_process_topic_review(
+        result = load_persisted_process_topic_review(
             values["project_dir"], source_id=values["source_id"],
             reviewed_topics_contract_path=resolved["process_reviewed_topics"],
             receipt_path=resolved["process_topic_review_receipt"],
             decisions_path=resolved["process_topic_review_decisions"],
         )
-    return present_machine_process_topics(values["project_dir"], source_id=values["source_id"], topics_path=topics_path)
+    else:
+        result = present_machine_process_topics(values["project_dir"], source_id=values["source_id"], topics_path=topics_path)
+    return result | {"topic_detail": _persisted_topic_detail(topics_path)}
 
 def _knowledge_review(root, request, apply=False):
     from integra_core.seminartext_topic_review_runtime import prepare_topic_review, apply_topic_review

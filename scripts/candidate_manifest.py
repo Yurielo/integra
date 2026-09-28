@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
@@ -33,6 +32,11 @@ def source_identity(root: Path) -> dict[str, object]:
         "dirty": bool(dirty),
         "dirty_diff_sha256": __import__("hashlib").sha256(diff).hexdigest(),
     }
+
+
+def source_timestamp(root: Path) -> str:
+    """Use the source commit time so identical sources package identically."""
+    return command("git", "-C", str(root), "show", "-s", "--format=%cI", "HEAD")
 
 
 def executable_identity(path: Path) -> dict[str, str]:
@@ -99,7 +103,7 @@ def generate(app: Path, source_root: Path, build_command: str, word_python: Path
         "identity_sha256": candidate_id(identity).removeprefix("candidate-v1-"),
         "identity": identity,
         "bundle": {"digest_algorithm": "sha256-tree-excluding-candidate-manifest", "digest": digest},
-        "build": {"timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
+        "build": {"timestamp": source_timestamp(source_root),
                   "build_id": os.environ.get("INTEGRA_BUILD_ID", "local")},
     }
     (resources / MANIFEST_NAME).write_bytes(canonical_bytes(value) + b"\n")

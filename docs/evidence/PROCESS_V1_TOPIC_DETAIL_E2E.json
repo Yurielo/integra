@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0",
+  "candidate_id": "candidate-v1-2b779255c5b57a7b6602f153ea13c497bf738a18a84412773f8b6ed5261fbfcc",
+  "manifest_identity_sha256": "2b779255c5b57a7b6602f153ea13c497bf738a18a84412773f8b6ed5261fbfcc",
+  "bundle_digest": "dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
+  "product_source": {
+    "commit_sha": "cf3fd4b17598a459cd19d5d9dbacf2ea34cad8cb",
+    "tree_sha": "eebd51044d16240bfef76fdf5415c715ad12b4f3"
+  },
+  "runtime": "packaged Integra Candidate Resources",
+  "provider": {
+    "name": "SeminarText",
+    "commit": "13644d262776aacdf36221b9a9fc7ebd0a7c0737",
+    "model": "qwen3:8b"
+  },
+  "fixture": {
+    "kind": "existing local Russian Process ASR test record",
+    "content_persisted_in_evidence": false
+  },
+  "result": "PASS",
+  "details": {
+    "low": {
+      "requested": "low",
+      "executed": "low",
+      "topic_count": 1
+    },
+    "auto": {
+      "requested": "auto",
+      "executed": "auto",
+      "topic_count": 2
+    },
+    "high": {
+      "requested": "high",
+      "executed": "high",
+      "topic_count": 3
+    }
+  },
+  "assertions": [
+    "all supported choices generated real Topics through the packaged Candidate",
+    "requested and executed detail match exactly",
+    "choice changed actual Topic count for the valid local fixture",
+    "provider-specific detail mechanics remained inside the adapter"
+  ],
+  "candidate_revalidation": {
+    "result": "PASS",
+    "detail": "The later Candidate changes only deterministic manifest timestamp generation. Its packaged Topic runtime, detail adapter and application routing have the same SHA-256 bytes as the real E2E Candidate."
+  }
+}

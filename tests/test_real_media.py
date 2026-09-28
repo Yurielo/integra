@@ -382,7 +382,7 @@ class RealMediaTests(unittest.TestCase):
         fake = SimpleNamespace(
             parse_srt=lambda _: items,
             make_windows=lambda value: [value],
-            analyze_window_boundaries=lambda *_args, **_kwargs: [1],
+            analyze_window_boundaries=lambda *_args, **kwargs: [1] if kwargs["detail"] == "low" else [],
             topic_range_prompt=lambda value: value,
             run_ollama_topic_label=lambda _model, _prompt, start, end: {
                 "start_id": start,

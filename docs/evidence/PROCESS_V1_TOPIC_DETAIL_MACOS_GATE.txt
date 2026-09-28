@@ -1,0 +1,24 @@
+{"artifact_type": "integra.review_runtime_wheel_cache", "state": "PASS", "wheel_count": 5}
+Looking in links: /private/tmp/integra-review-wheels.dYj3Wp
+Processing /private/tmp/integra-review-wheels.dYj3Wp/attrs-26.1.0-py3-none-any.whl (from -r /private/tmp/integra-25-topic-detail/scripts/review-runtime-requirements.txt (line 2))
+Processing /private/tmp/integra-review-wheels.dYj3Wp/jsonschema-4.25.1-py3-none-any.whl (from -r /private/tmp/integra-25-topic-detail/scripts/review-runtime-requirements.txt (line 3))
+Processing /private/tmp/integra-review-wheels.dYj3Wp/jsonschema_specifications-2025.9.1-py3-none-any.whl (from -r /private/tmp/integra-25-topic-detail/scripts/review-runtime-requirements.txt (line 4))
+Processing /private/tmp/integra-review-wheels.dYj3Wp/referencing-0.37.0-py3-none-any.whl (from -r /private/tmp/integra-25-topic-detail/scripts/review-runtime-requirements.txt (line 5))
+Processing /private/tmp/integra-review-wheels.dYj3Wp/rpds_py-2026.6.3-cp314-cp314-macosx_11_0_arm64.whl (from -r /private/tmp/integra-25-topic-detail/scripts/review-runtime-requirements.txt (line 6))
+Installing collected packages: rpds-py, referencing, jsonschema-specifications, jsonschema, attrs
+
+Successfully installed attrs-26.1.0 jsonschema-4.25.1 jsonschema-specifications-2025.9.1 referencing-0.37.0 rpds-py-2026.6.3
+INTEGRA_FINDER_ICON: PASS
+INTEGRA_DOCK_CMDTAB_ICON: PASS activationPolicy=regular
+INTEGRA_MACOS_SELF_TEST: PASS
+INTEGRA_BUNDLED_SEMINARTEXT_PREFLIGHT: PASS
+INTEGRA_BUNDLED_WORD_TIMELINE_PREFLIGHT: PASS
+INTEGRA_BUNDLED_BOOKTEXT_PREFLIGHT: PASS
+INTEGRA_MACOS_CLOSE_TEST: PASS
+INTEGRA_NATIVE_REAL_VIDEOTEXT_WORKFLOW: PASS
+INTEGRA_NATIVE_CLOSE_ACTIVE_RUN: PASS
+INTEGRA_NATIVE_QUIT_ACTIVE_RUN: PASS
+INTEGRA_NATIVE_STALE_RUNNING_RECONCILED: PASS
+INTEGRA_NATIVE_VERIFIED_ASR_RETRY: PASS
+INTEGRA_NATIVE_STABLE_OPERATIONS_AND_REAL_CANCEL: PASS
+INTEGRA_MACOS_LAUNCH_TEST: PASS

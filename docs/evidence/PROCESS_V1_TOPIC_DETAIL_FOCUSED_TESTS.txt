@@ -1,0 +1,7 @@
+Command:
+python3 -m unittest tests.test_seminartext_runtime tests.test_seminartext_topic_detail_adapter tests.test_application_runtime tests.test_process_topic_summary tests.test_real_media tests.test_macos_app tests.test_process_results_surface
+
+Result:
+77 tests run; 6 declared skips; PASS
+
+The focused suite covers supported-detail validation, adapter forwarding, persisted requested/executed provenance, reopen and review exposure, legacy fail-closed treatment, and ordinary Process result behavior.

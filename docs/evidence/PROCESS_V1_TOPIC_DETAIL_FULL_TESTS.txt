@@ -1,0 +1,11 @@
+Command:
+python3 -m unittest discover -s tests
+
+Environment:
+Pinned SeminarText, VideoText, BookText, word-alignment and review runtime inputs as verified by the macOS packaging gate.
+
+Result:
+Ran 819 tests in 348.086s
+OK (skipped=90)
+
+The previously observed reproducible-package failure is resolved: candidate manifest build metadata is deterministic from the source commit, and the full suite includes the two-build byte-for-byte packaging test.

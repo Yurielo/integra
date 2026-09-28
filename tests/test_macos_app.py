@@ -102,6 +102,13 @@ class MacOSApplicationTests(unittest.TestCase):
         self.assertIn("— В разработке", source)
         self.assertIn("enabled:false", source.replace(" ", ""))
 
+    def test_topic_detail_control_is_bounded_and_sent_with_the_execution_request(self):
+        source = (ROOT / "macos/IntegraApp.swift").read_text(encoding="utf-8")
+        self.assertIn('NSSegmentedControl(labels: ["Крупно", "Обычно", "Подробно"]', source)
+        self.assertIn('topicDetail = ["low", "auto", "high"]', source)
+        self.assertIn('"topic_detail": topicDetail', source)
+        self.assertIn('result["topic_detail"]', source)
+
     def test_closed_bridge_rejects_unknown_and_previews_without_writes(self):
         bridge = ROOT / "macos/Resources/bridge.py"
         unknown = subprocess.run(["python3", str(bridge), "publish"], capture_output=True, text=True)
