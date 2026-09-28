@@ -1,0 +1,12 @@
+{
+  "artifact_type": "integra.issue_205_candidate_evidence",
+  "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-ce1b1abbb4a9a6bb9350d38a24a948a8313077b7c663ea7e3ec8da5d7c5cf807/dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
+  "bundle_digest": "dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
+  "candidate_id": "candidate-v1-ce1b1abbb4a9a6bb9350d38a24a948a8313077b7c663ea7e3ec8da5d7c5cf807",
+  "manifest_identity_sha256": "ce1b1abbb4a9a6bb9350d38a24a948a8313077b7c663ea7e3ec8da5d7c5cf807",
+  "product_source": {
+    "commit_sha": "633f0415e68e6f5528b17ebeb344798a2c5d677d",
+    "tree_sha": "e3ebdd3a875bcbbd9b8465f83617abda6b1c2c90"
+  },
+  "status": "ARCHIVAL_BYTE_INTEGRITY_PASS"
+}
