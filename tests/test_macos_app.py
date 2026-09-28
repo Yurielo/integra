@@ -239,8 +239,10 @@ class MacOSApplicationTests(unittest.TestCase):
 
     def test_native_source_exposes_source_first_real_actions(self):
         source = (ROOT / "macos/IntegraApp.swift").read_text()
+        bridge_allow_list = source[source.index("let allowed = ["):source.index("guard allowed.contains(operation)")]
         for operation in ("detect-sources", "discover-folder-sources", "capability-registry", "build-plan", "execute-plan", "run-status", "media-navigation", "seminartext-preflight", "package-preview", "package-publish"):
             self.assertIn(operation, source)
+            self.assertIn(operation, bridge_allow_list)
         self.assertIn("NSOpenPanel", source)
         self.assertIn("Папка с Mac", source)
         self.assertIn("Подтвердите источники", source)

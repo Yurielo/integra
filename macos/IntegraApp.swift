@@ -23,7 +23,7 @@ final class Bridge: @unchecked Sendable {
     let allowed = [
       "workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job",
       "cancel-job", "resume-job", "import-media", "media-preflight", "seminartext-preflight", "project-view",
-      "detect-sources", "capability-registry", "build-plan", "execute-plan", "run-status",
+      "detect-sources", "discover-folder-sources", "capability-registry", "build-plan", "execute-plan", "run-status",
       "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "build-reviewed-package", "package-preview", "package-publish",
       "obsidian-preview", "transcript-text", "translate-transcript", "translate-topics", "topic-translation",
       "onedrive-preview",
