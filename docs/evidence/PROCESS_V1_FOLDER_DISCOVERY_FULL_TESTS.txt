@@ -1,0 +1,84 @@
+......................s........ss..s......s.....sssssssssssss.........s..............................................................................................................................................F..........F..............................................F..............................s.sss.ss./var/folders/q9/rprrsl95265b7h21d3_mp2fr0000gn/T/tmp9itrpsij/macos/Resources/Integra.icns
+............s..........................................................................................................................................................s..........sssss..........ssssssss...................................................................................................................INTEGRA_BACKUP_VERIFICATION: PASS
+..s......................ssssssssssss.ss.ssss....ss..s..s...........sssssssssss.....................s..ss..........ss..................................s.s.........sss..ssssssss...........................
+======================================================================
+FAIL: test_current_baseline_exact_contract_passes (test_governance.GovernanceValidationTests.test_current_baseline_exact_contract_passes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/integra-excel04-folder-discovery/tests/test_governance.py", line 130, in test_current_baseline_exact_contract_passes
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        VALIDATOR.validate_current(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            self.current_product_baseline_v2, ROOT, self.proposed_baseline
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ), []
+        ^^^^^
+    )
+    ^
+AssertionError: Lists differ: ['CURRENT v2 governed byte drift: macos/In[131 chars].py'] != []
+
+First list contains 3 additional elements.
+First extra element 0:
+'CURRENT v2 governed byte drift: macos/IntegraApp.swift'
+
++ []
+- ['CURRENT v2 governed byte drift: macos/IntegraApp.swift',
+-  'CURRENT v2 governed byte drift: macos/Resources/bridge.py',
+-  'CURRENT v2 governed byte drift: tests/test_macos_app.py']
+
+======================================================================
+FAIL: test_historical_certification_records_are_not_rewritten (test_governance.GovernanceValidationTests.test_historical_certification_records_are_not_rewritten)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/integra-excel04-folder-discovery/tests/test_governance.py", line 206, in test_historical_certification_records_are_not_rewritten
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        VALIDATOR.validate_current(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            self.current_product_baseline_v2, ROOT, self.proposed_baseline
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ), []
+        ^^^^^
+    )
+    ^
+AssertionError: Lists differ: ['CURRENT v2 governed byte drift: macos/In[131 chars].py'] != []
+
+First list contains 3 additional elements.
+First extra element 0:
+'CURRENT v2 governed byte drift: macos/IntegraApp.swift'
+
++ []
+- ['CURRENT v2 governed byte drift: macos/IntegraApp.swift',
+-  'CURRENT v2 governed byte drift: macos/Resources/bridge.py',
+-  'CURRENT v2 governed byte drift: tests/test_macos_app.py']
+
+======================================================================
+FAIL: test_valid_superseding_baseline_suppresses_only_explained_historical_drift (test_governance.GovernanceValidationTests.test_valid_superseding_baseline_suppresses_only_explained_historical_drift)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/integra-excel04-folder-discovery/tests/test_governance.py", line 186, in test_valid_superseding_baseline_suppresses_only_explained_historical_drift
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        VALIDATOR.validate_native_macos_app_evidence(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        [],
+        ^^^
+    )
+    ^
+AssertionError: Lists differ: ['R12 implementation hash differs: macos/I[134 chars].py'] != []
+
+First list contains 3 additional elements.
+First extra element 0:
+'R12 implementation hash differs: macos/IntegraApp.swift'
+
++ []
+- ['R12 implementation hash differs: macos/IntegraApp.swift',
+-  'R12 implementation hash differs: macos/Resources/bridge.py',
+-  'R12 implementation hash differs: tests/test_macos_app.py']
+
+----------------------------------------------------------------------
+Ran 830 tests in 51.270s
+
+FAILED (failures=3, skipped=92)

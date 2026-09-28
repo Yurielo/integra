@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.folder_discovery_evidence",
+  "status": "PASS",
+  "candidate_id": "candidate-v1-e5de327bd01cd38dd6f737ad03ff10dcf5e313e6f4aaaa07788cd0261f394779",
+  "manifest_identity_sha256": "e5de327bd01cd38dd6f737ad03ff10dcf5e313e6f4aaaa07788cd0261f394779",
+  "bundle_digest": "25522c028bc6f6bd720e1178a2abf8ce86c5d28b279a67aeb61b0588466cbd74",
+  "product_source": {"commit_sha": "3802f61c1e0ef04426137b79ce09fd79df4e5efc", "tree_sha": "a7d8f829b6bb43dd26fe52a5fc725ce3cb615b60"},
+  "scenario": "Native Process folder chooser and explicit confirmation before the existing local multi-source plan",
+  "discovery": {
+    "recursive": false,
+    "ordering": "filename_casefold_ascending",
+    "supported_inputs": "existing detect_source contract",
+    "hidden_and_non_regular_excluded": true,
+    "unsupported_reported": true,
+    "duplicate_content_deduplicated": true,
+    "empty_set_fails_before_processing": true
+  },
+  "execution": {
+    "confirmed_sources_equal_plan_sources": true,
+    "folder_provenance_persisted_per_source": true,
+    "existing_ordered_multi_source_executor_reused": true,
+    "per_source_failure_isolation_reused": true,
+    "source_change_or_disappearance_fails_closed": true
+  },
+  "native": {"swift_compile": "PASS", "packaged_self_test": "PASS", "normal_gui_controls": ["Папка с Mac", "Подтвердите источники"]}
+}
