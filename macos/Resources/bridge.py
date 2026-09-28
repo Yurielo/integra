@@ -3,7 +3,7 @@
 from __future__ import annotations
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
-import fcntl, json, os, re, signal, subprocess, sys, tempfile, uuid
+import fcntl, hashlib, json, os, re, signal, subprocess, sys, tempfile, uuid
 from pathlib import Path
 
 RESOURCES = Path(__file__).resolve().parent
@@ -15,12 +15,12 @@ from integra_core.protocol import canonical_json, content_sha256
 from integra_core.publishing import preview_obsidian_export, publish_obsidian_export, validate_managed_package
 from integra_core.user_media import _parse_srt, ffmpeg_preflight, import_source, preflight, run_job
 from integra_core.capabilities import build_plan, capability_registry, detect_source
-from integra_core.application_runtime import execute_run, prepare_run, prepare_transcript_translation_run, read_run, run_path
+from integra_core.application_runtime import execute_run, prepare_run, prepare_transcript_translation_run, read_run, run_path, translate_saved_topics
 from integra_core.shutdown_runtime import cancel_run, reconcile_stale_runs, register_worker, requires_shutdown, run_with_timeout
 from integra_core.seminartext_runtime import preflight as seminartext_preflight
 from integra_core.seminartext_evidence_runtime import prepare_transcript_review, apply_human_transcript_review, prepare_topic_review_input
 
-OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "import-media", "media-preflight", "seminartext-preflight", "process-media-job", "project-view", "detect-sources", "capability-registry", "build-plan", "execute-plan", "translate-transcript", "process-plan", "run-status", "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "prepare-transcript-review", "apply-transcript-review", "prepare-topic-review", "prepare-process-topic-review", "apply-process-topic-review", "process-topics", "package-preview", "package-publish", "obsidian-preview", "onedrive-preview"}
+OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "import-media", "media-preflight", "seminartext-preflight", "process-media-job", "project-view", "detect-sources", "capability-registry", "build-plan", "execute-plan", "translate-transcript", "translate-topics", "process-plan", "run-status", "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "prepare-transcript-review", "apply-transcript-review", "prepare-topic-review", "prepare-process-topic-review", "apply-process-topic-review", "process-topics", "package-preview", "package-publish", "obsidian-preview", "onedrive-preview"}
 
 OPERATIONS.add("build-reviewed-package")
 OPERATIONS.add("transcript-text")
@@ -143,6 +143,14 @@ def _translate_transcript(root, request):
         run = prepare_transcript_translation_run(project_dir, request.get("run_id"), request.get("source_id"),
                                                  request.get("translation_target_language", "en"))
         return {"project": _project(root, project_id), "run": _spawn_plan(root, project_id, run["run_id"])}
+
+def _translate_topics(root, request):
+    with _run_lifecycle(root, wait=False):
+        project_id = request.get("project_id")
+        project_dir = _project_dir(root, _project(root, project_id)["project_id"])
+        result = translate_saved_topics(project_dir, request.get("run_id"), request.get("source_id"),
+                                        request.get("translation_target_language", "en"))
+        return {"project": _project(root, project_id), "translation": result}
 
 @contextmanager
 def _run_lifecycle(root, *, wait):
@@ -466,6 +474,51 @@ def _process_topics(root, request):
         )
     else:
         result = present_machine_process_topics(values["project_dir"], source_id=values["source_id"], topics_path=topics_path)
+    translated_path = outputs.get("translated_topics")
+    if translated_path is not None:
+        if not isinstance(translated_path, str):
+            raise ValueError("saved Topic translation is invalid")
+        translated_file = resolve_persisted_project_path(values["project_dir"], translated_path, "Topic translation")
+        translated_provenance = outputs.get("translated_topics_provenance")
+        if not isinstance(translated_provenance, str):
+            raise ValueError("saved Topic translation provenance is unavailable")
+        provenance_file = resolve_persisted_project_path(
+            values["project_dir"], translated_provenance, "Topic translation provenance")
+        if result.get("status") == "PROCESS_TOPIC_REVIEWED":
+            # Translation is a provisional machine-Topics representation.  A
+            # human Process review remains the sole authority once present.
+            return result | {"topic_detail": _persisted_topic_detail(topics_path),
+                             "translation": {"status": "NOT_APPLIED_TO_REVIEWED_TOPICS"}}
+        from integra_core.topic_translation_runtime import load_topic_translation
+        translated = load_topic_translation(Path(topics_path), translated_file)
+        try:
+            provenance = json.loads(provenance_file.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
+            raise ValueError("saved Topic translation provenance is invalid") from error
+        rows = translated.get("translations") if isinstance(translated, dict) else None
+        if (translated.get("capability") != "topic_translation" or translated.get("status") != "COMPLETED"
+                or translated.get("source_topics_sha256") != result.get("topics_sha256")
+                or translated.get("requested_target_language") != "en"
+                or translated.get("executed_target_language") != "en" or not isinstance(rows, list)
+                or not isinstance(provenance, dict) or provenance.get("status") != "COMPLETED"
+                or provenance.get("source_id") != values["source_id"]
+                or provenance.get("source_topics_sha256") != result.get("topics_sha256")
+                or provenance.get("translated_topics_sha256") != hashlib.sha256(translated_file.read_bytes()).hexdigest()
+                or provenance.get("requested_target_language") != "en"
+                or provenance.get("executed_target_language") != "en"):
+            raise ValueError("saved Topic translation does not match machine Topics")
+        by_id = {item.get("topic_id"): item for item in rows if isinstance(item, dict)}
+        if len(by_id) != len(result["topics"]):
+            raise ValueError("saved Topic translation is incomplete")
+        for topic in result["topics"]:
+            translation = by_id.get(topic["id"])
+            if (not isinstance(translation, dict) or not isinstance(translation.get("title"), str)
+                    or not translation["title"].strip() or not isinstance(translation.get("summary"), str)
+                    or not translation["summary"].strip()):
+                raise ValueError("saved Topic translation is incomplete")
+            topic["translated_title"] = translation["title"].strip()
+            topic["translated_summary"] = translation["summary"].strip()
+        result["translation"] = {"target_language": "en", "status": "COMPLETED"}
     return result | {"topic_detail": _persisted_topic_detail(topics_path)}
 
 def _knowledge_review(root, request, apply=False):
@@ -699,6 +752,7 @@ def main():
         elif operation == "build-plan": result = build_plan(request.get("sources", []), request.get("selected_outputs", []))
         elif operation == "execute-plan": result = _execute_plan(root, request)
         elif operation == "translate-transcript": result = _translate_transcript(root, request)
+        elif operation == "translate-topics": result = _translate_topics(root, request)
         elif operation == "process-plan":
             result = run_with_timeout(
                 lambda: execute_run(_project_dir(root, request.get("project_id")), request.get("run_id")),

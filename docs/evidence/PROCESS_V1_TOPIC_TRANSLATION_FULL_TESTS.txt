@@ -1,0 +1,2 @@
+Command: python3 -m unittest discover -s tests -q
+Expected final governed result recorded after the Proposal Lite declaration: all supported tests pass; external runtime skips remain declared skips only.

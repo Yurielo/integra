@@ -37,6 +37,8 @@ class ProcessResultsSurfaceTests(unittest.TestCase):
         self.assertIn('outputs["topics"] is String', surface)
         self.assertIn('button("Открыть темы", #selector(showProcessTopics(_:)))', surface)
         self.assertIn('button("Проверить темы", #selector(prepareTopicReview(_:)))', surface)
+        self.assertIn('TranslationButton(title: "Перевести темы"', surface)
+        self.assertIn('if outputs["translated_topics"] == nil && outputs["process_reviewed_topics"] == nil', surface)
         self.assertNotIn('outputs["topics"] as? String', surface)
         technical = self.source.split("private func renderTechnicalData", 1)[1].split(
             "@objc private func runSelected", 1)[0]
@@ -62,6 +64,7 @@ class ProcessResultsSurfaceTests(unittest.TestCase):
             "// Process v1 subset", 1)[0]
         for label in ("Темы и таймкоды", "Время:", "Тема:", "Краткое содержание:"):
             self.assertIn(label, dialog)
+        self.assertIn("Перевод на английский:", dialog)
         for forbidden in ("Knowledge", "Evidence", "S12", "S13"):
             self.assertNotIn(forbidden, dialog)
 

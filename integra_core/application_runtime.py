@@ -24,6 +24,8 @@ from .user_media import (
 from .youtube_runtime import download_video
 from .youtube_playlist_runtime import execute_playlist
 from .seminartext_runtime import validate_topic_detail
+from .topic_translation_runtime import load_topic_translation, translate_topics
+from .videotext_runtime import preflight as videotext_translation_preflight
 
 RECOGNITION_MODES = frozenset({"normal", "careful"})
 SOURCE_SPEECH_LANGUAGES = frozenset({"ru"})
@@ -89,6 +91,64 @@ def prepare_transcript_translation_run(project_dir: Path, run_id: str, source_id
     detail = previous.get("topic_detail", {}).get("requested", "auto")
     return prepare_run(project_dir, plan, recognition_mode=mode, source_speech_language=language,
                        topic_detail=detail)
+
+
+def translate_saved_topics(project_dir: Path, run_id: str, source_id: str,
+                           target_language: str = TRANSLATION_TARGET_LANGUAGE) -> dict[str, Any]:
+    """Add a verified S15 translation to existing Topics without rerunning ASR/Topics."""
+    target_language = validate_translation_target_language(target_language)
+    record = read_run(project_dir, run_id)
+    source = next((item for item in record.get("source_results", [])
+                   if item.get("source_id") == source_id and item.get("state") == "COMPLETED"), None)
+    outputs = source.get("outputs") if isinstance(source, dict) else None
+    if not isinstance(outputs, dict) or not isinstance(outputs.get("topics"), str):
+        raise ValueError("completed machine Topics are unavailable")
+    if any(outputs.get(key) is not None for key in (
+            "process_reviewed_topics", "process_topic_review_receipt", "process_topic_review_decisions")):
+        raise ValueError("Topic translation is unavailable after Process Topic Review")
+    language = source.get("source_speech_language") if isinstance(source, dict) else None
+    executed_language = language.get("executed") if isinstance(language, dict) else None
+    if executed_language != "ru":
+        raise ValueError("Topic translation is available only for verified Russian source speech")
+    topics = _owned_artifact(project_dir, outputs["topics"])
+    output = topics.parent / "translated_topics.json"
+    provenance = topics.parent / "translated_topics_provenance.json"
+    if output.exists() or output.is_symlink() or provenance.exists() or provenance.is_symlink():
+        if not output.exists() or not provenance.exists() or output.is_symlink() or provenance.is_symlink():
+            raise ValueError("saved Topic translation has an incomplete state")
+        result = load_topic_translation(topics, output)
+        try:
+            evidence = json.loads(provenance.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
+            raise ValueError("saved Topic translation provenance is invalid") from error
+        if (not isinstance(evidence, dict) or evidence.get("status") != "COMPLETED"
+                or evidence.get("run_id") != run_id or evidence.get("source_id") != source_id
+                or evidence.get("source_topics_sha256") != result["source_topics_sha256"]
+                or evidence.get("translated_topics_sha256") != hashlib.sha256(output.read_bytes()).hexdigest()
+                or evidence.get("requested_target_language") != "en"
+                or evidence.get("executed_target_language") != "en"):
+            raise ValueError("saved Topic translation does not match its provenance")
+        outputs["translated_topics"] = str(output)
+        outputs["translated_topics_provenance"] = str(provenance)
+        atomic_json(run_path(project_dir, run_id), record)
+        result["output_sha256"] = hashlib.sha256(output.read_bytes()).hexdigest()
+        return result
+    runtime = videotext_translation_preflight()
+    result = translate_topics(topics, output, target_language=target_language, runtime=runtime)
+    evidence = {
+        "schema_version": "1.0", "component": "integra", "capability": "topic_translation_provenance",
+        "status": "COMPLETED", "run_id": run_id, "source_id": source_id,
+        "source_topics_sha256": result["source_topics_sha256"],
+        "translated_topics_sha256": hashlib.sha256(output.read_bytes()).hexdigest(),
+        "source_language": "ru", "requested_target_language": target_language,
+        "executed_target_language": target_language, "topic_detail": result["topic_detail"],
+        "translated_topic_count": result["translated_topic_count"], "runtime": result["runtime"],
+    }
+    atomic_json(provenance, evidence)
+    outputs["translated_topics"] = str(output)
+    outputs["translated_topics_provenance"] = str(provenance)
+    atomic_json(run_path(project_dir, run_id), record)
+    return result
 
 
 def run_path(project_dir:Path,run_id:str)->Path:
