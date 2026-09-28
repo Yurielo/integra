@@ -1075,7 +1075,13 @@ struct SidebarItem {
       open.toolTip = "\(projectID)\n\(runID)\n\(sourceID)"
       let review = button("Проверить темы", #selector(prepareTopicReview(_:)))
       review.toolTip = "\(projectID)\n\(runID)\n\(sourceID)"
-      addCard(processCard("Темы и таймкоды", controls: [open, review]), toLeft: left <= right)
+      var controls: [NSButton] = [open, review]
+      if outputs["translated_topics"] == nil && outputs["process_reviewed_topics"] == nil {
+        let translate = TranslationButton(title: "Перевести темы", target: self, action: #selector(translateTopics(_:)))
+        translate.projectID = projectID; translate.sourceRunID = runID; translate.sourceID = sourceID; translate.targetLanguage = "en"
+        controls.append(translate)
+      }
+      addCard(processCard("Темы и таймкоды", controls: controls), toLeft: left <= right)
     }
     if left + right > 0 {
       add(grid)
@@ -1271,6 +1277,12 @@ struct SidebarItem {
       stack.addArrangedSubview(title)
       let summary = NSTextField(wrappingLabelWithString: "Краткое содержание: \(topic["summary"] as? String ?? "")")
       summary.widthAnchor.constraint(equalToConstant: 560).isActive = true; stack.addArrangedSubview(summary)
+      if let translatedTitle = topic["translated_title"] as? String,
+         let translatedSummary = topic["translated_summary"] as? String {
+        let translated = NSTextField(wrappingLabelWithString: "Перевод на английский: \(translatedTitle)\n\(translatedSummary)")
+        translated.textColor = .secondaryLabelColor; translated.widthAnchor.constraint(equalToConstant: 560).isActive = true
+        stack.addArrangedSubview(translated)
+      }
     }
     let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 590, height: 420))
     scroll.hasVerticalScroller = true; scroll.documentView = stack
@@ -1537,6 +1549,23 @@ struct SidebarItem {
           self.status.textColor = .systemRed
           self.status.stringValue = error.localizedDescription
         }
+      }
+    }
+  }
+  @objc private func translateTopics(_ sender: NSButton) {
+    guard let request = sender as? TranslationButton,
+      !request.projectID.isEmpty, !request.sourceRunID.isEmpty, !request.sourceID.isEmpty,
+      request.targetLanguage == "en" else { return }
+    sender.isEnabled = false; sender.title = "Перевожу темы…"
+    let service = bridge!
+    serviceQueue.async {
+      do {
+        _ = try service.json("translate-topics", request: [
+          "project_id": request.projectID, "run_id": request.sourceRunID, "source_id": request.sourceID,
+          "translation_target_language": request.targetLanguage])
+        DispatchQueue.main.async { self.status.textColor = .labelColor; self.status.stringValue = "Перевод тем готов."; self.renderOutputs() }
+      } catch {
+        DispatchQueue.main.async { sender.isEnabled = true; sender.title = "Перевести темы"; self.status.textColor = .systemRed; self.status.stringValue = error.localizedDescription }
       }
     }
   }
