@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.proposed_product_baseline",
+  "proposal_id": "proposal-process-v1-folder-discovery-confirmation",
+  "status": "PROPOSED_BASELINE_VALID",
+  "base_current_id": "current-v2-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173",
+  "base_main": {"commit_sha": "94e7bbdc301d5dcc7ed0b83bc6496b26a60de73b", "tree_sha": "3e7c994b8a051a0bcb7baff365b1213632c78a7f"},
+  "proposed_source": {"commit_sha": "3802f61c1e0ef04426137b79ce09fd79df4e5efc", "tree_sha": "a7d8f829b6bb43dd26fe52a5fc725ce3cb615b60"},
+  "proposed_head": {"commit_sha": "536272afd6f188cf0da64e27d5bf4818edce11f0", "tree_sha": "ad0e9d7832077801f8f5ce6e492a1a1cf1fc261d"},
+  "intended_scope": {"wp": "Excel #4 / S06", "journey": "Select one local folder, deterministically discover supported direct-child sources, preview the exact ordered set, require explicit confirmation, then reuse the existing multi-source Process plan with per-source provenance and failure isolation."},
+  "candidate": {"candidate_id": "candidate-v1-e5de327bd01cd38dd6f737ad03ff10dcf5e313e6f4aaaa07788cd0261f394779", "identity_sha256": "e5de327bd01cd38dd6f737ad03ff10dcf5e313e6f4aaaa07788cd0261f394779", "bundle_digest": "25522c028bc6f6bd720e1178a2abf8ce86c5d28b279a67aeb61b0588466cbd74", "manifest_digest": "752fd9d54c98f80ebd0a074d4ac6f64494b17ee0c489813e2ba6497584a446cf"},
+  "delta": [
+    {"path": "integra_core/folder_discovery.py", "before_sha256": null, "after_sha256": "cc9da2491786feb8c731623d40ecca00e3423a07941f878ef72d9d8dbea83804"},
+    {"path": "macos/IntegraApp.swift", "before_sha256": "5349f5ccad8585f755113d75f3f4fc00480ace1cfef334a181603fac9b36d754", "after_sha256": "ee58b3bc01d72d78bdbd129e3deefb1db043be33ac840c83c37c9dfb6425ff92"},
+    {"path": "macos/Resources/bridge.py", "before_sha256": "dbc88e807807ac4ea0f099aec3e78751a7b1ee59160b9b68a2355205577a2d19", "after_sha256": "f2ea2c3d08ce541d18601de2f096318040c22e33ce0fde910c5a2bb25546d9b8"},
+    {"path": "tests/test_macos_app.py", "before_sha256": "b61e455a81f58d0082a6551cea1163d3773230a73981d6460d114ef37cdf5016", "after_sha256": "71cd630deba9e98b53c78e97e4aa818e19b64faab86763f9a9ad306502eb09c0"}
+  ],
+  "historical_test_successors": [],
+  "gates": [
+    {"name": "candidate-manifest", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_FOLDER_DISCOVERY_CANDIDATE_MANIFEST.json"},
+    {"name": "candidate-archive", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_FOLDER_DISCOVERY_CANDIDATE_ARCHIVE.json"},
+    {"name": "packaged-folder-discovery", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_FOLDER_DISCOVERY_E2E.json"},
+    {"name": "focused-process-regressions", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_FOLDER_DISCOVERY_FOCUSED_TESTS.txt"},
+    {"name": "full-supported-regressions", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_FOLDER_DISCOVERY_FULL_TESTS.txt"}
+  ],
+  "evidence": {
+    "candidate_manifest": {"path": "docs/evidence/PROCESS_V1_FOLDER_DISCOVERY_CANDIDATE_MANIFEST.json", "sha256": "752fd9d54c98f80ebd0a074d4ac6f64494b17ee0c489813e2ba6497584a446cf"},
+    "candidate_evidence": {"path": "docs/evidence/PROCESS_V1_FOLDER_DISCOVERY_E2E.json", "sha256": "cb8e91fd7b92c31285c845374744d81badfb59e9342a35482597b387b1566c1d"},
+    "report": {"path": "docs/PROCESS_V1_FOLDER_DISCOVERY_PROOF.md", "sha256": "340d227fab126f47498f3f7e2a6044abf48b0d6692026bc51c023982984cee49"}
+  },
+  "owner_acceptance": null,
+  "allowed_overlay_paths": ["docs/evidence/PROCESS_V1_FOLDER_DISCOVERY_CANDIDATE_ARCHIVE.json", "docs/evidence/PROCESS_V1_FOLDER_DISCOVERY_CANDIDATE_MANIFEST.json", "docs/evidence/PROCESS_V1_FOLDER_DISCOVERY_E2E.json", "docs/evidence/PROCESS_V1_FOLDER_DISCOVERY_FOCUSED_TESTS.txt", "docs/evidence/PROCESS_V1_FOLDER_DISCOVERY_FULL_TESTS.txt", "docs/PROCESS_V1_FOLDER_DISCOVERY_PROOF.md"]
+}
