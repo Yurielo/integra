@@ -198,6 +198,7 @@ struct SidebarItem {
     selected = Set<String>(), plan: [String: Any]?
   private var recognitionMode = "normal"
   private var sourceSpeechLanguage = "ru"
+  private var topicDetail = "auto"
   private var projectID: String?, runID: String?, timer: Timer?
   private var mediaPlayer: AVPlayer?, mediaWindow: NSWindow?
   private var reviewPlayer: AVPlayer?
@@ -543,6 +544,12 @@ struct SidebarItem {
       add(row("Режим распознавания", detail: "Выберите тщательный режим, когда важнее полнота распознавания, чем скорость."))
       add(mode)
     }
+    if selected.contains("topics") {
+      let detail = NSSegmentedControl(labels: ["Крупно", "Обычно", "Подробно"], trackingMode: .selectOne, target: self, action: #selector(changeTopicDetail(_:)))
+      detail.selectedSegment = topicDetail == "low" ? 0 : topicDetail == "high" ? 2 : 1
+      add(row("Детализация тем", detail: "Выбор задаёт реальную детализацию тематического таймкодинга для этой обработки."))
+      add(detail)
+    }
     if sources.contains(where: { $0["source_type"] as? String == "PDF" }) {
       add(button("Страницы OCR BookText…", #selector(configureOCRPages)))
       if let source = sources.first(where: { $0["source_type"] as? String == "PDF" }) {
@@ -640,6 +647,9 @@ struct SidebarItem {
   @objc private func changeSourceSpeechLanguage(_ sender: NSPopUpButton) {
     sourceSpeechLanguage = sender.indexOfSelectedItem == 0 ? "ru" : ""
   }
+  @objc private func changeTopicDetail(_ sender: NSSegmentedControl) {
+    topicDetail = ["low", "auto", "high"][max(0, min(sender.selectedSegment, 2))]
+  }
   @objc private func addYouTube() {
     let alert = NSAlert()
     alert.messageText = "YouTube"
@@ -670,6 +680,7 @@ struct SidebarItem {
           self.sources = detected
           self.recognitionMode = "normal"
           self.sourceSpeechLanguage = "ru"
+          self.topicDetail = "auto"
           self.capabilities = caps
           if let index = CommandLine.arguments.firstIndex(of: "--ui-probe-output"),
             CommandLine.arguments.indices.contains(index + 1)
@@ -721,10 +732,11 @@ struct SidebarItem {
     let name = sources.first?["display_name"] as? String ?? "Новая обработка"
     let recognitionMode = self.recognitionMode
     let sourceSpeechLanguage = self.sourceSpeechLanguage
+    let topicDetail = self.topicDetail
     serviceQueue.async {
       do {
         let result =
-          try bridge.json("execute-plan", request: ["plan": plan, "name": name, "recognition_mode": recognitionMode, "source_speech_language": sourceSpeechLanguage])["result"]
+          try bridge.json("execute-plan", request: ["plan": plan, "name": name, "recognition_mode": recognitionMode, "source_speech_language": sourceSpeechLanguage, "topic_detail": topicDetail])["result"]
           as? [String: Any]
         let project = result?["project"] as? [String: Any]
         let run = result?["run"] as? [String: Any]
@@ -1240,6 +1252,12 @@ struct SidebarItem {
     alert.informativeText = reviewed
       ? "Сохранённые проверенные темы для этого источника."
       : "Машинные темы. Перед использованием их можно проверить."
+    if let detail = result["topic_detail"] as? [String: String],
+      let executed = detail["executed"]
+    {
+      let label = ["low": "Крупно", "auto": "Обычно", "high": "Подробно"][executed] ?? executed
+      alert.informativeText += " Детализация: \(label)."
+    }
     let stack = FlippedStackView()
     stack.orientation = .vertical; stack.alignment = .leading; stack.spacing = 10
     for topic in topics {
@@ -1270,6 +1288,12 @@ struct SidebarItem {
     alert.informativeText = readOnly
       ? "Сохранённые решения человека для этого источника."
       : "Подтвердите или отредактируйте каждую машинную тему. Решения сохраняются в результатах обработки источника."
+    if let detail = package["topic_detail"] as? [String: String],
+      let executed = detail["executed"]
+    {
+      let label = ["low": "Крупно", "auto": "Обычно", "high": "Подробно"][executed] ?? executed
+      alert.informativeText += " Детализация: \(label)."
+    }
     let stack = FlippedStackView()
     stack.orientation = .vertical; stack.alignment = .leading; stack.spacing = 12
     var choices: [(String, String, String, NSPopUpButton, NSTextField, NSTextField)] = []

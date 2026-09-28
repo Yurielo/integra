@@ -15,6 +15,14 @@ PINNED_COMMIT = "13644d262776aacdf36221b9a9fc7ebd0a7c0737"
 ENTRYPOINT = Path("seminartext_modules/seminartext_topics.py")
 ENTRYPOINT_SHA256 = "d8a14e83b877024c3e016a33e594af17d512741a77735ff3d8c7d1262628c8db"
 BUNDLED_RUNTIME_ROOT = Path(__file__).resolve().parents[1] / "runtime" / "seminartext"
+TOPIC_DETAILS = frozenset({"low", "auto", "high"})
+
+
+def validate_topic_detail(value: Any) -> str:
+    """Accept only the bounded detail values supported by the pinned engine."""
+    if not isinstance(value, str) or value not in TOPIC_DETAILS:
+        raise ValueError("topic detail is unsupported")
+    return value
 
 
 def _entrypoint_is_exact(entrypoint: Path) -> bool:
@@ -53,18 +61,19 @@ def preflight() -> dict[str, Any]:
     return {"state":"READY","component":"seminartext","commit_sha":commit,"checkout":str(checkout.resolve(strict=True)),"entrypoint":str(entrypoint.resolve(strict=True)),"model":model,"origin":origin}
 
 
-def generate_topics(subtitles: Path, output: Path) -> dict[str, Any]:
+def generate_topics(subtitles: Path, output: Path, *, detail: str = "auto") -> dict[str, Any]:
     """Invoke the pinned Topic Engine and accept only its validated draft output."""
+    detail = validate_topic_detail(detail)
     runtime = preflight()
     if subtitles.is_symlink() or not subtitles.is_file():
         raise ValueError("timed subtitles are unavailable")
     output.parent.mkdir(parents=True, exist_ok=True)
-    worker = Path(__file__).resolve().parents[1] / "workers" / "seminartext_topics_worker.py"
-    if worker.is_symlink() or not worker.is_file():
-        raise ValueError("SeminarText Topic Engine worker is missing")
+    adapter = Path(__file__).with_name("seminartext_topic_detail_adapter.py")
+    if adapter.is_symlink() or not adapter.is_file():
+        raise ValueError("SeminarText Topic Engine detail adapter is missing")
     completed = subprocess.run(
-        [sys.executable, str(worker), "--checkout", runtime["checkout"], "--srt", str(subtitles),
-         "--model", runtime["model"], "--output", str(output)],
+        [sys.executable, str(adapter), "--checkout", runtime["checkout"], "--srt", str(subtitles),
+         "--model", runtime["model"], "--detail", detail, "--output", str(output)],
         capture_output=True, text=True, timeout=900,
     )
     if completed.returncode != 0 or output.is_symlink() or not output.is_file():
@@ -75,6 +84,10 @@ def generate_topics(subtitles: Path, output: Path) -> dict[str, Any]:
         raise ValueError("SeminarText Topic Engine output is invalid")
     if any(item.get("semantic_status") != "REVIEW_REQUIRED" for item in topics if isinstance(item, dict)):
         raise ValueError("SeminarText Topic Engine output has invalid semantic status")
+    executed_detail = result.get("detail")
+    if executed_detail != detail:
+        raise ValueError("SeminarText Topic Engine output has invalid detail provenance")
+    result["topic_detail"] = {"requested": detail, "executed": executed_detail}
     result["runtime"] = {"commit_sha": runtime["commit_sha"], "model": runtime["model"]}
     output.write_text(json.dumps(result, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
     return result

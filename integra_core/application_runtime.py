@@ -23,6 +23,7 @@ from .user_media import (
 )
 from .youtube_runtime import download_video
 from .youtube_playlist_runtime import execute_playlist
+from .seminartext_runtime import validate_topic_detail
 
 RECOGNITION_MODES = frozenset({"normal", "careful"})
 SOURCE_SPEECH_LANGUAGES = frozenset({"ru"})
@@ -45,7 +46,7 @@ def _source_speech_language(value: Any) -> str:
 
 
 def prepare_run(project_dir: Path, plan: dict[str,Any], *, recognition_mode: str = "normal",
-                source_speech_language: str = "ru") -> dict[str,Any]:
+                source_speech_language: str = "ru", topic_detail: str = "auto") -> dict[str,Any]:
     selected_outputs = plan.get("selected_outputs", [])
     target_language = plan.get("translation_target_language", TRANSLATION_TARGET_LANGUAGE)
     verified=build_plan(plan.get("sources",[]), selected_outputs,
@@ -53,10 +54,12 @@ def prepare_run(project_dir: Path, plan: dict[str,Any], *, recognition_mode: str
     if verified["plan_id"]!=plan.get("plan_id"): raise ValueError("execution plan identity differs")
     recognition_mode = _recognition_mode(recognition_mode)
     source_speech_language = _source_speech_language(source_speech_language)
+    topic_detail = validate_topic_detail(topic_detail)
     run_id=f"urn:integra:run:{uuid.uuid4()}"
     record={"schema_version":"1.0","run_id":run_id,"plan":verified,"state":"QUEUED","current_stage":None,
             "recognition":{"requested_mode":recognition_mode},
-            "source_speech_language":{"requested":source_speech_language},"completed_sources":0,
+            "source_speech_language":{"requested":source_speech_language},
+            "topic_detail":{"requested":topic_detail},"completed_sources":0,
             "total_sources":len(verified["sources"]),"source_results":[],"created_at":now()}
     atomic_json(_runs(project_dir)/(run_id.removeprefix("urn:integra:run:")+".json"),record); return record
 
@@ -83,7 +86,9 @@ def prepare_transcript_translation_run(project_dir: Path, run_id: str, source_id
     if target_language == language:
         raise ValueError("Язык перевода должен отличаться от языка исходной речи.")
     plan = build_plan([source], ["translation"], translation_target_language=target_language)
-    return prepare_run(project_dir, plan, recognition_mode=mode, source_speech_language=language)
+    detail = previous.get("topic_detail", {}).get("requested", "auto")
+    return prepare_run(project_dir, plan, recognition_mode=mode, source_speech_language=language,
+                       topic_detail=detail)
 
 
 def run_path(project_dir:Path,run_id:str)->Path:
@@ -286,6 +291,7 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
     path=run_path(project_dir,run_id); record=json.loads(path.read_bytes()); plan=record["plan"]
     recognition_mode = _recognition_mode(record.get("recognition", {}).get("requested_mode", "normal"))
     source_speech_language = _source_speech_language(record.get("source_speech_language", {}).get("requested", "ru"))
+    topic_detail = validate_topic_detail(record.get("topic_detail", {}).get("requested", "auto"))
     jobs_path=project_dir/"jobs.json"
     def refresh_record():
         return json.loads(path.read_bytes())
@@ -320,7 +326,7 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                     imported=import_source(project_dir,Path(source["input"]))
                     if imported["source_id"] != source["source_id"]:
                         raise ValueError("media source changed after plan creation")
-                    job={"job_id":f"urn:integra:job:{uuid.uuid4()}","kind":"LOCAL_MEDIA_TRANSCRIPTION","state":"QUEUED","progress":0,"message":"Queued by source-first plan","created_at":now(),"source_id":imported["source_id"],"source_sha256":imported["content_sha256"],"owned_path":imported["owned_path"],"requested_outputs":outputs,"recognition_mode":recognition_mode,"source_speech_language":source_speech_language,"translation_target_language":source_plan.get("translation_target_language"),"run_id":run_id}
+                    job={"job_id":f"urn:integra:job:{uuid.uuid4()}","kind":"LOCAL_MEDIA_TRANSCRIPTION","state":"QUEUED","progress":0,"message":"Queued by source-first plan","created_at":now(),"source_id":imported["source_id"],"source_sha256":imported["content_sha256"],"owned_path":imported["owned_path"],"requested_outputs":outputs,"recognition_mode":recognition_mode,"source_speech_language":source_speech_language,"topic_detail":topic_detail,"translation_target_language":source_plan.get("translation_target_language"),"run_id":run_id}
                     jobs=json.loads(jobs_path.read_bytes())
                     jobs["jobs"].append(job); atomic_json(jobs_path,jobs); result=run_job(project_dir,job["job_id"])
                     record["source_results"].append({"source_id":source["source_id"],"display_name":source["display_name"],"state":result["state"],"outputs":result.get("outputs",{}),"job_id":job["job_id"]})
@@ -331,6 +337,8 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                     if result.get("source_speech_language"):
                         record["source_results"][-1]["source_speech_language"] = result["source_speech_language"]
                         record["source_speech_language"] = result["source_speech_language"]
+                    if result.get("topic_detail"):
+                        record["source_results"][-1]["topic_detail"] = result["topic_detail"]
                     if result.get("asr_diagnostics"):
                         record["source_results"][-1]["asr_diagnostics"] = result["asr_diagnostics"]
                 except Exception as error:
@@ -357,7 +365,7 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                     record["source_results"].append({"source_id": source["source_id"], "display_name": source["display_name"], "state": "COMPLETED", "outputs": downloaded_outputs})
                 else:
                     record["current_stage"] = "media_preparation"; atomic_json(path, record)
-                    job = {"job_id": f"urn:integra:job:{uuid.uuid4()}", "kind": "YOUTUBE_MEDIA_TRANSCRIPTION", "state": "QUEUED", "progress": 0, "message": "Queued after YouTube download", "created_at": now(), "source_id": source["source_id"], "source_sha256": downloaded["content_sha256"], "owned_path": downloaded["downloaded_path"], "requested_outputs": downstream, "recognition_mode": recognition_mode, "source_speech_language": source_speech_language, "translation_target_language": source_plan.get("translation_target_language"), "run_id": run_id, "youtube_source_record": downloaded["record_path"]}
+                    job = {"job_id": f"urn:integra:job:{uuid.uuid4()}", "kind": "YOUTUBE_MEDIA_TRANSCRIPTION", "state": "QUEUED", "progress": 0, "message": "Queued after YouTube download", "created_at": now(), "source_id": source["source_id"], "source_sha256": downloaded["content_sha256"], "owned_path": downloaded["downloaded_path"], "requested_outputs": downstream, "recognition_mode": recognition_mode, "source_speech_language": source_speech_language, "topic_detail": topic_detail, "translation_target_language": source_plan.get("translation_target_language"), "run_id": run_id, "youtube_source_record": downloaded["record_path"]}
                     jobs = json.loads(jobs_path.read_bytes())
                     jobs["jobs"].append(job); atomic_json(jobs_path, jobs); result = run_job(project_dir, job["job_id"])
                     record["source_results"].append({"source_id": source["source_id"], "display_name": source["display_name"], "state": result["state"], "outputs": downloaded_outputs | result.get("outputs", {}), "job_id": job["job_id"]})
@@ -368,6 +376,8 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                     if result.get("source_speech_language"):
                         record["source_results"][-1]["source_speech_language"] = result["source_speech_language"]
                         record["source_speech_language"] = result["source_speech_language"]
+                    if result.get("topic_detail"):
+                        record["source_results"][-1]["topic_detail"] = result["topic_detail"]
                     if result.get("asr_diagnostics"):
                         record["source_results"][-1]["asr_diagnostics"] = result["asr_diagnostics"]
             elif source["kind"] == "URL" and source["source_type"] == "YOUTUBE_PLAYLIST":

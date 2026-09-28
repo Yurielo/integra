@@ -183,9 +183,12 @@ class ApplicationRuntimeTests(unittest.TestCase):
             output.write_text(json.dumps({"capability":"word_timeline", "words":[{"alignment_status":"ALIGNED"}]}))
             return json.loads(output.read_text())
 
-        def topic_drafts(subtitles, output):
+        def topic_drafts(subtitles, output, *, detail):
             self.assertTrue(subtitles.is_file())
-            output.write_text(json.dumps({"component":"seminartext", "topics":[{"semantic_status":"REVIEW_REQUIRED"}]}))
+            self.assertEqual(detail, "high")
+            output.write_text(json.dumps({"component":"seminartext", "detail": detail,
+                                          "topic_detail":{"requested": detail, "executed": detail},
+                                          "topics":[{"semantic_status":"REVIEW_REQUIRED"}]}))
             return json.loads(output.read_text())
 
         try:
@@ -196,7 +199,7 @@ class ApplicationRuntimeTests(unittest.TestCase):
                  patch("integra_core.user_media.generate_topics", side_effect=topic_drafts) as generated:
                 plan=build_plan([detect_source(str(source_path))],["topics"])
                 self.assertEqual([stage["id"] for stage in plan["stages"]], ["media_preparation", "transcript", "word_timeline", "topics"])
-                run=prepare_run(self.project,plan); result=execute_run(self.project,run["run_id"])
+                run=prepare_run(self.project,plan,topic_detail="high"); result=execute_run(self.project,run["run_id"])
         finally:
             for key,value in old.items():
                 if value is None: os.environ.pop(key,None)
@@ -209,8 +212,16 @@ class ApplicationRuntimeTests(unittest.TestCase):
         self.assertTrue(Path(outputs["topics"]).is_file())
         generated_timeline.assert_called_once()
         generated.assert_called_once()
+        self.assertEqual(result["topic_detail"], {"requested": "high"})
+        self.assertEqual(result["source_results"][0]["topic_detail"], {"requested": "high", "executed": "high"})
         self.assertEqual(json.loads(Path(outputs["topics"]).read_text())["topics"][0]["semantic_status"], "REVIEW_REQUIRED")
         self.assertNotIn("knowledge", outputs)
+
+    def test_topic_detail_is_rejected_before_a_run_is_created(self):
+        plan={"plan_id":"fixed-plan", "sources":[], "source_plans":[], "selected_outputs":[]}
+        with patch("integra_core.application_runtime.build_plan", return_value=plan):
+            with self.assertRaisesRegex(ValueError, "topic detail"):
+                prepare_run(self.project, plan, topic_detail="invented")
 
     def test_burns_generated_subtitles_into_local_video(self):
         source_path=self.root/"video.mp4"; real_media_fixture(source_path)

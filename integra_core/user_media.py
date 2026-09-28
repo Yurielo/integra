@@ -485,8 +485,10 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
         if requested and "topics" in requested:
             checkpoint("RUNNING", 88, "Generating topic drafts with SeminarText", run_stage="topics")
             topics_path = work / "topics.json"
-            generate_topics(subtitles, topics_path)
+            topic_detail = job.get("topic_detail", "auto")
+            generated_topics = generate_topics(subtitles, topics_path, detail=topic_detail)
             job["outputs"]["topics"] = str(topics_path)
+            job["topic_detail"] = generated_topics["topic_detail"]
         if requested and "burn_subtitles" in requested:
             checkpoint("RUNNING", 90, "Burning subtitles into video", run_stage="burn_subtitles")
             burned = work / (uuid.uuid4().hex + "_subtitled.mp4")
