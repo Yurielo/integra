@@ -42,6 +42,18 @@ class ProcessResultsSurfaceTests(unittest.TestCase):
             "@objc private func runSelected", 1)[0]
         self.assertNotIn('case "translation"', technical)
 
+    def test_topic_translation_is_a_distinct_process_result_not_a_second_topic_engine(self):
+        surface = self.source.split("private func renderPrimaryProcessResults", 1)[1].split(
+            "private func readableOutput", 1)[0]
+        self.assertIn('outputs["topic_translation_txt"] as? String', surface)
+        self.assertIn('processCard("Перевод тем"', surface)
+        self.assertIn('#selector(showTopicTranslation(_:))', surface)
+        self.assertIn('#selector(translateTopics(_:))', surface)
+        self.assertIn('Исходные темы не изменяются.', self.source)
+        self.assertIn('bridge.json("translate-topics"', self.source)
+        self.assertIn('bridge.json("topic-translation"', self.source)
+        self.assertNotIn('generate_topics(', self.source)
+
     def test_reviewable_topics_use_process_only_review_path(self):
         review = self.source.split("@objc private func prepareTopicReview", 1)[1].split(
             "private func presentTopicReview", 1)[0]

@@ -24,6 +24,7 @@ from .user_media import (
 from .youtube_runtime import download_video
 from .youtube_playlist_runtime import execute_playlist
 from .seminartext_runtime import validate_topic_detail
+from .topic_translation import load_topic_translation, translate_topics
 
 RECOGNITION_MODES = frozenset({"normal", "careful"})
 SOURCE_SPEECH_LANGUAGES = frozenset({"ru"})
@@ -89,6 +90,73 @@ def prepare_transcript_translation_run(project_dir: Path, run_id: str, source_id
     detail = previous.get("topic_detail", {}).get("requested", "auto")
     return prepare_run(project_dir, plan, recognition_mode=mode, source_speech_language=language,
                        topic_detail=detail)
+
+
+def prepare_topic_translation_run(project_dir: Path, run_id: str, source_id: str) -> dict[str, Any]:
+    """Queue S15 from one persisted machine Topic snapshot, never from loose text."""
+    previous = read_run(project_dir, run_id)
+    source = next((item for item in previous.get("plan", {}).get("sources", [])
+                   if item.get("source_id") == source_id), None)
+    completed = next((item for item in previous.get("source_results", [])
+                      if item.get("source_id") == source_id and item.get("state") == "COMPLETED"), None)
+    if not isinstance(source, dict) or not isinstance(completed, dict) or not isinstance(completed.get("outputs"), dict):
+        raise ValueError("completed Topic source is unavailable")
+    if not isinstance(completed["outputs"].get("topics"), str):
+        raise ValueError("real machine Topics are unavailable")
+    language = completed.get("source_speech_language", {})
+    language = language.get("executed") if isinstance(language, dict) else None
+    language = language or previous.get("source_speech_language", {}).get("executed")
+    language = language or previous.get("source_speech_language", {}).get("requested", "ru")
+    if language != "ru":
+        raise ValueError("Topic translation is currently available only for Russian source speech")
+    new_id = f"urn:integra:run:{uuid.uuid4()}"
+    record = {"schema_version": "1.0", "run_id": new_id, "kind": "TOPIC_TRANSLATION",
+              "parent_run_id": run_id, "state": "QUEUED", "current_stage": None,
+              "plan": {"schema_version": "1.0", "selected_outputs": ["topic_translation"],
+                       "sources": [source], "source_plans": [{"source_id": source_id, "outputs": ["topic_translation"]}],
+                       "translation_target_language": "en"},
+              "recognition": {"requested_mode": previous.get("recognition", {}).get("requested_mode", "normal")},
+              "source_speech_language": {"requested": "ru", "executed": "ru"},
+              "topic_detail": completed.get("topic_detail") or previous.get("topic_detail", {"status": "UNAVAILABLE_LEGACY"}),
+              "completed_sources": 0, "total_sources": 1, "source_results": [], "created_at": now()}
+    atomic_json(_runs(project_dir) / (new_id.removeprefix("urn:integra:run:") + ".json"), record)
+    return record
+
+
+def execute_topic_translation_run(project_dir: Path, run_id: str) -> dict[str, Any]:
+    path = run_path(project_dir, run_id)
+    record = json.loads(path.read_bytes())
+    if record.get("kind") != "TOPIC_TRANSLATION":
+        raise ValueError("run is not a Topic translation")
+    if _is_run_cancelled(project_dir, run_id):
+        record.update(state="CANCELLED", current_stage=None, cancelled_at=now()); atomic_json(path, record); return record
+    try:
+        parent = read_run(project_dir, record.get("parent_run_id"))
+        source = record["plan"]["sources"][0]
+        source_id = source["source_id"]
+        source_result = next((item for item in parent.get("source_results", [])
+                              if item.get("source_id") == source_id and item.get("state") == "COMPLETED"), None)
+        if not isinstance(source_result, dict) or not isinstance(source_result.get("outputs"), dict):
+            raise ValueError("completed Topic source is unavailable")
+        record.update(state="RUNNING", current_stage="topic_translation", started_at=now(),
+                      message="Translating saved Topics through VideoText")
+        atomic_json(path, record)
+        artifact = project_dir / "artifacts" / ("topic-translation-" + uuid.uuid4().hex)
+        outputs = translate_topics(project_dir, source_id=source_id, source_run_id=parent["run_id"],
+                                   source_outputs=source_result["outputs"], artifact_dir=artifact)
+        record["source_results"] = [{"source_id": source_id, "display_name": source.get("display_name", "Источник"),
+                                     "state": "COMPLETED", "outputs": outputs,
+                                     "source_run_id": parent["run_id"],
+                                     "source_speech_language": {"requested": "ru", "executed": "ru"},
+                                     "topic_detail": record.get("topic_detail")}]
+        record.update(state="COMPLETED", current_stage=None, completed_sources=1, completed_at=now(),
+                      message="Translated Topics are ready")
+        atomic_json(path, record)
+        return record
+    except Exception as error:
+        record.update(state="FAILED", current_stage=None, message=str(error)[:300], updated_at=now())
+        atomic_json(path, record)
+        raise
 
 
 def run_path(project_dir:Path,run_id:str)->Path:
@@ -289,6 +357,8 @@ def _booktext_outputs(result: dict[str, Any], output_dir: Path) -> dict[str, str
 
 def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
     path=run_path(project_dir,run_id); record=json.loads(path.read_bytes()); plan=record["plan"]
+    if record.get("kind") == "TOPIC_TRANSLATION":
+        return execute_topic_translation_run(project_dir, run_id)
     recognition_mode = _recognition_mode(record.get("recognition", {}).get("requested_mode", "normal"))
     source_speech_language = _source_speech_language(record.get("source_speech_language", {}).get("requested", "ru"))
     topic_detail = validate_topic_detail(record.get("topic_detail", {}).get("requested", "auto"))

@@ -1,0 +1,53 @@
+{
+  "artifact_type": "integra.process_topic_translation_e2e",
+  "bundle_digest": "c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b",
+  "candidate_id": "candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173",
+  "executor": {
+    "adapter_sha256": "83e55d3cb82522cb431ee20617510b0c39f79ae0fa5309daedf5c7ff9911a577",
+    "commit_sha": "2e098d1705b6815628bee1e023f4742718eabf02",
+    "component": "videotext",
+    "model": "qwen3:8b"
+  },
+  "failure_isolation": {
+    "no_silent_language_or_provider_substitution": true,
+    "provider_issues_fail_closed": true,
+    "tampered_source_binding_fails_closed": true,
+    "tampered_timing_or_parent_run_fails_closed": true
+  },
+  "language": {
+    "executed": "en",
+    "requested": "en",
+    "source": "ru",
+    "target": "en"
+  },
+  "manifest_identity_sha256": "8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173",
+  "native_app_smoke": {
+    "controlled_shutdown": "PASS",
+    "launch": "PASS"
+  },
+  "product_source": {
+    "commit_sha": "ac954f85858962345402f4649be5b9a1e8c3e0dd",
+    "tree_sha": "5678dbd0d347df617269624ba3ba246288a20e37"
+  },
+  "result": {
+    "continuation_kind": "TOPIC_TRANSLATION",
+    "order_preserved": true,
+    "original_titles_preserved": true,
+    "parent_run_unchanged": true,
+    "reopen_without_provider_reexecution": true,
+    "timestamps_and_source_spans_preserved": true,
+    "topic_count": 2,
+    "topic_detail_preserved": {
+      "executed": "auto",
+      "requested": "auto"
+    },
+    "translated_titles": [
+      "Practice of Mindful Breathing",
+      "Transition to Bodily Sensations"
+    ]
+  },
+  "scenario": "Packaged continuation from an existing machine Topics snapshot",
+  "schema_version": "1.0",
+  "source_commit": "ac954f85858962345402f4649be5b9a1e8c3e0dd",
+  "status": "PASS"
+}

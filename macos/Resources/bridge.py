@@ -15,12 +15,14 @@ from integra_core.protocol import canonical_json, content_sha256
 from integra_core.publishing import preview_obsidian_export, publish_obsidian_export, validate_managed_package
 from integra_core.user_media import _parse_srt, ffmpeg_preflight, import_source, preflight, run_job
 from integra_core.capabilities import build_plan, capability_registry, detect_source
-from integra_core.application_runtime import execute_run, prepare_run, prepare_transcript_translation_run, read_run, run_path
+from integra_core.application_runtime import (execute_run, prepare_run, prepare_topic_translation_run,
+                                              prepare_transcript_translation_run, read_run, run_path)
+from integra_core.topic_translation import load_topic_translation
 from integra_core.shutdown_runtime import cancel_run, reconcile_stale_runs, register_worker, requires_shutdown, run_with_timeout
 from integra_core.seminartext_runtime import preflight as seminartext_preflight
 from integra_core.seminartext_evidence_runtime import prepare_transcript_review, apply_human_transcript_review, prepare_topic_review_input
 
-OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "import-media", "media-preflight", "seminartext-preflight", "process-media-job", "project-view", "detect-sources", "capability-registry", "build-plan", "execute-plan", "translate-transcript", "process-plan", "run-status", "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "prepare-transcript-review", "apply-transcript-review", "prepare-topic-review", "prepare-process-topic-review", "apply-process-topic-review", "process-topics", "package-preview", "package-publish", "obsidian-preview", "onedrive-preview"}
+OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "import-media", "media-preflight", "seminartext-preflight", "process-media-job", "project-view", "detect-sources", "capability-registry", "build-plan", "execute-plan", "translate-transcript", "translate-topics", "topic-translation", "process-plan", "run-status", "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "prepare-transcript-review", "apply-transcript-review", "prepare-topic-review", "prepare-process-topic-review", "apply-process-topic-review", "process-topics", "package-preview", "package-publish", "obsidian-preview", "onedrive-preview"}
 
 OPERATIONS.add("build-reviewed-package")
 OPERATIONS.add("transcript-text")
@@ -142,6 +144,14 @@ def _translate_transcript(root, request):
         project_dir = _project_dir(root, _project(root, project_id)["project_id"])
         run = prepare_transcript_translation_run(project_dir, request.get("run_id"), request.get("source_id"),
                                                  request.get("translation_target_language", "en"))
+        return {"project": _project(root, project_id), "run": _spawn_plan(root, project_id, run["run_id"])}
+
+
+def _translate_topics(root, request):
+    with _run_lifecycle(root, wait=False):
+        project_id = request.get("project_id")
+        project_dir = _project_dir(root, _project(root, project_id)["project_id"])
+        run = prepare_topic_translation_run(project_dir, request.get("run_id"), request.get("source_id"))
         return {"project": _project(root, project_id), "run": _spawn_plan(root, project_id, run["run_id"])}
 
 @contextmanager
@@ -468,6 +478,26 @@ def _process_topics(root, request):
         result = present_machine_process_topics(values["project_dir"], source_id=values["source_id"], topics_path=topics_path)
     return result | {"topic_detail": _persisted_topic_detail(topics_path)}
 
+
+def _topic_translation(root, request):
+    """Read one persisted S15 output; reopening never invokes a provider."""
+    project_id = request.get("project_id")
+    project_dir = _project_dir(root, _project(root, project_id)["project_id"])
+    run = read_run(project_dir, request.get("run_id"))
+    if run.get("kind") != "TOPIC_TRANSLATION":
+        raise ValueError("saved Topic translation run is unavailable")
+    source_id = request.get("source_id")
+    result = next((item for item in run.get("source_results", []) if item.get("source_id") == source_id), None)
+    if not isinstance(result, dict) or result.get("state") != "COMPLETED" or not isinstance(result.get("outputs"), dict):
+        raise ValueError("saved Topic translation is unavailable")
+    parent = read_run(project_dir, run.get("parent_run_id"))
+    original = next((item for item in parent.get("source_results", [])
+                     if item.get("source_id") == source_id and item.get("state") == "COMPLETED"), None)
+    if not isinstance(original, dict) or not isinstance(original.get("outputs"), dict):
+        raise ValueError("saved Topic translation source is unavailable")
+    return load_topic_translation(project_dir, source_id=source_id, source_run_id=parent["run_id"],
+                                  source_outputs=original["outputs"], outputs=result["outputs"])
+
 def _knowledge_review(root, request, apply=False):
     from integra_core.seminartext_topic_review_runtime import prepare_topic_review, apply_topic_review
     values = _review_inputs(root, request)
@@ -511,7 +541,7 @@ def _knowledge_review(root, request, apply=False):
     return result
 
 OPERATIONS.update({"prepare-knowledge-review", "apply-knowledge-review"})
-OPERATIONS.update({"prepare-process-topic-review", "apply-process-topic-review", "process-topics"})
+OPERATIONS.update({"prepare-process-topic-review", "apply-process-topic-review", "process-topics", "topic-translation"})
 
 def _create_media_clip(root, request):
     """Render one owned local clip bounded by persisted SRT cue edges."""
@@ -699,6 +729,8 @@ def main():
         elif operation == "build-plan": result = build_plan(request.get("sources", []), request.get("selected_outputs", []))
         elif operation == "execute-plan": result = _execute_plan(root, request)
         elif operation == "translate-transcript": result = _translate_transcript(root, request)
+        elif operation == "translate-topics": result = _translate_topics(root, request)
+        elif operation == "topic-translation": result = _topic_translation(root, request)
         elif operation == "process-plan":
             result = run_with_timeout(
                 lambda: execute_run(_project_dir(root, request.get("project_id")), request.get("run_id")),

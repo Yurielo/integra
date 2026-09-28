@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.proposed_product_baseline",
+  "proposal_id": "proposal-process-v1-topic-translation",
+  "status": "PROPOSED_BASELINE_VALID",
+  "base_current_id": "current-v2-2b779255c5b57a7b6602f153ea13c497bf738a18a84412773f8b6ed5261fbfcc",
+  "base_main": {"commit_sha": "b6ac52aa08aac3f49a8a1dadce2b7f7f525af07b", "tree_sha": "b3b9f6c2384d62f3759c4f1a703cb4b532495af6"},
+  "proposed_source": {"commit_sha": "ac954f85858962345402f4649be5b9a1e8c3e0dd", "tree_sha": "5678dbd0d347df617269624ba3ba246288a20e37"},
+  "proposed_head": {"commit_sha": "94e7bbdc301d5dcc7ed0b83bc6496b26a60de73b", "tree_sha": "3e7c994b8a051a0bcb7baff365b1213632c78a7f"},
+  "intended_scope": {"wp": "Excel #22 / S15", "journey": "Translate only saved machine Topic title and summary through the canonical Russian-to-English VideoText translation capability; preserve source Topic identity, order, time spans, detail, review lineage and provenance; retain Process Topic Review authority."},
+  "candidate": {"candidate_id": "candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173", "identity_sha256": "8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173", "bundle_digest": "c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b", "manifest_digest": "4e54fcce8ee164ca86d170c12f31474a457eedaf377bb433893aba7d1607bdc9"},
+  "delta": [
+    {"path": "integra_core/application_runtime.py", "before_sha256": "3b3a383e147fa67a32d8aef2b8393f0b7a87a24570bb690749140b41024d93c9", "after_sha256": "990e846af4e7d1c3d7405663e4405ec73d2a13543d4c04b7154b6062cc0472ac"},
+    {"path": "integra_core/topic_translation.py", "before_sha256": null, "after_sha256": "72e3aa0769048a3d270158d26a1e18ce360d16fc6e43950b8df36451eab8930b"},
+    {"path": "macos/IntegraApp.swift", "before_sha256": "a62152ca75822f1396063441fc1878aa0a749bc5a15ff7ad225356a52818ed32", "after_sha256": "5349f5ccad8585f755113d75f3f4fc00480ace1cfef334a181603fac9b36d754"},
+    {"path": "macos/Resources/bridge.py", "before_sha256": "3fc4b98f99fed3b2bade189b567a9ec9237b5f90058a2b3d22dc1321baee0333", "after_sha256": "dbc88e807807ac4ea0f099aec3e78751a7b1ee59160b9b68a2355205577a2d19"}
+  ],
+  "historical_test_successors": [],
+  "gates": [
+    {"name": "candidate-manifest", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_TOPIC_TRANSLATION_CANDIDATE_MANIFEST.json"},
+    {"name": "candidate-archive", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_TOPIC_TRANSLATION_CANDIDATE_ARCHIVE.json"},
+    {"name": "packaged-topic-translation", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_TOPIC_TRANSLATION_E2E.json"},
+    {"name": "focused-process-regressions", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_TOPIC_TRANSLATION_FOCUSED_TESTS.txt"},
+    {"name": "full-supported-regressions", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_TOPIC_TRANSLATION_FULL_TESTS.txt"}
+  ],
+  "evidence": {
+    "candidate_manifest": {"path": "docs/evidence/PROCESS_V1_TOPIC_TRANSLATION_CANDIDATE_MANIFEST.json", "sha256": "4e54fcce8ee164ca86d170c12f31474a457eedaf377bb433893aba7d1607bdc9"},
+    "candidate_evidence": {"path": "docs/evidence/PROCESS_V1_TOPIC_TRANSLATION_E2E.json", "sha256": "49e61cc1dce972cd08400c179ccff42fbaffa7d2a04ccb5af6f1d55bae5e3319"},
+    "report": {"path": "docs/PROCESS_V1_TOPIC_TRANSLATION_PROOF.md", "sha256": "a7ad657db79237a2aa0d4cca409ded58c50f5bca6ea393d2ecee4a91d3a01257"}
+  },
+  "owner_acceptance": {
+    "decision": "PILOT_ACCEPTED",
+    "authority_ref": "PRODUCT OWNER AUTHORIZATION: ACCEPT_PROPOSED_BASELINE proposal-process-v1-topic-translation candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173",
+    "scope": "Topic translation — Excel #22 / S15 proposed baseline acceptance only",
+    "promotion_authorized": false
+  },
+  "allowed_overlay_paths": ["docs/evidence/PROCESS_V1_TOPIC_TRANSLATION_CANDIDATE_ARCHIVE.json", "docs/evidence/PROCESS_V1_TOPIC_TRANSLATION_CANDIDATE_MANIFEST.json", "docs/evidence/PROCESS_V1_TOPIC_TRANSLATION_E2E.json", "docs/evidence/PROCESS_V1_TOPIC_TRANSLATION_FOCUSED_TESTS.txt", "docs/evidence/PROCESS_V1_TOPIC_TRANSLATION_FULL_TESTS.txt", "docs/evidence/PROCESS_V1_TOPIC_TRANSLATION_MACOS_GATE.txt", "docs/PROCESS_V1_TOPIC_TRANSLATION_PROOF.md"]
+}
