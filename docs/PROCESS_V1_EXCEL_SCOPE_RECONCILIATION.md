@@ -52,7 +52,7 @@ Therefore: 51 original MUST − 4 approved transfers = 47 current Process MUST. 
 | 19 | Выбор языка перевода | MUST | PROCESS | MUST | Translation-language choice | DONE | Candidate `candidate-v1-6545998b95e0f2d84abc7cd82baaea79bf8aa3c80cdd6d76840f47e87a42f996` proves the supported Russian-source to English-target control and truthful requested/executed target-language provenance; no broader multilingual capability is claimed. |
 | 20 | Переведённый TXT | MUST | PROCESS | MUST | Translated TXT | DONE | Candidate `candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583` proves managed UTF-8 TXT, evidence-bound legacy recovery without provider re-execution, and ordinary Results Open/Export. |
 | 21 | Переведённый SRT | MUST | STUDIO | LATER | — | N/A | Owner correction: user-facing translated SRT is Studio. |
-| 22 | Перевод Topics | MUST | PROCESS | MUST | Topic translation | NOT_DONE | Retained as provisional Process output. |
+| 22 | Перевод Topics | MUST | PROCESS | MUST | Topic translation | DONE | Candidate `candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173` proves real `ru` to `en` Topic translation with additive persisted text, preserved Topic identity/order/spans/detail provenance, truthful reopen without retranslation, and Process-only review authority. |
 | 23 | Topics + timestamps | MUST | PROCESS | MUST | Topics/timestamps | DONE | Retained. |
 | 24 | Summary каждой темы | MUST | PROCESS | MUST | Topic summary | DONE | Candidate-bound normal Process result; title, summary and timing remain source-bound and review stays separate. |
 | 25 | Выбор детализации Topics | MUST | PROCESS | MUST | Topic detail choice | DONE | Candidate `candidate-v1-2b779255c5b57a7b6602f153ea13c497bf738a18a84412773f8b6ed5261fbfcc` proves the bounded `Крупно`/`Обычно`/`Подробно` choice, persisted requested/executed provenance, reopen and fail-closed mismatch handling. |
@@ -102,7 +102,7 @@ Therefore: 51 original MUST − 4 approved transfers = 47 current Process MUST. 
 
 ## Board reconciliation
 
-The active Board has 45 rows. Its states sum exactly: 37 DONE + 0 IN_PROGRESS + 7 NOT_DONE + 1 BLOCKED = 45.
+The active Board has 45 rows. Its states sum exactly: 38 DONE + 0 IN_PROGRESS + 6 NOT_DONE + 1 BLOCKED = 45.
 
 One explicit DoD aggregation explains the distinct denominators:
 
