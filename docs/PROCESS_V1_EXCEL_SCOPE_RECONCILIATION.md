@@ -55,7 +55,7 @@ Therefore: 51 original MUST − 4 approved transfers = 47 current Process MUST. 
 | 22 | Перевод Topics | MUST | PROCESS | MUST | Topic translation | NOT_DONE | Retained as provisional Process output. |
 | 23 | Topics + timestamps | MUST | PROCESS | MUST | Topics/timestamps | DONE | Retained. |
 | 24 | Summary каждой темы | MUST | PROCESS | MUST | Topic summary | DONE | Candidate-bound normal Process result; title, summary and timing remain source-bound and review stays separate. |
-| 25 | Выбор детализации Topics | MUST | PROCESS | MUST | Topic detail choice | NOT_DONE | Retained. |
+| 25 | Выбор детализации Topics | MUST | PROCESS | MUST | Topic detail choice | DONE | Candidate `candidate-v1-2b779255c5b57a7b6602f153ea13c497bf738a18a84412773f8b6ed5261fbfcc` proves the bounded `Крупно`/`Обычно`/`Подробно` choice, persisted requested/executed provenance, reopen and fail-closed mismatch handling. |
 | 26 | Редактирование/подтверждение Topics | MUST | PROCESS | MUST | Topic edit/confirm | DONE | Retained as Topic review, not Evidence review; owner accepted rename/save/reopen on the bound Candidate. |
 | 27 | Иерархия тем | MUST | KNOWLEDGE | LATER | — | N/A | Owner correction: mandatory hierarchy deferred to later/Knowledge. |
 | 28 | Ordered processing | MUST | PROCESS | MUST | Ordered processing | DONE | Retained; distinct from several local files. |
@@ -102,7 +102,7 @@ Therefore: 51 original MUST − 4 approved transfers = 47 current Process MUST. 
 
 ## Board reconciliation
 
-The active Board has 45 rows. Its states sum exactly: 36 DONE + 0 IN_PROGRESS + 8 NOT_DONE + 1 BLOCKED = 45.
+The active Board has 45 rows. Its states sum exactly: 37 DONE + 0 IN_PROGRESS + 7 NOT_DONE + 1 BLOCKED = 45.
 
 One explicit DoD aggregation explains the distinct denominators:
 
