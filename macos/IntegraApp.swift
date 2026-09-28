@@ -25,7 +25,7 @@ final class Bridge: @unchecked Sendable {
       "cancel-job", "resume-job", "import-media", "media-preflight", "seminartext-preflight", "project-view",
       "detect-sources", "capability-registry", "build-plan", "execute-plan", "run-status",
       "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "build-reviewed-package", "package-preview", "package-publish",
-      "obsidian-preview", "transcript-text", "translate-transcript",
+      "obsidian-preview", "transcript-text", "translate-transcript", "translate-topics", "topic-translation",
       "onedrive-preview",
       "prepare-transcript-review", "apply-transcript-review", "prepare-topic-review",
       "prepare-process-topic-review", "apply-process-topic-review", "process-topics",
@@ -1065,6 +1065,15 @@ struct SidebarItem {
       target.translationButton = translate
       addCard(processCard("Перевод", controls: [label, target, translate]), toLeft: left <= right)
     }
+    if let path = outputs["topic_translation_txt"] as? String,
+      let projectID, let runID, let sourceID = result["source_id"] as? String
+    {
+      let open = button("Открыть перевод тем", #selector(showTopicTranslation(_:)))
+      open.toolTip = "\(projectID)\n\(runID)\n\(sourceID)"
+      let target = NSTextField(labelWithString: "Русский → Английский")
+      target.textColor = .secondaryLabelColor
+      addCard(processCard("Перевод тем", controls: [target, open] + outputControls(path)), toLeft: left <= right)
+    }
     // The raw Topics JSON remains technical data. The normal Process view
     // reads the same persisted source-bound Topic result; review remains an
     // explicit and separate human decision.
@@ -1075,7 +1084,10 @@ struct SidebarItem {
       open.toolTip = "\(projectID)\n\(runID)\n\(sourceID)"
       let review = button("Проверить темы", #selector(prepareTopicReview(_:)))
       review.toolTip = "\(projectID)\n\(runID)\n\(sourceID)"
-      addCard(processCard("Темы и таймкоды", controls: [open, review]), toLeft: left <= right)
+      let translate = TranslationButton(title: "Перевести темы", target: self, action: #selector(translateTopics(_:)))
+      translate.bezelStyle = .rounded
+      translate.projectID = projectID; translate.sourceRunID = runID; translate.sourceID = sourceID
+      addCard(processCard("Темы и таймкоды", controls: [open, review, translate]), toLeft: left <= right)
     }
     if left + right > 0 {
       add(grid)
@@ -1242,6 +1254,64 @@ struct SidebarItem {
         }
       }
     }
+  }
+  @objc private func translateTopics(_ sender: NSButton) {
+    guard let translate = sender as? TranslationButton else { return }
+    sender.isEnabled = false; sender.title = "Перевожу темы…"
+    let bridge = self.bridge!
+    serviceQueue.async {
+      do {
+        let value = try bridge.json("translate-topics", request: [
+          "project_id": translate.projectID, "run_id": translate.sourceRunID, "source_id": translate.sourceID])
+        guard let run = value["result"] as? [String: Any], let record = run["run"] as? [String: Any],
+              let nextRun = record["run_id"] as? String else { throw BridgeError.invalidResponse }
+        DispatchQueue.main.async {
+          self.runID = nextRun
+          self.status.stringValue = "Перевод тем запущен. Исходные темы не изменяются."
+          self.renderOperations()
+        }
+      } catch {
+        DispatchQueue.main.async { sender.title = "Перевести темы"; sender.isEnabled = true; self.status.textColor = .systemRed; self.status.stringValue = error.localizedDescription }
+      }
+    }
+  }
+  @objc private func showTopicTranslation(_ sender: NSButton) {
+    let identifiers = sender.toolTip?.split(separator: "\n", maxSplits: 2).map(String.init) ?? []
+    guard identifiers.count == 3 else { return }
+    sender.isEnabled = false; sender.title = "Открываю перевод…"
+    let bridge = self.bridge!
+    serviceQueue.async {
+      do {
+        let result = try bridge.json("topic-translation", request: [
+          "project_id": identifiers[0], "run_id": identifiers[1], "source_id": identifiers[2]])["result"] as? [String: Any] ?? [:]
+        guard let topics = result["topics"] as? [[String: Any]], !topics.isEmpty else { throw BridgeError.invalidResponse }
+        DispatchQueue.main.async {
+          sender.title = "Открыть перевод тем"; sender.isEnabled = true
+          self.presentTopicTranslation(topics)
+        }
+      } catch {
+        DispatchQueue.main.async { sender.title = "Открыть перевод тем"; sender.isEnabled = true; self.status.textColor = .systemRed; self.status.stringValue = error.localizedDescription }
+      }
+    }
+  }
+  private func presentTopicTranslation(_ topics: [[String: Any]]) {
+    let alert = NSAlert()
+    alert.messageText = "Перевод тем"
+    alert.informativeText = "Перевод является отдельным машинным результатом. Исходные темы и их проверка не изменены."
+    let stack = FlippedStackView(); stack.orientation = .vertical; stack.alignment = .leading; stack.spacing = 12
+    for topic in topics {
+      let original = topic["original"] as? [String: Any] ?? [:]
+      let translation = topic["translation"] as? [String: Any] ?? [:]
+      let originalTitle = original["title"] as? String ?? ""
+      let translatedTitle = translation["title"] as? String ?? ""
+      let translatedSummary = translation["summary"] as? String ?? ""
+      let text = "\(originalTitle)\n\(translatedTitle)\n\(translatedSummary)"
+      let label = NSTextField(wrappingLabelWithString: text); label.maximumNumberOfLines = 0
+      stack.addArrangedSubview(label)
+    }
+    let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 570, height: 420)); scroll.hasVerticalScroller = true; scroll.documentView = stack
+    stack.setFrameSize(NSSize(width: 540, height: stack.fittingSize.height)); alert.accessoryView = scroll
+    alert.addButton(withTitle: "Готово"); _ = alert.runModal()
   }
   private func presentProcessTopics(_ result: [String: Any], reviewed: Bool) {
     guard let topics = result["topics"] as? [[String: Any]], !topics.isEmpty else {
