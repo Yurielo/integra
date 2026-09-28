@@ -1,6 +1,6 @@
-.............s........ss..s......s...../var/folders/q9/rprrsl95265b7h21d3_mp2fr0000gn/T/tmpl9muew0h/macos/Resources/Integra.icns
+...s........ss..s......s...../var/folders/q9/rprrsl95265b7h21d3_mp2fr0000gn/T/tmpo1p150ys/macos/Resources/Integra.icns
 ............s..
 ----------------------------------------------------------------------
-Ran 54 tests in 4.056s
+Ran 44 tests in 3.795s
 
 OK (skipped=6)
