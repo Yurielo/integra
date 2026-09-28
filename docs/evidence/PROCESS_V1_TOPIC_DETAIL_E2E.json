@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0",
+  "candidate_id": "candidate-v1-986ea18cde8d8a78332f5e2b1fc3005b9119cf551dcfb7de339f039d01b656de",
+  "manifest_identity_sha256": "986ea18cde8d8a78332f5e2b1fc3005b9119cf551dcfb7de339f039d01b656de",
+  "bundle_digest": "dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
+  "product_source": {
+    "commit_sha": "869f2f364975fa703a16e85a3f8c4d23e91b28e3",
+    "tree_sha": "faae45bc3adbc5c2a4aa6e6e098c39392f606a1d"
+  },
+  "runtime": "packaged Integra Candidate Resources",
+  "provider": {
+    "name": "SeminarText",
+    "commit": "13644d262776aacdf36221b9a9fc7ebd0a7c0737",
+    "model": "qwen3:8b"
+  },
+  "fixture": {
+    "kind": "existing local Russian Process ASR test record",
+    "content_persisted_in_evidence": false
+  },
+  "result": "PASS",
+  "details": {
+    "low": {
+      "requested": "low",
+      "executed": "low",
+      "topic_count": 1
+    },
+    "auto": {
+      "requested": "auto",
+      "executed": "auto",
+      "topic_count": 2
+    },
+    "high": {
+      "requested": "high",
+      "executed": "high",
+      "topic_count": 3
+    }
+  },
+  "assertions": [
+    "all supported choices generated real Topics through the packaged Candidate",
+    "requested and executed detail match exactly",
+    "choice changed actual Topic count for the valid local fixture",
+    "provider-specific detail mechanics remained inside the adapter"
+  ],
+  "repeat_attempt": {
+    "result": "INTERRUPTED_BY_AGENT_AFTER_LOW_PASS",
+    "detail": "qwen3:8b did not return the second sequential request promptly; no incomplete result was accepted or used as evidence"
+  }
+}
