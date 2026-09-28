@@ -3,7 +3,8 @@
 
 Packages are keyed by candidate ID AND bundle digest. Verification is offline:
 validate_manifest + tree_sha256, not validate_bundle's live external-runtime
-checks. No archive is overwritten or pruned, including incomplete attempts.
+checks. A failed archive staging copy is disposable and is removed by the
+creator; only a published COMPLETE archive is retained evidence.
 """
 from __future__ import annotations
 
@@ -288,9 +289,11 @@ def create_archive(app: Path, archive_root: Path, *, manifest: Path | None = Non
         _sync_directory(root)
         return verify_archive(destination, identity)
     except (OSError, ValueError, TypeError, KeyError, shutil.Error) as error:
-        # Keep failed copies for inspection, but never leave a completion claim.
+        # The stage belongs exclusively to this invocation and cannot qualify as
+        # retention evidence. Leaving it behind would recreate the multi-GiB
+        # temporary-archive leak that the workspace lifecycle prevents.
         if stage is not None and stage.exists():
-            (stage / COMPLETE).unlink(missing_ok=True)
+            shutil.rmtree(stage)
         raise ValueError(f"candidate archive creation failed: {error}") from error
 
 

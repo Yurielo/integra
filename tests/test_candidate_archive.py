@@ -136,7 +136,7 @@ class CandidateArchiveTests(unittest.TestCase):
         self.assertEqual(sentinel.read_text(), "preserve")
         self.assertEqual(list(destination.iterdir()), [sentinel])
 
-    def test_interrupted_copy_leaves_no_complete_or_published_package(self):
+    def test_interrupted_copy_leaves_no_complete_or_unretained_large_stage(self):
         original = shutil.copy2
         count = 0
 
@@ -151,7 +151,7 @@ class CandidateArchiveTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "simulated interruption"):
                 self._create()
         self.assertFalse(self._expected_path().exists())
-        self.assertTrue(list(self.destination.glob("*/.incomplete-*")))
+        self.assertFalse(list(self.destination.glob("*/.incomplete-*")))
         self.assertEqual(list(self.destination.rglob(archive.COMPLETE)), [])
 
     def test_publish_failure_keeps_only_incomplete_attempt(self):

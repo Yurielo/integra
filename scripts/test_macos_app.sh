@@ -2,11 +2,13 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
-test_root="$(mktemp -d)"
-cleanup() {
-  rm -rf "$test_root"
-}
-trap cleanup EXIT
+if [ "${1:-}" != "--owned-workspace" ]; then
+  exec python3 "$repo_root/scripts/temp_workspace_lifecycle.py" run \
+    --purpose macos-app-test --expected-bytes $((2400 * 1024 * 1024)) \
+    --reserve-bytes $((2 * 1024 * 1024 * 1024)) --timeout-seconds 3600 -- \
+    "$0" --owned-workspace
+fi
+test_root="${INTEGRA_OWNED_WORKSPACE:?test must run inside an owned workspace}"
 app="$($repo_root/scripts/build_macos_app.sh "$test_root")"
 
 test "$(plutil -extract CFBundleIconFile raw "$app/Contents/Info.plist")" = "Integra.icns"

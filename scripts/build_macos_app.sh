@@ -1,9 +1,45 @@
 #!/bin/bash
 set -euo pipefail
+trap 'printf "INTEGRA_MACOS_BUILD: FAIL at line %s\n" "$LINENO" >&2' ERR
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 output_root="${1:-$repo_root/build}"
 app="$output_root/Integra.app"
+python3 - "$output_root" <<'PY'
+"""Reject accidental full-size candidates in unowned temporary directories."""
+import json
+import os
+from pathlib import Path
+import sys
+import tempfile
+
+output = Path(sys.argv[1]).expanduser().resolve()
+temporary = {Path("/private/tmp"), Path("/tmp"), Path(tempfile.gettempdir())}
+for key in ("TMPDIR", "TMP", "TEMP"):
+    if os.environ.get(key):
+        temporary.add(Path(os.environ[key]).resolve())
+
+def within(path, root):
+    try:
+        path.relative_to(root.resolve())
+        return True
+    except ValueError:
+        return False
+
+if any(within(output, root) for root in temporary):
+    for ancestor in (output, *output.parents):
+        marker = ancestor / ".integra-owned-workspace.json"
+        if not marker.is_file() or marker.is_symlink():
+            continue
+        try:
+            value = json.loads(marker.read_text(encoding="utf-8"))
+        except (OSError, ValueError, json.JSONDecodeError):
+            continue
+        if value.get("artifact_type") == "integra.disposable_workspace" and value.get("root") == str(ancestor.resolve()):
+            break
+    else:
+        raise SystemExit("refusing to materialize Integra.app in an unowned temporary directory; use scripts/temp_workspace_lifecycle.py or a durable output root")
+PY
 seminartext_checkout="${INTEGRA_SEMINARTEXT_BUILD_CHECKOUT:-$repo_root/.runtime-components/seminartext-pinned}"
 seminartext_commit="13644d262776aacdf36221b9a9fc7ebd0a7c0737"
 seminartext_cli_sha256="30d8c1bd6f5ca717391b168cba71228a030009feaec4eb443bb1e76dab230a6c"
