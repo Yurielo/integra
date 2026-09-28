@@ -1,0 +1,74 @@
+{
+  "allowed_overlay_paths": [
+    "docs/evidence/ISSUE_205_CANDIDATE_EVIDENCE.json",
+    "docs/evidence/ISSUE_205_CANDIDATE_MANIFEST.json",
+    "docs/evidence/ISSUE_205_REPEATED_BUILD_EVIDENCE.json"
+  ],
+  "artifact_type": "integra.proposed_product_baseline",
+  "base_current_id": "current-v2-2b779255c5b57a7b6602f153ea13c497bf738a18a84412773f8b6ed5261fbfcc",
+  "base_main": {
+    "commit_sha": "b6ac52aa08aac3f49a8a1dadce2b7f7f525af07b",
+    "tree_sha": "b3b9f6c2384d62f3759c4f1a703cb4b532495af6"
+  },
+  "candidate": {
+    "bundle_digest": "dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
+    "candidate_id": "candidate-v1-ce1b1abbb4a9a6bb9350d38a24a948a8313077b7c663ea7e3ec8da5d7c5cf807",
+    "identity_sha256": "ce1b1abbb4a9a6bb9350d38a24a948a8313077b7c663ea7e3ec8da5d7c5cf807",
+    "manifest_digest": "19e42f3e67d7a09688186b0412b1a7b77119153f5799e36419688977d9eabed3"
+  },
+  "delta": [
+    {
+      "after_sha256": "331a21d21c36939b0e7067086dcc29ab0065002d45d93df3d715855ab85764f2",
+      "before_sha256": "ad81f7a08a2fbcb93b57788e64d2f028697f7f5f086bb8fa75e9eac758dc4507",
+      "path": "scripts/build_macos_app.sh"
+    },
+    {
+      "after_sha256": "ae7d802f4dad90610e68b4cc964b03b81f25eec7da9a84cedebe4a145afeadda",
+      "before_sha256": "1648671bac009e76169b26c039de42a1f769b4d422014d83e850dd87810ce359",
+      "path": "scripts/test_macos_app.sh"
+    }
+  ],
+  "evidence": {
+    "candidate_evidence": {
+      "path": "docs/evidence/ISSUE_205_CANDIDATE_EVIDENCE.json",
+      "sha256": "633eda52730302d45906c42bf596c2a93be8cf1462dc2a1ccb656beb48e8ee14"
+    },
+    "candidate_manifest": {
+      "path": "docs/evidence/ISSUE_205_CANDIDATE_MANIFEST.json",
+      "sha256": "19e42f3e67d7a09688186b0412b1a7b77119153f5799e36419688977d9eabed3"
+    },
+    "report": {
+      "path": "docs/ISSUE_205_TEMP_WORKSPACE_AUDIT.md",
+      "sha256": "7daadf69fad8d58d5a7eb8c9fd45de5f8da9b661569a59c569b723d6b4c282cc"
+    }
+  },
+  "gates": [
+    {
+      "evidence_ref": "docs/evidence/ISSUE_205_REPEATED_BUILD_EVIDENCE.json",
+      "name": "repeated-owned-workspace-build-evidence",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/ISSUE_205_CANDIDATE_EVIDENCE.json",
+      "name": "candidate-archive-byte-integrity",
+      "result": "PASS"
+    }
+  ],
+  "historical_test_successors": [],
+  "intended_scope": {
+    "journey": "disposable macOS build, test and release workspace lifecycle",
+    "wp": "GitHub Issue #205"
+  },
+  "owner_acceptance": null,
+  "proposal_id": "proposal-issue-205-temp-workspace-lifecycle",
+  "proposed_head": {
+    "commit_sha": "64c9864bdc18de0a1048372a6cdd91b80c5a176e",
+    "tree_sha": "b320d1b3cf5f92859d8d3561f56bd8079e96f8cd"
+  },
+  "proposed_source": {
+    "commit_sha": "633f0415e68e6f5528b17ebeb344798a2c5d677d",
+    "tree_sha": "e3ebdd3a875bcbbd9b8465f83617abda6b1c2c90"
+  },
+  "schema_version": "1.0",
+  "status": "PROPOSED_BASELINE_VALID"
+}
