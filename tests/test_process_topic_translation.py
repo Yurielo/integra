@@ -105,7 +105,7 @@ class ProcessTopicTranslationTests(unittest.TestCase):
         parent = read_run(self.project, self.parent_id)
         original_outputs = parent["source_results"][0]["outputs"]
         with patch("integra_core.topic_translation.translate", side_effect=AssertionError("must not translate")):
-            reopened = load_topic_translation(self.project, source_id=self.source_id,
+            reopened = load_topic_translation(self.project, source_id=self.source_id, source_run_id=self.parent_id,
                                               source_outputs=original_outputs, outputs=outputs)
         self.assertEqual(reopened["topics"][1]["translation"]["title"], "Second topic")
 
@@ -115,8 +115,21 @@ class ProcessTopicTranslationTests(unittest.TestCase):
         original_outputs = read_run(self.project, self.parent_id)["source_results"][0]["outputs"]
         self.topics.write_text(json.dumps({**self.original, "topics": self.original["topics"][:1]}, ensure_ascii=False), encoding="utf-8")
         with patch("integra_core.topic_translation.translate", side_effect=AssertionError("must not translate")), \
-             self.assertRaisesRegex(ValueError, "does not match|invalid topic count"):
-            load_topic_translation(self.project, source_id=self.source_id, source_outputs=original_outputs, outputs=outputs)
+            self.assertRaisesRegex(ValueError, "does not match|invalid topic count"):
+            load_topic_translation(self.project, source_id=self.source_id, source_run_id=self.parent_id,
+                                   source_outputs=original_outputs, outputs=outputs)
+
+    def test_tampered_topic_timing_or_source_run_fails_closed(self):
+        completed = self._completed()
+        outputs = completed["source_results"][0]["outputs"]
+        original_outputs = read_run(self.project, self.parent_id)["source_results"][0]["outputs"]
+        translated_path = Path(outputs["topic_translation"])
+        translated = json.loads(translated_path.read_text(encoding="utf-8"))
+        translated["topics"][0]["start_seconds"] = 2.0
+        translated_path.write_text(json.dumps(translated), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "does not match|invalid source binding"):
+            load_topic_translation(self.project, source_id=self.source_id, source_run_id=self.parent_id,
+                                   source_outputs=original_outputs, outputs=outputs)
 
     def test_provider_issues_cannot_publish_successful_topic_translation(self):
         run = prepare_topic_translation_run(self.project, self.parent_id, self.source_id)

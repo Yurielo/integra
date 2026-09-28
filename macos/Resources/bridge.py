@@ -495,7 +495,7 @@ def _topic_translation(root, request):
                      if item.get("source_id") == source_id and item.get("state") == "COMPLETED"), None)
     if not isinstance(original, dict) or not isinstance(original.get("outputs"), dict):
         raise ValueError("saved Topic translation source is unavailable")
-    return load_topic_translation(project_dir, source_id=source_id,
+    return load_topic_translation(project_dir, source_id=source_id, source_run_id=parent["run_id"],
                                   source_outputs=original["outputs"], outputs=result["outputs"])
 
 def _knowledge_review(root, request, apply=False):

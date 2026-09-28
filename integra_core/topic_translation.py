@@ -203,8 +203,8 @@ def translate_topics(project_dir: Path, *, source_id: str, source_run_id: str,
             "topic_translation_raw": str(raw), "topic_translation_input": str(transport)}
 
 
-def load_topic_translation(project_dir: Path, *, source_id: str, source_outputs: dict[str, Any],
-                           outputs: dict[str, Any]) -> dict[str, Any]:
+def load_topic_translation(project_dir: Path, *, source_id: str, source_run_id: str,
+                           source_outputs: dict[str, Any], outputs: dict[str, Any]) -> dict[str, Any]:
     """Load an existing S15 derivative without calling a provider on reopen."""
     source_path, _payload, source_topics = _machine_topics(project_dir, source_outputs.get("topics"))
     translated_path = _owned_file(project_dir, outputs.get("topic_translation"), "saved Topic translation")
@@ -216,13 +216,20 @@ def load_topic_translation(project_dir: Path, *, source_id: str, source_outputs:
     except (OSError, json.JSONDecodeError) as error:
         raise ValueError("saved Topic translation is invalid") from error
     source_digest = _sha256(source_path)
+    if (not isinstance(source_run_id, str) or not source_run_id):
+        raise ValueError("saved Topic translation source run is invalid")
+    expected_lineage = _review_lineage(project_dir, source_outputs)
     if (not isinstance(translated, dict) or not isinstance(provenance, dict)
             or translated.get("artifact_type") != "integra.process_topic_translation"
-            or translated.get("source_id") != source_id or translated.get("source_topics_sha256") != source_digest
+            or translated.get("source_id") != source_id or translated.get("source_run_id") != source_run_id
+            or translated.get("source_topics_sha256") != source_digest
             or translated.get("source_language") != SOURCE_LANGUAGE or translated.get("target_language") != TARGET_LANGUAGE
             or translated.get("topic_count") != len(source_topics)
+            or translated.get("review_lineage") != expected_lineage
             or provenance.get("status") != "COMPLETED" or provenance.get("source_id") != source_id
+            or provenance.get("source_run_id") != source_run_id
             or provenance.get("source_topics_sha256") != source_digest
+            or provenance.get("review_lineage") != expected_lineage
             or provenance.get("output_sha256") != _sha256(translated_path)
             or provenance.get("text_sha256") != _sha256(text_path)
             or provenance.get("requested_target_language") != TARGET_LANGUAGE
@@ -232,8 +239,18 @@ def load_topic_translation(project_dir: Path, *, source_id: str, source_outputs:
     if not isinstance(topics, list) or len(topics) != len(source_topics):
         raise ValueError("saved Topic translation has invalid topic count")
     for sequence, (source, value) in enumerate(zip(source_topics, topics)):
+        topic = source["topic"]
+        expected_span = {"start_segment_id": topic.get("start_segment_id"),
+                         "evidence_start_id": topic.get("evidence_start_id"),
+                         "evidence_end_id": topic.get("evidence_end_id")}
+        expected_id = f"machine-topic-{source_digest[:20]}-{sequence:04d}"
         if (not isinstance(value, dict) or value.get("source_index") != sequence
+                or value.get("topic_id") != expected_id
                 or value.get("original") != {"title": source["title"], "summary": source["summary"]}
+                or value.get("start_seconds") != topic["start_seconds"]
+                or value.get("end_seconds") != topic["end_seconds"]
+                or value.get("source_span") != expected_span
+                or value.get("semantic_status") != "MACHINE_TRANSLATION_REVIEW_REQUIRED"
                 or not isinstance(value.get("translation"), dict)
                 or not all(isinstance(value["translation"].get(field), str) and value["translation"][field].strip()
                            for field in ("title", "summary"))):
