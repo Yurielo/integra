@@ -1,0 +1,3 @@
+Command: python3 -m unittest tests.test_topic_translation_runtime tests.test_process_topic_translation tests.test_process_topic_summary tests.test_process_results_surface tests.test_process_topic_review_runtime -v
+Result: 24 passed; 4 declared skips requiring the unavailable exact pinned SeminarText checkout.
+Additional checks: Python compilation, Swift typecheck and git diff --check passed.
