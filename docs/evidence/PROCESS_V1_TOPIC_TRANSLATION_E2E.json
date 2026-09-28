@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "candidate_id": "candidate-v1-14b3c10e4d779ff8b5a520bf15e2b7087673aec2cd0abd25aac4e1d0ded77892",
+  "manifest_identity_sha256": "14b3c10e4d779ff8b5a520bf15e2b7087673aec2cd0abd25aac4e1d0ded77892",
+  "bundle_digest": "ab53369d4d46fc8a4dece0b8e0f777f5017731b2256ff34ecb27738a849d8c94",
+  "product_source": {"commit_sha": "47be46d8bfffb94e952b2a45e31d527ddd3b8e73", "tree_sha": "bbda40895732e2e4b1e994b5ff38776c08b02500"},
+  "runtime": "packaged Integra Candidate Resources",
+  "provider": {"component": "videotext", "commit_sha": "2e098d1705b6815628bee1e023f4742718eabf02", "model": "qwen3:8b"},
+  "result": "PASS",
+  "assertions": [
+    "a persisted Russian machine Topic title and summary were translated through the packaged production worker",
+    "source Topic title, summary, identity, order, time range, source span and auto detail remained unchanged",
+    "translated_topics.json and hash-bound translated_topics_provenance.json persisted on the source run",
+    "reopen returned the saved translation without a provider invocation",
+    "normal Process Topics displayed original and translated text together while retaining MACHINE_OUTPUT_REQUIRES_HUMAN_DECISION"
+  ]
+}
