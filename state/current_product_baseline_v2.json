@@ -1,6 +1,6 @@
 {
   "artifact_type": "integra.current_product_baseline",
-  "current_id": "current-v2-af81b2867f893e8e529a2d4f64d6c1370dd1249b46eb999d427fb408229680fa",
+  "current_id": "current-v2-d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8",
   "records": [
     {
       "acceptance": {
@@ -1524,6 +1524,131 @@
       },
       "promotion": {
         "accepted_report_head": "e139023b3e9699b5c97d1eb7ce87a9630c4e7aa5",
+        "issue_159_ref": "superseded-by-next-owner-promotion",
+        "pull_160_ref": "superseded-by-next-owner-promotion"
+      },
+      "promotion_policy": "EXPLICIT_HUMAN_OWNER_AUTHORIZATION_REQUIRED",
+      "repository": "Yurielo/integra",
+      "status": "CURRENT"
+    },
+    {
+      "acceptance": {
+        "authority_ref": "PRODUCT OWNER AUTHORIZATION: PROMOTE_CURRENT proposal-process-v1-zoom-folder candidate-v1-d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8; Zoom folder — Excel #5 / S07 promotion and PR #209 merge only.",
+        "decision": "USER_ACCEPTED",
+        "scope": "owner-authorized proposed baseline promotion"
+      },
+      "baseline_id": "current-v2-d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8",
+      "candidate": {
+        "bundle_digest": "fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
+        "candidate_id": "candidate-v1-d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8",
+        "identity_sha256": "d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8"
+      },
+      "governed_files": [
+        {
+          "path": "integra_core/_timed_transcript_provider.py",
+          "sha256": "57eaeaf175edcd15e2d0ec15869c8f06cf0e50ef0dc6de9199c2d5b48df7532f"
+        },
+        {
+          "path": "integra_core/application_runtime.py",
+          "sha256": "990e846af4e7d1c3d7405663e4405ec73d2a13543d4c04b7154b6062cc0472ac"
+        },
+        {
+          "path": "integra_core/asr_reuse.py",
+          "sha256": "693487657888b92370c23cd26f361e753127abc94416a37ea314b0a547de3e85"
+        },
+        {
+          "path": "integra_core/capabilities.py",
+          "sha256": "59450ec7bbd2938c303415905231931238a8b243ea261b78d4e9eae7c53706d0"
+        },
+        {
+          "path": "integra_core/folder_discovery.py",
+          "sha256": "e50a7888e49e7eac84b30acc094c371c6e062f0e1ea4ac6afdddca70fb01bf95"
+        },
+        {
+          "path": "integra_core/process_executor_pilot.py",
+          "sha256": "be67ac4d71efe8ed345effde6ea53e9ea2f38c722f1de550d056bd9063e7eb92"
+        },
+        {
+          "path": "integra_core/seminartext_asr_runtime.py",
+          "sha256": "f296ba0f885fe0503eeb7f0cf4c178668014ebd7354fc8ef3d1a643791a3c4c1"
+        },
+        {
+          "path": "integra_core/seminartext_evidence_runtime.py",
+          "sha256": "8e7c33cd7602c562b56caae9742cd000189bf712dbaddf24805260ff9a1b2140"
+        },
+        {
+          "path": "integra_core/seminartext_runtime.py",
+          "sha256": "4778d92ef747e0c255e02e356bbb725b07d43c581971eaafe7ef776fa2b3e233"
+        },
+        {
+          "path": "integra_core/seminartext_topic_detail_adapter.py",
+          "sha256": "34e56acde89e8e6035b5678fe02bcb18168876b4b035ffc934c1d579e447bae8"
+        },
+        {
+          "path": "integra_core/seminartext_topic_review_runtime.py",
+          "sha256": "79ddc3b7f23b23b04cf5ede2365e94ea0e26d3fbfb0d9963e31eae0760412f1a"
+        },
+        {
+          "path": "integra_core/shutdown_runtime.py",
+          "sha256": "0dc2bc03c25bae4e8c124c613a1be12b9b1c5227652291704ceca088f2f01192"
+        },
+        {
+          "path": "integra_core/topic_translation.py",
+          "sha256": "72e3aa0769048a3d270158d26a1e18ce360d16fc6e43950b8df36451eab8930b"
+        },
+        {
+          "path": "integra_core/transcript_output.py",
+          "sha256": "35c7aaad4f63d3e760e106f10cb078f8e4eaaaa759ee27b56a98d2ca48f6bcad"
+        },
+        {
+          "path": "integra_core/user_media.py",
+          "sha256": "c3d7e33245dfc4045d74bd38f716ce948e5050611b54c4e501a0f1cad4212e89"
+        },
+        {
+          "path": "integra_core/videotext_runtime.py",
+          "sha256": "27b6996c0c3fccc2f57c066aac11163260ab3238e9e126218a260d168cff7b19"
+        },
+        {
+          "path": "macos/IntegraApp.swift",
+          "sha256": "f8e7e2efa86a00241bbd600017297d66c6251e9ff417bd1491967f5f38fb9834"
+        },
+        {
+          "path": "macos/Resources/bridge.py",
+          "sha256": "ff2b281ad869f41d176cb96249ae2255060aacf4806bc7e4ee4ebade96a219f9"
+        },
+        {
+          "path": "scripts/build_macos_app.sh",
+          "sha256": "ad81f7a08a2fbcb93b57788e64d2f028697f7f5f086bb8fa75e9eac758dc4507"
+        },
+        {
+          "path": "scripts/candidate_manifest.py",
+          "sha256": "25210c1cea8fc8449c2f8f82034950f2be7853d3a9f2047106398a8a114df097"
+        },
+        {
+          "path": "scripts/test_macos_app.sh",
+          "sha256": "1648671bac009e76169b26c039de42a1f769b4d422014d83e850dd87810ce359"
+        },
+        {
+          "path": "tests/test_macos_app.py",
+          "sha256": "23a2ce04e8d79e407064437cd156b039f0cea800e864d3d8ecd31d70df139283"
+        },
+        {
+          "path": "tests/test_ready_app.py",
+          "sha256": "87ec31ae4a6cb6df38d2787ba5d92479dcde766c639ebfc86944b4eca2b7f3e7"
+        }
+      ],
+      "historical_predecessors": [
+        {
+          "path": "state/history/current_product_baseline_v2-current-v2-af81b2867f893e8e529a2d4f64d6c1370dd1249b46eb999d427fb408229680fa.json",
+          "sha256": "8d8282164c39e80c7cf9227dfe08e1e3f584249c4836ca78dcf8712c0c6af0c0"
+        }
+      ],
+      "main": {
+        "commit_sha": "a4fbdcb2d324acd5358f7e64602b0305b0722cfc",
+        "tree_sha": "3d23e21602b8d9ae530bf42d6dee527c4928c548"
+      },
+      "promotion": {
+        "accepted_report_head": "a4fbdcb2d324acd5358f7e64602b0305b0722cfc",
         "issue_159_ref": "superseded-by-next-owner-promotion",
         "pull_160_ref": "superseded-by-next-owner-promotion"
       },

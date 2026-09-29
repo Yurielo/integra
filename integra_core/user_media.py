@@ -29,7 +29,7 @@ from . import asr_reuse
 class _RunCancelled(Exception):
     """Internal control-signal for user cancellation."""
 
-SUPPORTED = {".aac", ".aif", ".aiff", ".flac", ".m4a", ".m4v", ".mkv", ".mov", ".mp3", ".mp4", ".ogg", ".wav", ".webm"}
+SUPPORTED = {".aac", ".aif", ".aiff", ".avi", ".flac", ".m4a", ".m4v", ".mkv", ".mov", ".mp3", ".mp4", ".ogg", ".opus", ".wav", ".webm"}
 
 
 def now() -> str:
@@ -182,7 +182,7 @@ def import_source(project_dir: Path, source: Path) -> dict[str, Any]:
             temporary.unlink(missing_ok=True); raise ValueError("source copy verification failed")
         os.replace(temporary, target)
     record = {"schema_version":"1.0", "source_id":source_id, "display_name":source.name,
-              "media_kind":"VIDEO" if source.suffix.lower() in {".m4v",".mkv",".mov",".mp4",".webm"} else "AUDIO",
+              "media_kind":"VIDEO" if source.suffix.lower() in {".avi", ".m4v", ".mkv", ".mov", ".mp4", ".webm"} else "AUDIO",
               "content_sha256":digest, "owned_path":str(target), "imported_at":now(),
               "source_modified":False, "status":"IMPORTED"}
     atomic_json(target_dir / "source.json", record)

@@ -23,7 +23,7 @@ final class Bridge: @unchecked Sendable {
     let allowed = [
       "workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job",
       "cancel-job", "resume-job", "import-media", "media-preflight", "seminartext-preflight", "project-view",
-      "detect-sources", "discover-folder-sources", "capability-registry", "build-plan", "execute-plan", "run-status",
+      "detect-sources", "discover-folder-sources", "discover-zoom-folder-sources", "capability-registry", "build-plan", "execute-plan", "run-status",
       "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "build-reviewed-package", "package-preview", "package-publish",
       "obsidian-preview", "transcript-text", "translate-transcript", "translate-topics", "topic-translation",
       "onedrive-preview",
@@ -513,6 +513,7 @@ struct SidebarItem {
     actions.addArrangedSubview(button("Документ с Mac", #selector(chooseDocument)))
     actions.addArrangedSubview(button("Несколько файлов", #selector(chooseMultiple)))
     actions.addArrangedSubview(button("Папка с Mac", #selector(chooseFolder)))
+    actions.addArrangedSubview(button("Папка Zoom", #selector(chooseZoomFolder)))
     actions.addArrangedSubview(button("YouTube", #selector(addYouTube)))
     add(actions)
     let drop = DropBox(frame: NSRect(x: 0, y: 0, width: 760, height: 92))
@@ -642,20 +643,23 @@ struct SidebarItem {
     guard panel.runModal() == .OK else { return }
     detect(panel.urls.map(\.path))
   }
-  @objc private func chooseFolder() {
+  @objc private func chooseFolder() { presentFolderPicker(zoom: false) }
+  @objc private func chooseZoomFolder() { presentFolderPicker(zoom: true) }
+  private func presentFolderPicker(zoom: Bool) {
     let panel = NSOpenPanel()
-    panel.title = "Выберите папку с материалами"
+    panel.title = zoom ? "Выберите папку с записью Zoom" : "Выберите папку с материалами"
     panel.canChooseFiles = false
     panel.canChooseDirectories = true
     panel.allowsMultipleSelection = false
     guard panel.runModal() == .OK, let folder = panel.url?.path else { return }
     status.textColor = .secondaryLabelColor
-    status.stringValue = "Ищу поддерживаемые источники в папке…"
+    status.stringValue = zoom ? "Ищу записи Zoom в папке…" : "Ищу поддерживаемые источники в папке…"
     let bridge = self.bridge!
     serviceQueue.async {
       do {
-        let discovery = try bridge.json("discover-folder-sources", request: ["folder": folder])["result"] as? [String: Any] ?? [:]
-        DispatchQueue.main.async { self.confirmFolderDiscovery(discovery) }
+        let operation = zoom ? "discover-zoom-folder-sources" : "discover-folder-sources"
+        let discovery = try bridge.json(operation, request: ["folder": folder])["result"] as? [String: Any] ?? [:]
+        DispatchQueue.main.async { self.confirmFolderDiscovery(discovery, zoom: zoom) }
       } catch {
         DispatchQueue.main.async {
           self.status.textColor = .systemRed
@@ -664,20 +668,21 @@ struct SidebarItem {
       }
     }
   }
-  private func confirmFolderDiscovery(_ discovery: [String: Any]) {
+  private func confirmFolderDiscovery(_ discovery: [String: Any], zoom: Bool = false) {
     let discovered = discovery["sources"] as? [[String: Any]] ?? []
     let folder = (discovery["folder"] as? [String: Any])?["name"] as? String ?? "выбранной папке"
     let ignored = discovery["ignored"] as? [[String: Any]] ?? []
     guard !discovered.isEmpty else {
       status.textColor = .systemRed
-      status.stringValue = "В папке «\(folder)» не найдено поддерживаемых файлов."
+      status.stringValue = zoom ? "В папке «\(folder)» не найдено записей Zoom." : "В папке «\(folder)» не найдено поддерживаемых файлов."
       return
     }
     let names = discovered.prefix(12).map { $0["display_name"] as? String ?? "Источник" }
     let tail = discovered.count > names.count ? "\nи ещё \(discovered.count - names.count)." : ""
     let alert = NSAlert()
-    alert.messageText = "Подтвердите источники"
-    alert.informativeText = "Папка «\(folder)». Будут добавлены \(discovered.count) файлов в этом порядке:\n\(names.joined(separator: "\n"))\(tail)\n\nНе поддерживаются или исключены: \(ignored.count)."
+    alert.messageText = zoom ? "Подтвердите записи Zoom" : "Подтвердите источники"
+    let prefix = zoom ? "Записи Zoom из папки" : "Папка"
+    alert.informativeText = "\(prefix) «\(folder)». Будут добавлены \(discovered.count) файлов в этом порядке:\n\(names.joined(separator: "\n"))\(tail)\n\nНе поддерживаются или исключены: \(ignored.count)."
     alert.addButton(withTitle: "Добавить \(discovered.count) источников")
     alert.addButton(withTitle: "Отмена")
     guard alert.runModal() == .alertFirstButtonReturn else { return }

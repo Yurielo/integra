@@ -15,7 +15,7 @@ from integra_core.protocol import canonical_json, content_sha256
 from integra_core.publishing import preview_obsidian_export, publish_obsidian_export, validate_managed_package
 from integra_core.user_media import _parse_srt, ffmpeg_preflight, import_source, preflight, run_job
 from integra_core.capabilities import build_plan, capability_registry, detect_source
-from integra_core.folder_discovery import discover_folder_sources
+from integra_core.folder_discovery import discover_folder_sources, discover_zoom_folder_sources
 from integra_core.application_runtime import (execute_run, prepare_run, prepare_topic_translation_run,
                                               prepare_transcript_translation_run, read_run, run_path)
 from integra_core.topic_translation import load_topic_translation
@@ -23,7 +23,7 @@ from integra_core.shutdown_runtime import cancel_run, reconcile_stale_runs, regi
 from integra_core.seminartext_runtime import preflight as seminartext_preflight
 from integra_core.seminartext_evidence_runtime import prepare_transcript_review, apply_human_transcript_review, prepare_topic_review_input
 
-OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "import-media", "media-preflight", "seminartext-preflight", "process-media-job", "project-view", "detect-sources", "discover-folder-sources", "capability-registry", "build-plan", "execute-plan", "translate-transcript", "translate-topics", "topic-translation", "process-plan", "run-status", "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "prepare-transcript-review", "apply-transcript-review", "prepare-topic-review", "prepare-process-topic-review", "apply-process-topic-review", "process-topics", "package-preview", "package-publish", "obsidian-preview", "onedrive-preview"}
+OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "import-media", "media-preflight", "seminartext-preflight", "process-media-job", "project-view", "detect-sources", "discover-folder-sources", "discover-zoom-folder-sources", "capability-registry", "build-plan", "execute-plan", "translate-transcript", "translate-topics", "topic-translation", "process-plan", "run-status", "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "prepare-transcript-review", "apply-transcript-review", "prepare-topic-review", "prepare-process-topic-review", "apply-process-topic-review", "process-topics", "package-preview", "package-publish", "obsidian-preview", "onedrive-preview"}
 
 OPERATIONS.add("build-reviewed-package")
 OPERATIONS.add("transcript-text")
@@ -727,6 +727,7 @@ def main():
         elif operation == "project-view": result = _project_view(root, request.get("project_id"))
         elif operation == "detect-sources": result = [detect_source(value) for value in request.get("inputs", [])]
         elif operation == "discover-folder-sources": result = discover_folder_sources(request.get("folder"))
+        elif operation == "discover-zoom-folder-sources": result = discover_zoom_folder_sources(request.get("folder"))
         elif operation == "capability-registry": result = capability_registry(request.get("sources", []))
         elif operation == "build-plan": result = build_plan(request.get("sources", []), request.get("selected_outputs", []))
         elif operation == "execute-plan": result = _execute_plan(root, request)
