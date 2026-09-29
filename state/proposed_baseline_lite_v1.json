@@ -28,6 +28,11 @@
     "candidate_evidence": {"path": "docs/evidence/PROCESS_V1_FOLDER_DISCOVERY_E2E.json", "sha256": "7e5f453c13b86fbf52f53a831e1f33c204369c62dd30a4281c218d1c8de5fb7b"},
     "report": {"path": "docs/PROCESS_V1_FOLDER_DISCOVERY_PROOF.md", "sha256": "a6636bbe03e31ba6b88e04d1674be5cfc8916f1587d2edf14cfb02abe56945af"}
   },
-  "owner_acceptance": null,
+  "owner_acceptance": {
+    "decision": "PILOT_ACCEPTED",
+    "authority_ref": "PRODUCT OWNER AUTHORIZATION: ACCEPT_PROPOSED_BASELINE proposal-process-v1-folder-discovery-confirmation candidate-v1-af81b2867f893e8e529a2d4f64d6c1370dd1249b46eb999d427fb408229680fa; Folder discovery/confirmation — Excel #4 / S06 only.",
+    "scope": "Product Owner accepts the bounded Excel #4 / S06 folder selection, deterministic direct-child discovery, exact preview, explicit confirmation, and existing canonical multi-source ingestion outcome only.",
+    "promotion_authorized": false
+  },
   "allowed_overlay_paths": ["docs/evidence/PROCESS_V1_FOLDER_DISCOVERY_CANDIDATE_ARCHIVE.json", "docs/evidence/PROCESS_V1_FOLDER_DISCOVERY_CANDIDATE_MANIFEST.json", "docs/evidence/PROCESS_V1_FOLDER_DISCOVERY_E2E.json", "docs/evidence/PROCESS_V1_FOLDER_DISCOVERY_FOCUSED_TESTS.txt", "docs/evidence/PROCESS_V1_FOLDER_DISCOVERY_FULL_TESTS.txt", "docs/PROCESS_V1_FOLDER_DISCOVERY_PROOF.md"]
 }
