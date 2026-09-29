@@ -128,6 +128,12 @@ def download_video(project_dir: Path, source: dict[str, Any], *, run_id: str | N
         "size_bytes": media.stat().st_size, "downloaded_at": now(),
         "runtime": runtime,
     }
+    membership = source.get("properties", {}).get("playlist_membership")
+    context = source.get("properties", {}).get("playlist_context")
+    if isinstance(membership, dict):
+        record["playlist_membership"] = membership
+    if isinstance(context, dict):
+        record["playlist_context"] = context
     record_path = directory / "youtube_source.json"
     atomic_json(record_path, record)
     return record | {"record_path": str(record_path)}

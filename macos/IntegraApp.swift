@@ -23,7 +23,7 @@ final class Bridge: @unchecked Sendable {
     let allowed = [
       "workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job",
       "cancel-job", "resume-job", "import-media", "media-preflight", "seminartext-preflight", "project-view",
-      "detect-sources", "discover-folder-sources", "discover-zoom-folder-sources", "capability-registry", "build-plan", "execute-plan", "run-status",
+      "detect-sources", "discover-folder-sources", "discover-zoom-folder-sources", "discover-youtube-playlist", "capability-registry", "build-plan", "execute-plan", "run-status",
       "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "build-reviewed-package", "package-preview", "package-publish",
       "obsidian-preview", "transcript-text", "translate-transcript", "translate-topics", "topic-translation",
       "onedrive-preview",
@@ -710,15 +710,103 @@ struct SidebarItem {
     let alert = NSAlert()
     alert.messageText = "YouTube"
     alert.informativeText =
-      "Введите одну или несколько ссылок, каждую с новой строки. Одиночное видео или плейлист будут загружены в проект после выбора доступного результата. Плейлист сначала получает фактический состав, затем скачивает элементы последовательно с checkpoint после каждого элемента."
+      "Введите одну или несколько ссылок, каждую с новой строки. Для плейлиста Integra сначала покажет найденные видео и попросит подтвердить выбор."
     let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 420, height: 72))
     field.placeholderString = "https://youtube.com/watch?v=…"
     alert.accessoryView = field
     alert.addButton(withTitle: "Добавить")
     alert.addButton(withTitle: "Отмена")
     if alert.runModal() == .alertFirstButtonReturn {
-      detect(field.stringValue.split(whereSeparator: \.isNewline).map(String.init))
+      resolveYouTubeInputs(field.stringValue.split(whereSeparator: \.isNewline).map(String.init))
     }
+  }
+  private func resolveYouTubeInputs(_ inputs: [String]) {
+    status.textColor = .secondaryLabelColor
+    status.stringValue = "Проверяю ссылки YouTube…"
+    let bridge = self.bridge!
+    serviceQueue.async {
+      do {
+        let detected = try bridge.json("detect-sources", request: ["inputs": inputs])["result"] as? [[String: Any]] ?? []
+        guard detected.contains(where: { ($0["source_type"] as? String) == "YOUTUBE_PLAYLIST" }) else {
+          DispatchQueue.main.async { self.applyDetected(detected) }
+          return
+        }
+        var resolved: [[String: Any]] = []
+        var unavailable: [[String: Any]] = []
+        var titles: [String] = []
+        for source in detected {
+          if (source["source_type"] as? String) != "YOUTUBE_PLAYLIST" {
+            resolved.append(source)
+          } else {
+            let inventory = try bridge.json("discover-youtube-playlist", request: ["source": source])["result"] as? [String: Any] ?? [:]
+            resolved += inventory["sources"] as? [[String: Any]] ?? []
+            unavailable += inventory["unavailable"] as? [[String: Any]] ?? []
+            if let title = (inventory["playlist"] as? [String: Any])?["playlist_title"] as? String, !title.isEmpty {
+              titles.append(title)
+            }
+          }
+        }
+        DispatchQueue.main.async { self.confirmYouTubeDiscovery(resolved, unavailable: unavailable, titles: titles) }
+      } catch {
+        DispatchQueue.main.async {
+          self.status.textColor = .systemRed
+          self.status.stringValue = error.localizedDescription
+        }
+      }
+    }
+  }
+  private func confirmYouTubeDiscovery(_ discovered: [[String: Any]], unavailable: [[String: Any]], titles: [String]) {
+    guard !discovered.isEmpty else {
+      status.textColor = .systemRed
+      status.stringValue = "В плейлисте нет доступных видео для добавления."
+      return
+    }
+    let alert = NSAlert()
+    alert.messageText = "Подтвердите видео плейлиста"
+    let title = titles.isEmpty ? "Плейлист" : titles.joined(separator: ", ")
+    alert.informativeText = "\(title). Выберите видео для добавления в этом порядке. Недоступно или исключено: \(unavailable.count)."
+    let stack = NSStackView()
+    stack.orientation = .vertical
+    stack.alignment = .leading
+    stack.spacing = 5
+    var choices: [(source: [String: Any], control: NSButton)] = []
+    for (index, source) in discovered.enumerated() {
+      let name = source["display_name"] as? String ?? "Видео"
+      let control = NSButton(checkboxWithTitle: "\(index + 1). \(name)", target: nil, action: nil)
+      control.state = .on
+      control.font = .systemFont(ofSize: 13)
+      stack.addArrangedSubview(control)
+      choices.append((source, control))
+    }
+    for item in unavailable {
+      let name = item["title"] as? String ?? "Видео"
+      let label = NSTextField(labelWithString: "Недоступно: \(name)")
+      label.font = .systemFont(ofSize: 12)
+      label.textColor = .secondaryLabelColor
+      stack.addArrangedSubview(label)
+    }
+    let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 500, height: 240))
+    scroll.hasVerticalScroller = true
+    scroll.borderType = .bezelBorder
+    scroll.documentView = stack
+    stack.translatesAutoresizingMaskIntoConstraints = false
+    NSLayoutConstraint.activate([
+      stack.leadingAnchor.constraint(equalTo: scroll.contentView.leadingAnchor, constant: 8),
+      stack.trailingAnchor.constraint(equalTo: scroll.contentView.trailingAnchor, constant: -8),
+      stack.topAnchor.constraint(equalTo: scroll.contentView.topAnchor, constant: 8),
+      stack.widthAnchor.constraint(equalTo: scroll.contentView.widthAnchor, constant: -16),
+    ])
+    alert.accessoryView = scroll
+    alert.addButton(withTitle: "Добавить выбранные источники")
+    alert.addButton(withTitle: "Отмена")
+    guard alert.runModal() == .alertFirstButtonReturn else { return }
+    let selectedSources = choices.filter { $0.control.state == .on }.map(\.source)
+    guard !selectedSources.isEmpty else {
+      status.textColor = .systemRed
+      status.stringValue = "Выберите хотя бы одно видео из плейлиста."
+      return
+    }
+    applyDetected(selectedSources)
   }
   private func detect(_ inputs: [String]) {
     status.textColor = .secondaryLabelColor

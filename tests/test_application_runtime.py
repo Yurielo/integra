@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 from integra_core.application_runtime import execute_run, prepare_run, read_run
 from integra_core.capabilities import build_plan, detect_source
+from integra_core.youtube_playlist_runtime import resolve_live_playlist_sources
 from tests.asr_tools import media_environment
 from tests.test_videotext_media_runtime import real_media_fixture
 
@@ -156,6 +157,49 @@ class ApplicationRuntimeTests(unittest.TestCase):
         self.assertEqual([item["video_id"] for item in checkpoint["completed"]],["video-a","video-b"])
         self.assertEqual(sorted(downloads),["video-a","video-b"])
         self.assertTrue(all((Path(outputs["playlist_artifacts_directory"])/item["relative_path"]).is_file() for item in checkpoint["completed"]))
+
+    def test_expands_playlist_before_execution_and_preserves_member_provenance(self):
+        old=os.environ.get("INTEGRA_YTDLP")
+        try:
+            os.environ["INTEGRA_YTDLP"]=self.youtube_playlist_downloader()
+            playlist=detect_source("https://www.youtube.com/playlist?list=PL-real")
+            resolved=resolve_live_playlist_sources(self.project, playlist, run_id=None)
+            plan=build_plan(resolved["sources"], ["youtube_ingest"])
+            run=prepare_run(self.project, plan); result=execute_run(self.project, run["run_id"])
+        finally:
+            if old is None: os.environ.pop("INTEGRA_YTDLP",None)
+            else: os.environ["INTEGRA_YTDLP"]=old
+        self.assertEqual(result["state"], "COMPLETED")
+        self.assertEqual([item["display_name"] for item in result["source_results"]], ["First real video", "Second real video"])
+        self.assertEqual([item["source_id"] for item in result["source_results"]], [item["source_id"] for item in resolved["sources"]])
+        record=json.loads(Path(result["source_results"][0]["outputs"]["youtube_source_record"]).read_bytes())
+        self.assertEqual(record["playlist_membership"]["position"], 0)
+        self.assertEqual(record["playlist_context"]["playlist_native_id"], "PL-real")
+        self.assertEqual(record["playlist_context"]["items"][1]["video_id"], "video-b")
+        reopened=read_run(self.project, run["run_id"])
+        self.assertEqual(reopened["plan"]["sources"][0]["properties"]["playlist_context"]["snapshot_id"], resolved["playlist"]["snapshot_id"])
+
+    def test_playlist_member_download_failure_does_not_cancel_later_selected_member(self):
+        old=os.environ.get("INTEGRA_YTDLP")
+        try:
+            os.environ["INTEGRA_YTDLP"]=self.youtube_playlist_downloader()
+            playlist=detect_source("https://www.youtube.com/playlist?list=PL-real")
+            resolved=resolve_live_playlist_sources(self.project, playlist, run_id=None)
+            plan=build_plan(resolved["sources"], ["youtube_ingest"])
+            run=prepare_run(self.project, plan)
+            good=self.root / "later.mp3"; good.write_bytes(b"later")
+            record=self.root / "later.json"; record.write_text("{}", encoding="utf-8")
+            with patch("integra_core.application_runtime.download_video", side_effect=[
+                ValueError("first item is unavailable"),
+                {"downloaded_path": str(good), "record_path": str(record), "content_sha256": hashlib.sha256(b"later").hexdigest()},
+            ]):
+                result=execute_run(self.project, run["run_id"])
+        finally:
+            if old is None: os.environ.pop("INTEGRA_YTDLP",None)
+            else: os.environ["INTEGRA_YTDLP"]=old
+        self.assertEqual(result["state"], "FAILED")
+        self.assertEqual([item["state"] for item in result["source_results"]], ["FAILED", "COMPLETED"])
+        self.assertIn("first item is unavailable", result["source_results"][0]["error"])
 
     def test_executes_selected_real_media_outputs_without_semantic_fakes(self):
         source_path=self.root/"audio.wav"; source_path.write_bytes(b"audio"); overrides=self.media_environment(); old={key:os.environ.get(key) for key in overrides}
