@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.proposed_product_baseline",
+  "proposal_id": "proposal-process-v1-zoom-folder",
+  "status": "PROPOSED_BASELINE_VALID",
+  "base_current_id": "current-v2-af81b2867f893e8e529a2d4f64d6c1370dd1249b46eb999d427fb408229680fa",
+  "base_main": {"commit_sha": "e139023b3e9699b5c97d1eb7ce87a9630c4e7aa5", "tree_sha": "84acf9858b15f9dd0247ae4cb670cb5b4a808918"},
+  "proposed_source": {"commit_sha": "02a980b72a2d0301274ed6d301a9e655a83a4653", "tree_sha": "e20ebfc10a277a5b202a587bee7b889d3a24dbb2"},
+  "proposed_head": {"commit_sha": "a4fbdcb2d324acd5358f7e64602b0305b0722cfc", "tree_sha": "3d23e21602b8d9ae530bf42d6dee527c4928c548"},
+  "intended_scope": {"wp": "Excel #5 / S07", "journey": "Select a Zoom recording folder, apply recursive S07 Zoom-aware discovery, preview the exact ordered recording set, require explicit confirmation, then reuse the canonical multi-source Process ingestion path with source identity and provenance."},
+  "candidate": {"candidate_id": "candidate-v1-d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8", "identity_sha256": "d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8", "bundle_digest": "fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582", "manifest_digest": "48cd6a5fb04677bc8b79d2a8e6212749c51bc931719fbb8923b1cdb8f7e71c56"},
+  "delta": [
+    {"path": "integra_core/capabilities.py", "before_sha256": "3f50ba49e9ff453f9251201303fe53f45c13bedbc8212fe62985695f07e4d8fb", "after_sha256": "59450ec7bbd2938c303415905231931238a8b243ea261b78d4e9eae7c53706d0"},
+    {"path": "integra_core/folder_discovery.py", "before_sha256": "cc9da2491786feb8c731623d40ecca00e3423a07941f878ef72d9d8dbea83804", "after_sha256": "e50a7888e49e7eac84b30acc094c371c6e062f0e1ea4ac6afdddca70fb01bf95"},
+    {"path": "integra_core/user_media.py", "before_sha256": "e75d61c9eb02336916623fef5fe6d63fc8f19d8c81242fd2a401307c281c5513", "after_sha256": "c3d7e33245dfc4045d74bd38f716ce948e5050611b54c4e501a0f1cad4212e89"},
+    {"path": "macos/IntegraApp.swift", "before_sha256": "8956e37c848493d4785bf8073494ab12f16d421ffa7c38989995db9dcdcf8633", "after_sha256": "f8e7e2efa86a00241bbd600017297d66c6251e9ff417bd1491967f5f38fb9834"},
+    {"path": "macos/Resources/bridge.py", "before_sha256": "f2ea2c3d08ce541d18601de2f096318040c22e33ce0fde910c5a2bb25546d9b8", "after_sha256": "ff2b281ad869f41d176cb96249ae2255060aacf4806bc7e4ee4ebade96a219f9"},
+    {"path": "tests/test_macos_app.py", "before_sha256": "33f63b5794794f15731579463013fef107a5e7b7fc4c274f4b3cea70126abff3", "after_sha256": "23a2ce04e8d79e407064437cd156b039f0cea800e864d3d8ecd31d70df139283"}
+  ],
+  "historical_test_successors": [],
+  "gates": [
+    {"name": "candidate-manifest", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_ZOOM_FOLDER_CANDIDATE_MANIFEST.json"},
+    {"name": "candidate-archive", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_ZOOM_FOLDER_CANDIDATE_ARCHIVE.json"},
+    {"name": "packaged-zoom-folder", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_ZOOM_FOLDER_E2E.json"},
+    {"name": "focused-process-regressions", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_ZOOM_FOLDER_FOCUSED_TESTS.txt"},
+    {"name": "full-supported-regressions", "result": "PASS", "evidence_ref": "docs/evidence/PROCESS_V1_ZOOM_FOLDER_FULL_TESTS.txt"}
+  ],
+  "evidence": {
+    "candidate_manifest": {"path": "docs/evidence/PROCESS_V1_ZOOM_FOLDER_CANDIDATE_MANIFEST.json", "sha256": "48cd6a5fb04677bc8b79d2a8e6212749c51bc931719fbb8923b1cdb8f7e71c56"},
+    "candidate_evidence": {"path": "docs/evidence/PROCESS_V1_ZOOM_FOLDER_E2E.json", "sha256": "a4052e5cd25d1a9b5be4136dd3392e663ac91f6e3a8d1cc9bf0a651baa17ea99"},
+    "report": {"path": "docs/PROCESS_V1_ZOOM_FOLDER_PROOF.md", "sha256": "9b31bea3f33009665fdabdad3ae83ada6cd78b7f079b4e540f39bb880415e5a1"}
+  },
+  "owner_acceptance": null,
+  "allowed_overlay_paths": ["docs/evidence/PROCESS_V1_ZOOM_FOLDER_CANDIDATE_ARCHIVE.json", "docs/evidence/PROCESS_V1_ZOOM_FOLDER_CANDIDATE_MANIFEST.json", "docs/evidence/PROCESS_V1_ZOOM_FOLDER_E2E.json", "docs/evidence/PROCESS_V1_ZOOM_FOLDER_FOCUSED_TESTS.txt", "docs/evidence/PROCESS_V1_ZOOM_FOLDER_FULL_TESTS.txt", "docs/PROCESS_V1_ZOOM_FOLDER_PROOF.md"]
+}
