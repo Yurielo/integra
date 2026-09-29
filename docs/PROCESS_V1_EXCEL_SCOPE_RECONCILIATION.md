@@ -35,7 +35,7 @@ Therefore: 51 original MUST − 4 approved transfers = 47 current Process MUST. 
 | 2 | Локальное аудио | MUST | PROCESS | MUST | Local audio | DONE | Retained in DoD inputs. |
 | 3 | Несколько видео/аудио за один запуск | MUST | PROCESS | MUST | Several local files | DONE | Retained; distinct from ordered processing. |
 | 4 | Папка с материалами | MUST | PROCESS | MUST | Folder discovery/confirmation | DONE | Candidate `candidate-v1-af81b2867f893e8e529a2d4f64d6c1370dd1249b46eb999d427fb408229680fa` proves native folder selection, deterministic supported-source preview, explicit confirmation, and reuse of canonical multi-source ingestion. |
-| 5 | Папка Zoom | MUST | PROCESS | MUST | Zoom folder | NOT_DONE | Retained. |
+| 5 | Папка Zoom | MUST | PROCESS | MUST | Zoom folder | DONE | Candidate `candidate-v1-d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8` proves real Zoom-folder S07 discovery, exact preview/confirmation and canonical multi-source ingestion; Product Owner GUI acceptance and CURRENT promotion recorded. |
 | 6 | YouTube — одно видео | MUST | PROCESS | MUST | One YouTube video | DONE | Retained. |
 | 7 | YouTube playlist | MUST | PROCESS | MUST | YouTube playlist | NOT_DONE | Retained with owner-fixed ordered discovery, selection, and independent item failure. |
 | 8 | Автоматическая расшифровка → TXT | MUST | PROCESS | MUST | Automatic TXT transcript | DONE | Retained. |
@@ -102,7 +102,7 @@ Therefore: 51 original MUST − 4 approved transfers = 47 current Process MUST. 
 
 ## Board reconciliation
 
-The active Board has 45 rows. Its states sum exactly: 39 DONE + 0 IN_PROGRESS + 5 NOT_DONE + 1 BLOCKED = 45.
+The active Board has 45 rows. Its states sum exactly: 40 DONE + 0 IN_PROGRESS + 4 NOT_DONE + 1 BLOCKED = 45.
 
 One explicit DoD aggregation explains the distinct denominators:
 
