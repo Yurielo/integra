@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.folder_discovery_evidence",
+  "status": "PASS",
+  "candidate_id": "candidate-v1-af81b2867f893e8e529a2d4f64d6c1370dd1249b46eb999d427fb408229680fa",
+  "manifest_identity_sha256": "af81b2867f893e8e529a2d4f64d6c1370dd1249b46eb999d427fb408229680fa",
+  "bundle_digest": "4032ad5334a42a9bbce6384b85b35857557afc2241d2c4d85c9e45379eca620c",
+  "product_source": {"commit_sha": "2f807b8596031395a4efd11732daf9820c67205d", "tree_sha": "511bbe7e434d4af0732fc4fb76c51c0c18ee6ff0"},
+  "scenario": "Native Process folder chooser and explicit confirmation before the existing local multi-source plan",
+  "discovery": {
+    "recursive": false,
+    "ordering": "filename_casefold_ascending",
+    "supported_inputs": "existing detect_source contract",
+    "hidden_and_non_regular_excluded": true,
+    "unsupported_reported": true,
+    "duplicate_content_deduplicated": true,
+    "empty_set_fails_before_processing": true
+  },
+  "execution": {
+    "confirmed_sources_equal_plan_sources": true,
+    "folder_provenance_persisted_per_source": true,
+    "existing_ordered_multi_source_executor_reused": true,
+    "per_source_failure_isolation_reused": true,
+    "source_change_or_disappearance_fails_closed": true
+  },
+  "native": {
+    "swift_compile": "PASS",
+    "packaged_self_test": "PASS",
+    "normal_gui_controls": ["Папка с Mac", "Подтвердите источники"],
+    "real_folder_preview": {
+      "status": "PASS",
+      "folder": "/Users/yurielokhin/Documents/Zoom/2026-08-21 13.36.10 Zoom Meeting Yuri Elokhin",
+      "visible_sources_in_order": ["audio1922670491.m4a", "video1922670491.mp4"],
+      "excluded_unsupported_file": "recording.conf",
+      "processing_started": false
+    }
+  }
+}
