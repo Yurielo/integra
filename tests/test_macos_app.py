@@ -195,6 +195,28 @@ class MacOSApplicationTests(unittest.TestCase):
                 item["source_id"] for item in result["sources"]
             ])
 
+    def test_bridge_discovers_zoom_recordings_before_the_existing_plan_is_built(self):
+        bridge = ROOT / "macos/Resources/bridge.py"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            folder = root / "Zoom Meeting"; folder.mkdir()
+            (folder / "zoom_0.mp4").write_bytes(b"video")
+            (folder / "audio_only.m4a").write_bytes(b"audio")
+            (folder / "recording.conf").write_text("config", encoding="utf-8")
+            second = folder / "part-02"; second.mkdir(); (second / "zoom_1.mp4").write_bytes(b"part")
+            environment = {**__import__("os").environ, "INTEGRA_APP_DATA_ROOT": str(root / "app-data")}
+            discovered = subprocess.run(
+                ["python3", str(bridge), "discover-zoom-folder-sources"],
+                input=json.dumps({"folder": str(folder)}), check=True,
+                capture_output=True, text=True, env=environment,
+            )
+            result = json.loads(discovered.stdout)["result"]
+            self.assertEqual([item["display_name"] for item in result["sources"]], ["audio_only.m4a", "zoom_1.mp4"])
+            self.assertEqual(result["sources"][0]["zoom_discovery"]["recognition"], "ZOOM_RECORDING_FOLDER_S07")
+            with patch("integra_core.capabilities.preflight", return_value={"state": "READY"}):
+                plan = build_plan(result["sources"], ["transcript"])
+            self.assertEqual(plan["sources"], result["sources"])
+
     def test_bridge_executes_youtube_playlist_through_source_first_runtime(self):
         bridge = ROOT / "macos/Resources/bridge.py"
         with tempfile.TemporaryDirectory() as directory:
@@ -240,11 +262,13 @@ class MacOSApplicationTests(unittest.TestCase):
     def test_native_source_exposes_source_first_real_actions(self):
         source = (ROOT / "macos/IntegraApp.swift").read_text()
         bridge_allow_list = source[source.index("let allowed = ["):source.index("guard allowed.contains(operation)")]
-        for operation in ("detect-sources", "discover-folder-sources", "capability-registry", "build-plan", "execute-plan", "run-status", "media-navigation", "seminartext-preflight", "package-preview", "package-publish"):
+        for operation in ("detect-sources", "discover-folder-sources", "discover-zoom-folder-sources", "capability-registry", "build-plan", "execute-plan", "run-status", "media-navigation", "seminartext-preflight", "package-preview", "package-publish"):
             self.assertIn(operation, source)
             self.assertIn(operation, bridge_allow_list)
         self.assertIn("NSOpenPanel", source)
         self.assertIn("Папка с Mac", source)
+        self.assertIn("Папка Zoom", source)
+        self.assertIn("Подтвердите записи Zoom", source)
         self.assertIn("Подтвердите источники", source)
         self.assertIn("Добавить \\(discovered.count) источников", source)
         self.assertIn("Одиночное видео или плейлист будут загружены в проект", source)

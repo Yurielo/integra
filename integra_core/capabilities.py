@@ -17,7 +17,7 @@ from .booktext_runtime import preflight as booktext_preflight, validate_page_sel
 from .youtube_runtime import preflight as youtube_preflight
 from .videotext_media_runtime import preflight as media_component_preflight
 
-VIDEO = {".m4v", ".mkv", ".mov", ".mp4", ".webm"}
+VIDEO = {".avi", ".m4v", ".mkv", ".mov", ".mp4", ".webm"}
 AUDIO = MEDIA_EXTENSIONS - VIDEO
 YOUTUBE = re.compile(r"^(?:https?://)?(?:www\.)?(?:youtube\.com|youtu\.be)/", re.I)
 PLAYLIST = re.compile(r"[?&]list=", re.I)
