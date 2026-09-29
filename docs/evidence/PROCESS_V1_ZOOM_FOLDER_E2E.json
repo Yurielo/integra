@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.zoom_folder_evidence",
+  "status": "PASS",
+  "product_outcome": "Zoom folder — Excel #5 / S07",
+  "candidate_id": "candidate-v1-d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8",
+  "manifest_identity_sha256": "d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8",
+  "bundle_digest": "fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
+  "product_source": {
+    "commit_sha": "02a980b72a2d0301274ed6d301a9e655a83a4653",
+    "tree_sha": "e20ebfc10a277a5b202a587bee7b889d3a24dbb2"
+  },
+  "candidate": {
+    "candidate_id": "candidate-v1-d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8",
+    "bundle_digest": "fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
+    "manifest_digest": "48cd6a5fb04677bc8b79d2a8e6212749c51bc931719fbb8923b1cdb8f7e71c56",
+    "source_commit": "02a980b72a2d0301274ed6d301a9e655a83a4653",
+    "source_tree": "e20ebfc10a277a5b202a587bee7b889d3a24dbb2"
+  },
+  "contract": {
+    "recognition": "ZOOM_RECORDING_FOLDER_S07",
+    "recursive": true,
+    "ordering": "recording_directory_path_casefold_ascending",
+    "selection_precedence": [
+      "largest audio_only.m4a",
+      "largest supported audio",
+      "largest supported video"
+    ],
+    "supported_audio_extensions": [".aac", ".flac", ".m4a", ".mp3", ".ogg", ".opus", ".wav"],
+    "supported_video_extensions": [".avi", ".m4v", ".mkv", ".mov", ".mp4", ".webm"],
+    "ignored_directories": ["audio record", "audio records", "audio_record", "audio_records", "separate audio", "separate_audio", "individual audio", "individual_audio", "participants", "participant audio", "participant_audio", "chat", "transcripts", "transcript"],
+    "empty_or_invalid_folder": "fails before Process ingestion",
+    "distinct_recording_directories": "preserved even when bytes are equal",
+    "missing_after_discovery": "marked unreadable and a remaining representation is reselected when available"
+  },
+  "real_folder_probe": {
+    "status": "PASS",
+    "folder": "/Users/yurielokhin/Documents/Zoom/2026-08-21 13.36.10 Zoom Meeting Yuri Elokhin",
+    "selected_sources": [
+      {
+        "name": "audio1922670491.m4a",
+        "kind": "LOCAL_AUDIO",
+        "ordinal": 1
+      }
+    ],
+    "excluded": [
+      {"name": "recording.conf", "reason": "UNSUPPORTED"},
+      {"name": "video1922670491.mp4", "reason": "SECONDARY_REPRESENTATION"}
+    ],
+    "folder_modified": false,
+    "processing_started": false
+  },
+  "native_checks": {
+    "status": "PASS",
+    "system_chooser_title": "Выберите папку с записью Zoom",
+    "native_action": "Папка Zoom",
+    "selection_and_preview_reuse": "same AppKit chooser, canonical preview confirmation, and existing multi-source ingestion path",
+    "packaged_self_test": "PASS",
+    "packaged_native_suite": "PASS",
+    "manual_scope": "The chooser opened for the real folder. No source confirmation or processing was performed. Preview-to-plan equality is covered by the deterministic bridge and native regression tests."
+  },
+  "regression": {
+    "focused_command": "python3 -m unittest tests.test_folder_discovery tests.test_capabilities tests.test_macos_app tests.test_application_runtime",
+    "focused_result": "57 passed / 6 declared skips",
+    "generic_folder_discovery": "covered",
+    "single_file_import": "covered",
+    "ordered_multi_source_failure_isolation": "covered"
+  },
+  "scope_exclusions": ["Zoom playlist", "combined transcript", "combined provenance", "multi-source corpus", "Selected-Capability Runtime Closure", "PR #206"]
+}
