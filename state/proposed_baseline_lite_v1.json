@@ -30,6 +30,11 @@
     "candidate_evidence": {"path": "docs/evidence/PROCESS_V1_ZOOM_FOLDER_E2E.json", "sha256": "a4052e5cd25d1a9b5be4136dd3392e663ac91f6e3a8d1cc9bf0a651baa17ea99"},
     "report": {"path": "docs/PROCESS_V1_ZOOM_FOLDER_PROOF.md", "sha256": "9b31bea3f33009665fdabdad3ae83ada6cd78b7f079b4e540f39bb880415e5a1"}
   },
-  "owner_acceptance": null,
+  "owner_acceptance": {
+    "decision": "PILOT_ACCEPTED",
+    "authority_ref": "Product Owner controlling conversation (2026-09-29): exact authorization headed ACCEPT_PROPOSED_BASELINE; proposal proposal-process-v1-zoom-folder; Candidate candidate-v1-d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8; native GUI acceptance PASS.",
+    "scope": "Zoom folder — Excel #5 / S07 proposed baseline acceptance only; no CURRENT promotion.",
+    "promotion_authorized": false
+  },
   "allowed_overlay_paths": ["docs/evidence/PROCESS_V1_ZOOM_FOLDER_CANDIDATE_ARCHIVE.json", "docs/evidence/PROCESS_V1_ZOOM_FOLDER_CANDIDATE_MANIFEST.json", "docs/evidence/PROCESS_V1_ZOOM_FOLDER_E2E.json", "docs/evidence/PROCESS_V1_ZOOM_FOLDER_FOCUSED_TESTS.txt", "docs/evidence/PROCESS_V1_ZOOM_FOLDER_FULL_TESTS.txt", "docs/PROCESS_V1_ZOOM_FOLDER_PROOF.md"]
 }
