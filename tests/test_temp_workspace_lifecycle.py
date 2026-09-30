@@ -16,6 +16,23 @@ import temp_workspace_lifecycle as lifecycle  # noqa: E402
 
 
 class TempWorkspaceLifecycleTests(unittest.TestCase):
+    def test_stale_volume_workspace_recovered_from_different_base(self):
+        with tempfile.TemporaryDirectory() as directory:
+            first, second = Path(directory) / 'first', Path(directory) / 'second'
+            first.mkdir(); second.mkdir()
+            old, marker = lifecycle.create_workspace(purpose='old-stage', base=first,
+                                                     expected_bytes=1, reserve_bytes=0)
+            marker['owner'] = {'pid': 99999999, 'start_token': 'dead'}
+            lifecycle._atomic_json(old / lifecycle.MARKER, marker)
+            with lifecycle.disk_admission._ledger(first) as (_, records):
+                records[marker['run_id']].update(pid=99999999, start_token='dead')
+            new, _ = lifecycle.create_workspace(purpose='retry-stage', base=second,
+                                                 expected_bytes=1, reserve_bytes=0)
+            try:
+                self.assertFalse(old.exists())
+            finally:
+                lifecycle.cleanup_workspace(new, reason='TEST', allow_live_owner=True)
+
     def test_failed_child_registration_terminates_process_before_cleanup(self):
         children = []
         original_spawn = subprocess.Popen
