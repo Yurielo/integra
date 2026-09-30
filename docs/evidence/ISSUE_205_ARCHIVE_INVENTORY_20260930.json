@@ -1,0 +1,1109 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.candidate_archive_inventory",
+  "verification": "METADATA_ONLY_NO_PAYLOAD_REHASH",
+  "archive_root": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive",
+  "archive_count": 25,
+  "unique_bundle_count": 14,
+  "declared_duplicate_logical_bytes": 24217048837,
+  "entries": [
+    {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-136e1a5b80644c20a4e7f9ecf66741ab069f88d66418123e6e85b409bfc714b8/d05c0863dcb4a205a3c0fd4e4787e8b15f70a17058335f09f46236bda64ca4ba",
+      "candidate_id": "candidate-v1-136e1a5b80644c20a4e7f9ecf66741ab069f88d66418123e6e85b409bfc714b8",
+      "bundle_digest": "d05c0863dcb4a205a3c0fd4e4787e8b15f70a17058335f09f46236bda64ca4ba",
+      "manifest_digest": "dddfd523af297bd0f70f9909eadafd8f1cdd2c58afbe504559ed7da5f7f15d06",
+      "source_commit": "c04a45635adbac7b56c3204acd7042363ba57ea4",
+      "build_timestamp": "2026-09-29T20:23:21+03:00",
+      "archive_modified_at": "2026-09-29T17:27:49.692804Z",
+      "logical_app_size_bytes": 2201652185,
+      "lifecycle_status": "COMPLETE_RETAINED",
+      "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+      "bundle_duplicate_count": 3,
+      "duplicate_status": "DECLARED_BUNDLE_DIGEST_REPEATED_RETAINED",
+      "source_github_provenance": {
+        "oid": "c04a45635adbac7b56c3204acd7042363ba57ea4",
+        "messageHeadline": "feat: expand YouTube playlists into Process sources",
+        "associatedPullRequests": {
+          "nodes": [
+            {
+              "number": 211,
+              "url": "https://github.com/Yurielo/integra/pull/211",
+              "state": "OPEN"
+            }
+          ]
+        }
+      },
+      "representative_executable_stat": {
+        "device": 16777233,
+        "inode": 42122640,
+        "nlink": 1,
+        "size": 515832
+      },
+      "physical_shared_extents": "NOT_MEASURED"
+    },
+    {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-14b3c10e4d779ff8b5a520bf15e2b7087673aec2cd0abd25aac4e1d0ded77892/ab53369d4d46fc8a4dece0b8e0f777f5017731b2256ff34ecb27738a849d8c94",
+      "candidate_id": "candidate-v1-14b3c10e4d779ff8b5a520bf15e2b7087673aec2cd0abd25aac4e1d0ded77892",
+      "bundle_digest": "ab53369d4d46fc8a4dece0b8e0f777f5017731b2256ff34ecb27738a849d8c94",
+      "manifest_digest": "55eb3562826006ca90be7f698877bfd709882eabe6605e1b12431b3f3cc791fb",
+      "source_commit": "47be46d8bfffb94e952b2a45e31d527ddd3b8e73",
+      "build_timestamp": "2026-09-28T11:13:07+03:00",
+      "archive_modified_at": "2026-09-28T08:39:28.535330Z",
+      "logical_app_size_bytes": 2201557611,
+      "lifecycle_status": "COMPLETE_RETAINED",
+      "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+      "bundle_duplicate_count": 1,
+      "duplicate_status": "DECLARED_UNIQUE_BUNDLE_DIGEST",
+      "source_github_provenance": {
+        "oid": "47be46d8bfffb94e952b2a45e31d527ddd3b8e73",
+        "messageHeadline": "feat: translate persisted process topics",
+        "associatedPullRequests": {
+          "nodes": [
+            {
+              "number": 204,
+              "url": "https://github.com/Yurielo/integra/pull/204",
+              "state": "OPEN"
+            }
+          ]
+        }
+      },
+      "representative_executable_stat": {
+        "device": 16777233,
+        "inode": 39559534,
+        "nlink": 1,
+        "size": 477576
+      },
+      "physical_shared_extents": "NOT_MEASURED"
+    },
+    {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-26b131104a0ccbcb75d61325412339b1d1bc264fdbf40bea1c9b6845c5d1de34/dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
+      "candidate_id": "candidate-v1-26b131104a0ccbcb75d61325412339b1d1bc264fdbf40bea1c9b6845c5d1de34",
+      "bundle_digest": "dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
+      "manifest_digest": "c8245cd960ac1acbf9c7292572966cd6f8511f3381007834deca6820fb927795",
+      "source_commit": "b54d491509d3a82d9a55c7a89be15eb025c3cd19",
+      "build_timestamp": "2026-09-30T19:20:45+03:00",
+      "archive_modified_at": "2026-09-30T16:23:02.877747Z",
+      "logical_app_size_bytes": 2201540153,
+      "lifecycle_status": "COMPLETE_RETAINED",
+      "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+      "bundle_duplicate_count": 7,
+      "duplicate_status": "DECLARED_BUNDLE_DIGEST_REPEATED_RETAINED",
+      "source_github_provenance": {
+        "associatedPullRequests": {
+          "nodes": [
+            {
+              "number": 206,
+              "url": "https://github.com/Yurielo/integra/pull/206",
+              "state": "OPEN"
+            }
+          ]
+        },
+        "binding": "LOCAL_ISSUE_205_BRANCH_PENDING_PUSH"
+      },
+      "representative_executable_stat": {
+        "device": 16777233,
+        "inode": 43227995,
+        "nlink": 1,
+        "size": 476424
+      },
+      "physical_shared_extents": "NOT_MEASURED"
+    },
+    {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-2b779255c5b57a7b6602f153ea13c497bf738a18a84412773f8b6ed5261fbfcc/dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
+      "candidate_id": "candidate-v1-2b779255c5b57a7b6602f153ea13c497bf738a18a84412773f8b6ed5261fbfcc",
+      "bundle_digest": "dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
+      "manifest_digest": "c99b991956c0611a74aa0509af78004cd9a0dd2c7f9b7d5dafd1d565a339651a",
+      "source_commit": "cf3fd4b17598a459cd19d5d9dbacf2ea34cad8cb",
+      "build_timestamp": "2026-09-28T09:35:16+03:00",
+      "archive_modified_at": "2026-09-28T06:44:20.990326Z",
+      "logical_app_size_bytes": 2201540153,
+      "lifecycle_status": "COMPLETE_RETAINED",
+      "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+      "bundle_duplicate_count": 7,
+      "duplicate_status": "DECLARED_BUNDLE_DIGEST_REPEATED_RETAINED",
+      "source_github_provenance": {
+        "oid": "cf3fd4b17598a459cd19d5d9dbacf2ea34cad8cb",
+        "messageHeadline": "fix: make candidate manifest packaging reproducible",
+        "associatedPullRequests": {
+          "nodes": [
+            {
+              "number": 202,
+              "url": "https://github.com/Yurielo/integra/pull/202",
+              "state": "MERGED"
+            }
+          ]
+        }
+      },
+      "representative_executable_stat": {
+        "device": 16777233,
+        "inode": 39247671,
+        "nlink": 1,
+        "size": 476424
+      },
+      "physical_shared_extents": "NOT_MEASURED"
+    },
+    {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-316393126468279aed6c5b645f29365067a6016cf5e06893775810d8a8d50ef8/d05c0863dcb4a205a3c0fd4e4787e8b15f70a17058335f09f46236bda64ca4ba",
+      "candidate_id": "candidate-v1-316393126468279aed6c5b645f29365067a6016cf5e06893775810d8a8d50ef8",
+      "bundle_digest": "d05c0863dcb4a205a3c0fd4e4787e8b15f70a17058335f09f46236bda64ca4ba",
+      "manifest_digest": "6f9f518a75d135835ba218a51ce0430b010c8487de00f7b072623de365e51b15",
+      "source_commit": "313f8939ba57aabaf2e2db6f6f063d635fc4e57c",
+      "build_timestamp": "2026-09-29T20:13:56+03:00",
+      "archive_modified_at": "2026-09-29T17:18:16.361121Z",
+      "logical_app_size_bytes": 2201652185,
+      "lifecycle_status": "COMPLETE_RETAINED",
+      "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+      "bundle_duplicate_count": 3,
+      "duplicate_status": "DECLARED_BUNDLE_DIGEST_REPEATED_RETAINED",
+      "source_github_provenance": null,
+      "representative_executable_stat": {
+        "device": 16777233,
+        "inode": 42047303,
+        "nlink": 1,
+        "size": 515832
+      },
+      "physical_shared_extents": "NOT_MEASURED"
+    },
+    {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-3348b6fc8ed525632d7d0abed1337f2e37b66404f0d6f4488cb3c012c3afca83/448e5ee02ed22c2c77837b25934278750ea9a4a08a9d7f02e70c372886a83d7a",
+      "candidate_id": "candidate-v1-3348b6fc8ed525632d7d0abed1337f2e37b66404f0d6f4488cb3c012c3afca83",
+      "bundle_digest": "448e5ee02ed22c2c77837b25934278750ea9a4a08a9d7f02e70c372886a83d7a",
+      "manifest_digest": "a9a9c6bc19238bbfc215dc1b40d618c3e2afd74c0c10f99b3ec410d0a5253cf1",
+      "source_commit": "d5e7c42bbf3b534a72032acd6d1a1dc178001d3f",
+      "build_timestamp": "2026-09-26T21:55:26Z",
+      "archive_modified_at": "2026-09-26T21:58:09.460111Z",
+      "logical_app_size_bytes": 2202970969,
+      "lifecycle_status": "COMPLETE_RETAINED",
+      "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+      "bundle_duplicate_count": 4,
+      "duplicate_status": "DECLARED_BUNDLE_DIGEST_REPEATED_RETAINED",
+      "source_github_provenance": {
+        "oid": "d5e7c42bbf3b534a72032acd6d1a1dc178001d3f",
+        "messageHeadline": "fix: make macOS release gate candidate-bound",
+        "associatedPullRequests": {
+          "nodes": [
+            {
+              "number": 194,
+              "url": "https://github.com/Yurielo/integra/pull/194",
+              "state": "MERGED"
+            }
+          ]
+        }
+      },
+      "representative_executable_stat": {
+        "device": 16777233,
+        "inode": 37392154,
+        "nlink": 1,
+        "size": 431800
+      },
+      "physical_shared_extents": "NOT_MEASURED"
+    },
+    {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-43bdfe7b93052a3f2f9b5b6b089179580ef5387ebe82d0e96ef69e612257b0cd/306e3301484b24f1933c3b3ef51583ab4c786263b4ac3ecea241060177aa5eb1",
+      "candidate_id": "candidate-v1-43bdfe7b93052a3f2f9b5b6b089179580ef5387ebe82d0e96ef69e612257b0cd",
+      "bundle_digest": "306e3301484b24f1933c3b3ef51583ab4c786263b4ac3ecea241060177aa5eb1",
+      "manifest_digest": "4e50d4156dca216d9b3fd90d8dfb72112f02d3889b90b101af6511ee1fb9d019",
+      "source_commit": "ccdc8bf1f63280df889483904720a9fb2d618345",
+      "build_timestamp": "2026-09-27T12:13:39Z",
+      "archive_modified_at": "2026-09-27T12:18:51.542550Z",
+      "logical_app_size_bytes": 2201504086,
+      "lifecycle_status": "COMPLETE_RETAINED",
+      "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+      "bundle_duplicate_count": 1,
+      "duplicate_status": "DECLARED_UNIQUE_BUNDLE_DIGEST",
+      "source_github_provenance": {
+        "oid": "ccdc8bf1f63280df889483904720a9fb2d618345",
+        "messageHeadline": "feat: persist source speech language for ASR",
+        "associatedPullRequests": {
+          "nodes": [
+            {
+              "number": 195,
+              "url": "https://github.com/Yurielo/integra/pull/195",
+              "state": "MERGED"
+            }
+          ]
+        }
+      },
+      "representative_executable_stat": {
+        "device": 16777233,
+        "inode": 37783693,
+        "nlink": 1,
+        "size": 432152
+      },
+      "physical_shared_extents": "NOT_MEASURED"
+    },
+    {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-6545998b95e0f2d84abc7cd82baaea79bf8aa3c80cdd6d76840f47e87a42f996/a344385ab7ab27812752c92530bb682313018b420363f9f3c91ae48500003faf",
+      "candidate_id": "candidate-v1-6545998b95e0f2d84abc7cd82baaea79bf8aa3c80cdd6d76840f47e87a42f996",
+      "bundle_digest": "a344385ab7ab27812752c92530bb682313018b420363f9f3c91ae48500003faf",
+      "manifest_digest": "328934fc8ea1a2b2fb7b2a1bcc57aadff00add18eb516310de1e6e517cddab65",
+      "source_commit": "df45022bd4dbd68ccc7a770e969418d35452bca3",
+      "build_timestamp": "2026-09-27T17:40:58Z",
+      "archive_modified_at": "2026-09-27T17:44:55.535044Z",
+      "logical_app_size_bytes": 2201560278,
+      "lifecycle_status": "COMPLETE_RETAINED",
+      "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+      "bundle_duplicate_count": 1,
+      "duplicate_status": "DECLARED_UNIQUE_BUNDLE_DIGEST",
+      "source_github_provenance": {
+        "oid": "df45022bd4dbd68ccc7a770e969418d35452bca3",
+        "messageHeadline": "feat: add translation language control",
+        "associatedPullRequests": {
+          "nodes": [
+            {
+              "number": 199,
+              "url": "https://github.com/Yurielo/integra/pull/199",
+              "state": "MERGED"
+            }
+          ]
+        }
+      },
+      "representative_executable_stat": {
+        "device": 16777233,
+        "inode": 38288882,
+        "nlink": 1,
+        "size": 473896
+      },
+      "physical_shared_extents": "NOT_MEASURED"
+    },
+    {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-726f3a48f66879bce611096db2ffe934727d1ef0372d8a5487db5a7ad69685a5/448e5ee02ed22c2c77837b25934278750ea9a4a08a9d7f02e70c372886a83d7a",
+      "candidate_id": "candidate-v1-726f3a48f66879bce611096db2ffe934727d1ef0372d8a5487db5a7ad69685a5",
+      "bundle_digest": "448e5ee02ed22c2c77837b25934278750ea9a4a08a9d7f02e70c372886a83d7a",
+      "manifest_digest": "7ce0867ceb519afbd9ac9ff2fe367633d067ba91a26b6eaba2135cef6570ec29",
+      "source_commit": "f411d93669831aec4c8511b32c03a96a3a3b842b",
+      "build_timestamp": "2026-09-26T22:10:18Z",
+      "archive_modified_at": "2026-09-26T22:11:40.732019Z",
+      "logical_app_size_bytes": 2201500380,
+      "lifecycle_status": "COMPLETE_RETAINED",
+      "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+      "bundle_duplicate_count": 4,
+      "duplicate_status": "DECLARED_BUNDLE_DIGEST_REPEATED_RETAINED",
+      "source_github_provenance": {
+        "oid": "f411d93669831aec4c8511b32c03a96a3a3b842b",
+        "messageHeadline": "fix: govern native release gate deltas",
+        "associatedPullRequests": {
+          "nodes": [
+            {
+              "number": 194,
+              "url": "https://github.com/Yurielo/integra/pull/194",
+              "state": "MERGED"
+            }
+          ]
+        }
+      },
+      "representative_executable_stat": {
+        "device": 16777233,
+        "inode": 37536735,
+        "nlink": 1,
+        "size": 431800
+      },
+      "physical_shared_extents": "NOT_MEASURED"
+    },
+    {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-83a2fe1744d4ba79e2a0cb9321ee15a860a56216dc028d15bc4a0a724d731877/dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
+      "candidate_id": "candidate-v1-83a2fe1744d4ba79e2a0cb9321ee15a860a56216dc028d15bc4a0a724d731877",
+      "bundle_digest": "dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
+      "manifest_digest": "c1114881f19022cd834f86ec8cb84700de102ee72c1fc0552e5de3b98b97d061",
+      "source_commit": "3ee63658d65e0639408350f4130a43011f62e613",
+      "build_timestamp": "2026-09-30T17:19:25+03:00",
+      "archive_modified_at": "2026-09-30T14:27:05.031773Z",
+      "logical_app_size_bytes": 2201540153,
+      "lifecycle_status": "COMPLETE_RETAINED",
+      "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+      "bundle_duplicate_count": 7,
+      "duplicate_status": "DECLARED_BUNDLE_DIGEST_REPEATED_RETAINED",
+      "source_github_provenance": {
+        "oid": "3ee63658d65e0639408350f4130a43011f62e613",
+        "messageHeadline": "fix: supervise candidate workspaces after caller loss",
+        "associatedPullRequests": {
+          "nodes": [
+            {
+              "number": 206,
+              "url": "https://github.com/Yurielo/integra/pull/206",
+              "state": "OPEN"
+            }
+          ]
+        }
+      },
+      "representative_executable_stat": {
+        "device": 16777233,
+        "inode": 42998744,
+        "nlink": 1,
+        "size": 476424
+      },
+      "physical_shared_extents": "NOT_MEASURED"
+    },
+    {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173/c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b",
+      "candidate_id": "candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173",
+      "bundle_digest": "c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b",
+      "manifest_digest": "4e54fcce8ee164ca86d170c12f31474a457eedaf377bb433893aba7d1607bdc9",
+      "source_commit": "ac954f85858962345402f4649be5b9a1e8c3e0dd",
+      "build_timestamp": "2026-09-28T17:51:26+03:00",
+      "archive_modified_at": "2026-09-28T14:59:24.266330Z",
+      "logical_app_size_bytes": 2203145589,
+      "lifecycle_status": "COMPLETE_RETAINED",
+      "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+      "bundle_duplicate_count": 1,
+      "duplicate_status": "DECLARED_UNIQUE_BUNDLE_DIGEST",
+      "source_github_provenance": {
+        "oid": "ac954f85858962345402f4649be5b9a1e8c3e0dd",
+        "messageHeadline": "fix: verify persisted topic translation lineage",
+        "associatedPullRequests": {
+          "nodes": [
+            {
+              "number": 207,
+              "url": "https://github.com/Yurielo/integra/pull/207",
+              "state": "MERGED"
+            }
+          ]
+        }
+      },
+      "representative_executable_stat": {
+        "device": 16777233,
+        "inode": 40805964,
+        "nlink": 1,
+        "size": 495352
+      },
+      "physical_shared_extents": "NOT_MEASURED"
+    },
+    {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-91d028895714a30e4693b5268be1ca078daad385c2ac4364cbb4644a8839c0a0/dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
+      "candidate_id": "candidate-v1-91d028895714a30e4693b5268be1ca078daad385c2ac4364cbb4644a8839c0a0",
+      "bundle_digest": "dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
+      "manifest_digest": "a1c356b79584e6120c275a25cb8af77ceee64934d56244e5fe9109bbf323ceb0",
+      "source_commit": "2261dea2aabc7e809c087eee5c29d651b917c90b",
+      "build_timestamp": "2026-09-30T19:13:27+03:00",
+      "archive_modified_at": "2026-09-30T16:15:17.262879Z",
+      "logical_app_size_bytes": 2201540153,
+      "lifecycle_status": "COMPLETE_RETAINED",
+      "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+      "bundle_duplicate_count": 7,
+      "duplicate_status": "DECLARED_BUNDLE_DIGEST_REPEATED_RETAINED",
+      "source_github_provenance": {
+        "associatedPullRequests": {
+          "nodes": [
+            {
+              "number": 206,
+              "url": "https://github.com/Yurielo/integra/pull/206",
+              "state": "OPEN"
+            }
+          ]
+        },
+        "binding": "LOCAL_ISSUE_205_BRANCH_PENDING_PUSH"
+      },
+      "representative_executable_stat": {
+        "device": 16777233,
+        "inode": 43145464,
+        "nlink": 1,
+        "size": 476424
+      },
+      "physical_shared_extents": "NOT_MEASURED"
+    },
+    {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-95d3284963a5c51105a5a37a215c1398e95ca203e0b167a33c4d1c8fef5da844/d05c0863dcb4a205a3c0fd4e4787e8b15f70a17058335f09f46236bda64ca4ba",
+      "candidate_id": "candidate-v1-95d3284963a5c51105a5a37a215c1398e95ca203e0b167a33c4d1c8fef5da844",
+      "bundle_digest": "d05c0863dcb4a205a3c0fd4e4787e8b15f70a17058335f09f46236bda64ca4ba",
+      "manifest_digest": "db500f4670b1313129f6f753747d5b7007c5907d12d2a4a8a17877ac9b588911",
+      "source_commit": "f254535517386edf5da1ecb417ca45956ebab6ab",
+      "build_timestamp": "2026-09-29T20:06:45+03:00",
+      "archive_modified_at": "2026-09-29T17:09:00.911290Z",
+      "logical_app_size_bytes": 2201652185,
+      "lifecycle_status": "COMPLETE_RETAINED",
+      "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+      "bundle_duplicate_count": 3,
+      "duplicate_status": "DECLARED_BUNDLE_DIGEST_REPEATED_RETAINED",
+      "source_github_provenance": null,
+      "representative_executable_stat": {
+        "device": 16777233,
+        "inode": 41946834,
+        "nlink": 1,
+        "size": 515832
+      },
+      "physical_shared_extents": "NOT_MEASURED"
+    },
+    {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-986ea18cde8d8a78332f5e2b1fc3005b9119cf551dcfb7de339f039d01b656de/dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
+      "candidate_id": "candidate-v1-986ea18cde8d8a78332f5e2b1fc3005b9119cf551dcfb7de339f039d01b656de",
+      "bundle_digest": "dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
+      "manifest_digest": "22b7ffdf26c04856b88a085e5a47888af7e6273b2980ff8a1efe8abced6473fe",
+      "source_commit": "869f2f364975fa703a16e85a3f8c4d23e91b28e3",
+      "build_timestamp": "2026-09-28T06:06:49Z",
+      "archive_modified_at": "2026-09-28T06:09:07.186156Z",
+      "logical_app_size_bytes": 2201540148,
+      "lifecycle_status": "COMPLETE_RETAINED",
+      "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+      "bundle_duplicate_count": 7,
+      "duplicate_status": "DECLARED_BUNDLE_DIGEST_REPEATED_RETAINED",
+      "source_github_provenance": {
+        "oid": "869f2f364975fa703a16e85a3f8c4d23e91b28e3",
+        "messageHeadline": "feat: add bounded Process topic detail selection",
+        "associatedPullRequests": {
+          "nodes": [
+            {
+              "number": 202,
+              "url": "https://github.com/Yurielo/integra/pull/202",
+              "state": "MERGED"
+            }
+          ]
+        }
+      },
+      "representative_executable_stat": {
+        "device": 16777233,
+        "inode": 38857076,
+        "nlink": 1,
+        "size": 476424
+      },
+      "physical_shared_extents": "NOT_MEASURED"
+    },
+    {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-9fa80fda7d7711776415927d1c71d41d0d70e5b1212ccc02a8c4d9b7056660ed/448e5ee02ed22c2c77837b25934278750ea9a4a08a9d7f02e70c372886a83d7a",
+      "candidate_id": "candidate-v1-9fa80fda7d7711776415927d1c71d41d0d70e5b1212ccc02a8c4d9b7056660ed",
+      "bundle_digest": "448e5ee02ed22c2c77837b25934278750ea9a4a08a9d7f02e70c372886a83d7a",
+      "manifest_digest": "deedb1f1b1af0d3c3ef48d280234277768d7e8dacce1c00577448de96fcb377f",
+      "source_commit": "5d376182ef4fdeceafaf26f529879f080e7bbc0d",
+      "build_timestamp": "2026-09-26T21:33:44Z",
+      "archive_modified_at": "2026-09-26T21:38:49.890420Z",
+      "logical_app_size_bytes": 2201502794,
+      "lifecycle_status": "COMPLETE_RETAINED",
+      "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+      "bundle_duplicate_count": 4,
+      "duplicate_status": "DECLARED_BUNDLE_DIGEST_REPEATED_RETAINED",
+      "source_github_provenance": {
+        "oid": "5d376182ef4fdeceafaf26f529879f080e7bbc0d",
+        "messageHeadline": "test: align packaged ASR fixture with careful mode pin",
+        "associatedPullRequests": {
+          "nodes": [
+            {
+              "number": 194,
+              "url": "https://github.com/Yurielo/integra/pull/194",
+              "state": "MERGED"
+            }
+          ]
+        }
+      },
+      "representative_executable_stat": {
+        "device": 16777233,
+        "inode": 37155314,
+        "nlink": 1,
+        "size": 431800
+      },
+      "physical_shared_extents": "NOT_MEASURED"
+    },
+    {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a52cd2b257c55f0c50251ec21c253a3370de9d72f16148459650243c5fb3b669/afc07aee895fe1e4cefd882eafae1956ce44a5bf6f62d38fe676f5d84928c925",
+      "candidate_id": "candidate-v1-a52cd2b257c55f0c50251ec21c253a3370de9d72f16148459650243c5fb3b669",
+      "bundle_digest": "afc07aee895fe1e4cefd882eafae1956ce44a5bf6f62d38fe676f5d84928c925",
+      "manifest_digest": "e1c067bacffe06198f927d1e8010312d7d6b7e48d489944b94ad33f10d50195c",
+      "source_commit": "5301527da6d447e474ec0df9ed657b836ef7d1a1",
+      "build_timestamp": "2026-09-27T21:10:33Z",
+      "archive_modified_at": "2026-09-27T21:12:44.784212Z",
+      "logical_app_size_bytes": 2201571519,
+      "lifecycle_status": "COMPLETE_RETAINED",
+      "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+      "bundle_duplicate_count": 1,
+      "duplicate_status": "DECLARED_UNIQUE_BUNDLE_DIGEST",
+      "source_github_provenance": {
+        "oid": "5301527da6d447e474ec0df9ed657b836ef7d1a1",
+        "messageHeadline": "feat: expose Process topic summaries",
+        "associatedPullRequests": {
+          "nodes": [
+            {
+              "number": 201,
+              "url": "https://github.com/Yurielo/integra/pull/201",
+              "state": "MERGED"
+            }
+          ]
+        }
+      },
+      "representative_executable_stat": {
+        "device": 16777233,
+        "inode": 38639691,
+        "nlink": 1,
+        "size": 475432
+      },
+      "physical_shared_extents": "NOT_MEASURED"
+    },
+    {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8",
+      "candidate_id": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583",
+      "bundle_digest": "2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8",
+      "manifest_digest": "4c9027d2fb65ef921bbb9c20878ccef61fca34c999c1f606f37da9e2a44a3161",
+      "source_commit": "9f7122bb1d823e82db93eaede08e6a90c98775b6",
+      "build_timestamp": "2026-09-27T19:45:07Z",
+      "archive_modified_at": "2026-09-27T19:48:20.078048Z",
+      "logical_app_size_bytes": 2203044017,
+      "lifecycle_status": "COMPLETE_RETAINED",
+      "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+      "bundle_duplicate_count": 1,
+      "duplicate_status": "DECLARED_UNIQUE_BUNDLE_DIGEST",
+      "source_github_provenance": {
+        "oid": "9f7122bb1d823e82db93eaede08e6a90c98775b6",
+        "messageHeadline": "feat: add translated text result",
+        "associatedPullRequests": {
+          "nodes": [
+            {
+              "number": 200,
+              "url": "https://github.com/Yurielo/integra/pull/200",
+              "state": "MERGED"
+            }
+          ]
+        }
+      },
+      "representative_executable_stat": {
+        "device": 16777233,
+        "inode": 38480220,
+        "nlink": 1,
+        "size": 457624
+      },
+      "physical_shared_extents": "NOT_MEASURED"
+    },
+    {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-af81b2867f893e8e529a2d4f64d6c1370dd1249b46eb999d427fb408229680fa/4032ad5334a42a9bbce6384b85b35857557afc2241d2c4d85c9e45379eca620c",
+      "candidate_id": "candidate-v1-af81b2867f893e8e529a2d4f64d6c1370dd1249b46eb999d427fb408229680fa",
+      "bundle_digest": "4032ad5334a42a9bbce6384b85b35857557afc2241d2c4d85c9e45379eca620c",
+      "manifest_digest": "c0f016e1ca16fe08cf5209ed7d2a74eb903e536d88da0775579dc1e646b262cd",
+      "source_commit": "2f807b8596031395a4efd11732daf9820c67205d",
+      "build_timestamp": "2026-09-28T23:50:23+03:00",
+      "archive_modified_at": "2026-09-28T20:57:19.087169Z",
+      "logical_app_size_bytes": 2201624017,
+      "lifecycle_status": "COMPLETE_RETAINED",
+      "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+      "bundle_duplicate_count": 1,
+      "duplicate_status": "DECLARED_UNIQUE_BUNDLE_DIGEST",
+      "source_github_provenance": {
+        "oid": "2f807b8596031395a4efd11732daf9820c67205d",
+        "messageHeadline": "fix: allow native folder discovery bridge call",
+        "associatedPullRequests": {
+          "nodes": [
+            {
+              "number": 208,
+              "url": "https://github.com/Yurielo/integra/pull/208",
+              "state": "MERGED"
+            }
+          ]
+        }
+      },
+      "representative_executable_stat": {
+        "device": 16777233,
+        "inode": 41275914,
+        "nlink": 1,
+        "size": 496760
+      },
+      "physical_shared_extents": "NOT_MEASURED"
+    },
+    {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-ce1b1abbb4a9a6bb9350d38a24a948a8313077b7c663ea7e3ec8da5d7c5cf807/dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
+      "candidate_id": "candidate-v1-ce1b1abbb4a9a6bb9350d38a24a948a8313077b7c663ea7e3ec8da5d7c5cf807",
+      "bundle_digest": "dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
+      "manifest_digest": "19e42f3e67d7a09688186b0412b1a7b77119153f5799e36419688977d9eabed3",
+      "source_commit": "633f0415e68e6f5528b17ebeb344798a2c5d677d",
+      "build_timestamp": "2026-09-28T15:03:05+03:00",
+      "archive_modified_at": "2026-09-28T12:09:45.804858Z",
+      "logical_app_size_bytes": 2201540153,
+      "lifecycle_status": "COMPLETE_RETAINED",
+      "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+      "bundle_duplicate_count": 7,
+      "duplicate_status": "DECLARED_BUNDLE_DIGEST_REPEATED_RETAINED",
+      "source_github_provenance": {
+        "oid": "633f0415e68e6f5528b17ebeb344798a2c5d677d",
+        "messageHeadline": "fix: govern disposable macOS build workspaces",
+        "associatedPullRequests": {
+          "nodes": [
+            {
+              "number": 206,
+              "url": "https://github.com/Yurielo/integra/pull/206",
+              "state": "OPEN"
+            }
+          ]
+        }
+      },
+      "representative_executable_stat": {
+        "device": 16777233,
+        "inode": 40503104,
+        "nlink": 1,
+        "size": 476424
+      },
+      "physical_shared_extents": "NOT_MEASURED"
+    },
+    {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8/fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
+      "candidate_id": "candidate-v1-d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8",
+      "bundle_digest": "fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
+      "manifest_digest": "48cd6a5fb04677bc8b79d2a8e6212749c51bc931719fbb8923b1cdb8f7e71c56",
+      "source_commit": "02a980b72a2d0301274ed6d301a9e655a83a4653",
+      "build_timestamp": "2026-09-29T14:50:56+03:00",
+      "archive_modified_at": "2026-09-29T11:57:19.752083Z",
+      "logical_app_size_bytes": 2201629355,
+      "lifecycle_status": "COMPLETE_RETAINED",
+      "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+      "bundle_duplicate_count": 1,
+      "duplicate_status": "DECLARED_UNIQUE_BUNDLE_DIGEST",
+      "source_github_provenance": {
+        "oid": "02a980b72a2d0301274ed6d301a9e655a83a4653",
+        "messageHeadline": "feat: add Zoom folder source discovery",
+        "associatedPullRequests": {
+          "nodes": [
+            {
+              "number": 209,
+              "url": "https://github.com/Yurielo/integra/pull/209",
+              "state": "MERGED"
+            }
+          ]
+        }
+      },
+      "representative_executable_stat": {
+        "device": 16777233,
+        "inode": 41689518,
+        "nlink": 1,
+        "size": 496952
+      },
+      "physical_shared_extents": "NOT_MEASURED"
+    },
+    {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-de25ee770d537b88eafd805249769e50694f7f5b56daab2f0771ec2c7706fd3d/3506954cab9fc7a4bd92f681e638fad2974042981f47af24bb2433cbf2cc215a",
+      "candidate_id": "candidate-v1-de25ee770d537b88eafd805249769e50694f7f5b56daab2f0771ec2c7706fd3d",
+      "bundle_digest": "3506954cab9fc7a4bd92f681e638fad2974042981f47af24bb2433cbf2cc215a",
+      "manifest_digest": "d12b83c2206fd584cca2afc12aae2c172539e3ab9c9f6ed2b98794e3125d10a1",
+      "source_commit": "7150d711f127a4aeaecf519c65b91f88fda64447",
+      "build_timestamp": "2026-09-27T16:31:35Z",
+      "archive_modified_at": "2026-09-27T16:38:34.185545Z",
+      "logical_app_size_bytes": 2201534544,
+      "lifecycle_status": "COMPLETE_RETAINED",
+      "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+      "bundle_duplicate_count": 1,
+      "duplicate_status": "DECLARED_UNIQUE_BUNDLE_DIGEST",
+      "source_github_provenance": {
+        "oid": "7150d711f127a4aeaecf519c65b91f88fda64447",
+        "messageHeadline": "fix: accept canonical numeric translation cue ids",
+        "associatedPullRequests": {
+          "nodes": [
+            {
+              "number": 198,
+              "url": "https://github.com/Yurielo/integra/pull/198",
+              "state": "MERGED"
+            }
+          ]
+        }
+      },
+      "representative_executable_stat": {
+        "device": 16777233,
+        "inode": 38140905,
+        "nlink": 1,
+        "size": 450072
+      },
+      "physical_shared_extents": "NOT_MEASURED"
+    },
+    {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-e13b57a839bb722fb10cb7d46295ae58e77f4641bfacc1226147eedc28df4277/dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
+      "candidate_id": "candidate-v1-e13b57a839bb722fb10cb7d46295ae58e77f4641bfacc1226147eedc28df4277",
+      "bundle_digest": "dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
+      "manifest_digest": "6dfdef7b11a2b0014aed9e67f285281abbdc979970c556b4d4db2053cc4189c9",
+      "source_commit": "e23aa21e085fba8fbf664f8eb517d4460baffed8",
+      "build_timestamp": "2026-09-30T19:29:25+03:00",
+      "archive_modified_at": "2026-09-30T16:32:00.571746Z",
+      "logical_app_size_bytes": 2201540153,
+      "lifecycle_status": "COMPLETE_RETAINED",
+      "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+      "bundle_duplicate_count": 7,
+      "duplicate_status": "DECLARED_BUNDLE_DIGEST_REPEATED_RETAINED",
+      "source_github_provenance": {
+        "associatedPullRequests": {
+          "nodes": [
+            {
+              "number": 206,
+              "url": "https://github.com/Yurielo/integra/pull/206",
+              "state": "OPEN"
+            }
+          ]
+        },
+        "binding": "LOCAL_ISSUE_205_BRANCH_PENDING_PUSH"
+      },
+      "representative_executable_stat": {
+        "device": 16777233,
+        "inode": 43309454,
+        "nlink": 1,
+        "size": 476424
+      },
+      "physical_shared_extents": "NOT_MEASURED"
+    },
+    {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-e5de327bd01cd38dd6f737ad03ff10dcf5e313e6f4aaaa07788cd0261f394779/25522c028bc6f6bd720e1178a2abf8ce86c5d28b279a67aeb61b0588466cbd74",
+      "candidate_id": "candidate-v1-e5de327bd01cd38dd6f737ad03ff10dcf5e313e6f4aaaa07788cd0261f394779",
+      "bundle_digest": "25522c028bc6f6bd720e1178a2abf8ce86c5d28b279a67aeb61b0588466cbd74",
+      "manifest_digest": "752fd9d54c98f80ebd0a074d4ac6f64494b17ee0c489813e2ba6497584a446cf",
+      "source_commit": "3802f61c1e0ef04426137b79ce09fd79df4e5efc",
+      "build_timestamp": "2026-09-28T22:06:28+03:00",
+      "archive_modified_at": "2026-09-28T20:15:38.275035Z",
+      "logical_app_size_bytes": 2201624017,
+      "lifecycle_status": "COMPLETE_RETAINED",
+      "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+      "bundle_duplicate_count": 1,
+      "duplicate_status": "DECLARED_UNIQUE_BUNDLE_DIGEST",
+      "source_github_provenance": {
+        "oid": "3802f61c1e0ef04426137b79ce09fd79df4e5efc",
+        "messageHeadline": "feat: add confirmed folder source discovery",
+        "associatedPullRequests": {
+          "nodes": [
+            {
+              "number": 208,
+              "url": "https://github.com/Yurielo/integra/pull/208",
+              "state": "MERGED"
+            }
+          ]
+        }
+      },
+      "representative_executable_stat": {
+        "device": 16777233,
+        "inode": 41150280,
+        "nlink": 1,
+        "size": 496760
+      },
+      "physical_shared_extents": "NOT_MEASURED"
+    },
+    {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-ec1ae4eaccc5a2af225490135dc6385920c5f26ee0433059311be9074f6a2e57/4794bca8031cf6ff0d6a8c019e5492646604ba9e66b3e591167c0c9e63929ffd",
+      "candidate_id": "candidate-v1-ec1ae4eaccc5a2af225490135dc6385920c5f26ee0433059311be9074f6a2e57",
+      "bundle_digest": "4794bca8031cf6ff0d6a8c019e5492646604ba9e66b3e591167c0c9e63929ffd",
+      "manifest_digest": "df330c430ff6862f97d7db12d6bcc0362b3241b80989a7ec1935372e7fa2a7df",
+      "source_commit": "3576de15c915dba90ac8cff30e3f18a47ed858a8",
+      "build_timestamp": "2026-09-27T15:38:59Z",
+      "archive_modified_at": "2026-09-27T15:40:06.445890Z",
+      "logical_app_size_bytes": 2201525299,
+      "lifecycle_status": "COMPLETE_RETAINED",
+      "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+      "bundle_duplicate_count": 1,
+      "duplicate_status": "DECLARED_UNIQUE_BUNDLE_DIGEST",
+      "source_github_provenance": {
+        "oid": "3576de15c915dba90ac8cff30e3f18a47ed858a8",
+        "messageHeadline": "feat: persist user-facing ASR diagnostics",
+        "associatedPullRequests": {
+          "nodes": [
+            {
+              "number": 197,
+              "url": "https://github.com/Yurielo/integra/pull/197",
+              "state": "MERGED"
+            }
+          ]
+        }
+      },
+      "representative_executable_stat": {
+        "device": 16777233,
+        "inode": 37948962,
+        "nlink": 1,
+        "size": 448552
+      },
+      "physical_shared_extents": "NOT_MEASURED"
+    },
+    {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-f9ef07f48ff155645239f9c72b454732f53fecabdbf9379ad4d25b1a5acbdc9a/448e5ee02ed22c2c77837b25934278750ea9a4a08a9d7f02e70c372886a83d7a",
+      "candidate_id": "candidate-v1-f9ef07f48ff155645239f9c72b454732f53fecabdbf9379ad4d25b1a5acbdc9a",
+      "bundle_digest": "448e5ee02ed22c2c77837b25934278750ea9a4a08a9d7f02e70c372886a83d7a",
+      "manifest_digest": "5f4de8d844aaf6ba42c2839b8462f79c0e9862b09ec6e513f8ec9b327fc7c40f",
+      "source_commit": "5635bf1573e642c041ade4ad888fb79e5f5f6889",
+      "build_timestamp": "2026-09-26T22:22:51Z",
+      "archive_modified_at": "2026-09-26T22:25:04.644040Z",
+      "logical_app_size_bytes": 2201500380,
+      "lifecycle_status": "COMPLETE_RETAINED",
+      "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+      "bundle_duplicate_count": 4,
+      "duplicate_status": "DECLARED_BUNDLE_DIGEST_REPEATED_RETAINED",
+      "source_github_provenance": {
+        "oid": "5635bf1573e642c041ade4ad888fb79e5f5f6889",
+        "messageHeadline": "test: skip local macOS rebuild without pinned runtimes",
+        "associatedPullRequests": {
+          "nodes": [
+            {
+              "number": 194,
+              "url": "https://github.com/Yurielo/integra/pull/194",
+              "state": "MERGED"
+            }
+          ]
+        }
+      },
+      "representative_executable_stat": {
+        "device": 16777233,
+        "inode": 37619609,
+        "nlink": 1,
+        "size": 431800
+      },
+      "physical_shared_extents": "NOT_MEASURED"
+    }
+  ],
+  "captured_at": "2026-09-30T16:33:29.756287+00:00",
+  "additional_copies": [
+    {
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/retained/candidate-v1-2fe375cc31b3a57d74ad0f994894bd610442deae3adfff033cdc5f3cf400fcd3/47befb29a6c221db7cb79262fc949f29248095e31dceba7fc4d46e78ab06c39e/Integra.app",
+      "owner_uid": 501,
+      "device": 16777233,
+      "inode": 36959435,
+      "birth_time": 1790375303.0294442,
+      "modified_time": 1790375303.0294442,
+      "classification": "RETAINED_CANONICAL",
+      "candidate_id": "candidate-v1-2fe375cc31b3a57d74ad0f994894bd610442deae3adfff033cdc5f3cf400fcd3",
+      "bundle_digest": "47befb29a6c221db7cb79262fc949f29248095e31dceba7fc4d46e78ab06c39e",
+      "source_commit": "2e2403ac7ae41c2104371902b3c56a0319dfe4ff",
+      "build_timestamp": "2026-09-25T22:29:30Z",
+      "build_command": {
+        "identity": "scripts/build_macos_app.sh",
+        "path": "scripts/build_macos_app.sh",
+        "script_sha256": "f2c7577b3afcde75e00828e8a9d0303a9370eac517902d7c49a87cce65237623"
+      },
+      "allocated_kib": 2219940
+    },
+    {
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/retained/candidate-v1-65bf72d1262146c9137aca433b51ae3974d98bc4c8ed37042db13b46e0318a1d/044594f1a632f1c140af28bb7de8e4acf782daca9863d84b9c5d77edb731fdf8/Integra.app",
+      "owner_uid": 501,
+      "device": 16777233,
+      "inode": 36917008,
+      "birth_time": 1790375303.0294442,
+      "modified_time": 1790375303.0294442,
+      "classification": "RETAINED_CANONICAL",
+      "candidate_id": "candidate-v1-65bf72d1262146c9137aca433b51ae3974d98bc4c8ed37042db13b46e0318a1d",
+      "bundle_digest": "044594f1a632f1c140af28bb7de8e4acf782daca9863d84b9c5d77edb731fdf8",
+      "source_commit": "ba94b39ac75517f6f5fb485e5a0fb93927895e40",
+      "build_timestamp": "2026-09-23T19:27:27Z",
+      "build_command": {
+        "identity": "scripts/build_macos_app.sh",
+        "path": "scripts/build_macos_app.sh",
+        "script_sha256": "f2c7577b3afcde75e00828e8a9d0303a9370eac517902d7c49a87cce65237623"
+      },
+      "allocated_kib": 2219920
+    },
+    {
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Recovery Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app",
+      "owner_uid": 501,
+      "device": 16777233,
+      "inode": 38745356,
+      "birth_time": 1790546263.3838844,
+      "modified_time": 1790546263.3838844,
+      "classification": "PROTECTED_PENDING_CANONICAL_OR_RETENTION_AUTHORITY",
+      "candidate_id": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583",
+      "bundle_digest": "2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8",
+      "source_commit": "9f7122bb1d823e82db93eaede08e6a90c98775b6",
+      "build_timestamp": "2026-09-27T19:45:07Z",
+      "build_command": {
+        "identity": "scripts/build_macos_app.sh",
+        "path": "scripts/build_macos_app.sh",
+        "script_sha256": "ad81f7a08a2fbcb93b57788e64d2f028697f7f5f086bb8fa75e9eac758dc4507"
+      },
+      "allocated_kib": 2221520
+    },
+    {
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive Recovery/candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173/c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b/Integra.app",
+      "owner_uid": 501,
+      "device": 16777233,
+      "inode": 41528445,
+      "birth_time": 1790607254.6514516,
+      "modified_time": 1790607254.6514516,
+      "classification": "PROTECTED_PENDING_CANONICAL_OR_RETENTION_AUTHORITY",
+      "candidate_id": "candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173",
+      "bundle_digest": "c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b",
+      "source_commit": "ac954f85858962345402f4649be5b9a1e8c3e0dd",
+      "build_timestamp": "2026-09-28T17:51:26+03:00",
+      "build_command": {
+        "identity": "scripts/build_macos_app.sh",
+        "path": "scripts/build_macos_app.sh",
+        "script_sha256": "ad81f7a08a2fbcb93b57788e64d2f028697f7f5f086bb8fa75e9eac758dc4507"
+      },
+      "allocated_kib": 2221624
+    },
+    {
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/pilot-2fe375-original/Integra.app",
+      "owner_uid": 501,
+      "device": 16777233,
+      "inode": 36848034,
+      "birth_time": 1790375303.0294442,
+      "modified_time": 1790375303.0294442,
+      "classification": "PROTECTED_PENDING_CANONICAL_OR_RETENTION_AUTHORITY",
+      "candidate_id": "candidate-v1-2fe375cc31b3a57d74ad0f994894bd610442deae3adfff033cdc5f3cf400fcd3",
+      "bundle_digest": "47befb29a6c221db7cb79262fc949f29248095e31dceba7fc4d46e78ab06c39e",
+      "source_commit": "2e2403ac7ae41c2104371902b3c56a0319dfe4ff",
+      "build_timestamp": "2026-09-25T22:29:30Z",
+      "build_command": {
+        "identity": "scripts/build_macos_app.sh",
+        "path": "scripts/build_macos_app.sh",
+        "script_sha256": "f2c7577b3afcde75e00828e8a9d0303a9370eac517902d7c49a87cce65237623"
+      },
+      "allocated_kib": 2219940
+    },
+    {
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/recovered-current-65bf72/Integra.app",
+      "owner_uid": 501,
+      "device": 16777233,
+      "inode": 36881834,
+      "birth_time": 1790375303.0294442,
+      "modified_time": 1790375303.0294442,
+      "classification": "PROTECTED_PENDING_CANONICAL_OR_RETENTION_AUTHORITY",
+      "candidate_id": "candidate-v1-65bf72d1262146c9137aca433b51ae3974d98bc4c8ed37042db13b46e0318a1d",
+      "bundle_digest": "044594f1a632f1c140af28bb7de8e4acf782daca9863d84b9c5d77edb731fdf8",
+      "source_commit": "ba94b39ac75517f6f5fb485e5a0fb93927895e40",
+      "build_timestamp": "2026-09-23T19:27:27Z",
+      "build_command": {
+        "identity": "scripts/build_macos_app.sh",
+        "path": "scripts/build_macos_app.sh",
+        "script_sha256": "f2c7577b3afcde75e00828e8a9d0303a9370eac517902d7c49a87cce65237623"
+      },
+      "allocated_kib": 2219920
+    },
+    {
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Candidate Builds/topic-translation-47be46d/Integra.app",
+      "owner_uid": 501,
+      "device": 16777233,
+      "inode": 39503493,
+      "birth_time": 1790583941.1077626,
+      "modified_time": 1790583941.107904,
+      "classification": "PROTECTED_PENDING_CANONICAL_OR_RETENTION_AUTHORITY",
+      "candidate_id": "candidate-v1-14b3c10e4d779ff8b5a520bf15e2b7087673aec2cd0abd25aac4e1d0ded77892",
+      "bundle_digest": "ab53369d4d46fc8a4dece0b8e0f777f5017731b2256ff34ecb27738a849d8c94",
+      "source_commit": "47be46d8bfffb94e952b2a45e31d527ddd3b8e73",
+      "build_timestamp": "2026-09-28T11:13:07+03:00",
+      "build_command": {
+        "identity": "scripts/build_macos_app.sh",
+        "path": "scripts/build_macos_app.sh",
+        "script_sha256": "ad81f7a08a2fbcb93b57788e64d2f028697f7f5f086bb8fa75e9eac758dc4507"
+      },
+      "allocated_kib": 2219980
+    },
+    {
+      "path": "/Users/yurielokhin/AI/runtimes/integra/current-build/Integra.app",
+      "owner_uid": 501,
+      "device": 16777233,
+      "inode": 31168908,
+      "birth_time": 1789810913.3562431,
+      "modified_time": 1789810913.3562803,
+      "classification": "UNKNOWN_RUNTIME_PROTECTED",
+      "identity_status": "NO_EMBEDDED_MANIFEST",
+      "allocated_kib": 2219868
+    },
+    {
+      "path": "/private/tmp/integra-excel07-candidate/Integra.app",
+      "owner_uid": 501,
+      "device": 16777233,
+      "inode": 41860148,
+      "birth_time": 1790700871.2403657,
+      "modified_time": 1790700871.240396,
+      "classification": "SMALL_LEGACY_SKELETON_PRESERVED",
+      "identity_status": "NO_EMBEDDED_MANIFEST",
+      "allocated_kib": 7492
+    },
+    {
+      "path": "/private/tmp/integra-excel07-source-current/Integra.app",
+      "owner_uid": 501,
+      "device": 16777233,
+      "inode": 41980913,
+      "birth_time": 1790702064.5128946,
+      "modified_time": 1790702064.5129225,
+      "classification": "PROTECTED_PENDING_CANONICAL_OR_RETENTION_AUTHORITY",
+      "candidate_id": "candidate-v1-e594978870ae4569f1fac1c67f3b4a07a43e0d29d64026d8c44226bf1bf95ecb",
+      "bundle_digest": "d05c0863dcb4a205a3c0fd4e4787e8b15f70a17058335f09f46236bda64ca4ba",
+      "source_commit": "2cc003f83e15800d46fe41164fea6aba44151e5e",
+      "build_timestamp": "2026-09-29T20:13:56+03:00",
+      "build_command": {
+        "identity": "scripts/build_macos_app.sh",
+        "path": "scripts/build_macos_app.sh",
+        "script_sha256": "ad81f7a08a2fbcb93b57788e64d2f028697f7f5f086bb8fa75e9eac758dc4507"
+      },
+      "allocated_kib": 2220084
+    },
+    {
+      "path": "/private/tmp/integra-excel05-zoom-candidate-b53d3d2/Integra.app",
+      "owner_uid": 501,
+      "device": 16777233,
+      "inode": 41586602,
+      "birth_time": 1790682512.9994032,
+      "modified_time": 1790682512.9994342,
+      "classification": "PROTECTED_PENDING_CANONICAL_OR_RETENTION_AUTHORITY",
+      "candidate_id": "candidate-v1-132cff2db4e0a5aa98b04aafab4f3a3975cbb26b28496529bd3fc24f2fbaf8c6",
+      "bundle_digest": "6d88cff3107c0790d5306d6251cfca6bc3419b0fbbab5c2360ce241323f90d46",
+      "source_commit": "b53d3d2f9f76f593d7bbaecb54f662e68d3ac54c",
+      "build_timestamp": "2026-09-29T14:48:16+03:00",
+      "build_command": {
+        "identity": "scripts/build_macos_app.sh",
+        "path": "scripts/build_macos_app.sh",
+        "script_sha256": "ad81f7a08a2fbcb93b57788e64d2f028697f7f5f086bb8fa75e9eac758dc4507"
+      },
+      "allocated_kib": 2220068
+    },
+    {
+      "path": "/private/tmp/integra-excel05-zoom-candidate-179bd79/Integra.app",
+      "owner_uid": 501,
+      "device": 16777233,
+      "inode": 41585783,
+      "birth_time": 1790682482.742476,
+      "modified_time": 1790682482.7425072,
+      "classification": "SMALL_LEGACY_SKELETON_PRESERVED",
+      "identity_status": "NO_EMBEDDED_MANIFEST",
+      "allocated_kib": 0
+    },
+    {
+      "path": "/private/tmp/integra-excel07-build/Integra.app",
+      "owner_uid": 501,
+      "device": 16777233,
+      "inode": 41859634,
+      "birth_time": 1790700794.3720307,
+      "modified_time": 1790700794.372064,
+      "classification": "SMALL_LEGACY_SKELETON_PRESERVED",
+      "identity_status": "NO_EMBEDDED_MANIFEST",
+      "allocated_kib": 7492
+    },
+    {
+      "path": "/private/tmp/integra-excel07-final-current/Integra.app/Integra.app",
+      "owner_uid": 501,
+      "device": 16777233,
+      "inode": 42085139,
+      "birth_time": 1790702634.619893,
+      "modified_time": 1790702634.6199207,
+      "classification": "BYTE_VERIFIED_ARCHIVED_DUPLICATE_CLEANUP_ELIGIBLE",
+      "candidate_id": "candidate-v1-136e1a5b80644c20a4e7f9ecf66741ab069f88d66418123e6e85b409bfc714b8",
+      "bundle_digest": "d05c0863dcb4a205a3c0fd4e4787e8b15f70a17058335f09f46236bda64ca4ba",
+      "source_commit": "c04a45635adbac7b56c3204acd7042363ba57ea4",
+      "build_timestamp": "2026-09-29T20:23:21+03:00",
+      "build_command": {
+        "identity": "scripts/build_macos_app.sh",
+        "path": "scripts/build_macos_app.sh",
+        "script_sha256": "ad81f7a08a2fbcb93b57788e64d2f028697f7f5f086bb8fa75e9eac758dc4507"
+      },
+      "allocated_kib": 2220084,
+      "payload_verification": "PASS_20260930",
+      "active_writer_check": "LSOF_EXIT_1_NO_ROWS_20260930"
+    },
+    {
+      "path": "/private/tmp/integra-excel07-release/Integra.app",
+      "owner_uid": 501,
+      "device": 16777233,
+      "inode": 41866743,
+      "birth_time": 1790701424.8893297,
+      "modified_time": 1790701424.8893654,
+      "classification": "PROTECTED_PENDING_CANONICAL_OR_RETENTION_AUTHORITY",
+      "candidate_id": "candidate-v1-0020e329657e0719d3725e791c7f8cca42301b0092e41f46b6f19e637dc83d4d",
+      "bundle_digest": "d05c0863dcb4a205a3c0fd4e4787e8b15f70a17058335f09f46236bda64ca4ba",
+      "source_commit": "4161ec1dd5eeef9f4cfc6b8df02e6af577d9ec87",
+      "build_timestamp": "2026-09-29T19:33:16+03:00",
+      "build_command": {
+        "identity": "scripts/build_macos_app.sh",
+        "path": "scripts/build_macos_app.sh",
+        "script_sha256": "ad81f7a08a2fbcb93b57788e64d2f028697f7f5f086bb8fa75e9eac758dc4507"
+      },
+      "allocated_kib": 2220084
+    },
+    {
+      "path": "/private/tmp/integra-excel22-topic-translation",
+      "classification": "ACTIVE_PR_204_SOURCE_WORKTREE_PROTECTED",
+      "github": "https://github.com/Yurielo/integra/pull/204",
+      "head": "93a080dcc9d1cd6509b56905b99e1593004df8b1"
+    }
+  ],
+  "controlled_builds": {
+    "source_commits": [
+      "2261dea",
+      "b54d491",
+      "e23aa21"
+    ],
+    "created_archives": 3,
+    "retained_reason": "EXACT_SOURCE_CANDIDATE_EVIDENCE_REQUIRED_BY_ACCEPTED_POLICY",
+    "logical_new_app_bytes": 6604620459,
+    "remaining_owned_roots": 0
+  }
+}

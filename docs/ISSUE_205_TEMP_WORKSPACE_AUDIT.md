@@ -162,6 +162,91 @@ deadline and exited with the exact test process.
 
 ## Evidence contract
 
+## Follow-up: archive provenance and atomic disk admission — 2026-09-30
+
+Final source: `e23aa21e085fba8fbf664f8eb517d4460baffed8`.
+Independent QA/review: PASS for that exact source. The independent two-process
+admission check used different roots on the same volume and a budget sufficient
+for only one reservation: exactly one process was admitted. Injected marker
+failure, post-spawn registration failure, archive cancellation and first-root
+SIGKILL/retry cases now remove their owned roots and terminate their writers.
+The new cross-base stale recovery regression verifies recovery through the
+volume ledger even after the destination ancestor changes.
+
+- Final full supported suite: **838 tests, 746 passed, 92 skipped, zero failures**.
+- `check_agents.py`, focused regression checks and `git diff --check`: PASS.
+- Three controlled sequential full Candidate builds on the follow-up sources
+  `2261dea`, `b54d491`, and final `e23aa21` completed with byte-verified archives
+  and zero remaining owned build/staging roots. The previous two sequential and
+  two concurrent full-build measurements above remain historical evidence for
+  the original lifecycle repair; the new admission race was independently
+  verified with bounded synthetic processes, not full concurrent app builds.
+- Final Candidate: `candidate-v1-e13b57a839bb722fb10cb7d46295ae58e77f4641bfacc1226147eedc28df4277`,
+  bundle `dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204`.
+  Its archived manifest binds a clean final source commit and tree.
+
+### Inventory and growth accounting
+
+`docs/evidence/ISSUE_205_ARCHIVE_INVENTORY_20260930.json` records every top-level
+completed archive, source commit and associated GitHub PR where available,
+manifest/receipt identity, dates, logical bytes, duplicate groups and sample
+inode/link counts. It also records retained/recovery/runtime copies and legacy
+tmp roots. The final inventory has **25 top-level completed Candidate archives,
+14 declared bundle digests**, plus two historical canonical Candidates under
+`retained` with two additional digests. Initial top-level inventory was 22/14.
+The three controlled source revisions each required actual Candidate bytes
+under the accepted retention contract: this added 6,604,620,459 logical app
+bytes (about 6.15 GiB; filesystem allocation is greater). They are intentionally
+accounted as permanent retained growth, not a temporary-cleanup leak.
+
+After these builds, the top-level digest groups contain **24,217,048,837 logical
+bytes (22.55 GiB)** beyond one copy per digest. This is a policy-decision upper
+bound, not an authorized reclaim estimate: distinct Candidate identities and
+some excluded bytecode files differ. Sample executables have separate inodes
+and link count one; APFS shared extents were not measured.
+
+### Exact tmp-root conclusion and SAFE CLEANUP PLAN
+
+All four legacy app manifests bind the old builder hash `ad81f7…` and September
+29 timestamps, preceding the September 30 repair. The fifth full-size root is
+the still-open PR #204 source worktree (`93a080d…`), not an owned disposable run.
+The new lifecycle cannot infer ownership from an `integra-excel*` name.
+
+- `integra-excel07-final-current` contains a nested app. Its full computed
+  bundle digest equals `d05c0863…`; its exact Candidate `136e1a5…` is retained in
+  a separately reverified COMPLETE archive. Bounded `lsof +D` returned exit 1
+  with zero rows. **Cleanup-eligible: about 2.12 GiB**, with a fresh no-writer
+  check immediately before any deletion. This audit did not delete it.
+- `excel05-zoom-candidate-b53d3d2` has no exact Candidate archive; preserve.
+- `excel07-source-current` and `excel07-release` share a declared bundle digest
+  with archives but their own Candidate identities are not archived; preserve
+  until provenance/retention authority is resolved.
+- `excel22-topic-translation` is active PR #204; preserve.
+- Three additional old skeletons total about 14.6 MiB and lack manifests; they
+  are recorded separately and were not mistaken for another full-size leak.
+- Canonical CURRENT, historical retained Candidates, installed/runtime copies,
+  user projects and source checkouts remain protected. The older runtime is at
+  `/Users/yurielokhin/AI/runtimes/integra/current-build`, with no embedded
+  Candidate manifest. Its consumers and runtime identity remain unproven.
+- Top-level repeated bundles (~22.55 GiB logical), the two historical recovery
+  app copies (~4.24 GiB allocated), and the three recovery/review duplicates
+  (~6.37 GiB allocated) need an explicit retention decision. No archive count,
+  TTL, retirement authority or byte-sharing implementation was invented.
+
+The policy gap and class-based plan are also documented in
+`docs/ISSUE_205_ARCHIVE_RETENTION_AUDIT.md`. Proposed owner decision: define
+canonical/current protection, review-pending protection, historical-review
+retirement authority and an explicit count/age bound, and decide whether equal
+verified bundles may share an immutable byte archive while retaining each
+Candidate's metadata and evidence. Policy-controlled eviction must remain
+fail-closed when any class, reference, active writer or byte-integrity check is
+unproven. Until that decision, automatic cleanup applies only to marked
+disposable workspaces; repeated archive publication remains permanent growth.
+
+PR #206 remains OPEN / AWAITING_OWNER_ACCEPTANCE. This follow-up does not accept
+the proposal, change CURRENT, merge, promote or deploy. Final governance and
+GitHub status are checked on the renewed declaration HEAD.
+
 `scripts/verify_temp_workspace_lifecycle.py` runs two sequential full builds,
 two concurrent full builds, artificial failure and timeout, and the release
 path from a disposable owner root. It writes disk measurements and the list of
