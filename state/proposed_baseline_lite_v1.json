@@ -2,7 +2,8 @@
   "allowed_overlay_paths": [
     "docs/ISSUE_205_TEMP_WORKSPACE_AUDIT.md",
     "docs/evidence/ISSUE_205_CANDIDATE_EVIDENCE.json",
-    "docs/evidence/ISSUE_205_CANDIDATE_MANIFEST.json"
+    "docs/evidence/ISSUE_205_CANDIDATE_MANIFEST.json",
+    "docs/evidence/ISSUE_205_ARCHIVE_INVENTORY_20260930.json"
   ],
   "artifact_type": "integra.proposed_product_baseline",
   "base_current_id": "current-v2-2b779255c5b57a7b6602f153ea13c497bf738a18a84412773f8b6ed5261fbfcc",
@@ -12,9 +13,9 @@
   },
   "candidate": {
     "bundle_digest": "dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
-    "candidate_id": "candidate-v1-83a2fe1744d4ba79e2a0cb9321ee15a860a56216dc028d15bc4a0a724d731877",
-    "identity_sha256": "83a2fe1744d4ba79e2a0cb9321ee15a860a56216dc028d15bc4a0a724d731877",
-    "manifest_digest": "c1114881f19022cd834f86ec8cb84700de102ee72c1fc0552e5de3b98b97d061"
+    "candidate_id": "candidate-v1-e13b57a839bb722fb10cb7d46295ae58e77f4641bfacc1226147eedc28df4277",
+    "identity_sha256": "e13b57a839bb722fb10cb7d46295ae58e77f4641bfacc1226147eedc28df4277",
+    "manifest_digest": "6dfdef7b11a2b0014aed9e67f285281abbdc979970c556b4d4db2053cc4189c9"
   },
   "delta": [
     {
@@ -31,15 +32,15 @@
   "evidence": {
     "candidate_evidence": {
       "path": "docs/evidence/ISSUE_205_CANDIDATE_EVIDENCE.json",
-      "sha256": "380485dceac33dc68dcb78bae38b54f42ecb58e37a786d22e46f791f34e48e67"
+      "sha256": "657d761c19ba4c626f9b81415268e878e3d8e91ac5beeba99d66f24b68afa454"
     },
     "candidate_manifest": {
       "path": "docs/evidence/ISSUE_205_CANDIDATE_MANIFEST.json",
-      "sha256": "c1114881f19022cd834f86ec8cb84700de102ee72c1fc0552e5de3b98b97d061"
+      "sha256": "6dfdef7b11a2b0014aed9e67f285281abbdc979970c556b4d4db2053cc4189c9"
     },
     "report": {
       "path": "docs/ISSUE_205_TEMP_WORKSPACE_AUDIT.md",
-      "sha256": "fc08683c667bc7f238aee22f7fa89ef1fd40e3c7db0e2d2299f8f79e1d8fb27d"
+      "sha256": "bc231042621c6fdcb366537242c8b9c75902c4514ef87fd9774aa0b0ffa897aa"
     }
   },
   "gates": [
@@ -52,22 +53,27 @@
       "evidence_ref": "docs/evidence/ISSUE_205_CANDIDATE_EVIDENCE.json",
       "name": "candidate-archive-byte-integrity",
       "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/ISSUE_205_TEMP_WORKSPACE_AUDIT.md",
+      "name": "volume-admission-and-interrupted-stage-independent-review",
+      "result": "PASS"
     }
   ],
   "historical_test_successors": [],
   "intended_scope": {
-    "journey": "disposable macOS build, test and release workspace lifecycle",
+    "journey": "disposable macOS build/test/release and archive staging lifecycle; volume disk admission and retention audit",
     "wp": "GitHub Issue #205"
   },
   "owner_acceptance": null,
   "proposal_id": "proposal-issue-205-temp-workspace-lifecycle",
   "proposed_head": {
-    "commit_sha": "438e5d6931b899caa2a911233d9157ae22ba4a4e",
-    "tree_sha": "6519ca128681a8088cde74d2234e362446e7a9ca"
+    "commit_sha": "0f6ad12c3fb9ca44ac2473d39cfdd307b40bd4ce",
+    "tree_sha": "1dca30ed169761b8e97d6e2bcc50889a5649494e"
   },
   "proposed_source": {
-    "commit_sha": "3ee63658d65e0639408350f4130a43011f62e613",
-    "tree_sha": "5dfc663d65e9d8e698951f3de6654aeec0c11a7a"
+    "commit_sha": "e23aa21e085fba8fbf664f8eb517d4460baffed8",
+    "tree_sha": "c5cee3d7581c85c01ec13a7de5d91b8c83e752f3"
   },
   "schema_version": "1.0",
   "status": "PROPOSED_BASELINE_VALID"
