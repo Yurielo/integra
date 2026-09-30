@@ -19,9 +19,9 @@ import stat
 import sys
 import tempfile
 try:
-    from scripts import build_disk_admission as disk_admission
+    from scripts import temp_workspace_lifecycle as workspace_lifecycle
 except ModuleNotFoundError:
-    import build_disk_admission as disk_admission
+    import temp_workspace_lifecycle as workspace_lifecycle
 from datetime import datetime, timezone
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -286,7 +286,7 @@ def create_archive(app: Path, archive_root: Path, *, manifest: Path | None = Non
                    evidence: list[Path] | None = None, reserve_bytes: int = RESERVE_BYTES) -> dict:
     """Copy and verify a fresh immutable package; preserve partial attempts."""
     stage = None
-    reservation = None
+    stage_root = None
     try:
         app = _path(app)
         root = _path(archive_root, durable=True)
@@ -323,14 +323,21 @@ def create_archive(app: Path, archive_root: Path, *, manifest: Path | None = Non
         block = max(4096, os.statvfs(ancestor).f_frsize)
         required = sum(((item.get("size", 0) + block - 1) // block + 1) * block for item in planned)
         required += 1024 * 1024
-        reservation, _, _ = disk_admission.reserve(ancestor, required, reserve_bytes)
+        # Admission precedes even destination creation. Staging is on the
+        # destination volume, so publication remains an atomic rename.
+        stage_root, _ = workspace_lifecycle.create_workspace(
+            purpose='archive-stage', base=ancestor,
+            expected_bytes=required, reserve_bytes=reserve_bytes)
         destination.parent.mkdir(parents=True, exist_ok=True)
         _path(destination.parent, durable=True)
         parent = destination.parent
         while parent != ancestor:
             _sync_directory(parent.parent)
             parent = parent.parent
-        stage = Path(tempfile.mkdtemp(prefix=".incomplete-", dir=destination.parent))
+        # SIGKILL leaves a marked disposable root, conservatively reserved
+        # until a subsequent invocation reaps this existing volume ancestor.
+        stage = stage_root / 'payload'
+        stage.mkdir()
         shutil.copytree(app, stage / APP, symlinks=True, copy_function=shutil.copy2)
         shutil.copy2(retained_manifest, stage / MANIFEST_NAME, follow_symlinks=False)
         if evidence_entries:
@@ -361,16 +368,18 @@ def create_archive(app: Path, archive_root: Path, *, manifest: Path | None = Non
         _sync_directory(destination.parent)
         _sync_directory(root)
         return verify_archive(destination, identity)
-    except (OSError, ValueError, TypeError, KeyError, shutil.Error) as error:
+    except BaseException as error:
         # The stage belongs exclusively to this invocation and cannot qualify as
         # retention evidence. Leaving it behind would recreate the multi-GiB
         # temporary-archive leak that the workspace lifecycle prevents.
         if stage is not None and stage.exists():
             shutil.rmtree(stage)
+        if not isinstance(error, Exception):
+            raise
         raise ValueError(f"candidate archive creation failed: {error}") from error
     finally:
-        if reservation is not None:
-            disk_admission.release(ancestor, reservation)
+        if stage_root is not None and stage_root.exists():
+            workspace_lifecycle.cleanup_workspace(stage_root, reason='ARCHIVE_FINISHED', allow_live_owner=True)
 
 
 def main() -> None:

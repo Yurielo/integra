@@ -6,6 +6,7 @@ import sys
 import tempfile
 import time
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 
 
@@ -15,6 +16,43 @@ import temp_workspace_lifecycle as lifecycle  # noqa: E402
 
 
 class TempWorkspaceLifecycleTests(unittest.TestCase):
+    def test_failed_child_registration_terminates_process_before_cleanup(self):
+        children = []
+        original_spawn = subprocess.Popen
+        original_bind = lifecycle.disk_admission.bind
+        def spawn(*args, **kwargs):
+            child = original_spawn(*args, **kwargs)
+            children.append(child)
+            return child
+        def bind(*args, **kwargs):
+            if kwargs.get('process_group'):
+                raise ValueError('injected child registration failure')
+            return original_bind(*args, **kwargs)
+        with tempfile.TemporaryDirectory() as directory:
+            args = SimpleNamespace(purpose='child-failure', base=directory, expected_bytes=1,
+                                   reserve_bytes=0, timeout_seconds=5,
+                                   argv=[sys.executable, '-c', 'import time; time.sleep(30)'])
+            with patch.object(lifecycle.subprocess, 'Popen', side_effect=spawn), patch.object(
+                    lifecycle.disk_admission, 'bind', side_effect=bind):
+                with self.assertRaisesRegex(ValueError, 'registration failure'):
+                    lifecycle._run_owned_worker(args, {'pid': os.getpid(),
+                        'start_token': lifecycle._process_start_token(os.getpid())})
+            self.assertTrue(children)
+            self.assertTrue(all(child.poll() is not None for child in children))
+            self.assertEqual(list(Path(directory).glob('integra-owned-*')), [])
+
+    def test_failed_marker_creation_removes_unmarked_root_and_reservation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            with patch.object(lifecycle, '_atomic_json', side_effect=OSError('injected marker failure')):
+                with self.assertRaises(OSError):
+                    lifecycle.create_workspace(purpose='marker-failure', base=base,
+                                               expected_bytes=1, reserve_bytes=0)
+            self.assertEqual(list(base.glob('integra-owned-*')), [])
+            _, _, ledger = lifecycle.disk_admission._paths(base)
+            self.assertFalse(any(item.get('workspace', '').startswith(str(base))
+                                 for item in json.loads(ledger.read_text()).values()))
+
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.base = Path(self.temporary.name)

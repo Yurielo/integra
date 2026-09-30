@@ -21,7 +21,10 @@ import sys
 import tempfile
 import time
 import uuid
-import build_disk_admission as disk_admission
+try:
+    from scripts import build_disk_admission as disk_admission
+except ModuleNotFoundError:
+    import build_disk_admission as disk_admission
 
 
 MARKER = ".integra-owned-workspace.json"
@@ -154,29 +157,36 @@ def create_workspace(*, purpose: str, base: str | Path | None = None,
     reap_stale(base=root_base)
     with _reservation_lock(root_base):
         run_id, free, live = disk_admission.reserve(root_base, expected_bytes, reserve_bytes)
-        root = Path(tempfile.mkdtemp(prefix=f"integra-owned-{purpose}-", dir=root_base)).resolve(strict=True)
-        os.chmod(root, 0o700)
-        disk_admission.bind(root_base, run_id, workspace=root)
-        owner = {"pid": os.getpid(), "start_token": _process_start_token(os.getpid())}
-        if owner["start_token"] is None:
-            shutil.rmtree(root)
+        root = None
+        try:
+            root = Path(tempfile.mkdtemp(prefix=f"integra-owned-{purpose}-", dir=root_base)).resolve(strict=True)
+            os.chmod(root, 0o700)
+            disk_admission.bind(root_base, run_id, workspace=root)
+            owner = {"pid": os.getpid(), "start_token": _process_start_token(os.getpid())}
+            if owner["start_token"] is None:
+                raise ValueError("unable to establish owner process identity")
+            marker = {
+                "schema_version": SCHEMA,
+                "artifact_type": "integra.disposable_workspace",
+                "root": str(root),
+                "purpose": purpose,
+                "created_at": _now(),
+                "run_id": run_id,
+                "expected_bytes": expected_bytes,
+                "reserve_bytes": reserve_bytes,
+                "owner": owner,
+                "child": {},
+                "state": "CREATED",
+                "events": [{"at": _now(), "event": "CREATED", "free_bytes": free, "reserved_bytes": live}],
+            }
+            _atomic_json(_marker_path(root), marker)
+        except BaseException:
+            # No writer has been launched. This exact freshly created root is
+            # owned even if the marker could not be persisted.
+            if root is not None and root.exists():
+                shutil.rmtree(root)
             disk_admission.release(root_base, run_id)
-            raise ValueError("unable to establish owner process identity")
-        marker = {
-            "schema_version": SCHEMA,
-            "artifact_type": "integra.disposable_workspace",
-            "root": str(root),
-            "purpose": purpose,
-            "created_at": _now(),
-            "run_id": run_id,
-            "expected_bytes": expected_bytes,
-            "reserve_bytes": reserve_bytes,
-            "owner": owner,
-            "child": {},
-            "state": "CREATED",
-            "events": [{"at": _now(), "event": "CREATED", "free_bytes": free, "reserved_bytes": live}],
-        }
-        _atomic_json(_marker_path(root), marker)
+            raise
     return root, marker
 
 
@@ -292,9 +302,9 @@ def _run_owned_worker(args: argparse.Namespace, parent: dict) -> int:
         (root / "tmp").mkdir(mode=0o700)
         argv = args.argv[1:] if args.argv[:1] == ["--"] else args.argv
         child = subprocess.Popen(argv, cwd=root, env=environment, start_new_session=True)
-        disk_admission.bind(root.parent, marker["run_id"], process_group=child.pid)
         marker = _record(root, marker, "CHILD_STARTED", state="RUNNING", child={"pid": child.pid,
                          "start_token": _process_start_token(child.pid), "process_group": child.pid})
+        disk_admission.bind(root.parent, marker["run_id"], process_group=child.pid)
         deadline = time.monotonic() + args.timeout_seconds
         while True:
             if not _process_is_live(parent):
@@ -319,6 +329,12 @@ def _run_owned_worker(args: argparse.Namespace, parent: dict) -> int:
         marker = _record(root, marker, "CANCELLED", state="CANCELLED", signal=interrupted["signal"])
         outcome = 128
     finally:
+        if child is not None:
+            _terminate_group(child.pid)
+            try:
+                child.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                outcome = 1
         for item, handler in previous.items():
             signal.signal(item, handler)
         if root.exists():

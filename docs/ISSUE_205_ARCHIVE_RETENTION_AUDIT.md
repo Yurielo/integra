@@ -89,6 +89,10 @@ an owner, child process group or unresolved workspace exists; this deliberately
 overestimates peak use. Archive copies reserve their rounded planned allocation
 before staging. Existing archive reuse does not allocate another copy. Cleanup
 releases a workspace reservation only after its directory has been removed.
+Archive publication staging also uses marked disposable workspaces on the
+destination volume. An interrupted copy removes only its unpublished payload;
+an abruptly killed owner leaves a marked root for conservative stale reaping
+on the next archive invocation. Published COMPLETE archives remain protected.
 
 This mechanism bounds admission for cooperating Integra processes. Other apps
 can consume free space after admission; copy failures still fail closed and

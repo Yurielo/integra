@@ -50,6 +50,13 @@ class CandidateArchiveTests(unittest.TestCase):
     def _create(self, **kwargs):
         return archive.create_archive(self.app, self.destination, **kwargs)
 
+    def test_interrupted_copy_removes_only_unpublished_stage(self):
+        with patch.object(archive.shutil, 'copytree', side_effect=KeyboardInterrupt):
+            with self.assertRaises(KeyboardInterrupt):
+                self._create()
+        self.assertEqual(list(self.destination.rglob('.incomplete-*')), [])
+        self.assertTrue(self.app.exists())
+
     def _package(self):
         return Path(self._create()["archive_path"])
 
