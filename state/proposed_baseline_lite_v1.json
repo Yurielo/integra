@@ -1,8 +1,8 @@
 {
   "allowed_overlay_paths": [
+    "docs/ISSUE_205_TEMP_WORKSPACE_AUDIT.md",
     "docs/evidence/ISSUE_205_CANDIDATE_EVIDENCE.json",
-    "docs/evidence/ISSUE_205_CANDIDATE_MANIFEST.json",
-    "docs/evidence/ISSUE_205_REPEATED_BUILD_EVIDENCE.json"
+    "docs/evidence/ISSUE_205_CANDIDATE_MANIFEST.json"
   ],
   "artifact_type": "integra.proposed_product_baseline",
   "base_current_id": "current-v2-2b779255c5b57a7b6602f153ea13c497bf738a18a84412773f8b6ed5261fbfcc",
@@ -12,9 +12,9 @@
   },
   "candidate": {
     "bundle_digest": "dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
-    "candidate_id": "candidate-v1-ce1b1abbb4a9a6bb9350d38a24a948a8313077b7c663ea7e3ec8da5d7c5cf807",
-    "identity_sha256": "ce1b1abbb4a9a6bb9350d38a24a948a8313077b7c663ea7e3ec8da5d7c5cf807",
-    "manifest_digest": "19e42f3e67d7a09688186b0412b1a7b77119153f5799e36419688977d9eabed3"
+    "candidate_id": "candidate-v1-83a2fe1744d4ba79e2a0cb9321ee15a860a56216dc028d15bc4a0a724d731877",
+    "identity_sha256": "83a2fe1744d4ba79e2a0cb9321ee15a860a56216dc028d15bc4a0a724d731877",
+    "manifest_digest": "c1114881f19022cd834f86ec8cb84700de102ee72c1fc0552e5de3b98b97d061"
   },
   "delta": [
     {
@@ -31,20 +31,20 @@
   "evidence": {
     "candidate_evidence": {
       "path": "docs/evidence/ISSUE_205_CANDIDATE_EVIDENCE.json",
-      "sha256": "633eda52730302d45906c42bf596c2a93be8cf1462dc2a1ccb656beb48e8ee14"
+      "sha256": "380485dceac33dc68dcb78bae38b54f42ecb58e37a786d22e46f791f34e48e67"
     },
     "candidate_manifest": {
       "path": "docs/evidence/ISSUE_205_CANDIDATE_MANIFEST.json",
-      "sha256": "19e42f3e67d7a09688186b0412b1a7b77119153f5799e36419688977d9eabed3"
+      "sha256": "c1114881f19022cd834f86ec8cb84700de102ee72c1fc0552e5de3b98b97d061"
     },
     "report": {
       "path": "docs/ISSUE_205_TEMP_WORKSPACE_AUDIT.md",
-      "sha256": "7daadf69fad8d58d5a7eb8c9fd45de5f8da9b661569a59c569b723d6b4c282cc"
+      "sha256": "fc08683c667bc7f238aee22f7fa89ef1fd40e3c7db0e2d2299f8f79e1d8fb27d"
     }
   },
   "gates": [
     {
-      "evidence_ref": "docs/evidence/ISSUE_205_REPEATED_BUILD_EVIDENCE.json",
+      "evidence_ref": "docs/evidence/ISSUE_205_REPEATED_BUILD_EVIDENCE_20260930.json",
       "name": "repeated-owned-workspace-build-evidence",
       "result": "PASS"
     },
@@ -62,12 +62,12 @@
   "owner_acceptance": null,
   "proposal_id": "proposal-issue-205-temp-workspace-lifecycle",
   "proposed_head": {
-    "commit_sha": "64c9864bdc18de0a1048372a6cdd91b80c5a176e",
-    "tree_sha": "b320d1b3cf5f92859d8d3561f56bd8079e96f8cd"
+    "commit_sha": "438e5d6931b899caa2a911233d9157ae22ba4a4e",
+    "tree_sha": "6519ca128681a8088cde74d2234e362446e7a9ca"
   },
   "proposed_source": {
-    "commit_sha": "633f0415e68e6f5528b17ebeb344798a2c5d677d",
-    "tree_sha": "e3ebdd3a875bcbbd9b8465f83617abda6b1c2c90"
+    "commit_sha": "3ee63658d65e0639408350f4130a43011f62e613",
+    "tree_sha": "5dfc663d65e9d8e698951f3de6654aeec0c11a7a"
   },
   "schema_version": "1.0",
   "status": "PROPOSED_BASELINE_VALID"
