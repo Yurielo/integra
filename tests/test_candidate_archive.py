@@ -121,6 +121,23 @@ class CandidateArchiveTests(unittest.TestCase):
         self.assertEqual(archive.verify_archive(Path(first["archive_path"])), first)
         self.assertEqual(archive.verify_archive(Path(second["archive_path"])), second)
 
+    def test_metadata_inventory_reports_repeated_declared_bundle_without_pruning(self):
+        first = self._create()
+        self.identity["source"]["commit_sha"] = "c" * 40
+        self._manifest(timestamp="later build with identical payload")
+        second = self._create()
+        report = archive.inventory_archives(self.destination)
+        self.assertEqual(report["verification"], "METADATA_ONLY_NO_PAYLOAD_REHASH")
+        self.assertEqual(report["archive_count"], 2)
+        self.assertEqual(report["unique_bundle_count"], 1)
+        self.assertEqual(report["declared_duplicate_logical_bytes"], first["app_size_bytes"])
+        self.assertEqual({entry["candidate_id"] for entry in report["entries"]},
+                         {first["candidate_id"], second["candidate_id"]})
+        self.assertTrue(all(entry["lifecycle_status"] == "COMPLETE_RETAINED" for entry in report["entries"]))
+        self.assertTrue(all(entry["bundle_duplicate_count"] == 2 for entry in report["entries"]))
+        self.assertTrue(Path(first["archive_path"]).is_dir())
+        self.assertTrue(Path(second["archive_path"]).is_dir())
+
     def test_same_candidate_bundle_but_different_manifest_is_not_overwritten(self):
         first = self._create()
         self._manifest(timestamp="different metadata")

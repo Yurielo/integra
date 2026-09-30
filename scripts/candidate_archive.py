@@ -18,6 +18,7 @@ import shutil
 import stat
 import sys
 import tempfile
+from datetime import datetime, timezone
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -176,6 +177,74 @@ def verify_archive(archive: Path, expected: dict | None = None) -> dict:
         raise ValueError(f"archive verification failed: {error}") from error
 
 
+def inventory_archives(archive_root: Path) -> dict:
+    """Read archive metadata without rehashing multi-gigabyte payloads.
+
+    This is an audit tool, not a retention decision or integrity verification.
+    A repeated declared bundle digest identifies bytes that were verified equal
+    when their individual COMPLETE records were published, but it never makes
+    either archive disposable on its own.
+    """
+    root = _path(archive_root, durable=True)
+    if not root.is_dir():
+        raise ValueError("archive root must be an existing directory")
+    entries = []
+    for manifest_path in sorted(root.glob("candidate-v1-*/*/" + MANIFEST_NAME)):
+        archive = manifest_path.parent
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            validate_manifest(manifest)
+            receipt = json.loads((archive / COMPLETE).read_text(encoding="utf-8"))
+        except (OSError, TypeError, KeyError, json.JSONDecodeError) as error:
+            raise ValueError(f"archive metadata is unreadable: {archive}: {error}") from error
+        identity = {
+            "candidate_id": manifest["candidate_id"],
+            "bundle_digest": manifest["bundle"]["digest"],
+            "manifest_digest": _hash(manifest_path),
+        }
+        if (receipt.get("status") != "COMPLETE" or
+                any(receipt.get(key) != value for key, value in identity.items())):
+            raise ValueError(f"archive receipt does not bind its manifest identity: {archive}")
+        app_size = receipt.get("app_size_bytes")
+        if not isinstance(app_size, int) or app_size < 0:
+            raise ValueError(f"archive receipt has an invalid logical app size: {archive}")
+        info = archive.stat()
+        entries.append({
+            "archive_path": str(archive),
+            **identity,
+            "source_commit": manifest["identity"]["source"]["commit_sha"],
+            "build_timestamp": manifest["build"].get("timestamp"),
+            "archive_modified_at": datetime.fromtimestamp(info.st_mtime, timezone.utc).isoformat().replace("+00:00", "Z"),
+            "logical_app_size_bytes": app_size,
+            "lifecycle_status": "COMPLETE_RETAINED",
+            "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+        })
+    groups: dict[str, list[dict]] = {}
+    for entry in entries:
+        groups.setdefault(entry["bundle_digest"], []).append(entry)
+    duplicate_bytes = 0
+    for group in groups.values():
+        if len(group) <= 1:
+            continue
+        for entry in group:
+            entry["bundle_duplicate_count"] = len(group)
+            entry["duplicate_status"] = "DECLARED_BUNDLE_DIGEST_REPEATED_RETAINED"
+        duplicate_bytes += sum(entry["logical_app_size_bytes"] for entry in group) - group[0]["logical_app_size_bytes"]
+    for entry in entries:
+        entry.setdefault("bundle_duplicate_count", 1)
+        entry.setdefault("duplicate_status", "DECLARED_UNIQUE_BUNDLE_DIGEST")
+    return {
+        "schema_version": "1.0",
+        "artifact_type": "integra.candidate_archive_inventory",
+        "verification": "METADATA_ONLY_NO_PAYLOAD_REHASH",
+        "archive_root": str(root),
+        "archive_count": len(entries),
+        "unique_bundle_count": len(groups),
+        "declared_duplicate_logical_bytes": duplicate_bytes,
+        "entries": entries,
+    }
+
+
 def _write_json(path: Path, value: object) -> None:
     with path.open("xb") as handle:
         handle.write(canonical_bytes(value) + b"\n")
@@ -310,14 +379,18 @@ def main() -> None:
     verify.add_argument("archive", type=Path)
     for key in sorted(IDENTITY_KEYS):
         verify.add_argument("--" + key.replace("_", "-"))
+    inventory = commands.add_parser("inventory")
+    inventory.add_argument("--archive-root", type=Path, required=True)
     args = parser.parse_args()
     try:
         if args.command == "create":
             receipt = create_archive(args.app, args.archive_root, manifest=args.manifest,
                                      evidence=args.evidence, reserve_bytes=args.reserve_bytes)
-        else:
+        elif args.command == "verify":
             expected = {key: getattr(args, key) for key in IDENTITY_KEYS if getattr(args, key) is not None}
             receipt = verify_archive(args.archive, expected)
+        else:
+            receipt = inventory_archives(args.archive_root)
     except ValueError as error:
         parser.exit(1, f"{error}\n")
     print(json.dumps(receipt, sort_keys=True))

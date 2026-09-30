@@ -153,6 +153,16 @@ class TempWorkspaceLifecycleTests(unittest.TestCase):
         self.assertIn("unowned temporary directory", script)
         self.assertIn(".integra-owned-workspace.json", script)
 
+    def test_excel_named_unowned_temporary_candidate_is_rejected_before_build(self):
+        # These were the real recurrence names.  The rejection must happen
+        # before source-component checks or a multi-GiB app materialization.
+        target = Path("/private/tmp") / f"integra-excel-regression-{os.getpid()}"
+        result = subprocess.run([str(ROOT / "scripts" / "build_macos_app.sh"), str(target)],
+                                capture_output=True, text=True, timeout=10, check=False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("unowned temporary directory", result.stderr)
+        self.assertFalse((target / "Integra.app").exists())
+
     def test_macos_full_build_test_uses_authoritative_lifecycle(self):
         script = (ROOT / "scripts" / "test_macos_app.sh").read_text(encoding="utf-8")
         self.assertIn("temp_workspace_lifecycle.py", script)
