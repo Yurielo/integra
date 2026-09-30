@@ -18,6 +18,10 @@ import shutil
 import stat
 import sys
 import tempfile
+try:
+    from scripts import build_disk_admission as disk_admission
+except ModuleNotFoundError:
+    import build_disk_admission as disk_admission
 from datetime import datetime, timezone
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -282,6 +286,7 @@ def create_archive(app: Path, archive_root: Path, *, manifest: Path | None = Non
                    evidence: list[Path] | None = None, reserve_bytes: int = RESERVE_BYTES) -> dict:
     """Copy and verify a fresh immutable package; preserve partial attempts."""
     stage = None
+    reservation = None
     try:
         app = _path(app)
         root = _path(archive_root, durable=True)
@@ -317,9 +322,8 @@ def create_archive(app: Path, archive_root: Path, *, manifest: Path | None = Non
             ancestor = ancestor.parent
         block = max(4096, os.statvfs(ancestor).f_frsize)
         required = sum(((item.get("size", 0) + block - 1) // block + 1) * block for item in planned)
-        required += 1024 * 1024 + reserve_bytes
-        if shutil.disk_usage(ancestor).free < required:
-            raise ValueError(f"insufficient disk space: need {required} free bytes including reserve")
+        required += 1024 * 1024
+        reservation, _, _ = disk_admission.reserve(ancestor, required, reserve_bytes)
         destination.parent.mkdir(parents=True, exist_ok=True)
         _path(destination.parent, durable=True)
         parent = destination.parent
@@ -364,6 +368,9 @@ def create_archive(app: Path, archive_root: Path, *, manifest: Path | None = Non
         if stage is not None and stage.exists():
             shutil.rmtree(stage)
         raise ValueError(f"candidate archive creation failed: {error}") from error
+    finally:
+        if reservation is not None:
+            disk_admission.release(ancestor, reservation)
 
 
 def main() -> None:

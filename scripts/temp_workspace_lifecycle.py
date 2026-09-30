@@ -21,6 +21,7 @@ import sys
 import tempfile
 import time
 import uuid
+import build_disk_admission as disk_admission
 
 
 MARKER = ".integra-owned-workspace.json"
@@ -111,7 +112,15 @@ def _reservation_lock(base: Path):
     lock = base / LOCK
     descriptor = os.open(lock, os.O_CREAT | os.O_RDWR, 0o600)
     try:
-        fcntl.flock(descriptor, fcntl.LOCK_EX)
+        deadline = time.monotonic() + 30
+        while True:
+            try:
+                fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                if time.monotonic() >= deadline:
+                    raise ValueError("workspace reservation lock timed out")
+                time.sleep(.05)
         yield
     finally:
         fcntl.flock(descriptor, fcntl.LOCK_UN)
@@ -144,19 +153,14 @@ def create_workspace(*, purpose: str, base: str | Path | None = None,
     # This is a fallback for a killed supervisor, never the primary cleanup.
     reap_stale(base=root_base)
     with _reservation_lock(root_base):
-        live = _live_reservations(root_base)
-        free = shutil.disk_usage(root_base).free
-        required = expected_bytes + reserve_bytes + live
-        if free < required:
-            raise ValueError(
-                f"insufficient disk for owned workspace: need {required} bytes "
-                f"({expected_bytes} expected + {reserve_bytes} reserve + {live} live reservations), have {free}"
-            )
+        run_id, free, live = disk_admission.reserve(root_base, expected_bytes, reserve_bytes)
         root = Path(tempfile.mkdtemp(prefix=f"integra-owned-{purpose}-", dir=root_base)).resolve(strict=True)
         os.chmod(root, 0o700)
+        disk_admission.bind(root_base, run_id, workspace=root)
         owner = {"pid": os.getpid(), "start_token": _process_start_token(os.getpid())}
         if owner["start_token"] is None:
             shutil.rmtree(root)
+            disk_admission.release(root_base, run_id)
             raise ValueError("unable to establish owner process identity")
         marker = {
             "schema_version": SCHEMA,
@@ -164,7 +168,7 @@ def create_workspace(*, purpose: str, base: str | Path | None = None,
             "root": str(root),
             "purpose": purpose,
             "created_at": _now(),
-            "run_id": uuid.uuid4().hex,
+            "run_id": run_id,
             "expected_bytes": expected_bytes,
             "reserve_bytes": reserve_bytes,
             "owner": owner,
@@ -224,6 +228,7 @@ def cleanup_workspace(root: str | Path, *, reason: str, allow_live_owner: bool =
     _terminate_group(marker["child"].get("process_group"))
     marker = _record(path, marker, "CLEANUP", reason=reason)
     shutil.rmtree(path)
+    disk_admission.release(path.parent, marker["run_id"])
     return True
 
 
@@ -287,6 +292,7 @@ def _run_owned_worker(args: argparse.Namespace, parent: dict) -> int:
         (root / "tmp").mkdir(mode=0o700)
         argv = args.argv[1:] if args.argv[:1] == ["--"] else args.argv
         child = subprocess.Popen(argv, cwd=root, env=environment, start_new_session=True)
+        disk_admission.bind(root.parent, marker["run_id"], process_group=child.pid)
         marker = _record(root, marker, "CHILD_STARTED", state="RUNNING", child={"pid": child.pid,
                          "start_token": _process_start_token(child.pid), "process_group": child.pid})
         deadline = time.monotonic() + args.timeout_seconds
