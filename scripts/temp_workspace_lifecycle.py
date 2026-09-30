@@ -152,6 +152,13 @@ def create_workspace(*, purpose: str, base: str | Path | None = None,
     if expected_bytes < 0 or reserve_bytes < 0:
         raise ValueError("workspace byte reservations must be non-negative")
     root_base = _base(base)
+    for stale in disk_admission.stale_workspaces(root_base):
+        try:
+            cleanup_workspace(stale, reason="VOLUME_STALE_REAP", allow_live_owner=False)
+        except (OSError, ValueError, json.JSONDecodeError):
+            # A ledger path alone never authorizes deletion. Unknown markers
+            # and live children stay protected and conservatively reserved.
+            pass
     # Recover only previously marked work whose original supervisor is gone.
     # This is a fallback for a killed supervisor, never the primary cleanup.
     reap_stale(base=root_base)

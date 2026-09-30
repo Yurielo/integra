@@ -124,3 +124,14 @@ def bind(target, reservation_id, *, workspace=None, process_group=None):
 def release(target, reservation_id):
     with _ledger(target) as (_, records):
         records.pop(reservation_id, None)
+
+
+def stale_workspaces(target):
+    """Snapshot dead owners on this volume; caller must prove marker ownership.
+
+    Release the ledger lock before cleanup, which itself releases a lease.
+    A changed staging ancestor must not hide an interrupted archive copy.
+    """
+    with _ledger(target) as (_, records):
+        return [record['workspace'] for record in records.values()
+                if record.get('workspace') and _start(record['pid']) != record['start_token']]
