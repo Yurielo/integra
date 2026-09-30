@@ -1,12 +1,12 @@
 {
+  "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-83a2fe1744d4ba79e2a0cb9321ee15a860a56216dc028d15bc4a0a724d731877/dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
   "artifact_type": "integra.issue_205_candidate_evidence",
-  "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-ce1b1abbb4a9a6bb9350d38a24a948a8313077b7c663ea7e3ec8da5d7c5cf807/dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
   "bundle_digest": "dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
-  "candidate_id": "candidate-v1-ce1b1abbb4a9a6bb9350d38a24a948a8313077b7c663ea7e3ec8da5d7c5cf807",
-  "manifest_identity_sha256": "ce1b1abbb4a9a6bb9350d38a24a948a8313077b7c663ea7e3ec8da5d7c5cf807",
+  "candidate_id": "candidate-v1-83a2fe1744d4ba79e2a0cb9321ee15a860a56216dc028d15bc4a0a724d731877",
+  "manifest_identity_sha256": "83a2fe1744d4ba79e2a0cb9321ee15a860a56216dc028d15bc4a0a724d731877",
   "product_source": {
-    "commit_sha": "633f0415e68e6f5528b17ebeb344798a2c5d677d",
-    "tree_sha": "e3ebdd3a875bcbbd9b8465f83617abda6b1c2c90"
+    "commit_sha": "3ee63658d65e0639408350f4130a43011f62e613",
+    "tree_sha": "5dfc663d65e9d8e698951f3de6654aeec0c11a7a"
   },
   "status": "ARCHIVAL_BYTE_INTEGRITY_PASS"
 }
