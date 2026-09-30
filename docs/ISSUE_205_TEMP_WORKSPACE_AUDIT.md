@@ -143,18 +143,21 @@ deadline and exited with the exact test process.
 
 - Focused workspace lifecycle tests: 11 passed, including killed caller,
   killed child, SIGTERM, timeout, live/stale separation and reserve rejection.
-- Final full suite: 830 tests, 735 passed, 92 skipped, 3 failed. The same
-  three governance/CURRENT-drift failures reproduced on a clean checkout of
-  the unchanged PR #206 head, proving that this repair did not introduce them.
+- Final full suite with complete Git history and a renewed Candidate proposal:
+  830 tests, 738 passed, 92 skipped, zero failures.
 - `scripts/check_agents.py` and `git diff --check`: PASS.
-- `scripts/validate_governance.py`: FAIL on the same pre-existing CURRENT v2
-  governed byte drift and promotion source/overlay lineage. Historical
-  governance evidence was not rewritten to mask the failure. Merge remains
-  blocked until the Quality Gate and accepted baseline are reconciled under
-  their own authority.
+- `scripts/validate_governance.py`: PASS; CURRENT remains valid and the new
+  proposal is `PROPOSED_BASELINE_VALID / AWAITING_OWNER_ACCEPTANCE`. A fresh
+  Candidate built from exact source commit `3ee6365` was archived and reverified
+  under the accepted retention contract. The initial shallow-clone failures
+  were caused by unavailable lineage commits and a stale proposal after the
+  source change, then resolved by source → evidence → declaration commits.
+  The exact new GitHub Quality Gate must pass before merge. This proposal does
+  not grant Product Owner acceptance or CURRENT promotion.
 - The old root-owned whole-Data-volume `find` cannot be terminated by this
-  unprivileged session; administrator action is required. The 53 GiB archive
-  retention set likewise remains protected by the accepted retention policy
+  unprivileged session; administrator action is required. The initial 53 GiB
+  archive retention set plus the new approximately 2.1 GiB Candidate remain
+  protected by the accepted retention policy
   and requires a separate explicit retention decision before any pruning.
 
 ## Evidence contract
