@@ -4,7 +4,7 @@ Scope: Issue #205 and PR #206 only. UTC audit date2026-09-30; local completion d
 
 ## Concrete Human Gate proposal
 
-**Approve retirement of exactly30 app paths below, with7 selected archive survivors and all source/metadata/evidence kept.** The package semantic SHA-256 is `fb25cea8c3fe7b1bc85a7226b298512bdf8b26481eb327c4b09a3b9351769cdf`. `DELETE` denotes an evidence-backed retirement proposal requiring this separate exact owner gate, not current deletion permission. `SAFE_TO_FREE_NOW=0`. No historical objects are adopted into the publisher ownership catalog.
+**Approve retirement of exactly30 app paths below, with7 selected archive survivors and all source/metadata/evidence kept.** The package semantic SHA-256 is `1100c4367510e7f005e3dd3b802cf40232c2dfc6c0c750aaf58ba643743126b1`. `DELETE` denotes an evidence-backed retirement proposal requiring this separate exact owner gate, not current deletion permission. `SAFE_TO_FREE_NOW=0`. No historical objects are adopted into the publisher ownership catalog.
 
 The approval must attest the reconstructed exact legacy paths and scoped protected obligations; confirm af81 as rollback, retained65bf as recovery, retained2fe pilot provenance, and the listed CURRENT/pending survivors; retire only the enumerated app copies. The stale PR204/206 base2b references are explicitly disclosed: those frozen declarations cannot promote againstCURRENTd8; future proposals must use verifiedCURRENT. Retiring old2b bytes preserves every historical baseline/declaration record and does not retire current c5/14b pending Candidate obligations. This is not an assertion that a complete global active-pin registry already exists.
 
@@ -15,7 +15,7 @@ Fresh main/open-proposal, protected-survivor full integrity, inactivity, ownersh
 - Managed archive: **33 →7 full copies** and **75,299,602,432 →16,186,310,656 attributed bytes** (~15.07GiB) if this exact proposal is approved and executed.
 - Selected protected packages: **15,964,635,136 bytes**; retained nonselected metadata/source/container allocation: **221,675,520 bytes**.
 - Proposed30 apps: **66,056,344,473 logical bytes**, **68,208,316,416 attributed allocated bytes**. Archive-family portion: **59,113,291,776 attributed bytes**.
-- UNKNOWN across the expanded bounded scope: **2,385,362,944 attributed bytes**. Includes manifestless AI runtime, four partial/empty apps, unmarked tmp container residuals and three small unidentified Mach-O probe binaries. UNKNOWN objects are excluded from deletion.
+- UNKNOWN across the expanded bounded scope: **2,385,362,944 attributed bytes**. Includes manifestless AI runtime, four partial/empty apps, unmarked tmp container residuals and three small unidentified Mach-O probe binaries. UNKNOWN objects are excluded from deletion. Manifestless AI/runtime and partial apps have UNKNOWN_CURRENT/accepted/rollback/recovery relations; no identity or role is inferred from their directory name or a single source-file probe.
 
 Accounting observes1,249,845 unique inodes across39 disjoint directory roots plus166 disjoint top-level tmp files, with zero observed hardlinked regular-file paths. An app row is an accounting unit; container residual rows exclude all app descendants. `retained` is insideBuildArchive, never added again. The old nine large roots have unchanged allocations. Newly generated report/log metadata after the measurement is identified as new audit output, not historical growth.
 

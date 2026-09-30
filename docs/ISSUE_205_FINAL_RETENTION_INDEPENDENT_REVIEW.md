@@ -83,3 +83,15 @@ PR-011's consolidated user-return notification belongs to the coordinating task;
 The driver uses `py_compile` with explicit external `cfile`, original source `dfile`, optimize 0 and TIMESTAMP invalidation; it checks recorded source hashes and inode/size/mtime/ctime around compilation. It neither imports the inspected source modules nor executes/unmarshals the original bytecode. The saved supervisor command uses a fresh owned 1 MiB reservation; removal is recorded and its named workspace was absent at review. This supports exact compiler-derived bytes. It does not identify the historical writer or restore the originals to VERIFIED archive status. This reviewer checked the evidence and preserved small inert bytes, without running recompilation or hashing application payloads again.
 
 The decision JSON raw hash remains `f48a7b51349822bb6fbb8ae1196bedfad9f9cc357a5f11d0676e0e06a7f1c69f`; its semantic digest remains `fb25cea8c3fe7b1bc85a7226b298512bdf8b26481eb327c4b09a3b9351769cdf`. The final decision Markdown now hashes to `764d9c8c8e603ca60294ec41e636b76d095fa812d97a7d663dd7c1e303930b8f`, superseding only that Markdown hash in the original table. Classifications, accounting, source code and test claims are unchanged.
+
+## Supplement — manifestless relation correction
+
+**PASS; deletion eligibility and execution limits unchanged.** Compared the corrected decision JSON to its committed predecessor. After removing only the four relation fields (`current_relation`, `accepted_relation`, `rollback_relation`, `recovery_relation`) on object indices 33, 35, 39, 40 and 41, and the top-level semantic digest, the parsed JSONs are exactly equal. All five objects remain UNKNOWN and now explicitly carry `UNKNOWN_NO_MANIFEST_BOUND_IDENTITY` for each relation. No directory-name-based nonidentity or nonrole assertion is justified for these objects. The exact 30 deletion paths, 7 KEEP objects, all accounting values, source-code and test evidence remain unchanged. The Markdown diff changes only the semantic digest and adds the explicit manifestless-identity limitation.
+
+The latest authoritative review bindings supersede the earlier decision-document bindings:
+
+- Decision JSON raw SHA-256: `c35f1cebd42040c66bddd67d2808b1aeca827d419c227ef69e015535736eb26c`.
+- Recomputed decision JSON semantic SHA-256: `1100c4367510e7f005e3dd3b802cf40232c2dfc6c0c750aaf58ba643743126b1`.
+- Decision Markdown raw SHA-256: `9ca3f7710d0436d8667b3e1b732ba1ebcf8e5f5438b655b88978219084019799`.
+
+This is a factual uncertainty correction, not an approval to delete UNKNOWN objects or an expansion of the historical gate.

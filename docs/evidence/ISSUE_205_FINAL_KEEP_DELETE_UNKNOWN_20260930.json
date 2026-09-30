@@ -3666,10 +3666,10 @@
         "E02",
         "E03"
       ],
-      "current_relation": "NOT_CURRENT",
-      "accepted_relation": null,
-      "rollback_relation": "NOT_SELECTED",
-      "recovery_relation": "NOT_SELECTED",
+      "current_relation": "UNKNOWN_NO_MANIFEST_BOUND_IDENTITY",
+      "accepted_relation": "UNKNOWN_NO_MANIFEST_BOUND_IDENTITY",
+      "rollback_relation": "UNKNOWN_NO_MANIFEST_BOUND_IDENTITY",
+      "recovery_relation": "UNKNOWN_NO_MANIFEST_BOUND_IDENTITY",
       "pending_owner_acceptance": false,
       "active_pin_status": "SCOPED_GATE_ATTESTATION_REQUIRED; no complete canonical active-pin registry",
       "ownership": "UNRESOLVED; UID/path alone insufficient",
@@ -3822,10 +3822,10 @@
         "E02",
         "E03"
       ],
-      "current_relation": "NOT_CURRENT",
-      "accepted_relation": null,
-      "rollback_relation": "NOT_SELECTED",
-      "recovery_relation": "NOT_SELECTED",
+      "current_relation": "UNKNOWN_NO_MANIFEST_BOUND_IDENTITY",
+      "accepted_relation": "UNKNOWN_NO_MANIFEST_BOUND_IDENTITY",
+      "rollback_relation": "UNKNOWN_NO_MANIFEST_BOUND_IDENTITY",
+      "recovery_relation": "UNKNOWN_NO_MANIFEST_BOUND_IDENTITY",
       "pending_owner_acceptance": false,
       "active_pin_status": "SCOPED_GATE_ATTESTATION_REQUIRED; no complete canonical active-pin registry",
       "ownership": "UNRESOLVED; UID/path alone insufficient",
@@ -4176,7 +4176,11 @@
       "expected_reclaim": {
         "minimum": 0,
         "upper_attributed_bytes": 0
-      }
+      },
+      "current_relation": "UNKNOWN_NO_MANIFEST_BOUND_IDENTITY",
+      "accepted_relation": "UNKNOWN_NO_MANIFEST_BOUND_IDENTITY",
+      "rollback_relation": "UNKNOWN_NO_MANIFEST_BOUND_IDENTITY",
+      "recovery_relation": "UNKNOWN_NO_MANIFEST_BOUND_IDENTITY"
     },
     {
       "object_index": 40,
@@ -4201,7 +4205,11 @@
       "expected_reclaim": {
         "minimum": 0,
         "upper_attributed_bytes": 0
-      }
+      },
+      "current_relation": "UNKNOWN_NO_MANIFEST_BOUND_IDENTITY",
+      "accepted_relation": "UNKNOWN_NO_MANIFEST_BOUND_IDENTITY",
+      "rollback_relation": "UNKNOWN_NO_MANIFEST_BOUND_IDENTITY",
+      "recovery_relation": "UNKNOWN_NO_MANIFEST_BOUND_IDENTITY"
     },
     {
       "object_index": 41,
@@ -4226,7 +4234,11 @@
       "expected_reclaim": {
         "minimum": 0,
         "upper_attributed_bytes": 0
-      }
+      },
+      "current_relation": "UNKNOWN_NO_MANIFEST_BOUND_IDENTITY",
+      "accepted_relation": "UNKNOWN_NO_MANIFEST_BOUND_IDENTITY",
+      "rollback_relation": "UNKNOWN_NO_MANIFEST_BOUND_IDENTITY",
+      "recovery_relation": "UNKNOWN_NO_MANIFEST_BOUND_IDENTITY"
     }
   ],
   "root_residuals": [
@@ -12165,5 +12177,5 @@
     }
   ],
   "additional_scope_accounting": "166 top-level regular Integra files, no observed hardlinks, disjoint from39 directory roots; snapshot bytes included once; newly generated audit metadata after snapshot is excluded from that historical measurement.",
-  "decision_package_sha256": "fb25cea8c3fe7b1bc85a7226b298512bdf8b26481eb327c4b09a3b9351769cdf"
+  "decision_package_sha256": "1100c4367510e7f005e3dd3b802cf40232c2dfc6c0c750aaf58ba643743126b1"
 }
