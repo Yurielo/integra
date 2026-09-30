@@ -1,0 +1,242 @@
+{
+  "artifact_type": "integra.inert_forensic_cache_bytes",
+  "no_execution": true,
+  "entries": [
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/__init__.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/__init__.cpython-314.pyc.bin",
+      "sha256": "33fb565746e7bfc666c04f87d1118c78598e2b1a21d3d98b7df94c67262e7f8c",
+      "bytes": 3678
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_cmp.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_cmp.cpython-314.pyc.bin",
+      "sha256": "7b220875e91b59cffbf2e54b7c230115ea8b98d8b47031b92101eae2de48dbe8",
+      "bytes": 5374
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_compat.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_compat.cpython-314.pyc.bin",
+      "sha256": "30ac788e6b67cb32a87be41779629e950d04d7e4ff4000af5bc01065a4084384",
+      "bytes": 4025
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_config.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_config.cpython-314.pyc.bin",
+      "sha256": "824c3ba5c34406317ef1cc4a19f3b142368e6b2108656d67b6c9fa66edac202a",
+      "bytes": 1307
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_funcs.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_funcs.cpython-314.pyc.bin",
+      "sha256": "f8ee26a4dc8c5300073d42d2b485aedfad18942a5e74e506e96eab6f3cd817de",
+      "bytes": 14113
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_make.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_make.cpython-314.pyc.bin",
+      "sha256": "023fa163c188192fff0b8083dcb059e7cd2edc459e6cb28df484853ee8b678b4",
+      "bytes": 114929
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_next_gen.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_next_gen.cpython-314.pyc.bin",
+      "sha256": "ad9254fd7fdc628d7d0f3a8336432fbfc2ce14134d74bd2f9bfebc35128085af",
+      "bytes": 25470
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_version_info.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_version_info.cpython-314.pyc.bin",
+      "sha256": "4b272c041eeed1c5331301f302deb13f24bb5ea777a9c1349b9943035c05544c",
+      "bytes": 3655
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/converters.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/converters.cpython-314.pyc.bin",
+      "sha256": "e4a2afae10071f9ab2d5afd58a2beda9761d6e02ee7ca7575745b1de440cc5a3",
+      "bytes": 4749
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/exceptions.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/exceptions.cpython-314.pyc.bin",
+      "sha256": "e2926b23ebb2b9e4cf9a0e3de66bf7265842f541eb77236ab23af41d9b188c1a",
+      "bytes": 3967
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/filters.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/filters.cpython-314.pyc.bin",
+      "sha256": "d479da16e076fab0d0fcae97284696d666f06d75859e404409083ed942085c2f",
+      "bytes": 3226
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/setters.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/setters.cpython-314.pyc.bin",
+      "sha256": "9843d04a88e7d6b683572c3e2d571e62853803c3c6be57c3e4ecc128448526c2",
+      "bytes": 2101
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/validators.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/validators.cpython-314.pyc.bin",
+      "sha256": "2e1c94799b167d59f04c3a8d0facda68427d08300749138d7b3a1e3223d7e89e",
+      "bytes": 28072
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/__init__.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/__init__.cpython-314.pyc.bin",
+      "sha256": "9433b918ece0b8884e8179a19b2f0a143932b95945b2c22e78f221ccc9d5620b",
+      "bytes": 1962
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/converters.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/converters.cpython-314.pyc.bin",
+      "sha256": "dc7b708c7f9bea682730048411e0bedc669418fd541cb05a1bb5072d007b86b0",
+      "bytes": 439
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/exceptions.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/exceptions.cpython-314.pyc.bin",
+      "sha256": "99a1189d7e6a6bf79edcab9a8239581d22dfbcfe276b54220195e53dea5aa382",
+      "bytes": 439
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/filters.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/filters.cpython-314.pyc.bin",
+      "sha256": "36d5b90adf0599c0b45a77259baf25f892b003105a479ccffa7e2380530217cc",
+      "bytes": 433
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/setters.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/setters.cpython-314.pyc.bin",
+      "sha256": "725cf9d60e2fd91ec760bc29fdd5a66b269ba37283a429b8b836cf073b777be5",
+      "bytes": 433
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/validators.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/validators.cpython-314.pyc.bin",
+      "sha256": "0100100c04833264e4fb5a206f702d2d32f3922bed342d382d3cbe4ab5ad123d",
+      "bytes": 439
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/__init__.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/__init__.cpython-314.pyc.bin",
+      "sha256": "e41987ff9908926177115503dbf8c9ef92eb7376a6edc9dbd84a94f618d06f05",
+      "bytes": 4046
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/_format.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/_format.cpython-314.pyc.bin",
+      "sha256": "cf398ca0efc9199a0635f90e0b53631374c9ed30e2634fe280164cce3c0c6168",
+      "bytes": 24354
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/_keywords.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/_keywords.cpython-314.pyc.bin",
+      "sha256": "5cc9a4ca765e71587f0fe60c3cd28f6c8a80e06180f35bfef6cbdecccd32a7ec",
+      "bytes": 21085
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/_legacy_keywords.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/_legacy_keywords.cpython-314.pyc.bin",
+      "sha256": "bdbc9bd375a2b45506244b27c174b88d4b102b4dd32ea85d7c9718bf616430fd",
+      "bytes": 18470
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/_types.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/_types.cpython-314.pyc.bin",
+      "sha256": "ac1a15da93d72b4b429ec0d7ba78cc13cda86a37bf8faf0bfc090ac6ea90580f",
+      "bytes": 7871
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/_typing.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/_typing.cpython-314.pyc.bin",
+      "sha256": "8d2ac2e16d062cd67ba54e09cffe446357f5592806b8ac25e8bde824e9a48f6e",
+      "bytes": 1894
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/_utils.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/_utils.cpython-314.pyc.bin",
+      "sha256": "b51726bdef8332fb6eaef39c461aef7b79dcbfe736360c859cacc844005310c5",
+      "bytes": 15352
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/exceptions.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/exceptions.cpython-314.pyc.bin",
+      "sha256": "21f68e18d95387f442b52aabf6e6b31dadd4583bf30fc9c97443136fc57e275c",
+      "bytes": 24660
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/protocols.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/protocols.cpython-314.pyc.bin",
+      "sha256": "f5837cff0fe96548e1633ad9375061e4ea60eb4a5a89e5bc62f351f6fd961831",
+      "bytes": 7498
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/validators.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/validators.cpython-314.pyc.bin",
+      "sha256": "24862342f0cb9efb06a1d6143badbd7f8d1cee1450792dc86c33840540aec61e",
+      "bytes": 53000
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema_specifications/__pycache__/__init__.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/jsonschema_specifications/__pycache__/__init__.cpython-314.pyc.bin",
+      "sha256": "1009b839d2539a1713223ee4267911288084f9373a2a45f29d6b86a9c910f6af",
+      "bytes": 776
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema_specifications/__pycache__/_core.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/jsonschema_specifications/__pycache__/_core.cpython-314.pyc.bin",
+      "sha256": "d8bc263243e898e2e1129db2166f169bd2174a2167b614321d67180a78929fc3",
+      "bytes": 1735
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__/__init__.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__/__init__.cpython-314.pyc.bin",
+      "sha256": "36d4099e94d3b4bc8ef98e002b1ffd2e282cdf4a21dfa3fb58a34e8403fa7da0",
+      "bytes": 624
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__/_attrs.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__/_attrs.cpython-314.pyc.bin",
+      "sha256": "d6473d6f44be9524680e9974771f9598c292902fe0bfb2f10251fa89efbfd5db",
+      "bytes": 2111
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__/_core.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__/_core.cpython-314.pyc.bin",
+      "sha256": "7c2571c896a197e13b4d6aff02fa366e846fb867d76b4e577509bfc15e479240",
+      "bytes": 35025
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__/exceptions.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__/exceptions.cpython-314.pyc.bin",
+      "sha256": "c585ce63537b5cbd8664fbd71374779960e6709aff912e6b5d63148135c49af8",
+      "bytes": 9092
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__/jsonschema.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__/jsonschema.cpython-314.pyc.bin",
+      "sha256": "2e96d096935c699338e62b10aae0608e8da97cc3aa3de3de2ccc67e212445b69",
+      "bytes": 21638
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__/typing.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__/typing.cpython-314.pyc.bin",
+      "sha256": "ca988b072a7a4baa15f281b2c5627573c63791814c3960da5b4b4fa3b7db15ed",
+      "bytes": 2943
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/rpds/__pycache__/__init__.cpython-314.pyc",
+      "entry": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/Contents/Resources/runtime/review-python/site-packages/rpds/__pycache__/__init__.cpython-314.pyc.bin",
+      "sha256": "d8523e6691dcfdfa2eea7290751760621eb43b557195bfd6cfed87997b704167",
+      "bytes": 573
+    },
+    {
+      "original_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173/c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b/Integra.app/Contents/Resources/runtime/word-alignment/site-packages/whisperx/__pycache__/__init__.cpython-313.pyc",
+      "entry": "candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173/Contents/Resources/runtime/word-alignment/site-packages/whisperx/__pycache__/__init__.cpython-313.pyc.bin",
+      "sha256": "c66ec5e79701d861cf0cd22492912988f04c85eb338a2f70a729542d992e3a93",
+      "bytes": 2564
+    }
+  ],
+  "zip_sha256": "199a4c0e50376e53d3be3c911734f51957e8d0f1ae06442ed4be47ee791be938",
+  "zip_bytes": 220685
+}

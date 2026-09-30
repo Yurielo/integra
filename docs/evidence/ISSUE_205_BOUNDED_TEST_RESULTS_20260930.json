@@ -1,0 +1,34 @@
+{
+  "agent_team_validation": "PASS",
+  "archive_tests": "28 PASS",
+  "diff_check": "PASS",
+  "full_supported_suite": {
+    "failed": 1,
+    "failure": "R12 implementation hash differs: scripts/build_macos_app.sh",
+    "passed": 786,
+    "run": 879,
+    "skipped": 92
+  },
+  "independent_review": "40 tests PASS; source digests in review MD",
+  "logs": [
+    {
+      "bytes": 1313,
+      "path": "/private/tmp/integra-205-bounded-fulltests-final.log",
+      "sha256": "8c2c40085060b917b36b0b3128c7c92548ed8501b5f435b9002ca5fc6d14490e",
+      "tail": "/var/folders/q9/rprrsl95265b7h21d3_mp2fr0000gn/T/tmpb3qpj0lb/macos/Resources/Integra.icns\nINTEGRA_BACKUP_VERIFICATION: PASS\n======================================================================\nFAIL: test_valid_superseding_baseline_suppresses_only_explained_historical_drift (test_governance.GovernanceValidationTests.test_valid_superseding_baseline_suppresses_only_explained_historical_drift)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/private/tmp/integra-retention-lifecycle-20260930/tests/test_governance.py\", line 186, in test_valid_superseding_baseline_suppresses_only_explained_historical_drift\n    self.assertEqual(\n    ~~~~~~~~~~~~~~~~^\n        VALIDATOR.validate_native_macos_app_evidence(\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    ...<3 lines>...\n        [],\n        ^^^\n    )\n    ^\nAssertionError: Lists differ: ['R12 implementation hash differs: scripts/build_macos_app.sh'] != []\n\nFirst list contains 1 additional elements.\nFirst extra element 0:\n'R12 implementation hash differs: scripts/build_macos_app.sh'\n\n- ['R12 implementation hash differs: scripts/build_macos_app.sh']\n+ []\n\n----------------------------------------------------------------------\nRan 879 tests in 59.135s\n\nFAILED (failures=1, skipped=92)\n"
+    },
+    {
+      "bytes": 98,
+      "path": "/private/tmp/integra-205-bounded-governance.log",
+      "sha256": "cc329e802991fdb3764c1c32edc50d488b776d44cd144c88e961e0f9eed244cc",
+      "tail": "INTEGRA_GOVERNANCE_VALIDATION: FAIL\n- R12 implementation hash differs: scripts/build_macos_app.sh\n"
+    },
+    {
+      "bytes": 597,
+      "path": "/private/tmp/integra-205-bounded-final-root-du.txt",
+      "sha256": "e3a38c12c37a12a944df2fdfb1c138d64f7695f4fecf347be87dc2fe5df8dc92",
+      "tail": "66857220\t/Users/yurielokhin/Library/Application Support/Integra/Build Archive\n2228728\t/Users/yurielokhin/Library/Application Support/Integra/Recovery Archive\n2228832\t/Users/yurielokhin/Library/Application Support/Integra/Build Archive Recovery\n2219988\t/Users/yurielokhin/Library/Application Support/Integra/Candidate Builds\n2219868\t/Users/yurielokhin/AI/runtimes/integra/current-build\n2246040\t/private/tmp/integra-excel22-topic-translation\n2220084\t/private/tmp/integra-excel07-release\n2220084\t/private/tmp/integra-excel07-source-current\n2220068\t/private/tmp/integra-excel05-zoom-candidate-b53d3d2\n"
+    }
+  ],
+  "native_build": "NOT_STARTED; archive cap and reserve gate"
+}

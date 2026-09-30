@@ -2,10 +2,16 @@
 
 Issue: [#192](https://github.com/Yurielo/integra/issues/192).
 
-An accepted or review-pending Candidate requires the actual application bytes
-in permanent storage. A source commit, embedded manifest copied into Git,
-test log or Candidate ID alone cannot restore compiled binaries, runtime
-packages and models.
+## Active bounded policy, 2026-09-30
+
+The Product Owner decision in Issue #205 adopts
+[`BOUNDED_CANDIDATE_RETENTION.md`](BOUNDED_CANDIDATE_RETENTION.md): 8 full copies,
+20 GiB attributed archive allocation, and 15 GiB free after reservations.
+Actual application bytes remain mandatory for every protected class. Historical
+acceptance alone no longer grants indefinite full-byte protection; explicitly
+active governance/provenance obligations remain protected. The exact historical
+migration requires a separate Human Gate. The historical recovery evidence
+below remains unchanged.
 
 ## Lifecycle
 
@@ -40,12 +46,12 @@ verification is offline byte-integrity checking. Runtime executability on the
 current host is a separate `candidate_manifest.py validate` and native-test
 check, because external interpreters and tools can change independently.
 
-The archive tool has no deletion or pruning operation. Cleanup work in #180
-and #181 must distinguish disposable build attempts from accepted and
-review-pending Candidates. Any wording allowing all full-size transient
-Candidates to be deleted is conditional on a verified retained archive for
-those protected Candidates. Filesystem ownership, age, a green test log and a
-copied manifest do not establish that precondition.
+Archive creation/verification is separate from the ownership catalog and
+policy-controlled retention executor. Cleanup in #180/#181/#205 distinguishes
+owned disposable builds from protected Candidate bytes. Filesystem UID, age,
+a green test log and a copied manifest do not establish deletion ownership or
+prove a protected Candidate has a verified retained survivor. Historical
+unmarked objects require explicit ownership attestation at the migration gate.
 
 This repair changes development tooling, not the packaged runtime, CURRENT,
 source-product pins, semantic authority or installed application. It does not

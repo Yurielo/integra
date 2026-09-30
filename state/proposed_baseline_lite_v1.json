@@ -1,0 +1,80 @@
+{
+  "allowed_overlay_paths": [
+    "docs/ISSUE_205_TEMP_WORKSPACE_AUDIT.md",
+    "docs/evidence/ISSUE_205_CANDIDATE_EVIDENCE.json",
+    "docs/evidence/ISSUE_205_CANDIDATE_MANIFEST.json",
+    "docs/evidence/ISSUE_205_ARCHIVE_INVENTORY_20260930.json"
+  ],
+  "artifact_type": "integra.proposed_product_baseline",
+  "base_current_id": "current-v2-2b779255c5b57a7b6602f153ea13c497bf738a18a84412773f8b6ed5261fbfcc",
+  "base_main": {
+    "commit_sha": "b6ac52aa08aac3f49a8a1dadce2b7f7f525af07b",
+    "tree_sha": "b3b9f6c2384d62f3759c4f1a703cb4b532495af6"
+  },
+  "candidate": {
+    "bundle_digest": "dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
+    "candidate_id": "candidate-v1-c5f5b6ea7e8495c967c0b999dd24bdf7a3162c1fb34035cb0dcedbd5fe323cd2",
+    "identity_sha256": "c5f5b6ea7e8495c967c0b999dd24bdf7a3162c1fb34035cb0dcedbd5fe323cd2",
+    "manifest_digest": "ea6003528896581fdc4c5e8b14953de7de58b980707e9e12a9fc3fb43b60ebde"
+  },
+  "delta": [
+    {
+      "after_sha256": "331a21d21c36939b0e7067086dcc29ab0065002d45d93df3d715855ab85764f2",
+      "before_sha256": "ad81f7a08a2fbcb93b57788e64d2f028697f7f5f086bb8fa75e9eac758dc4507",
+      "path": "scripts/build_macos_app.sh"
+    },
+    {
+      "after_sha256": "ae7d802f4dad90610e68b4cc964b03b81f25eec7da9a84cedebe4a145afeadda",
+      "before_sha256": "1648671bac009e76169b26c039de42a1f769b4d422014d83e850dd87810ce359",
+      "path": "scripts/test_macos_app.sh"
+    }
+  ],
+  "evidence": {
+    "candidate_evidence": {
+      "path": "docs/evidence/ISSUE_205_CANDIDATE_EVIDENCE.json",
+      "sha256": "ac6d71673c0f98986917fb440f6a30a1eea52be345a0c9fa6df0d710b080c040"
+    },
+    "candidate_manifest": {
+      "path": "docs/evidence/ISSUE_205_CANDIDATE_MANIFEST.json",
+      "sha256": "ea6003528896581fdc4c5e8b14953de7de58b980707e9e12a9fc3fb43b60ebde"
+    },
+    "report": {
+      "path": "docs/ISSUE_205_TEMP_WORKSPACE_AUDIT.md",
+      "sha256": "3b67b59f4b23744a1a932f0afeb2d22f864dccf99d428af9647b2c39cb11f6bf"
+    }
+  },
+  "gates": [
+    {
+      "evidence_ref": "docs/evidence/ISSUE_205_REPEATED_BUILD_EVIDENCE_20260930.json",
+      "name": "repeated-owned-workspace-build-evidence",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/ISSUE_205_CANDIDATE_EVIDENCE.json",
+      "name": "candidate-archive-byte-integrity",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/ISSUE_205_TEMP_WORKSPACE_AUDIT.md",
+      "name": "volume-admission-and-interrupted-stage-independent-review",
+      "result": "PASS"
+    }
+  ],
+  "historical_test_successors": [],
+  "intended_scope": {
+    "journey": "disposable macOS build/test/release and archive staging lifecycle; volume disk admission and retention audit",
+    "wp": "GitHub Issue #205"
+  },
+  "owner_acceptance": null,
+  "proposal_id": "proposal-issue-205-temp-workspace-lifecycle",
+  "proposed_head": {
+    "commit_sha": "1790a7557ef40c1722020a672aec2d84574be437",
+    "tree_sha": "92351d7ca4cd790c4342b0941095ba8ebb70c02e"
+  },
+  "proposed_source": {
+    "commit_sha": "72fc6d37fede5fa3af7fd16934648b6e90120e85",
+    "tree_sha": "fd9dcb58dc5b8783d9ebeee74a3eb26c3a19f00e"
+  },
+  "schema_version": "1.0",
+  "status": "PROPOSED_BASELINE_VALID"
+}

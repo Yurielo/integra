@@ -3,7 +3,8 @@
 
 Packages are keyed by candidate ID AND bundle digest. Verification is offline:
 validate_manifest + tree_sha256, not validate_bundle's live external-runtime
-checks. No archive is overwritten or pruned, including incomplete attempts.
+checks. A failed archive staging copy is disposable and is removed by the
+creator; only a published COMPLETE archive is retained evidence.
 """
 from __future__ import annotations
 
@@ -17,6 +18,11 @@ import shutil
 import stat
 import sys
 import tempfile
+try:
+    from scripts import temp_workspace_lifecycle as workspace_lifecycle
+except ModuleNotFoundError:
+    import temp_workspace_lifecycle as workspace_lifecycle
+from datetime import datetime, timezone
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -175,6 +181,74 @@ def verify_archive(archive: Path, expected: dict | None = None) -> dict:
         raise ValueError(f"archive verification failed: {error}") from error
 
 
+def inventory_archives(archive_root: Path) -> dict:
+    """Read archive metadata without rehashing multi-gigabyte payloads.
+
+    This is an audit tool, not a retention decision or integrity verification.
+    A repeated declared bundle digest identifies bytes that were verified equal
+    when their individual COMPLETE records were published, but it never makes
+    either archive disposable on its own.
+    """
+    root = _path(archive_root, durable=True)
+    if not root.is_dir():
+        raise ValueError("archive root must be an existing directory")
+    entries = []
+    for manifest_path in sorted(root.glob("candidate-v1-*/*/" + MANIFEST_NAME)):
+        archive = manifest_path.parent
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            validate_manifest(manifest)
+            receipt = json.loads((archive / COMPLETE).read_text(encoding="utf-8"))
+        except (OSError, TypeError, KeyError, json.JSONDecodeError) as error:
+            raise ValueError(f"archive metadata is unreadable: {archive}: {error}") from error
+        identity = {
+            "candidate_id": manifest["candidate_id"],
+            "bundle_digest": manifest["bundle"]["digest"],
+            "manifest_digest": _hash(manifest_path),
+        }
+        if (receipt.get("status") != "COMPLETE" or
+                any(receipt.get(key) != value for key, value in identity.items())):
+            raise ValueError(f"archive receipt does not bind its manifest identity: {archive}")
+        app_size = receipt.get("app_size_bytes")
+        if not isinstance(app_size, int) or app_size < 0:
+            raise ValueError(f"archive receipt has an invalid logical app size: {archive}")
+        info = archive.stat()
+        entries.append({
+            "archive_path": str(archive),
+            **identity,
+            "source_commit": manifest["identity"]["source"]["commit_sha"],
+            "build_timestamp": manifest["build"].get("timestamp"),
+            "archive_modified_at": datetime.fromtimestamp(info.st_mtime, timezone.utc).isoformat().replace("+00:00", "Z"),
+            "logical_app_size_bytes": app_size,
+            "lifecycle_status": "COMPLETE_RETAINED",
+            "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+        })
+    groups: dict[str, list[dict]] = {}
+    for entry in entries:
+        groups.setdefault(entry["bundle_digest"], []).append(entry)
+    duplicate_bytes = 0
+    for group in groups.values():
+        if len(group) <= 1:
+            continue
+        for entry in group:
+            entry["bundle_duplicate_count"] = len(group)
+            entry["duplicate_status"] = "DECLARED_BUNDLE_DIGEST_REPEATED_RETAINED"
+        duplicate_bytes += sum(entry["logical_app_size_bytes"] for entry in group) - group[0]["logical_app_size_bytes"]
+    for entry in entries:
+        entry.setdefault("bundle_duplicate_count", 1)
+        entry.setdefault("duplicate_status", "DECLARED_UNIQUE_BUNDLE_DIGEST")
+    return {
+        "schema_version": "1.0",
+        "artifact_type": "integra.candidate_archive_inventory",
+        "verification": "METADATA_ONLY_NO_PAYLOAD_REHASH",
+        "archive_root": str(root),
+        "archive_count": len(entries),
+        "unique_bundle_count": len(groups),
+        "declared_duplicate_logical_bytes": duplicate_bytes,
+        "entries": entries,
+    }
+
+
 def _write_json(path: Path, value: object) -> None:
     with path.open("xb") as handle:
         handle.write(canonical_bytes(value) + b"\n")
@@ -212,6 +286,8 @@ def create_archive(app: Path, archive_root: Path, *, manifest: Path | None = Non
                    evidence: list[Path] | None = None, reserve_bytes: int = RESERVE_BYTES) -> dict:
     """Copy and verify a fresh immutable package; preserve partial attempts."""
     stage = None
+    stage_root = None
+    retention_lease = None
     try:
         app = _path(app)
         root = _path(archive_root, durable=True)
@@ -242,21 +318,39 @@ def create_archive(app: Path, archive_root: Path, *, manifest: Path | None = Non
             if _inventory(destination, exclude={INVENTORY, COMPLETE}) != planned:
                 raise ValueError("existing archive differs from requested retained files/permissions")
             return receipt
+        try:
+            from scripts import candidate_retention as retention
+        except ModuleNotFoundError:
+            import candidate_retention as retention
+        reused = retention.reusable_archive(root, identity, planned)
+        if reused is not None:
+            return reused
         ancestor = root
         while not ancestor.exists():
             ancestor = ancestor.parent
         block = max(4096, os.statvfs(ancestor).f_frsize)
         required = sum(((item.get("size", 0) + block - 1) // block + 1) * block for item in planned)
-        required += 1024 * 1024 + reserve_bytes
-        if shutil.disk_usage(ancestor).free < required:
-            raise ValueError(f"insufficient disk space: need {required} free bytes including reserve")
+        required += 1024 * 1024
+        # Even unknown legacy occupancy is charged. Policy never evicts it to
+        # admit this copy. The caller cannot lower the adopted free-space floor.
+        retention_lease = retention.reserve_archive(root, required, destination=destination, identity=identity)
+        reserve_bytes = max(reserve_bytes, retention.FREE_FLOOR)
+        # Admission precedes even destination creation. Staging is on the
+        # destination volume, so publication remains an atomic rename.
+        stage_root, stage_marker = workspace_lifecycle.create_workspace(
+            purpose='archive-stage', base=ancestor,
+            expected_bytes=required, reserve_bytes=reserve_bytes)
+        retention.bind_stage(*retention_lease, stage_root, stage_marker)
         destination.parent.mkdir(parents=True, exist_ok=True)
         _path(destination.parent, durable=True)
         parent = destination.parent
         while parent != ancestor:
             _sync_directory(parent.parent)
             parent = parent.parent
-        stage = Path(tempfile.mkdtemp(prefix=".incomplete-", dir=destination.parent))
+        # SIGKILL leaves a marked disposable root, conservatively reserved
+        # until a subsequent invocation reaps this existing volume ancestor.
+        stage = stage_root / 'payload'
+        stage.mkdir()
         shutil.copytree(app, stage / APP, symlinks=True, copy_function=shutil.copy2)
         shutil.copy2(retained_manifest, stage / MANIFEST_NAME, follow_symlinks=False)
         if evidence_entries:
@@ -283,15 +377,28 @@ def create_archive(app: Path, archive_root: Path, *, manifest: Path | None = Non
         _write_json(stage / COMPLETE, receipt)
         _sync_directory(stage)
         _verify(stage, identity, check_key=False)
+        retention.bind_publication(*retention_lease, stage)
         _publish(stage, destination)
         _sync_directory(destination.parent)
         _sync_directory(root)
-        return verify_archive(destination, identity)
-    except (OSError, ValueError, TypeError, KeyError, shutil.Error) as error:
-        # Keep failed copies for inspection, but never leave a completion claim.
+        final_receipt = verify_archive(destination, identity)
+        retention.finish_publication(*retention_lease, final_receipt)
+        retention_lease = None
+        return final_receipt
+    except BaseException as error:
+        # The stage belongs exclusively to this invocation and cannot qualify as
+        # retention evidence. Leaving it behind would recreate the multi-GiB
+        # temporary-archive leak that the workspace lifecycle prevents.
         if stage is not None and stage.exists():
-            (stage / COMPLETE).unlink(missing_ok=True)
+            shutil.rmtree(stage)
+        if not isinstance(error, Exception):
+            raise
         raise ValueError(f"candidate archive creation failed: {error}") from error
+    finally:
+        if stage_root is not None and stage_root.exists():
+            workspace_lifecycle.cleanup_workspace(stage_root, reason='ARCHIVE_FINISHED', allow_live_owner=True)
+        if retention_lease is not None:
+            retention.cancel_publication(*retention_lease)
 
 
 def main() -> None:
@@ -307,14 +414,18 @@ def main() -> None:
     verify.add_argument("archive", type=Path)
     for key in sorted(IDENTITY_KEYS):
         verify.add_argument("--" + key.replace("_", "-"))
+    inventory = commands.add_parser("inventory")
+    inventory.add_argument("--archive-root", type=Path, required=True)
     args = parser.parse_args()
     try:
         if args.command == "create":
             receipt = create_archive(args.app, args.archive_root, manifest=args.manifest,
                                      evidence=args.evidence, reserve_bytes=args.reserve_bytes)
-        else:
+        elif args.command == "verify":
             expected = {key: getattr(args, key) for key in IDENTITY_KEYS if getattr(args, key) is not None}
             receipt = verify_archive(args.archive, expected)
+        else:
+            receipt = inventory_archives(args.archive_root)
     except ValueError as error:
         parser.exit(1, f"{error}\n")
     print(json.dumps(receipt, sort_keys=True))

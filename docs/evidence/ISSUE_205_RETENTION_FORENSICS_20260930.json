@@ -1,0 +1,2063 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.issue_205_retention_forensics",
+  "status": "FORENSICS_COMPLETE_WITH_RETAINED_INTEGRITY_INCIDENTS",
+  "authority": "Product Owner bounded retention implementation under Issue #205 / PR #206; independent evidence role",
+  "constraints": {
+    "no_archive_changes": true,
+    "no_current_changes": true,
+    "no_cleanup": true,
+    "no_builds": true,
+    "no_executed_bytecode": true,
+    "write_scope": [
+      "docs/evidence/ISSUE_205_RETENTION_FORENSICS_20260930.json",
+      "docs/ISSUE_205_RETENTION_FORENSICS.md"
+    ]
+  },
+  "input_inventory": {
+    "path": "/private/tmp/integra-205-retention-audit-20260930.json",
+    "sha256": "1059b49c934fca51f9360adec257b6dce99b2178207481669ae9b9986228baef"
+  },
+  "main_current": {
+    "current_id": "current-v2-d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8",
+    "github_blob_sha": "16a52db59499d3aa6ff47534491b32b3086c7810",
+    "sha256": "47f4023fc7905166c5134f224519d83520f95b06ac68ccd357c02d86035f900e",
+    "candidate": {
+      "bundle_digest": "fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
+      "candidate_id": "candidate-v1-d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8",
+      "identity_sha256": "d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8"
+    },
+    "previous_accepted": {
+      "bundle_digest": "4032ad5334a42a9bbce6384b85b35857557afc2241d2c4d85c9e45379eca620c",
+      "candidate_id": "candidate-v1-af81b2867f893e8e529a2d4f64d6c1370dd1249b46eb999d427fb408229680fa",
+      "identity_sha256": "af81b2867f893e8e529a2d4f64d6c1370dd1249b46eb999d427fb408229680fa"
+    },
+    "previous_acceptance": {
+      "authority_ref": "PRODUCT OWNER AUTHORIZATION: PROMOTE_CURRENT proposal-process-v1-folder-discovery-confirmation candidate-v1-af81b2867f893e8e529a2d4f64d6c1370dd1249b46eb999d427fb408229680fa; Folder discovery/confirmation — Excel #4 / S06 promotion and PR #208 merge only.",
+      "decision": "USER_ACCEPTED",
+      "scope": "owner-authorized proposed baseline promotion"
+    },
+    "previous_baseline_id": "current-v2-af81b2867f893e8e529a2d4f64d6c1370dd1249b46eb999d427fb408229680fa",
+    "command": [
+      "gh",
+      "api",
+      "repos/Yurielo/integra/contents/state/current_product_baseline_v2.json?ref=main"
+    ]
+  },
+  "archive_metadata": [
+    {
+      "app_index": 9,
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8",
+      "candidate_id": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583",
+      "bundle_digest": "2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8",
+      "manifest_digest": "4c9027d2fb65ef921bbb9c20878ccef61fca34c999c1f606f37da9e2a44a3161",
+      "build_timestamp": "2026-09-27T19:45:07Z",
+      "files": [
+        {
+          "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/COMPLETE.json",
+          "sha256": "08c8fe94d4c835a6051f021bf68a4978111cc06ed2a932f8b723265331017fc1",
+          "birthtime": 1790538500.0780387,
+          "mtime": 1790538500.0781338,
+          "size": 596
+        },
+        {
+          "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/inventory.json",
+          "sha256": "82cb9127a42fd11f24debe9e606afacae6433297487d842542c14688523854ba",
+          "birthtime": 1790538499.9957485,
+          "mtime": 1790538500.0185404,
+          "size": 7366363
+        },
+        {
+          "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/candidate-manifest.json",
+          "sha256": "4c9027d2fb65ef921bbb9c20878ccef61fca34c999c1f606f37da9e2a44a3161",
+          "birthtime": 1790538307.9008968,
+          "mtime": 1790538307.9008968,
+          "size": 4510
+        }
+      ]
+    },
+    {
+      "app_index": 27,
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173/c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b",
+      "candidate_id": "candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173",
+      "bundle_digest": "c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b",
+      "manifest_digest": "4e54fcce8ee164ca86d170c12f31474a457eedaf377bb433893aba7d1607bdc9",
+      "build_timestamp": "2026-09-28T17:51:26+03:00",
+      "files": [
+        {
+          "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173/c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b/COMPLETE.json",
+          "sha256": "1ac404691aec0941e81420ba14b41cb59f1ba02248a30397dc2dde1cc2dfd6f8",
+          "birthtime": 1790607564.2663229,
+          "mtime": 1790607564.2664137,
+          "size": 596
+        },
+        {
+          "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173/c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b/inventory.json",
+          "sha256": "d4170e9d073fb209274af0a17b984a2a1cc019c5c1d791781366de6150c80a3b",
+          "birthtime": 1790607564.1747737,
+          "mtime": 1790607564.201396,
+          "size": 7366972
+        },
+        {
+          "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173/c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b/candidate-manifest.json",
+          "sha256": "4e54fcce8ee164ca86d170c12f31474a457eedaf377bb433893aba7d1607bdc9",
+          "birthtime": 1790607319.2478194,
+          "mtime": 1790607319.2478194,
+          "size": 4515
+        }
+      ]
+    },
+    {
+      "app_index": 30,
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Recovery Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8",
+      "candidate_id": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583",
+      "bundle_digest": "2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8",
+      "manifest_digest": "4c9027d2fb65ef921bbb9c20878ccef61fca34c999c1f606f37da9e2a44a3161",
+      "build_timestamp": "2026-09-27T19:45:07Z",
+      "files": [
+        {
+          "path": "/Users/yurielokhin/Library/Application Support/Integra/Recovery Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/COMPLETE.json",
+          "sha256": "08c8fe94d4c835a6051f021bf68a4978111cc06ed2a932f8b723265331017fc1",
+          "birthtime": 1790546308.6560214,
+          "mtime": 1790546308.6561003,
+          "size": 596
+        },
+        {
+          "path": "/Users/yurielokhin/Library/Application Support/Integra/Recovery Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/inventory.json",
+          "sha256": "82cb9127a42fd11f24debe9e606afacae6433297487d842542c14688523854ba",
+          "birthtime": 1790546308.5708368,
+          "mtime": 1790546308.597745,
+          "size": 7366363
+        },
+        {
+          "path": "/Users/yurielokhin/Library/Application Support/Integra/Recovery Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/candidate-manifest.json",
+          "sha256": "4c9027d2fb65ef921bbb9c20878ccef61fca34c999c1f606f37da9e2a44a3161",
+          "birthtime": 1790546263.3860326,
+          "mtime": 1790546263.3860326,
+          "size": 4510
+        }
+      ]
+    },
+    {
+      "app_index": 31,
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive Recovery/candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173/c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b",
+      "candidate_id": "candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173",
+      "bundle_digest": "c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b",
+      "manifest_digest": "4e54fcce8ee164ca86d170c12f31474a457eedaf377bb433893aba7d1607bdc9",
+      "build_timestamp": "2026-09-28T17:51:26+03:00",
+      "files": [
+        {
+          "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive Recovery/candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173/c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b/COMPLETE.json",
+          "sha256": "1ac404691aec0941e81420ba14b41cb59f1ba02248a30397dc2dde1cc2dfd6f8",
+          "birthtime": 1790681527.038455,
+          "mtime": 1790681527.0385494,
+          "size": 596
+        },
+        {
+          "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive Recovery/candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173/c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b/inventory.json",
+          "sha256": "d4170e9d073fb209274af0a17b984a2a1cc019c5c1d791781366de6150c80a3b",
+          "birthtime": 1790681526.954093,
+          "mtime": 1790681526.9777489,
+          "size": 7366972
+        },
+        {
+          "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive Recovery/candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173/c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b/candidate-manifest.json",
+          "sha256": "4e54fcce8ee164ca86d170c12f31474a457eedaf377bb433893aba7d1607bdc9",
+          "birthtime": 1790607319.2478194,
+          "mtime": 1790607319.2478194,
+          "size": 4515
+        }
+      ]
+    }
+  ],
+  "pyc_read_method": "read_bytes + SHA256 + struct.unpack on 16-byte PEP 552 header; associated .py read_bytes/stat; no marshal or execution",
+  "interpreter_magic_checks": [
+    {
+      "command": [
+        "/opt/homebrew/opt/python@3.13/bin/python3.13",
+        "-B",
+        "-c",
+        "import importlib.util,sys;print(sys.version.split()[0],importlib.util.MAGIC_NUMBER.hex())"
+      ],
+      "timeout_seconds": 10,
+      "result": "3.13.15 f30d0d0a"
+    },
+    {
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "-c",
+        "import importlib.util,sys;print(sys.version.split()[0],importlib.util.MAGIC_NUMBER.hex())"
+      ],
+      "timeout_seconds": 10,
+      "result": "3.14.6 2b0e0d0a"
+    }
+  ],
+  "pyc_files": [
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__init__.py",
+      "birthtime_utc": "2026-09-27T21:08:11.144790+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 2057
+      },
+      "mtime_utc": "2026-09-27T21:08:11.144821+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/__init__.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "33fb565746e7bfc666c04f87d1118c78598e2b1a21d3d98b7df94c67262e7f8c",
+      "size": 3678,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.754016+00:00",
+      "source_sha256": "7ce608bedd5e192a90adee2e092dec256299d26c00b82f140faa9b6b9392f7f5",
+      "source_size": 2057,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "7ce608bedd5e192a90adee2e092dec256299d26c00b82f140faa9b6b9392f7f5",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/_cmp.py",
+      "birthtime_utc": "2026-09-27T21:08:11.161768+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 4117
+      },
+      "mtime_utc": "2026-09-27T21:08:11.161815+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_cmp.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "7b220875e91b59cffbf2e54b7c230115ea8b98d8b47031b92101eae2de48dbe8",
+      "size": 5374,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.754184+00:00",
+      "source_sha256": "dcd9f54e3c659546225ff9c9a159c4917a0393484cd4360a8f90c4ec665ee22d",
+      "source_size": 4117,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "dcd9f54e3c659546225ff9c9a159c4917a0393484cd4360a8f90c4ec665ee22d",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/_compat.py",
+      "birthtime_utc": "2026-09-27T21:08:11.145873+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 2829
+      },
+      "mtime_utc": "2026-09-27T21:08:11.145901+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_compat.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "30ac788e6b67cb32a87be41779629e950d04d7e4ff4000af5bc01065a4084384",
+      "size": 4025,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.754311+00:00",
+      "source_sha256": "c7483b88450e9c15490bbdb3c850a06f578aab2c52fbb7f62c69cdc99febf79b",
+      "source_size": 2829,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "c7483b88450e9c15490bbdb3c850a06f578aab2c52fbb7f62c69cdc99febf79b",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/_config.py",
+      "birthtime_utc": "2026-09-27T21:08:11.155637+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 843
+      },
+      "mtime_utc": "2026-09-27T21:08:11.155682+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_config.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "824c3ba5c34406317ef1cc4a19f3b142368e6b2108656d67b6c9fa66edac202a",
+      "size": 1307,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.754376+00:00",
+      "source_sha256": "746ab7c51e9f819105e9406dfcbd13f9e507201e22e37911987d0fdbcb09570f",
+      "source_size": 843,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "746ab7c51e9f819105e9406dfcbd13f9e507201e22e37911987d0fdbcb09570f",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/_funcs.py",
+      "birthtime_utc": "2026-09-27T21:08:11.162748+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 16479
+      },
+      "mtime_utc": "2026-09-27T21:08:11.162856+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_funcs.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "f8ee26a4dc8c5300073d42d2b485aedfad18942a5e74e506e96eab6f3cd817de",
+      "size": 14113,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.754459+00:00",
+      "source_sha256": "231e481134dfcf9174d45fb5d8c17f0921689889f687c6faec4555cf6802b411",
+      "source_size": 16479,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "231e481134dfcf9174d45fb5d8c17f0921689889f687c6faec4555cf6802b411",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/_make.py",
+      "birthtime_utc": "2026-09-27T21:08:11.153552+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 106129
+      },
+      "mtime_utc": "2026-09-27T21:08:11.153903+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_make.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "023fa163c188192fff0b8083dcb059e7cd2edc459e6cb28df484853ee8b678b4",
+      "size": 114929,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.754605+00:00",
+      "source_sha256": "1fb387d9e592e429c1ccb5233451355b299f3eb985d6bf1fbf644f76df4cb980",
+      "source_size": 106129,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "1fb387d9e592e429c1ccb5233451355b299f3eb985d6bf1fbf644f76df4cb980",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/_next_gen.py",
+      "birthtime_utc": "2026-09-27T21:08:11.163515+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 26274
+      },
+      "mtime_utc": "2026-09-27T21:08:11.163548+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_next_gen.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "ad9254fd7fdc628d7d0f3a8336432fbfc2ce14134d74bd2f9bfebc35128085af",
+      "size": 25470,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.754709+00:00",
+      "source_sha256": "050b42525cf08368161d3617050beb118067cc152b0ef3b9eeed0fcba5023e17",
+      "source_size": 26274,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "050b42525cf08368161d3617050beb118067cc152b0ef3b9eeed0fcba5023e17",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/_version_info.py",
+      "birthtime_utc": "2026-09-27T21:08:11.163966+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 2222
+      },
+      "mtime_utc": "2026-09-27T21:08:11.164006+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_version_info.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "4b272c041eeed1c5331301f302deb13f24bb5ea777a9c1349b9943035c05544c",
+      "size": 3655,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.754852+00:00",
+      "source_sha256": "c3847e1580b734afe43241945899583f87150251fd1d1682fae9b77dc8d89073",
+      "source_size": 2222,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "c3847e1580b734afe43241945899583f87150251fd1d1682fae9b77dc8d89073",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/converters.py",
+      "birthtime_utc": "2026-09-27T21:08:11.145310+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 3861
+      },
+      "mtime_utc": "2026-09-27T21:08:11.145526+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/converters.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "e4a2afae10071f9ab2d5afd58a2beda9761d6e02ee7ca7575745b1de440cc5a3",
+      "size": 4749,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.754989+00:00",
+      "source_sha256": "1a50de3b33de4c581e0412db8fd1b9ec4cf994093af2e85200b45827f7b17bce",
+      "source_size": 3861,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "1a50de3b33de4c581e0412db8fd1b9ec4cf994093af2e85200b45827f7b17bce",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/exceptions.py",
+      "birthtime_utc": "2026-09-27T21:08:11.156543+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 1990
+      },
+      "mtime_utc": "2026-09-27T21:08:11.156583+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/exceptions.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "e2926b23ebb2b9e4cf9a0e3de66bf7265842f541eb77236ab23af41d9b188c1a",
+      "size": 3967,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.755115+00:00",
+      "source_sha256": "6f8bcc6e7a10dd5a7059986aad88bfb2c5d508af28d9ce074124b4f5c49433da",
+      "source_size": 1990,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "6f8bcc6e7a10dd5a7059986aad88bfb2c5d508af28d9ce074124b4f5c49433da",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/filters.py",
+      "birthtime_utc": "2026-09-27T21:08:11.158330+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 1795
+      },
+      "mtime_utc": "2026-09-27T21:08:11.158370+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/filters.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "d479da16e076fab0d0fcae97284696d666f06d75859e404409083ed942085c2f",
+      "size": 3226,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.755244+00:00",
+      "source_sha256": "64188a58ba774742df099b2aed7d75a67f565fc36c952db05cce23b272ce19cf",
+      "source_size": 1795,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "64188a58ba774742df099b2aed7d75a67f565fc36c952db05cce23b272ce19cf",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/setters.py",
+      "birthtime_utc": "2026-09-27T21:08:11.156101+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 1617
+      },
+      "mtime_utc": "2026-09-27T21:08:11.156149+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/setters.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "9843d04a88e7d6b683572c3e2d571e62853803c3c6be57c3e4ecc128448526c2",
+      "size": 2101,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.755422+00:00",
+      "source_sha256": "e7e75c4fadc640adf938d1334a07d70a46c1ee93e4691faabf5e669b83d54b34",
+      "source_size": 1617,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "e7e75c4fadc640adf938d1334a07d70a46c1ee93e4691faabf5e669b83d54b34",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/validators.py",
+      "birthtime_utc": "2026-09-27T21:08:11.159916+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 21553
+      },
+      "mtime_utc": "2026-09-27T21:08:11.159958+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/validators.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "2e1c94799b167d59f04c3a8d0facda68427d08300749138d7b3a1e3223d7e89e",
+      "size": 28072,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.755564+00:00",
+      "source_sha256": "9b7411cd94c036be1fd82e1e55d528160d753605d66a4f166ade2a4131a1bdcb",
+      "source_size": 21553,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "9b7411cd94c036be1fd82e1e55d528160d753605d66a4f166ade2a4131a1bdcb",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__init__.py",
+      "birthtime_utc": "2026-09-27T21:08:11.144171+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 1183
+      },
+      "mtime_utc": "2026-09-27T21:08:11.144207+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/__init__.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "9433b918ece0b8884e8179a19b2f0a143932b95945b2c22e78f221ccc9d5620b",
+      "size": 1962,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.755741+00:00",
+      "source_sha256": "47168064dc1888487e7dcbc72d936943f0d62a78bbdccfe3c443c47ed8aad597",
+      "source_size": 1183,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "47168064dc1888487e7dcbc72d936943f0d62a78bbdccfe3c443c47ed8aad597",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/converters.py",
+      "birthtime_utc": "2026-09-27T21:08:11.164570+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 76
+      },
+      "mtime_utc": "2026-09-27T21:08:11.164606+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/converters.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "dc7b708c7f9bea682730048411e0bedc669418fd541cb05a1bb5072d007b86b0",
+      "size": 439,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.755881+00:00",
+      "source_sha256": "f244258eb5707d24d1bbc20dc0493c488d1e1abce659fb6c4fbaccd04ab2a213",
+      "source_size": 76,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "f244258eb5707d24d1bbc20dc0493c488d1e1abce659fb6c4fbaccd04ab2a213",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/exceptions.py",
+      "birthtime_utc": "2026-09-27T21:08:11.164790+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 76
+      },
+      "mtime_utc": "2026-09-27T21:08:11.164822+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/exceptions.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "99a1189d7e6a6bf79edcab9a8239581d22dfbcfe276b54220195e53dea5aa382",
+      "size": 439,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.755950+00:00",
+      "source_sha256": "0020829a0d7dfaf0c56833d8f6f165d7df523d709030dfdb10db380c02e3ce6b",
+      "source_size": 76,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "0020829a0d7dfaf0c56833d8f6f165d7df523d709030dfdb10db380c02e3ce6b",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/filters.py",
+      "birthtime_utc": "2026-09-27T21:08:11.164994+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 73
+      },
+      "mtime_utc": "2026-09-27T21:08:11.165021+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/filters.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "36d5b90adf0599c0b45a77259baf25f892b003105a479ccffa7e2380530217cc",
+      "size": 433,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.756012+00:00",
+      "source_sha256": "54e50c66e83db8453a754b80d1d1758c89d42b43cbddf2e03f45414b977e0831",
+      "source_size": 73,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "54e50c66e83db8453a754b80d1d1758c89d42b43cbddf2e03f45414b977e0831",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/setters.py",
+      "birthtime_utc": "2026-09-27T21:08:11.165252+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 73
+      },
+      "mtime_utc": "2026-09-27T21:08:11.165295+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/setters.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "725cf9d60e2fd91ec760bc29fdd5a66b269ba37283a429b8b836cf073b777be5",
+      "size": 433,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.756121+00:00",
+      "source_sha256": "78bd5889d6105774f687dfd2608652651d4501c1c66f54ee093cb41342efd925",
+      "source_size": 73,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "78bd5889d6105774f687dfd2608652651d4501c1c66f54ee093cb41342efd925",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/validators.py",
+      "birthtime_utc": "2026-09-27T21:08:11.165485+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 76
+      },
+      "mtime_utc": "2026-09-27T21:08:11.165525+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/validators.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "0100100c04833264e4fb5a206f702d2d32f3922bed342d382d3cbe4ab5ad123d",
+      "size": 439,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.756185+00:00",
+      "source_sha256": "c5ccbac03e53b5391d086d5fe1759ba1c3d23b47da06393921f5497cfe92523d",
+      "source_size": 76,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "c5ccbac03e53b5391d086d5fe1759ba1c3d23b47da06393921f5497cfe92523d",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__init__.py",
+      "birthtime_utc": "2026-09-27T21:08:11.139161+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 3941
+      },
+      "mtime_utc": "2026-09-27T21:08:11.139217+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/__init__.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "e41987ff9908926177115503dbf8c9ef92eb7376a6edc9dbd84a94f618d06f05",
+      "size": 4046,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.749117+00:00",
+      "source_sha256": "a7e470e134bfd0e3c76482722260d6b1d5a099de823d61cc5cbabb06e4314c67",
+      "source_size": 3941,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "a7e470e134bfd0e3c76482722260d6b1d5a099de823d61cc5cbabb06e4314c67",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/_format.py",
+      "birthtime_utc": "2026-09-27T21:08:11.140872+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 15581
+      },
+      "mtime_utc": "2026-09-27T21:08:11.140917+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/_format.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "cf398ca0efc9199a0635f90e0b53631374c9ed30e2634fe280164cce3c0c6168",
+      "size": 24354,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.749307+00:00",
+      "source_sha256": "8a9d4dd7a08104e6fff2c33f89e8f25b4539258f645e8cf73bf0058f5487165f",
+      "source_size": 15581,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "8a9d4dd7a08104e6fff2c33f89e8f25b4539258f645e8cf73bf0058f5487165f",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/_keywords.py",
+      "birthtime_utc": "2026-09-27T21:08:20.623356+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 14949
+      },
+      "mtime_utc": "2026-09-27T21:08:20.623553+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/_keywords.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "5cc9a4ca765e71587f0fe60c3cd28f6c8a80e06180f35bfef6cbdecccd32a7ec",
+      "size": 21085,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.749421+00:00",
+      "source_sha256": "afcfc3aea01f9fa40bc109e65c4820bde89253e51a20bda9da7b8f20d7a57c57",
+      "source_size": 14949,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "afcfc3aea01f9fa40bc109e65c4820bde89253e51a20bda9da7b8f20d7a57c57",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/_legacy_keywords.py",
+      "birthtime_utc": "2026-09-27T21:08:20.625785+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 15191
+      },
+      "mtime_utc": "2026-09-27T21:08:20.625828+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/_legacy_keywords.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "bdbc9bd375a2b45506244b27c174b88d4b102b4dd32ea85d7c9718bf616430fd",
+      "size": 18470,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.749523+00:00",
+      "source_sha256": "dad5aec113d66d84bb10097cc01202feb69b1aebf527875f60ba8d10fa528610",
+      "source_size": 15191,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "dad5aec113d66d84bb10097cc01202feb69b1aebf527875f60ba8d10fa528610",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/_types.py",
+      "birthtime_utc": "2026-09-27T21:08:20.600261+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 5456
+      },
+      "mtime_utc": "2026-09-27T21:08:20.600332+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/_types.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "ac1a15da93d72b4b429ec0d7ba78cc13cda86a37bf8faf0bfc090ac6ea90580f",
+      "size": 7871,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.749604+00:00",
+      "source_sha256": "d296091bad5c9ffe195959eac83db8b5ac764013259d23f2d1f704082a4048c9",
+      "source_size": 5456,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "d296091bad5c9ffe195959eac83db8b5ac764013259d23f2d1f704082a4048c9",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/_typing.py",
+      "birthtime_utc": "2026-09-27T21:08:20.626074+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 630
+      },
+      "mtime_utc": "2026-09-27T21:08:20.626109+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/_typing.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "8d2ac2e16d062cd67ba54e09cffe446357f5592806b8ac25e8bde824e9a48f6e",
+      "size": 1894,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.749670+00:00",
+      "source_sha256": "8457c011e149efa2d8025fdf7ae55ad209c79d5f5512afd48632c94beedac606",
+      "source_size": 630,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "8457c011e149efa2d8025fdf7ae55ad209c79d5f5512afd48632c94beedac606",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/_utils.py",
+      "birthtime_utc": "2026-09-27T21:08:20.598693+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 10659
+      },
+      "mtime_utc": "2026-09-27T21:08:20.598996+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/_utils.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "b51726bdef8332fb6eaef39c461aef7b79dcbfe736360c859cacc844005310c5",
+      "size": 15352,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.749759+00:00",
+      "source_sha256": "5efebfc0a2ac941265c328fdfa3d9cf090c5c3ee33e1a5859d57b6a57f21ed4e",
+      "source_size": 10659,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "5efebfc0a2ac941265c328fdfa3d9cf090c5c3ee33e1a5859d57b6a57f21ed4e",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/exceptions.py",
+      "birthtime_utc": "2026-09-27T21:08:11.143326+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 15256
+      },
+      "mtime_utc": "2026-09-27T21:08:11.143606+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/exceptions.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "21f68e18d95387f442b52aabf6e6b31dadd4583bf30fc9c97443136fc57e275c",
+      "size": 24660,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.749960+00:00",
+      "source_sha256": "6f8da150339f3c5729ac8e1994da630de2cabfc93dbce86059cb768f20e5c739",
+      "source_size": 15256,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "6f8da150339f3c5729ac8e1994da630de2cabfc93dbce86059cb768f20e5c739",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/protocols.py",
+      "birthtime_utc": "2026-09-27T21:08:20.626459+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 7198
+      },
+      "mtime_utc": "2026-09-27T21:08:20.626513+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/protocols.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "f5837cff0fe96548e1633ad9375061e4ea60eb4a5a89e5bc62f351f6fd961831",
+      "size": 7498,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.750051+00:00",
+      "source_sha256": "960cabc951ea1628d2151033f79721dd5376173fa84c5ca18fd39b732e4ffc22",
+      "source_size": 7198,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "960cabc951ea1628d2151033f79721dd5376173fa84c5ca18fd39b732e4ffc22",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/validators.py",
+      "birthtime_utc": "2026-09-27T21:08:20.604037+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 47147
+      },
+      "mtime_utc": "2026-09-27T21:08:20.604123+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/validators.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "24862342f0cb9efb06a1d6143badbd7f8d1cee1450792dc86c33840540aec61e",
+      "size": 53000,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.750252+00:00",
+      "source_sha256": "008d1b42b189a6f107d5148edf29f059c36f7e4a8de9624f832cb454ded69521",
+      "source_size": 47147,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "008d1b42b189a6f107d5148edf29f059c36f7e4a8de9624f832cb454ded69521",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema_specifications/__init__.py",
+      "birthtime_utc": "2026-09-27T21:08:20.614302+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 386
+      },
+      "mtime_utc": "2026-09-27T21:08:20.614354+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema_specifications/__pycache__/__init__.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "1009b839d2539a1713223ee4267911288084f9373a2a45f29d6b86a9c910f6af",
+      "size": 776,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.745875+00:00",
+      "source_sha256": "aa84c1d83298eeabcdac684c3c7ea0b6600944b8a599543e7c56704faaf2ab0d",
+      "source_size": 386,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "aa84c1d83298eeabcdac684c3c7ea0b6600944b8a599543e7c56704faaf2ab0d",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema_specifications/_core.py",
+      "birthtime_utc": "2026-09-27T21:08:20.617068+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 1140
+      },
+      "mtime_utc": "2026-09-27T21:08:20.617113+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema_specifications/__pycache__/_core.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "d8bc263243e898e2e1129db2166f169bd2174a2167b614321d67180a78929fc3",
+      "size": 1735,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.745950+00:00",
+      "source_sha256": "b4585cd42325789dc024e2bf6e3c4ea4541376bb140a51467c5c4f054fc279b3",
+      "source_size": 1140,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "b4585cd42325789dc024e2bf6e3c4ea4541376bb140a51467c5c4f054fc279b3",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/__init__.py",
+      "birthtime_utc": "2026-09-27T21:08:11.166082+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 207
+      },
+      "mtime_utc": "2026-09-27T21:08:11.166111+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__/__init__.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "36d4099e94d3b4bc8ef98e002b1ffd2e282cdf4a21dfa3fb58a34e8403fa7da0",
+      "size": 624,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.743535+00:00",
+      "source_sha256": "e4864a5da007fc55b20894646939f55dca6d2df83d72f78b6fdbb99d853124ab",
+      "source_size": 207,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "e4864a5da007fc55b20894646939f55dca6d2df83d72f78b6fdbb99d853124ab",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/_attrs.py",
+      "birthtime_utc": "2026-09-27T21:08:20.592217+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 791
+      },
+      "mtime_utc": "2026-09-27T21:08:20.592288+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__/_attrs.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "d6473d6f44be9524680e9974771f9598c292902fe0bfb2f10251fa89efbfd5db",
+      "size": 2111,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.743612+00:00",
+      "source_sha256": "6e04fe28c84354b786b56c4cfd218a61e2da6411734f691454574090e7178bc8",
+      "source_size": 791,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "6e04fe28c84354b786b56c4cfd218a61e2da6411734f691454574090e7178bc8",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/_core.py",
+      "birthtime_utc": "2026-09-27T21:08:11.168220+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 24732
+      },
+      "mtime_utc": "2026-09-27T21:08:11.168259+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__/_core.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "7c2571c896a197e13b4d6aff02fa366e846fb867d76b4e577509bfc15e479240",
+      "size": 35025,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.743786+00:00",
+      "source_sha256": "d923c67da4efcc0dec46a6e3ff8476c02fbe7e25e8942515a4b14b249eb3759f",
+      "source_size": 24732,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "d923c67da4efcc0dec46a6e3ff8476c02fbe7e25e8942515a4b14b249eb3759f",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/exceptions.py",
+      "birthtime_utc": "2026-09-27T21:08:20.591672+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 4176
+      },
+      "mtime_utc": "2026-09-27T21:08:20.591816+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__/exceptions.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "c585ce63537b5cbd8664fbd71374779960e6709aff912e6b5d63148135c49af8",
+      "size": 9092,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.743876+00:00",
+      "source_sha256": "cc581a120e9688a793e7c310b8a36c8060e71ecce9dba738a11782eac17d8073",
+      "source_size": 4176,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "cc581a120e9688a793e7c310b8a36c8060e71ecce9dba738a11782eac17d8073",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/jsonschema.py",
+      "birthtime_utc": "2026-09-27T21:08:20.616051+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 18615
+      },
+      "mtime_utc": "2026-09-27T21:08:20.616276+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__/jsonschema.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "2e96d096935c699338e62b10aae0608e8da97cc3aa3de3de2ccc67e212445b69",
+      "size": 21638,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.743952+00:00",
+      "source_sha256": "8d767ab7ac7da13bd31cc202d2d4726858d6e6bdaa78739b62ebbb52149f2b74",
+      "source_size": 18615,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "8d767ab7ac7da13bd31cc202d2d4726858d6e6bdaa78739b62ebbb52149f2b74",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/typing.py",
+      "birthtime_utc": "2026-09-27T21:08:20.594385+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 1445
+      },
+      "mtime_utc": "2026-09-27T21:08:20.594446+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__/typing.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "ca988b072a7a4baa15f281b2c5627573c63791814c3960da5b4b4fa3b7db15ed",
+      "size": 2943,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.744128+00:00",
+      "source_sha256": "5a351b9d9ea33c0777d5c9c214069e588544373c87b47749c8e95e96fd4663bd",
+      "source_size": 1445,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "5a351b9d9ea33c0777d5c9c214069e588544373c87b47749c8e95e96fd4663bd",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 9,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/rpds/__init__.py",
+      "birthtime_utc": "2026-09-27T21:08:11.169530+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "2b0e0d0a",
+        "magic_number_little_endian": 168627755,
+        "source_mtime_uint32": 1790538281,
+        "source_size_uint32": 99
+      },
+      "mtime_utc": "2026-09-27T21:08:11.169561+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8/Integra.app/Contents/Resources/runtime/review-python/site-packages/rpds/__pycache__/__init__.cpython-314.pyc",
+      "python_tag_from_filename": "314",
+      "sha256": "d8523e6691dcfdfa2eea7290751760621eb43b557195bfd6cfed87997b704167",
+      "size": 573,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-27T19:44:41.740689+00:00",
+      "source_sha256": "c373205d6ee5a530880b0d0a5dbc36d105f9ef7fe46ec12758878cb0202e82f3",
+      "source_size": 99,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "c373205d6ee5a530880b0d0a5dbc36d105f9ef7fe46ec12758878cb0202e82f3",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    },
+    {
+      "app_index": 27,
+      "associated_source_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173/c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b/Integra.app/Contents/Resources/runtime/word-alignment/site-packages/whisperx/__init__.py",
+      "birthtime_utc": "2026-09-28T19:05:39.240557+00:00",
+      "header": {
+        "flags": 0,
+        "magic_hex": "f30d0d0a",
+        "magic_number_little_endian": 168627699,
+        "source_mtime_uint32": 1789243638,
+        "source_size_uint32": 1452
+      },
+      "mtime_utc": "2026-09-28T19:05:39.240613+00:00",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173/c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b/Integra.app/Contents/Resources/runtime/word-alignment/site-packages/whisperx/__pycache__/__init__.cpython-313.pyc",
+      "python_tag_from_filename": "313",
+      "sha256": "c66ec5e79701d861cf0cd22492912988f04c85eb338a2f70a729542d992e3a93",
+      "size": 2564,
+      "size_header_matches_source": true,
+      "source_exists": true,
+      "source_mtime_utc": "2026-09-12T20:07:18+00:00",
+      "source_sha256": "f509cd97d1b4e3c971862cfd5fef80d6980e0141224625ab4fa1bff2f2a71968",
+      "source_size": 1452,
+      "timestamp_header_matches_source": true,
+      "writer": "UNPROVEN",
+      "source_recorded_sha256": "f509cd97d1b4e3c971862cfd5fef80d6980e0141224625ab4fa1bff2f2a71968",
+      "source_hash_matches_recorded_inventory": true,
+      "created_after_complete": true
+    }
+  ],
+  "alternate_archive_verifications": [
+    {
+      "app_index": 30,
+      "command": [
+        "python3",
+        "-B",
+        "scripts/candidate_archive.py",
+        "verify",
+        "/Users/yurielokhin/Library/Application Support/Integra/Recovery Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8",
+        "--candidate-id",
+        "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583",
+        "--bundle-digest",
+        "2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8",
+        "--manifest-digest",
+        "4c9027d2fb65ef921bbb9c20878ccef61fca34c999c1f606f37da9e2a44a3161"
+      ],
+      "timeout_seconds": 600,
+      "elapsed_seconds": 9.178,
+      "returncode": 0,
+      "stdout": {
+        "app_size_bytes": 2203044017,
+        "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Recovery Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8",
+        "artifact_type": "integra.candidate_archive",
+        "bundle_digest": "2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8",
+        "candidate_id": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583",
+        "file_count": 29646,
+        "inventory_sha256": "82cb9127a42fd11f24debe9e606afacae6433297487d842542c14688523854ba",
+        "manifest_digest": "4c9027d2fb65ef921bbb9c20878ccef61fca34c999c1f606f37da9e2a44a3161",
+        "retained_size_bytes": 2203048527,
+        "runtime_validation": "NOT_PERFORMED",
+        "schema_version": "1.0",
+        "status": "COMPLETE",
+        "verification": "ARCHIVAL_BYTE_INTEGRITY"
+      },
+      "stderr": ""
+    },
+    {
+      "app_index": 31,
+      "command": [
+        "python3",
+        "-B",
+        "scripts/candidate_archive.py",
+        "verify",
+        "/Users/yurielokhin/Library/Application Support/Integra/Build Archive Recovery/candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173/c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b",
+        "--candidate-id",
+        "candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173",
+        "--bundle-digest",
+        "c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b",
+        "--manifest-digest",
+        "4e54fcce8ee164ca86d170c12f31474a457eedaf377bb433893aba7d1607bdc9"
+      ],
+      "timeout_seconds": 600,
+      "elapsed_seconds": 9.036,
+      "returncode": 0,
+      "stdout": {
+        "app_size_bytes": 2203145589,
+        "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive Recovery/candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173/c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b",
+        "artifact_type": "integra.candidate_archive",
+        "bundle_digest": "c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b",
+        "candidate_id": "candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173",
+        "file_count": 29649,
+        "inventory_sha256": "d4170e9d073fb209274af0a17b984a2a1cc019c5c1d791781366de6150c80a3b",
+        "manifest_digest": "4e54fcce8ee164ca86d170c12f31474a457eedaf377bb433893aba7d1607bdc9",
+        "retained_size_bytes": 2203150104,
+        "runtime_validation": "NOT_PERFORMED",
+        "schema_version": "1.0",
+        "status": "COMPLETE",
+        "verification": "ARCHIVAL_BYTE_INTEGRITY"
+      },
+      "stderr": ""
+    }
+  ],
+  "remaining_steps": [],
+  "legacy_objects": {
+    "objects": [
+      {
+        "app_index": 33,
+        "app_path": "/Users/yurielokhin/AI/runtimes/integra/current-build/Integra.app",
+        "scope": "/Users/yurielokhin/AI/runtimes/integra/current-build",
+        "uid": 501,
+        "lifecycle_marker_exists": false,
+        "app_parent_marker_exists": false,
+        "recorded_role": "LEGACY_RUNTIME_WITHOUT_MANIFEST",
+        "is_full_size": true,
+        "logical_app_bytes": 2201448085,
+        "candidate_id": null,
+        "bundle_digest": null,
+        "manifest_digest": null,
+        "source": null,
+        "build": null,
+        "build_command": null,
+        "scope_entries": [
+          "Integra.app"
+        ],
+        "plist": {
+          "CFBundleIdentifier": "app.integra.ready",
+          "CFBundleShortVersionString": "1.0.0",
+          "CFBundleVersion": "100",
+          "CFBundleExecutable": "Integra"
+        },
+        "small_file_hashes": [
+          {
+            "path": "Contents/MacOS/Integra",
+            "sha256": "4d0cfde0b7f30b4fc7dbf0ade077a30a6e5a1c7bb1309d92a8d90e77572e821f",
+            "size": 441896,
+            "mtime": 1789810917.7136078,
+            "birthtime": 1789810917.7135303
+          },
+          {
+            "path": "Contents/Resources/bridge.py",
+            "sha256": "f83a5e9c82a4be43e170a054c51427b794eb0d2f3e76fbfc7c72bc6db011a806",
+            "size": 38755,
+            "mtime": 1789810917.7554471,
+            "birthtime": 1789810917.7551968
+          },
+          {
+            "path": "Contents/Resources/integra_core/application_runtime.py",
+            "sha256": "ac29994d6718708d8bfdd1a1367e37d7cca87bbfde1ba5a2e82f8d754c64b541",
+            "size": 17759,
+            "mtime": 1789806159,
+            "birthtime": 1789806159
+          }
+        ],
+        "selected_file_lsof": {
+          "command": [
+            "/usr/sbin/lsof",
+            "-nP",
+            "-F",
+            "pn",
+            "--",
+            "/Users/yurielokhin/AI/runtimes/integra/current-build/Integra.app/Contents/MacOS/Integra",
+            "/Users/yurielokhin/AI/runtimes/integra/current-build/Integra.app/Contents/Resources/bridge.py"
+          ],
+          "returncode": 1,
+          "stdout": "",
+          "stderr": "",
+          "proof_limit": "selected files only; current-user visibility; not complete consumer proof"
+        },
+        "managed_provenance": "LEGACY_INTEGRA_APPLICATION_IDENTITY_INCOMPLETE",
+        "deletion_ownership": "UNCONFIRMED_NO_LIFECYCLE_OR_PUBLISHER_ATTESTATION",
+        "disposition": "RETAIN_PENDING_OWNERSHIP_AND_LIFECYCLE_DECISION",
+        "automatic_deletion_allowed": false,
+        "identity_limit": "No Candidate manifest; small-file hashes do not establish full Candidate identity",
+        "historical_association": {
+          "file": "Contents/Resources/integra_core/application_runtime.py",
+          "sha256": "ac29994d6718708d8bfdd1a1367e37d7cca87bbfde1ba5a2e82f8d754c64b541",
+          "matches_accepted_governed_file_of": "candidate-v1-c5851d168b116fed83109014519ebc01c0291e23705ac9d2ec0a4e5df2471960",
+          "proof_level": "SINGLE_SOURCE_FILE_HASH_MATCH; NOT_CANDIDATE_IDENTITY"
+        }
+      },
+      {
+        "app_index": 35,
+        "app_path": "/private/tmp/integra-excel22-topic-translation/build/excel-22/Integra.app",
+        "scope": "/private/tmp/integra-excel22-topic-translation",
+        "uid": 501,
+        "lifecycle_marker_exists": false,
+        "app_parent_marker_exists": false,
+        "recorded_role": "UNKNOWN",
+        "is_full_size": false,
+        "logical_app_bytes": 7586596,
+        "candidate_id": null,
+        "bundle_digest": null,
+        "manifest_digest": null,
+        "source": null,
+        "build": null,
+        "build_command": null,
+        "scope_entries": [
+          ".codex",
+          ".git",
+          ".github",
+          ".gitignore",
+          "AGENTS.md",
+          "DEVELOPMENT_WORKFLOW.md",
+          "README.md",
+          "build",
+          "docs",
+          "integra_core",
+          "macos",
+          "schemas",
+          "scripts",
+          "state",
+          "tests",
+          "workers"
+        ],
+        "plist": {
+          "CFBundleIdentifier": "app.integra.ready",
+          "CFBundleShortVersionString": "1.0.0",
+          "CFBundleVersion": "100",
+          "CFBundleExecutable": "Integra"
+        },
+        "small_file_hashes": [
+          {
+            "path": "Contents/MacOS/Integra",
+            "sha256": "f3be74a85e824307e962093eab1f7c5e100129c8d70228b54216285222f378c1",
+            "size": 495352,
+            "mtime": 1790606823.879649,
+            "birthtime": 1790606823.8795605
+          },
+          {
+            "path": "Contents/Resources/bridge.py",
+            "sha256": "7d344d75d8b4a6ed2dbe9321d5112f0bc84a96e28efb3251a7398b58321c57ec",
+            "size": 53049,
+            "mtime": 1790606823.8926394,
+            "birthtime": 1790606823.8920503
+          }
+        ],
+        "git": {
+          "head": {
+            "returncode": 0,
+            "stdout": "f958b3618c27dde335383e0d4e147b1f380f28d9",
+            "stderr": ""
+          },
+          "branch": {
+            "returncode": 0,
+            "stdout": "codex/excel-22-topic-translation",
+            "stderr": ""
+          },
+          "dirty_tracked": {
+            "returncode": 0,
+            "stdout": "",
+            "stderr": ""
+          }
+        },
+        "selected_file_lsof": {
+          "command": [
+            "/usr/sbin/lsof",
+            "-nP",
+            "-F",
+            "pn",
+            "--",
+            "/private/tmp/integra-excel22-topic-translation/build/excel-22/Integra.app/Contents/MacOS/Integra",
+            "/private/tmp/integra-excel22-topic-translation/build/excel-22/Integra.app/Contents/Resources/bridge.py"
+          ],
+          "returncode": 1,
+          "stdout": "",
+          "stderr": "",
+          "proof_limit": "selected files only; current-user visibility; not complete consumer proof"
+        },
+        "managed_provenance": "INTEGRA_BUILD_INSIDE_ACTIVE_SOURCE_WORKTREE",
+        "deletion_ownership": "UNCONFIRMED_NO_LIFECYCLE_OR_PUBLISHER_ATTESTATION",
+        "disposition": "RETAIN_PENDING_OWNERSHIP_AND_LIFECYCLE_DECISION",
+        "automatic_deletion_allowed": false,
+        "identity_limit": "No Candidate manifest; small-file hashes do not establish full Candidate identity",
+        "active_reference": {
+          "pull_request": 204,
+          "head_sha": "93a080dcc9d1cd6509b56905b99e1593004df8b1",
+          "state": "open",
+          "local_worktree_is_distinct_branch": true,
+          "cleanup_authorization": false
+        }
+      },
+      {
+        "app_index": 36,
+        "app_path": "/private/tmp/integra-excel07-release/Integra.app",
+        "scope": "/private/tmp/integra-excel07-release",
+        "uid": 501,
+        "lifecycle_marker_exists": false,
+        "app_parent_marker_exists": false,
+        "recorded_role": "UNARCHIVED_LEGACY_CANDIDATE",
+        "is_full_size": true,
+        "logical_app_bytes": 2201652184,
+        "candidate_id": "candidate-v1-0020e329657e0719d3725e791c7f8cca42301b0092e41f46b6f19e637dc83d4d",
+        "bundle_digest": "d05c0863dcb4a205a3c0fd4e4787e8b15f70a17058335f09f46236bda64ca4ba",
+        "manifest_digest": "e1ba90f85ab1cafb7cb9a99b9ec26f834f4fff89232cc05f892a766c534fe8fc",
+        "source": {
+          "commit_sha": "4161ec1dd5eeef9f4cfc6b8df02e6af577d9ec87",
+          "dirty": true,
+          "dirty_diff_sha256": "8e04fd0fed5afa9d118bde88cf69fc68992d9e122ae539bee312a54d85b35f35",
+          "tree_sha": "6f58a18bddc519f546f27a6980122ecc5f044281"
+        },
+        "build": {
+          "build_id": "local",
+          "timestamp": "2026-09-29T19:33:16+03:00"
+        },
+        "build_command": {
+          "identity": "scripts/build_macos_app.sh",
+          "path": "scripts/build_macos_app.sh",
+          "script_sha256": "ad81f7a08a2fbcb93b57788e64d2f028697f7f5f086bb8fa75e9eac758dc4507"
+        },
+        "scope_entries": [
+          "Integra.app"
+        ],
+        "plist": {
+          "CFBundleIdentifier": "app.integra.ready",
+          "CFBundleShortVersionString": "1.0.0",
+          "CFBundleVersion": "100",
+          "CFBundleExecutable": "Integra"
+        },
+        "small_file_hashes": [
+          {
+            "path": "Contents/MacOS/Integra",
+            "sha256": "6e81035f2932edc62725cd7c26eecaf9b045d4874dedb8405f4fec8f62dd1a0e",
+            "size": 515832,
+            "mtime": 1790701429.2350125,
+            "birthtime": 1790701429.2349296
+          },
+          {
+            "path": "Contents/Resources/bridge.py",
+            "sha256": "fdc4642eb3b3efae280f8d1afc160fc0dee97c49bb6d63599f879c06a4bf3a0c",
+            "size": 53712,
+            "mtime": 1790701429.2690926,
+            "birthtime": 1790701429.268652
+          },
+          {
+            "path": "Contents/Resources/integra_core/application_runtime.py",
+            "sha256": "3fb03f62b896168a90eab3534a2545376e605fa138e065b1fee688c491469c52",
+            "size": 35744,
+            "mtime": 1790700181,
+            "birthtime": 1790700181
+          },
+          {
+            "path": "Contents/Resources/candidate-manifest.json",
+            "sha256": "e1ba90f85ab1cafb7cb9a99b9ec26f834f4fff89232cc05f892a766c534fe8fc",
+            "size": 4514,
+            "mtime": 1790701493.1708534,
+            "birthtime": 1790701493.1707745
+          }
+        ],
+        "selected_file_lsof": {
+          "command": [
+            "/usr/sbin/lsof",
+            "-nP",
+            "-F",
+            "pn",
+            "--",
+            "/private/tmp/integra-excel07-release/Integra.app/Contents/MacOS/Integra",
+            "/private/tmp/integra-excel07-release/Integra.app/Contents/Resources/bridge.py"
+          ],
+          "returncode": 1,
+          "stdout": "",
+          "stderr": "",
+          "proof_limit": "selected files only; current-user visibility; not complete consumer proof"
+        },
+        "managed_provenance": "MANIFEST_BOUND_LEGACY_INTEGRA_BUILD",
+        "deletion_ownership": "UNCONFIRMED_NO_LIFECYCLE_OR_PUBLISHER_ATTESTATION",
+        "disposition": "RETAIN_PENDING_OWNERSHIP_AND_LIFECYCLE_DECISION",
+        "automatic_deletion_allowed": false,
+        "identity_limit": "Manifest-bound source/execution identity; full current payload not freshly verified in this stage"
+      },
+      {
+        "app_index": 37,
+        "app_path": "/private/tmp/integra-excel07-source-current/Integra.app",
+        "scope": "/private/tmp/integra-excel07-source-current",
+        "uid": 501,
+        "lifecycle_marker_exists": false,
+        "app_parent_marker_exists": false,
+        "recorded_role": "UNARCHIVED_LEGACY_CANDIDATE",
+        "is_full_size": true,
+        "logical_app_bytes": 2201652185,
+        "candidate_id": "candidate-v1-e594978870ae4569f1fac1c67f3b4a07a43e0d29d64026d8c44226bf1bf95ecb",
+        "bundle_digest": "d05c0863dcb4a205a3c0fd4e4787e8b15f70a17058335f09f46236bda64ca4ba",
+        "manifest_digest": "dd31a5e7a6b4c330a992621c18e015441eb74d54f06d14cc66174c05734983c7",
+        "source": {
+          "commit_sha": "2cc003f83e15800d46fe41164fea6aba44151e5e",
+          "dirty": false,
+          "dirty_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "tree_sha": "cc6238898e0b4de4042cbcbfc7d70d6918c8a0c1"
+        },
+        "build": {
+          "build_id": "local",
+          "timestamp": "2026-09-29T20:13:56+03:00"
+        },
+        "build_command": {
+          "identity": "scripts/build_macos_app.sh",
+          "path": "scripts/build_macos_app.sh",
+          "script_sha256": "ad81f7a08a2fbcb93b57788e64d2f028697f7f5f086bb8fa75e9eac758dc4507"
+        },
+        "scope_entries": [
+          "Integra.app"
+        ],
+        "plist": {
+          "CFBundleIdentifier": "app.integra.ready",
+          "CFBundleShortVersionString": "1.0.0",
+          "CFBundleVersion": "100",
+          "CFBundleExecutable": "Integra"
+        },
+        "small_file_hashes": [
+          {
+            "path": "Contents/MacOS/Integra",
+            "sha256": "6e81035f2932edc62725cd7c26eecaf9b045d4874dedb8405f4fec8f62dd1a0e",
+            "size": 515832,
+            "mtime": 1790702068.7526693,
+            "birthtime": 1790702068.7525854
+          },
+          {
+            "path": "Contents/Resources/bridge.py",
+            "sha256": "fdc4642eb3b3efae280f8d1afc160fc0dee97c49bb6d63599f879c06a4bf3a0c",
+            "size": 53712,
+            "mtime": 1790702068.7657256,
+            "birthtime": 1790702068.7656527
+          },
+          {
+            "path": "Contents/Resources/integra_core/application_runtime.py",
+            "sha256": "3fb03f62b896168a90eab3534a2545376e605fa138e065b1fee688c491469c52",
+            "size": 35744,
+            "mtime": 1790702036,
+            "birthtime": 1790702036
+          },
+          {
+            "path": "Contents/Resources/candidate-manifest.json",
+            "sha256": "dd31a5e7a6b4c330a992621c18e015441eb74d54f06d14cc66174c05734983c7",
+            "size": 4515,
+            "mtime": 1790702129.6250145,
+            "birthtime": 1790702129.6249278
+          }
+        ],
+        "selected_file_lsof": {
+          "command": [
+            "/usr/sbin/lsof",
+            "-nP",
+            "-F",
+            "pn",
+            "--",
+            "/private/tmp/integra-excel07-source-current/Integra.app/Contents/MacOS/Integra",
+            "/private/tmp/integra-excel07-source-current/Integra.app/Contents/Resources/bridge.py"
+          ],
+          "returncode": 1,
+          "stdout": "",
+          "stderr": "",
+          "proof_limit": "selected files only; current-user visibility; not complete consumer proof"
+        },
+        "managed_provenance": "MANIFEST_BOUND_LEGACY_INTEGRA_BUILD",
+        "deletion_ownership": "UNCONFIRMED_NO_LIFECYCLE_OR_PUBLISHER_ATTESTATION",
+        "disposition": "RETAIN_PENDING_OWNERSHIP_AND_LIFECYCLE_DECISION",
+        "automatic_deletion_allowed": false,
+        "identity_limit": "Manifest-bound source/execution identity; full current payload not freshly verified in this stage"
+      },
+      {
+        "app_index": 38,
+        "app_path": "/private/tmp/integra-excel05-zoom-candidate-b53d3d2/Integra.app",
+        "scope": "/private/tmp/integra-excel05-zoom-candidate-b53d3d2",
+        "uid": 501,
+        "lifecycle_marker_exists": false,
+        "app_parent_marker_exists": false,
+        "recorded_role": "UNARCHIVED_LEGACY_CANDIDATE",
+        "is_full_size": true,
+        "logical_app_bytes": 2201629206,
+        "candidate_id": "candidate-v1-132cff2db4e0a5aa98b04aafab4f3a3975cbb26b28496529bd3fc24f2fbaf8c6",
+        "bundle_digest": "6d88cff3107c0790d5306d6251cfca6bc3419b0fbbab5c2360ce241323f90d46",
+        "manifest_digest": "b8f5a9640ba78fd923d10bc7b47b988e4e548d13494bf31e2cf032bc6058af0e",
+        "source": {
+          "commit_sha": "b53d3d2f9f76f593d7bbaecb54f662e68d3ac54c",
+          "dirty": false,
+          "dirty_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "tree_sha": "176abdab05e2cd24e6b8a951043b895923b397a6"
+        },
+        "build": {
+          "build_id": "local",
+          "timestamp": "2026-09-29T14:48:16+03:00"
+        },
+        "build_command": {
+          "identity": "scripts/build_macos_app.sh",
+          "path": "scripts/build_macos_app.sh",
+          "script_sha256": "ad81f7a08a2fbcb93b57788e64d2f028697f7f5f086bb8fa75e9eac758dc4507"
+        },
+        "scope_entries": [
+          "Integra.app"
+        ],
+        "plist": {
+          "CFBundleIdentifier": "app.integra.ready",
+          "CFBundleShortVersionString": "1.0.0",
+          "CFBundleVersion": "100",
+          "CFBundleExecutable": "Integra"
+        },
+        "small_file_hashes": [
+          {
+            "path": "Contents/MacOS/Integra",
+            "sha256": "7dc2912578262bc2c0f70a0a4386e128f4965875671e407cb6483adf3fb9b1f0",
+            "size": 496952,
+            "mtime": 1790682517.476441,
+            "birthtime": 1790682517.476366
+          },
+          {
+            "path": "Contents/Resources/bridge.py",
+            "sha256": "ff2b281ad869f41d176cb96249ae2255060aacf4806bc7e4ee4ebade96a219f9",
+            "size": 53464,
+            "mtime": 1790682517.5118082,
+            "birthtime": 1790682517.5114403
+          },
+          {
+            "path": "Contents/Resources/integra_core/application_runtime.py",
+            "sha256": "990e846af4e7d1c3d7405663e4405ec73d2a13543d4c04b7154b6062cc0472ac",
+            "size": 35194,
+            "mtime": 1790621557,
+            "birthtime": 1790621557
+          },
+          {
+            "path": "Contents/Resources/candidate-manifest.json",
+            "sha256": "b8f5a9640ba78fd923d10bc7b47b988e4e548d13494bf31e2cf032bc6058af0e",
+            "size": 4515,
+            "mtime": 1790682579.8867147,
+            "birthtime": 1790682579.8866336
+          }
+        ],
+        "selected_file_lsof": {
+          "command": [
+            "/usr/sbin/lsof",
+            "-nP",
+            "-F",
+            "pn",
+            "--",
+            "/private/tmp/integra-excel05-zoom-candidate-b53d3d2/Integra.app/Contents/MacOS/Integra",
+            "/private/tmp/integra-excel05-zoom-candidate-b53d3d2/Integra.app/Contents/Resources/bridge.py"
+          ],
+          "returncode": 1,
+          "stdout": "",
+          "stderr": "",
+          "proof_limit": "selected files only; current-user visibility; not complete consumer proof"
+        },
+        "managed_provenance": "MANIFEST_BOUND_LEGACY_INTEGRA_BUILD",
+        "deletion_ownership": "UNCONFIRMED_NO_LIFECYCLE_OR_PUBLISHER_ATTESTATION",
+        "disposition": "RETAIN_PENDING_OWNERSHIP_AND_LIFECYCLE_DECISION",
+        "automatic_deletion_allowed": false,
+        "identity_limit": "Manifest-bound source/execution identity; full current payload not freshly verified in this stage"
+      }
+    ],
+    "process_matches": [],
+    "ps_command": [
+      "/bin/ps",
+      "-axo",
+      "pid,ppid,lstart,command"
+    ],
+    "process_proof_limit": "command-line snapshot cannot prove no future/indirect readers"
+  },
+  "finished_at": "2026-09-30 19:01:26 UTC",
+  "pyc_summary": {
+    "extra_files": 39,
+    "extra_directories": 7,
+    "logical_extra_file_bytes": 474122,
+    "allocated_extra_file_bytes": 557056,
+    "timestamp_headers_matching_associated_source": 39,
+    "associated_source_hashes_matching_recorded_inventory": 39,
+    "created_after_original_complete": 39,
+    "cpython_314_magic": "2b0e0d0a",
+    "cpython_313_magic": "f30d0d0a",
+    "writer": "UNPROVEN",
+    "inference": "Header/version/source association is consistent with Python import-cache creation after archival completion; timestamps and valid cache headers do not identify the writer process or prove the bytecode's semantics."
+  },
+  "original_recorded_file_comparisons": [
+    {
+      "command": [
+        "python3",
+        "-B",
+        "-c",
+        "<read_programs.original_recorded_file_comparison>",
+        "9"
+      ],
+      "timeout_seconds": 600,
+      "result": {
+        "app_index": 9,
+        "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8",
+        "elapsed_seconds": 4.664,
+        "bytes_hashed": 2203048527,
+        "recorded_files_checked": 29646,
+        "recorded_entries_checked": 32497,
+        "all_recorded_entries_match": true,
+        "mismatches": [],
+        "unrecorded_files": [
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/__init__.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_cmp.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_compat.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_config.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_funcs.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_make.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_next_gen.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_version_info.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/converters.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/exceptions.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/filters.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/setters.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/validators.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/__init__.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/converters.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/exceptions.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/filters.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/setters.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/validators.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/__init__.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/_format.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/_keywords.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/_legacy_keywords.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/_types.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/_typing.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/_utils.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/exceptions.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/protocols.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/validators.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema_specifications/__pycache__/__init__.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema_specifications/__pycache__/_core.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__/__init__.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__/_attrs.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__/_core.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__/exceptions.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__/jsonschema.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__/typing.cpython-314.pyc",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/rpds/__pycache__/__init__.cpython-314.pyc"
+        ],
+        "unrecorded_directories": [
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema_specifications/__pycache__",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__",
+          "Integra.app/Contents/Resources/runtime/review-python/site-packages/rpds/__pycache__"
+        ],
+        "original_disposition": "QUARANTINED_RETAIN",
+        "in_place_repair": false
+      }
+    },
+    {
+      "command": [
+        "python3",
+        "-B",
+        "-c",
+        "<read_programs.original_recorded_file_comparison>",
+        "27"
+      ],
+      "timeout_seconds": 600,
+      "result": {
+        "app_index": 27,
+        "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173/c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b",
+        "elapsed_seconds": 5.131,
+        "bytes_hashed": 2203150104,
+        "recorded_files_checked": 29649,
+        "recorded_entries_checked": 32500,
+        "all_recorded_entries_match": true,
+        "mismatches": [],
+        "unrecorded_files": [
+          "Integra.app/Contents/Resources/runtime/word-alignment/site-packages/whisperx/__pycache__/__init__.cpython-313.pyc"
+        ],
+        "unrecorded_directories": [
+          "Integra.app/Contents/Resources/runtime/word-alignment/site-packages/whisperx/__pycache__"
+        ],
+        "original_disposition": "QUARANTINED_RETAIN",
+        "in_place_repair": false
+      }
+    }
+  ],
+  "read_programs": {
+    "original_recorded_file_comparison": "import sys,json,hashlib,stat,time,os\nfrom pathlib import Path\nv=json.loads(Path('/private/tmp/integra-205-retention-audit-20260930.json').read_text())\nindex=int(sys.argv[1]);app=v['apps'][index];root=Path(app['path']).parent;start=time.monotonic();expected=json.loads((root/'inventory.json').read_text())\nmismatches=[];bytes_hashed=0;checked_files=0;expected_paths={x['path'] for x in expected}\nfor item in expected:\n p=root/item['path']\n try:\n  s=p.lstat();mode=stat.S_IMODE(s.st_mode)\n  if mode!=item['mode']:mismatches.append({'path':item['path'],'error':'mode'})\n  if item['type']=='directory':\n   if not stat.S_ISDIR(s.st_mode):mismatches.append({'path':item['path'],'error':'not_directory'})\n  else:\n   if not stat.S_ISREG(s.st_mode):mismatches.append({'path':item['path'],'error':'not_regular_file'});continue\n   digest=hashlib.sha256()\n   with p.open('rb') as f:\n    for b in iter(lambda:f.read(1024*1024),b''):digest.update(b);bytes_hashed+=len(b)\n   checked_files+=1\n   if s.st_size!=item['size'] or digest.hexdigest()!=item['sha256'] or s.st_nlink!=1:mismatches.append({'path':item['path'],'error':'recorded_size_hash_or_link_differs','expected_sha256':item['sha256'],'actual_sha256':digest.hexdigest()})\n except OSError as e:mismatches.append({'path':item['path'],'error':str(e)})\nextra_files=[];extra_dirs=[]\nfor d,dirs,files in os.walk(root,followlinks=False):\n for name in dirs:\n  p=Path(d)/name;relative=p.relative_to(root).as_posix()\n  if relative not in expected_paths:extra_dirs.append(relative)\n for name in files:\n  p=Path(d)/name;relative=p.relative_to(root).as_posix()\n  if relative not in expected_paths and relative not in {'inventory.json','COMPLETE.json'}:extra_files.append(relative)\nprint(json.dumps({'app_index':index,'archive_path':str(root),'elapsed_seconds':round(time.monotonic()-start,3),'bytes_hashed':bytes_hashed,'recorded_files_checked':checked_files,'recorded_entries_checked':len(expected),'all_recorded_entries_match':not mismatches,'mismatches':mismatches,'unrecorded_files':sorted(extra_files),'unrecorded_directories':sorted(extra_dirs),'original_disposition':'QUARANTINED_RETAIN','in_place_repair':False}))"
+  },
+  "promotion_rejection": {
+    "original_archives": "QUARANTINED_RETAIN",
+    "in_place_repair": false,
+    "canonical_reference_changed": false,
+    "current_changed": false,
+    "proof_level": "RECORDED_FILE_CHECKSUMS_FRESHLY_VERIFIED_PLUS_EXTRA_FILE_AND_DIRECTORY_SET; STRICT_VERIFY_GUARD_SOURCE_INSPECTED",
+    "archive_verifier": {
+      "path": "scripts/candidate_archive.py",
+      "verify_guard_source_sha256": "d40e4a03aeb186899558e738ce4398c3ec0bcb0e1988b97b5f5fa3db55d1f63c",
+      "guard_lines": [
+        {
+          "line": 168,
+          "text": "if json.loads((archive / INVENTORY).read_text(encoding=\"utf-8\")) != inventory:"
+        },
+        {
+          "line": 169,
+          "text": "raise ValueError(\"archive checksum/permission inventory differs from disk\")"
+        }
+      ]
+    },
+    "promotion_helper": {
+      "path": "scripts/promote_proposed_baseline_lite.py",
+      "sha256": "8171db70089e69a13e463f9e9576ba7b4371e088fe21bad13ac1b9af49de3fb5",
+      "verify_archive_calls_at_lines": [
+        47,
+        53
+      ],
+      "failure_return_before_output_writes": true
+    },
+    "actual_promotion_invoked": false,
+    "reason": "Observed current archive inventory necessarily differs from recorded inventory. verify_archive rejects that difference, and the promotion helper fails before output writes. No second unnecessary whole-original rehash was performed just to repeat the already established failure."
+  },
+  "provenance_reads": {
+    "github": [
+      {
+        "command": [
+          "gh",
+          "api",
+          "repos/Yurielo/integra/pulls/204"
+        ],
+        "timeout_seconds": 30,
+        "returncode": 0,
+        "results": [
+          {
+            "number": 204,
+            "state": "open",
+            "title": "feat: translate persisted Process topics",
+            "head_sha": "93a080dcc9d1cd6509b56905b99e1593004df8b1",
+            "head_ref": "codex/issue-22-topic-translation",
+            "merged_at": null
+          }
+        ]
+      },
+      {
+        "command": [
+          "gh",
+          "api",
+          "repos/Yurielo/integra/commits/4161ec1dd5eeef9f4cfc6b8df02e6af577d9ec87/pulls"
+        ],
+        "timeout_seconds": 30,
+        "returncode": 0,
+        "results": [
+          {
+            "number": 209,
+            "state": "closed",
+            "title": "Add Zoom folder source discovery",
+            "head_sha": "8f526eea9a084481c7efecd42ce2bde7f308ce1b",
+            "head_ref": "codex/excel-05-zoom-folder",
+            "merged_at": "2026-09-29T16:33:17Z"
+          }
+        ]
+      },
+      {
+        "command": [
+          "gh",
+          "api",
+          "repos/Yurielo/integra/commits/2cc003f83e15800d46fe41164fea6aba44151e5e/pulls"
+        ],
+        "timeout_seconds": 30,
+        "returncode": 1,
+        "stderr": "gh: No commit found for SHA: 2cc003f83e15800d46fe41164fea6aba44151e5e (HTTP 422)\n"
+      },
+      {
+        "command": [
+          "gh",
+          "api",
+          "repos/Yurielo/integra/commits/b53d3d2f9f76f593d7bbaecb54f662e68d3ac54c/pulls"
+        ],
+        "timeout_seconds": 30,
+        "returncode": 1,
+        "stderr": "gh: No commit found for SHA: b53d3d2f9f76f593d7bbaecb54f662e68d3ac54c (HTTP 422)\n"
+      }
+    ],
+    "bounded_repository_search": {
+      "command": [
+        "rg",
+        "-n",
+        "-m",
+        "5",
+        "AI/runtimes/integra/current-build|4161ec1|2cc003f|b53d3d2",
+        "docs",
+        "state",
+        "scripts"
+      ],
+      "timeout_seconds": 30,
+      "returncode": 0,
+      "stdout": "docs/ISSUE_205_TEMP_WORKSPACE_AUDIT.md:103:| `/private/tmp/integra-excel05-zoom-candidate-b53d3d2` | `UNKNOWN` | Full Candidate, no matching completed archive; preserved. |\ndocs/ISSUE_205_TEMP_WORKSPACE_AUDIT.md:236:- `excel05-zoom-candidate-b53d3d2` has no exact Candidate archive; preserve.\ndocs/ISSUE_205_TEMP_WORKSPACE_AUDIT.md:245:  `/Users/yurielokhin/AI/runtimes/integra/current-build`, with no embedded\ndocs/ISSUE_205_ARCHIVE_RETENTION_AUDIT.md:39:| `AI/runtimes/integra/current-build` | older local runtime workflow | No embedded Candidate manifest; current product/runtime identity is not proven by this audit | `UNKNOWN_PROTECTED` |\ndocs/ISSUE_205_ARCHIVE_RETENTION_AUDIT.md:69:| `integra-excel05-zoom-candidate-b53d3d2` | Preserve | ~2.12 GiB | Candidate `132cff…` has no matching permanent Candidate archive |\ndocs/ISSUE_205_ARCHIVE_RETENTION_AUDIT.md:74:| `AI/runtimes/integra/current-build` | Preserve | ~2.12 GiB | Runtime identity and active consumers not proven |\ndocs/evidence/ISSUE_205_ARCHIVE_INVENTORY_20260930.json:1002:      \"path\": \"/Users/yurielokhin/AI/runtimes/integra/current-build/Integra.app\",\ndocs/evidence/ISSUE_205_ARCHIVE_INVENTORY_20260930.json:1033:      \"source_commit\": \"2cc003f83e15800d46fe41164fea6aba44151e5e\",\ndocs/evidence/ISSUE_205_ARCHIVE_INVENTORY_20260930.json:1043:      \"path\": \"/private/tmp/integra-excel05-zoom-candidate-b53d3d2/Integra.app\",\ndocs/evidence/ISSUE_205_ARCHIVE_INVENTORY_20260930.json:1052:      \"source_commit\": \"b53d3d2f9f76f593d7bbaecb54f662e68d3ac54c\",\ndocs/evidence/ISSUE_205_ARCHIVE_INVENTORY_20260930.json:1114:      \"source_commit\": \"4161ec1dd5eeef9f4cfc6b8df02e6af577d9ec87\",\ndocs/evidence/ISSUE_205_RETENTION_FORENSICS_20260930.json:1214:        \"app_path\": \"/Users/yurielokhin/AI/runtimes/integra/current-build/Integra.app\",\ndocs/evidence/ISSUE_205_RETENTION_FORENSICS_20260930.json:1215:        \"scope\": \"/Users/yurielokhin/AI/runtimes/integra/current-build\",\ndocs/evidence/ISSUE_205_RETENTION_FORENSICS_20260930.json:1267:            \"/Users/yurielokhin/AI/runtimes/integra/current-build/Integra.app/Contents/MacOS/Integra\",\ndocs/evidence/ISSUE_205_RETENTION_FORENSICS_20260930.json:1268:            \"/Users/yurielokhin/AI/runtimes/integra/current-build/Integra.app/Contents/Resources/bridge.py\"\ndocs/evidence/ISSUE_205_RETENTION_FORENSICS_20260930.json:1379:          \"commit_sha\": \"4161ec1dd5eeef9f4cfc6b8df02e6af577d9ec87\",\n",
+      "stderr": ""
+    }
+  },
+  "fresh_pr204_proposal": {
+    "command": [
+      "gh",
+      "api",
+      "repos/Yurielo/integra/contents/state/proposed_baseline_lite_v1.json?ref=93a080dcc9d1cd6509b56905b99e1593004df8b1"
+    ],
+    "github_blob_sha": "aae48756d0ee302a267394cf35cf7e7454fa1519",
+    "proposal_id": "proposal-process-v1-topic-translation",
+    "candidate": {
+      "candidate_id": "candidate-v1-14b3c10e4d779ff8b5a520bf15e2b7087673aec2cd0abd25aac4e1d0ded77892",
+      "identity_sha256": "14b3c10e4d779ff8b5a520bf15e2b7087673aec2cd0abd25aac4e1d0ded77892",
+      "bundle_digest": "ab53369d4d46fc8a4dece0b8e0f777f5017731b2256ff34ecb27738a849d8c94",
+      "manifest_digest": "55eb3562826006ca90be7f698877bfd709882eabe6605e1b12431b3f3cc791fb"
+    },
+    "base_current_id": "current-v2-2b779255c5b57a7b6602f153ea13c497bf738a18a84412773f8b6ed5261fbfcc",
+    "owner_acceptance": null,
+    "proposed_source": {
+      "commit_sha": "47be46d8bfffb94e952b2a45e31d527ddd3b8e73",
+      "tree_sha": "bbda40895732e2e4b1e994b5ff38776c08b02500"
+    }
+  },
+  "selector_recommendations": {
+    "rollback": {
+      "candidate_id": "candidate-v1-af81b2867f893e8e529a2d4f64d6c1370dd1249b46eb999d427fb408229680fa",
+      "bundle_digest": "4032ad5334a42a9bbce6384b85b35857557afc2241d2c4d85c9e45379eca620c",
+      "manifest_digest": "c0f016e1ca16fe08cf5209ed7d2a74eb903e536d88da0775579dc1e646b262cd",
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-af81b2867f893e8e529a2d4f64d6c1370dd1249b46eb999d427fb408229680fa/4032ad5334a42a9bbce6384b85b35857557afc2241d2c4d85c9e45379eca620c",
+      "basis": "immediate outgoing accepted record preceding fresh main current_id d8bd6fc",
+      "fresh_full_verification_in_this_stage": false,
+      "confirmed_policy_selector_authority": "PRODUCT_OWNER_CONFIRMATION_REQUIRED; recommendation does not adopt selector"
+    },
+    "recovery": {
+      "candidate_id": "candidate-v1-65bf72d1262146c9137aca433b51ae3974d98bc4c8ed37042db13b46e0318a1d",
+      "bundle_digest": "044594f1a632f1c140af28bb7de8e4acf782daca9863d84b9c5d77edb731fdf8",
+      "manifest_digest": "c59d18552b8b860019852a420d4b7d6337e32408196df0615c8599179d44a2a5",
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/retained/candidate-v1-65bf72d1262146c9137aca433b51ae3974d98bc4c8ed37042db13b46e0318a1d/044594f1a632f1c140af28bb7de8e4acf782daca9863d84b9c5d77edb731fdf8",
+      "basis": "accepted historical recovery documented in docs/CANDIDATE_RETENTION.md and CANDIDATE_65BF72_RECOVERY(_QA).json",
+      "fresh_full_verification_in_this_stage": false,
+      "confirmed_policy_selector_authority": "PRODUCT_OWNER_CONFIRMATION_REQUIRED; recommendation does not adopt selector"
+    },
+    "authority_limit": "Existing baseline acceptance/recovery evidence is not by itself confirmation of a new named retention-policy slot. Selection requires exact Product Owner confirmation; recommendation performs no selection, promotion, restore or copy."
+  },
+  "ownership_advice": {
+    "legacy_archive_provenance": "COMPLETE plus a bound Git receipt/path plus UID supports historical artifact identity; does not create the new publisher/run ownership attestation",
+    "count_against_managed_cap": true,
+    "automatic_deletion_allowed": false,
+    "historical_cleanup_requires": "Exact separate HumanGate enumerating path, Candidate, bundle, manifest, fresh verified receipt, filesystem device/inode and retirement/ownership authority"
+  },
+  "no_archive_changes": true,
+  "no_runtime_execution": true,
+  "no_cleanup": true,
+  "no_candidate_build": true,
+  "remaining_unresolved_facts": [
+    "Exact process/user action that generated the pyc caches is unproven",
+    "Selectors are recommendations, not newly confirmed retention-policy pins",
+    "Ownership and lifecycle retirement of five legacy objects remain unconfirmed",
+    "Selected-file lsof/ps snapshots do not prove complete absence of consumers",
+    "Three legacy Candidate payloads and old AI runtime are not fully byte-verified in this stage",
+    "Two alternate archives are freshly valid but no canonical or CURRENT reference was switched",
+    "Physical APFS shared extent accounting and exact reclaim remain unmeasured"
+  ]
+}
