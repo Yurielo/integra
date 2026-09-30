@@ -17,9 +17,16 @@ from temp_workspace_lifecycle import (  # noqa: E402
 import candidate_retention  # noqa: E402
 
 
-def _build_inside_workspace(archive_root: Path | None, expected_bytes: int = DEFAULT_EXPECTED_BYTES) -> int:
+def _build_inside_workspace(archive_root: Path | None, expected_bytes: int = DEFAULT_EXPECTED_BYTES,
+                            *, native_tests: bool = False) -> int:
     root = archive_root or (Path.home() / 'Library/Application Support/Integra/Build Archive')
     with candidate_retention.reserved_build(root, expected_bytes, archive_copy=archive_root is not None):
+        if native_tests:
+            # Tests use the same reservation and supervisor as Candidate builds.
+            # Suppress Python import caches in the bytes under inspection.
+            environment = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
+            return subprocess.run([str(ROOT / "scripts/test_macos_app.sh"), "--owned-workspace"],
+                                  env=environment, check=True).returncode
         return _execute_build_inside_workspace(archive_root)
 
 
@@ -53,14 +60,17 @@ def main() -> int:
     parser.add_argument("--reserve-bytes", type=int, default=DEFAULT_RESERVE_BYTES)
     parser.add_argument("--timeout-seconds", type=float, default=3600)
     parser.add_argument("--archive-root", type=Path)
+    parser.add_argument("--native-tests", action="store_true", help="run native tests under the same build admission")
     parser.add_argument("--inside-owned-workspace", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
     if args.timeout_seconds <= 0:
         parser.error("timeout must be positive")
+    if args.native_tests and args.archive_root is not None:
+        parser.error("native test workspaces are disposable; archive publication is a separate Candidate operation")
     if args.expected_bytes < DEFAULT_EXPECTED_BYTES or args.reserve_bytes < DEFAULT_RESERVE_BYTES:
         parser.error("full Candidate builds require at least the documented expected bytes and hard disk reserve")
     if args.inside_owned_workspace:
-        return _build_inside_workspace(args.archive_root, args.expected_bytes)
+        return _build_inside_workspace(args.archive_root, args.expected_bytes, native_tests=args.native_tests)
     try:
         root = args.archive_root or (Path.home() / "Library/Application Support/Integra/Build Archive")
         candidate_retention.build_preflight(root, args.expected_bytes, archive_copy=args.archive_root is not None)
@@ -70,6 +80,8 @@ def main() -> int:
              "--expected-bytes", str(args.expected_bytes), "--reserve-bytes", str(args.reserve_bytes)]
     if args.archive_root is not None:
         child.extend(["--archive-root", str(args.archive_root.resolve())])
+    if args.native_tests:
+        child.append("--native-tests")
     args.argv = child
     return run_owned(args)
 

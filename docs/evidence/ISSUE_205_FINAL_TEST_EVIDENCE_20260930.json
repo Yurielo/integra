@@ -1,0 +1,81 @@
+{
+  "captured_at": "2026-09-30T21:11:29.179144+00:00",
+  "source_parent": "0dbf071b6a5fbded5cf8d95c86a2334dc02fe61c",
+  "source_files": {
+    "scripts/build_macos_candidate.py": "f6575535e529f220a2be354bb8d6b07300b559411da16fa704c76c765194b855",
+    "scripts/test_macos_app.sh": "bded70e8c256344412c1ae2818e1f8fd4a1d12fd4bbcaba219b5cd0a416c552c",
+    "tests/test_native_test_admission.py": "9d92b20d4e5f2e15aa1c1d6a6325f5f8eceb72dd6323649883253cb9132ca83a",
+    "tests/test_temp_workspace_lifecycle.py": "6a25a3c4266a59079538fbedbb23167a54f791f7dca6ac4d0e58048e88653b63"
+  },
+  "full_suite": {
+    "run": 883,
+    "passed": 790,
+    "skipped": 92,
+    "failures": 1,
+    "log_sha256": "82cd9d907dc09f2bd90d267880a12781dbb9e504293e1bcb39d341fce4ce45e3",
+    "failure": "R12historicalbuilder/testscript hashes differ; newrealCandidateevidence required"
+  },
+  "focused": [
+    {
+      "pattern": "test_candidate_retention.py",
+      "exit": 0,
+      "log": "/private/tmp/integra-205-stage-two-test_candidate_retention.py.log",
+      "tail": "entionTests.test_unowned_legacy_counts_toward_cap_and_is_never_deletable) ... ok\n\n----------------------------------------------------------------------\nRan 24 tests in 1.182s\n\nOK\n",
+      "log_sha256": "4c400ffcc4a584503922a0518d3e6110404bcbd2a01c4b471c7f0c79a6ee7e64"
+    },
+    {
+      "pattern": "test_retention_governance.py",
+      "exit": 0,
+      "log": "/private/tmp/integra-205-stage-two-test_retention_governance.py.log",
+      "tail": "ernanceTests.test_unreadable_pr_commit_is_not_treated_as_absent_proposal) ... ok\n\n----------------------------------------------------------------------\nRan 16 tests in 0.010s\n\nOK\n",
+      "log_sha256": "96091e04aff46c5e65f1e4e8a4a8133d7e8c65b5e4eed71a074529589662d9b6"
+    },
+    {
+      "pattern": "test_candidate_archive.py",
+      "exit": 0,
+      "log": "/private/tmp/integra-205-stage-two-test_candidate_archive.py.log",
+      "tail": "chiveTests.test_verification_is_offline_after_original_source_disappears) ... ok\n\n----------------------------------------------------------------------\nRan 28 tests in 0.919s\n\nOK\n",
+      "log_sha256": "2328efc012263f9e95d2a692673e845373701b895a7e44b6178b1d8e29a5b219"
+    },
+    {
+      "pattern": "test_temp_workspace_lifecycle.py",
+      "exit": 0,
+      "log": "/private/tmp/integra-205-stage-two-test_temp_workspace_lifecycle.py.log",
+      "tail": "ifecycleTests.test_stale_volume_workspace_recovered_from_different_base) ... ok\n\n----------------------------------------------------------------------\nRan 15 tests in 13.263s\n\nOK\n",
+      "log_sha256": "9fa800f85f5deba08453b178664ed49eb90e1af06edaa84bb44af64893c8b624"
+    },
+    {
+      "pattern": "test_native_test_admission.py",
+      "exit": 0,
+      "log": "/private/tmp/integra-205-stage-two-test_native_test_admission.py.log",
+      "tail": "ests.test_native_tests_execute_only_with_live_reservation_and_no_bytecode) ... ok\n\n----------------------------------------------------------------------\nRan 4 tests in 0.112s\n\nOK\n",
+      "log_sha256": "05045d6493d8af393819cc6e1f5b7084dde094be7e08b520429169e554a0b5d7"
+    }
+  ],
+  "governance_log_sha256": "32c0dd1a154bce27227ce6921c9132bd0361a1aa631255484ab7d3792599bf86",
+  "governance_errors": [
+    "R12 implementation hash differs: scripts/build_macos_app.sh",
+    "R12 implementation hash differs: scripts/test_macos_app.sh",
+    "promotion proposal record is not directly atop evidence overlay",
+    "promotion declaration overlay must contain only the PROPOSED record"
+  ],
+  "actual_native_test_preflight": {
+    "captured_at": "2026-09-30T20:54:55.159382+00:00",
+    "command": [
+      "bash",
+      "scripts/test_macos_app.sh"
+    ],
+    "exit": 2,
+    "stdout": "",
+    "stderr": "usage: build_macos_candidate.py [-h] [--purpose PURPOSE] [--base BASE]\n                                [--expected-bytes EXPECTED_BYTES]\n                                [--reserve-bytes RESERVE_BYTES]\n                                [--timeout-seconds TIMEOUT_SECONDS]\n                                [--archive-root ARCHIVE_ROOT] [--native-tests]\nbuild_macos_candidate.py: error: build blocked by 8-copy / 20-GiB archive cap\n",
+    "owned_workspaces_before": [],
+    "owned_workspaces_after": [],
+    "new_owned_workspaces": [],
+    "free_bytes": 16228814848,
+    "native_builder_started": false,
+    "reason": "Actual native test entry fails preflight before run_owned child creation"
+  },
+  "historical_deletion": false,
+  "current_change": false,
+  "promotion": false
+}

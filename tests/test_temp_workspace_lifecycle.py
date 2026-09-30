@@ -220,5 +220,9 @@ class TempWorkspaceLifecycleTests(unittest.TestCase):
 
     def test_macos_full_build_test_uses_authoritative_lifecycle(self):
         script = (ROOT / "scripts" / "test_macos_app.sh").read_text(encoding="utf-8")
-        self.assertIn("temp_workspace_lifecycle.py", script)
+        self.assertIn("build_macos_candidate.py", script)
+        self.assertIn("--native-tests", script)
+        wrapper = (ROOT / "scripts/build_macos_candidate.py").read_text()
+        self.assertIn("run_owned(args)", wrapper)
+        self.assertIn("candidate_retention.reserved_build", wrapper)
         self.assertIn("--owned-workspace", script)
