@@ -14,6 +14,7 @@ import subprocess
 import tempfile
 import uuid
 import time
+import sys
 
 
 def _start(pid):
@@ -42,7 +43,10 @@ def _paths(target):
     target = Path(target).resolve()
     while not target.exists():
         target = target.parent
-    stem = Path('/private/tmp') / f'.integra-disk-{os.getuid()}-{target.stat().st_dev}'
+    # Do not use tempfile.gettempdir(): TMPDIR inside an owned child points
+    # into that child's workspace and would split the global ledger again.
+    ledger_base = Path('/private/tmp' if sys.platform == 'darwin' else '/tmp')
+    stem = ledger_base / f'.integra-disk-{os.getuid()}-{target.stat().st_dev}'
     return target, stem.with_suffix('.lock'), stem.with_suffix('.json')
 
 

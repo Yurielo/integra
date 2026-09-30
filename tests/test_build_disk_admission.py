@@ -10,6 +10,17 @@ import build_disk_admission as admission
 
 
 class DiskAdmissionTests(unittest.TestCase):
+    def test_ledger_path_is_portable_and_independent_of_child_tmpdir(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(admission.sys, 'platform', 'linux'), patch.dict(
+                    admission.os.environ, {'TMPDIR': directory}):
+                _, lock, ledger = admission._paths(directory)
+            self.assertEqual(lock.parent, Path('/tmp'))
+            self.assertEqual(ledger.parent, Path('/tmp'))
+            with patch.object(admission.sys, 'platform', 'darwin'):
+                _, lock, _ = admission._paths(directory)
+            self.assertEqual(lock.parent, Path('/private/tmp'))
+
     def test_same_volume_different_roots_share_atomic_reservations(self):
         with tempfile.TemporaryDirectory() as directory:
             base = Path(directory)
