@@ -3,9 +3,9 @@
   "artifact_type": "integra.candidate_archive_inventory",
   "verification": "METADATA_ONLY_NO_PAYLOAD_REHASH",
   "archive_root": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive",
-  "archive_count": 25,
+  "archive_count": 26,
   "unique_bundle_count": 14,
-  "declared_duplicate_logical_bytes": 24217048837,
+  "declared_duplicate_logical_bytes": 26418588990,
   "entries": [
     {
       "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-136e1a5b80644c20a4e7f9ecf66741ab069f88d66418123e6e85b409bfc714b8/d05c0863dcb4a205a3c0fd4e4787e8b15f70a17058335f09f46236bda64ca4ba",
@@ -86,7 +86,7 @@
       "logical_app_size_bytes": 2201540153,
       "lifecycle_status": "COMPLETE_RETAINED",
       "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
-      "bundle_duplicate_count": 7,
+      "bundle_duplicate_count": 8,
       "duplicate_status": "DECLARED_BUNDLE_DIGEST_REPEATED_RETAINED",
       "source_github_provenance": {
         "associatedPullRequests": {
@@ -119,7 +119,7 @@
       "logical_app_size_bytes": 2201540153,
       "lifecycle_status": "COMPLETE_RETAINED",
       "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
-      "bundle_duplicate_count": 7,
+      "bundle_duplicate_count": 8,
       "duplicate_status": "DECLARED_BUNDLE_DIGEST_REPEATED_RETAINED",
       "source_github_provenance": {
         "oid": "cf3fd4b17598a459cd19d5d9dbacf2ea34cad8cb",
@@ -311,7 +311,7 @@
       "logical_app_size_bytes": 2201540153,
       "lifecycle_status": "COMPLETE_RETAINED",
       "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
-      "bundle_duplicate_count": 7,
+      "bundle_duplicate_count": 8,
       "duplicate_status": "DECLARED_BUNDLE_DIGEST_REPEATED_RETAINED",
       "source_github_provenance": {
         "oid": "3ee63658d65e0639408350f4130a43011f62e613",
@@ -379,7 +379,7 @@
       "logical_app_size_bytes": 2201540153,
       "lifecycle_status": "COMPLETE_RETAINED",
       "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
-      "bundle_duplicate_count": 7,
+      "bundle_duplicate_count": 8,
       "duplicate_status": "DECLARED_BUNDLE_DIGEST_REPEATED_RETAINED",
       "source_github_provenance": {
         "associatedPullRequests": {
@@ -434,7 +434,7 @@
       "logical_app_size_bytes": 2201540148,
       "lifecycle_status": "COMPLETE_RETAINED",
       "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
-      "bundle_duplicate_count": 7,
+      "bundle_duplicate_count": 8,
       "duplicate_status": "DECLARED_BUNDLE_DIGEST_REPEATED_RETAINED",
       "source_github_provenance": {
         "oid": "869f2f364975fa703a16e85a3f8c4d23e91b28e3",
@@ -594,6 +594,39 @@
       "physical_shared_extents": "NOT_MEASURED"
     },
     {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-c5f5b6ea7e8495c967c0b999dd24bdf7a3162c1fb34035cb0dcedbd5fe323cd2/dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
+      "candidate_id": "candidate-v1-c5f5b6ea7e8495c967c0b999dd24bdf7a3162c1fb34035cb0dcedbd5fe323cd2",
+      "bundle_digest": "dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
+      "manifest_digest": "ea6003528896581fdc4c5e8b14953de7de58b980707e9e12a9fc3fb43b60ebde",
+      "source_commit": "72fc6d37fede5fa3af7fd16934648b6e90120e85",
+      "build_timestamp": "2026-09-30T19:39:05+03:00",
+      "archive_modified_at": "2026-09-30T16:42:01.916095Z",
+      "logical_app_size_bytes": 2201540153,
+      "lifecycle_status": "COMPLETE_RETAINED",
+      "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
+      "bundle_duplicate_count": 8,
+      "duplicate_status": "DECLARED_BUNDLE_DIGEST_REPEATED_RETAINED",
+      "source_github_provenance": {
+        "associatedPullRequests": {
+          "nodes": [
+            {
+              "number": 206,
+              "url": "https://github.com/Yurielo/integra/pull/206",
+              "state": "OPEN"
+            }
+          ]
+        },
+        "binding": "LOCAL_ISSUE_205_BRANCH_PENDING_PUSH"
+      },
+      "representative_executable_stat": {
+        "device": 16777233,
+        "inode": 43390317,
+        "nlink": 1,
+        "size": 476424
+      },
+      "physical_shared_extents": "NOT_MEASURED"
+    },
+    {
       "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-ce1b1abbb4a9a6bb9350d38a24a948a8313077b7c663ea7e3ec8da5d7c5cf807/dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
       "candidate_id": "candidate-v1-ce1b1abbb4a9a6bb9350d38a24a948a8313077b7c663ea7e3ec8da5d7c5cf807",
       "bundle_digest": "dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
@@ -604,7 +637,7 @@
       "logical_app_size_bytes": 2201540153,
       "lifecycle_status": "COMPLETE_RETAINED",
       "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
-      "bundle_duplicate_count": 7,
+      "bundle_duplicate_count": 8,
       "duplicate_status": "DECLARED_BUNDLE_DIGEST_REPEATED_RETAINED",
       "source_github_provenance": {
         "oid": "633f0415e68e6f5528b17ebeb344798a2c5d677d",
@@ -706,7 +739,7 @@
       "logical_app_size_bytes": 2201540153,
       "lifecycle_status": "COMPLETE_RETAINED",
       "metadata_verification": "RECEIPT_AND_MANIFEST_ONLY",
-      "bundle_duplicate_count": 7,
+      "bundle_duplicate_count": 8,
       "duplicate_status": "DECLARED_BUNDLE_DIGEST_REPEATED_RETAINED",
       "source_github_provenance": {
         "associatedPullRequests": {
@@ -831,7 +864,6 @@
       "physical_shared_extents": "NOT_MEASURED"
     }
   ],
-  "captured_at": "2026-09-30T16:33:29.756287+00:00",
   "additional_copies": [
     {
       "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/retained/candidate-v1-2fe375cc31b3a57d74ad0f994894bd610442deae3adfff033cdc5f3cf400fcd3/47befb29a6c221db7cb79262fc949f29248095e31dceba7fc4d46e78ab06c39e/Integra.app",
@@ -1095,15 +1127,21 @@
       "head": "93a080dcc9d1cd6509b56905b99e1593004df8b1"
     }
   ],
+  "captured_at": "2026-09-30T16:44:45.928753+00:00",
   "controlled_builds": {
     "source_commits": [
       "2261dea",
       "b54d491",
-      "e23aa21"
+      "e23aa21",
+      "72fc6d3"
     ],
-    "created_archives": 3,
+    "created_archives": 4,
     "retained_reason": "EXACT_SOURCE_CANDIDATE_EVIDENCE_REQUIRED_BY_ACCEPTED_POLICY",
-    "logical_new_app_bytes": 6604620459,
-    "remaining_owned_roots": 0
+    "logical_new_app_bytes": 8806160612,
+    "remaining_owned_roots": 0,
+    "disk_free_after_bytes": 17803980800,
+    "archive_allocated_after_kib": 66857220,
+    "archive_allocated_before_kib": 57948580,
+    "previous_audit_disk_free_before_kib": 26440148
   }
 }

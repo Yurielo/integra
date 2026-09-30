@@ -164,7 +164,7 @@ deadline and exited with the exact test process.
 
 ## Follow-up: archive provenance and atomic disk admission — 2026-09-30
 
-Final source: `e23aa21e085fba8fbf664f8eb517d4460baffed8`.
+Final source: `72fc6d37fede5fa3af7fd16934648b6e90120e85`.
 Independent QA/review: PASS for that exact source. The independent two-process
 admission check used different roots on the same volume and a budget sufficient
 for only one reservation: exactly one process was admitted. Injected marker
@@ -173,17 +173,23 @@ SIGKILL/retry cases now remove their owned roots and terminate their writers.
 The new cross-base stale recovery regression verifies recovery through the
 volume ledger even after the destination ancestor changes.
 
-- Final full supported suite: **838 tests, 746 passed, 92 skipped, zero failures**.
+- Final full supported suite: **839 tests, 747 passed, 92 skipped, zero failures**.
 - `check_agents.py`, focused regression checks and `git diff --check`: PASS.
-- Three controlled sequential full Candidate builds on the follow-up sources
-  `2261dea`, `b54d491`, and final `e23aa21` completed with byte-verified archives
+- Four controlled sequential full Candidate builds on the follow-up sources
+  `2261dea`, `b54d491`, `e23aa21`, and final `72fc6d3` completed with byte-verified archives
   and zero remaining owned build/staging roots. The previous two sequential and
   two concurrent full-build measurements above remain historical evidence for
   the original lifecycle repair; the new admission race was independently
   verified with bounded synthetic processes, not full concurrent app builds.
-- Final Candidate: `candidate-v1-e13b57a839bb722fb10cb7d46295ae58e77f4641bfacc1226147eedc28df4277`,
+- Final Candidate: `candidate-v1-c5f5b6ea7e8495c967c0b999dd24bdf7a3162c1fb34035cb0dcedbd5fe323cd2`,
   bundle `dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204`.
   Its archived manifest binds a clean final source commit and tree.
+
+The initial new-head Linux CI failed because `/private/tmp` does not exist on
+that runner. Final source uses stable `/tmp` on Linux, preserving `/private/tmp`
+on macOS and ignoring child `TMPDIR`. A regression verifies both platforms and
+ledger independence from a child workspace. Independent review of this exact
+portability delta: PASS.
 
 ### Inventory and growth accounting
 
@@ -191,19 +197,29 @@ volume ledger even after the destination ancestor changes.
 completed archive, source commit and associated GitHub PR where available,
 manifest/receipt identity, dates, logical bytes, duplicate groups and sample
 inode/link counts. It also records retained/recovery/runtime copies and legacy
-tmp roots. The final inventory has **25 top-level completed Candidate archives,
+tmp roots. The final inventory has **26 top-level completed Candidate archives,
 14 declared bundle digests**, plus two historical canonical Candidates under
 `retained` with two additional digests. Initial top-level inventory was 22/14.
-The three controlled source revisions each required actual Candidate bytes
-under the accepted retention contract: this added 6,604,620,459 logical app
-bytes (about 6.15 GiB; filesystem allocation is greater). They are intentionally
+The four controlled source revisions each required actual Candidate bytes
+under the accepted retention contract: this added 8,806,160,612 logical app
+bytes (about 8.20 GiB; filesystem allocation is greater). They are intentionally
 accounted as permanent retained growth, not a temporary-cleanup leak.
 
-After these builds, the top-level digest groups contain **24,217,048,837 logical
-bytes (22.55 GiB)** beyond one copy per digest. This is a policy-decision upper
+After these builds, the top-level digest groups contain **26,418,588,990 logical
+bytes (24.60 GiB)** beyond one copy per digest. This is a policy-decision upper
 bound, not an authorized reclaim estimate: distinct Candidate identities and
 some excluded bytecode files differ. Sample executables have separate inodes
 and link count one; APFS shared extents were not measured.
+
+Final measured Data free space: 16.58 GiB.
+Archive allocation: 55.26 GiB before,
+63.76 GiB after. These snapshots account for four
+mandatory retained Candidate publications. Build and archive staging roots and
+the volume ledger are empty after completion. No retained archive or user data
+was deleted. Historical literal paths are absent from maintained production
+scripts; the supported wrapper and archive entry point now use the common
+contract. Legacy ad hoc recovery/current/review copies remain classified and
+protected rather than being retroactively claimed as owned temporary work.
 
 ### Exact tmp-root conclusion and SAFE CLEANUP PLAN
 
