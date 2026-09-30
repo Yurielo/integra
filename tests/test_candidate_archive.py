@@ -22,6 +22,11 @@ class CandidateArchiveTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory(prefix=".integra-archive-test-", dir=Path.home())
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
+        from scripts import candidate_retention
+        for fixture_patch in (patch.object(candidate_retention, 'catalog_path', return_value=self.root / 'retention/catalog.json'),
+                              patch.object(candidate_retention, 'managed_roots', return_value=[]),
+                              patch.object(archive.shutil, 'disk_usage', return_value=SimpleNamespace(free=64 * 1024**3))):
+            fixture_patch.start(); self.addCleanup(fixture_patch.stop)
         self.app = self.root / "source" / "Integra.app"
         self.manifest = self.app / archive.EMBEDDED
         self.manifest.parent.mkdir(parents=True)
@@ -364,7 +369,17 @@ class CandidateArchiveTests(unittest.TestCase):
 
     def test_cli_create_verify_and_expected_mismatch(self):
         script = Path(archive.__file__)
-        result = subprocess.run([sys.executable, "-B", str(script), "create", "--app", str(self.app),
+        # Patch the child test process itself: production has no alternate
+        # catalog/managed-root environment escape hatch.
+        fixture_launcher = ('import runpy,sys; from pathlib import Path; '
+                            'from unittest.mock import patch; from scripts import candidate_retention as r; '
+                            'sys.argv=sys.argv[1:]; '
+                            f'p=patch.object(r,"catalog_path",return_value=Path({str(self.root / "retention/catalog.json")!r})); p.start(); '
+                            'q=patch.object(r,"managed_roots",return_value=[]); q.start(); '
+                            'from types import SimpleNamespace; '
+                            'd=patch.object(r.shutil,"disk_usage",return_value=SimpleNamespace(free=64*1024**3)); d.start(); '
+                            'runpy.run_path(sys.argv[0],run_name="__main__")')
+        result = subprocess.run([sys.executable, "-B", '-c', fixture_launcher, str(script), "create", "--app", str(self.app),
                                  "--archive-root", str(self.destination)], capture_output=True, text=True, check=True)
         receipt = json.loads(result.stdout)
         result = subprocess.run([sys.executable, "-B", str(script), "verify", receipt["archive_path"],

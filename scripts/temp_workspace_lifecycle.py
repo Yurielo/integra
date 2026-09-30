@@ -30,7 +30,7 @@ except ModuleNotFoundError:
 MARKER = ".integra-owned-workspace.json"
 SCHEMA = "1.0"
 DEFAULT_EXPECTED_BYTES = 2_400 * 1024 * 1024
-DEFAULT_RESERVE_BYTES = 2 * 1024 * 1024 * 1024
+DEFAULT_RESERVE_BYTES = 15 * 1024 * 1024 * 1024
 LOCK = ".integra-workspace-reservations.lock"
 
 

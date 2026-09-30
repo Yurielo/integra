@@ -14,9 +14,16 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from temp_workspace_lifecycle import (  # noqa: E402
     DEFAULT_EXPECTED_BYTES, DEFAULT_RESERVE_BYTES, run_owned,
 )
+import candidate_retention  # noqa: E402
 
 
-def _build_inside_workspace(archive_root: Path | None) -> int:
+def _build_inside_workspace(archive_root: Path | None, expected_bytes: int = DEFAULT_EXPECTED_BYTES) -> int:
+    root = archive_root or (Path.home() / 'Library/Application Support/Integra/Build Archive')
+    with candidate_retention.reserved_build(root, expected_bytes, archive_copy=archive_root is not None):
+        return _execute_build_inside_workspace(archive_root)
+
+
+def _execute_build_inside_workspace(archive_root: Path | None) -> int:
     """Execute as the supervised child, never as an unowned top-level build."""
     workspace_name = os.environ.get("INTEGRA_OWNED_WORKSPACE")
     if not workspace_name:
@@ -50,11 +57,17 @@ def main() -> int:
     args = parser.parse_args()
     if args.timeout_seconds <= 0:
         parser.error("timeout must be positive")
-    if args.inside_owned_workspace:
-        return _build_inside_workspace(args.archive_root)
     if args.expected_bytes < DEFAULT_EXPECTED_BYTES or args.reserve_bytes < DEFAULT_RESERVE_BYTES:
         parser.error("full Candidate builds require at least the documented expected bytes and hard disk reserve")
-    child = [sys.executable, str(Path(__file__).resolve()), "--inside-owned-workspace"]
+    if args.inside_owned_workspace:
+        return _build_inside_workspace(args.archive_root, args.expected_bytes)
+    try:
+        root = args.archive_root or (Path.home() / "Library/Application Support/Integra/Build Archive")
+        candidate_retention.build_preflight(root, args.expected_bytes, archive_copy=args.archive_root is not None)
+    except (OSError, ValueError) as error:
+        parser.error(str(error))
+    child = [sys.executable, str(Path(__file__).resolve()), "--inside-owned-workspace",
+             "--expected-bytes", str(args.expected_bytes), "--reserve-bytes", str(args.reserve_bytes)]
     if args.archive_root is not None:
         child.extend(["--archive-root", str(args.archive_root.resolve())])
     args.argv = child

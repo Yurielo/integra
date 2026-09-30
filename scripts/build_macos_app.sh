@@ -40,6 +40,18 @@ if any(within(output, root) for root in temporary):
     else:
         raise SystemExit("refusing to materialize Integra.app in an unowned temporary directory; use scripts/temp_workspace_lifecycle.py or a durable output root")
 PY
+python3 - "$repo_root" "$output_root" <<'PY'
+import os
+from pathlib import Path
+import sys
+sys.path.insert(0, sys.argv[1])
+from scripts.candidate_retention import require_build_lease
+try:
+    require_build_lease(Path(os.environ.get('INTEGRA_RETENTION_ARCHIVE_ROOT',
+        str(Path.home() / 'Library/Application Support/Integra/Build Archive'))), output=Path(sys.argv[2]))
+except (OSError, ValueError) as error:
+    raise SystemExit(str(error))
+PY
 seminartext_checkout="${INTEGRA_SEMINARTEXT_BUILD_CHECKOUT:-$repo_root/.runtime-components/seminartext-pinned}"
 seminartext_commit="13644d262776aacdf36221b9a9fc7ebd0a7c0737"
 seminartext_cli_sha256="30d8c1bd6f5ca717391b168cba71228a030009feaec4eb443bb1e76dab230a6c"

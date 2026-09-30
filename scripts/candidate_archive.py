@@ -287,6 +287,7 @@ def create_archive(app: Path, archive_root: Path, *, manifest: Path | None = Non
     """Copy and verify a fresh immutable package; preserve partial attempts."""
     stage = None
     stage_root = None
+    retention_lease = None
     try:
         app = _path(app)
         root = _path(archive_root, durable=True)
@@ -317,17 +318,29 @@ def create_archive(app: Path, archive_root: Path, *, manifest: Path | None = Non
             if _inventory(destination, exclude={INVENTORY, COMPLETE}) != planned:
                 raise ValueError("existing archive differs from requested retained files/permissions")
             return receipt
+        try:
+            from scripts import candidate_retention as retention
+        except ModuleNotFoundError:
+            import candidate_retention as retention
+        reused = retention.reusable_archive(root, identity, planned)
+        if reused is not None:
+            return reused
         ancestor = root
         while not ancestor.exists():
             ancestor = ancestor.parent
         block = max(4096, os.statvfs(ancestor).f_frsize)
         required = sum(((item.get("size", 0) + block - 1) // block + 1) * block for item in planned)
         required += 1024 * 1024
+        # Even unknown legacy occupancy is charged. Policy never evicts it to
+        # admit this copy. The caller cannot lower the adopted free-space floor.
+        retention_lease = retention.reserve_archive(root, required, destination=destination, identity=identity)
+        reserve_bytes = max(reserve_bytes, retention.FREE_FLOOR)
         # Admission precedes even destination creation. Staging is on the
         # destination volume, so publication remains an atomic rename.
-        stage_root, _ = workspace_lifecycle.create_workspace(
+        stage_root, stage_marker = workspace_lifecycle.create_workspace(
             purpose='archive-stage', base=ancestor,
             expected_bytes=required, reserve_bytes=reserve_bytes)
+        retention.bind_stage(*retention_lease, stage_root, stage_marker)
         destination.parent.mkdir(parents=True, exist_ok=True)
         _path(destination.parent, durable=True)
         parent = destination.parent
@@ -364,10 +377,14 @@ def create_archive(app: Path, archive_root: Path, *, manifest: Path | None = Non
         _write_json(stage / COMPLETE, receipt)
         _sync_directory(stage)
         _verify(stage, identity, check_key=False)
+        retention.bind_publication(*retention_lease, stage)
         _publish(stage, destination)
         _sync_directory(destination.parent)
         _sync_directory(root)
-        return verify_archive(destination, identity)
+        final_receipt = verify_archive(destination, identity)
+        retention.finish_publication(*retention_lease, final_receipt)
+        retention_lease = None
+        return final_receipt
     except BaseException as error:
         # The stage belongs exclusively to this invocation and cannot qualify as
         # retention evidence. Leaving it behind would recreate the multi-GiB
@@ -380,6 +397,8 @@ def create_archive(app: Path, archive_root: Path, *, manifest: Path | None = Non
     finally:
         if stage_root is not None and stage_root.exists():
             workspace_lifecycle.cleanup_workspace(stage_root, reason='ARCHIVE_FINISHED', allow_live_owner=True)
+        if retention_lease is not None:
+            retention.cancel_publication(*retention_lease)
 
 
 def main() -> None:
