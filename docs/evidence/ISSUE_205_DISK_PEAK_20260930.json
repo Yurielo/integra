@@ -1,0 +1,10 @@
+{
+  "monitored_pid": 54661,
+  "pid_start_token": "Wed Sep 30 16:55:13 2026",
+  "samples": 224,
+  "start_free_bytes": 30466240512,
+  "minimum_free_bytes": 24812072960,
+  "max_owned_temp_bytes": 4611846144,
+  "max_at_epoch": 1790777417.236657,
+  "ended_by": "PROCESS_EXIT"
+}

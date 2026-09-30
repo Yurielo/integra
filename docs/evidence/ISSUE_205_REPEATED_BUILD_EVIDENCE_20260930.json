@@ -1,0 +1,112 @@
+{
+  "after": {
+    "free_bytes": 29376593920,
+    "used_bytes": 464955772928
+  },
+  "before": {
+    "free_bytes": 30530043904,
+    "used_bytes": 463802322944
+  },
+  "issue": 205,
+  "scenarios": [
+    {
+      "after": {
+        "free_bytes": 29379153920,
+        "used_bytes": 464953212928
+      },
+      "before": {
+        "free_bytes": 30471602176,
+        "used_bytes": 463860764672
+      },
+      "id": "issue205-sequential-one",
+      "remaining_owned_roots": [],
+      "result": {
+        "app": "/private/tmp/integra-owned-issue205-sequential-one-agp58v2p/candidate/Integra.app",
+        "retained_archive": null,
+        "workspace": "/private/tmp/integra-owned-issue205-sequential-one-agp58v2p"
+      }
+    },
+    {
+      "after": {
+        "free_bytes": 29374619648,
+        "used_bytes": 464957747200
+      },
+      "before": {
+        "free_bytes": 29379153920,
+        "used_bytes": 464953212928
+      },
+      "id": "issue205-sequential-two",
+      "remaining_owned_roots": [],
+      "result": {
+        "app": "/private/tmp/integra-owned-issue205-sequential-two-zsiyqb6b/candidate/Integra.app",
+        "retained_archive": null,
+        "workspace": "/private/tmp/integra-owned-issue205-sequential-two-zsiyqb6b"
+      }
+    },
+    {
+      "after": {
+        "free_bytes": 29391724544,
+        "used_bytes": 464940642304
+      },
+      "before": {
+        "free_bytes": 29374619648,
+        "used_bytes": 464957747200
+      },
+      "id": "concurrent-full-candidates",
+      "remaining_owned_roots": [],
+      "result": [
+        {
+          "app": "/private/tmp/integra-owned-issue205-concurrent-one-dorrcucx/candidate/Integra.app",
+          "retained_archive": null,
+          "workspace": "/private/tmp/integra-owned-issue205-concurrent-one-dorrcucx"
+        },
+        {
+          "app": "/private/tmp/integra-owned-issue205-concurrent-two-eclp9ri4/candidate/Integra.app",
+          "retained_archive": null,
+          "workspace": "/private/tmp/integra-owned-issue205-concurrent-two-eclp9ri4"
+        }
+      ]
+    },
+    {
+      "exit_code": 7,
+      "id": "artificial-failure",
+      "remaining_owned_roots": []
+    },
+    {
+      "exit_code": 124,
+      "id": "artificial-timeout",
+      "remaining_owned_roots": []
+    },
+    {
+      "id": "stale-reap-and-live-protection",
+      "live_root_preserved": true,
+      "live_root_visible_before_explicit_cleanup": [
+        "/private/tmp/integra-owned-issue205-live-reap-q_rgtkb3"
+      ],
+      "reap": {
+        "removed": [
+          "/private/tmp/integra-owned-issue205-stale-reap-dssoio24"
+        ],
+        "skipped": [
+          {
+            "reason": "LIVE_OWNER_OR_CHILD",
+            "root": "/private/tmp/integra-owned-issue205-live-reap-q_rgtkb3"
+          },
+          {
+            "reason": "LIVE_OWNER_OR_CHILD",
+            "root": "/private/tmp/integra-owned-lifecycle-evidence-ju5mp7ek"
+          }
+        ]
+      },
+      "remaining_owned_roots": [],
+      "stale_root": "/private/tmp/integra-owned-issue205-stale-reap-dssoio24"
+    },
+    {
+      "exit_code": 0,
+      "id": "release-path",
+      "remaining_owned_roots": []
+    }
+  ],
+  "schema_version": "1.0",
+  "status": "PASS"
+}

@@ -140,6 +140,9 @@ def create_workspace(*, purpose: str, base: str | Path | None = None,
     if expected_bytes < 0 or reserve_bytes < 0:
         raise ValueError("workspace byte reservations must be non-negative")
     root_base = _base(base)
+    # Recover only previously marked work whose original supervisor is gone.
+    # This is a fallback for a killed supervisor, never the primary cleanup.
+    reap_stale(base=root_base)
     with _reservation_lock(root_base):
         live = _live_reservations(root_base)
         free = shutil.disk_usage(root_base).free
@@ -233,8 +236,20 @@ def reap_stale(*, base: str | Path | None = None) -> dict:
                 continue
             try:
                 root, marker = _load(child)
-                if _process_is_live(marker["owner"]) or _process_is_live(marker["child"]) or _group_is_live(marker["child"].get("process_group")):
+                if _process_is_live(marker["owner"]):
                     skipped.append({"root": str(root), "reason": "LIVE_OWNER_OR_CHILD"})
+                    continue
+                if _process_is_live(marker["child"]):
+                    group = marker["child"].get("process_group")
+                    if group != marker["child"].get("pid"):
+                        skipped.append({"root": str(root), "reason": "UNPROVEN_CHILD_GROUP"})
+                        continue
+                    _terminate_group(group)
+                    if _process_is_live(marker["child"]) or _group_is_live(group):
+                        skipped.append({"root": str(root), "reason": "CHILD_STILL_LIVE"})
+                        continue
+                elif _group_is_live(marker["child"].get("process_group")):
+                    skipped.append({"root": str(root), "reason": "UNPROVEN_LIVE_GROUP"})
                     continue
                 cleanup_workspace(root, reason="STALE_REAP", allow_live_owner=False)
                 removed.append(str(root))
@@ -243,9 +258,15 @@ def reap_stale(*, base: str | Path | None = None) -> dict:
     return {"removed": removed, "skipped": skipped}
 
 
-def run_owned(args: argparse.Namespace) -> int:
-    root, marker = create_workspace(purpose=args.purpose, base=args.base,
-                                    expected_bytes=args.expected_bytes, reserve_bytes=args.reserve_bytes)
+def _run_owned_worker(args: argparse.Namespace, parent: dict) -> int:
+    watched_signals = (signal.SIGINT, signal.SIGTERM)
+    original_mask = signal.pthread_sigmask(signal.SIG_BLOCK, watched_signals)
+    try:
+        root, marker = create_workspace(purpose=args.purpose, base=args.base,
+                                        expected_bytes=args.expected_bytes, reserve_bytes=args.reserve_bytes)
+    except BaseException:
+        signal.pthread_sigmask(signal.SIG_SETMASK, original_mask)
+        raise
     child: subprocess.Popen | None = None
     interrupted = {"signal": None}
 
@@ -256,27 +277,38 @@ def run_owned(args: argparse.Namespace) -> int:
             _terminate_group(child.pid, grace_seconds=1)
         raise KeyboardInterrupt
 
-    previous = {item: signal.getsignal(item) for item in (signal.SIGINT, signal.SIGTERM)}
+    previous = {item: signal.getsignal(item) for item in watched_signals}
     signal.signal(signal.SIGINT, cancel)
     signal.signal(signal.SIGTERM, cancel)
     outcome = 1
     try:
+        signal.pthread_sigmask(signal.SIG_SETMASK, original_mask)
         environment = os.environ | {"INTEGRA_OWNED_WORKSPACE": str(root), "TMPDIR": str(root / "tmp")}
         (root / "tmp").mkdir(mode=0o700)
         argv = args.argv[1:] if args.argv[:1] == ["--"] else args.argv
         child = subprocess.Popen(argv, cwd=root, env=environment, start_new_session=True)
         marker = _record(root, marker, "CHILD_STARTED", state="RUNNING", child={"pid": child.pid,
                          "start_token": _process_start_token(child.pid), "process_group": child.pid})
-        try:
-            result = child.wait(timeout=args.timeout_seconds)
-        except subprocess.TimeoutExpired:
-            child.terminate()
-            _terminate_group(child.pid)
-            marker = _record(root, marker, "TIMEOUT", state="TIMED_OUT", timeout_seconds=args.timeout_seconds)
-            outcome = 124
-        else:
+        deadline = time.monotonic() + args.timeout_seconds
+        while True:
+            if not _process_is_live(parent):
+                _terminate_group(child.pid, grace_seconds=1)
+                marker = _record(root, marker, "PARENT_LOST", state="CANCELLED")
+                outcome = 130
+                break
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                _terminate_group(child.pid)
+                marker = _record(root, marker, "TIMEOUT", state="TIMED_OUT", timeout_seconds=args.timeout_seconds)
+                outcome = 124
+                break
+            try:
+                result = child.wait(timeout=min(.25, remaining))
+            except subprocess.TimeoutExpired:
+                continue
             marker = _record(root, marker, "CHILD_EXITED", state="FINISHED", exit_code=result)
             outcome = result
+            break
     except KeyboardInterrupt:
         marker = _record(root, marker, "CANCELLED", state="CANCELLED", signal=interrupted["signal"])
         outcome = 128
@@ -293,6 +325,46 @@ def run_owned(args: argparse.Namespace) -> int:
                 # later conservative stale reaper.
                 outcome = 1
     return outcome
+
+
+def run_owned(args: argparse.Namespace) -> int:
+    """A detached supervisor owns cleanup even if its calling tool is killed."""
+    parent = {"pid": os.getpid(), "start_token": _process_start_token(os.getpid())}
+    if parent["start_token"] is None:
+        raise ValueError("unable to establish caller process identity")
+    supervisor = os.fork()
+    if supervisor == 0:
+        try:
+            os.setsid()
+            code = _run_owned_worker(args, parent)
+        except BaseException as error:
+            print(f"INTEGRA_TEMP_LIFECYCLE: supervisor failed: {error}", file=sys.stderr)
+            code = 1
+        exit_code = 128 + abs(code) if code < 0 else code
+        os._exit(max(0, min(int(exit_code), 255)))
+
+    def forward(signum: int, _frame: object) -> None:
+        try:
+            os.kill(supervisor, signum)
+        except ProcessLookupError:
+            pass
+
+    previous = {item: signal.getsignal(item) for item in (signal.SIGINT, signal.SIGTERM)}
+    for item in previous:
+        signal.signal(item, forward)
+    try:
+        while True:
+            try:
+                _, status = os.waitpid(supervisor, 0)
+                break
+            except InterruptedError:
+                continue
+    finally:
+        for item, handler in previous.items():
+            signal.signal(item, handler)
+    if os.WIFEXITED(status):
+        return os.WEXITSTATUS(status)
+    return 128 + os.WTERMSIG(status) if os.WIFSIGNALED(status) else 1
 
 
 def main() -> int:

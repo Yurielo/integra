@@ -70,6 +70,93 @@ state amplification. Explicit archives remain intentionally duplicated and
 need a separate retention policy decision rather than an unsafe deduplication
 change.
 
+## Recurrence audit, 2026-09-30
+
+The issue reproduced while PR #206 was still open. At the start of this audit,
+the Data volume had about 18 GiB free, `/private/tmp` occupied 24 GiB, and
+`/private/var/folders` occupied 4.5 GiB. Eleven unmarked full-size Integra
+roots of about 2.1 GiB each dominated `/private/tmp`. Their timestamps were
+September 28–29, after the earlier cleanup. They were created by direct,
+manually named candidate/release/worktree paths rather than the proposed
+`integra-owned-*` lifecycle. No build process held these roots open.
+
+Five exact candidate roots had a matching completed permanent archive. Each
+archive passed `candidate_archive.py verify`, each source bundle recomputed to
+the embedded bundle digest, and each source manifest hash matched the archive
+receipt. Those five roots alone were classified `STALE-SAFE-TO-DELETE` and
+removed by exact path. Free space rose from about 18 to 29 GiB. The remaining
+large roots include four unarchived candidate/release/current copies and one
+open-PR worktree; they remain `UNKNOWN` or active review material and were not
+deleted. All completed Build Archive entries and other retained baselines were
+preserved. `Build Archive` itself occupies about 53 GiB across 21 completed
+Candidate archives plus explicit historical retained/recovery copies. The
+accepted retention contract has no automatic pruning authority.
+
+The macOS temp container occupies about 4.5 GiB, including about 2.8 GiB of
+Chrome code-sign clones and ordinary caches. These are not Integra-owned
+workspaces. BookText and SeminarText temporary roots are below 1 GiB each in
+this audit and do not explain the multi-GiB recurrence. No deleted-but-open
+file above 100 MiB was found.
+
+| Remaining large root | Classification | Evidence and disposition |
+| --- | --- | --- |
+| `/private/tmp/integra-excel05-zoom-candidate-b53d3d2` | `UNKNOWN` | Full Candidate, no matching completed archive; preserved. |
+| `/private/tmp/integra-excel07-final-current` | `UNKNOWN` | Full app without ownership marker or verified archive mapping; preserved. |
+| `/private/tmp/integra-excel07-release` | `UNKNOWN` | Full Candidate without matching completed archive; preserved. |
+| `/private/tmp/integra-excel07-source-current` | `UNKNOWN` | Full Candidate without matching completed archive; preserved. |
+| `/private/tmp/integra-excel22-topic-translation` | `ACTIVE` | Separate Git worktree for open PR #204, with a full app in its build directory; preserved. |
+| `/private/tmp/seminartext-proofread.OFbH7y` | `UNKNOWN` | About 0.9 GiB of separate SeminarText work; preserved. |
+| `/private/var/folders/.../X/com.google.Chrome.code_sign_clone` | `UNKNOWN` | About 2.8 GiB of Chrome-owned clones; preserved. |
+| `~/Library/Application Support/Integra/Build Archive` | `RETAINED-CANONICAL` | About 53 GiB of completed archived Candidates and historical retained copies; preserved. |
+
+An unrelated but relevant root-owned `find /System/Volumes/Data` diagnostic
+started on September 24 and remains orphaned under PID 1. The current user
+cannot terminate it without administrator authentication. It was not started
+by any tracked Integra script. No new unbounded `find` or `pgrep` polling was
+used during this audit.
+
+The additional repair on PR #206 puts the shared run lifecycle in a detached
+supervisor. It owns the workspace and child process group, detects loss of its
+calling process, and cleans after signal, timeout or killed child. The full
+Candidate wrapper now uses that same supervisor and enforces its hard
+free-space reserve. The low-level builder still requires a matching owned
+marker before a temporary full-size build. New workspaces conservatively reap stale marked
+work, while live owners and unproven roots remain protected.
+
+Final repeated-build evidence is in
+`docs/evidence/ISSUE_205_REPEATED_BUILD_EVIDENCE_20260930.json` and
+`docs/evidence/ISSUE_205_DISK_PEAK_20260930.json`. The first rerun required
+fresh local pinned source checkouts because the older Documents checkout
+blocked `git checkout` past the bounded 60-second deadline; that failed setup
+left no owned roots. The final run exercised two sequential full builds,
+two concurrent full builds, failure, timeout, stale/live reaping and the
+release path. Every scenario ended with zero owned roots. It recorded 30.53 GB
+free before and 29.38 GB immediately after the scenarios (before deleting the
+small evidence workspace). The first build warmed system caches and reduced
+free space by about 1.09 GB; the second build changed free space by only
+about 4.5 MB, so there was no linear 2.2 GB accumulation. The measured peak
+was 4.61 GB in owned temporary roots during the concurrent case, with at least
+24.81 GB free. The disk monitor sampled every five seconds under a finite
+deadline and exited with the exact test process.
+
+## Verification and remaining gates
+
+- Focused workspace lifecycle tests: 11 passed, including killed caller,
+  killed child, SIGTERM, timeout, live/stale separation and reserve rejection.
+- Final full suite: 830 tests, 735 passed, 92 skipped, 3 failed. The same
+  three governance/CURRENT-drift failures reproduced on a clean checkout of
+  the unchanged PR #206 head, proving that this repair did not introduce them.
+- `scripts/check_agents.py` and `git diff --check`: PASS.
+- `scripts/validate_governance.py`: FAIL on the same pre-existing CURRENT v2
+  governed byte drift and promotion source/overlay lineage. Historical
+  governance evidence was not rewritten to mask the failure. Merge remains
+  blocked until the Quality Gate and accepted baseline are reconciled under
+  their own authority.
+- The old root-owned whole-Data-volume `find` cannot be terminated by this
+  unprivileged session; administrator action is required. The 53 GiB archive
+  retention set likewise remains protected by the accepted retention policy
+  and requires a separate explicit retention decision before any pruning.
+
 ## Evidence contract
 
 `scripts/verify_temp_workspace_lifecycle.py` runs two sequential full builds,

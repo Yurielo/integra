@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -49,6 +50,23 @@ class TempWorkspaceLifecycleTests(unittest.TestCase):
         self.assertEqual(timed.returncode, 124)
         self.assertEqual(list(self.base.glob("integra-owned-*")), [])
 
+    def test_killed_child_is_failure_and_leaves_no_workspace(self):
+        killed = subprocess.run([sys.executable, str(ROOT / "scripts" / "temp_workspace_lifecycle.py"),
+                                 "run", "--purpose", "killed-child", "--base", str(self.base),
+                                 "--expected-bytes", "1", "--reserve-bytes", "0",
+                                 "--timeout-seconds", "5", "--", sys.executable, "-c",
+                                 "import os,signal; os.kill(os.getpid(), signal.SIGKILL)"], check=False)
+        self.assertEqual(killed.returncode, 137)
+        self.assertEqual(list(self.base.glob("integra-owned-killed-child-*")), [])
+
+    def test_full_candidate_cannot_lower_disk_reserve(self):
+        candidate = subprocess.run([sys.executable, str(ROOT / "scripts" / "build_macos_candidate.py"),
+                                    "--base", str(self.base), "--expected-bytes", "1",
+                                    "--reserve-bytes", "0"], capture_output=True, text=True, check=False)
+        self.assertNotEqual(candidate.returncode, 0)
+        self.assertIn("hard disk reserve", candidate.stderr)
+        self.assertEqual(list(self.base.glob("integra-owned-*")), [])
+
     def test_sigterm_cleans_owned_workspace(self):
         process = subprocess.Popen([sys.executable, str(ROOT / "scripts" / "temp_workspace_lifecycle.py"), "run",
                                     "--purpose", "sigterm", "--base", str(self.base), "--expected-bytes", "1",
@@ -66,6 +84,39 @@ class TempWorkspaceLifecycleTests(unittest.TestCase):
             if process.poll() is None:
                 process.kill()
                 process.wait(timeout=5)
+
+    def test_killed_caller_is_reaped_by_detached_supervisor(self):
+        pid_file = self.base / "child.pid"
+        child_code = (
+            "import os,pathlib,time; "
+            "pathlib.Path(os.environ['PID_FILE']).write_text(str(os.getpid())); "
+            "(pathlib.Path(os.environ['INTEGRA_OWNED_WORKSPACE'])/'large-sentinel').write_bytes(b'x'*1024); "
+            "time.sleep(30)"
+        )
+        caller = subprocess.Popen([sys.executable, str(ROOT / "scripts" / "temp_workspace_lifecycle.py"),
+                                   "run", "--purpose", "parent-killed", "--base", str(self.base),
+                                   "--expected-bytes", "1024", "--reserve-bytes", "0",
+                                   "--timeout-seconds", "30", "--", sys.executable, "-c", child_code],
+                                  env={**os.environ, "PID_FILE": str(pid_file)})
+        try:
+            deadline = time.monotonic() + 5
+            while not pid_file.exists() and time.monotonic() < deadline:
+                time.sleep(.02)
+            self.assertTrue(pid_file.exists())
+            worker_pid = int(pid_file.read_text())
+            caller.kill()
+            caller.wait(timeout=5)
+            deadline = time.monotonic() + 8
+            while list(self.base.glob("integra-owned-parent-killed-*")) and time.monotonic() < deadline:
+                time.sleep(.05)
+            self.assertEqual(list(self.base.glob("integra-owned-parent-killed-*")), [])
+            status = subprocess.run(["/bin/ps", "-o", "stat=", "-p", str(worker_pid)],
+                                    capture_output=True, text=True, timeout=5).stdout.strip()
+            self.assertTrue(not status or status.startswith("Z"), status)
+        finally:
+            if caller.poll() is None:
+                caller.kill()
+                caller.wait(timeout=5)
 
     def test_reaper_preserves_live_and_removes_stale_owned_only(self):
         live, _ = lifecycle.create_workspace(purpose="live", base=self.base, expected_bytes=1, reserve_bytes=0)
