@@ -13,9 +13,9 @@
   },
   "candidate": {
     "bundle_digest": "dfa6b0102940534f2e06284a3768245d7476052bbe9f3e82713e1679b05a0204",
-    "candidate_id": "candidate-v1-e13b57a839bb722fb10cb7d46295ae58e77f4641bfacc1226147eedc28df4277",
-    "identity_sha256": "e13b57a839bb722fb10cb7d46295ae58e77f4641bfacc1226147eedc28df4277",
-    "manifest_digest": "6dfdef7b11a2b0014aed9e67f285281abbdc979970c556b4d4db2053cc4189c9"
+    "candidate_id": "candidate-v1-c5f5b6ea7e8495c967c0b999dd24bdf7a3162c1fb34035cb0dcedbd5fe323cd2",
+    "identity_sha256": "c5f5b6ea7e8495c967c0b999dd24bdf7a3162c1fb34035cb0dcedbd5fe323cd2",
+    "manifest_digest": "ea6003528896581fdc4c5e8b14953de7de58b980707e9e12a9fc3fb43b60ebde"
   },
   "delta": [
     {
@@ -32,15 +32,15 @@
   "evidence": {
     "candidate_evidence": {
       "path": "docs/evidence/ISSUE_205_CANDIDATE_EVIDENCE.json",
-      "sha256": "657d761c19ba4c626f9b81415268e878e3d8e91ac5beeba99d66f24b68afa454"
+      "sha256": "ac6d71673c0f98986917fb440f6a30a1eea52be345a0c9fa6df0d710b080c040"
     },
     "candidate_manifest": {
       "path": "docs/evidence/ISSUE_205_CANDIDATE_MANIFEST.json",
-      "sha256": "6dfdef7b11a2b0014aed9e67f285281abbdc979970c556b4d4db2053cc4189c9"
+      "sha256": "ea6003528896581fdc4c5e8b14953de7de58b980707e9e12a9fc3fb43b60ebde"
     },
     "report": {
       "path": "docs/ISSUE_205_TEMP_WORKSPACE_AUDIT.md",
-      "sha256": "bc231042621c6fdcb366537242c8b9c75902c4514ef87fd9774aa0b0ffa897aa"
+      "sha256": "3b67b59f4b23744a1a932f0afeb2d22f864dccf99d428af9647b2c39cb11f6bf"
     }
   },
   "gates": [
@@ -68,12 +68,12 @@
   "owner_acceptance": null,
   "proposal_id": "proposal-issue-205-temp-workspace-lifecycle",
   "proposed_head": {
-    "commit_sha": "0f6ad12c3fb9ca44ac2473d39cfdd307b40bd4ce",
-    "tree_sha": "1dca30ed169761b8e97d6e2bcc50889a5649494e"
+    "commit_sha": "1790a7557ef40c1722020a672aec2d84574be437",
+    "tree_sha": "92351d7ca4cd790c4342b0941095ba8ebb70c02e"
   },
   "proposed_source": {
-    "commit_sha": "e23aa21e085fba8fbf664f8eb517d4460baffed8",
-    "tree_sha": "c5cee3d7581c85c01ec13a7de5d91b8c83e752f3"
+    "commit_sha": "72fc6d37fede5fa3af7fd16934648b6e90120e85",
+    "tree_sha": "fd9dcb58dc5b8783d9ebeee74a3eb26c3a19f00e"
   },
   "schema_version": "1.0",
   "status": "PROPOSED_BASELINE_VALID"
