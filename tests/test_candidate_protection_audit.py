@@ -23,11 +23,12 @@ class ProtectionAuditTests(unittest.TestCase):
                        self.registry['proposed'][0]['candidate_id']}}
         self.registry.update(status='PRODUCT_OWNER_AUTHORIZED_ACTIVE',
                              activation_authority_ref='issue-comment:fixture',
-                             promotion_contract_integration_ref='pr:fixture',
+                             promotion_contract_integration_ref=audit.INTEGRATION_REF,
                              decision_authority_ref='issue-comment:fixture',
                              decision_token_sha256='fixture',
                              explicit_governance_pins={},
                              deletion_authorizations={},
+                             historical_gaps=[], recovery_selection=None,
                              recovery={**self.registry['canonical_current'],
                                        'confirmation_ref': 'issue-comment:fixture'})
         self.registry['rollback']['confirmation_ref'] = 'issue-comment:fixture'
@@ -43,11 +44,7 @@ class ProtectionAuditTests(unittest.TestCase):
                           'decision_authority_ref': 'issue-comment:fixture',
                           'decision_token_sha256': 'fixture',
                           'decision_token': 'PRODUCT_OWNER_AUTHORIZATION: FIXTURE EXPLICIT_GOVERNANCE_PINS={} DELETION_AUTHORIZATIONS={} DELETION_ENABLED=false',
-                          'historical_receipts': {
-                              gap['candidate_id']: {
-                                  'record': json.loads((audit.ROOT / gap['receipt_path']).read_text()),
-                                  'path': gap['receipt_path']}
-                              for gap in self.registry['historical_gaps']}}
+                          'historical_receipts': {}}
 
     def package(self, identity, *, allocated=100):
         cid = identity['candidate_id']
@@ -63,6 +60,106 @@ class ProtectionAuditTests(unittest.TestCase):
                     expected['candidate_id'], {}).get('record', {}).get('inventory_sha256')}
         return audit.resolve(self.registry, self.current, self.proposals, self.packages,
                              free_bytes=free, verifier=verifier, canonical=self.canonical)
+
+    def accepted_gap_fixture(self):
+        registry = json.loads(audit.REGISTRY.read_text())
+        registry['proposed'] = [p for p in registry['proposed'] if p['pr'] == 213]
+        wanted = {registry['canonical_current']['candidate_id'],
+                  registry['rollback']['candidate_id'], registry['proposed'][0]['candidate_id']}
+        registry['selected_survivors'] = {cid: path for cid, path in
+                                          registry['selected_survivors'].items() if cid in wanted}
+        proposal = {'artifact_type': 'integra.proposed_product_baseline',
+                    'candidate': {key: registry['proposed'][0][key] for key in audit.IDENTITY},
+                    'owner_acceptance': {'decision': 'PILOT_ACCEPTED',
+                                         'promotion_authorized': False}}
+        token = ('PRODUCT_OWNER_AUTHORIZATION: ISSUE_214_ACCEPT_PROTECTION_DECISIONS '
+                 f'CURRENT_RECOVERY_GAP={registry["canonical_current"]["candidate_id"]}:MISSING_WITH_AVAILABLE_EVIDENCE '
+                 f'ROLLBACK_RECOVERY_GAP={registry["rollback"]["candidate_id"]}:MISSING_WITH_AVAILABLE_EVIDENCE '
+                 'EXPLICIT_GOVERNANCE_PINS={} UNKNOWN=RETAIN_FAIL_CLOSED '
+                 'DELETION_AUTHORIZATIONS={} '
+                 'CANONICAL_PROTECTION_AUTHORITY=state/candidate_protection_registry_v1.json')
+        canonical = {'current_sha256': registry['canonical_current']['sha256'],
+                     'decision_authority_ref': registry['decision_authority_ref'],
+                     'decision_token_sha256': registry['decision_token_sha256'],
+                     'decision_token': token,
+                     'historical_receipts': {gap['candidate_id']: {
+                         'path': gap['receipt_path'],
+                         'record': json.loads((audit.ROOT / gap['receipt_path']).read_text())}
+                         for gap in registry['historical_gaps']}}
+        selected = self.package(registry['proposed'][0])
+        selected['path'] = registry['selected_survivors'][selected['candidate_id']]
+        return registry, {213: proposal}, [selected], canonical
+
+    def test_accepted_gap_is_explicit_and_never_claims_recovered_bytes(self):
+        registry, proposals, packages, canonical = self.accepted_gap_fixture()
+        result = audit.resolve(registry, self.current, proposals, packages,
+                               free_bytes=40 * 1024**3,
+                               verifier=lambda path, expected: dict(expected), canonical=canonical)
+        self.assertEqual(result['authority_state'], 'COMPLETE')
+        self.assertFalse(result['promotion_ready'])
+        self.assertIn('OUTGOING_CURRENT_EXACT_ARCHIVE_MISSING', result['promotion_blockers'])
+        self.assertEqual(result['verified_protected_bytes'], packages[0]['allocated_bytes'])
+        self.assertEqual(registry['recovery_selection']['archive_path'], None)
+        self.assertEqual(registry['recovery'], None)
+        self.assertEqual(result['eligible_bytes'], 0)
+        unverified_current_copy = self.package(registry['canonical_current'])
+        packages.append(unverified_current_copy)
+        with_copy = audit.resolve(registry, self.current, proposals, packages,
+                                  free_bytes=40 * 1024**3,
+                                  verifier=lambda path, expected: dict(expected), canonical=canonical)
+        self.assertEqual(with_copy['entries'][-1]['classification'], 'PROTECTED')
+        self.assertFalse(with_copy['entries'][-1]['verified_protected_archive'])
+        self.assertFalse(with_copy['promotion_ready'])
+
+    def test_accepted_gap_cannot_claim_archive_or_lose_selected_survivor(self):
+        registry, proposals, packages, canonical = self.accepted_gap_fixture()
+        registry['selected_survivors'][registry['canonical_current']['candidate_id']] = 'Build Archive/fake-current'
+        result = audit.resolve(registry, self.current, proposals, packages,
+                               free_bytes=40 * 1024**3,
+                               verifier=lambda path, expected: dict(expected), canonical=canonical)
+        self.assertTrue(any(x.startswith('HISTORICAL_GAP_FALSE_RECOVERY_CLAIM:') for x in result['blockers']))
+        registry['selected_survivors'][registry['canonical_current']['candidate_id']] = None
+        result = audit.resolve(registry, self.current, proposals, [],
+                               free_bytes=40 * 1024**3,
+                               verifier=lambda path, expected: dict(expected), canonical=canonical)
+        self.assertIn('MISSING_PROTECTED_ARCHIVE:' + packages[0]['candidate_id'], result['blockers'])
+
+    def test_gap_unknown_and_limits_stay_fail_closed(self):
+        registry, proposals, packages, canonical = self.accepted_gap_fixture()
+        extra = self.package({'candidate_id': 'candidate-v1-' + '9'*64,
+                              'bundle_digest': '8'*64, 'manifest_digest': '7'*64})
+        packages.append(extra)
+        result = audit.resolve(registry, self.current, proposals, packages,
+                               free_bytes=40 * 1024**3,
+                               verifier=lambda path, expected: dict(expected), canonical=canonical)
+        self.assertEqual(result['entries'][-1]['classification'], 'UNKNOWN')
+        self.assertEqual(result['eligible_bytes'], 0)
+        registry['deletion_authorizations'] = {extra['path']: {
+            **{key: extra[key] for key in ('path', *audit.IDENTITY)},
+            'authority_ref': 'unaccepted-fixture-grant'}}
+        registry['deletion_enabled'] = True
+        forbidden = audit.resolve(registry, self.current, proposals, packages,
+                                  free_bytes=40 * 1024**3,
+                                  verifier=lambda path, expected: dict(expected), canonical=canonical)
+        self.assertEqual(forbidden['entries'][-1]['classification'], 'UNKNOWN')
+        self.assertEqual(forbidden['eligible_bytes'], 0)
+        registry['deletion_authorizations'] = {}
+        registry['deletion_enabled'] = False
+        registry['limits']['max_full_copies'] = 1
+        capped = audit.resolve(registry, self.current, proposals, packages,
+                               free_bytes=40 * 1024**3,
+                               verifier=lambda path, expected: dict(expected), canonical=canonical)
+        self.assertIn('ARCHIVE_COPY_CAP_EXCEEDED', capped['blockers'])
+        canonical['decision_token'] = canonical['decision_token'].replace(
+            'MISSING_WITH_AVAILABLE_EVIDENCE', 'RECOVERED', 1)
+        self.assertIn('HISTORICAL_GAP_DECISION_CONFLICT', audit.resolve(
+            registry, self.current, proposals, packages, free_bytes=40 * 1024**3,
+            verifier=lambda path, expected: dict(expected), canonical=canonical)['blockers'])
+        canonical['decision_token'] = self.accepted_gap_fixture()[3]['decision_token']
+        registry['historical_gaps'] = []
+        self.assertIn('HISTORICAL_GAP_DECISION_CONFLICT', audit.resolve(
+            registry, self.current, proposals, packages, free_bytes=40 * 1024**3,
+            verifier=lambda path, expected: dict(expected), canonical=canonical)['blockers'])
 
     def test_verified_current_and_rollback_recovery_archive(self):
         result = self.resolve()
@@ -197,6 +294,7 @@ class ProtectionAuditTests(unittest.TestCase):
         self.assertEqual(result['eligible_bytes'], 0)
 
     def test_unverified_owner_decision_cannot_accept_bootstrap(self):
+        self.registry['historical_gaps'] = json.loads(audit.REGISTRY.read_text())['historical_gaps']
         self.canonical['decision_token_sha256'] = 'changed'
         result = self.resolve()
         self.assertIn('PRODUCT_OWNER_DECISION_UNVERIFIED', result['blockers'])

@@ -31,6 +31,11 @@ HASH = re.compile(r'^[0-9a-f]{64}$')
 TERMINAL = {'COMPLETED', 'REJECTED', 'SUPERSEDED', 'UNUSED'}
 ROOT_NAMES = {'Build Archive', 'Recovery Archive', 'Build Archive Recovery',
               'Candidate Builds', 'Validation'}
+ACCEPTED_GAP_DECISION_SHA256 = 'c0fbc7699ae3caa6ea56a59987410977515881043f2ce2fd9b4f39382cc132f8'
+INTEGRATION_REF = 'https://github.com/Yurielo/integra/pull/215'
+HISTORICAL_RECEIPTS = {
+    'CURRENT': 'docs/evidence/PROCESS_V1_ZOOM_FOLDER_CANDIDATE_ARCHIVE.json',
+    'ROLLBACK': 'docs/evidence/PROCESS_V1_FOLDER_DISCOVERY_CANDIDATE_ARCHIVE.json'}
 
 
 def sha(data: bytes) -> str:
@@ -215,24 +220,56 @@ def _add(protected: dict, identity: dict, reason: str, blockers: list[str]) -> N
         protected[cid] = {'identity': identity, 'reasons': [reason]}
 
 
+def _accepted_historical_gaps(registry: dict, canonical: dict | None,
+                              blockers: list[str]) -> set[str]:
+    """Recognize only the exact Issue #214 owner decision, never inferred loss."""
+    token = (canonical or {}).get('decision_token', '')
+    current_id = registry.get('canonical_current', {}).get('candidate_id')
+    rollback_id = registry.get('rollback', {}).get('candidate_id')
+    expected = {'CURRENT': current_id, 'ROLLBACK': rollback_id}
+    gaps = registry.get('historical_gaps')
+    if gaps == []:
+        if registry.get('decision_token_sha256') == ACCEPTED_GAP_DECISION_SHA256:
+            blockers.append('HISTORICAL_GAP_DECISION_CONFLICT')
+        return set()
+    if (registry.get('decision_token_sha256') != ACCEPTED_GAP_DECISION_SHA256
+            or (canonical or {}).get('decision_token_sha256') != ACCEPTED_GAP_DECISION_SHA256
+            or not isinstance(gaps, list) or len(gaps) != 2
+            or {g.get('role'): g.get('candidate_id') for g in gaps if isinstance(g, dict)} != expected
+            or any(g.get('observed_state') != 'MISSING_WITH_AVAILABLE_EVIDENCE'
+                   or set(g) != {'role', 'candidate_id', 'receipt_path', 'observed_state'}
+                   or g.get('receipt_path') != HISTORICAL_RECEIPTS.get(g.get('role'))
+                   for g in gaps if isinstance(g, dict))
+            or any(f'{role}_RECOVERY_GAP={cid}:MISSING_WITH_AVAILABLE_EVIDENCE' not in token
+                   for role, cid in expected.items())
+            or 'UNKNOWN=RETAIN_FAIL_CLOSED' not in token
+            or 'CANONICAL_PROTECTION_AUTHORITY=state/candidate_protection_registry_v1.json' not in token
+            or registry.get('unknown_historical') != 'RETAIN_FAIL_CLOSED'):
+        blockers.append('HISTORICAL_GAP_DECISION_CONFLICT')
+        return set()
+    return {current_id, rollback_id}
+
+
 def _validate_registry(registry: dict, current: dict, proposals: dict[int, dict],
-                       blockers: list[str]) -> dict:
+                       blockers: list[str], accepted_gaps: set[str] | None = None) -> dict:
+    accepted_gaps = accepted_gaps or set()
     if registry.get('artifact_type') != 'integra.candidate_protection_registry' or registry.get('schema_version') != '1.0':
         raise ValueError('protection registry schema is invalid')
     if set(registry.get('managed_roots', [])) != ROOT_NAMES or len(registry['managed_roots']) != len(ROOT_NAMES):
         blockers.append('MANAGED_ROOT_ENUMERATION_INCOMPLETE')
     if type(registry.get('deletion_enabled')) is not bool:
         blockers.append('DELETION_STATE_INVALID')
-    if registry.get('decision_token_sha256') == 'c0fbc7699ae3caa6ea56a59987410977515881043f2ce2fd9b4f39382cc132f8':
+    if registry.get('decision_token_sha256') == ACCEPTED_GAP_DECISION_SHA256:
         if registry.get('explicit_governance_pins') != {}:
             blockers.append('OWNER_AUTHORIZED_PINS_DIFFER')
         if registry.get('deletion_authorizations') != {}:
             blockers.append('OWNER_AUTHORIZED_DELETION_GRANTS_DIFFER')
         if registry.get('deletion_enabled') is not False:
             blockers.append('OWNER_AUTHORIZED_DELETION_DISABLED')
-    if registry.get('status') != 'PRODUCT_OWNER_AUTHORIZED_ACTIVE' or not registry.get('activation_authority_ref'):
+    if (registry.get('status') != 'PRODUCT_OWNER_AUTHORIZED_ACTIVE'
+            or registry.get('activation_authority_ref') != registry.get('decision_authority_ref')):
         blockers.append('REGISTRY_NOT_OWNER_ACTIVATED')
-    if not registry.get('promotion_contract_integration_ref'):
+    if registry.get('promotion_contract_integration_ref') != INTEGRATION_REF:
         blockers.append('PROMOTION_CONTRACT_INTEGRATION_MISSING')
     records = current['records']
     active = [item for item in records if item['baseline_id'] == current['current_id']]
@@ -255,13 +292,29 @@ def _validate_registry(registry: dict, current: dict, proposals: dict[int, dict]
                                              for k in ('candidate_id', 'bundle_digest')):
         blockers.append('ROLLBACK_REGISTRY_CONFLICT')
     else:
-        _add(protected, rollback, 'CONFIRMED_ROLLBACK', blockers)
-        if not rollback.get('confirmation_ref'):
+        if (rollback['candidate_id'] in accepted_gaps
+                and (rollback.get('confirmation_ref') is not None
+                     or set(rollback) != {*IDENTITY, 'confirmation_ref'})):
+            blockers.append('HISTORICAL_ROLLBACK_FALSE_RECOVERY_CLAIM')
+        _add(protected, rollback,
+             'ACCEPTED_HISTORICAL_ROLLBACK_GAP' if rollback['candidate_id'] in accepted_gaps
+             else 'CONFIRMED_ROLLBACK', blockers)
+        if not rollback.get('confirmation_ref') and rollback['candidate_id'] not in accepted_gaps:
             blockers.append('ROLLBACK_CONFIRMATION_MISSING')
     recovery = registry.get('recovery')
     if recovery is None:
-        blockers.append('RECOVERY_SELECTION_MISSING')
+        selection = registry.get('recovery_selection')
+        if (registered['candidate_id'] not in accepted_gaps
+                or not isinstance(selection, dict)
+                or set(selection) != {'state', 'candidate_id', 'decision_ref', 'archive_path'}
+                or selection.get('state') != 'NO_VERIFIED_ARCHIVE_ACCEPTED_HISTORICAL_GAP'
+                or selection.get('candidate_id') != registered['candidate_id']
+                or selection.get('decision_ref') != registry.get('decision_authority_ref')
+                or selection.get('archive_path') is not None):
+            blockers.append('RECOVERY_SELECTION_MISSING')
     else:
+        if registry.get('recovery_selection') is not None:
+            blockers.append('CONFLICTING_RECOVERY_SELECTION')
         _add(protected, recovery, 'CONFIRMED_RECOVERY', blockers)
         if not recovery.get('confirmation_ref'):
             blockers.append('RECOVERY_CONFIRMATION_MISSING')
@@ -329,7 +382,8 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
             blockers.append('OWNER_DELETION_STATE_UNAUTHORIZED')
     elif (deletion_state.group(1) == 'true') != registry.get('deletion_enabled'):
         blockers.append('OWNER_DELETION_STATE_CONFLICT')
-    protected = _validate_registry(registry, current, proposals, blockers)
+    accepted_gaps = _accepted_historical_gaps(registry, canonical, blockers)
+    protected = _validate_registry(registry, current, proposals, blockers, accepted_gaps)
     historical = (canonical or {}).get('historical_receipts', {})
     for gap in registry.get('historical_gaps', []):
         cid = gap['candidate_id']
@@ -349,7 +403,20 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
     verified_paths = set()
     for cid, role in protected.items():
         path = selected.get(cid)
-        if not path or path not in known_paths:
+        if path is None:
+            # A null selector is an explicit statement that no verified
+            # archive is claimed. The exact historical gap is protected by
+            # identity; other open proposals are protected even when no
+            # archive has been published. A specific promotion still requires
+            # a byte-verified selected Candidate in its own operation gate.
+            continue
+        if not isinstance(path, str) or not path:
+            blockers.append('INVALID_SELECTED_SURVIVOR:' + cid)
+            continue
+        if cid in accepted_gaps:
+            blockers.append('HISTORICAL_GAP_FALSE_RECOVERY_CLAIM:' + cid)
+            continue
+        if path not in known_paths:
             blockers.append('MISSING_PROTECTED_ARCHIVE:' + cid)
             continue
         package = next(item for item in packages if item['path'] == path)
@@ -395,11 +462,13 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
     for gap in registry.get('historical_gaps', []):
         if gap.get('observed_state') != 'MISSING_WITH_AVAILABLE_EVIDENCE':
             blockers.append('HISTORICAL_GAP_STATUS_CONFLICT:' + gap['candidate_id'])
-        if gap.get('candidate_id') not in verified:
-            blockers.append('MISSING_WITH_AVAILABLE_EVIDENCE:' + gap['candidate_id'])
     blockers = sorted(set(blockers))
     promotion_blockers = list(blockers)
+    if registry['canonical_current']['candidate_id'] in accepted_gaps:
+        promotion_blockers.append('OUTGOING_CURRENT_EXACT_ARCHIVE_MISSING')
     for number, proposal in proposals.items():
+        if number == 213 and proposal['candidate']['candidate_id'] not in verified:
+            promotion_blockers.append('PROPOSED_CANDIDATE_EXACT_ARCHIVE_MISSING:213')
         if number == 213 and (proposal.get('owner_acceptance') or {}).get('promotion_authorized') is not True:
             promotion_blockers.append('PROMOTION_OWNER_AUTHORIZATION_MISSING:213')
     # A future complete authority may classify exact owned terminal objects as
@@ -422,6 +491,7 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
             'promotion_ready': not promotion_blockers,
             'promotion_blockers': sorted(set(promotion_blockers)),
             'blockers': blockers, 'canonical': canonical,
+            'protected_identities': protected,
             'full_copies': len(rows), 'archive_bytes': total,
             'protected_bytes': sum(r['allocated_bytes'] for r in rows if r['classification'] == 'PROTECTED'),
             'verified_protected_bytes': sum(r['allocated_bytes'] for r in rows if r['verified_protected_archive']),

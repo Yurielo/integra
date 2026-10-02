@@ -1,12 +1,12 @@
 {
   "schema_version": "1.0",
   "artifact_type": "integra.candidate_protection_registry",
-  "status": "PRODUCT_OWNER_ACCEPTED_PENDING_INTEGRATION",
+  "status": "PRODUCT_OWNER_AUTHORIZED_ACTIVE",
   "issue_ref": "https://github.com/Yurielo/integra/issues/214",
   "decision_authority_ref": "https://github.com/Yurielo/integra/issues/214#issuecomment-5951189263",
   "decision_token_sha256": "c0fbc7699ae3caa6ea56a59987410977515881043f2ce2fd9b4f39382cc132f8",
-  "activation_authority_ref": null,
-  "promotion_contract_integration_ref": null,
+  "activation_authority_ref": "https://github.com/Yurielo/integra/issues/214#issuecomment-5951189263",
+  "promotion_contract_integration_ref": "https://github.com/Yurielo/integra/pull/215",
   "canonical_current": {
     "path": "state/current_product_baseline_v2.json",
     "sha256": "47f4023fc7905166c5134f224519d83520f95b06ac68ccd357c02d86035f900e",
@@ -23,6 +23,12 @@
     "confirmation_ref": null
   },
   "recovery": null,
+  "recovery_selection": {
+    "state": "NO_VERIFIED_ARCHIVE_ACCEPTED_HISTORICAL_GAP",
+    "candidate_id": "candidate-v1-d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8",
+    "decision_ref": "https://github.com/Yurielo/integra/issues/214#issuecomment-5951189263",
+    "archive_path": null
+  },
   "proposed": [
     {
       "pr": 182,

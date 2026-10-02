@@ -1,6 +1,6 @@
 # Candidate protection and historical recovery gap — Issue #214
 
-Status: PRODUCT_OWNER_ACCEPTED_PENDING_INTEGRATION. This contract does not promote a Candidate, change
+Status: PRODUCT_OWNER_AUTHORIZED_ACTIVE in draft PR #215. This contract does not promote a Candidate, change
 CURRENT, authorize historical deletion, or make PR #213's accepted proposal a
 new baseline.
 
@@ -13,17 +13,18 @@ CURRENT record, exact Candidate identity tuples, every open proposal head
 roles. The resolver enumerates all open PR proposals and blocks on unregistered
 proposals or head drift. It must re-read GitHub/main and PR-head bytes; it may not
 trust a filename, local catalog entry, historical receipt, or unmerged policy
-file alone. A changed reference, missing pin enumeration, missing archive,
-conflicting identity, or incomplete registry returns BLOCKED. The registry is
-not active merely because this PR exists or its CI passes. The exact Product
+file alone. A changed reference, missing pin enumeration, missing selected
+archive, conflicting identity, or incomplete registry returns BLOCKED. A null
+selected-survivor value expressly claims no verified archive; it never means
+that a Candidate was recovered or may be deleted. The exact Product
 Owner decision is recorded at Issue #214 comment 5951189263 and its token hash
 is bound in the registry. It accepts `explicit_governance_pins={}` and
 `deletion_authorizations={}` while retaining every UNKNOWN artifact.
 The existing PR #213 lifecycle policy remains the cap/cleanup executor contract.
 Its owned catalog is ownership and transaction evidence only. The registry is
-the sole positive protection and deletion authority. The registry's
-`promotion_contract_integration_ref` remains null while activation is pending;
-a standalone resolver PASS cannot authorize promotion.
+the sole positive protection and deletion authority. Activation binds the
+accepted Issue #214 decision and draft PR #215 integration. This unmerged
+branch state grants neither promotion nor deletion.
 
 The existing promotion helper now requires a fresh canonical registry gate in
 addition to its old proposal, acceptance, exact archive and output checks.
@@ -35,7 +36,7 @@ this PR. Planning, package withdrawal and resumed transactions require the
 canonical gate. The journal binds the registry digest, grant, identity and
 canonical GitHub snapshot. Drift stops recovery. The catalog mirror is derived
 from verified registry survivors, not the old policy snapshot. It remains
-dormant while the real registry has no grants and incomplete recovery evidence.
+dormant while the real registry has no grants.
 Cleanup may reduce an over-cap archive or restore a disk reserve; those two
 capacity conditions block new publication, not exact owner-granted deletion.
 
@@ -70,15 +71,20 @@ no-replace, under both archive caps and the disk reserve, and must not prune
 existing packages. On this Mac, that operation is BLOCKED because no exact
 source is established and all eight full-copy slots are occupied.
 
-If exact bytes cannot be found, the accepted historical status is
-`MISSING_WITH_AVAILABLE_EVIDENCE`; no new archive or receipt may be
-fabricated. The machine-readable `bootstrap_plan` records the old CURRENT/rollback gap, all
+The accepted historical status is `MISSING_WITH_AVAILABLE_EVIDENCE`; no new
+archive or receipt may be fabricated. `recovery_selection` explicitly records
+`NO_VERIFIED_ARCHIVE_ACCEPTED_HISTORICAL_GAP` with `archive_path: null`.
+CURRENT and rollback Candidate identities remain protected, without a claim
+that their archive bytes survive. Other open proposals without selected
+archives remain protected by identity. PR #213 retains its byte-verified
+selected archive. The machine-readable `bootstrap_plan` records the old CURRENT/rollback gap, all
 UNKNOWN copies, the proposed next Candidate, and the remaining physical
 headroom. It does not turn the old baseline into a recovered one or write a
 successor CURRENT. Any transition that deliberately accepts a recovery gap
 requires a separate exact Product Owner promotion decision and a new governed promotion
 contract; the existing promotion helper continues to require both exact
-archives.
+archives. Protection authority may be COMPLETE while promotion remains blocked
+by the missing outgoing CURRENT archive and the separate owner promotion gate.
 
 ## Non-destructive verification
 
@@ -89,7 +95,9 @@ bytes charged once per physical inode. A missing or incomplete authority
 cannot produce ELIGIBLE. Candidate archive verification is the existing
 `scripts/candidate_archive.py` verifier; a receipt without its package is not
 byte evidence. Interruption before an immutable COMPLETE publication leaves
-no qualifying archive, and subsequent dry-run remains BLOCKED.
+no qualifying archive. A missing selected survivor blocks authority; an
+explicitly null historical-gap selector stays protected without claiming a
+surviving archive.
 
 PR #213 and its accepted proposal remain unchanged. The transferred executor
 is independently reviewable in PR #215; no real cleanup, publication, promotion

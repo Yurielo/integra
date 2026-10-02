@@ -17,7 +17,9 @@ except ModuleNotFoundError:
 
 
 def _snapshot(*, for_deletion: bool = False) -> tuple[dict, dict]:
-    registry = json.loads(protection.REGISTRY.read_text())
+    registry_bytes = protection.REGISTRY.read_bytes()
+    registry_sha256 = protection.sha(registry_bytes)
+    registry = json.loads(registry_bytes)
     if (registry.get('status') != 'PRODUCT_OWNER_AUTHORIZED_ACTIVE'
             or not registry.get('activation_authority_ref')
             or not registry.get('promotion_contract_integration_ref')
@@ -31,6 +33,9 @@ def _snapshot(*, for_deletion: bool = False) -> tuple[dict, dict]:
                                canonical=canonical, for_deletion=for_deletion)
     if audit['authority_state'] != 'COMPLETE':
         raise ValueError('canonical protection authority is incomplete: ' + ','.join(audit['blockers']))
+    if protection.sha(protection.REGISTRY.read_bytes()) != registry_sha256:
+        raise ValueError('canonical protection registry changed during capture')
+    audit['registry_sha256'] = registry_sha256
     return registry, audit
 
 
@@ -103,10 +108,18 @@ def require_deletion(path: Path) -> None:
             or any(grant.get(key) != rows[0].get(key)
                    for key in ('path', *protection.IDENTITY))):
         raise ValueError('canonical protection forbids deletion')
-    return {'registry_sha256': hashlib.sha256(protection.REGISTRY.read_bytes()).hexdigest(),
+    survivors = {}
+    for cid, selected in registry['selected_survivors'].items():
+        if selected is not None:
+            receipt = base / selected / 'COMPLETE.json'
+            survivors[cid] = {'path': selected,
+                              'receipt_sha256': protection.sha(receipt.read_bytes())}
+    if protection.sha(protection.REGISTRY.read_bytes()) != audit.get('registry_sha256'):
+        raise ValueError('canonical protection registry changed before deletion lease')
+    return {'registry_sha256': audit['registry_sha256'],
             'canonical_sha256': protection.digest(audit['canonical']),
             'path': relative, 'identity': {key: rows[0][key] for key in protection.IDENTITY},
-            'grant': grant}
+            'grant': grant, 'survivors': survivors}
 
 
 def require_deletion_continuation(lease: dict) -> None:
@@ -133,13 +146,29 @@ def require_deletion_continuation(lease: dict) -> None:
     if protection.digest(canonical) != lease.get('canonical_sha256'):
         raise ValueError('canonical deletion inputs changed')
     blockers = []
-    protected = protection._validate_registry(registry, current, proposals, blockers)
+    accepted_gaps = protection._accepted_historical_gaps(registry, canonical, blockers)
+    protected = protection._validate_registry(registry, current, proposals, blockers, accepted_gaps)
     identity = lease.get('identity') or {}
     if blockers or identity.get('candidate_id') in protected:
         raise ValueError('canonical protection blocks resumed deletion')
     base = Path.home() / 'Library/Application Support/Integra'
-    for cid, relative in registry['selected_survivors'].items():
-        if not relative:
-            raise ValueError('protected survivor is missing: ' + cid)
-        if cid not in protected or not (base / relative / 'COMPLETE.json').is_file():
-            raise ValueError('protected survivor disappeared: ' + cid)
+    selected = registry['selected_survivors']
+    if set(selected) != set(protected):
+        raise ValueError('protected survivor set changed')
+    expected_survivors = lease.get('survivors')
+    if not isinstance(expected_survivors, dict) or set(expected_survivors) != {
+            cid for cid, relative in selected.items() if relative is not None}:
+        raise ValueError('protected survivor lease is incomplete')
+    for cid, relative in selected.items():
+        if relative is None:
+            proposal_ids = {proposal['candidate']['candidate_id']
+                            for proposal in proposals.values()}
+            if cid not in accepted_gaps and cid not in proposal_ids:
+                raise ValueError('required protected survivor is missing: ' + cid)
+            continue
+        if cid in accepted_gaps or not isinstance(relative, str) or not relative:
+            raise ValueError('protected survivor claim conflicts with accepted gap: ' + cid)
+        receipt = base / relative / 'COMPLETE.json'
+        if (expected_survivors[cid].get('path') != relative
+                or protection.sha(receipt.read_bytes()) != expected_survivors[cid].get('receipt_sha256')):
+            raise ValueError('protected survivor disappeared or changed: ' + cid)

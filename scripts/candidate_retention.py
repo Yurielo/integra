@@ -225,11 +225,11 @@ def _context_valid(context):
         base = Path.home() / 'Library/Application Support/Integra'
         expected = {cid: str(base / relative) for cid, relative in selected.items() if relative}
         return bool(context and context.get('protected') and context.get('inputs')
-                    and set(context['protected']) == set(context.get('selected_archives', {}))
-                    and set(context['protected']) == set(context.get('verified_survivors', {}))
+                    and set(context['protected']) == set(selected)
+                    and set(context.get('selected_archives', {})) == set(expected)
+                    and set(context.get('verified_survivors', {})) == set(expected)
                     and all(_sha(p) == digest for p, digest in context['inputs'].items())
                     and context.get('selected_archives') == expected
-                    and set(context['protected']) == set(selected)
                     and audit['authority_state'] == 'COMPLETE')
     except (OSError, ValueError, KeyError, TypeError, ImportError, subprocess.SubprocessError):
         return False
@@ -283,7 +283,7 @@ def plan(catalog, *, free_bytes=None):
                                           for k in ('candidate_id', 'bundle_digest', 'manifest_digest'))
                                   and (not (context or {}).get('selected_archives', {}).get(cid)
                                        or r['path'] == context['selected_archives'][cid]) for r in rows)
-                          for cid in protected_ids)
+                          for cid in (context or {}).get('selected_archives', {}))
     valid = valid and complete_roots and survivors_valid
     if not valid:
         for r in rows:
@@ -401,6 +401,11 @@ def _lease_caller(lease):
 
 def reserve_archive(root, allocated_bytes, *, destination=None, identity=None):
     """Reserve a publication slot before staging; never silently prune."""
+    try:
+        from scripts.candidate_protection_gate import require_archive_publication
+    except ModuleNotFoundError:
+        from candidate_protection_gate import require_archive_publication
+    require_archive_publication(_safe(root), allocated_bytes)
     if not os.environ.get('INTEGRA_RETENTION_BUILD_LEASE'):
         maintenance(root, reason='BEFORE_ARCHIVE_COPY')
     path = catalog_path(root)
@@ -587,13 +592,15 @@ def sync_protection(catalog, current_path, proposals, rollback_archive, recovery
         raise ValueError('catalog pins differ from canonical registry')
     selected = {cid: str(base / relative)
                 for cid, relative in registry['selected_survivors'].items() if relative}
-    if (set(selected) != set(registry['selected_survivors'])
-            or (selected_archives is not None and selected_archives != selected)
-            or str(_safe(rollback_archive)) != selected[registry['rollback']['candidate_id']]
-            or registry['recovery'] is None
-            or str(_safe(recovery_archive)) != selected[registry['recovery']['candidate_id']]):
+    if (selected_archives is not None and selected_archives != selected
+            or rollback_archive is not None and
+               str(_safe(rollback_archive)) != selected.get(registry['rollback']['candidate_id'])
+            or recovery_archive is not None and
+               (registry['recovery'] is None or
+                str(_safe(recovery_archive)) != selected.get(registry['recovery']['candidate_id']))):
         raise ValueError('catalog survivor selection differs from canonical registry')
-    context = {'protected': {}, 'inputs': {}, 'selected_archives': selected,
+    context = {'protected': {cid: role['reasons'] for cid, role in audit['protected_identities'].items()},
+               'inputs': {}, 'selected_archives': selected,
                'verified_survivors': {}, 'registry_sha256': _sha(protection.REGISTRY)}
     verified = {}
     for cid, name in selected.items():
@@ -604,7 +611,6 @@ def sync_protection(catalog, current_path, proposals, rollback_archive, recovery
         if len(rows) != 1 or rows[0]['classification'] != 'PROTECTED' or not rows[0]['verified_protected_archive']:
             raise ValueError('canonical protected survivor is not verified')
         receipt = verify_archive(package, {key: rows[0][key] for key in protection.IDENTITY})
-        context['protected'][cid] = rows[0]['reasons']
         verified[cid] = receipt
         context['inputs'][str(package / 'COMPLETE.json')] = _sha(package / 'COMPLETE.json')
         context['inputs'][str(package / 'inventory.json')] = _sha(package / 'inventory.json')
@@ -662,19 +668,18 @@ def recover_cleanup(path):
 
 def refresh_protection(catalog):
     """Refresh the catalog mirror from the registry; no heuristic selection."""
-    previous = catalog.get('protection') or {}
-    if not previous.get('current_path'):
-        return
     try:
         from scripts.candidate_protection_gate import _snapshot
+        from scripts import candidate_protection_audit as protection
     except ModuleNotFoundError:
         from candidate_protection_gate import _snapshot
+        import candidate_protection_audit as protection
     registry, _ = _snapshot(for_deletion=True)
     base = Path.home() / 'Library/Application Support/Integra'
     selected = {cid: str(base / relative) for cid, relative in registry['selected_survivors'].items() if relative}
-    sync_protection(catalog, previous['current_path'], [],
-                    selected[registry['rollback']['candidate_id']],
-                    selected[registry['recovery']['candidate_id']],
+    sync_protection(catalog, protection.ROOT / registry['canonical_current']['path'], [],
+                    selected.get(registry['rollback']['candidate_id']),
+                    selected.get(registry['recovery']['candidate_id']) if registry['recovery'] else None,
                     pins=registry['explicit_governance_pins'], selected_archives=selected)
     emit('PROTECTION_RECONCILED', current_id=registry['canonical_current']['current_id'],
          selected_survivors=selected)

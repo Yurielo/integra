@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import hashlib
 import json
 import tempfile
 import unittest
@@ -15,8 +16,10 @@ class OperationGateTests(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
-        self.root = Path(temporary.name)
-        self.base = Path.home() / 'Library/Application Support/Integra'
+        self.root = Path(temporary.name).resolve()
+        self.base = self.root / 'Library/Application Support/Integra'
+        home_patch = patch.object(gate.Path, 'home', return_value=self.root)
+        home_patch.start(); self.addCleanup(home_patch.stop)
         self.current = {'candidate_id': 'candidate-v1-' + 'a'*64,
                         'bundle_digest': 'b'*64, 'manifest_digest': 'c'*64}
         self.proposed = {'candidate_id': 'candidate-v1-' + 'd'*64,
@@ -47,8 +50,11 @@ class OperationGateTests(unittest.TestCase):
         return {'path': path, **identity, 'classification': classification,
                 'verified_protected_archive': True}
 
-    def test_pending_real_registry_blocks_all_operations_before_network(self):
-        with patch.object(gate.protection, 'fetch_canonical', side_effect=AssertionError('network')):
+    def test_pending_registry_blocks_all_operations_before_network(self):
+        path = self.root / 'pending-registry.json'
+        path.write_text(json.dumps({'status': 'PRODUCT_OWNER_ACCEPTED_PENDING_INTEGRATION'}))
+        with patch.object(gate.protection, 'REGISTRY', path), \
+                patch.object(gate.protection, 'fetch_canonical', side_effect=AssertionError('network')):
             for operation in (
                     lambda: gate.require_promotion({'candidate': self.proposed},
                                                    {'current_id': 'current-fixture'},
@@ -83,6 +89,12 @@ class OperationGateTests(unittest.TestCase):
                         gate.require_archive_publication(self.base / 'Build Archive', 100)
                     self.audit[key] = old
 
+    def test_retention_publication_reservation_uses_canonical_gate_first(self):
+        with patch.object(gate, 'require_archive_publication', side_effect=ValueError('authority unavailable')):
+            with self.assertRaisesRegex(ValueError, 'authority unavailable'):
+                retention.reserve_archive(self.base / 'Build Archive', 100)
+        self.assertFalse((self.base / 'Retention').exists())
+
     def test_deletion_requires_exact_grant_and_eligible_row(self):
         target = self.base / 'Build Archive/old'
         identity = {'candidate_id': 'candidate-v1-' + '1'*64,
@@ -103,6 +115,12 @@ class OperationGateTests(unittest.TestCase):
             self.audit['entries'][-1]['classification'] = 'ELIGIBLE'
             with patch.object(gate.protection, 'REGISTRY', self.root / 'registry.json'):
                 (self.root / 'registry.json').write_text(json.dumps(self.registry))
+                self.audit['registry_sha256'] = gate.protection.sha(
+                    (self.root / 'registry.json').read_bytes())
+                for relative in self.registry['selected_survivors'].values():
+                    receipt = self.base / relative / 'COMPLETE.json'
+                    receipt.parent.mkdir(parents=True, exist_ok=True)
+                    receipt.write_text('fixture receipt')
                 self.audit['canonical'] = {'fixture': 'verified-current-and-proposals'}
                 lease = gate.require_deletion(target)
                 self.assertEqual(lease['identity'], identity)
@@ -133,6 +151,58 @@ class OperationGateTests(unittest.TestCase):
                 gate.require_deletion_continuation(lease)
             registry_path.write_text('{broken')
             with self.assertRaisesRegex(ValueError, 'registry changed'):
+                gate.require_deletion_continuation(lease)
+            lease['registry_sha256'] = hashlib.sha256(registry_path.read_bytes()).hexdigest()
+            with self.assertRaises(json.JSONDecodeError):
+                gate.require_deletion_continuation(lease)
+
+    def test_registry_drift_during_snapshot_fails_closed(self):
+        registry_path = self.root / 'drifting-registry.json'
+        registry_path.write_text(json.dumps({'status': 'PRODUCT_OWNER_AUTHORIZED_ACTIVE',
+            'activation_authority_ref': 'fixture',
+            'promotion_contract_integration_ref': 'fixture', 'deletion_enabled': False}))
+        def drift(*args, **kwargs):
+            registry_path.write_text(registry_path.read_text() + ' ')
+            return {'authority_state': 'COMPLETE'}
+        with patch.object(gate.protection, 'REGISTRY', registry_path), \
+                patch.object(gate.protection, 'fetch_canonical', return_value=({}, {}, {})), \
+                patch.object(gate.protection, 'scan_local', return_value=[]), \
+                patch.object(gate.protection, 'resolve', side_effect=drift), \
+                patch.object(gate.shutil, 'disk_usage', return_value=type('D', (), {'free': 1})()):
+            with self.assertRaisesRegex(ValueError, 'registry changed during capture'):
+                gate._snapshot()
+
+    def test_resume_revalidates_current_authority_and_selected_survivor(self):
+        registry_path = self.root / 'active-registry.json'
+        cid = self.current['candidate_id']
+        registry = {'status': 'PRODUCT_OWNER_AUTHORIZED_ACTIVE',
+                    'activation_authority_ref': 'fixture-owner',
+                    'promotion_contract_integration_ref': 'fixture-integration',
+                    'deletion_enabled': True,
+                    'deletion_authorizations': {'Build Archive/old': {'authority_ref': 'fixture-grant'}},
+                    'selected_survivors': {cid: 'Build Archive/current'}}
+        registry_path.write_text(json.dumps(registry))
+        receipt = self.base / 'Build Archive/current/COMPLETE.json'
+        receipt.parent.mkdir(parents=True)
+        receipt.write_text('verified fixture survivor receipt')
+        canonical = {'current_sha256': 'a'*64}
+        lease = {'registry_sha256': hashlib.sha256(registry_path.read_bytes()).hexdigest(),
+                 'canonical_sha256': gate.protection.digest(canonical),
+                 'path': 'Build Archive/old', 'identity': {'candidate_id': 'candidate-v1-' + '1'*64},
+                 'grant': registry['deletion_authorizations']['Build Archive/old'],
+                 'survivors': {cid: {'path': 'Build Archive/current',
+                                     'receipt_sha256': gate.protection.sha(receipt.read_bytes())}}}
+        with patch.object(gate.protection, 'REGISTRY', registry_path), \
+                patch.object(gate.protection, 'fetch_canonical', return_value=({}, {}, canonical)) as fetch, \
+                patch.object(gate.protection, '_accepted_historical_gaps', return_value=set()), \
+                patch.object(gate.protection, '_validate_registry', return_value={cid: {'identity': self.current}}):
+            gate.require_deletion_continuation(lease)
+            fetch.return_value = ({}, {}, {'current_sha256': 'changed'})
+            with self.assertRaisesRegex(ValueError, 'canonical deletion inputs changed'):
+                gate.require_deletion_continuation(lease)
+            fetch.return_value = ({}, {}, canonical)
+            receipt.unlink()
+            with self.assertRaises(FileNotFoundError):
                 gate.require_deletion_continuation(lease)
             registry_path.write_text(json.dumps({'deletion_enabled': False}))
             with self.assertRaisesRegex(ValueError, 'registry changed'):
