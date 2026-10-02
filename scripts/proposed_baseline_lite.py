@@ -516,6 +516,11 @@ def verify_promotion_material(proposal: dict[str, Any], root: Path, proposal_pat
             declaration = None
             acceptance_commit = None
             for revision in revisions:
+                # A merge can carry the unchanged proposal file from either
+                # parent.  It is not a declaration or acceptance amendment
+                # unless this commit actually changed that one governed file.
+                if relative_proposal not in _changed_paths(root, f"{revision}^", revision):
+                    continue
                 try:
                     record = json.loads(_git(root, "show", f"{revision}:{relative_proposal}"))
                 except (OSError, subprocess.CalledProcessError, ValueError, TypeError):

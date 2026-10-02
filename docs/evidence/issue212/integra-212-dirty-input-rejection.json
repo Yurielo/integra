@@ -1,0 +1,33 @@
+{
+  "issue": 212,
+  "source": "9ef8d33b354517ab064231e023dc9bef638622cd",
+  "before_free": 72994107392,
+  "native_runs": [
+    {
+      "label": "archived-native",
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/private/tmp/integra-issue-212/scripts/build_macos_candidate.py",
+        "--base",
+        "/private/tmp/integra-212-native-fc1dffe35fcb",
+        "--purpose",
+        "issue212-archived-native",
+        "--timeout-seconds",
+        "1800",
+        "--archive-root",
+        "/Users/yurielokhin/Library/Application Support/Integra/Validation/integra-212-native-fc1dffe35fcb"
+      ],
+      "exit": 1,
+      "seconds": 15.48,
+      "log": "/private/tmp/integra-212-archived-native.log",
+      "remaining_owned_roots": [],
+      "error_tail": "{\"artifact_type\": \"integra.lifecycle_event\", \"at\": \"2026-10-02T08:35:02.445793+00:00\", \"event\": \"CLEANUP_SKIPPED\", \"reason\": \"NO_OWNERSHIP_CATALOG\", \"trigger\": \"BEFORE_BUILD\"}\n{\"artifact_type\": \"integra.lifecycle_event\", \"at\": \"2026-10-02T08:35:08.745142+00:00\", \"event\": \"WORKSPACE_CREATED\", \"expected_bytes\": 2516582400, \"purpose\": \"issue212-archived-native\", \"root\": \"/private/tmp/integra-212-native-fc1dffe35fcb/integra-owned-issue212-archived-native-28oegnrh\"}\nINTEGRA_MACOS_BUILD: FAIL at line 96\nTraceback (most recent call last):\n  File \"/private/tmp/integra-issue-212/scripts/build_macos_candidate.py\", line 107, in <module>\n    raise SystemExit(main())\n                     ~~~~^^\n  File \"/private/tmp/integra-issue-212/scripts/build_macos_candidate.py\", line 87, in main\n    return _build_inside_workspace(args.archive_root, args.expected_bytes,\n                                   native_tests=args.native_tests, package_tests=args.package_tests)\n  File \"/private/tmp/integra-issue-212/scripts/build_macos_candidate.py\", line 40, in _build_inside_workspace\n    return _execute_build_inside_workspace(archive_root)\n  File \"/private/tmp/integra-issue-212/scripts/build_macos_candidate.py\", line 52, in _execute_build_inside_workspace\n    subprocess.run([str(ROOT / \"scripts\" / \"build_macos_app.sh\"), str(app.parent)], check=True)\n    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py\", line 578, in run\n    raise CalledProcessError(retcode, process.args,\n                             output=stdout, stderr=stderr)\nsubprocess.CalledProcessError: Command '['/private/tmp/integra-issue-212/scripts/build_macos_app.sh', '/private/tmp/integra-212-native-fc1dffe35fcb/integra-owned-issue212-archived-native-28oegnrh/candidate']' returned non-zero exit status 1.\n{\"artifact_type\": \"integra.lifecycle_event\", \"at\": \"2026-10-02T08:35:17.883067+00:00\", \"event\": \"WORKSPACE_CLEANUP_ATTEMPTED\", \"reason\": \"RUN_FINISHED\", \"root\": \"/private/tmp/integra-212-native-fc1dffe35fcb/integra-owned-issue212-archived-native-28oegnrh\"}\n{\"artifact_type\": \"integra.lifecycle_event\", \"at\": \"2026-10-02T08:35:17.883634+00:00\", \"event\": \"WORKSPACE_CLEANUP_COMPLETED\", \"reason\": \"RUN_FINISHED\", \"root\": \"/private/tmp/integra-212-native-fc1dffe35fcb/integra-owned-issue212-archived-native-28oegnrh\"}\n"
+    }
+  ],
+  "new_archive_root": "/Users/yurielokhin/Library/Application Support/Integra/Validation/integra-212-native-fc1dffe35fcb",
+  "base": "/private/tmp/integra-212-native-fc1dffe35fcb",
+  "remaining_owned_roots_after": [],
+  "after_free": 72994414592,
+  "temporary_inputs_removed": true
+}

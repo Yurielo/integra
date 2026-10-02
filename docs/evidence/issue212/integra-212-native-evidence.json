@@ -1,0 +1,311 @@
+{
+  "issue": 212,
+  "source": "74785b5f34cb12e1cd557b34731bffbe191cbe15",
+  "before_free": 73001861120,
+  "native_runs": [
+    {
+      "label": "archived-native",
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/private/tmp/integra-issue-212/scripts/build_macos_candidate.py",
+        "--base",
+        "/private/tmp/integra-212-native-35e6f9101278",
+        "--purpose",
+        "issue212-archived-native",
+        "--timeout-seconds",
+        "1800",
+        "--archive-root",
+        "/Users/yurielokhin/Library/Application Support/Integra/Validation/integra-212-native-35e6f9101278"
+      ],
+      "exit": 0,
+      "seconds": 151.42,
+      "log": "/private/tmp/integra-212-archived-native.log",
+      "remaining_owned_roots": [],
+      "result": {
+        "app": "/private/tmp/integra-212-native-35e6f9101278/integra-owned-issue212-archived-native-n6lctccm/candidate/Integra.app",
+        "candidate_manifest": {
+          "build": {
+            "build_id": "local",
+            "timestamp": "2026-10-02T11:38:39+03:00"
+          },
+          "bundle": {
+            "digest": "fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
+            "digest_algorithm": "sha256-tree-excluding-candidate-manifest"
+          },
+          "candidate_id": "candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29",
+          "identity": {
+            "build_command": {
+              "identity": "scripts/build_macos_app.sh",
+              "path": "scripts/build_macos_app.sh",
+              "script_sha256": "b905ba56beed4a8f5fdea5819d05de1bd1498634d235c6e0cbc321063e48e6b8"
+            },
+            "components": {
+              "booktext": {
+                "commit_sha": "46396649214275eb18054b670a842bace02d02e1",
+                "component": "booktext",
+                "entrypoint_sha256": "32ecbb3f9a46e0648f4f701a3935487d0be91799334b27128161a51a1f99f05f",
+                "personal_use_only": true,
+                "vision_sha256": "3b5a25577a58713cb4cb3a7e81d3883bdf822ce9df6ef0aa4b60d56186e92753"
+              },
+              "seminartext": {
+                "commit_sha": "13644d262776aacdf36221b9a9fc7ebd0a7c0737",
+                "component": "seminartext",
+                "entrypoint_sha256": "30d8c1bd6f5ca717391b168cba71228a030009feaec4eb443bb1e76dab230a6c",
+                "evidence_foundation_sha256": "6adcf15e9767c36ad2d0dfe3a6a995d90c41b5f1671b4c9434a4b48f590e3856",
+                "evidence_validator_sha256": "889e6cdf3dc2dd7504f76923c04e2d8d1eceabdb828d0c110ddc1059b107860e",
+                "personal_use_only": true
+              },
+              "videotext": {
+                "audio_adapter_sha256": "ab525fe985a0fa1af8ba9ccf6b94e78b0095b0a240f057e8e381116acbd3d9f6",
+                "commit_sha": "2e098d1705b6815628bee1e023f4742718eabf02",
+                "component": "videotext",
+                "media_adapters_sha256": "4c3d7fee2777291b297679b28b1727d8e54ed74e6d0172da58e83702570cdca5",
+                "personal_use_only": true,
+                "srt_service_sha256": "417017a6a3becc395e88e2554e8d7c2dca51b09de9743e8c5c0cf81ac9ba6205",
+                "translation_adapter_sha256": "83e55d3cb82522cb431ee20617510b0c39f79ae0fa5309daedf5c7ff9911a577",
+                "worker_sha256": "22ba7bbfd827a1f2937f3757070b74b2e5d4d1200ebea954c48c1eaac1162d28"
+              }
+            },
+            "execution": {
+              "gui_python": {
+                "architecture": "Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64e:Mach-O 64-bit executable arm64e]\n/usr/bin/python3 (for architecture x86_64):\tMach-O 64-bit executable x86_64\n/usr/bin/python3 (for architecture arm64e):\tMach-O 64-bit executable arm64e",
+                "path": "/usr/bin/python3",
+                "sha256": "179301dcb41ea78accc3fa0048a7e6f6710d891945a751a34addd622020c1818",
+                "version": "Python 3.9.6"
+              },
+              "host_architecture": "arm64",
+              "ollama": {
+                "executable": {
+                  "architecture": "Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64]\n/Applications/Ollama.app/Contents/Resources/ollama (for architecture x86_64):\tMach-O 64-bit executable x86_64\n/Applications/Ollama.app/Contents/Resources/ollama (for architecture arm64):\tMach-O 64-bit executable arm64",
+                  "path": "/Applications/Ollama.app/Contents/Resources/ollama",
+                  "sha256": "bd835b935229256fc8c5fcd983bef69f5b6142d4fa4f5d8baa05e5e77fd13fbf",
+                  "version": "ollama version is 0.33.1"
+                },
+                "resolution_order": [
+                  "INTEGRA_OLLAMA",
+                  "PATH:ollama",
+                  "/opt/homebrew/bin/ollama",
+                  "/usr/local/bin/ollama",
+                  "/Applications/Ollama.app/Contents/Resources/ollama"
+                ],
+                "state": "RESOLVED",
+                "version_exit_status": 0,
+                "version_output": "ollama version is 0.33.1"
+              },
+              "word_alignment": {
+                "capability": "word_timeline",
+                "component": "seminartext",
+                "model_revision": "2329100508896c6d9b157019803ab5601e6f3406",
+                "personal_use_only": true,
+                "site_packages_tree_sha256": "66d2ad50eac6194b8808b0316d37bdb64d69d27560847a671cc0f593119ac0c7",
+                "weights_actual_sha256": "d1cdb1a7921de7d363f967a9b0101a713602e109dba62b6f3f9ae2e0b2df0c1c",
+                "weights_sha256": "d1cdb1a7921de7d363f967a9b0101a713602e109dba62b6f3f9ae2e0b2df0c1c"
+              },
+              "word_alignment_python": {
+                "architecture": "Mach-O 64-bit executable arm64",
+                "path": "/opt/homebrew/Cellar/python@3.13/3.13.15/Frameworks/Python.framework/Versions/3.13/bin/python3.13",
+                "sha256": "1988a0dd685f91bbaf20b5267046e13cb78859dbb3b5f030e89b448c1fbfe8d4",
+                "version": "Python 3.13.15"
+              },
+              "word_timeline_ffmpeg": {
+                "path": "/opt/homebrew/Cellar/ffmpeg-full/9.0.1/bin/ffmpeg",
+                "path_classification": {
+                  "homebrew_directory": true,
+                  "parent": "/opt/homebrew/Cellar/ffmpeg-full/9.0.1/bin",
+                  "uses_inherited_path": false
+                },
+                "resolution_source": "standard:/opt/homebrew/opt/ffmpeg-full/bin",
+                "sha256": "58b8f5171449c6d3174173d84409a35682b1ab157e2e24b4023a8d8b329d7e3d",
+                "version": "ffmpeg version 9.0.1 Copyright (c) 2000-2026 the FFmpeg developers"
+              }
+            },
+            "source": {
+              "commit_sha": "74785b5f34cb12e1cd557b34731bffbe191cbe15",
+              "dirty": false,
+              "dirty_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "tree_sha": "c86f8451b1ca49372e12885fa752a4962b15ef80"
+            }
+          },
+          "identity_sha256": "82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29",
+          "schema_version": "1.0"
+        },
+        "retained_archive": {
+          "app_size_bytes": 2201629355,
+          "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Validation/integra-212-native-35e6f9101278/candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29/fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
+          "artifact_type": "integra.candidate_archive",
+          "bundle_digest": "fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
+          "candidate_id": "candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29",
+          "file_count": 29607,
+          "inventory_sha256": "eda3834f496bacf2bfe7286f6e92bd4bcb515db314d8d88bfedc3e212e93b01b",
+          "manifest_digest": "667539142be8f7909dc56acb60be1e1fa30c05c6cec44ab931f32fcc8dd36c39",
+          "retained_size_bytes": 2201633870,
+          "runtime_validation": "NOT_PERFORMED",
+          "schema_version": "1.0",
+          "status": "COMPLETE",
+          "verification": "ARCHIVAL_BYTE_INTEGRITY"
+        },
+        "workspace": "/private/tmp/integra-212-native-35e6f9101278/integra-owned-issue212-archived-native-n6lctccm"
+      }
+    },
+    {
+      "label": "disposable-native",
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/private/tmp/integra-issue-212/scripts/build_macos_candidate.py",
+        "--base",
+        "/private/tmp/integra-212-native-35e6f9101278",
+        "--purpose",
+        "issue212-disposable-native",
+        "--timeout-seconds",
+        "1800"
+      ],
+      "exit": 0,
+      "seconds": 104.86,
+      "log": "/private/tmp/integra-212-disposable-native.log",
+      "remaining_owned_roots": [],
+      "result": {
+        "app": "/private/tmp/integra-212-native-35e6f9101278/integra-owned-issue212-disposable-native-dd5dzik9/candidate/Integra.app",
+        "candidate_manifest": {
+          "build": {
+            "build_id": "local",
+            "timestamp": "2026-10-02T11:38:39+03:00"
+          },
+          "bundle": {
+            "digest": "fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
+            "digest_algorithm": "sha256-tree-excluding-candidate-manifest"
+          },
+          "candidate_id": "candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29",
+          "identity": {
+            "build_command": {
+              "identity": "scripts/build_macos_app.sh",
+              "path": "scripts/build_macos_app.sh",
+              "script_sha256": "b905ba56beed4a8f5fdea5819d05de1bd1498634d235c6e0cbc321063e48e6b8"
+            },
+            "components": {
+              "booktext": {
+                "commit_sha": "46396649214275eb18054b670a842bace02d02e1",
+                "component": "booktext",
+                "entrypoint_sha256": "32ecbb3f9a46e0648f4f701a3935487d0be91799334b27128161a51a1f99f05f",
+                "personal_use_only": true,
+                "vision_sha256": "3b5a25577a58713cb4cb3a7e81d3883bdf822ce9df6ef0aa4b60d56186e92753"
+              },
+              "seminartext": {
+                "commit_sha": "13644d262776aacdf36221b9a9fc7ebd0a7c0737",
+                "component": "seminartext",
+                "entrypoint_sha256": "30d8c1bd6f5ca717391b168cba71228a030009feaec4eb443bb1e76dab230a6c",
+                "evidence_foundation_sha256": "6adcf15e9767c36ad2d0dfe3a6a995d90c41b5f1671b4c9434a4b48f590e3856",
+                "evidence_validator_sha256": "889e6cdf3dc2dd7504f76923c04e2d8d1eceabdb828d0c110ddc1059b107860e",
+                "personal_use_only": true
+              },
+              "videotext": {
+                "audio_adapter_sha256": "ab525fe985a0fa1af8ba9ccf6b94e78b0095b0a240f057e8e381116acbd3d9f6",
+                "commit_sha": "2e098d1705b6815628bee1e023f4742718eabf02",
+                "component": "videotext",
+                "media_adapters_sha256": "4c3d7fee2777291b297679b28b1727d8e54ed74e6d0172da58e83702570cdca5",
+                "personal_use_only": true,
+                "srt_service_sha256": "417017a6a3becc395e88e2554e8d7c2dca51b09de9743e8c5c0cf81ac9ba6205",
+                "translation_adapter_sha256": "83e55d3cb82522cb431ee20617510b0c39f79ae0fa5309daedf5c7ff9911a577",
+                "worker_sha256": "22ba7bbfd827a1f2937f3757070b74b2e5d4d1200ebea954c48c1eaac1162d28"
+              }
+            },
+            "execution": {
+              "gui_python": {
+                "architecture": "Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64e:Mach-O 64-bit executable arm64e]\n/usr/bin/python3 (for architecture x86_64):\tMach-O 64-bit executable x86_64\n/usr/bin/python3 (for architecture arm64e):\tMach-O 64-bit executable arm64e",
+                "path": "/usr/bin/python3",
+                "sha256": "179301dcb41ea78accc3fa0048a7e6f6710d891945a751a34addd622020c1818",
+                "version": "Python 3.9.6"
+              },
+              "host_architecture": "arm64",
+              "ollama": {
+                "executable": {
+                  "architecture": "Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64]\n/Applications/Ollama.app/Contents/Resources/ollama (for architecture x86_64):\tMach-O 64-bit executable x86_64\n/Applications/Ollama.app/Contents/Resources/ollama (for architecture arm64):\tMach-O 64-bit executable arm64",
+                  "path": "/Applications/Ollama.app/Contents/Resources/ollama",
+                  "sha256": "bd835b935229256fc8c5fcd983bef69f5b6142d4fa4f5d8baa05e5e77fd13fbf",
+                  "version": "ollama version is 0.33.1"
+                },
+                "resolution_order": [
+                  "INTEGRA_OLLAMA",
+                  "PATH:ollama",
+                  "/opt/homebrew/bin/ollama",
+                  "/usr/local/bin/ollama",
+                  "/Applications/Ollama.app/Contents/Resources/ollama"
+                ],
+                "state": "RESOLVED",
+                "version_exit_status": 0,
+                "version_output": "ollama version is 0.33.1"
+              },
+              "word_alignment": {
+                "capability": "word_timeline",
+                "component": "seminartext",
+                "model_revision": "2329100508896c6d9b157019803ab5601e6f3406",
+                "personal_use_only": true,
+                "site_packages_tree_sha256": "66d2ad50eac6194b8808b0316d37bdb64d69d27560847a671cc0f593119ac0c7",
+                "weights_actual_sha256": "d1cdb1a7921de7d363f967a9b0101a713602e109dba62b6f3f9ae2e0b2df0c1c",
+                "weights_sha256": "d1cdb1a7921de7d363f967a9b0101a713602e109dba62b6f3f9ae2e0b2df0c1c"
+              },
+              "word_alignment_python": {
+                "architecture": "Mach-O 64-bit executable arm64",
+                "path": "/opt/homebrew/Cellar/python@3.13/3.13.15/Frameworks/Python.framework/Versions/3.13/bin/python3.13",
+                "sha256": "1988a0dd685f91bbaf20b5267046e13cb78859dbb3b5f030e89b448c1fbfe8d4",
+                "version": "Python 3.13.15"
+              },
+              "word_timeline_ffmpeg": {
+                "path": "/opt/homebrew/Cellar/ffmpeg-full/9.0.1/bin/ffmpeg",
+                "path_classification": {
+                  "homebrew_directory": true,
+                  "parent": "/opt/homebrew/Cellar/ffmpeg-full/9.0.1/bin",
+                  "uses_inherited_path": false
+                },
+                "resolution_source": "standard:/opt/homebrew/opt/ffmpeg-full/bin",
+                "sha256": "58b8f5171449c6d3174173d84409a35682b1ab157e2e24b4023a8d8b329d7e3d",
+                "version": "ffmpeg version 9.0.1 Copyright (c) 2000-2026 the FFmpeg developers"
+              }
+            },
+            "source": {
+              "commit_sha": "74785b5f34cb12e1cd557b34731bffbe191cbe15",
+              "dirty": false,
+              "dirty_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "tree_sha": "c86f8451b1ca49372e12885fa752a4962b15ef80"
+            }
+          },
+          "identity_sha256": "82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29",
+          "schema_version": "1.0"
+        },
+        "retained_archive": null,
+        "workspace": "/private/tmp/integra-212-native-35e6f9101278/integra-owned-issue212-disposable-native-dd5dzik9"
+      }
+    },
+    {
+      "label": "disposable-package",
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/private/tmp/integra-issue-212/scripts/build_macos_candidate.py",
+        "--base",
+        "/private/tmp/integra-212-native-35e6f9101278",
+        "--purpose",
+        "issue212-disposable-package",
+        "--timeout-seconds",
+        "1800",
+        "--package-tests"
+      ],
+      "exit": 0,
+      "seconds": 110.25,
+      "log": "/private/tmp/integra-212-disposable-package.log",
+      "remaining_owned_roots": [],
+      "result": {
+        "validation": "READY_APP_PACKAGE_TEST_PASS",
+        "app": "/private/tmp/integra-212-native-35e6f9101278/integra-owned-issue212-disposable-package-qfk5x8rj/candidate/Integra.app",
+        "retained_archive": null,
+        "candidate_identity_claimed": false
+      }
+    }
+  ],
+  "new_archive_root": "/Users/yurielokhin/Library/Application Support/Integra/Validation/integra-212-native-35e6f9101278",
+  "base": "/private/tmp/integra-212-native-35e6f9101278",
+  "remaining_owned_roots_after": [],
+  "after_free": 70071181312,
+  "temporary_inputs_removed": true
+}

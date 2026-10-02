@@ -147,7 +147,7 @@ def require_deletion_continuation(lease: dict) -> None:
         raise ValueError('canonical deletion inputs changed')
     blockers = []
     accepted_gaps = protection._accepted_historical_gaps(registry, canonical, blockers)
-    protected = protection._validate_registry(registry, current, proposals, blockers, accepted_gaps)
+    protected = protection._validate_registry(registry, current, proposals, blockers, accepted_gaps, canonical)
     identity = lease.get('identity') or {}
     if blockers or identity.get('candidate_id') in protected:
         raise ValueError('canonical protection blocks resumed deletion')

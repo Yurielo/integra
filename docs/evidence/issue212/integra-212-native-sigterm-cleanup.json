@@ -1,0 +1,33 @@
+{
+  "issue": 212,
+  "source": "74785b5f34cb12e1cd557b34731bffbe191cbe15",
+  "before_free": 73007181824,
+  "native_runs": [
+    {
+      "label": "archived-native",
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/private/tmp/integra-issue-212/scripts/build_macos_candidate.py",
+        "--base",
+        "/private/tmp/integra-212-native-9e2231f931ae",
+        "--purpose",
+        "issue212-archived-native",
+        "--timeout-seconds",
+        "1800",
+        "--archive-root",
+        "/Users/yurielokhin/Library/Application Support/Integra/Validation/integra-212-native-9e2231f931ae"
+      ],
+      "exit": 128,
+      "seconds": 526.49,
+      "log": "/private/tmp/integra-212-archived-native.log",
+      "remaining_owned_roots": [],
+      "error_tail": "ra/Build Archive/retained/candidate-v1-65bf72d1262146c9137aca433b51ae3974d98bc4c8ed37042db13b46e0318a1d/044594f1a632f1c140af28bb7de8e4acf782daca9863d84b9c5d77edb731fdf8\", \"reasons\": [\"UNKNOWN_OR_ACTIVE\"], \"trigger\": \"BEFORE_BUILD\"}\n{\"artifact_type\": \"integra.lifecycle_event\", \"at\": \"2026-10-02T08:39:06.213973+00:00\", \"event\": \"CANDIDATE_RETAINED\", \"path\": \"/Users/yurielokhin/Library/Application Support/Integra/Build Archive Recovery/candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173/c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b\", \"reasons\": [\"UNKNOWN_OR_ACTIVE\"], \"trigger\": \"BEFORE_BUILD\"}\n{\"artifact_type\": \"integra.lifecycle_event\", \"at\": \"2026-10-02T08:39:06.213977+00:00\", \"event\": \"CANDIDATE_RETAINED\", \"path\": \"/Users/yurielokhin/Library/Application Support/Integra/Candidate Builds/topic-translation-47be46d\", \"reasons\": [\"UNKNOWN_OR_ACTIVE\"], \"trigger\": \"BEFORE_BUILD\"}\n{\"artifact_type\": \"integra.lifecycle_event\", \"at\": \"2026-10-02T08:39:06.213982+00:00\", \"event\": \"CANDIDATE_RETAINED\", \"path\": \"/Users/yurielokhin/Library/Application Support/Integra/Recovery Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8\", \"reasons\": [\"UNKNOWN_OR_ACTIVE\"], \"trigger\": \"BEFORE_BUILD\"}\n{\"artifact_type\": \"integra.lifecycle_event\", \"at\": \"2026-10-02T08:39:06.213986+00:00\", \"event\": \"CLEANUP_SKIPPED\", \"reason\": \"PROTECTION_AUTHORITY_UNAVAILABLE\", \"trigger\": \"BEFORE_BUILD\"}\n{\"artifact_type\": \"integra.lifecycle_event\", \"at\": \"2026-10-02T08:39:12.010796+00:00\", \"event\": \"WORKSPACE_CREATED\", \"expected_bytes\": 2516582400, \"purpose\": \"issue212-archived-native\", \"root\": \"/private/tmp/integra-212-native-9e2231f931ae/integra-owned-issue212-archived-native-o7cw8i_6\"}\n{\"artifact_type\": \"integra.review_runtime_wheel_cache\", \"state\": \"PASS\", \"wheel_count\": 5}\nLooking in links: /private/tmp/integra-212-native-9e2231f931ae/integra-owned-native-evidence-inputs-91vxs4q0/review-wheels\nProcessing /private/tmp/integra-212-native-9e2231f931ae/integra-owned-native-evidence-inputs-91vxs4q0/review-wheels/attrs-26.1.0-py3-none-any.whl (from -r /private/tmp/integra-issue-212/scripts/review-runtime-requirements.txt (line 2))\nProcessing /private/tmp/integra-212-native-9e2231f931ae/integra-owned-native-evidence-inputs-91vxs4q0/review-wheels/jsonschema-4.25.1-py3-none-any.whl (from -r /private/tmp/integra-issue-212/scripts/review-runtime-requirements.txt (line 3))\nProcessing /private/tmp/integra-212-native-9e2231f931ae/integra-owned-native-evidence-inputs-91vxs4q0/review-wheels/jsonschema_specifications-2025.9.1-py3-none-any.whl (from -r /private/tmp/integra-issue-212/scripts/review-runtime-requirements.txt (line 4))\nProcessing /private/tmp/integra-212-native-9e2231f931ae/integra-owned-native-evidence-inputs-91vxs4q0/review-wheels/referencing-0.37.0-py3-none-any.whl (from -r /private/tmp/integra-issue-212/scripts/review-runtime-requirements.txt (line 5))\nProcessing /private/tmp/integra-212-native-9e2231f931ae/integra-owned-native-evidence-inputs-91vxs4q0/review-wheels/rpds_py-2026.6.3-cp314-cp314-macosx_11_0_arm64.whl (from -r /private/tmp/integra-issue-212/scripts/review-runtime-requirements.txt (line 6))\nInstalling collected packages: rpds-py, referencing, jsonschema-specifications, jsonschema, attrs\n\nSuccessfully installed attrs-26.1.0 jsonschema-4.25.1 jsonschema-specifications-2025.9.1 referencing-0.37.0 rpds-py-2026.6.3\n{\"artifact_type\": \"integra.lifecycle_event\", \"at\": \"2026-10-02T08:47:45.905658+00:00\", \"event\": \"WORKSPACE_CLEANUP_ATTEMPTED\", \"reason\": \"RUN_FINISHED\", \"root\": \"/private/tmp/integra-212-native-9e2231f931ae/integra-owned-issue212-archived-native-o7cw8i_6\"}\n{\"artifact_type\": \"integra.lifecycle_event\", \"at\": \"2026-10-02T08:47:46.681742+00:00\", \"event\": \"WORKSPACE_CLEANUP_COMPLETED\", \"reason\": \"RUN_FINISHED\", \"root\": \"/private/tmp/integra-212-native-9e2231f931ae/integra-owned-issue212-archived-native-o7cw8i_6\"}\n"
+    }
+  ],
+  "new_archive_root": "/Users/yurielokhin/Library/Application Support/Integra/Validation/integra-212-native-9e2231f931ae",
+  "base": "/private/tmp/integra-212-native-9e2231f931ae",
+  "remaining_owned_roots_after": [],
+  "after_free": 73013280768,
+  "temporary_inputs_removed": true
+}

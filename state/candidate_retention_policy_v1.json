@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.candidate_retention_policy",
+  "status": "PRODUCT_OWNER_AUTHORIZED",
+  "authority_ref": "https://github.com/Yurielo/integra/issues/205#issuecomment-5917563905",
+  "max_full_copies": 8,
+  "max_allocated_bytes": 21474836480,
+  "minimum_free_after_reservations": 16106127360,
+  "protected_classes": [
+    "CURRENT",
+    "LATEST_ACCEPTED_BASELINE",
+    "CONFIRMED_ROLLBACK",
+    "CONFIRMED_RECOVERY",
+    "AWAITING_OWNER_ACCEPTANCE",
+    "EXPLICIT_GOVERNANCE_PROVENANCE"
+  ],
+  "terminal_classes": [
+    "COMPLETED",
+    "REJECTED",
+    "SUPERSEDED",
+    "UNUSED"
+  ],
+  "historical_migration": "SEPARATE_HUMAN_GATE_REQUIRED",
+  "unknown_or_unowned": "RETAIN_FAIL_CLOSED",
+  "immutable_archive_repair": "NO_IN_PLACE_REPAIR",
+  "explicit_governance_pins": null,
+  "pin_registry_status": "UNRESOLVED_FAIL_CLOSED_UNTIL_APPROVED_CANONICAL_ENUMERATION"
+}

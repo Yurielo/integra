@@ -1,0 +1,15 @@
+{
+  "issue": 212,
+  "validation": "ACTUAL_ARCHIVE_CAP_REJECTION",
+  "result": "PASS",
+  "existing_full_copies": 8,
+  "rejection": "build blocked by 8-copy / 20-GiB archive cap",
+  "protected_context": null,
+  "owned_archive_count": 1,
+  "historical_adoptions": [],
+  "deletion_records_before": {},
+  "deletion_records_after": {},
+  "new_materialized_workspace": false,
+  "actual_free_bytes": 70012637184,
+  "charged_archive_allocated_bytes": 18278240256
+}

@@ -1,0 +1,11 @@
+{
+  "issue": 212,
+  "source": "9ef8d33b354517ab064231e023dc9bef638622cd",
+  "before_free": 73002635264,
+  "native_runs": [],
+  "new_archive_root": "/Users/yurielokhin/Library/Application Support/Integra/Validation/integra-212-native-97cb8cf9d996",
+  "base": "/private/tmp/integra-212-native-97cb8cf9d996",
+  "remaining_owned_roots_after": [],
+  "after_free": 72997085184,
+  "temporary_inputs_removed": true
+}

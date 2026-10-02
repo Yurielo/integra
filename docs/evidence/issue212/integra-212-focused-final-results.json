@@ -1,0 +1,51 @@
+[
+  {
+    "test_file": "test_build_disk_admission.py",
+    "exit": 0,
+    "seconds": 0.09,
+    "log": "/private/tmp/integra-212-final-test_build_disk_admission.py.log",
+    "tail": " 60, \"required_bytes\": 110, \"reserve_bytes\": 10}\nok\n\n----------------------------------------------------------------------\nRan 3 tests in 0.017s\n\nOK\n"
+  },
+  {
+    "test_file": "test_candidate_archive.py",
+    "exit": 0,
+    "seconds": 1.39,
+    "log": "/private/tmp/integra-212-final-test_candidate_archive.py.log",
+    "tail": "2spmef04/integra-owned-archive-stage-hnc7j33z\"}\nok\n\n----------------------------------------------------------------------\nRan 28 tests in 1.317s\n\nOK\n"
+  },
+  {
+    "test_file": "test_candidate_retention.py",
+    "exit": 0,
+    "seconds": 1.12,
+    "log": "/private/tmp/integra-212-final-test_candidate_retention.py.log",
+    "tail": "CHIVE_HEADROOM_REJECTED\", \"requested_bytes\": 1}\nok\n\n----------------------------------------------------------------------\nRan 24 tests in 1.054s\n\nOK\n"
+  },
+  {
+    "test_file": "test_retention_governance.py",
+    "exit": 0,
+    "seconds": 0.07,
+    "log": "/private/tmp/integra-212-final-test_retention_governance.py.log",
+    "tail": "r_commit_is_not_treated_as_absent_proposal) ... ok\n\n----------------------------------------------------------------------\nRan 16 tests in 0.010s\n\nOK\n"
+  },
+  {
+    "test_file": "test_temp_workspace_lifecycle.py",
+    "exit": 0,
+    "seconds": 12.29,
+    "log": "/private/tmp/integra-212-final-test_temp_workspace_lifecycle.py.log",
+    "tail": "38/second/integra-owned-retry-stage-spyijpns\"}\nok\n\n----------------------------------------------------------------------\nRan 15 tests in 12.239s\n\nOK\n"
+  },
+  {
+    "test_file": "test_native_test_admission.py",
+    "exit": 0,
+    "seconds": 0.17,
+    "log": "/private/tmp/integra-212-final-test_native_test_admission.py.log",
+    "tail": "_requires_shared_admission_and_fresh_output) ... ok\n\n----------------------------------------------------------------------\nRan 5 tests in 0.104s\n\nOK\n"
+  },
+  {
+    "test_file": "test_issue212_lifecycle.py",
+    "exit": 0,
+    "seconds": 3.71,
+    "log": "/private/tmp/integra-212-final-test_issue212_lifecycle.py.log",
+    "tail": "6/durable/integra-owned-archive-stage-4fbt0p_1\"}\nok\n\n----------------------------------------------------------------------\nRan 7 tests in 3.635s\n\nOK\n"
+  }
+]

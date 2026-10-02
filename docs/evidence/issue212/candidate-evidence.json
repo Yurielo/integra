@@ -1,0 +1,97 @@
+{
+  "issue": 212,
+  "candidate_id": "candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29",
+  "manifest_identity_sha256": "82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29",
+  "bundle_digest": "fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
+  "product_source": {
+    "commit_sha": "74785b5f34cb12e1cd557b34731bffbe191cbe15",
+    "tree_sha": "c86f8451b1ca49372e12885fa752a4962b15ef80"
+  },
+  "archive_receipt": {
+    "app_size_bytes": 2201629355,
+    "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Validation/integra-212-native-35e6f9101278/candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29/fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
+    "artifact_type": "integra.candidate_archive",
+    "bundle_digest": "fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
+    "candidate_id": "candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29",
+    "file_count": 29607,
+    "inventory_sha256": "eda3834f496bacf2bfe7286f6e92bd4bcb515db314d8d88bfedc3e212e93b01b",
+    "manifest_digest": "667539142be8f7909dc56acb60be1e1fa30c05c6cec44ab931f32fcc8dd36c39",
+    "retained_size_bytes": 2201633870,
+    "runtime_validation": "NOT_PERFORMED",
+    "schema_version": "1.0",
+    "status": "COMPLETE",
+    "verification": "ARCHIVAL_BYTE_INTEGRITY"
+  },
+  "archive_verification": "PASS archival byte integrity, NOT product acceptance",
+  "focused_tests": 98,
+  "controlled_e2e": {
+    "iterations": 12,
+    "synthetic": true,
+    "max_archive_copies": 6,
+    "after_each_copies": 5,
+    "after_each_allocated_bytes": 21114880,
+    "tmp_owned_roots_between_cycles": 0,
+    "simulated_free_probe": true
+  },
+  "native_completed_runs": 4,
+  "native_tests": {
+    "validation": "NATIVE_TESTS_PASS",
+    "pass_markers": [
+      "INTEGRA_FINDER_ICON: PASS",
+      "INTEGRA_DOCK_CMDTAB_ICON: PASS activationPolicy=regular",
+      "INTEGRA_MACOS_SELF_TEST: PASS",
+      "INTEGRA_BUNDLED_SEMINARTEXT_PREFLIGHT: PASS",
+      "INTEGRA_BUNDLED_WORD_TIMELINE_PREFLIGHT: PASS",
+      "INTEGRA_BUNDLED_BOOKTEXT_PREFLIGHT: PASS",
+      "INTEGRA_MACOS_CLOSE_TEST: PASS",
+      "INTEGRA_NATIVE_REAL_VIDEOTEXT_WORKFLOW: PASS",
+      "INTEGRA_NATIVE_CLOSE_ACTIVE_RUN: PASS",
+      "INTEGRA_NATIVE_QUIT_ACTIVE_RUN: PASS",
+      "INTEGRA_NATIVE_STALE_RUNNING_RECONCILED: PASS",
+      "INTEGRA_NATIVE_VERIFIED_ASR_RETRY: PASS",
+      "INTEGRA_NATIVE_STABLE_OPERATIONS_AND_REAL_CANCEL: PASS",
+      "INTEGRA_MACOS_LAUNCH_TEST: PASS"
+    ]
+  },
+  "protection_snapshot_result": "PASS",
+  "real_cap_validation": {
+    "issue": 212,
+    "validation": "ACTUAL_ARCHIVE_CAP_REJECTION",
+    "result": "PASS",
+    "existing_full_copies": 8,
+    "rejection": "build blocked by 8-copy / 20-GiB archive cap",
+    "protected_context": null,
+    "owned_archive_count": 1,
+    "historical_adoptions": [],
+    "deletion_records_before": {},
+    "deletion_records_after": {},
+    "new_materialized_workspace": false,
+    "actual_free_bytes": 70012637184,
+    "charged_archive_allocated_bytes": 18278240256
+  },
+  "installed_current_modified": false,
+  "promotion_performed": false,
+  "owner_acceptance": null,
+  "source_products_modified": false,
+  "historical_governance_rewritten": false,
+  "historical_archive_cleanup_performed": false,
+  "new_archive_count": 1,
+  "new_archive_role": "AWAITING_OWNER_ACCEPTANCE",
+  "policy": {
+    "max_copies": 8,
+    "max_allocated_bytes": 21474836480,
+    "reserve_bytes": 16106127360
+  },
+  "protected_bytes_limitation": "All protected entry stats and governance JSON SHA unchanged; not a repeated full payload hash of legacy archives.",
+  "ci_test_only_overlay": {
+    "first_declaration": "13ea0b8450f60402b6e66489e6bab2617cd837cf",
+    "first_github_ci": "https://github.com/Yurielo/integra/actions/runs/36987720248",
+    "failure": "SIGTERM test 5-second timeout raced allowed 1+5-second termination graces on Linux",
+    "repair": "nonhistorical test wait10seconds; original exit128 and no-owned-workspace assertions preserved",
+    "production_source_unchanged": true,
+    "native_evidence_source": {
+      "commit_sha": "74785b5f34cb12e1cd557b34731bffbe191cbe15",
+      "tree_sha": "c86f8451b1ca49372e12885fa752a4962b15ef80"
+    }
+  }
+}

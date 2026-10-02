@@ -23,6 +23,18 @@ class CandidateArchiveTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory(prefix=".integra-archive-test-", dir=Path.home())
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
+        from scripts import candidate_retention
+        from scripts import build_disk_admission
+        def fixture_ledger(target):
+            target = Path(target).resolve()
+            while not target.exists():
+                target = target.parent
+            return target, self.root / 'disk.lock', self.root / 'disk.json'
+        for fixture_patch in (patch.object(candidate_retention, 'catalog_path', return_value=self.root / 'retention/catalog.json'),
+                              patch.object(candidate_retention, 'managed_roots', return_value=[]),
+                              patch.object(build_disk_admission, '_paths', side_effect=fixture_ledger),
+                              patch.object(archive.shutil, 'disk_usage', return_value=SimpleNamespace(free=64 * 1024**3))):
+            fixture_patch.start(); self.addCleanup(fixture_patch.stop)
         self.app = self.root / "source" / "Integra.app"
         self.manifest = self.app / archive.EMBEDDED
         self.manifest.parent.mkdir(parents=True)
@@ -50,6 +62,13 @@ class CandidateArchiveTests(unittest.TestCase):
 
     def _create(self, **kwargs):
         return archive.create_archive(self.app, self.destination, **kwargs)
+
+    def test_interrupted_copy_removes_only_unpublished_stage(self):
+        with patch.object(archive.shutil, 'copytree', side_effect=KeyboardInterrupt):
+            with self.assertRaises(KeyboardInterrupt):
+                self._create()
+        self.assertEqual(list(self.destination.rglob('.incomplete-*')), [])
+        self.assertTrue(self.app.exists())
 
     def _package(self):
         return Path(self._create()["archive_path"])
@@ -131,6 +150,23 @@ class CandidateArchiveTests(unittest.TestCase):
         self.assertEqual(archive.verify_archive(Path(first["archive_path"])), first)
         self.assertEqual(archive.verify_archive(Path(second["archive_path"])), second)
 
+    def test_metadata_inventory_reports_repeated_declared_bundle_without_pruning(self):
+        first = self._create()
+        self.identity["source"]["commit_sha"] = "c" * 40
+        self._manifest(timestamp="later build with identical payload")
+        second = self._create()
+        report = archive.inventory_archives(self.destination)
+        self.assertEqual(report["verification"], "METADATA_ONLY_NO_PAYLOAD_REHASH")
+        self.assertEqual(report["archive_count"], 2)
+        self.assertEqual(report["unique_bundle_count"], 1)
+        self.assertEqual(report["declared_duplicate_logical_bytes"], first["app_size_bytes"])
+        self.assertEqual({entry["candidate_id"] for entry in report["entries"]},
+                         {first["candidate_id"], second["candidate_id"]})
+        self.assertTrue(all(entry["lifecycle_status"] == "COMPLETE_RETAINED" for entry in report["entries"]))
+        self.assertTrue(all(entry["bundle_duplicate_count"] == 2 for entry in report["entries"]))
+        self.assertTrue(Path(first["archive_path"]).is_dir())
+        self.assertTrue(Path(second["archive_path"]).is_dir())
+
     def test_same_candidate_bundle_but_different_manifest_is_not_overwritten(self):
         first = self._create()
         self._manifest(timestamp="different metadata")
@@ -146,7 +182,7 @@ class CandidateArchiveTests(unittest.TestCase):
         self.assertEqual(sentinel.read_text(), "preserve")
         self.assertEqual(list(destination.iterdir()), [sentinel])
 
-    def test_interrupted_copy_leaves_no_complete_or_published_package(self):
+    def test_interrupted_copy_leaves_no_complete_or_unretained_large_stage(self):
         original = shutil.copy2
         count = 0
 
@@ -161,7 +197,7 @@ class CandidateArchiveTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "simulated interruption"):
                 self._create()
         self.assertFalse(self._expected_path().exists())
-        self.assertTrue(list(self.destination.glob("*/.incomplete-*")))
+        self.assertFalse(list(self.destination.glob("*/.incomplete-*")))
         self.assertEqual(list(self.destination.rglob(archive.COMPLETE)), [])
 
     def test_publish_failure_keeps_only_incomplete_attempt(self):
@@ -350,7 +386,17 @@ class CandidateArchiveTests(unittest.TestCase):
 
     def test_cli_create_verify_and_expected_mismatch(self):
         script = Path(archive.__file__)
-        result = subprocess.run([sys.executable, "-B", str(script), "create", "--app", str(self.app),
+        # Patch the child test process itself: production has no alternate
+        # catalog/managed-root environment escape hatch.
+        fixture_launcher = ('import runpy,sys; from pathlib import Path; '
+                            'from unittest.mock import patch; from scripts import candidate_retention as r; '
+                            'sys.argv=sys.argv[1:]; '
+                            f'p=patch.object(r,"catalog_path",return_value=Path({str(self.root / "retention/catalog.json")!r})); p.start(); '
+                            'q=patch.object(r,"managed_roots",return_value=[]); q.start(); '
+                            'from types import SimpleNamespace; '
+                            'd=patch.object(r.shutil,"disk_usage",return_value=SimpleNamespace(free=64*1024**3)); d.start(); '
+                            'runpy.run_path(sys.argv[0],run_name="__main__")')
+        result = subprocess.run([sys.executable, "-B", '-c', fixture_launcher, str(script), "create", "--app", str(self.app),
                                  "--archive-root", str(self.destination)], capture_output=True, text=True, check=True)
         receipt = json.loads(result.stdout)
         result = subprocess.run([sys.executable, "-B", str(script), "verify", receipt["archive_path"],

@@ -1,0 +1,18 @@
+{
+  "pr": "https://github.com/Yurielo/integra/pull/213",
+  "head": "13ea0b8450f60402b6e66489e6bab2617cd837cf",
+  "full_suite": {
+    "run": 905,
+    "pass": 813,
+    "skipped": 92,
+    "failures": 0,
+    "seconds": 64.236
+  },
+  "governance": "PASS",
+  "independent_exact_head_review": "PASS",
+  "log_bindings": {
+    "integra-212-final-full-suite.log": "5f2cae7aca34eb8566861012a49ca1c0a5f2544e779708500831138f2dd33559",
+    "integra-212-final-governance.log": "eacac33cf93f0bedfa3006b8086fdd321a7cb662910bf07a0e6caabc161989f1",
+    "integra-212-independent-review.md": "939c2d16adb9a2dd2cde82e166197c31ff0128aec1d8bc0ff35c1a6b30af42e8"
+  }
+}

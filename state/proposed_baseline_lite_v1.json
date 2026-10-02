@@ -1,0 +1,144 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.proposed_product_baseline",
+  "proposal_id": "proposal-issue-212-bounded-lifecycle",
+  "status": "PROPOSED_BASELINE_VALID",
+  "base_current_id": "current-v2-d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8",
+  "base_main": {
+    "commit_sha": "a4fbdcb2d324acd5358f7e64602b0305b0722cfc",
+    "tree_sha": "3d23e21602b8d9ae530bf42d6dee527c4928c548"
+  },
+  "proposed_source": {
+    "commit_sha": "74785b5f34cb12e1cd557b34731bffbe191cbe15",
+    "tree_sha": "c86f8451b1ca49372e12885fa752a4962b15ef80"
+  },
+  "proposed_head": {
+    "commit_sha": "ca83de49adaa81afd94075ce71fe8752303e5556",
+    "tree_sha": "a903b2d65e2055b990a463874982091107ecf1f2"
+  },
+  "intended_scope": {
+    "wp": "GitHub Issue #212",
+    "journey": "Owned bounded Candidate archive and disposable TMP lifecycle; unchanged packaged product bytes"
+  },
+  "candidate": {
+    "candidate_id": "candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29",
+    "identity_sha256": "82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29",
+    "bundle_digest": "fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
+    "manifest_digest": "667539142be8f7909dc56acb60be1e1fa30c05c6cec44ab931f32fcc8dd36c39"
+  },
+  "delta": [
+    {
+      "path": "scripts/build_macos_app.sh",
+      "before_sha256": "ad81f7a08a2fbcb93b57788e64d2f028697f7f5f086bb8fa75e9eac758dc4507",
+      "after_sha256": "b905ba56beed4a8f5fdea5819d05de1bd1498634d235c6e0cbc321063e48e6b8"
+    },
+    {
+      "path": "scripts/test_macos_app.sh",
+      "before_sha256": "1648671bac009e76169b26c039de42a1f769b4d422014d83e850dd87810ce359",
+      "after_sha256": "bded70e8c256344412c1ae2818e1f8fd4a1d12fd4bbcaba219b5cd0a416c552c"
+    }
+  ],
+  "historical_test_successors": [],
+  "gates": [
+    {
+      "name": "98 focused tests",
+      "result": "PASS",
+      "evidence_ref": "docs/evidence/issue212/integra-212-focused-final-results.json"
+    },
+    {
+      "name": "12 controlled filesystem promotion cycles",
+      "result": "PASS",
+      "evidence_ref": "docs/evidence/issue212/integra-212-controlled-e2e.json"
+    },
+    {
+      "name": "Native archive and reproducible disposable build plus package",
+      "result": "PASS",
+      "evidence_ref": "docs/evidence/issue212/integra-212-native-evidence.json"
+    },
+    {
+      "name": "Native GUI runtime workflow probes",
+      "result": "PASS",
+      "evidence_ref": "docs/evidence/issue212/integra-212-native-tests-evidence.json"
+    },
+    {
+      "name": "Protected artifact metadata preservation",
+      "result": "PASS",
+      "evidence_ref": "docs/evidence/issue212/integra-212-protected-preservation.json"
+    },
+    {
+      "name": "Actual ninth full-copy rejection",
+      "result": "PASS",
+      "evidence_ref": "docs/evidence/issue212/integra-212-real-cap-validation.json"
+    },
+    {
+      "name": "Independent source and native QA",
+      "result": "PASS",
+      "evidence_ref": "docs/evidence/issue212/integra-212-independent-review.md"
+    },
+    {
+      "name": "Portable bounded cancellation test repair",
+      "result": "PASS",
+      "evidence_ref": "docs/evidence/issue212/integra-212-ci-repair-focused.log"
+    }
+  ],
+  "evidence": {
+    "candidate_manifest": {
+      "path": "docs/evidence/issue212/candidate-manifest.json",
+      "sha256": "667539142be8f7909dc56acb60be1e1fa30c05c6cec44ab931f32fcc8dd36c39"
+    },
+    "candidate_evidence": {
+      "path": "docs/evidence/issue212/candidate-evidence.json",
+      "sha256": "be37f9d2bdbf4fde7df3516bd8fde61b11229fb84dc7c510e923e2dac19f12a6"
+    },
+    "report": {
+      "path": "docs/ISSUE_212_LIFECYCLE_REPORT.md",
+      "sha256": "c651121cc3880b5c81dd9a149547e0157c6fef69ce5f9df9d5482a2c65c90eae"
+    }
+  },
+  "owner_acceptance": {
+    "decision": "PILOT_ACCEPTED",
+    "authority_ref": "PRODUCT OWNER AUTHORIZATION: ACCEPT_PROPOSED_BASELINE proposal-issue-212-bounded-lifecycle candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29",
+    "scope": "Issue #212 bounded Candidate archive and /private/tmp lifecycle proposed baseline acceptance only",
+    "promotion_authorized": false
+  },
+  "allowed_overlay_paths": [
+    "docs/ISSUE_212_LIFECYCLE_REPORT.md",
+    "docs/evidence/issue212/candidate-evidence.json",
+    "docs/evidence/issue212/candidate-manifest.json",
+    "docs/evidence/issue212/changed-source-files.txt",
+    "docs/evidence/issue212/integra-212-archived-native.log",
+    "docs/evidence/issue212/integra-212-ci-repair-focused.log",
+    "docs/evidence/issue212/integra-212-controlled-e2e.json",
+    "docs/evidence/issue212/integra-212-dirty-input-rejection.json",
+    "docs/evidence/issue212/integra-212-disposable-native.log",
+    "docs/evidence/issue212/integra-212-disposable-package.log",
+    "docs/evidence/issue212/integra-212-e2e-final.log",
+    "docs/evidence/issue212/integra-212-final-test_build_disk_admission.py.log",
+    "docs/evidence/issue212/integra-212-final-test_candidate_archive.py.log",
+    "docs/evidence/issue212/integra-212-final-test_candidate_retention.py.log",
+    "docs/evidence/issue212/integra-212-final-test_issue212_lifecycle.py.log",
+    "docs/evidence/issue212/integra-212-final-test_native_test_admission.py.log",
+    "docs/evidence/issue212/integra-212-final-test_retention_governance.py.log",
+    "docs/evidence/issue212/integra-212-final-test_temp_workspace_lifecycle.py.log",
+    "docs/evidence/issue212/integra-212-first-declaration-local-validation.json",
+    "docs/evidence/issue212/integra-212-first-github-quality-gate-failure.log",
+    "docs/evidence/issue212/integra-212-focused-final-results.json",
+    "docs/evidence/issue212/integra-212-independent-review.md",
+    "docs/evidence/issue212/integra-212-input-copy-timeout.json",
+    "docs/evidence/issue212/integra-212-missing-wheel-rejection.json",
+    "docs/evidence/issue212/integra-212-native-driver.py",
+    "docs/evidence/issue212/integra-212-native-evidence.json",
+    "docs/evidence/issue212/integra-212-native-sigterm-cleanup.json",
+    "docs/evidence/issue212/integra-212-native-sigterm-cleanup.log",
+    "docs/evidence/issue212/integra-212-native-tests-driver.py",
+    "docs/evidence/issue212/integra-212-native-tests-evidence.json",
+    "docs/evidence/issue212/integra-212-native-tests.log",
+    "docs/evidence/issue212/integra-212-preservation-check.py",
+    "docs/evidence/issue212/integra-212-protected-preservation.json",
+    "docs/evidence/issue212/integra-212-real-archive-plan.json",
+    "docs/evidence/issue212/integra-212-real-cap-validation.json",
+    "docs/evidence/issue212/integra-212-runtime-input-verification.json",
+    "state/proposed_baseline_lite_v1.json",
+    "tests/test_temp_workspace_lifecycle.py"
+  ]
+}

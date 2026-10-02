@@ -376,6 +376,24 @@ class ProposedOverlayLineageTests(unittest.TestCase):
         root, proposal, path = self._lineage()
         self.assertEqual(verify_promotion_material(proposal, root, path), [])
 
+    def test_acceptance_lineage_survives_merge_without_proposal_change(self):
+        root, proposal, path = self._lineage()
+        accepted = copy.deepcopy(proposal)
+        accepted["owner_acceptance"] = {
+            "decision": "PILOT_ACCEPTED", "authority_ref": "Product Owner test authority",
+            "scope": "bounded pilot only", "promotion_authorized": False,
+        }
+        path.write_text(json.dumps(accepted))
+        self._commit(root, "pilot acceptance")
+        self._git(root, "branch", "integration")
+        self._git(root, "checkout", "-q", "-b", "authority")
+        (root / "docs" / "authority.txt").write_text("canonical authority\n")
+        self._commit(root, "authority integration")
+        self._git(root, "checkout", "-q", "integration")
+        self._git(root, "-c", "user.name=Test", "-c", "user.email=test@example.invalid",
+                  "merge", "--no-ff", "authority", "-m", "merge authority")
+        self.assertEqual(verify_promotion_material(accepted, root, path), [])
+
     def test_product_byte_in_overlay_fails(self):
         root, proposal, path = self._lineage(overlay_product=True)
         self.assertIn("promotion evidence overlay contains product/runtime bytes",
