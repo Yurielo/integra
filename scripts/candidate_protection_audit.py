@@ -132,7 +132,11 @@ def fetch_canonical(registry: dict) -> tuple[dict, dict[int, dict], dict]:
     current_bytes, current = _remote_file(registry['canonical_current']['path'], main)
     if sha(current_bytes) != registry['canonical_current']['sha256']:
         raise ValueError('canonical CURRENT bytes differ from registry binding')
-    authority = _api('repos/Yurielo/integra/issues/comments/5951189263')
+    decision_ref = registry.get('decision_authority_ref', '')
+    match = re.fullmatch(r'https://github\.com/Yurielo/integra/issues/214#issuecomment-([0-9]+)', decision_ref)
+    if not match:
+        raise ValueError('Product Owner decision reference is invalid')
+    authority = _api(f'repos/{REPOSITORY}/issues/comments/{match.group(1)}')
     token_lines = re.findall(r'^PRODUCT_OWNER_AUTHORIZATION:.*$', authority.get('body', ''), re.MULTILINE)
     if (registry.get('decision_authority_ref') != authority.get('html_url')
             or authority.get('user', {}).get('login', '').lower() != 'yurielo'
@@ -180,6 +184,7 @@ def fetch_canonical(registry: dict) -> tuple[dict, dict[int, dict], dict]:
     return current, proposals, {'main_sha': main, 'current_sha256': sha(current_bytes),
                                  'decision_authority_ref': authority['html_url'],
                                  'decision_token_sha256': sha(token_lines[0].encode()),
+                                 'decision_token': token_lines[0],
                                  'historical_receipts': historical_receipts,
                                  'proposal_heads': {str(n): captured_heads[n] for n in proposals}}
 
@@ -216,13 +221,15 @@ def _validate_registry(registry: dict, current: dict, proposals: dict[int, dict]
         raise ValueError('protection registry schema is invalid')
     if set(registry.get('managed_roots', [])) != ROOT_NAMES or len(registry['managed_roots']) != len(ROOT_NAMES):
         blockers.append('MANAGED_ROOT_ENUMERATION_INCOMPLETE')
-    if registry.get('deletion_enabled') is not False:
-        blockers.append('REGISTRY_MUST_NOT_SELF_AUTHORIZE_DELETION')
+    if type(registry.get('deletion_enabled')) is not bool:
+        blockers.append('DELETION_STATE_INVALID')
     if registry.get('decision_token_sha256') == 'c0fbc7699ae3caa6ea56a59987410977515881043f2ce2fd9b4f39382cc132f8':
         if registry.get('explicit_governance_pins') != {}:
             blockers.append('OWNER_AUTHORIZED_PINS_DIFFER')
         if registry.get('deletion_authorizations') != {}:
             blockers.append('OWNER_AUTHORIZED_DELETION_GRANTS_DIFFER')
+        if registry.get('deletion_enabled') is not False:
+            blockers.append('OWNER_AUTHORIZED_DELETION_DISABLED')
     if registry.get('status') != 'PRODUCT_OWNER_AUTHORIZED_ACTIVE' or not registry.get('activation_authority_ref'):
         blockers.append('REGISTRY_NOT_OWNER_ACTIVATED')
     if not registry.get('promotion_contract_integration_ref'):
@@ -304,6 +311,23 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
                              and canonical.get('decision_token_sha256') == registry.get('decision_token_sha256'))
     if not decision_verified:
         blockers.append('PRODUCT_OWNER_DECISION_UNVERIFIED')
+    token = (canonical or {}).get('decision_token', '')
+    for field, key in (('EXPLICIT_GOVERNANCE_PINS', 'explicit_governance_pins'),
+                       ('DELETION_AUTHORIZATIONS', 'deletion_authorizations')):
+        declared = re.search(r'(?:^| )' + field + r'=(\{\}|sha256:[0-9a-f]{64})(?: |$)', token)
+        value = registry.get(key)
+        if not declared or (declared.group(1) == '{}' and value != {}) or (
+                declared.group(1).startswith('sha256:') and
+                (not isinstance(value, dict) or digest(value) != declared.group(1)[7:])):
+            blockers.append('OWNER_' + field + '_BINDING_MISSING_OR_CONFLICT')
+    deletion_state = re.search(r'(?:^| )DELETION_ENABLED=(true|false)(?: |$)', token)
+    # The accepted #214 token explicitly denies grants. It predates the
+    # DELETION_ENABLED field; only its false state is valid under that token.
+    if deletion_state is None:
+        if registry.get('deletion_enabled') is not False:
+            blockers.append('OWNER_DELETION_STATE_UNAUTHORIZED')
+    elif (deletion_state.group(1) == 'true') != registry.get('deletion_enabled'):
+        blockers.append('OWNER_DELETION_STATE_CONFLICT')
     protected = _validate_registry(registry, current, proposals, blockers)
     historical = (canonical or {}).get('historical_receipts', {})
     for gap in registry.get('historical_gaps', []):
@@ -408,12 +432,27 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
 
 
 def scan_local(registry: dict, base: Path) -> list[dict]:
-    """Metadata inventory only; no payload rehash and no deletion ownership."""
+    """Read-only inventory; publisher ownership requires an exact catalog bond."""
     base = Path(base).expanduser().resolve()
     if base.is_symlink() or not base.is_dir():
         raise ValueError('managed archive base is missing or linked')
     seen: set[tuple[int, int]] = set()
     rows = []
+    catalog = {}
+    try:
+        from scripts import candidate_retention as retention
+        catalog_path = retention.catalog_path(base / 'Build Archive')
+        if catalog_path.is_symlink() or catalog_path.stat().st_uid != os.getuid():
+            raise ValueError('publisher catalog owner is unproven')
+        raw = catalog_path.read_bytes()
+        catalog = json.loads(raw)
+        if (catalog.get('artifact_type') != 'integra.owned_archive_catalog'
+                or catalog.get('owner_uid') != os.getuid()
+                or not isinstance(catalog.get('artifacts'), dict)
+                or not set(map(str, (base / name for name in registry['managed_roots']))).issubset(set(catalog.get('roots', [])))):
+            raise ValueError('publisher catalog is incomplete')
+    except (OSError, ValueError, TypeError, KeyError, ImportError):
+        catalog = {}
     for name in registry['managed_roots']:
         if name not in ROOT_NAMES:
             raise ValueError('unregistered managed archive root')
@@ -445,10 +484,25 @@ def scan_local(registry: dict, base: Path) -> list[dict]:
                         amount += s.st_blocks * 512; seen.add(key)
                     if stat.S_ISLNK(s.st_mode):
                         error = 'package contains a symlink'
+            owned = False
+            lifecycle = 'LEGACY_UNCONFIRMED'
+            inactive = False
+            record = catalog.get('artifacts', {}).get(str(package))
+            if isinstance(record, dict) and not record.get('historical'):
+                try:
+                    verified_identity, receipt, metadata_error = retention._metadata(package)
+                    owned = (metadata_error is None and verified_identity == identity
+                             and retention._ownership(package, record, receipt)
+                             and not retention._publisher_live(record))
+                    if owned:
+                        lifecycle = record.get('status', 'LEGACY_UNCONFIRMED')
+                        inactive = retention._inactive(package)
+                except (OSError, ValueError, KeyError, TypeError):
+                    owned = False
             rows.append({'path': relative, 'absolute_path': str(package),
                          **identity, 'allocated_bytes': amount,
-                         'metadata_error': error, 'publisher_owned': False,
-                         'lifecycle': 'LEGACY_UNCONFIRMED', 'inactive': False})
+                         'metadata_error': error, 'publisher_owned': owned,
+                         'lifecycle': lifecycle, 'inactive': inactive})
     return rows
 
 

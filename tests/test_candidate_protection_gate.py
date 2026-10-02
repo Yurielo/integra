@@ -8,6 +8,7 @@ import unittest
 from unittest.mock import patch
 
 from scripts import candidate_protection_gate as gate
+from scripts import candidate_retention as retention, retention_cleanup as executor
 
 
 class OperationGateTests(unittest.TestCase):
@@ -96,9 +97,46 @@ class OperationGateTests(unittest.TestCase):
                 gate.require_deletion(target)
             self.registry['deletion_enabled'] = True
             with self.assertRaisesRegex(ValueError, 'forbids deletion'):
+                gate.require_deletion(self.current_path)
+            with self.assertRaisesRegex(ValueError, 'forbids deletion'):
                 gate.require_deletion(target)
             self.audit['entries'][-1]['classification'] = 'ELIGIBLE'
-            gate.require_deletion(target)  # Contract check only; no unlink exists here.
+            with patch.object(gate.protection, 'REGISTRY', self.root / 'registry.json'):
+                (self.root / 'registry.json').write_text(json.dumps(self.registry))
+                self.audit['canonical'] = {'fixture': 'verified-current-and-proposals'}
+                lease = gate.require_deletion(target)
+                self.assertEqual(lease['identity'], identity)
+
+    def test_executor_uses_registry_for_plan_and_withdrawal(self):
+        target = self.root / 'Build Archive/old'
+        target.mkdir(parents=True)
+        context = {'protected': {}, 'selected_archives': {}}
+        job = {'source': str(target), 'trash': str(target.parent / '.retention-trash-fixture'),
+               'identity': {'candidate_id': 'candidate-v1-' + '1'*64},
+               'record': {}, 'device': target.stat().st_dev, 'inode': target.stat().st_ino,
+               'canonical_deletion_lease': {'fixture': True}}
+        catalog = {'protection': context}
+        with patch.object(executor.canonical_gate, 'require_deletion', side_effect=ValueError('UNKNOWN')):
+            with self.assertRaisesRegex(ValueError, 'UNKNOWN'):
+                executor._guard(retention, catalog, job, target)
+        with patch.object(executor.canonical_gate, 'require_deletion', return_value={'fixture': True}), \
+                patch.object(retention, '_context_valid', return_value=False):
+            with self.assertRaisesRegex(ValueError, 'protection authority'):
+                executor._guard(retention, catalog, job, target)
+
+    def test_missing_malformed_and_stale_registry_block_continuation(self):
+        registry_path = self.root / 'registry.json'
+        lease = {'registry_sha256': '0'*64, 'path': 'Build Archive/old',
+                 'identity': {'candidate_id': 'candidate-v1-' + '1'*64}, 'grant': {}}
+        with patch.object(gate.protection, 'REGISTRY', registry_path):
+            with self.assertRaises(FileNotFoundError):
+                gate.require_deletion_continuation(lease)
+            registry_path.write_text('{broken')
+            with self.assertRaisesRegex(ValueError, 'registry changed'):
+                gate.require_deletion_continuation(lease)
+            registry_path.write_text(json.dumps({'deletion_enabled': False}))
+            with self.assertRaisesRegex(ValueError, 'registry changed'):
+                gate.require_deletion_continuation(lease)
 
 
 if __name__ == '__main__':

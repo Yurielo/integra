@@ -42,6 +42,7 @@ class ProtectionAuditTests(unittest.TestCase):
         self.canonical = {'current_sha256': self.registry['canonical_current']['sha256'],
                           'decision_authority_ref': 'issue-comment:fixture',
                           'decision_token_sha256': 'fixture',
+                          'decision_token': 'PRODUCT_OWNER_AUTHORIZATION: FIXTURE EXPLICIT_GOVERNANCE_PINS={} DELETION_AUTHORIZATIONS={} DELETION_ENABLED=false',
                           'historical_receipts': {
                               gap['candidate_id']: {
                                   'record': json.loads((audit.ROOT / gap['receipt_path']).read_text()),
@@ -102,6 +103,27 @@ class ProtectionAuditTests(unittest.TestCase):
             'authority_ref': 'issue-comment:fixture-grant'}
         self.assertEqual(self.resolve()['entries'][-1]['classification'], 'UNKNOWN')
         self.assertEqual(self.resolve()['entries'][0]['classification'], 'PROTECTED')
+
+    def test_eligible_requires_owner_bound_grant_and_complete_survivors(self):
+        old = self.package({'candidate_id': 'candidate-v1-' + '9'*64,
+                            'bundle_digest': '8'*64, 'manifest_digest': '7'*64})
+        self.packages.append(old)
+        grant = {k: old[k] for k in ('path', *audit.IDENTITY)}
+        grant['authority_ref'] = 'issue-comment:future-fixture'
+        self.registry['deletion_authorizations'] = {old['path']: grant}
+        self.registry['deletion_enabled'] = True
+        self.canonical['decision_token'] = ('PRODUCT_OWNER_AUTHORIZATION: FIXTURE '
+             'EXPLICIT_GOVERNANCE_PINS={} DELETION_AUTHORIZATIONS=sha256:'
+             + audit.digest(self.registry['deletion_authorizations']) + ' DELETION_ENABLED=true')
+        result = self.resolve()
+        self.assertEqual(result['authority_state'], 'COMPLETE')
+        self.assertEqual(result['entries'][-1]['classification'], 'ELIGIBLE')
+        self.packages.pop(0)
+        self.assertEqual(self.resolve()['entries'][-1]['classification'], 'UNKNOWN')
+        self.packages.insert(0, self.package(self.registry['canonical_current']))
+        self.canonical['decision_token'] += ' STALE'
+        self.registry['deletion_authorizations'][old['path']]['authority_ref'] = 'changed'
+        self.assertEqual(self.resolve()['entries'][-1]['classification'], 'UNKNOWN')
 
     def test_explicit_pin_protects_and_missing_pin_enumeration_blocks(self):
         pinned = {'candidate_id': 'candidate-v1-' + '9'*64,

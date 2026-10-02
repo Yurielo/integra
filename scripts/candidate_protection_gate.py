@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import shutil
+import hashlib
 
 try:
     from scripts import candidate_protection_audit as protection
@@ -20,7 +21,7 @@ def _snapshot() -> tuple[dict, dict]:
     if (registry.get('status') != 'PRODUCT_OWNER_AUTHORIZED_ACTIVE'
             or not registry.get('activation_authority_ref')
             or not registry.get('promotion_contract_integration_ref')
-            or registry.get('deletion_enabled') is not False):
+            or type(registry.get('deletion_enabled')) is not bool):
         raise ValueError('canonical protection authority is not activated and integrated')
     current, proposals, canonical = protection.fetch_canonical(registry)
     base = Path.home() / 'Library/Application Support/Integra'
@@ -102,3 +103,43 @@ def require_deletion(path: Path) -> None:
             or any(grant.get(key) != rows[0].get(key)
                    for key in ('path', *protection.IDENTITY))):
         raise ValueError('canonical protection forbids deletion')
+    return {'registry_sha256': hashlib.sha256(protection.REGISTRY.read_bytes()).hexdigest(),
+            'canonical_sha256': protection.digest(audit['canonical']),
+            'path': relative, 'identity': {key: rows[0][key] for key in protection.IDENTITY},
+            'grant': grant}
+
+
+def require_deletion_continuation(lease: dict) -> None:
+    """Revalidate canonical bytes after an owned package is moved to trash.
+
+    The original path no longer exists at this point, so a fresh eligibility
+    scan would misclassify the in-progress transaction. The immutable decision
+    and grant are instead bound to the journal and every canonical input is
+    refreshed before unlink or interrupted recovery.
+    """
+    if not isinstance(lease, dict):
+        raise ValueError('canonical deletion lease is missing')
+    data = protection.REGISTRY.read_bytes()
+    if hashlib.sha256(data).hexdigest() != lease.get('registry_sha256'):
+        raise ValueError('canonical deletion registry changed')
+    registry = json.loads(data)
+    if (registry.get('status') != 'PRODUCT_OWNER_AUTHORIZED_ACTIVE'
+            or not registry.get('activation_authority_ref')
+            or not registry.get('promotion_contract_integration_ref')
+            or registry.get('deletion_enabled') is not True
+            or registry.get('deletion_authorizations', {}).get(lease.get('path')) != lease.get('grant')):
+        raise ValueError('canonical deletion authority is unavailable')
+    current, proposals, canonical = protection.fetch_canonical(registry)
+    if protection.digest(canonical) != lease.get('canonical_sha256'):
+        raise ValueError('canonical deletion inputs changed')
+    blockers = []
+    protected = protection._validate_registry(registry, current, proposals, blockers)
+    identity = lease.get('identity') or {}
+    if blockers or identity.get('candidate_id') in protected:
+        raise ValueError('canonical protection blocks resumed deletion')
+    base = Path.home() / 'Library/Application Support/Integra'
+    for cid, relative in registry['selected_survivors'].items():
+        if not relative:
+            raise ValueError('protected survivor is missing: ' + cid)
+        if cid not in protected or not (base / relative / 'COMPLETE.json').is_file():
+            raise ValueError('protected survivor disappeared: ' + cid)
