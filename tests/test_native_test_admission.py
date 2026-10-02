@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -25,12 +26,13 @@ class NativeTestAdmissionTests(unittest.TestCase):
                 active.pop()
         def launch(command, **kwargs):
             self.assertTrue(active)
-            self.assertEqual(command[-1], '/private/tmp/candidate')
+            self.assertEqual(command[-1], str(Path(directory).resolve() / 'candidate'))
             self.assertTrue(command[0].endswith('/package_ready_app.sh'))
             self.assertEqual(kwargs['env']['PYTHONDONTWRITEBYTECODE'], '1')
-            return SimpleNamespace(stdout='/private/tmp/candidate/Integra.app\n')
-        with patch.object(builder.candidate_retention, 'reserved_build', reservation), \
-                patch.dict(os.environ, INTEGRA_OWNED_WORKSPACE='/private/tmp'), \
+            return SimpleNamespace(stdout=str(Path(directory).resolve() / 'candidate/Integra.app')+'\n')
+        with tempfile.TemporaryDirectory() as directory, \
+                patch.object(builder.candidate_retention, 'reserved_build', reservation), \
+                patch.dict(os.environ, INTEGRA_OWNED_WORKSPACE=directory), \
                 patch.object(builder.subprocess, 'run', side_effect=launch):
             self.assertEqual(builder._build_inside_workspace(None, package_tests=True), 0)
 
