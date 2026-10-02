@@ -16,6 +16,12 @@ trust a filename, local catalog entry, historical receipt, or unmerged policy
 file alone. A changed reference, missing pin enumeration, missing archive,
 conflicting identity, or incomplete registry returns BLOCKED. The registry is
 not active merely because this PR exists or its CI passes.
+The existing PR #213 lifecycle policy remains the cap/cleanup executor contract.
+Before any later promotion can use this registry, a separately verified
+integration must make its promotion helper consume this authority and reconcile
+its policy's explicit pins with the registry. The registry's
+`promotion_contract_integration_ref` is null until that happens; a standalone
+resolver PASS cannot authorize promotion or create a second active authority.
 
 The local ownership catalog remains evidence of who may *possibly* delete a
 package. It is never protection authority. A package can be ELIGIBLE only when

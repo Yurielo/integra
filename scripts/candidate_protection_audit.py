@@ -210,6 +210,8 @@ def _validate_registry(registry: dict, current: dict, proposals: dict[int, dict]
         blockers.append('REGISTRY_MUST_NOT_SELF_AUTHORIZE_DELETION')
     if registry.get('status') != 'PRODUCT_OWNER_AUTHORIZED_ACTIVE' or not registry.get('activation_authority_ref'):
         blockers.append('REGISTRY_NOT_OWNER_ACTIVATED')
+    if not registry.get('promotion_contract_integration_ref'):
+        blockers.append('PROMOTION_CONTRACT_INTEGRATION_MISSING')
     records = current['records']
     active = [item for item in records if item['baseline_id'] == current['current_id']]
     if len(active) != 1 or active[0] != records[-1] or len(records) < 2:

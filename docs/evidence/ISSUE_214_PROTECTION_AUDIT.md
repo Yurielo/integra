@@ -15,6 +15,7 @@ snapshot; live disk and GitHub state must be recaptured before any action.
 | CURRENT recovery | MISSING_HISTORICAL_RECOVERY_ARTIFACT |
 | Immediate rollback recovery | MISSING_HISTORICAL_RECOVERY_ARTIFACT |
 | Canonical protection authority | PROPOSED_INCOMPLETE_FAIL_CLOSED |
+| PR #213 promotion integration | MISSING; separate governed verification required |
 | Promotion readiness | BLOCKED |
 
 The protected bytes include a Candidate matching an open proposal in PR #204

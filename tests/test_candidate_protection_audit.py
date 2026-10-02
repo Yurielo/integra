@@ -23,6 +23,7 @@ class ProtectionAuditTests(unittest.TestCase):
                        self.registry['proposed'][0]['candidate_id']}}
         self.registry.update(status='PRODUCT_OWNER_AUTHORIZED_ACTIVE',
                              activation_authority_ref='issue-comment:fixture',
+                             promotion_contract_integration_ref='pr:fixture',
                              explicit_governance_pins={},
                              deletion_authorizations={},
                              recovery={**self.registry['canonical_current'],
@@ -145,6 +146,12 @@ class ProtectionAuditTests(unittest.TestCase):
         self.assertFalse(result['promotion_ready'])
         self.assertIn('PROMOTION_OWNER_AUTHORIZATION_MISSING:213', result['promotion_blockers'])
         self.assertEqual(result['eligible_bytes'], 0)
+
+    def test_missing_promotion_integration_blocks_readiness(self):
+        self.registry['promotion_contract_integration_ref'] = None
+        result = self.resolve()
+        self.assertIn('PROMOTION_CONTRACT_INTEGRATION_MISSING', result['blockers'])
+        self.assertFalse(result['promotion_ready'])
 
     def test_exact_historical_recovery_source_requires_full_inventory(self):
         with tempfile.TemporaryDirectory(prefix='.integra-protection-test-', dir=Path.home()) as root:

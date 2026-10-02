@@ -4,6 +4,7 @@
   "status": "PROPOSED_INCOMPLETE_FAIL_CLOSED",
   "issue_ref": "https://github.com/Yurielo/integra/issues/214",
   "activation_authority_ref": null,
+  "promotion_contract_integration_ref": null,
   "canonical_current": {
     "path": "state/current_product_baseline_v2.json",
     "sha256": "47f4023fc7905166c5134f224519d83520f95b06ac68ccd357c02d86035f900e",
