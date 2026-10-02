@@ -95,7 +95,12 @@
       "sha256": "c651121cc3880b5c81dd9a149547e0157c6fef69ce5f9df9d5482a2c65c90eae"
     }
   },
-  "owner_acceptance": null,
+  "owner_acceptance": {
+    "decision": "PILOT_ACCEPTED",
+    "authority_ref": "PRODUCT OWNER AUTHORIZATION: ACCEPT_PROPOSED_BASELINE proposal-issue-212-bounded-lifecycle candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29",
+    "scope": "Issue #212 bounded Candidate archive and /private/tmp lifecycle proposed baseline acceptance only",
+    "promotion_authorized": false
+  },
   "allowed_overlay_paths": [
     "docs/ISSUE_212_LIFECYCLE_REPORT.md",
     "docs/evidence/issue212/candidate-evidence.json",
