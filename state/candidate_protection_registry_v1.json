@@ -1,0 +1,56 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.candidate_protection_registry",
+  "status": "PROPOSED_INCOMPLETE_FAIL_CLOSED",
+  "issue_ref": "https://github.com/Yurielo/integra/issues/214",
+  "activation_authority_ref": null,
+  "canonical_current": {
+    "path": "state/current_product_baseline_v2.json",
+    "sha256": "47f4023fc7905166c5134f224519d83520f95b06ac68ccd357c02d86035f900e",
+    "current_id": "current-v2-d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8",
+    "candidate_id": "candidate-v1-d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8",
+    "bundle_digest": "fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
+    "manifest_digest": "48cd6a5fb04677bc8b79d2a8e6212749c51bc931719fbb8923b1cdb8f7e71c56"
+  },
+  "latest_accepted_candidate_id": "candidate-v1-d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8",
+  "rollback": {
+    "candidate_id": "candidate-v1-af81b2867f893e8e529a2d4f64d6c1370dd1249b46eb999d427fb408229680fa",
+    "bundle_digest": "4032ad5334a42a9bbce6384b85b35857557afc2241d2c4d85c9e45379eca620c",
+    "manifest_digest": "c0f016e1ca16fe08cf5209ed7d2a74eb903e536d88da0775579dc1e646b262cd",
+    "confirmation_ref": null
+  },
+  "recovery": null,
+  "proposed": [
+    {
+      "pr": 213,
+      "head_sha": "ff0760f1a206de3f047b8d163c2c573689a4a530",
+      "path": "state/proposed_baseline_lite_v1.json",
+      "candidate_id": "candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29",
+      "bundle_digest": "fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
+      "manifest_digest": "667539142be8f7909dc56acb60be1e1fa30c05c6cec44ab931f32fcc8dd36c39"
+    }
+  ],
+  "explicit_governance_pins": null,
+  "historical_gaps": [
+    {
+      "role": "CURRENT",
+      "candidate_id": "candidate-v1-d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8",
+      "receipt_path": "docs/evidence/PROCESS_V1_ZOOM_FOLDER_CANDIDATE_ARCHIVE.json",
+      "observed_state": "MISSING_HISTORICAL_RECOVERY_ARTIFACT"
+    },
+    {
+      "role": "ROLLBACK",
+      "candidate_id": "candidate-v1-af81b2867f893e8e529a2d4f64d6c1370dd1249b46eb999d427fb408229680fa",
+      "receipt_path": "docs/evidence/PROCESS_V1_FOLDER_DISCOVERY_CANDIDATE_ARCHIVE.json",
+      "observed_state": "MISSING_HISTORICAL_RECOVERY_ARTIFACT"
+    }
+  ],
+  "limits": {
+    "max_full_copies": 8,
+    "max_attributed_bytes": 21474836480,
+    "minimum_free_after_reservations": 16106127360
+  },
+  "unknown_historical": "RETAIN_FAIL_CLOSED",
+  "deletion_enabled": false,
+  "bootstrap_authorization_ref": null
+}
