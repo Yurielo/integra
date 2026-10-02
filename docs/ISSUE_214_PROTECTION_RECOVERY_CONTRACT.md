@@ -1,8 +1,9 @@
 # Candidate protection and historical recovery gap — Issue #214
 
-Status: PRODUCT_OWNER_AUTHORIZED_ACTIVE in draft PR #215. This contract does not promote a Candidate, change
-CURRENT, authorize historical deletion, or make PR #213's accepted proposal a
-new baseline.
+Status: PRODUCT_OWNER_AUTHORIZED_ACTIVE in PR #215. The original #214 decision
+did not authorize historical deletion; the later exact six-object decision is
+recorded below. Neither decision promotes a Candidate, changes CURRENT, or
+makes PR #213's accepted proposal a new baseline.
 
 ## Single authority root
 
@@ -45,8 +46,8 @@ package. It is never protection authority. A package can be ELIGIBLE only when
 the registry is owner-authorized and complete, all protected survivors have
 fresh complete byte verification, the exact package has a path and identity-bound
 deletion grant, is publisher-owned, terminal, inactive, unpinned, and the
-established cleanup transaction passes. This PR contains no deletion grant.
-The accepted decision also keeps `deletion_enabled=false`; even a forged grant
+established cleanup transaction passes. The automatic executor has no deletion
+grant. The original accepted decision keeps `deletion_enabled=false`; even a forged grant
 cannot yield ELIGIBLE. A future decision would have to bind an exact grant map
 digest and explicitly set `DELETION_ENABLED=true` in its owner token.
 Unknown historical objects remain UNKNOWN even if a cap is full. A matching
@@ -102,3 +103,24 @@ surviving archive.
 PR #213 and its accepted proposal remain unchanged. The transferred executor
 is independently reviewable in PR #215; no real cleanup, publication, promotion
 or CURRENT change occurred. Both PRs remain unmerged.
+
+## Exact six-object historical retirement decision (2026-10-02)
+
+The Product Owner subsequently authorized retirement of the six exact historical
+full-size app copies bound by catalog SHA-256
+`f146bfb1c3ed397275071528ee1aa0945dbde75a0b1669357051c3a6136e2c76`
+in Issue #214 comment `5957484872`. This is a narrow additional decision, not
+a change to the earlier missing CURRENT/rollback recovery finding. The
+canonical registry binds the decision and the exact catalog; its automatic
+publisher-owned deletion grants remain `{}` and `deletion_enabled=false`.
+Only `scripts/issue214_exact_legacy_retirement.py` interprets the separately
+authorized `EXACT_CATALOG_ONLY` mode. It requires fresh canonical protection,
+the original Product Owner decision, the new exact decision, byte-verified
+Candidate identity, an inactive app, matching allocation, no hard links or
+foreign files, and a durable per-entry journal. Two loose app copies are also
+checked against their retained COMPLETE twins before any removal. It removes
+only each authorized `Integra.app` child; surrounding proof, receipt, manifest,
+inventory, and evidence files remain. An interruption resumes only against the
+same registry/catalog and exact inode/entry journal. All other UNKNOWN objects
+remain RETAIN_FAIL_CLOSED. No transition, CURRENT change, promotion or PR merge
+is implied by this retirement decision.

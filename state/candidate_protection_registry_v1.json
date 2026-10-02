@@ -128,5 +128,15 @@
   },
   "unknown_historical": "RETAIN_FAIL_CLOSED",
   "deletion_enabled": false,
-  "bootstrap_authorization_ref": "https://github.com/Yurielo/integra/issues/214#issuecomment-5951189263"
+  "bootstrap_authorization_ref": "https://github.com/Yurielo/integra/issues/214#issuecomment-5951189263",
+  "exact_legacy_retirement": {
+    "status": "PRODUCT_OWNER_AUTHORIZED_EXACT_CATALOG",
+    "decision_ref": "https://github.com/Yurielo/integra/issues/214#issuecomment-5957484872",
+    "decision_token_sha256": "358eeb2902767c5d4efd873e8654d5a4f0bfe7477f23c36f25230c4e5368b526",
+    "catalog_path": "state/issue214_exact_legacy_retirement_v1.json",
+    "catalog_sha256": "f146bfb1c3ed397275071528ee1aa0945dbde75a0b1669357051c3a6136e2c76",
+    "count": 6,
+    "max_attributed_bytes": 13673029632,
+    "deletion_mode": "EXACT_CATALOG_ONLY"
+  }
 }
