@@ -40,6 +40,8 @@ COUNT = 6
 MAX_BYTES = 13673029632
 JOURNAL = BASE / 'issue214-exact-legacy-retirement-journal.json'
 LOCK = BASE / 'issue214-exact-legacy-retirement.lock'
+EVIDENCE = BASE / 'Historical Retirement Evidence' / ('issue214-' + CATALOG_SHA)
+RELOCATION_JOURNAL = BASE / 'issue214-exact-legacy-relocation-journal.json'
 IDENTITY = ('candidate_id', 'bundle_digest', 'manifest_digest')
 
 
@@ -179,18 +181,22 @@ def _entries(app: Path) -> list[dict]:
     return entries
 
 
-def _persist(value: dict) -> None:
-    JOURNAL.parent.mkdir(parents=True, exist_ok=True)
-    temporary = JOURNAL.with_name(JOURNAL.name + '.' + uuid.uuid4().hex + '.new')
+def _write_journal(path: Path, value: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(path.name + '.' + uuid.uuid4().hex + '.new')
     with temporary.open('x') as handle:
         json.dump(value, handle, sort_keys=True)
         handle.write('\n'); handle.flush(); os.fsync(handle.fileno())
-    os.replace(temporary, JOURNAL)
-    fd = os.open(JOURNAL.parent, os.O_RDONLY | os.O_DIRECTORY)
+    os.replace(temporary, path)
+    fd = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY)
     try:
         os.fsync(fd)
     finally:
         os.close(fd)
+
+
+def _persist(value: dict) -> None:
+    _write_journal(JOURNAL, value)
 
 
 def _load(registry_sha: str) -> dict:
@@ -311,11 +317,133 @@ def execute(*, apply: bool = False) -> dict:
                 'completed': len(journal['completed']), 'max_attributed_bytes': MAX_BYTES}
 
 
+def _metadata_digest(root: Path) -> str:
+    """Bind every remaining file/mode; never mistake a new app for metadata."""
+    candidate_archive._path(root, durable=True)
+    if not root.is_dir() or root.is_symlink() or (root / 'Integra.app').exists():
+        raise ValueError('retirement metadata root is missing, linked, or contains an app')
+    s = root.lstat()
+    if s.st_uid != os.getuid() or not stat.S_ISDIR(s.st_mode):
+        raise ValueError('retirement metadata root has foreign ownership/type')
+    _inactive(root)
+    entries = candidate_archive._inventory(root)
+    for item in entries:
+        info = (root / item['path']).lstat()
+        if info.st_uid != os.getuid() or (item['type'] == 'file' and info.st_nlink != 1):
+            raise ValueError('retirement metadata contains a foreign/hardlinked entry')
+    return _digest(entries)
+
+
+def _load_relocation(registry_sha: str) -> dict:
+    if not RELOCATION_JOURNAL.exists():
+        return {'schema_version': '1.0', 'catalog_sha256': CATALOG_SHA,
+                'registry_sha256': registry_sha, 'completed': [],
+                'completed_digests': {}, 'active': None}
+    value = json.loads(RELOCATION_JOURNAL.read_text())
+    if (set(value) != {'schema_version', 'catalog_sha256', 'registry_sha256',
+                       'completed', 'completed_digests', 'active'}
+            or value['schema_version'] != '1.0' or value['catalog_sha256'] != CATALOG_SHA
+            or value['registry_sha256'] != registry_sha
+            or not isinstance(value['completed'], list)
+            or len(set(value['completed'])) != len(value['completed'])
+            or not isinstance(value['completed_digests'], dict)
+            or set(value['completed_digests']) != set(value['completed'])):
+        raise ValueError('metadata relocation journal is stale or malformed')
+    return value
+
+
+def _relocate_active(journal: dict, row: dict) -> None:
+    job = journal['active']
+    if not isinstance(job, dict) or job.get('path') != row['path']:
+        raise ValueError('metadata relocation target differs from exact catalog')
+    source = BASE / row['path']
+    destination = EVIDENCE / row['path']
+    candidate_archive._path(source, durable=True)
+    candidate_archive._path(destination, durable=True)
+    if source.exists() and destination.exists():
+        raise ValueError('metadata source/destination collision')
+    if source.exists():
+        info = source.lstat()
+        if ((info.st_dev, info.st_ino) != (job['device'], job['inode'])
+                or _metadata_digest(source) != job['inventory_digest']):
+            raise ValueError('metadata changed after relocation was prepared')
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        candidate_archive._path(destination, durable=True)
+        if destination.exists():
+            raise ValueError('metadata destination appeared before atomic move')
+        os.rename(source, destination)
+        for parent in (source.parent, destination.parent):
+            fd = os.open(parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+            try:
+                os.fsync(fd)
+            finally:
+                os.close(fd)
+    if not destination.exists() or source.exists():
+        raise ValueError('metadata atomic relocation did not complete')
+    info = destination.lstat()
+    if ((info.st_dev, info.st_ino) != (job['device'], job['inode'])
+            or _metadata_digest(destination) != job['inventory_digest']):
+        raise ValueError('relocated metadata inode or bytes differ')
+    journal['completed'].append(row['path'])
+    journal['completed_digests'][row['path']] = job['inventory_digest']
+    journal['active'] = None
+    _write_journal(RELOCATION_JOURNAL, journal)
+
+
+def finalize_paths() -> dict:
+    """Atomically preserve metadata elsewhere so all six exact roots disappear."""
+    registry, audit, rows = _snapshot()
+    registry_sha = audit['registry_sha256']
+    if audit['full_copies'] != 2 or audit['unknown_bytes'] != 0 or audit['eligible_bytes'] != 0:
+        raise ValueError('exact legacy retirement payload state is not complete')
+    with LOCK.open('a+') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        retirement = _load(registry_sha)
+        if (retirement['active'] is not None
+                or retirement['completed'] != [row['path'] for row in rows]):
+            raise ValueError('six-app retirement journal is incomplete')
+        journal = _load_relocation(registry_sha)
+        if any(path not in {row['path'] for row in rows} for path in journal['completed']):
+            raise ValueError('relocation completion is outside exact catalog')
+        # Verify all six metadata roots before the first move. Completed roots
+        # are validated at their exact evidence destinations on resumption.
+        for row in rows:
+            source, dest = BASE / row['path'], EVIDENCE / row['path']
+            if row['path'] in journal['completed']:
+                if source.exists() or not dest.exists() or _metadata_digest(dest) != journal.get('completed_digests', {}).get(row['path']):
+                    raise ValueError('completed metadata relocation differs')
+            elif journal['active'] is None or journal['active'].get('path') != row['path']:
+                _metadata_digest(source)
+        if not RELOCATION_JOURNAL.exists():
+            _write_journal(RELOCATION_JOURNAL, journal)
+        for row in rows:
+            if row['path'] in journal['completed']:
+                continue
+            _, current, current_rows = _snapshot()
+            if current['registry_sha256'] != registry_sha or current_rows != rows:
+                raise ValueError('canonical protection changed before metadata relocation')
+            if journal['active'] is None:
+                source = BASE / row['path']; info = source.lstat()
+                journal['active'] = {'path': row['path'], 'device': info.st_dev,
+                                     'inode': info.st_ino,
+                                     'inventory_digest': _metadata_digest(source)}
+                _write_journal(RELOCATION_JOURNAL, journal)
+            elif journal['active']['path'] != row['path']:
+                raise ValueError('relocation journal order differs from catalog')
+            _relocate_active(journal, row)
+        return {'status': 'COMPLETE', 'catalog_sha256': CATALOG_SHA,
+                'relocated': len(journal['completed']), 'evidence_root': str(EVIDENCE)}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--apply', action='store_true', help='execute exact owner-authorized retirement')
+    parser.add_argument('--finalize-paths', action='store_true',
+                        help='atomically preserve metadata and remove six exact source paths')
     args = parser.parse_args()
-    print(json.dumps(execute(apply=args.apply), sort_keys=True))
+    if args.apply and args.finalize_paths:
+        parser.error('choose one operation')
+    print(json.dumps(finalize_paths() if args.finalize_paths else execute(apply=args.apply), sort_keys=True))
     return 0
 
 

@@ -124,3 +124,11 @@ inventory, and evidence files remain. An interruption resumes only against the
 same registry/catalog and exact inode/entry journal. All other UNKNOWN objects
 remain RETAIN_FAIL_CLOSED. No transition, CURRENT change, promotion or PR merge
 is implied by this retirement decision.
+
+Once the six payloads are journaled as removed, `--finalize-paths` verifies
+that only metadata remains at every exact catalog path. It atomically renames
+each metadata root to `Historical Retirement Evidence/issue214-<catalog SHA>/`
+with the original relative path, then checks inode and full metadata inventory
+SHA-256. A separate durable journal resumes an interrupted rename. The six
+original catalog paths disappear while receipt, manifest, inventory and proof
+bytes remain preserved, with no new full-size app copy.

@@ -115,6 +115,47 @@ class ExactLegacyRetirementTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'stale or malformed'):
                 retire._load('b' * 64)
 
+    def _relocation_job(self):
+        s = self.package.lstat()
+        return {'path': self.row['path'], 'device': s.st_dev, 'inode': s.st_ino,
+                'inventory_digest': retire._metadata_digest(self.package)}
+
+    def test_exact_metadata_root_is_atomically_relocated_without_copy(self):
+        for file in self.app.iterdir():
+            file.unlink()
+        self.app.rmdir()
+        with patch.object(retire, 'BASE', self.root), patch.object(retire, 'EVIDENCE', self.root / 'evidence'), \
+             patch.object(retire, 'RELOCATION_JOURNAL', self.root / 'relocation.json'), \
+             patch.object(retire, '_inactive'):
+            job = self._relocation_job()
+            journal = {'active': job, 'completed': [], 'completed_digests': {}}
+            retire._relocate_active(journal, self.row)
+            destination = self.root / 'evidence' / self.row['path']
+            self.assertFalse(self.package.exists())
+            self.assertEqual(destination.lstat().st_ino, job['inode'])
+            self.assertEqual((destination / 'preserve-receipt.json').read_text(), 'historical evidence')
+            self.assertEqual(journal['completed'], [self.row['path']])
+
+    def test_relocation_resume_after_atomic_move_rechecks_same_inode(self):
+        for file in self.app.iterdir():
+            file.unlink()
+        self.app.rmdir()
+        with patch.object(retire, 'BASE', self.root), patch.object(retire, 'EVIDENCE', self.root / 'evidence'), \
+             patch.object(retire, 'RELOCATION_JOURNAL', self.root / 'relocation.json'), \
+             patch.object(retire, '_inactive'):
+            job = self._relocation_job()
+            destination = self.root / 'evidence' / self.row['path']
+            destination.parent.mkdir(parents=True)
+            os.rename(self.package, destination)
+            journal = {'active': job, 'completed': [], 'completed_digests': {}}
+            retire._relocate_active(journal, self.row)
+            self.assertEqual(journal['completed_digests'][self.row['path']], job['inventory_digest'])
+
+    def test_metadata_relocation_rejects_any_remaining_app(self):
+        with patch.object(retire, '_inactive'):
+            with self.assertRaisesRegex(ValueError, 'contains an app'):
+                retire._metadata_digest(self.package)
+
 
 if __name__ == '__main__':
     unittest.main()
