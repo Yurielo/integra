@@ -134,7 +134,10 @@ class TempWorkspaceLifecycleTests(unittest.TestCase):
                 time.sleep(.02)
             self.assertTrue(list(self.base.glob("integra-owned-sigterm-*")))
             process.terminate()
-            self.assertEqual(process.wait(timeout=5), 128)
+            # Cancellation may spend 1s in its signal handler plus the
+            # supervisor's 5s termination grace on Linux zombie groups.
+            # Leave bounded time for reaping, cleanup and caller notification.
+            self.assertEqual(process.wait(timeout=10), 128)
             self.assertEqual(list(self.base.glob("integra-owned-sigterm-*")), [])
         finally:
             if process.poll() is None:

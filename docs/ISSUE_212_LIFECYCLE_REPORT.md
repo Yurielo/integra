@@ -143,6 +143,23 @@ At evidence B, final full-suite/governance results on the declaration head are
 not yet asserted: those exact-head outcomes and GitHub Quality Gate are attached
 in the PR and Issue #212 after execution. No quality bypass is introduced.
 
+## First GitHub CI and portable cancellation test repair
+
+At declaration `13ea0b8…`, local full suite and governance passed. The first
+Linux Quality Gate ran 905 tests (99 conditional skips) and found one error:
+the SIGTERM test waited 5 seconds although cancellation can use its 1-second
+signal-handler grace plus the supervisor's 5-second termination grace before
+reaping a Linux zombie process group and notifying the caller. The test's
+bounded wait is corrected to 10 seconds. Exit-code and workspace-removal
+assertions are preserved. No production lifecycle/native code, policy, historical
+assertion or protected artifact changes. The raw failed CI log and original
+local PASS bindings remain evidence, not a claim of first-CI success.
+
+This nonhistorical test-only fix is explicitly declared in the new evidence
+overlay under the existing contract. The actual native source/Candidate stays A
+`74785b5…`; its product/runtime/tooling bytes remain unchanged. Final declaration
+full-suite/governance and Linux CI must be rerun before the PR is reported green.
+
 Next genuine boundary: owner acceptance of the new Candidate, complete canonical
 protection/pin authority, and any separately authorized historical migration or
 promotion. No acceptance, promotion, runtime reconciliation, deployment or

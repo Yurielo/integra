@@ -82,5 +82,16 @@
     "max_allocated_bytes": 21474836480,
     "reserve_bytes": 16106127360
   },
-  "protected_bytes_limitation": "All protected entry stats and governance JSON SHA unchanged; not a repeated full payload hash of legacy archives."
+  "protected_bytes_limitation": "All protected entry stats and governance JSON SHA unchanged; not a repeated full payload hash of legacy archives.",
+  "ci_test_only_overlay": {
+    "first_declaration": "13ea0b8450f60402b6e66489e6bab2617cd837cf",
+    "first_github_ci": "https://github.com/Yurielo/integra/actions/runs/36987720248",
+    "failure": "SIGTERM test 5-second timeout raced allowed 1+5-second termination graces on Linux",
+    "repair": "nonhistorical test wait10seconds; original exit128 and no-owned-workspace assertions preserved",
+    "production_source_unchanged": true,
+    "native_evidence_source": {
+      "commit_sha": "74785b5f34cb12e1cd557b34731bffbe191cbe15",
+      "tree_sha": "c86f8451b1ca49372e12885fa752a4962b15ef80"
+    }
+  }
 }
