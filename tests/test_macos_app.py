@@ -296,6 +296,13 @@ class MacOSApplicationTests(unittest.TestCase):
         self.assertIn('object["error"] as? String', source)
         self.assertNotIn("Integra Reference Project", source)
 
+    def test_youtube_source_type_stays_internal_to_normal_source_lists(self):
+        source = (ROOT / "macos/IntegraApp.swift").read_text()
+        self.assertIn('case "YOUTUBE_VIDEO": return "YouTube"', source)
+        self.assertEqual(source.count("sourcePresentationDetail(source)"), 3)
+        self.assertNotIn('detail: source["source_type"] as? String ?? "UNKNOWN"', source)
+        self.assertNotIn('detail: "\\(source["source_type"] ?? "UNKNOWN")"', source)
+
     def test_macos_build_packages_seminartext_topics_worker(self):
         build = (ROOT / "scripts/build_macos_app.sh").read_text()
         self.assertIn('workers/seminartext_topics_worker.py', build)

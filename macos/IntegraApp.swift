@@ -480,6 +480,14 @@ struct SidebarItem {
     default: return stage
     }
   }
+  private func sourcePresentationDetail(_ source: [String: Any]) -> String {
+    // Source-type identifiers are contract/persistence values.  The normal
+    // user-facing source list uses the established product label instead.
+    switch source["source_type"] as? String {
+    case "YOUTUBE_VIDEO": return "YouTube"
+    default: return source["source_type"] as? String ?? "Источник"
+    }
+  }
   private func section(_ value: String) -> NSTextField {
     let label = NSTextField(labelWithString: value)
     label.font = .systemFont(ofSize: 12, weight: .bold)
@@ -530,7 +538,7 @@ struct SidebarItem {
     for source in sources {
       add(
         row(
-          "\(source["display_name"] ?? "Источник")", detail: "\(source["source_type"] ?? "UNKNOWN")"
+          "\(source["display_name"] ?? "Источник")", detail: sourcePresentationDetail(source)
         ))
     }
     if sources.contains(where: { ($0["kind"] as? String) == "MEDIA" || ($0["source_type"] as? String) == "YOUTUBE_VIDEO" }) {
@@ -1869,7 +1877,7 @@ struct SidebarItem {
         control.toolTip = "\(projectID)\n\(runID)"
         add(control)
         for source in ((run["plan"] as? [String: Any])?["sources"] as? [[String: Any]]) ?? [] {
-          add(row(source["display_name"] as? String ?? "Источник", detail: source["source_type"] as? String ?? "UNKNOWN"))
+          add(row(source["display_name"] as? String ?? "Источник", detail: sourcePresentationDetail(source)))
         }
       }
     } catch { status.stringValue = error.localizedDescription }
@@ -1888,7 +1896,7 @@ struct SidebarItem {
           let control = button(source["display_name"] as? String ?? "Источник", #selector(openRecentRun(_:)))
           control.toolTip = "\(projectID)\n\(runID)"
           add(control)
-          add(row(source["source_type"] as? String ?? "UNKNOWN", detail: project["name"] as? String ?? "Проект Integra"))
+          add(row(sourcePresentationDetail(source), detail: project["name"] as? String ?? "Проект Integra"))
           count += 1
         }
       }
