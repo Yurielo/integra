@@ -1,0 +1,44 @@
+[
+  {
+    "path": "Build Archive Recovery/candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173/c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b",
+    "candidate_id": "candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173",
+    "bundle_digest": "c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b",
+    "manifest_digest": "4e54fcce8ee164ca86d170c12f31474a457eedaf377bb433893aba7d1607bdc9",
+    "allocated_bytes": 2282323968
+  },
+  {
+    "path": "Build Archive/pilot-2fe375-original",
+    "candidate_id": "candidate-v1-2fe375cc31b3a57d74ad0f994894bd610442deae3adfff033cdc5f3cf400fcd3",
+    "bundle_digest": "47befb29a6c221db7cb79262fc949f29248095e31dceba7fc4d46e78ab06c39e",
+    "manifest_digest": "8b050aeba19f06972b43fb680e5a5706d443ff0f48ef8b357c4f61cbaa0c9647",
+    "allocated_bytes": 2274074624
+  },
+  {
+    "path": "Build Archive/recovered-current-65bf72",
+    "candidate_id": "candidate-v1-65bf72d1262146c9137aca433b51ae3974d98bc4c8ed37042db13b46e0318a1d",
+    "bundle_digest": "044594f1a632f1c140af28bb7de8e4acf782daca9863d84b9c5d77edb731fdf8",
+    "manifest_digest": "c59d18552b8b860019852a420d4b7d6337e32408196df0615c8599179d44a2a5",
+    "allocated_bytes": 2273202176
+  },
+  {
+    "path": "Build Archive/retained/candidate-v1-2fe375cc31b3a57d74ad0f994894bd610442deae3adfff033cdc5f3cf400fcd3/47befb29a6c221db7cb79262fc949f29248095e31dceba7fc4d46e78ab06c39e",
+    "candidate_id": "candidate-v1-2fe375cc31b3a57d74ad0f994894bd610442deae3adfff033cdc5f3cf400fcd3",
+    "bundle_digest": "47befb29a6c221db7cb79262fc949f29248095e31dceba7fc4d46e78ab06c39e",
+    "manifest_digest": "8b050aeba19f06972b43fb680e5a5706d443ff0f48ef8b357c4f61cbaa0c9647",
+    "allocated_bytes": 2280636416
+  },
+  {
+    "path": "Build Archive/retained/candidate-v1-65bf72d1262146c9137aca433b51ae3974d98bc4c8ed37042db13b46e0318a1d/044594f1a632f1c140af28bb7de8e4acf782daca9863d84b9c5d77edb731fdf8",
+    "candidate_id": "candidate-v1-65bf72d1262146c9137aca433b51ae3974d98bc4c8ed37042db13b46e0318a1d",
+    "bundle_digest": "044594f1a632f1c140af28bb7de8e4acf782daca9863d84b9c5d77edb731fdf8",
+    "manifest_digest": "c59d18552b8b860019852a420d4b7d6337e32408196df0615c8599179d44a2a5",
+    "allocated_bytes": 2280574976
+  },
+  {
+    "path": "Recovery Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8",
+    "candidate_id": "candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583",
+    "bundle_digest": "2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8",
+    "manifest_digest": "4c9027d2fb65ef921bbb9c20878ccef61fca34c999c1f606f37da9e2a44a3161",
+    "allocated_bytes": 2282217472
+  }
+]

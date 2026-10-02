@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from proposed_baseline_lite import next_current, validate_current, validate_proposal, verify_promotion_material  # noqa: E402
 from candidate_archive import path_is_within, verify_archive  # noqa: E402
+from candidate_protection_gate import require_promotion  # noqa: E402
 
 
 def load(path: Path) -> dict:
@@ -53,6 +54,7 @@ def main(argv: list[str] | None = None) -> int:
         verify_archive(args.current_archive, expected={
             key: active["candidate"][key] for key in ("candidate_id", "bundle_digest")
         })
+        require_promotion(proposal, current, args.candidate_archive, args.current_archive)
         archives = (args.candidate_archive, args.current_archive)
         if any(path_is_within(path.resolve(), archive) for path in (args.output, args.history_output)
                for archive in archives):

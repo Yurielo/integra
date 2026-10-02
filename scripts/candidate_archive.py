@@ -19,6 +19,7 @@ import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
+MANAGED_BASE = Path.home() / 'Library/Application Support/Integra'
 sys.path.insert(0, str(ROOT))
 from integra_core.candidate_identity import (  # noqa: E402
     MANIFEST_NAME, canonical_bytes, tree_sha256, validate_manifest,
@@ -248,6 +249,12 @@ def create_archive(app: Path, archive_root: Path, *, manifest: Path | None = Non
         block = max(4096, os.statvfs(ancestor).f_frsize)
         required = sum(((item.get("size", 0) + block - 1) // block + 1) * block for item in planned)
         required += 1024 * 1024 + reserve_bytes
+        if root == MANAGED_BASE or root.is_relative_to(MANAGED_BASE):
+            try:
+                from scripts.candidate_protection_gate import require_archive_publication
+            except ModuleNotFoundError:
+                from candidate_protection_gate import require_archive_publication
+            require_archive_publication(root, required - reserve_bytes)
         if shutil.disk_usage(ancestor).free < required:
             raise ValueError(f"insufficient disk space: need {required} free bytes including reserve")
         destination.parent.mkdir(parents=True, exist_ok=True)
