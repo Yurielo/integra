@@ -12,7 +12,22 @@ from scripts import candidate_retention as r, candidate_archive as archive, rete
 
 
 class OwnedRetentionTests(unittest.TestCase):
-    setUp = fixtures.CandidateArchiveTests.setUp
+    def setUp(self):
+        fixtures.CandidateArchiveTests.setUp(self)
+        self._install_canonical_fixture()
+
+    def _install_canonical_fixture(self):
+        """Isolate Issue #212 lifecycle mechanics from the real registry."""
+        from scripts import candidate_protection_gate as gate
+        for fixture_patch in (
+            patch.object(archive, 'MANAGED_BASE', self.root),
+            patch.object(gate, 'require_archive_publication', return_value=None),
+            patch.object(gate, 'require_deletion', return_value='fixture-deletion-lease'),
+            patch.object(gate, 'require_deletion_continuation', return_value=None),
+            patch.object(r, '_context_valid', return_value=True),
+            patch.object(r, 'refresh_protection', return_value=None),
+        ):
+            fixture_patch.start(); self.addCleanup(fixture_patch.stop)
     _manifest = fixtures.CandidateArchiveTests._manifest
     _create = fixtures.CandidateArchiveTests._create
     _package = fixtures.CandidateArchiveTests._package
@@ -31,6 +46,18 @@ class OwnedRetentionTests(unittest.TestCase):
     def _context(self, package, survivor):
         receipt = archive.verify_archive(survivor); cid = receipt['candidate_id']
         with r.locked(self._catalog()) as catalog:
+            for item in (package, survivor):
+                item_receipt = archive.verify_archive(item)
+                info = item.stat()
+                catalog['artifacts'][str(item)] = {
+                    **{key: item_receipt[key] for key in ('candidate_id', 'bundle_digest', 'manifest_digest', 'inventory_sha256')},
+                    'complete_sha256': r._sha(item / 'COMPLETE.json'),
+                    'owner_uid': os.getuid(), 'device': info.st_dev, 'inode': info.st_ino,
+                    'publisher_run_id': 'fixture', 'publisher_pid': os.getpid(),
+                    'publisher_start_token': 'dead fixture publisher',
+                    'publisher_completed': True, 'status': 'AWAITING_OWNER_ACCEPTANCE',
+                    'historical': False,
+                }
             catalog['protection'] = {'protected': {cid: ['CURRENT', 'LATEST_ACCEPTED_BASELINE', 'CONFIRMED_ROLLBACK', 'CONFIRMED_RECOVERY']},
                 'inputs': {str(survivor / 'COMPLETE.json'): r._sha(survivor / 'COMPLETE.json')},
                 'authoritative_snapshot': {'fixture': True}, 'selected_archives': {cid: str(survivor)},
@@ -38,8 +65,7 @@ class OwnedRetentionTests(unittest.TestCase):
             r.disposition(catalog, package, 'SUPERSEDED', 'fixture exact retirement authority')
             for v in catalog['artifacts'].values():
                 v['publisher_start_token'] = 'dead fixture publisher'
-        for fixture_patch in (patch('scripts.retention_governance.validate_snapshot', return_value=True),
-                              patch.object(r, '_inactive', return_value=True)):
+        for fixture_patch in (patch.object(r, '_inactive', return_value=True),):
             fixture_patch.start(); self.addCleanup(fixture_patch.stop)
 
     def _plan(self):
@@ -113,7 +139,7 @@ class OwnedRetentionTests(unittest.TestCase):
 
     def test_missing_context_and_protected_or_active_objects_fail_closed(self):
         package, survivor = self._ready()
-        with patch('scripts.retention_governance.validate_snapshot', return_value=False):
+        with patch.object(r, '_context_valid', return_value=False):
             self.assertEqual(self._plan()['DELETABLE_BYTES'], 0)
         with patch.object(r, '_inactive', return_value=False):
             self.assertEqual(self._plan()['DELETABLE_BYTES'], 0)
@@ -199,7 +225,7 @@ class OwnedRetentionTests(unittest.TestCase):
 
     def test_protection_drift_before_withdrawal_and_resume_preserves_bytes(self):
         package, _ = self._ready(); planned = self._plan()
-        with patch('scripts.retention_governance.validate_snapshot', return_value=False):
+        with patch.object(r, '_context_valid', return_value=False):
             with self.assertRaisesRegex(ValueError, 'plan/protection changed'):
                 r.cleanup(self._catalog(), planned)
         self.assertTrue(package.exists())
@@ -207,7 +233,7 @@ class OwnedRetentionTests(unittest.TestCase):
             with self.assertRaises(KeyboardInterrupt):
                 r.cleanup(self._catalog(), self._plan())
         job = next(iter(json.loads(self._catalog().read_text())['deletions'].values()))
-        with patch('scripts.retention_governance.validate_snapshot', return_value=False):
+        with patch.object(r, '_context_valid', return_value=False):
             with self.assertRaisesRegex(ValueError, 'context is unavailable'):
                 r.recover_cleanup(self._catalog())
         self.assertTrue(Path(job['trash']).exists())

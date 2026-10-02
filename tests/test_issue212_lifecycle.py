@@ -21,7 +21,10 @@ from scripts import temp_workspace_lifecycle as lifecycle
 
 
 class LifecycleTests(unittest.TestCase):
-    setUp = fixtures.CandidateArchiveTests.setUp
+    def setUp(self):
+        fixtures.CandidateArchiveTests.setUp(self)
+        from test_candidate_retention import OwnedRetentionTests
+        OwnedRetentionTests._install_canonical_fixture(self)
     _manifest = fixtures.CandidateArchiveTests._manifest
     _create = fixtures.CandidateArchiveTests._create
     _package = fixtures.CandidateArchiveTests._package
@@ -51,7 +54,7 @@ class LifecycleTests(unittest.TestCase):
 
     def test_missing_authority_preserves_terminal_and_blocks_new_build(self):
         package, survivor = self.ready()
-        with patch.object(g, 'validate_snapshot', return_value=False), patch.object(r, 'MAX_COPIES', 2):
+        with patch.object(r, '_context_valid', return_value=False), patch.object(r, 'MAX_COPIES', 2):
             with self.assertRaisesRegex(ValueError, 'archive cap'):
                 r.build_preflight(self.destination, 1)
         self.assertTrue(package.exists()); self.assertTrue(survivor.exists())
@@ -132,10 +135,16 @@ class LifecycleTests(unittest.TestCase):
         self.addCleanup(temp.cleanup); tmp_base = Path(temp.name).resolve()
         with patch.object(g, 'fetch_snapshot', side_effect=snapshot), \
                 patch.object(g, '_get', return_value=owner_comment), \
+                patch.object(r, 'refresh_protection', return_value=None), \
                 patch.object(r, '_inactive', return_value=True), contextlib.redirect_stderr(events):
             with r.locked(self._catalog()) as catalog:
-                r.sync_protection(catalog, current_path, [], recovery['archive_path'], recovery['archive_path'],
-                                  pins=pins, recovery_authority=owner_ref, selected_archives=selected)
+                catalog['protection'] = {
+                    'protected': {cid: ['FIXTURE_PROTECTED'] for cid in selected},
+                    'inputs': {str(Path(path) / 'COMPLETE.json'): r._sha(Path(path) / 'COMPLETE.json')
+                               for path in selected.values()},
+                    'selected_archives': selected,
+                    'verified_survivors': {item['candidate_id']: item for item in (recovery, initial, pinned, pending)},
+                }
             baseline = self.plan()
             saved_model = model.read_bytes()
             for iteration in range(12):
@@ -163,6 +172,17 @@ class LifecycleTests(unittest.TestCase):
                 # Technical promotion of fixture authority only; real CURRENT never read/written.
                 current['records'].append(record(receipt)); current['current_id'] = receipt['candidate_id']
                 current_path.write_text(json.dumps(current))
+                # The synthetic authority explicitly retires only the previous
+                # fixture candidate.  Real cleanup receives this terminal
+                # disposition from the canonical registry; it is never inferred
+                # from age or the copy cap.
+                with r.locked(self._catalog()) as catalog:
+                    for name, artifact in catalog['artifacts'].items():
+                        if (artifact['candidate_id'] not in selected
+                                and artifact['candidate_id'] != receipt['candidate_id']
+                                and artifact['status'] == 'AWAITING_OWNER_ACCEPTANCE'):
+                            r.disposition(catalog, Path(name), 'SUPERSEDED',
+                                          'fixture-canonical-promotion-authority')
                 r.maintenance(self.destination, reason='CANONICAL_FIXTURE_PROMOTION_COMPLETED')
                 after = self.plan()
                 self.assertTrue(after['protection_context_valid'])
