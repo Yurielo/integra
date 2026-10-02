@@ -163,6 +163,13 @@ class ProtectionAuditTests(unittest.TestCase):
             self.assertIn(blocker, result['blockers'])
         self.assertFalse(result['bootstrap_plan']['can_create_recovery_now'])
         self.assertFalse(result['bootstrap_plan']['capacity_available_for_preflight'])
+        cleanup = audit.resolve(self.registry, self.current, self.proposals, self.packages,
+                                free_bytes=10 * 1024**3,
+                                verifier=lambda path, expected: {**expected,
+                                  'inventory_sha256': self.canonical['historical_receipts'].get(
+                                  expected['candidate_id'], {}).get('record', {}).get('inventory_sha256')},
+                                canonical=self.canonical, for_deletion=True)
+        self.assertEqual(cleanup['authority_state'], 'COMPLETE')
 
     def test_current_rollback_proposed_never_eligible_when_terminal(self):
         for item in self.resolve()['entries']:

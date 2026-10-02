@@ -57,7 +57,8 @@ def catalog_path(archive_root):
 
 def managed_roots():
     base = Path.home() / 'Library/Application Support/Integra'
-    return [base / name for name in ('Build Archive', 'Recovery Archive', 'Build Archive Recovery', 'Candidate Builds')]
+    return [base / name for name in ('Build Archive', 'Recovery Archive', 'Build Archive Recovery',
+                                    'Candidate Builds', 'Validation')]
 
 
 def _empty():
@@ -219,7 +220,7 @@ def _context_valid(context):
             from scripts.candidate_protection_gate import _snapshot
         except ModuleNotFoundError:
             from candidate_protection_gate import _snapshot
-        registry, audit = _snapshot()
+        registry, audit = _snapshot(for_deletion=True)
         selected = registry['selected_survivors']
         base = Path.home() / 'Library/Application Support/Integra'
         expected = {cid: str(base / relative) for cid, relative in selected.items() if relative}
@@ -565,53 +566,51 @@ def reserved_build(root, expected_bytes, *, archive_copy):
 
 def sync_protection(catalog, current_path, proposals, rollback_archive, recovery_archive,
                     pins=None, *, recovery_authority=None, selected_archives=None):
-    """Require fresh canonical CURRENT/open proposals and confirmed durable roles."""
+    """Mirror only byte-verified canonical registry survivors into the owner catalog.
+
+    The catalog records publisher ownership and transaction state; it cannot
+    select protected identities or grant deletion independently of the registry.
+    """
     try:
         from scripts.candidate_archive import verify_archive
-        from scripts.retention_governance import capture_protection
+        from scripts.candidate_protection_gate import _snapshot
+        from scripts import candidate_protection_audit as protection
     except ModuleNotFoundError:
         from candidate_archive import verify_archive
-        from retention_governance import capture_protection
-    rollback = verify_archive(_safe(rollback_archive)); recovery = verify_archive(_safe(recovery_archive))
-    context = capture_protection(_safe(current_path), proposals, rollback, recovery, recovery_authority, pins)
-    selected = dict(selected_archives or {})
-    selected[rollback['candidate_id']] = rollback['archive_path']
-    selected[recovery['candidate_id']] = recovery['archive_path']
+        from candidate_protection_gate import _snapshot
+        import candidate_protection_audit as protection
+    registry, audit = _snapshot(for_deletion=True)
+    base = Path.home() / 'Library/Application Support/Integra'
+    if _safe(current_path) != _safe(protection.ROOT / registry['canonical_current']['path']):
+        raise ValueError('catalog CURRENT differs from canonical registry')
+    if pins is not None and pins != registry['explicit_governance_pins']:
+        raise ValueError('catalog pins differ from canonical registry')
+    selected = {cid: str(base / relative)
+                for cid, relative in registry['selected_survivors'].items() if relative}
+    if (set(selected) != set(registry['selected_survivors'])
+            or (selected_archives is not None and selected_archives != selected)
+            or str(_safe(rollback_archive)) != selected[registry['rollback']['candidate_id']]
+            or registry['recovery'] is None
+            or str(_safe(recovery_archive)) != selected[registry['recovery']['candidate_id']]):
+        raise ValueError('catalog survivor selection differs from canonical registry')
+    context = {'protected': {}, 'inputs': {}, 'selected_archives': selected,
+               'verified_survivors': {}, 'registry_sha256': _sha(protection.REGISTRY)}
     verified = {}
     for cid, name in selected.items():
-        if cid not in context['protected']:
-            raise ValueError('selected survivor has no protected role')
         package = _safe(name)
         if not any(package == root or root in package.parents for root in map(_safe, catalog['roots'])):
             raise ValueError('protected survivor is outside the managed roots')
-        receipt = verify_archive(package, {'candidate_id': cid})
-        for identity in context['protected_identities'].get(cid, []):
-            if any(receipt.get(k) != v for k, v in identity.items() if k in ('candidate_id', 'bundle_digest', 'manifest_digest')):
-                raise ValueError('protected survivor conflicts with a required exact identity tuple')
-        # CURRENT and every open proposal must retain the exact bundle tuple.
-        snapshot = context['authoritative_snapshot']
-        identities = [snapshot['current']['value']['records'][-1]['candidate']]
-        identities += [v['proposal']['value']['candidate'] for v in snapshot['open_prs'].values() if v['proposal']]
-        required = [v for v in identities if v['candidate_id'] == cid]
-        if any(v['bundle_digest'] != receipt['bundle_digest'] for v in required):
-            raise ValueError('protected survivor bundle differs from authoritative identity')
+        rows = [row for row in audit['entries'] if row['path'] == str(package.relative_to(base))]
+        if len(rows) != 1 or rows[0]['classification'] != 'PROTECTED' or not rows[0]['verified_protected_archive']:
+            raise ValueError('canonical protected survivor is not verified')
+        receipt = verify_archive(package, {key: rows[0][key] for key in protection.IDENTITY})
+        context['protected'][cid] = rows[0]['reasons']
         verified[cid] = receipt
         context['inputs'][str(package / 'COMPLETE.json')] = _sha(package / 'COMPLETE.json')
         context['inputs'][str(package / 'inventory.json')] = _sha(package / 'inventory.json')
-    context['selected_archives'] = selected
     context['verified_survivors'] = verified
     context['current_path'] = str(_safe(current_path))
-    context['recovery_authority'] = recovery_authority
     catalog['protection'] = context
-    accepted = {r['candidate']['candidate_id'] for r in context['authoritative_snapshot']['current']['value']['records']}
-    for name, record in catalog['artifacts'].items():
-        cid = record['candidate_id']
-        if cid in accepted and cid not in context['protected']:
-            record['status'] = 'SUPERSEDED'; record['disposition_ref'] = str(current_path) + ':' + _sha(current_path)
-        elif cid in selected and selected[cid] != name and not record.get('pin_ref'):
-            chosen = verified[cid]
-            if all(record[k] == chosen[k] for k in ('candidate_id', 'bundle_digest', 'manifest_digest', 'inventory_sha256')):
-                record['status'] = 'SUPERSEDED'; record['disposition_ref'] = 'EXACT_VERIFIED_SELECTED_SURVIVOR:' + selected[cid]
 
 
 def disposition(catalog, package, status, authority_ref):
@@ -662,46 +661,22 @@ def recover_cleanup(path):
 
 
 def refresh_protection(catalog):
-    """After canonical promotion, mechanically retain exact new role tuples.
-
-    Never promote or assert acceptance. An initial confirmed recovery selector
-    and complete canonical pin authority remain prerequisites. No arbitrary
-    duplicate is selected when there is more than one exact matching archive.
-    """
+    """Refresh the catalog mirror from the registry; no heuristic selection."""
     previous = catalog.get('protection') or {}
-    if not previous.get('current_path') or not previous.get('recovery_authority'):
+    if not previous.get('current_path'):
         return
     try:
-        from scripts.retention_governance import fetch_snapshot
+        from scripts.candidate_protection_gate import _snapshot
     except ModuleNotFoundError:
-        from retention_governance import fetch_snapshot
-    snapshot = fetch_snapshot()
-    if snapshot.get('pin_requirements') is None:
-        raise ValueError('canonical pin registry unavailable; automatic reconciliation blocked')
-    records = snapshot['current']['value']['records']
-    required = [r['candidate'] for r in records[-2:]]
-    required += [v['proposal']['value']['candidate'] for v in snapshot['open_prs'].values()
-                 if v.get('proposal')]
-    recovery = previous['selected_receipts']['CONFIRMED_RECOVERY']
-    required.append(recovery)
-    required += [{'candidate_id': cid} for cid in snapshot['pin_requirements']]
-    selected = {}
-    packages = [(str(p), _metadata(p)) for p in _packages(catalog)]
-    for identity in required:
-        cid = identity['candidate_id']
-        matches = [name for name, (actual, _, error) in packages if not error
-                   and all(actual.get(k) == v for k, v in identity.items()
-                           if k in ('candidate_id', 'bundle_digest', 'manifest_digest'))]
-        prior = previous.get('selected_archives', {}).get(cid)
-        chosen = prior if prior in matches else matches[0] if len(matches) == 1 else None
-        if chosen is None or (cid in selected and selected[cid] != chosen):
-            raise ValueError('missing/ambiguous exact protected survivor: ' + cid)
-        selected[cid] = chosen
+        from candidate_protection_gate import _snapshot
+    registry, _ = _snapshot(for_deletion=True)
+    base = Path.home() / 'Library/Application Support/Integra'
+    selected = {cid: str(base / relative) for cid, relative in registry['selected_survivors'].items() if relative}
     sync_protection(catalog, previous['current_path'], [],
-                    selected[records[-2]['candidate']['candidate_id']],
-                    selected[recovery['candidate_id']], pins=snapshot['pin_requirements'],
-                    recovery_authority=previous['recovery_authority'], selected_archives=selected)
-    emit('PROTECTION_RECONCILED', current_id=snapshot['current']['value']['current_id'],
+                    selected[registry['rollback']['candidate_id']],
+                    selected[registry['recovery']['candidate_id']],
+                    pins=registry['explicit_governance_pins'], selected_archives=selected)
+    emit('PROTECTION_RECONCILED', current_id=registry['canonical_current']['current_id'],
          selected_survivors=selected)
 
 

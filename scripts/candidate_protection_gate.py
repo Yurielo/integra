@@ -16,7 +16,7 @@ except ModuleNotFoundError:
     import candidate_protection_audit as protection
 
 
-def _snapshot() -> tuple[dict, dict]:
+def _snapshot(*, for_deletion: bool = False) -> tuple[dict, dict]:
     registry = json.loads(protection.REGISTRY.read_text())
     if (registry.get('status') != 'PRODUCT_OWNER_AUTHORIZED_ACTIVE'
             or not registry.get('activation_authority_ref')
@@ -28,7 +28,7 @@ def _snapshot() -> tuple[dict, dict]:
     packages = protection.scan_local(registry, base)
     audit = protection.resolve(registry, current, proposals, packages,
                                free_bytes=shutil.disk_usage(base).free,
-                               canonical=canonical)
+                               canonical=canonical, for_deletion=for_deletion)
     if audit['authority_state'] != 'COMPLETE':
         raise ValueError('canonical protection authority is incomplete: ' + ','.join(audit['blockers']))
     return registry, audit
@@ -86,7 +86,7 @@ def require_archive_publication(archive_root: Path, estimated_bytes: int) -> Non
 
 def require_deletion(path: Path) -> None:
     """No deletion without an exact grant and a fresh eligible classification."""
-    registry, audit = _snapshot()
+    registry, audit = _snapshot(for_deletion=True)
     if registry.get('deletion_enabled') is not True:
         raise ValueError('canonical protection disables deletion')
     base = Path.home() / 'Library/Application Support/Integra'

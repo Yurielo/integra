@@ -20,21 +20,24 @@ Owner decision is recorded at Issue #214 comment 5951189263 and its token hash
 is bound in the registry. It accepts `explicit_governance_pins={}` and
 `deletion_authorizations={}` while retaining every UNKNOWN artifact.
 The existing PR #213 lifecycle policy remains the cap/cleanup executor contract.
-Before any later promotion can use this registry, a separately verified
-integration must make its promotion helper consume this authority and reconcile
-its policy's explicit pins with the registry. The registry's
-`promotion_contract_integration_ref` is null until that happens; a standalone
-resolver PASS cannot authorize promotion or create a second active authority.
+Its owned catalog is ownership and transaction evidence only. The registry is
+the sole positive protection and deletion authority. The registry's
+`promotion_contract_integration_ref` remains null while activation is pending;
+a standalone resolver PASS cannot authorize promotion.
 
 The existing promotion helper now requires a fresh canonical registry gate in
 addition to its old proposal, acceptance, exact archive and output checks.
 The low-level archive publisher requires the same gate before creating a new
 managed full copy. `candidate_protection_gate.require_deletion` refuses a target
 without exact path/identity grant and fresh ELIGIBLE classification. The
-Issue #212 deletion executor exists only in the separate unmerged PR #213; it
-does not yet call this gate. Consequently the deletion side is a verified
-fail-closed contract, not an activated executor integration. Neither this PR
-nor the accepted PR #213 proposal may claim complete integration yet.
+Issue #212 owned cleanup journal and lifecycle deletion path are adapted into
+this PR. Planning, package withdrawal and resumed transactions require the
+canonical gate. The journal binds the registry digest, grant, identity and
+canonical GitHub snapshot. Drift stops recovery. The catalog mirror is derived
+from verified registry survivors, not the old policy snapshot. It remains
+dormant while the real registry has no grants and incomplete recovery evidence.
+Cleanup may reduce an over-cap archive or restore a disk reserve; those two
+capacity conditions block new publication, not exact owner-granted deletion.
 
 The local ownership catalog remains evidence of who may *possibly* delete a
 package. It is never protection authority. A package can be ELIGIBLE only when
@@ -43,7 +46,8 @@ fresh complete byte verification, the exact package has a path and identity-boun
 deletion grant, is publisher-owned, terminal, inactive, unpinned, and the
 established cleanup transaction passes. This PR contains no deletion grant.
 The accepted decision also keeps `deletion_enabled=false`; even a forged grant
-cannot yield ELIGIBLE under this registry version.
+cannot yield ELIGIBLE. A future decision would have to bind an exact grant map
+digest and explicitly set `DELETION_ENABLED=true` in its owner token.
 Unknown historical objects remain UNKNOWN even if a cap is full. A matching
 identity without a byte-verified selected survivor remains unverified.
 
@@ -87,8 +91,6 @@ cannot produce ELIGIBLE. Candidate archive verification is the existing
 byte evidence. Interruption before an immutable COMPLETE publication leaves
 no qualifying archive, and subsequent dry-run remains BLOCKED.
 
-The Issue #212 retention implementation remains in PR #213. This separate PR
-does not edit PR #213, its accepted proposal, or its Quality Gate. Integration
-with the lifecycle executor is a later governed step after both PRs and
-authority decisions are resolved; the resolver's output is deliberately not
-a deletion command.
+PR #213 and its accepted proposal remain unchanged. The transferred executor
+is independently reviewable in PR #215; no real cleanup, publication, promotion
+or CURRENT change occurred. Both PRs remain unmerged.

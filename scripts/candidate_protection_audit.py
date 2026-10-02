@@ -302,7 +302,8 @@ def _validate_registry(registry: dict, current: dict, proposals: dict[int, dict]
 
 
 def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages: list[dict],
-            *, free_bytes: int, verifier=verify_archive, canonical: dict | None = None) -> dict:
+            *, free_bytes: int, verifier=verify_archive, canonical: dict | None = None,
+            for_deletion: bool = False) -> dict:
     """Classify only from exact authority and evidence; never mutate a package."""
     blockers: list[str] = []
     if canonical is None or canonical.get('current_sha256') != registry['canonical_current']['sha256']:
@@ -385,11 +386,11 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
         blockers.append('UNKNOWN_ALLOCATION')
     total = sum(item.get('allocated_bytes', 0) for item in rows)
     limits = registry['limits']
-    if len(rows) > limits['max_full_copies']:
+    if not for_deletion and len(rows) > limits['max_full_copies']:
         blockers.append('ARCHIVE_COPY_CAP_EXCEEDED')
-    if total > limits['max_attributed_bytes']:
+    if not for_deletion and total > limits['max_attributed_bytes']:
         blockers.append('ARCHIVE_BYTE_CAP_EXCEEDED')
-    if free_bytes < limits['minimum_free_after_reservations']:
+    if not for_deletion and free_bytes < limits['minimum_free_after_reservations']:
         blockers.append('DISK_RESERVE_BELOW_FLOOR')
     for gap in registry.get('historical_gaps', []):
         if gap.get('observed_state') != 'MISSING_WITH_AVAILABLE_EVIDENCE':
