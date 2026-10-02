@@ -8,9 +8,10 @@ new baseline.
 
 `state/candidate_protection_registry_v1.json` is the proposed machine-readable
 root for protection decisions. It binds the SHA-256 of the canonical `main`
-CURRENT record, exact Candidate identity tuples, the exact PR #213 proposal
-head, explicit provenance pins, and selected rollback/recovery roles. A
-resolver must re-read its referenced GitHub/main and PR-head bytes; it may not
+CURRENT record, exact Candidate identity tuples, every open proposal head
+(including PR #213), explicit provenance pins, and selected rollback/recovery
+roles. The resolver enumerates all open PR proposals and blocks on unregistered
+proposals or head drift. It must re-read GitHub/main and PR-head bytes; it may not
 trust a filename, local catalog entry, historical receipt, or unmerged policy
 file alone. A changed reference, missing pin enumeration, missing archive,
 conflicting identity, or incomplete registry returns BLOCKED. The registry is
@@ -19,9 +20,11 @@ not active merely because this PR exists or its CI passes.
 The local ownership catalog remains evidence of who may *possibly* delete a
 package. It is never protection authority. A package can be ELIGIBLE only when
 the registry is owner-authorized and complete, all protected survivors have
-fresh complete byte verification, the exact package is publisher-owned,
-terminal, inactive, unpinned, and the established cleanup transaction passes.
-Unknown historical objects remain UNKNOWN even if a cap is full.
+fresh complete byte verification, the exact package has a path and identity-bound
+deletion grant, is publisher-owned, terminal, inactive, unpinned, and the
+established cleanup transaction passes. This PR contains no deletion grant.
+Unknown historical objects remain UNKNOWN even if a cap is full. A matching
+identity without a byte-verified selected survivor remains unverified.
 
 ## Recovery gap and bootstrap
 
@@ -35,14 +38,16 @@ for the missing CURRENT archive.
 
 A recovery archive may be created only from an exact source app with matching
 embedded manifest, Candidate ID, bundle digest, canonical historical manifest
-SHA-256 and a complete copied-file inventory. Creation must be immutable,
+SHA-256 and the historical receipt's full-byte inventory digest. The read-only
+`verify_exact_recovery_source` preflight recomputes that digest, including bytes
+excluded from the bundle tree such as `.pyc`. Creation must be immutable,
 no-replace, under both archive caps and the disk reserve, and must not prune
 existing packages. On this Mac, that operation is BLOCKED because no exact
 source is established and all eight full-copy slots are occupied.
 
 If exact bytes cannot be found, the historical status is
 `MISSING_HISTORICAL_RECOVERY_ARTIFACT`; no new archive or receipt may be
-fabricated. A bootstrap dry-run records the old CURRENT/rollback gap, all
+fabricated. The machine-readable `bootstrap_plan` records the old CURRENT/rollback gap, all
 UNKNOWN copies, the proposed next Candidate, and the remaining physical
 headroom. It does not turn the old baseline into a recovered one or write a
 successor CURRENT. Any transition that deliberately accepts a recovery gap
