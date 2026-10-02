@@ -1,0 +1,33 @@
+{
+  "issue": 212,
+  "source": "9ef8d33b354517ab064231e023dc9bef638622cd",
+  "before_free": 72999845888,
+  "native_runs": [
+    {
+      "label": "archived-native",
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/private/tmp/integra-issue-212/scripts/build_macos_candidate.py",
+        "--base",
+        "/private/tmp/integra-212-native-9fd6916b03fb",
+        "--purpose",
+        "issue212-archived-native",
+        "--timeout-seconds",
+        "1800",
+        "--archive-root",
+        "/Users/yurielokhin/Library/Application Support/Integra/Validation/integra-212-native-9fd6916b03fb"
+      ],
+      "exit": 1,
+      "seconds": 64.01,
+      "log": "/private/tmp/integra-212-archived-native.log",
+      "remaining_owned_roots": [],
+      "error_tail": "ue-212/scripts/validate_review_wheel_cache.py\", line 80, in <module>\n    main()\n    ~~~~^^\n  File \"/private/tmp/integra-issue-212/scripts/validate_review_wheel_cache.py\", line 75, in main\n    value = validate(args.cache, args.requirements, args.manifest)\n  File \"/private/tmp/integra-issue-212/scripts/validate_review_wheel_cache.py\", line 48, in validate\n    for wheel in sorted(cache.iterdir()):\n                        ~~~~~~~~~~~~~^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py\", line 836, in iterdir\n    with os.scandir(root_dir) as scandir_it:\n         ~~~~~~~~~~^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: '/private/tmp/integra-issue-212/.runtime-components/review-wheels'\nTraceback (most recent call last):\n  File \"/private/tmp/integra-issue-212/scripts/package_review_runtime.py\", line 47, in <module>\n    main()\n    ~~~~^^\n  File \"/private/tmp/integra-issue-212/scripts/package_review_runtime.py\", line 36, in main\n    subprocess.run([sys.executable, str(root / \"scripts/validate_review_wheel_cache.py\"), str(wheels),\n    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                    \"--manifest\", str(root / \"state/review_runtime_cache_v1.json\")], check=True)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py\", line 578, in run\n    raise CalledProcessError(retcode, process.args,\n                             output=stdout, stderr=stderr)\nsubprocess.CalledProcessError: Command '['/opt/homebrew/opt/python@3.14/bin/python3.14', '/private/tmp/integra-issue-212/scripts/validate_review_wheel_cache.py', '/private/tmp/integra-issue-212/.runtime-components/review-wheels', '--manifest', '/private/tmp/integra-issue-212/state/review_runtime_cache_v1.json']' returned non-zero exit status 1.\nINTEGRA_MACOS_BUILD: FAIL at line 133\nTraceback (most recent call last):\n  File \"/private/tmp/integra-issue-212/scripts/build_macos_candidate.py\", line 107, in <module>\n    raise SystemExit(main())\n                     ~~~~^^\n  File \"/private/tmp/integra-issue-212/scripts/build_macos_candidate.py\", line 87, in main\n    return _build_inside_workspace(args.archive_root, args.expected_bytes,\n                                   native_tests=args.native_tests, package_tests=args.package_tests)\n  File \"/private/tmp/integra-issue-212/scripts/build_macos_candidate.py\", line 40, in _build_inside_workspace\n    return _execute_build_inside_workspace(archive_root)\n  File \"/private/tmp/integra-issue-212/scripts/build_macos_candidate.py\", line 52, in _execute_build_inside_workspace\n    subprocess.run([str(ROOT / \"scripts\" / \"build_macos_app.sh\"), str(app.parent)], check=True)\n    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py\", line 578, in run\n    raise CalledProcessError(retcode, process.args,\n                             output=stdout, stderr=stderr)\nsubprocess.CalledProcessError: Command '['/private/tmp/integra-issue-212/scripts/build_macos_app.sh', '/private/tmp/integra-212-native-9fd6916b03fb/integra-owned-issue212-archived-native-7_hstmzd/candidate']' returned non-zero exit status 1.\n{\"artifact_type\": \"integra.lifecycle_event\", \"at\": \"2026-10-02T08:37:22.225120+00:00\", \"event\": \"WORKSPACE_CLEANUP_ATTEMPTED\", \"reason\": \"RUN_FINISHED\", \"root\": \"/private/tmp/integra-212-native-9fd6916b03fb/integra-owned-issue212-archived-native-7_hstmzd\"}\n{\"artifact_type\": \"integra.lifecycle_event\", \"at\": \"2026-10-02T08:37:22.227257+00:00\", \"event\": \"WORKSPACE_CLEANUP_COMPLETED\", \"reason\": \"RUN_FINISHED\", \"root\": \"/private/tmp/integra-212-native-9fd6916b03fb/integra-owned-issue212-archived-native-7_hstmzd\"}\n"
+    }
+  ],
+  "new_archive_root": "/Users/yurielokhin/Library/Application Support/Integra/Validation/integra-212-native-9fd6916b03fb",
+  "base": "/private/tmp/integra-212-native-9fd6916b03fb",
+  "remaining_owned_roots_after": [],
+  "after_free": 73005277184,
+  "temporary_inputs_removed": true
+}

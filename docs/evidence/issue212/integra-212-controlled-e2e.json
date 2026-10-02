@@ -1,0 +1,2945 @@
+{
+  "issue": 212,
+  "validation": "CONTROLLED_SYNTHETIC_FILESYSTEM_LIFECYCLE",
+  "production_product_acceptance": false,
+  "real_user_artifacts_modified": false,
+  "adapter_boundaries": [
+    "isolated catalog/root/volume-ledger paths",
+    "synthetic canonical GitHub",
+    "inactive fixture archive probe",
+    "synthetic app payload",
+    "simulated 64-GiB free-space probe"
+  ],
+  "policy": {
+    "copies": 8,
+    "bytes": 21474836480,
+    "reserve": 16106127360
+  },
+  "before_bytes": 16891904,
+  "after_bytes": 21114880,
+  "measurements": [
+    {
+      "iteration": 1,
+      "archive_count_during": 5,
+      "archive_count_after": 5,
+      "archive_allocated_after": 21114880,
+      "tmp_owned_count_after": 0
+    },
+    {
+      "iteration": 2,
+      "archive_count_during": 6,
+      "archive_count_after": 5,
+      "archive_allocated_after": 21114880,
+      "tmp_owned_count_after": 0
+    },
+    {
+      "iteration": 3,
+      "archive_count_during": 6,
+      "archive_count_after": 5,
+      "archive_allocated_after": 21114880,
+      "tmp_owned_count_after": 0
+    },
+    {
+      "iteration": 4,
+      "archive_count_during": 6,
+      "archive_count_after": 5,
+      "archive_allocated_after": 21114880,
+      "tmp_owned_count_after": 0
+    },
+    {
+      "iteration": 5,
+      "archive_count_during": 6,
+      "archive_count_after": 5,
+      "archive_allocated_after": 21114880,
+      "tmp_owned_count_after": 0
+    },
+    {
+      "iteration": 6,
+      "archive_count_during": 6,
+      "archive_count_after": 5,
+      "archive_allocated_after": 21114880,
+      "tmp_owned_count_after": 0
+    },
+    {
+      "iteration": 7,
+      "archive_count_during": 6,
+      "archive_count_after": 5,
+      "archive_allocated_after": 21114880,
+      "tmp_owned_count_after": 0
+    },
+    {
+      "iteration": 8,
+      "archive_count_during": 6,
+      "archive_count_after": 5,
+      "archive_allocated_after": 21114880,
+      "tmp_owned_count_after": 0
+    },
+    {
+      "iteration": 9,
+      "archive_count_during": 6,
+      "archive_count_after": 5,
+      "archive_allocated_after": 21114880,
+      "tmp_owned_count_after": 0
+    },
+    {
+      "iteration": 10,
+      "archive_count_during": 6,
+      "archive_count_after": 5,
+      "archive_allocated_after": 21114880,
+      "tmp_owned_count_after": 0
+    },
+    {
+      "iteration": 11,
+      "archive_count_during": 6,
+      "archive_count_after": 5,
+      "archive_allocated_after": 21114880,
+      "tmp_owned_count_after": 0
+    },
+    {
+      "iteration": 12,
+      "archive_count_during": 6,
+      "archive_count_after": 5,
+      "archive_allocated_after": 21114880,
+      "tmp_owned_count_after": 0
+    }
+  ],
+  "retained": [
+    {
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "candidate_id": "candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb",
+      "bundle_digest": "b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "manifest_digest": "d14dbfae52898686a62470748fa358342dab4d70d3cb070c49c6fe4aa2b6c081",
+      "allocated_bytes": 4222976,
+      "classification": "PROTECTED",
+      "protected_reasons": [
+        "CONFIRMED_RECOVERY",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "ownership": "PUBLISHER_BOUND",
+      "lifecycle": "AWAITING_OWNER_ACCEPTANCE",
+      "metadata_error": null,
+      "device": 16777233,
+      "inode": 44295281,
+      "historical": false
+    },
+    {
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "candidate_id": "candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f",
+      "bundle_digest": "b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "manifest_digest": "9d206bb34358346b3ba419960eb0efe05cba4e8215eb4b1373d3c22377a40f0c",
+      "allocated_bytes": 4222976,
+      "classification": "PROTECTED",
+      "protected_reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "ownership": "PUBLISHER_BOUND",
+      "lifecycle": "AWAITING_OWNER_ACCEPTANCE",
+      "metadata_error": null,
+      "device": 16777233,
+      "inode": 44296039,
+      "historical": false
+    },
+    {
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-29ddaa5ef2ec209a0c6adab86a44c1c5e5599603032e2c76177d37d9175081e7/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "candidate_id": "candidate-v1-29ddaa5ef2ec209a0c6adab86a44c1c5e5599603032e2c76177d37d9175081e7",
+      "bundle_digest": "b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "manifest_digest": "6ff501c1d60e00079919de8c00dfd2d6f007e213f1bc9b7c54dccac95c36e3ca",
+      "allocated_bytes": 4222976,
+      "classification": "PROTECTED",
+      "protected_reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "ownership": "PUBLISHER_BOUND",
+      "lifecycle": "AWAITING_OWNER_ACCEPTANCE",
+      "metadata_error": null,
+      "device": 16777233,
+      "inode": 44305897,
+      "historical": false
+    },
+    {
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4fa38ac19f0c1bca815f92ad85897a59b10226270dca3ed80caa1d3080b12cff/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "candidate_id": "candidate-v1-4fa38ac19f0c1bca815f92ad85897a59b10226270dca3ed80caa1d3080b12cff",
+      "bundle_digest": "b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "manifest_digest": "793577d17231ee5022457612b5c1e4da481e0d06646ca5b2f6695a83e33826c8",
+      "allocated_bytes": 4222976,
+      "classification": "PROTECTED",
+      "protected_reasons": [
+        "CONFIRMED_ROLLBACK",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "ownership": "PUBLISHER_BOUND",
+      "lifecycle": "AWAITING_OWNER_ACCEPTANCE",
+      "metadata_error": null,
+      "device": 16777233,
+      "inode": 44304397,
+      "historical": false
+    },
+    {
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "candidate_id": "candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958",
+      "bundle_digest": "b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "manifest_digest": "78d8fff01b41bebc454f87468ac1916f44bba44b25a571bcd26f7bddfb25829b",
+      "allocated_bytes": 4222976,
+      "classification": "PROTECTED",
+      "protected_reasons": [
+        "EXPLICIT_GOVERNANCE_PROVENANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "ownership": "PUBLISHER_BOUND",
+      "lifecycle": "AWAITING_OWNER_ACCEPTANCE",
+      "metadata_error": null,
+      "device": 16777233,
+      "inode": 44295754,
+      "historical": false
+    }
+  ],
+  "events": [
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.713688+00:00",
+      "catalog": "/Users/yurielokhin/.integra-archive-test-cykizb12/retention/catalog.json",
+      "event": "CLEANUP_ATTEMPTED",
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.741958+00:00",
+      "current_id": "candidate-v1-dd1468aa7af8c6abdb4f3d6ffa44ad45a76c82f8e88c924bab2b78bbc4704135",
+      "event": "PROTECTION_RECONCILED",
+      "selected_survivors": {
+        "candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-dd1468aa7af8c6abdb4f3d6ffa44ad45a76c82f8e88c924bab2b78bbc4704135": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-dd1468aa7af8c6abdb4f3d6ffa44ad45a76c82f8e88c924bab2b78bbc4704135/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      }
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.746184+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_ROLLBACK",
+        "CONFIRMED_RECOVERY",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.746192+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.746196+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "EXPLICIT_GOVERNANCE_PROVENANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.746201+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-dd1468aa7af8c6abdb4f3d6ffa44ad45a76c82f8e88c924bab2b78bbc4704135/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.746206+00:00",
+      "event": "CLEANUP_SKIPPED",
+      "reason": "NO_ELIGIBLE_TERMINAL_COPIES",
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.757432+00:00",
+      "event": "WORKSPACE_CREATED",
+      "expected_bytes": 8388608,
+      "purpose": "issue212-cycle",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-hr6le3fy"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.802699+00:00",
+      "event": "WORKSPACE_CREATED",
+      "expected_bytes": 5308416,
+      "purpose": "archive-stage",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-5pkwclbf"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.829785+00:00",
+      "candidate_id": "candidate-v1-31d612e320226e8eb937bb2fe67613a37bfb8a3e40e0d488d59cb1663dc59012",
+      "event": "CANDIDATE_CREATED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-31d612e320226e8eb937bb2fe67613a37bfb8a3e40e0d488d59cb1663dc59012/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "protected_reason": "AWAITING_OWNER_ACCEPTANCE"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.830080+00:00",
+      "event": "WORKSPACE_CLEANUP_ATTEMPTED",
+      "reason": "ARCHIVE_FINISHED",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-5pkwclbf"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.830436+00:00",
+      "event": "WORKSPACE_CLEANUP_COMPLETED",
+      "reason": "ARCHIVE_FINISHED",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-5pkwclbf"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.835804+00:00",
+      "event": "WORKSPACE_CLEANUP_ATTEMPTED",
+      "reason": "CONTROLLED_CYCLE_COMPLETE",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-hr6le3fy"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.836576+00:00",
+      "event": "WORKSPACE_CLEANUP_COMPLETED",
+      "reason": "CONTROLLED_CYCLE_COMPLETE",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-hr6le3fy"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.836661+00:00",
+      "catalog": "/Users/yurielokhin/.integra-archive-test-cykizb12/retention/catalog.json",
+      "event": "CLEANUP_ATTEMPTED",
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.869889+00:00",
+      "current_id": "candidate-v1-31d612e320226e8eb937bb2fe67613a37bfb8a3e40e0d488d59cb1663dc59012",
+      "event": "PROTECTION_RECONCILED",
+      "selected_survivors": {
+        "candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-31d612e320226e8eb937bb2fe67613a37bfb8a3e40e0d488d59cb1663dc59012": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-31d612e320226e8eb937bb2fe67613a37bfb8a3e40e0d488d59cb1663dc59012/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-dd1468aa7af8c6abdb4f3d6ffa44ad45a76c82f8e88c924bab2b78bbc4704135": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-dd1468aa7af8c6abdb4f3d6ffa44ad45a76c82f8e88c924bab2b78bbc4704135/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      }
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.874979+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_RECOVERY",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.874987+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.874991+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-31d612e320226e8eb937bb2fe67613a37bfb8a3e40e0d488d59cb1663dc59012/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.874995+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "EXPLICIT_GOVERNANCE_PROVENANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.874998+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-dd1468aa7af8c6abdb4f3d6ffa44ad45a76c82f8e88c924bab2b78bbc4704135/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_ROLLBACK",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.875002+00:00",
+      "event": "CLEANUP_SKIPPED",
+      "reason": "NO_ELIGIBLE_TERMINAL_COPIES",
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.892429+00:00",
+      "catalog": "/Users/yurielokhin/.integra-archive-test-cykizb12/retention/catalog.json",
+      "event": "CLEANUP_ATTEMPTED",
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.925682+00:00",
+      "current_id": "candidate-v1-31d612e320226e8eb937bb2fe67613a37bfb8a3e40e0d488d59cb1663dc59012",
+      "event": "PROTECTION_RECONCILED",
+      "selected_survivors": {
+        "candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-31d612e320226e8eb937bb2fe67613a37bfb8a3e40e0d488d59cb1663dc59012": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-31d612e320226e8eb937bb2fe67613a37bfb8a3e40e0d488d59cb1663dc59012/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-dd1468aa7af8c6abdb4f3d6ffa44ad45a76c82f8e88c924bab2b78bbc4704135": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-dd1468aa7af8c6abdb4f3d6ffa44ad45a76c82f8e88c924bab2b78bbc4704135/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      }
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.930574+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_RECOVERY",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.930586+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.930590+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-31d612e320226e8eb937bb2fe67613a37bfb8a3e40e0d488d59cb1663dc59012/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.930594+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "EXPLICIT_GOVERNANCE_PROVENANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.930598+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-dd1468aa7af8c6abdb4f3d6ffa44ad45a76c82f8e88c924bab2b78bbc4704135/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_ROLLBACK",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.930601+00:00",
+      "event": "CLEANUP_SKIPPED",
+      "reason": "NO_ELIGIBLE_TERMINAL_COPIES",
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.942642+00:00",
+      "event": "WORKSPACE_CREATED",
+      "expected_bytes": 8388608,
+      "purpose": "issue212-cycle",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-0wn14v4u"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:06.988486+00:00",
+      "event": "WORKSPACE_CREATED",
+      "expected_bytes": 5308416,
+      "purpose": "archive-stage",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-9g7lk_ga"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.015645+00:00",
+      "candidate_id": "candidate-v1-771ae66ed98012b099749e896090bf5d9593eda54f101d37601798b997c7619b",
+      "event": "CANDIDATE_CREATED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-771ae66ed98012b099749e896090bf5d9593eda54f101d37601798b997c7619b/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "protected_reason": "AWAITING_OWNER_ACCEPTANCE"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.015947+00:00",
+      "event": "WORKSPACE_CLEANUP_ATTEMPTED",
+      "reason": "ARCHIVE_FINISHED",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-9g7lk_ga"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.016303+00:00",
+      "event": "WORKSPACE_CLEANUP_COMPLETED",
+      "reason": "ARCHIVE_FINISHED",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-9g7lk_ga"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.023202+00:00",
+      "event": "WORKSPACE_CLEANUP_ATTEMPTED",
+      "reason": "CONTROLLED_CYCLE_COMPLETE",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-0wn14v4u"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.024223+00:00",
+      "event": "WORKSPACE_CLEANUP_COMPLETED",
+      "reason": "CONTROLLED_CYCLE_COMPLETE",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-0wn14v4u"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.024305+00:00",
+      "catalog": "/Users/yurielokhin/.integra-archive-test-cykizb12/retention/catalog.json",
+      "event": "CLEANUP_ATTEMPTED",
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.057556+00:00",
+      "current_id": "candidate-v1-771ae66ed98012b099749e896090bf5d9593eda54f101d37601798b997c7619b",
+      "event": "PROTECTION_RECONCILED",
+      "selected_survivors": {
+        "candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-31d612e320226e8eb937bb2fe67613a37bfb8a3e40e0d488d59cb1663dc59012": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-31d612e320226e8eb937bb2fe67613a37bfb8a3e40e0d488d59cb1663dc59012/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-771ae66ed98012b099749e896090bf5d9593eda54f101d37601798b997c7619b": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-771ae66ed98012b099749e896090bf5d9593eda54f101d37601798b997c7619b/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      }
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.062995+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_RECOVERY",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.063004+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.063008+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-31d612e320226e8eb937bb2fe67613a37bfb8a3e40e0d488d59cb1663dc59012/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_ROLLBACK",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.063016+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-771ae66ed98012b099749e896090bf5d9593eda54f101d37601798b997c7619b/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.063020+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "EXPLICIT_GOVERNANCE_PROVENANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.099272+00:00",
+      "attributed_bytes": 4222976,
+      "event": "CLEANUP_COMPLETED",
+      "observed_free_space_delta": 0,
+      "paths": [
+        "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-dd1468aa7af8c6abdb4f3d6ffa44ad45a76c82f8e88c924bab2b78bbc4704135/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      ],
+      "physical_reclaim": "NOT_EXCLUSIVE_APFS_PROOF",
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.116728+00:00",
+      "catalog": "/Users/yurielokhin/.integra-archive-test-cykizb12/retention/catalog.json",
+      "event": "CLEANUP_ATTEMPTED",
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.150850+00:00",
+      "current_id": "candidate-v1-771ae66ed98012b099749e896090bf5d9593eda54f101d37601798b997c7619b",
+      "event": "PROTECTION_RECONCILED",
+      "selected_survivors": {
+        "candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-31d612e320226e8eb937bb2fe67613a37bfb8a3e40e0d488d59cb1663dc59012": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-31d612e320226e8eb937bb2fe67613a37bfb8a3e40e0d488d59cb1663dc59012/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-771ae66ed98012b099749e896090bf5d9593eda54f101d37601798b997c7619b": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-771ae66ed98012b099749e896090bf5d9593eda54f101d37601798b997c7619b/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      }
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.156034+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_RECOVERY",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.156042+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.156047+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-31d612e320226e8eb937bb2fe67613a37bfb8a3e40e0d488d59cb1663dc59012/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_ROLLBACK",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.156050+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-771ae66ed98012b099749e896090bf5d9593eda54f101d37601798b997c7619b/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.156059+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "EXPLICIT_GOVERNANCE_PROVENANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.156063+00:00",
+      "event": "CLEANUP_SKIPPED",
+      "reason": "NO_ELIGIBLE_TERMINAL_COPIES",
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.168739+00:00",
+      "event": "WORKSPACE_CREATED",
+      "expected_bytes": 8388608,
+      "purpose": "issue212-cycle",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-sf9pg_w5"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.218126+00:00",
+      "event": "WORKSPACE_CREATED",
+      "expected_bytes": 5308416,
+      "purpose": "archive-stage",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-dx0i3pcr"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.246784+00:00",
+      "candidate_id": "candidate-v1-4146bc0b494bcac0cdc55b49105e56c74098f8a3dd70c065a727bd7c66faeeeb",
+      "event": "CANDIDATE_CREATED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4146bc0b494bcac0cdc55b49105e56c74098f8a3dd70c065a727bd7c66faeeeb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "protected_reason": "AWAITING_OWNER_ACCEPTANCE"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.247082+00:00",
+      "event": "WORKSPACE_CLEANUP_ATTEMPTED",
+      "reason": "ARCHIVE_FINISHED",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-dx0i3pcr"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.247450+00:00",
+      "event": "WORKSPACE_CLEANUP_COMPLETED",
+      "reason": "ARCHIVE_FINISHED",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-dx0i3pcr"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.253526+00:00",
+      "event": "WORKSPACE_CLEANUP_ATTEMPTED",
+      "reason": "CONTROLLED_CYCLE_COMPLETE",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-sf9pg_w5"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.254431+00:00",
+      "event": "WORKSPACE_CLEANUP_COMPLETED",
+      "reason": "CONTROLLED_CYCLE_COMPLETE",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-sf9pg_w5"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.254519+00:00",
+      "catalog": "/Users/yurielokhin/.integra-archive-test-cykizb12/retention/catalog.json",
+      "event": "CLEANUP_ATTEMPTED",
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.287774+00:00",
+      "current_id": "candidate-v1-4146bc0b494bcac0cdc55b49105e56c74098f8a3dd70c065a727bd7c66faeeeb",
+      "event": "PROTECTION_RECONCILED",
+      "selected_survivors": {
+        "candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-4146bc0b494bcac0cdc55b49105e56c74098f8a3dd70c065a727bd7c66faeeeb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4146bc0b494bcac0cdc55b49105e56c74098f8a3dd70c065a727bd7c66faeeeb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-771ae66ed98012b099749e896090bf5d9593eda54f101d37601798b997c7619b": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-771ae66ed98012b099749e896090bf5d9593eda54f101d37601798b997c7619b/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      }
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.293398+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_RECOVERY",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.293409+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.293413+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4146bc0b494bcac0cdc55b49105e56c74098f8a3dd70c065a727bd7c66faeeeb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.293417+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-771ae66ed98012b099749e896090bf5d9593eda54f101d37601798b997c7619b/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_ROLLBACK",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.293423+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "EXPLICIT_GOVERNANCE_PROVENANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.331110+00:00",
+      "attributed_bytes": 4222976,
+      "event": "CLEANUP_COMPLETED",
+      "observed_free_space_delta": 0,
+      "paths": [
+        "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-31d612e320226e8eb937bb2fe67613a37bfb8a3e40e0d488d59cb1663dc59012/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      ],
+      "physical_reclaim": "NOT_EXCLUSIVE_APFS_PROOF",
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.348606+00:00",
+      "catalog": "/Users/yurielokhin/.integra-archive-test-cykizb12/retention/catalog.json",
+      "event": "CLEANUP_ATTEMPTED",
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.380752+00:00",
+      "current_id": "candidate-v1-4146bc0b494bcac0cdc55b49105e56c74098f8a3dd70c065a727bd7c66faeeeb",
+      "event": "PROTECTION_RECONCILED",
+      "selected_survivors": {
+        "candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-4146bc0b494bcac0cdc55b49105e56c74098f8a3dd70c065a727bd7c66faeeeb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4146bc0b494bcac0cdc55b49105e56c74098f8a3dd70c065a727bd7c66faeeeb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-771ae66ed98012b099749e896090bf5d9593eda54f101d37601798b997c7619b": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-771ae66ed98012b099749e896090bf5d9593eda54f101d37601798b997c7619b/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      }
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.385440+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_RECOVERY",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.385448+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.385452+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4146bc0b494bcac0cdc55b49105e56c74098f8a3dd70c065a727bd7c66faeeeb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.385456+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-771ae66ed98012b099749e896090bf5d9593eda54f101d37601798b997c7619b/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_ROLLBACK",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.385459+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "EXPLICIT_GOVERNANCE_PROVENANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.385462+00:00",
+      "event": "CLEANUP_SKIPPED",
+      "reason": "NO_ELIGIBLE_TERMINAL_COPIES",
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.398074+00:00",
+      "event": "WORKSPACE_CREATED",
+      "expected_bytes": 8388608,
+      "purpose": "issue212-cycle",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-vfytk4is"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.445215+00:00",
+      "event": "WORKSPACE_CREATED",
+      "expected_bytes": 5308416,
+      "purpose": "archive-stage",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-qh3xdgh7"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.472070+00:00",
+      "candidate_id": "candidate-v1-4f5456c276333dc0f185096bf5b4be90e1f5bb30b3423110b587f16c51a75e0b",
+      "event": "CANDIDATE_CREATED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4f5456c276333dc0f185096bf5b4be90e1f5bb30b3423110b587f16c51a75e0b/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "protected_reason": "AWAITING_OWNER_ACCEPTANCE"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.472337+00:00",
+      "event": "WORKSPACE_CLEANUP_ATTEMPTED",
+      "reason": "ARCHIVE_FINISHED",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-qh3xdgh7"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.472679+00:00",
+      "event": "WORKSPACE_CLEANUP_COMPLETED",
+      "reason": "ARCHIVE_FINISHED",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-qh3xdgh7"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.478852+00:00",
+      "event": "WORKSPACE_CLEANUP_ATTEMPTED",
+      "reason": "CONTROLLED_CYCLE_COMPLETE",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-vfytk4is"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.479598+00:00",
+      "event": "WORKSPACE_CLEANUP_COMPLETED",
+      "reason": "CONTROLLED_CYCLE_COMPLETE",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-vfytk4is"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.479678+00:00",
+      "catalog": "/Users/yurielokhin/.integra-archive-test-cykizb12/retention/catalog.json",
+      "event": "CLEANUP_ATTEMPTED",
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.513195+00:00",
+      "current_id": "candidate-v1-4f5456c276333dc0f185096bf5b4be90e1f5bb30b3423110b587f16c51a75e0b",
+      "event": "PROTECTION_RECONCILED",
+      "selected_survivors": {
+        "candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-4146bc0b494bcac0cdc55b49105e56c74098f8a3dd70c065a727bd7c66faeeeb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4146bc0b494bcac0cdc55b49105e56c74098f8a3dd70c065a727bd7c66faeeeb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-4f5456c276333dc0f185096bf5b4be90e1f5bb30b3423110b587f16c51a75e0b": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4f5456c276333dc0f185096bf5b4be90e1f5bb30b3423110b587f16c51a75e0b/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      }
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.518760+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_RECOVERY",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.518769+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.518773+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4146bc0b494bcac0cdc55b49105e56c74098f8a3dd70c065a727bd7c66faeeeb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_ROLLBACK",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.518777+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4f5456c276333dc0f185096bf5b4be90e1f5bb30b3423110b587f16c51a75e0b/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.518780+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "EXPLICIT_GOVERNANCE_PROVENANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.566068+00:00",
+      "attributed_bytes": 4222976,
+      "event": "CLEANUP_COMPLETED",
+      "observed_free_space_delta": 0,
+      "paths": [
+        "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-771ae66ed98012b099749e896090bf5d9593eda54f101d37601798b997c7619b/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      ],
+      "physical_reclaim": "NOT_EXCLUSIVE_APFS_PROOF",
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.583568+00:00",
+      "catalog": "/Users/yurielokhin/.integra-archive-test-cykizb12/retention/catalog.json",
+      "event": "CLEANUP_ATTEMPTED",
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.615577+00:00",
+      "current_id": "candidate-v1-4f5456c276333dc0f185096bf5b4be90e1f5bb30b3423110b587f16c51a75e0b",
+      "event": "PROTECTION_RECONCILED",
+      "selected_survivors": {
+        "candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-4146bc0b494bcac0cdc55b49105e56c74098f8a3dd70c065a727bd7c66faeeeb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4146bc0b494bcac0cdc55b49105e56c74098f8a3dd70c065a727bd7c66faeeeb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-4f5456c276333dc0f185096bf5b4be90e1f5bb30b3423110b587f16c51a75e0b": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4f5456c276333dc0f185096bf5b4be90e1f5bb30b3423110b587f16c51a75e0b/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      }
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.620468+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_RECOVERY",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.620476+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.620480+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4146bc0b494bcac0cdc55b49105e56c74098f8a3dd70c065a727bd7c66faeeeb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_ROLLBACK",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.620484+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4f5456c276333dc0f185096bf5b4be90e1f5bb30b3423110b587f16c51a75e0b/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.620487+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "EXPLICIT_GOVERNANCE_PROVENANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.620490+00:00",
+      "event": "CLEANUP_SKIPPED",
+      "reason": "NO_ELIGIBLE_TERMINAL_COPIES",
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.632569+00:00",
+      "event": "WORKSPACE_CREATED",
+      "expected_bytes": 8388608,
+      "purpose": "issue212-cycle",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-ayhdppkn"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.677766+00:00",
+      "event": "WORKSPACE_CREATED",
+      "expected_bytes": 5308416,
+      "purpose": "archive-stage",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-b53e1nu4"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.707026+00:00",
+      "candidate_id": "candidate-v1-e06176eddc706e019532917b3fb0b0ca40a04b267fb42307ddbc006aabb84c00",
+      "event": "CANDIDATE_CREATED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-e06176eddc706e019532917b3fb0b0ca40a04b267fb42307ddbc006aabb84c00/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "protected_reason": "AWAITING_OWNER_ACCEPTANCE"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.707295+00:00",
+      "event": "WORKSPACE_CLEANUP_ATTEMPTED",
+      "reason": "ARCHIVE_FINISHED",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-b53e1nu4"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.707680+00:00",
+      "event": "WORKSPACE_CLEANUP_COMPLETED",
+      "reason": "ARCHIVE_FINISHED",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-b53e1nu4"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.714259+00:00",
+      "event": "WORKSPACE_CLEANUP_ATTEMPTED",
+      "reason": "CONTROLLED_CYCLE_COMPLETE",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-ayhdppkn"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.715181+00:00",
+      "event": "WORKSPACE_CLEANUP_COMPLETED",
+      "reason": "CONTROLLED_CYCLE_COMPLETE",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-ayhdppkn"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.715274+00:00",
+      "catalog": "/Users/yurielokhin/.integra-archive-test-cykizb12/retention/catalog.json",
+      "event": "CLEANUP_ATTEMPTED",
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.749004+00:00",
+      "current_id": "candidate-v1-e06176eddc706e019532917b3fb0b0ca40a04b267fb42307ddbc006aabb84c00",
+      "event": "PROTECTION_RECONCILED",
+      "selected_survivors": {
+        "candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-4f5456c276333dc0f185096bf5b4be90e1f5bb30b3423110b587f16c51a75e0b": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4f5456c276333dc0f185096bf5b4be90e1f5bb30b3423110b587f16c51a75e0b/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-e06176eddc706e019532917b3fb0b0ca40a04b267fb42307ddbc006aabb84c00": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-e06176eddc706e019532917b3fb0b0ca40a04b267fb42307ddbc006aabb84c00/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      }
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.754937+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_RECOVERY",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.754946+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.754950+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4f5456c276333dc0f185096bf5b4be90e1f5bb30b3423110b587f16c51a75e0b/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_ROLLBACK",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.754954+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "EXPLICIT_GOVERNANCE_PROVENANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.754957+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-e06176eddc706e019532917b3fb0b0ca40a04b267fb42307ddbc006aabb84c00/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.791486+00:00",
+      "attributed_bytes": 4222976,
+      "event": "CLEANUP_COMPLETED",
+      "observed_free_space_delta": 0,
+      "paths": [
+        "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4146bc0b494bcac0cdc55b49105e56c74098f8a3dd70c065a727bd7c66faeeeb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      ],
+      "physical_reclaim": "NOT_EXCLUSIVE_APFS_PROOF",
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.810170+00:00",
+      "catalog": "/Users/yurielokhin/.integra-archive-test-cykizb12/retention/catalog.json",
+      "event": "CLEANUP_ATTEMPTED",
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.842409+00:00",
+      "current_id": "candidate-v1-e06176eddc706e019532917b3fb0b0ca40a04b267fb42307ddbc006aabb84c00",
+      "event": "PROTECTION_RECONCILED",
+      "selected_survivors": {
+        "candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-4f5456c276333dc0f185096bf5b4be90e1f5bb30b3423110b587f16c51a75e0b": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4f5456c276333dc0f185096bf5b4be90e1f5bb30b3423110b587f16c51a75e0b/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-e06176eddc706e019532917b3fb0b0ca40a04b267fb42307ddbc006aabb84c00": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-e06176eddc706e019532917b3fb0b0ca40a04b267fb42307ddbc006aabb84c00/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      }
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.847529+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_RECOVERY",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.847538+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.847543+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4f5456c276333dc0f185096bf5b4be90e1f5bb30b3423110b587f16c51a75e0b/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_ROLLBACK",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.847546+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "EXPLICIT_GOVERNANCE_PROVENANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.847550+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-e06176eddc706e019532917b3fb0b0ca40a04b267fb42307ddbc006aabb84c00/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.847553+00:00",
+      "event": "CLEANUP_SKIPPED",
+      "reason": "NO_ELIGIBLE_TERMINAL_COPIES",
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.861440+00:00",
+      "event": "WORKSPACE_CREATED",
+      "expected_bytes": 8388608,
+      "purpose": "issue212-cycle",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-s7igkr21"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.911111+00:00",
+      "event": "WORKSPACE_CREATED",
+      "expected_bytes": 5308416,
+      "purpose": "archive-stage",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-lrt8qc_6"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.938182+00:00",
+      "candidate_id": "candidate-v1-560e80fd8b1a9e400607a0e38fa531202757ec5ac626a6d474a0613703ee2678",
+      "event": "CANDIDATE_CREATED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-560e80fd8b1a9e400607a0e38fa531202757ec5ac626a6d474a0613703ee2678/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "protected_reason": "AWAITING_OWNER_ACCEPTANCE"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.938481+00:00",
+      "event": "WORKSPACE_CLEANUP_ATTEMPTED",
+      "reason": "ARCHIVE_FINISHED",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-lrt8qc_6"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.938856+00:00",
+      "event": "WORKSPACE_CLEANUP_COMPLETED",
+      "reason": "ARCHIVE_FINISHED",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-lrt8qc_6"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.948145+00:00",
+      "event": "WORKSPACE_CLEANUP_ATTEMPTED",
+      "reason": "CONTROLLED_CYCLE_COMPLETE",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-s7igkr21"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.949041+00:00",
+      "event": "WORKSPACE_CLEANUP_COMPLETED",
+      "reason": "CONTROLLED_CYCLE_COMPLETE",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-s7igkr21"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.949130+00:00",
+      "catalog": "/Users/yurielokhin/.integra-archive-test-cykizb12/retention/catalog.json",
+      "event": "CLEANUP_ATTEMPTED",
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.982109+00:00",
+      "current_id": "candidate-v1-560e80fd8b1a9e400607a0e38fa531202757ec5ac626a6d474a0613703ee2678",
+      "event": "PROTECTION_RECONCILED",
+      "selected_survivors": {
+        "candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-560e80fd8b1a9e400607a0e38fa531202757ec5ac626a6d474a0613703ee2678": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-560e80fd8b1a9e400607a0e38fa531202757ec5ac626a6d474a0613703ee2678/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-e06176eddc706e019532917b3fb0b0ca40a04b267fb42307ddbc006aabb84c00": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-e06176eddc706e019532917b3fb0b0ca40a04b267fb42307ddbc006aabb84c00/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      }
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.987603+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_RECOVERY",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.987611+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.987615+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-560e80fd8b1a9e400607a0e38fa531202757ec5ac626a6d474a0613703ee2678/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.987619+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "EXPLICIT_GOVERNANCE_PROVENANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:07.987624+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-e06176eddc706e019532917b3fb0b0ca40a04b267fb42307ddbc006aabb84c00/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_ROLLBACK",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.024461+00:00",
+      "attributed_bytes": 4222976,
+      "event": "CLEANUP_COMPLETED",
+      "observed_free_space_delta": 0,
+      "paths": [
+        "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4f5456c276333dc0f185096bf5b4be90e1f5bb30b3423110b587f16c51a75e0b/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      ],
+      "physical_reclaim": "NOT_EXCLUSIVE_APFS_PROOF",
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.042139+00:00",
+      "catalog": "/Users/yurielokhin/.integra-archive-test-cykizb12/retention/catalog.json",
+      "event": "CLEANUP_ATTEMPTED",
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.074849+00:00",
+      "current_id": "candidate-v1-560e80fd8b1a9e400607a0e38fa531202757ec5ac626a6d474a0613703ee2678",
+      "event": "PROTECTION_RECONCILED",
+      "selected_survivors": {
+        "candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-560e80fd8b1a9e400607a0e38fa531202757ec5ac626a6d474a0613703ee2678": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-560e80fd8b1a9e400607a0e38fa531202757ec5ac626a6d474a0613703ee2678/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-e06176eddc706e019532917b3fb0b0ca40a04b267fb42307ddbc006aabb84c00": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-e06176eddc706e019532917b3fb0b0ca40a04b267fb42307ddbc006aabb84c00/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      }
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.079728+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_RECOVERY",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.079738+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.079742+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-560e80fd8b1a9e400607a0e38fa531202757ec5ac626a6d474a0613703ee2678/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.079747+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "EXPLICIT_GOVERNANCE_PROVENANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.079750+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-e06176eddc706e019532917b3fb0b0ca40a04b267fb42307ddbc006aabb84c00/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_ROLLBACK",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.079754+00:00",
+      "event": "CLEANUP_SKIPPED",
+      "reason": "NO_ELIGIBLE_TERMINAL_COPIES",
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.092155+00:00",
+      "event": "WORKSPACE_CREATED",
+      "expected_bytes": 8388608,
+      "purpose": "issue212-cycle",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-8ep65012"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.138982+00:00",
+      "event": "WORKSPACE_CREATED",
+      "expected_bytes": 5308416,
+      "purpose": "archive-stage",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-p2gj9tfy"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.166932+00:00",
+      "candidate_id": "candidate-v1-57b105630279be692a20f105744865685b769fca464b21c5645d6e59f197420e",
+      "event": "CANDIDATE_CREATED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-57b105630279be692a20f105744865685b769fca464b21c5645d6e59f197420e/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "protected_reason": "AWAITING_OWNER_ACCEPTANCE"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.167232+00:00",
+      "event": "WORKSPACE_CLEANUP_ATTEMPTED",
+      "reason": "ARCHIVE_FINISHED",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-p2gj9tfy"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.167614+00:00",
+      "event": "WORKSPACE_CLEANUP_COMPLETED",
+      "reason": "ARCHIVE_FINISHED",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-p2gj9tfy"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.174082+00:00",
+      "event": "WORKSPACE_CLEANUP_ATTEMPTED",
+      "reason": "CONTROLLED_CYCLE_COMPLETE",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-8ep65012"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.174948+00:00",
+      "event": "WORKSPACE_CLEANUP_COMPLETED",
+      "reason": "CONTROLLED_CYCLE_COMPLETE",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-8ep65012"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.175036+00:00",
+      "catalog": "/Users/yurielokhin/.integra-archive-test-cykizb12/retention/catalog.json",
+      "event": "CLEANUP_ATTEMPTED",
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.209896+00:00",
+      "current_id": "candidate-v1-57b105630279be692a20f105744865685b769fca464b21c5645d6e59f197420e",
+      "event": "PROTECTION_RECONCILED",
+      "selected_survivors": {
+        "candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-560e80fd8b1a9e400607a0e38fa531202757ec5ac626a6d474a0613703ee2678": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-560e80fd8b1a9e400607a0e38fa531202757ec5ac626a6d474a0613703ee2678/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-57b105630279be692a20f105744865685b769fca464b21c5645d6e59f197420e": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-57b105630279be692a20f105744865685b769fca464b21c5645d6e59f197420e/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      }
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.215656+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_RECOVERY",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.215666+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.215671+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-560e80fd8b1a9e400607a0e38fa531202757ec5ac626a6d474a0613703ee2678/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_ROLLBACK",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.215674+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-57b105630279be692a20f105744865685b769fca464b21c5645d6e59f197420e/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.215678+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "EXPLICIT_GOVERNANCE_PROVENANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.253631+00:00",
+      "attributed_bytes": 4222976,
+      "event": "CLEANUP_COMPLETED",
+      "observed_free_space_delta": 0,
+      "paths": [
+        "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-e06176eddc706e019532917b3fb0b0ca40a04b267fb42307ddbc006aabb84c00/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      ],
+      "physical_reclaim": "NOT_EXCLUSIVE_APFS_PROOF",
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.271684+00:00",
+      "catalog": "/Users/yurielokhin/.integra-archive-test-cykizb12/retention/catalog.json",
+      "event": "CLEANUP_ATTEMPTED",
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.304631+00:00",
+      "current_id": "candidate-v1-57b105630279be692a20f105744865685b769fca464b21c5645d6e59f197420e",
+      "event": "PROTECTION_RECONCILED",
+      "selected_survivors": {
+        "candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-560e80fd8b1a9e400607a0e38fa531202757ec5ac626a6d474a0613703ee2678": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-560e80fd8b1a9e400607a0e38fa531202757ec5ac626a6d474a0613703ee2678/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-57b105630279be692a20f105744865685b769fca464b21c5645d6e59f197420e": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-57b105630279be692a20f105744865685b769fca464b21c5645d6e59f197420e/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      }
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.309774+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_RECOVERY",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.309783+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.309787+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-560e80fd8b1a9e400607a0e38fa531202757ec5ac626a6d474a0613703ee2678/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_ROLLBACK",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.309791+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-57b105630279be692a20f105744865685b769fca464b21c5645d6e59f197420e/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.309795+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "EXPLICIT_GOVERNANCE_PROVENANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.309798+00:00",
+      "event": "CLEANUP_SKIPPED",
+      "reason": "NO_ELIGIBLE_TERMINAL_COPIES",
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.323370+00:00",
+      "event": "WORKSPACE_CREATED",
+      "expected_bytes": 8388608,
+      "purpose": "issue212-cycle",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-n1p7ll44"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.371892+00:00",
+      "event": "WORKSPACE_CREATED",
+      "expected_bytes": 5308416,
+      "purpose": "archive-stage",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-ypyxw3a9"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.409026+00:00",
+      "candidate_id": "candidate-v1-43f3e7fcbd3068f9e9c6d4fbf47e37dde65dd12f0388b1941086ee81681b8d86",
+      "event": "CANDIDATE_CREATED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-43f3e7fcbd3068f9e9c6d4fbf47e37dde65dd12f0388b1941086ee81681b8d86/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "protected_reason": "AWAITING_OWNER_ACCEPTANCE"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.411061+00:00",
+      "event": "WORKSPACE_CLEANUP_ATTEMPTED",
+      "reason": "ARCHIVE_FINISHED",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-ypyxw3a9"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.411589+00:00",
+      "event": "WORKSPACE_CLEANUP_COMPLETED",
+      "reason": "ARCHIVE_FINISHED",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-ypyxw3a9"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.417622+00:00",
+      "event": "WORKSPACE_CLEANUP_ATTEMPTED",
+      "reason": "CONTROLLED_CYCLE_COMPLETE",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-n1p7ll44"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.418516+00:00",
+      "event": "WORKSPACE_CLEANUP_COMPLETED",
+      "reason": "CONTROLLED_CYCLE_COMPLETE",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-n1p7ll44"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.418624+00:00",
+      "catalog": "/Users/yurielokhin/.integra-archive-test-cykizb12/retention/catalog.json",
+      "event": "CLEANUP_ATTEMPTED",
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.452909+00:00",
+      "current_id": "candidate-v1-43f3e7fcbd3068f9e9c6d4fbf47e37dde65dd12f0388b1941086ee81681b8d86",
+      "event": "PROTECTION_RECONCILED",
+      "selected_survivors": {
+        "candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-43f3e7fcbd3068f9e9c6d4fbf47e37dde65dd12f0388b1941086ee81681b8d86": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-43f3e7fcbd3068f9e9c6d4fbf47e37dde65dd12f0388b1941086ee81681b8d86/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-57b105630279be692a20f105744865685b769fca464b21c5645d6e59f197420e": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-57b105630279be692a20f105744865685b769fca464b21c5645d6e59f197420e/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      }
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.472991+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_RECOVERY",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.473005+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.473010+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-43f3e7fcbd3068f9e9c6d4fbf47e37dde65dd12f0388b1941086ee81681b8d86/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.473013+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-57b105630279be692a20f105744865685b769fca464b21c5645d6e59f197420e/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_ROLLBACK",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.473017+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "EXPLICIT_GOVERNANCE_PROVENANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.530111+00:00",
+      "attributed_bytes": 4222976,
+      "event": "CLEANUP_COMPLETED",
+      "observed_free_space_delta": 0,
+      "paths": [
+        "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-560e80fd8b1a9e400607a0e38fa531202757ec5ac626a6d474a0613703ee2678/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      ],
+      "physical_reclaim": "NOT_EXCLUSIVE_APFS_PROOF",
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.548272+00:00",
+      "catalog": "/Users/yurielokhin/.integra-archive-test-cykizb12/retention/catalog.json",
+      "event": "CLEANUP_ATTEMPTED",
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.580816+00:00",
+      "current_id": "candidate-v1-43f3e7fcbd3068f9e9c6d4fbf47e37dde65dd12f0388b1941086ee81681b8d86",
+      "event": "PROTECTION_RECONCILED",
+      "selected_survivors": {
+        "candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-43f3e7fcbd3068f9e9c6d4fbf47e37dde65dd12f0388b1941086ee81681b8d86": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-43f3e7fcbd3068f9e9c6d4fbf47e37dde65dd12f0388b1941086ee81681b8d86/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-57b105630279be692a20f105744865685b769fca464b21c5645d6e59f197420e": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-57b105630279be692a20f105744865685b769fca464b21c5645d6e59f197420e/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      }
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.585450+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_RECOVERY",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.585460+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.585465+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-43f3e7fcbd3068f9e9c6d4fbf47e37dde65dd12f0388b1941086ee81681b8d86/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.585468+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-57b105630279be692a20f105744865685b769fca464b21c5645d6e59f197420e/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_ROLLBACK",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.585472+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "EXPLICIT_GOVERNANCE_PROVENANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.585476+00:00",
+      "event": "CLEANUP_SKIPPED",
+      "reason": "NO_ELIGIBLE_TERMINAL_COPIES",
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.597994+00:00",
+      "event": "WORKSPACE_CREATED",
+      "expected_bytes": 8388608,
+      "purpose": "issue212-cycle",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-8g2fuw53"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.663989+00:00",
+      "event": "WORKSPACE_CREATED",
+      "expected_bytes": 5308416,
+      "purpose": "archive-stage",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-6mkykw_h"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.692040+00:00",
+      "candidate_id": "candidate-v1-bae22db08a5a3855d4e3dd38c6d330a2f556b373775435bb274889f25773d059",
+      "event": "CANDIDATE_CREATED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-bae22db08a5a3855d4e3dd38c6d330a2f556b373775435bb274889f25773d059/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "protected_reason": "AWAITING_OWNER_ACCEPTANCE"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.692379+00:00",
+      "event": "WORKSPACE_CLEANUP_ATTEMPTED",
+      "reason": "ARCHIVE_FINISHED",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-6mkykw_h"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.692783+00:00",
+      "event": "WORKSPACE_CLEANUP_COMPLETED",
+      "reason": "ARCHIVE_FINISHED",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-6mkykw_h"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.698883+00:00",
+      "event": "WORKSPACE_CLEANUP_ATTEMPTED",
+      "reason": "CONTROLLED_CYCLE_COMPLETE",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-8g2fuw53"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.699722+00:00",
+      "event": "WORKSPACE_CLEANUP_COMPLETED",
+      "reason": "CONTROLLED_CYCLE_COMPLETE",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-8g2fuw53"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.699846+00:00",
+      "catalog": "/Users/yurielokhin/.integra-archive-test-cykizb12/retention/catalog.json",
+      "event": "CLEANUP_ATTEMPTED",
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.733572+00:00",
+      "current_id": "candidate-v1-bae22db08a5a3855d4e3dd38c6d330a2f556b373775435bb274889f25773d059",
+      "event": "PROTECTION_RECONCILED",
+      "selected_survivors": {
+        "candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-43f3e7fcbd3068f9e9c6d4fbf47e37dde65dd12f0388b1941086ee81681b8d86": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-43f3e7fcbd3068f9e9c6d4fbf47e37dde65dd12f0388b1941086ee81681b8d86/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-bae22db08a5a3855d4e3dd38c6d330a2f556b373775435bb274889f25773d059": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-bae22db08a5a3855d4e3dd38c6d330a2f556b373775435bb274889f25773d059/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      }
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.739260+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_RECOVERY",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.739269+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.739273+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-43f3e7fcbd3068f9e9c6d4fbf47e37dde65dd12f0388b1941086ee81681b8d86/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_ROLLBACK",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.739277+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-bae22db08a5a3855d4e3dd38c6d330a2f556b373775435bb274889f25773d059/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.739281+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "EXPLICIT_GOVERNANCE_PROVENANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.776997+00:00",
+      "attributed_bytes": 4222976,
+      "event": "CLEANUP_COMPLETED",
+      "observed_free_space_delta": 0,
+      "paths": [
+        "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-57b105630279be692a20f105744865685b769fca464b21c5645d6e59f197420e/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      ],
+      "physical_reclaim": "NOT_EXCLUSIVE_APFS_PROOF",
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.795161+00:00",
+      "catalog": "/Users/yurielokhin/.integra-archive-test-cykizb12/retention/catalog.json",
+      "event": "CLEANUP_ATTEMPTED",
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.827855+00:00",
+      "current_id": "candidate-v1-bae22db08a5a3855d4e3dd38c6d330a2f556b373775435bb274889f25773d059",
+      "event": "PROTECTION_RECONCILED",
+      "selected_survivors": {
+        "candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-43f3e7fcbd3068f9e9c6d4fbf47e37dde65dd12f0388b1941086ee81681b8d86": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-43f3e7fcbd3068f9e9c6d4fbf47e37dde65dd12f0388b1941086ee81681b8d86/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-bae22db08a5a3855d4e3dd38c6d330a2f556b373775435bb274889f25773d059": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-bae22db08a5a3855d4e3dd38c6d330a2f556b373775435bb274889f25773d059/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      }
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.832886+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_RECOVERY",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.832896+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.832900+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-43f3e7fcbd3068f9e9c6d4fbf47e37dde65dd12f0388b1941086ee81681b8d86/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_ROLLBACK",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.832904+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-bae22db08a5a3855d4e3dd38c6d330a2f556b373775435bb274889f25773d059/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.832907+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "EXPLICIT_GOVERNANCE_PROVENANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.832911+00:00",
+      "event": "CLEANUP_SKIPPED",
+      "reason": "NO_ELIGIBLE_TERMINAL_COPIES",
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.846018+00:00",
+      "event": "WORKSPACE_CREATED",
+      "expected_bytes": 8388608,
+      "purpose": "issue212-cycle",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-e7auu6zk"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.893012+00:00",
+      "event": "WORKSPACE_CREATED",
+      "expected_bytes": 5308416,
+      "purpose": "archive-stage",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-w2fgkd8c"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.921062+00:00",
+      "candidate_id": "candidate-v1-d04ea1dcd64f4f4460df429025112b0f01a808b23993a2a368dda073ade1f727",
+      "event": "CANDIDATE_CREATED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-d04ea1dcd64f4f4460df429025112b0f01a808b23993a2a368dda073ade1f727/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "protected_reason": "AWAITING_OWNER_ACCEPTANCE"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.921341+00:00",
+      "event": "WORKSPACE_CLEANUP_ATTEMPTED",
+      "reason": "ARCHIVE_FINISHED",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-w2fgkd8c"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.921744+00:00",
+      "event": "WORKSPACE_CLEANUP_COMPLETED",
+      "reason": "ARCHIVE_FINISHED",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-w2fgkd8c"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.927804+00:00",
+      "event": "WORKSPACE_CLEANUP_ATTEMPTED",
+      "reason": "CONTROLLED_CYCLE_COMPLETE",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-e7auu6zk"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.928628+00:00",
+      "event": "WORKSPACE_CLEANUP_COMPLETED",
+      "reason": "CONTROLLED_CYCLE_COMPLETE",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-e7auu6zk"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.928730+00:00",
+      "catalog": "/Users/yurielokhin/.integra-archive-test-cykizb12/retention/catalog.json",
+      "event": "CLEANUP_ATTEMPTED",
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.963204+00:00",
+      "current_id": "candidate-v1-d04ea1dcd64f4f4460df429025112b0f01a808b23993a2a368dda073ade1f727",
+      "event": "PROTECTION_RECONCILED",
+      "selected_survivors": {
+        "candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-bae22db08a5a3855d4e3dd38c6d330a2f556b373775435bb274889f25773d059": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-bae22db08a5a3855d4e3dd38c6d330a2f556b373775435bb274889f25773d059/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-d04ea1dcd64f4f4460df429025112b0f01a808b23993a2a368dda073ade1f727": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-d04ea1dcd64f4f4460df429025112b0f01a808b23993a2a368dda073ade1f727/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      }
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.969935+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_RECOVERY",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.969950+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.969962+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-bae22db08a5a3855d4e3dd38c6d330a2f556b373775435bb274889f25773d059/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_ROLLBACK",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.969967+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-d04ea1dcd64f4f4460df429025112b0f01a808b23993a2a368dda073ade1f727/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:08.969971+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "EXPLICIT_GOVERNANCE_PROVENANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.012865+00:00",
+      "attributed_bytes": 4222976,
+      "event": "CLEANUP_COMPLETED",
+      "observed_free_space_delta": 0,
+      "paths": [
+        "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-43f3e7fcbd3068f9e9c6d4fbf47e37dde65dd12f0388b1941086ee81681b8d86/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      ],
+      "physical_reclaim": "NOT_EXCLUSIVE_APFS_PROOF",
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.033199+00:00",
+      "catalog": "/Users/yurielokhin/.integra-archive-test-cykizb12/retention/catalog.json",
+      "event": "CLEANUP_ATTEMPTED",
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.066586+00:00",
+      "current_id": "candidate-v1-d04ea1dcd64f4f4460df429025112b0f01a808b23993a2a368dda073ade1f727",
+      "event": "PROTECTION_RECONCILED",
+      "selected_survivors": {
+        "candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-bae22db08a5a3855d4e3dd38c6d330a2f556b373775435bb274889f25773d059": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-bae22db08a5a3855d4e3dd38c6d330a2f556b373775435bb274889f25773d059/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-d04ea1dcd64f4f4460df429025112b0f01a808b23993a2a368dda073ade1f727": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-d04ea1dcd64f4f4460df429025112b0f01a808b23993a2a368dda073ade1f727/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      }
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.071769+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_RECOVERY",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.071779+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.071784+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-bae22db08a5a3855d4e3dd38c6d330a2f556b373775435bb274889f25773d059/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_ROLLBACK",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.071787+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-d04ea1dcd64f4f4460df429025112b0f01a808b23993a2a368dda073ade1f727/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.071791+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "EXPLICIT_GOVERNANCE_PROVENANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.071794+00:00",
+      "event": "CLEANUP_SKIPPED",
+      "reason": "NO_ELIGIBLE_TERMINAL_COPIES",
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.084234+00:00",
+      "event": "WORKSPACE_CREATED",
+      "expected_bytes": 8388608,
+      "purpose": "issue212-cycle",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-4d1w93hm"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.132126+00:00",
+      "event": "WORKSPACE_CREATED",
+      "expected_bytes": 5308416,
+      "purpose": "archive-stage",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-f8apfk7y"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.161817+00:00",
+      "candidate_id": "candidate-v1-4fa38ac19f0c1bca815f92ad85897a59b10226270dca3ed80caa1d3080b12cff",
+      "event": "CANDIDATE_CREATED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4fa38ac19f0c1bca815f92ad85897a59b10226270dca3ed80caa1d3080b12cff/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "protected_reason": "AWAITING_OWNER_ACCEPTANCE"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.162116+00:00",
+      "event": "WORKSPACE_CLEANUP_ATTEMPTED",
+      "reason": "ARCHIVE_FINISHED",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-f8apfk7y"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.162490+00:00",
+      "event": "WORKSPACE_CLEANUP_COMPLETED",
+      "reason": "ARCHIVE_FINISHED",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-f8apfk7y"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.169260+00:00",
+      "event": "WORKSPACE_CLEANUP_ATTEMPTED",
+      "reason": "CONTROLLED_CYCLE_COMPLETE",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-4d1w93hm"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.170056+00:00",
+      "event": "WORKSPACE_CLEANUP_COMPLETED",
+      "reason": "CONTROLLED_CYCLE_COMPLETE",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-4d1w93hm"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.170171+00:00",
+      "catalog": "/Users/yurielokhin/.integra-archive-test-cykizb12/retention/catalog.json",
+      "event": "CLEANUP_ATTEMPTED",
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.205164+00:00",
+      "current_id": "candidate-v1-4fa38ac19f0c1bca815f92ad85897a59b10226270dca3ed80caa1d3080b12cff",
+      "event": "PROTECTION_RECONCILED",
+      "selected_survivors": {
+        "candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-4fa38ac19f0c1bca815f92ad85897a59b10226270dca3ed80caa1d3080b12cff": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4fa38ac19f0c1bca815f92ad85897a59b10226270dca3ed80caa1d3080b12cff/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-d04ea1dcd64f4f4460df429025112b0f01a808b23993a2a368dda073ade1f727": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-d04ea1dcd64f4f4460df429025112b0f01a808b23993a2a368dda073ade1f727/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      }
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.211663+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_RECOVERY",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.211672+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.211676+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4fa38ac19f0c1bca815f92ad85897a59b10226270dca3ed80caa1d3080b12cff/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.211680+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-d04ea1dcd64f4f4460df429025112b0f01a808b23993a2a368dda073ade1f727/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_ROLLBACK",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.211684+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "EXPLICIT_GOVERNANCE_PROVENANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.250107+00:00",
+      "attributed_bytes": 4222976,
+      "event": "CLEANUP_COMPLETED",
+      "observed_free_space_delta": 0,
+      "paths": [
+        "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-bae22db08a5a3855d4e3dd38c6d330a2f556b373775435bb274889f25773d059/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      ],
+      "physical_reclaim": "NOT_EXCLUSIVE_APFS_PROOF",
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.269204+00:00",
+      "catalog": "/Users/yurielokhin/.integra-archive-test-cykizb12/retention/catalog.json",
+      "event": "CLEANUP_ATTEMPTED",
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.303791+00:00",
+      "current_id": "candidate-v1-4fa38ac19f0c1bca815f92ad85897a59b10226270dca3ed80caa1d3080b12cff",
+      "event": "PROTECTION_RECONCILED",
+      "selected_survivors": {
+        "candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-4fa38ac19f0c1bca815f92ad85897a59b10226270dca3ed80caa1d3080b12cff": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4fa38ac19f0c1bca815f92ad85897a59b10226270dca3ed80caa1d3080b12cff/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-d04ea1dcd64f4f4460df429025112b0f01a808b23993a2a368dda073ade1f727": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-d04ea1dcd64f4f4460df429025112b0f01a808b23993a2a368dda073ade1f727/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      }
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.309506+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_RECOVERY",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.309516+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.309521+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4fa38ac19f0c1bca815f92ad85897a59b10226270dca3ed80caa1d3080b12cff/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.309525+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-d04ea1dcd64f4f4460df429025112b0f01a808b23993a2a368dda073ade1f727/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_ROLLBACK",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.309529+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "EXPLICIT_GOVERNANCE_PROVENANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.309532+00:00",
+      "event": "CLEANUP_SKIPPED",
+      "reason": "NO_ELIGIBLE_TERMINAL_COPIES",
+      "trigger": "BEFORE_BUILD"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.323189+00:00",
+      "event": "WORKSPACE_CREATED",
+      "expected_bytes": 8388608,
+      "purpose": "issue212-cycle",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-babxi5fm"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.392990+00:00",
+      "event": "WORKSPACE_CREATED",
+      "expected_bytes": 5308416,
+      "purpose": "archive-stage",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-k_3llymw"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.427647+00:00",
+      "candidate_id": "candidate-v1-29ddaa5ef2ec209a0c6adab86a44c1c5e5599603032e2c76177d37d9175081e7",
+      "event": "CANDIDATE_CREATED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-29ddaa5ef2ec209a0c6adab86a44c1c5e5599603032e2c76177d37d9175081e7/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "protected_reason": "AWAITING_OWNER_ACCEPTANCE"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.428202+00:00",
+      "event": "WORKSPACE_CLEANUP_ATTEMPTED",
+      "reason": "ARCHIVE_FINISHED",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-k_3llymw"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.428738+00:00",
+      "event": "WORKSPACE_CLEANUP_COMPLETED",
+      "reason": "ARCHIVE_FINISHED",
+      "root": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/integra-owned-archive-stage-k_3llymw"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.440696+00:00",
+      "event": "WORKSPACE_CLEANUP_ATTEMPTED",
+      "reason": "CONTROLLED_CYCLE_COMPLETE",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-babxi5fm"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.441853+00:00",
+      "event": "WORKSPACE_CLEANUP_COMPLETED",
+      "reason": "CONTROLLED_CYCLE_COMPLETE",
+      "root": "/private/tmp/integra-212-e2e-q036u12_/integra-owned-issue212-cycle-babxi5fm"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.441997+00:00",
+      "catalog": "/Users/yurielokhin/.integra-archive-test-cykizb12/retention/catalog.json",
+      "event": "CLEANUP_ATTEMPTED",
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.492930+00:00",
+      "current_id": "candidate-v1-29ddaa5ef2ec209a0c6adab86a44c1c5e5599603032e2c76177d37d9175081e7",
+      "event": "PROTECTION_RECONCILED",
+      "selected_survivors": {
+        "candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-29ddaa5ef2ec209a0c6adab86a44c1c5e5599603032e2c76177d37d9175081e7": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-29ddaa5ef2ec209a0c6adab86a44c1c5e5599603032e2c76177d37d9175081e7/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-4fa38ac19f0c1bca815f92ad85897a59b10226270dca3ed80caa1d3080b12cff": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4fa38ac19f0c1bca815f92ad85897a59b10226270dca3ed80caa1d3080b12cff/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      }
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.500826+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_RECOVERY",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.500839+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.500874+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-29ddaa5ef2ec209a0c6adab86a44c1c5e5599603032e2c76177d37d9175081e7/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.500881+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4fa38ac19f0c1bca815f92ad85897a59b10226270dca3ed80caa1d3080b12cff/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_ROLLBACK",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.500886+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "EXPLICIT_GOVERNANCE_PROVENANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.554747+00:00",
+      "attributed_bytes": 4222976,
+      "event": "CLEANUP_COMPLETED",
+      "observed_free_space_delta": 0,
+      "paths": [
+        "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-d04ea1dcd64f4f4460df429025112b0f01a808b23993a2a368dda073ade1f727/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      ],
+      "physical_reclaim": "NOT_EXCLUSIVE_APFS_PROOF",
+      "trigger": "CANONICAL_FIXTURE_PROMOTION_COMPLETED"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.585823+00:00",
+      "catalog": "/Users/yurielokhin/.integra-archive-test-cykizb12/retention/catalog.json",
+      "event": "CLEANUP_ATTEMPTED",
+      "trigger": "IDEMPOTENT_RETRY"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.628420+00:00",
+      "current_id": "candidate-v1-29ddaa5ef2ec209a0c6adab86a44c1c5e5599603032e2c76177d37d9175081e7",
+      "event": "PROTECTION_RECONCILED",
+      "selected_survivors": {
+        "candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-29ddaa5ef2ec209a0c6adab86a44c1c5e5599603032e2c76177d37d9175081e7": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-29ddaa5ef2ec209a0c6adab86a44c1c5e5599603032e2c76177d37d9175081e7/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-4fa38ac19f0c1bca815f92ad85897a59b10226270dca3ed80caa1d3080b12cff": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4fa38ac19f0c1bca815f92ad85897a59b10226270dca3ed80caa1d3080b12cff/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+        "candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c"
+      }
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.636433+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-0565a5ffe2feafdaaf79a2b82cf1eb2236d41e8bab7d6b7857e4d6ba7e6b39cb/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_RECOVERY",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "IDEMPOTENT_RETRY"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.636447+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-2133f86e426f06fb3dce863aad214a8b960f1c0095f58381aab9fa6038d12f0f/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "IDEMPOTENT_RETRY"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.636452+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-29ddaa5ef2ec209a0c6adab86a44c1c5e5599603032e2c76177d37d9175081e7/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "IDEMPOTENT_RETRY"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.636455+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-4fa38ac19f0c1bca815f92ad85897a59b10226270dca3ed80caa1d3080b12cff/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "CONFIRMED_ROLLBACK",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "IDEMPOTENT_RETRY"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.636459+00:00",
+      "event": "CANDIDATE_RETAINED",
+      "path": "/Users/yurielokhin/.integra-archive-test-cykizb12/durable/candidate-v1-db852085012a1c0533180492c1efb64e400ec67274d2998e0c90198ac574c958/b742ef030cf731ff9ba7d708b6274182e6902a49928c2867d4dcd04b726f014c",
+      "reasons": [
+        "EXPLICIT_GOVERNANCE_PROVENANCE",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "trigger": "IDEMPOTENT_RETRY"
+    },
+    {
+      "artifact_type": "integra.lifecycle_event",
+      "at": "2026-10-02T08:50:09.636463+00:00",
+      "event": "CLEANUP_SKIPPED",
+      "reason": "NO_ELIGIBLE_TERMINAL_COPIES",
+      "trigger": "IDEMPOTENT_RETRY"
+    }
+  ],
+  "result": "PASS"
+}

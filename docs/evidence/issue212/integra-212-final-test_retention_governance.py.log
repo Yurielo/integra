@@ -1,0 +1,21 @@
+test_404_only_is_absent_not_permission_failure (test_retention_governance.RetentionGovernanceTests.test_404_only_is_absent_not_permission_failure) ... ok
+test_accepted_historical_recovery_evidence_needs_exact_main_binding (test_retention_governance.RetentionGovernanceTests.test_accepted_historical_recovery_evidence_needs_exact_main_binding) ... ok
+test_arbitrary_recovery_ref_rejected (test_retention_governance.RetentionGovernanceTests.test_arbitrary_recovery_ref_rejected) ... ok
+test_capture_uses_immutable_main_and_exact_pr_head_refs (test_retention_governance.RetentionGovernanceTests.test_capture_uses_immutable_main_and_exact_pr_head_refs) ... ok
+test_exact_context_complete_and_selected_receipts_bound (test_retention_governance.RetentionGovernanceTests.test_exact_context_complete_and_selected_receipts_bound) ... ok
+test_exhaustive_open_pr_pagination (test_retention_governance.RetentionGovernanceTests.test_exhaustive_open_pr_pagination) ... ok
+test_keyword_mentions_are_not_owner_recovery_confirmation (test_retention_governance.RetentionGovernanceTests.test_keyword_mentions_are_not_owner_recovery_confirmation) ... ok
+test_local_sha_bound_self_assertion_does_not_establish_owner_authority (test_retention_governance.RetentionGovernanceTests.test_local_sha_bound_self_assertion_does_not_establish_owner_authority) ... ok
+test_missing_canonical_pin_enumeration_never_authorizes_cleanup (test_retention_governance.RetentionGovernanceTests.test_missing_canonical_pin_enumeration_never_authorizes_cleanup) ... ok
+test_omitted_canonical_pin_rejected (test_retention_governance.RetentionGovernanceTests.test_omitted_canonical_pin_rejected) ... ok
+test_omitted_local_proposal_is_still_protected_from_canonical_inventory (test_retention_governance.RetentionGovernanceTests.test_omitted_local_proposal_is_still_protected_from_canonical_inventory) ... ok
+test_owner_comment_edit_invalidates_snapshot (test_retention_governance.RetentionGovernanceTests.test_owner_comment_edit_invalidates_snapshot) ... ok
+test_same_candidate_conflicting_required_bundles_are_not_collapsed (test_retention_governance.RetentionGovernanceTests.test_same_candidate_conflicting_required_bundles_are_not_collapsed) ... ok
+test_same_candidate_different_rollback_bundle_rejected (test_retention_governance.RetentionGovernanceTests.test_same_candidate_different_rollback_bundle_rejected) ... ok
+test_snapshot_drift_or_read_error_fails_closed (test_retention_governance.RetentionGovernanceTests.test_snapshot_drift_or_read_error_fails_closed) ... ok
+test_unreadable_pr_commit_is_not_treated_as_absent_proposal (test_retention_governance.RetentionGovernanceTests.test_unreadable_pr_commit_is_not_treated_as_absent_proposal) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.010s
+
+OK

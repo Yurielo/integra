@@ -1,0 +1,32 @@
+{
+  "validation": "PROTECTED_ARTIFACT_PRESERVATION",
+  "before_snapshot_sha256": "43b3cbacba3f1bd9b30259513aa1e655da5c13ff2c96ee4959bbf549596dcc37",
+  "entries_before": 162377,
+  "entries_after": 162377,
+  "before_stat_identity_digest": "cc8c96cf2da7e229f664a925e0fa373ce9b5ade1e41805e24e43fbe0882d81dc",
+  "after_stat_identity_digest": "cc8c96cf2da7e229f664a925e0fa373ce9b5ade1e41805e24e43fbe0882d81dc",
+  "changed": [],
+  "missing": [],
+  "added": [],
+  "protected_roots": [
+    "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/retained",
+    "/Users/yurielokhin/Library/Application Support/Integra/Recovery Archive",
+    "/Users/yurielokhin/Library/Application Support/Integra/Build Archive Recovery",
+    "/Users/yurielokhin/Library/Application Support/Integra/Candidate Builds"
+  ],
+  "checks": [
+    "device",
+    "inode",
+    "size",
+    "mode",
+    "mtime_ns",
+    "ctime_ns"
+  ],
+  "governance_json_sha256": {
+    "/private/tmp/integra-issue-212/state/current_product_baseline_v2.json": "47f4023fc7905166c5134f224519d83520f95b06ac68ccd357c02d86035f900e",
+    "/private/tmp/integra-issue-212/state/native_macos_app_v1.json": "1250908c2cd282c92cf307dd9ff49e3896c09802f09c191de1256467d422718b",
+    "/private/tmp/integra-issue-212/state/ready_app_v1.json": "8af7479ba84c111bc3a9e517eaa0f22d2f027c4fc2a7ef47536be2371d27497b"
+  },
+  "payload_scope": "metadata invariance of all entries; no repeated full-payload hashes; readonly runtime subset verified separately",
+  "result": "PASS"
+}

@@ -1,0 +1,9 @@
+test_dead_owner_workspace_remains_reserved_until_cleanup (test_build_disk_admission.DiskAdmissionTests.test_dead_owner_workspace_remains_reserved_until_cleanup) ... ok
+test_ledger_path_is_portable_and_independent_of_child_tmpdir (test_build_disk_admission.DiskAdmissionTests.test_ledger_path_is_portable_and_independent_of_child_tmpdir) ... ok
+test_same_volume_different_roots_share_atomic_reservations (test_build_disk_admission.DiskAdmissionTests.test_same_volume_different_roots_share_atomic_reservations) ... {"artifact_type": "integra.lifecycle_event", "at": "2026-10-02T08:49:22.235341+00:00", "event": "DISK_HEADROOM_REJECTED", "expected_bytes": 40, "free_bytes": 100, "live_reservation_bytes": 60, "required_bytes": 110, "reserve_bytes": 10}
+ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.017s
+
+OK

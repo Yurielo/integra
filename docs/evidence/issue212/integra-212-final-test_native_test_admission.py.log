@@ -1,0 +1,20 @@
+{"validation": "READY_APP_PACKAGE_TEST_PASS", "app": "/private/var/folders/q9/rprrsl95265b7h21d3_mp2fr0000gn/T/tmp2vznj29t/candidate/Integra.app", "retained_archive": null, "candidate_identity_claimed": false}
+test_import_cache_does_not_change_identity_but_invalidates_archive_inventory (test_native_test_admission.ArchivedPythonImportTests.test_import_cache_does_not_change_identity_but_invalidates_archive_inventory) ... {"artifact_type": "integra.lifecycle_event", "at": "2026-10-02T08:49:37.181440+00:00", "catalog": "/Users/yurielokhin/.integra-archive-test-z0xa_7py/retention/catalog.json", "event": "CLEANUP_ATTEMPTED", "trigger": "BEFORE_ARCHIVE_COPY"}
+{"artifact_type": "integra.lifecycle_event", "at": "2026-10-02T08:49:37.183368+00:00", "event": "CLEANUP_SKIPPED", "reason": "PROTECTION_AUTHORITY_UNAVAILABLE", "trigger": "BEFORE_ARCHIVE_COPY"}
+{"artifact_type": "integra.lifecycle_event", "at": "2026-10-02T08:49:37.194511+00:00", "event": "WORKSPACE_CREATED", "expected_bytes": 1114112, "purpose": "archive-stage", "root": "/Users/yurielokhin/.integra-archive-test-z0xa_7py/integra-owned-archive-stage-8nc78mw0"}
+{"artifact_type": "integra.lifecycle_event", "at": "2026-10-02T08:49:37.208136+00:00", "candidate_id": "candidate-v1-fb14c8a3cd38ed0724bbde7d965a36f412f3901c4f41ff526848bee9074feda6", "event": "CANDIDATE_CREATED", "path": "/Users/yurielokhin/.integra-archive-test-z0xa_7py/durable/candidate-v1-fb14c8a3cd38ed0724bbde7d965a36f412f3901c4f41ff526848bee9074feda6/acbd55e3054a4ebe800861d82d585e32286d427b05f22c4b126434fb7b0dab81", "protected_reason": "AWAITING_OWNER_ACCEPTANCE"}
+{"artifact_type": "integra.lifecycle_event", "at": "2026-10-02T08:49:37.208437+00:00", "event": "WORKSPACE_CLEANUP_ATTEMPTED", "reason": "ARCHIVE_FINISHED", "root": "/Users/yurielokhin/.integra-archive-test-z0xa_7py/integra-owned-archive-stage-8nc78mw0"}
+{"artifact_type": "integra.lifecycle_event", "at": "2026-10-02T08:49:37.208800+00:00", "event": "WORKSPACE_CLEANUP_COMPLETED", "reason": "ARCHIVE_FINISHED", "root": "/Users/yurielokhin/.integra-archive-test-z0xa_7py/integra-owned-archive-stage-8nc78mw0"}
+ok
+test_real_output_guard_accepts_fresh_descendant_and_rejects_workspace_root (test_native_test_admission.ArchivedPythonImportTests.test_real_output_guard_accepts_fresh_descendant_and_rejects_workspace_root) ... {"artifact_type": "integra.lifecycle_event", "at": "2026-10-02T08:49:37.262150+00:00", "event": "WORKSPACE_CREATED", "expected_bytes": 1, "purpose": "admission-fixture", "root": "/Users/yurielokhin/.integra-archive-test-6l_31f_7/integra-owned-admission-fixture-inqjna17"}
+{"artifact_type": "integra.lifecycle_event", "at": "2026-10-02T08:49:37.279704+00:00", "event": "WORKSPACE_CLEANUP_ATTEMPTED", "reason": "TEST_COMPLETED", "root": "/Users/yurielokhin/.integra-archive-test-6l_31f_7/integra-owned-admission-fixture-inqjna17"}
+{"artifact_type": "integra.lifecycle_event", "at": "2026-10-02T08:49:37.280152+00:00", "event": "WORKSPACE_CLEANUP_COMPLETED", "reason": "TEST_COMPLETED", "root": "/Users/yurielokhin/.integra-archive-test-6l_31f_7/integra-owned-admission-fixture-inqjna17"}
+ok
+test_failed_admission_never_launches_native_tests (test_native_test_admission.NativeTestAdmissionTests.test_failed_admission_never_launches_native_tests) ... ok
+test_native_tests_execute_only_with_live_reservation_and_no_bytecode (test_native_test_admission.NativeTestAdmissionTests.test_native_tests_execute_only_with_live_reservation_and_no_bytecode) ... ok
+test_packaging_child_requires_shared_admission_and_fresh_output (test_native_test_admission.NativeTestAdmissionTests.test_packaging_child_requires_shared_admission_and_fresh_output) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.104s
+
+OK

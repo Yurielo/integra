@@ -1,0 +1,39 @@
+INTEGRA_FINDER_ICON: PASS
+INTEGRA_DOCK_CMDTAB_ICON: PASS activationPolicy=regular
+INTEGRA_MACOS_SELF_TEST: PASS
+INTEGRA_BUNDLED_SEMINARTEXT_PREFLIGHT: PASS
+INTEGRA_BUNDLED_WORD_TIMELINE_PREFLIGHT: PASS
+INTEGRA_BUNDLED_BOOKTEXT_PREFLIGHT: PASS
+INTEGRA_MACOS_CLOSE_TEST: PASS
+INTEGRA_NATIVE_REAL_VIDEOTEXT_WORKFLOW: PASS
+INTEGRA_NATIVE_CLOSE_ACTIVE_RUN: PASS
+INTEGRA_NATIVE_QUIT_ACTIVE_RUN: PASS
+INTEGRA_NATIVE_STALE_RUNNING_RECONCILED: PASS
+INTEGRA_NATIVE_VERIFIED_ASR_RETRY: PASS
+INTEGRA_NATIVE_STABLE_OPERATIONS_AND_REAL_CANCEL: PASS
+INTEGRA_MACOS_LAUNCH_TEST: PASS
+
+STDERR
+{"artifact_type": "integra.lifecycle_event", "at": "2026-10-02T08:55:39.516998+00:00", "catalog": "/Users/yurielokhin/Library/Application Support/Integra/Retention/catalog-501.json", "event": "CLEANUP_ATTEMPTED", "trigger": "BEFORE_BUILD"}
+{"artifact_type": "integra.lifecycle_event", "at": "2026-10-02T08:55:48.338002+00:00", "event": "CANDIDATE_RETAINED", "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/pilot-2fe375-original", "reasons": ["UNKNOWN_OR_ACTIVE"], "trigger": "BEFORE_BUILD"}
+{"artifact_type": "integra.lifecycle_event", "at": "2026-10-02T08:55:48.338031+00:00", "event": "CANDIDATE_RETAINED", "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/recovered-current-65bf72", "reasons": ["UNKNOWN_OR_ACTIVE"], "trigger": "BEFORE_BUILD"}
+{"artifact_type": "integra.lifecycle_event", "at": "2026-10-02T08:55:48.338040+00:00", "event": "CANDIDATE_RETAINED", "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/retained/candidate-v1-2fe375cc31b3a57d74ad0f994894bd610442deae3adfff033cdc5f3cf400fcd3/47befb29a6c221db7cb79262fc949f29248095e31dceba7fc4d46e78ab06c39e", "reasons": ["UNKNOWN_OR_ACTIVE"], "trigger": "BEFORE_BUILD"}
+{"artifact_type": "integra.lifecycle_event", "at": "2026-10-02T08:55:48.338046+00:00", "event": "CANDIDATE_RETAINED", "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/retained/candidate-v1-65bf72d1262146c9137aca433b51ae3974d98bc4c8ed37042db13b46e0318a1d/044594f1a632f1c140af28bb7de8e4acf782daca9863d84b9c5d77edb731fdf8", "reasons": ["UNKNOWN_OR_ACTIVE"], "trigger": "BEFORE_BUILD"}
+{"artifact_type": "integra.lifecycle_event", "at": "2026-10-02T08:55:48.338051+00:00", "event": "CANDIDATE_RETAINED", "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive Recovery/candidate-v1-8be1ad5ca090afd08b869761046e6f4c56727e11dbf6ae968f6ad6f227d2b173/c4dc155349dc73f2177fa8e8ee29709cc494662a999c2c4a6800e2b992c3907b", "reasons": ["UNKNOWN_OR_ACTIVE"], "trigger": "BEFORE_BUILD"}
+{"artifact_type": "integra.lifecycle_event", "at": "2026-10-02T08:55:48.338055+00:00", "event": "CANDIDATE_RETAINED", "path": "/Users/yurielokhin/Library/Application Support/Integra/Candidate Builds/topic-translation-47be46d", "reasons": ["UNKNOWN_OR_ACTIVE"], "trigger": "BEFORE_BUILD"}
+{"artifact_type": "integra.lifecycle_event", "at": "2026-10-02T08:55:48.338059+00:00", "event": "CANDIDATE_RETAINED", "path": "/Users/yurielokhin/Library/Application Support/Integra/Recovery Archive/candidate-v1-a6d470e1e68163ed119bda229acffb2754b404f2d64310a93cc5dbbab19e5583/2efeff23bab95ec8c54decd11916aae171e0cf5042a14b27ff43dea3304210a8", "reasons": ["UNKNOWN_OR_ACTIVE"], "trigger": "BEFORE_BUILD"}
+{"artifact_type": "integra.lifecycle_event", "at": "2026-10-02T08:55:48.338063+00:00", "event": "CANDIDATE_RETAINED", "path": "/Users/yurielokhin/Library/Application Support/Integra/Validation/integra-212-native-35e6f9101278/candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29/fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582", "reasons": ["AWAITING_OWNER_ACCEPTANCE"], "trigger": "BEFORE_BUILD"}
+{"artifact_type": "integra.lifecycle_event", "at": "2026-10-02T08:55:48.338067+00:00", "event": "CLEANUP_SKIPPED", "reason": "PROTECTION_AUTHORITY_UNAVAILABLE", "trigger": "BEFORE_BUILD"}
+{"artifact_type": "integra.lifecycle_event", "at": "2026-10-02T08:55:56.047971+00:00", "event": "WORKSPACE_CREATED", "expected_bytes": 2516582400, "purpose": "issue212-native-tests", "root": "/private/tmp/integra-212-native-0c6ddbe686ca/integra-owned-issue212-native-tests-yvpaf1nj"}
+{"artifact_type": "integra.review_runtime_wheel_cache", "state": "PASS", "wheel_count": 5}
+Looking in links: /private/tmp/integra-212-native-0c6ddbe686ca/integra-owned-native-evidence-inputs-hyf1218w/review-wheels
+Processing /private/tmp/integra-212-native-0c6ddbe686ca/integra-owned-native-evidence-inputs-hyf1218w/review-wheels/attrs-26.1.0-py3-none-any.whl (from -r /private/tmp/integra-issue-212/scripts/review-runtime-requirements.txt (line 2))
+Processing /private/tmp/integra-212-native-0c6ddbe686ca/integra-owned-native-evidence-inputs-hyf1218w/review-wheels/jsonschema-4.25.1-py3-none-any.whl (from -r /private/tmp/integra-issue-212/scripts/review-runtime-requirements.txt (line 3))
+Processing /private/tmp/integra-212-native-0c6ddbe686ca/integra-owned-native-evidence-inputs-hyf1218w/review-wheels/jsonschema_specifications-2025.9.1-py3-none-any.whl (from -r /private/tmp/integra-issue-212/scripts/review-runtime-requirements.txt (line 4))
+Processing /private/tmp/integra-212-native-0c6ddbe686ca/integra-owned-native-evidence-inputs-hyf1218w/review-wheels/referencing-0.37.0-py3-none-any.whl (from -r /private/tmp/integra-issue-212/scripts/review-runtime-requirements.txt (line 5))
+Processing /private/tmp/integra-212-native-0c6ddbe686ca/integra-owned-native-evidence-inputs-hyf1218w/review-wheels/rpds_py-2026.6.3-cp314-cp314-macosx_11_0_arm64.whl (from -r /private/tmp/integra-issue-212/scripts/review-runtime-requirements.txt (line 6))
+Installing collected packages: rpds-py, referencing, jsonschema-specifications, jsonschema, attrs
+
+Successfully installed attrs-26.1.0 jsonschema-4.25.1 jsonschema-specifications-2025.9.1 referencing-0.37.0 rpds-py-2026.6.3
+{"artifact_type": "integra.lifecycle_event", "at": "2026-10-02T08:58:01.898180+00:00", "event": "WORKSPACE_CLEANUP_ATTEMPTED", "reason": "RUN_FINISHED", "root": "/private/tmp/integra-212-native-0c6ddbe686ca/integra-owned-issue212-native-tests-yvpaf1nj"}
+{"artifact_type": "integra.lifecycle_event", "at": "2026-10-02T08:58:03.030078+00:00", "event": "WORKSPACE_CLEANUP_COMPLETED", "reason": "RUN_FINISHED", "root": "/private/tmp/integra-212-native-0c6ddbe686ca/integra-owned-issue212-native-tests-yvpaf1nj"}

@@ -1,0 +1,8 @@
+{
+  "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/retained/candidate-v1-65bf72d1262146c9137aca433b51ae3974d98bc4c8ed37042db13b46e0318a1d/044594f1a632f1c140af28bb7de8e4acf782daca9863d84b9c5d77edb731fdf8/Integra.app/Contents/Resources/runtime/word-alignment/site-packages",
+  "manifest": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/retained/candidate-v1-65bf72d1262146c9137aca433b51ae3974d98bc4c8ed37042db13b46e0318a1d/044594f1a632f1c140af28bb7de8e4acf782daca9863d84b9c5d77edb731fdf8/candidate-manifest.json",
+  "expected_sha256": "66d2ad50eac6194b8808b0316d37bdb64d69d27560847a671cc0f593119ac0c7",
+  "actual_sha256": "66d2ad50eac6194b8808b0316d37bdb64d69d27560847a671cc0f593119ac0c7",
+  "result": "PASS",
+  "read_only": true
+}
