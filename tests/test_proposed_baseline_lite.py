@@ -390,7 +390,8 @@ class ProposedOverlayLineageTests(unittest.TestCase):
         (root / "docs" / "authority.txt").write_text("canonical authority\n")
         self._commit(root, "authority integration")
         self._git(root, "checkout", "-q", "integration")
-        self._git(root, "merge", "--no-ff", "authority", "-m", "merge authority")
+        self._git(root, "-c", "user.name=Test", "-c", "user.email=test@example.invalid",
+                  "merge", "--no-ff", "authority", "-m", "merge authority")
         self.assertEqual(verify_promotion_material(accepted, root, path), [])
 
     def test_product_byte_in_overlay_fails(self):
