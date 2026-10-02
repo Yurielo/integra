@@ -33,6 +33,43 @@ describes source and execution identity; it alone does not prove byte equality.
 Existing archive destinations must be verified, never replaced or repaired
 in place. A missing or damaged archive is an explicit recovery incident.
 
+### Accepted historical-gap transition (#216)
+
+The ordinary promotion helper and every future normal promotion still require
+the byte-verified outgoing CURRENT archive. Issue #214 established an explicit
+exceptional historical fact: the archives for outgoing CURRENT
+`candidate-v1-d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8`
+and preceding rollback
+`candidate-v1-af81b2867f893e8e529a2d4f64d6c1370dd1249b46eb999d427fb408229680fa`
+are `MISSING_WITH_AVAILABLE_EVIDENCE`. Registry protection prevents their
+deletion, blocks UNKNOWN deletion, and detects contradictory claims, but it
+cannot provide rollback bytes. No installed lookalike may be called recovery.
+
+`scripts/prepare_historical_gap_transition.py` is restricted to the exact
+transition to PR #213 Candidate
+`candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29`.
+It checks the fully verified proposed archive, unchanged registry on main,
+complete fresh authority, exact missing status and null archive selectors,
+all existing proposal/source gates against a clean checkout of PR #213's exact
+accepted head, no deletion grant, and a separate exact
+Product Owner comment in Issue #216. Its three new outputs are prior-CURRENT
+history, a proposed next-CURRENT record, and evidence that explicitly says
+`PREPARED_NOT_PROMOTED` and `MISSING_WITH_AVAILABLE_EVIDENCE`. It never replaces
+CURRENT or performs promotion. The helper's required Product Owner comment
+must have the exact token checked by `require_historical_gap_transition`; a
+PILOT_ACCEPTED proposal and the #214 decision are insufficient. The token
+binds the registry SHA, exact old and new Candidate IDs, and PR #213 head.
+The helper code runs from the integrated main checkout; the accepted PR #213
+proposal is read from its separate clean checkout. Thus the accepted proposal
+head need not move merely to prepare the transition.
+
+The historical exception is exhausted as soon as CURRENT no longer has the
+exact old ID and byte hash. The new Candidate has a verified retained archive;
+that archive must be selected in the refreshed canonical registry before a
+later normal promotion. Historical gap records remain historical and must not
+be rewritten as recovered. Follow-up registry reconciliation must preserve
+UNKNOWN and deletion grants as fail closed.
+
 ## Scope of protection
 
 The archive records regular-file contents, sizes and permission modes. Its
