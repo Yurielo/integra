@@ -177,7 +177,7 @@ def fetch_canonical(registry: dict) -> tuple[dict, dict[int, dict], dict]:
         required = {'pr', 'head_sha', *IDENTITY, 'authority_ref', 'authorization_sha256', 'status'}
         if set(reference) != required or reference['status'] != 'ACCEPTED_UNPROMOTED_PROTECTED':
             raise ValueError('accepted-unpromoted registry record is invalid')
-        match = re.fullmatch(r'https://github\\.com/Yurielo/integra/issues/214#issuecomment-([0-9]+)', reference['authority_ref'])
+        match = re.fullmatch(r'https://github\.com/Yurielo/integra/issues/214#issuecomment-([0-9]+)', reference['authority_ref'])
         if not match:
             raise ValueError('accepted-unpromoted authority reference is invalid')
         authority = _api(f'repos/{REPOSITORY}/issues/comments/{match.group(1)}')
