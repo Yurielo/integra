@@ -172,6 +172,36 @@ def fetch_canonical(registry: dict) -> tuple[dict, dict[int, dict], dict]:
     for reference in registry['proposed']:
         if captured_heads.get(reference['pr']) != reference['head_sha']:
             raise ValueError(f'proposal PR #{reference["pr"]} is closed or has changed head')
+    accepted_unpromoted = {}
+    for reference in registry.get('accepted_unpromoted', []):
+        required = {'pr', 'head_sha', *IDENTITY, 'authority_ref', 'authorization_sha256', 'status'}
+        if set(reference) != required or reference['status'] != 'ACCEPTED_UNPROMOTED_PROTECTED':
+            raise ValueError('accepted-unpromoted registry record is invalid')
+        match = re.fullmatch(r'https://github\\.com/Yurielo/integra/issues/214#issuecomment-([0-9]+)', reference['authority_ref'])
+        if not match:
+            raise ValueError('accepted-unpromoted authority reference is invalid')
+        authority = _api(f'repos/{REPOSITORY}/issues/comments/{match.group(1)}')
+        lines = re.findall(r'^PRODUCT_OWNER_AUTHORIZATION:.*$', authority.get('body', ''), re.MULTILINE)
+        if (authority.get('html_url') != reference['authority_ref']
+                or authority.get('user', {}).get('login', '').lower() != 'yurielo'
+                or len(lines) != 1 or sha(lines[0].encode()) != reference['authorization_sha256']
+                or f'CANDIDATE_ID={reference["candidate_id"]}' not in lines[0]
+                or 'FROM=OPEN_PROPOSAL_PR_213 TO=ACCEPTED_UNPROMOTED_PROTECTED' not in lines[0]
+                or 'MERGE_PR_213=AUTHORIZED' not in lines[0]
+                or 'PROMOTION=FORBIDDEN' not in lines[0] or 'CURRENT_CHANGE=FORBIDDEN' not in lines[0]
+                or 'DELETION_AUTHORIZATIONS={}' not in lines[0] or 'UNKNOWN=RETAIN_FAIL_CLOSED' not in lines[0]):
+            raise ValueError('accepted-unpromoted Product Owner authorization differs')
+        pr = _api(f'repos/{REPOSITORY}/pulls/{reference["pr"]}')
+        if (pr.get('state') != 'closed' or not pr.get('merged_at')
+                or pr.get('head', {}).get('sha') != reference['head_sha']):
+            raise ValueError('accepted-unpromoted PR is not the exact merged PR head')
+        proposal = _remote_file('state/proposed_baseline_lite_v1.json', reference['head_sha'])[1]
+        if (proposal.get('artifact_type') != 'integra.proposed_product_baseline'
+                or any(proposal.get('candidate', {}).get(k) != reference[k] for k in IDENTITY)
+                or proposal.get('owner_acceptance', {}).get('decision') != 'PILOT_ACCEPTED'
+                or proposal.get('owner_acceptance', {}).get('promotion_authorized') is not False):
+            raise ValueError('accepted-unpromoted proposal binding differs')
+        accepted_unpromoted[reference['pr']] = proposal
     closing_heads = {}
     page = 1
     while True:
@@ -191,7 +221,8 @@ def fetch_canonical(registry: dict) -> tuple[dict, dict[int, dict], dict]:
                                  'decision_token_sha256': sha(token_lines[0].encode()),
                                  'decision_token': token_lines[0],
                                  'historical_receipts': historical_receipts,
-                                 'proposal_heads': {str(n): captured_heads[n] for n in proposals}}
+                                 'proposal_heads': {str(n): captured_heads[n] for n in proposals},
+                                 'accepted_unpromoted': accepted_unpromoted}
 
 
 def _identity(value: dict) -> dict:
@@ -251,7 +282,8 @@ def _accepted_historical_gaps(registry: dict, canonical: dict | None,
 
 
 def _validate_registry(registry: dict, current: dict, proposals: dict[int, dict],
-                       blockers: list[str], accepted_gaps: set[str] | None = None) -> dict:
+                       blockers: list[str], accepted_gaps: set[str] | None = None,
+                       canonical: dict | None = None) -> dict:
     accepted_gaps = accepted_gaps or set()
     if registry.get('artifact_type') != 'integra.candidate_protection_registry' or registry.get('schema_version') != '1.0':
         raise ValueError('protection registry schema is invalid')
@@ -331,6 +363,16 @@ def _validate_registry(registry: dict, current: dict, proposals: dict[int, dict]
             blockers.append('UNREGISTERED_OPEN_PROPOSAL:' + str(number))
         elif any(reference.get(k) != proposal.get('candidate', {}).get(k) for k in IDENTITY):
             blockers.append('PROPOSAL_IDENTITY_CONFLICT:' + str(number))
+    accepted = (canonical or {}).get('accepted_unpromoted', {})
+    declared_accepted = {item['pr']: item for item in registry.get('accepted_unpromoted', [])}
+    if len(declared_accepted) != len(registry.get('accepted_unpromoted', [])) or set(declared_accepted) != set(accepted):
+        blockers.append('ACCEPTED_UNPROMOTED_SET_CONFLICT')
+    for number, proposal in accepted.items():
+        reference = declared_accepted.get(number)
+        if not reference or any(reference.get(k) != proposal.get('candidate', {}).get(k) for k in IDENTITY):
+            blockers.append('ACCEPTED_UNPROMOTED_IDENTITY_CONFLICT:' + str(number))
+            continue
+        _add(protected, proposal['candidate'], 'ACCEPTED_UNPROMOTED', blockers)
     pins = registry.get('explicit_governance_pins')
     if pins is None:
         blockers.append('EXPLICIT_PIN_ENUMERATION_MISSING')
@@ -383,7 +425,7 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
     elif (deletion_state.group(1) == 'true') != registry.get('deletion_enabled'):
         blockers.append('OWNER_DELETION_STATE_CONFLICT')
     accepted_gaps = _accepted_historical_gaps(registry, canonical, blockers)
-    protected = _validate_registry(registry, current, proposals, blockers, accepted_gaps)
+    protected = _validate_registry(registry, current, proposals, blockers, accepted_gaps, canonical)
     historical = (canonical or {}).get('historical_receipts', {})
     for gap in registry.get('historical_gaps', []):
         cid = gap['candidate_id']

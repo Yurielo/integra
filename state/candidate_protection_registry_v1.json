@@ -77,14 +77,18 @@
       "candidate_id": "candidate-v1-136e1a5b80644c20a4e7f9ecf66741ab069f88d66418123e6e85b409bfc714b8",
       "bundle_digest": "d05c0863dcb4a205a3c0fd4e4787e8b15f70a17058335f09f46236bda64ca4ba",
       "manifest_digest": "dddfd523af297bd0f70f9909eadafd8f1cdd2c58afbe504559ed7da5f7f15d06"
-    },
+    }
+  ],
+  "accepted_unpromoted": [
     {
       "pr": 213,
-      "head_sha": "ff0760f1a206de3f047b8d163c2c573689a4a530",
-      "path": "state/proposed_baseline_lite_v1.json",
+      "head_sha": "8efd97ba1aea65b5b5584ca2cd581f4b56f30a86",
       "candidate_id": "candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29",
       "bundle_digest": "fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
-      "manifest_digest": "667539142be8f7909dc56acb60be1e1fa30c05c6cec44ab931f32fcc8dd36c39"
+      "manifest_digest": "667539142be8f7909dc56acb60be1e1fa30c05c6cec44ab931f32fcc8dd36c39",
+      "authority_ref": "https://github.com/Yurielo/integra/issues/214#issuecomment-5960716164",
+      "authorization_sha256": "94307bc4fd7b0ecb4a4fcc87a5e8a8d5e40ae7941ef48bf62037d3b02973f21f",
+      "status": "ACCEPTED_UNPROMOTED_PROTECTED"
     }
   ],
   "explicit_governance_pins": {},

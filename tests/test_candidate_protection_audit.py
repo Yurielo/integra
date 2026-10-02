@@ -15,6 +15,14 @@ from integra_core.candidate_identity import candidate_id, canonical_bytes, tree_
 class ProtectionAuditTests(unittest.TestCase):
     def setUp(self):
         self.registry = json.loads(audit.REGISTRY.read_text())
+        # Most resolver tests exercise the still-open proposal path.  Recreate
+        # that isolated fixture from the exact accepted-unpromoted record.
+        accepted = self.registry['accepted_unpromoted'][0]
+        self.registry['accepted_unpromoted'] = []
+        self.registry['proposed'].append({
+            'pr': accepted['pr'], 'head_sha': accepted['head_sha'],
+            'path': 'state/proposed_baseline_lite_v1.json',
+            **{key: accepted[key] for key in audit.IDENTITY}})
         self.registry['proposed'] = [item for item in self.registry['proposed'] if item['pr'] == 213]
         self.registry['selected_survivors'] = {
             cid: path for cid, path in self.registry['selected_survivors'].items()
@@ -63,6 +71,12 @@ class ProtectionAuditTests(unittest.TestCase):
 
     def accepted_gap_fixture(self):
         registry = json.loads(audit.REGISTRY.read_text())
+        accepted = registry['accepted_unpromoted'][0]
+        registry['accepted_unpromoted'] = []
+        registry['proposed'].append({
+            'pr': accepted['pr'], 'head_sha': accepted['head_sha'],
+            'path': 'state/proposed_baseline_lite_v1.json',
+            **{key: accepted[key] for key in audit.IDENTITY}})
         registry['proposed'] = [p for p in registry['proposed'] if p['pr'] == 213]
         wanted = {registry['canonical_current']['candidate_id'],
                   registry['rollback']['candidate_id'], registry['proposed'][0]['candidate_id']}
@@ -166,6 +180,22 @@ class ProtectionAuditTests(unittest.TestCase):
         self.assertEqual(result['authority_state'], 'COMPLETE')
         self.assertTrue(result['promotion_ready'])
         self.assertEqual([r['classification'] for r in result['entries']], ['PROTECTED'] * 3)
+
+    def test_accepted_unpromoted_candidate_stays_protected_after_pr_close(self):
+        reference = self.registry['proposed'].pop()
+        self.registry['accepted_unpromoted'] = [{
+            **{key: reference[key] for key in ('pr', 'head_sha', *audit.IDENTITY)},
+            'authority_ref': 'issue-comment:fixture', 'authorization_sha256': 'fixture',
+            'status': 'ACCEPTED_UNPROMOTED_PROTECTED'}]
+        accepted = {'artifact_type': 'integra.proposed_product_baseline',
+                    'candidate': {key: reference[key] for key in audit.IDENTITY},
+                    'owner_acceptance': {'decision': 'PILOT_ACCEPTED', 'promotion_authorized': False}}
+        self.canonical['accepted_unpromoted'] = {213: accepted}
+        self.proposals = {}
+        result = self.resolve()
+        self.assertEqual(result['authority_state'], 'COMPLETE')
+        self.assertIn('ACCEPTED_UNPROMOTED', result['entries'][-1]['reasons'])
+        self.assertEqual(result['entries'][-1]['classification'], 'PROTECTED')
 
     def test_missing_current_archive_blocks_and_never_eligible(self):
         self.packages.pop(0)
