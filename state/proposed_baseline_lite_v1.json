@@ -13,8 +13,8 @@
     "tree_sha": "c86f8451b1ca49372e12885fa752a4962b15ef80"
   },
   "proposed_head": {
-    "commit_sha": "08b80cbf27d1533dba9b00ca107e4ef311bda404",
-    "tree_sha": "adfc77f902112686bd7d460c16842828261b67f9"
+    "commit_sha": "ca83de49adaa81afd94075ce71fe8752303e5556",
+    "tree_sha": "a903b2d65e2055b990a463874982091107ecf1f2"
   },
   "intended_scope": {
     "wp": "GitHub Issue #212",
@@ -74,6 +74,11 @@
       "name": "Independent source and native QA",
       "result": "PASS",
       "evidence_ref": "docs/evidence/issue212/integra-212-independent-review.md"
+    },
+    {
+      "name": "Portable bounded cancellation test repair",
+      "result": "PASS",
+      "evidence_ref": "docs/evidence/issue212/integra-212-ci-repair-focused.log"
     }
   ],
   "evidence": {
@@ -83,11 +88,11 @@
     },
     "candidate_evidence": {
       "path": "docs/evidence/issue212/candidate-evidence.json",
-      "sha256": "a527bc10a9ae0bf8253ed0cd0a0e83737194e46f9dc86110d21e8777e7b490e5"
+      "sha256": "be37f9d2bdbf4fde7df3516bd8fde61b11229fb84dc7c510e923e2dac19f12a6"
     },
     "report": {
       "path": "docs/ISSUE_212_LIFECYCLE_REPORT.md",
-      "sha256": "d015cab5d65728b6581ab5d5af6a0e7f3d2e2fe14a089e76ccaa5638a94b242a"
+      "sha256": "c651121cc3880b5c81dd9a149547e0157c6fef69ce5f9df9d5482a2c65c90eae"
     }
   },
   "owner_acceptance": null,
@@ -97,6 +102,7 @@
     "docs/evidence/issue212/candidate-manifest.json",
     "docs/evidence/issue212/changed-source-files.txt",
     "docs/evidence/issue212/integra-212-archived-native.log",
+    "docs/evidence/issue212/integra-212-ci-repair-focused.log",
     "docs/evidence/issue212/integra-212-controlled-e2e.json",
     "docs/evidence/issue212/integra-212-dirty-input-rejection.json",
     "docs/evidence/issue212/integra-212-disposable-native.log",
@@ -109,6 +115,8 @@
     "docs/evidence/issue212/integra-212-final-test_native_test_admission.py.log",
     "docs/evidence/issue212/integra-212-final-test_retention_governance.py.log",
     "docs/evidence/issue212/integra-212-final-test_temp_workspace_lifecycle.py.log",
+    "docs/evidence/issue212/integra-212-first-declaration-local-validation.json",
+    "docs/evidence/issue212/integra-212-first-github-quality-gate-failure.log",
     "docs/evidence/issue212/integra-212-focused-final-results.json",
     "docs/evidence/issue212/integra-212-independent-review.md",
     "docs/evidence/issue212/integra-212-input-copy-timeout.json",
@@ -124,6 +132,8 @@
     "docs/evidence/issue212/integra-212-protected-preservation.json",
     "docs/evidence/issue212/integra-212-real-archive-plan.json",
     "docs/evidence/issue212/integra-212-real-cap-validation.json",
-    "docs/evidence/issue212/integra-212-runtime-input-verification.json"
+    "docs/evidence/issue212/integra-212-runtime-input-verification.json",
+    "state/proposed_baseline_lite_v1.json",
+    "tests/test_temp_workspace_lifecycle.py"
   ]
 }
