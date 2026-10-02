@@ -24,6 +24,8 @@ class ProtectionAuditTests(unittest.TestCase):
         self.registry.update(status='PRODUCT_OWNER_AUTHORIZED_ACTIVE',
                              activation_authority_ref='issue-comment:fixture',
                              promotion_contract_integration_ref='pr:fixture',
+                             decision_authority_ref='issue-comment:fixture',
+                             decision_token_sha256='fixture',
                              explicit_governance_pins={},
                              deletion_authorizations={},
                              recovery={**self.registry['canonical_current'],
@@ -38,6 +40,8 @@ class ProtectionAuditTests(unittest.TestCase):
         self.packages = [self.package(identity) for identity in (
             self.registry['canonical_current'], self.registry['rollback'], self.registry['proposed'][0])]
         self.canonical = {'current_sha256': self.registry['canonical_current']['sha256'],
+                          'decision_authority_ref': 'issue-comment:fixture',
+                          'decision_token_sha256': 'fixture',
                           'historical_receipts': {
                               gap['candidate_id']: {
                                   'record': json.loads((audit.ROOT / gap['receipt_path']).read_text()),
@@ -89,14 +93,14 @@ class ProtectionAuditTests(unittest.TestCase):
                                            'bundle_digest': '8'*64, 'manifest_digest': '7'*64}))
         self.assertEqual(self.resolve()['entries'][-1]['classification'], 'UNKNOWN')
 
-    def test_exact_deletion_grant_only_for_unprotected_owned_terminal(self):
+    def test_exact_deletion_grant_does_not_override_disabled_deletion(self):
         unknown = self.package({'candidate_id': 'candidate-v1-' + '9'*64,
                                 'bundle_digest': '8'*64, 'manifest_digest': '7'*64})
         self.packages.append(unknown)
         self.registry['deletion_authorizations'][unknown['path']] = {
             **{k: unknown[k] for k in ('path', *audit.IDENTITY)},
             'authority_ref': 'issue-comment:fixture-grant'}
-        self.assertEqual(self.resolve()['entries'][-1]['classification'], 'ELIGIBLE')
+        self.assertEqual(self.resolve()['entries'][-1]['classification'], 'UNKNOWN')
         self.assertEqual(self.resolve()['entries'][0]['classification'], 'PROTECTED')
 
     def test_explicit_pin_protects_and_missing_pin_enumeration_blocks(self):
@@ -152,6 +156,23 @@ class ProtectionAuditTests(unittest.TestCase):
         result = self.resolve()
         self.assertIn('PROMOTION_CONTRACT_INTEGRATION_MISSING', result['blockers'])
         self.assertFalse(result['promotion_ready'])
+
+    def test_exact_issue_214_decision_cannot_authorize_pins_or_deletion(self):
+        self.registry['decision_token_sha256'] = 'c0fbc7699ae3caa6ea56a59987410977515881043f2ce2fd9b4f39382cc132f8'
+        self.canonical['decision_token_sha256'] = self.registry['decision_token_sha256']
+        self.registry['explicit_governance_pins'] = {'unexpected': {}}
+        self.registry['deletion_authorizations'] = {'Build Archive/unexpected': {}}
+        result = self.resolve()
+        self.assertIn('OWNER_AUTHORIZED_PINS_DIFFER', result['blockers'])
+        self.assertIn('OWNER_AUTHORIZED_DELETION_GRANTS_DIFFER', result['blockers'])
+        self.assertEqual(result['eligible_bytes'], 0)
+
+    def test_unverified_owner_decision_cannot_accept_bootstrap(self):
+        self.canonical['decision_token_sha256'] = 'changed'
+        result = self.resolve()
+        self.assertIn('PRODUCT_OWNER_DECISION_UNVERIFIED', result['blockers'])
+        self.assertEqual(result['bootstrap_plan']['status'],
+                         'BLOCKED_REQUIRES_PRODUCT_OWNER_RECOVERY_GAP_DECISION')
 
     def test_exact_historical_recovery_source_requires_full_inventory(self):
         with tempfile.TemporaryDirectory(prefix='.integra-protection-test-', dir=Path.home()) as root:

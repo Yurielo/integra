@@ -73,7 +73,7 @@ def verify_exact_recovery_source(app: Path, historical_receipt: dict,
 def bootstrap_plan(registry: dict, audit: dict) -> dict:
     """Machine-readable migration plan; never claims recovered bytes or writes state."""
     gaps = [gap for gap in registry.get('historical_gaps', [])
-            if gap.get('observed_state') == 'MISSING_HISTORICAL_RECOVERY_ARTIFACT']
+            if gap.get('observed_state') == 'MISSING_WITH_AVAILABLE_EVIDENCE']
     limits = registry['limits']
     copies = audit.get('full_copies')
     archive_bytes = audit.get('archive_bytes')
@@ -83,7 +83,8 @@ def bootstrap_plan(registry: dict, audit: dict) -> dict:
                           and archive_bytes < limits['max_attributed_bytes']
                           and free_bytes > limits['minimum_free_after_reservations'])
     return {'artifact_type': 'integra.protection_bootstrap_plan',
-            'status': 'BLOCKED_REQUIRES_PRODUCT_OWNER_RECOVERY_GAP_DECISION' if gaps else 'NO_HISTORICAL_GAP',
+            'status': 'ACCEPTED_HISTORICAL_GAP_NO_RECOVERY' if gaps and audit.get('decision_authority_verified') else
+                      'BLOCKED_REQUIRES_PRODUCT_OWNER_RECOVERY_GAP_DECISION' if gaps else 'NO_HISTORICAL_GAP',
             'historical_gaps': gaps, 'unknown_bytes': audit.get('unknown_bytes'),
             'unknown_copies': sum(row.get('classification') == 'UNKNOWN' for row in audit.get('entries', [])),
             'archive_copies': copies, 'archive_bytes': archive_bytes,
@@ -131,6 +132,13 @@ def fetch_canonical(registry: dict) -> tuple[dict, dict[int, dict], dict]:
     current_bytes, current = _remote_file(registry['canonical_current']['path'], main)
     if sha(current_bytes) != registry['canonical_current']['sha256']:
         raise ValueError('canonical CURRENT bytes differ from registry binding')
+    authority = _api('repos/Yurielo/integra/issues/comments/5951189263')
+    token_lines = re.findall(r'^PRODUCT_OWNER_AUTHORIZATION:.*$', authority.get('body', ''), re.MULTILINE)
+    if (registry.get('decision_authority_ref') != authority.get('html_url')
+            or authority.get('user', {}).get('login', '').lower() != 'yurielo'
+            or len(token_lines) != 1
+            or sha(token_lines[0].encode()) != registry.get('decision_token_sha256')):
+        raise ValueError('Product Owner Issue #214 decision binding differs')
     historical_receipts = {}
     for gap in registry.get('historical_gaps', []):
         data, receipt = _remote_file(gap['receipt_path'], main)
@@ -170,6 +178,8 @@ def fetch_canonical(registry: dict) -> tuple[dict, dict[int, dict], dict]:
     if _api(f'repos/{REPOSITORY}/git/ref/heads/main')['object']['sha'] != main:
         raise ValueError('canonical main moved during protection capture')
     return current, proposals, {'main_sha': main, 'current_sha256': sha(current_bytes),
+                                 'decision_authority_ref': authority['html_url'],
+                                 'decision_token_sha256': sha(token_lines[0].encode()),
                                  'historical_receipts': historical_receipts,
                                  'proposal_heads': {str(n): captured_heads[n] for n in proposals}}
 
@@ -208,6 +218,11 @@ def _validate_registry(registry: dict, current: dict, proposals: dict[int, dict]
         blockers.append('MANAGED_ROOT_ENUMERATION_INCOMPLETE')
     if registry.get('deletion_enabled') is not False:
         blockers.append('REGISTRY_MUST_NOT_SELF_AUTHORIZE_DELETION')
+    if registry.get('decision_token_sha256') == 'c0fbc7699ae3caa6ea56a59987410977515881043f2ce2fd9b4f39382cc132f8':
+        if registry.get('explicit_governance_pins') != {}:
+            blockers.append('OWNER_AUTHORIZED_PINS_DIFFER')
+        if registry.get('deletion_authorizations') != {}:
+            blockers.append('OWNER_AUTHORIZED_DELETION_GRANTS_DIFFER')
     if registry.get('status') != 'PRODUCT_OWNER_AUTHORIZED_ACTIVE' or not registry.get('activation_authority_ref'):
         blockers.append('REGISTRY_NOT_OWNER_ACTIVATED')
     if not registry.get('promotion_contract_integration_ref'):
@@ -285,6 +300,10 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
     blockers: list[str] = []
     if canonical is None or canonical.get('current_sha256') != registry['canonical_current']['sha256']:
         blockers.append('CANONICAL_CURRENT_BYTES_UNVERIFIED')
+    decision_verified = bool(canonical and canonical.get('decision_authority_ref') == registry.get('decision_authority_ref')
+                             and canonical.get('decision_token_sha256') == registry.get('decision_token_sha256'))
+    if not decision_verified:
+        blockers.append('PRODUCT_OWNER_DECISION_UNVERIFIED')
     protected = _validate_registry(registry, current, proposals, blockers)
     historical = (canonical or {}).get('historical_receipts', {})
     for gap in registry.get('historical_gaps', []):
@@ -349,8 +368,10 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
     if free_bytes < limits['minimum_free_after_reservations']:
         blockers.append('DISK_RESERVE_BELOW_FLOOR')
     for gap in registry.get('historical_gaps', []):
-        if gap.get('observed_state') == 'MISSING_HISTORICAL_RECOVERY_ARTIFACT' and gap.get('candidate_id') not in verified:
-            blockers.append('MISSING_HISTORICAL_RECOVERY_ARTIFACT:' + gap['candidate_id'])
+        if gap.get('observed_state') != 'MISSING_WITH_AVAILABLE_EVIDENCE':
+            blockers.append('HISTORICAL_GAP_STATUS_CONFLICT:' + gap['candidate_id'])
+        if gap.get('candidate_id') not in verified:
+            blockers.append('MISSING_WITH_AVAILABLE_EVIDENCE:' + gap['candidate_id'])
     blockers = sorted(set(blockers))
     promotion_blockers = list(blockers)
     for number, proposal in proposals.items():
@@ -358,7 +379,7 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
             promotion_blockers.append('PROMOTION_OWNER_AUTHORIZATION_MISSING:213')
     # A future complete authority may classify exact owned terminal objects as
     # eligible. Incomplete authority never gets that result.
-    if not blockers:
+    if not blockers and registry.get('deletion_enabled') is True:
         authorized = registry['deletion_authorizations']
         for row in rows:
             grant = authorized.get(row['path'])
@@ -370,6 +391,8 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
                 row['classification'] = 'ELIGIBLE'
                 row['reasons'] = ['EXACT_OWNER_AUTHORIZED_TERMINAL']
     result = {'artifact_type': 'integra.candidate_protection_audit',
+            'registry_status': registry.get('status'),
+            'decision_authority_verified': decision_verified,
             'authority_state': 'COMPLETE' if not blockers else 'BLOCKED_FAIL_CLOSED',
             'promotion_ready': not promotion_blockers,
             'promotion_blockers': sorted(set(promotion_blockers)),

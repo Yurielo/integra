@@ -1,6 +1,6 @@
 # Candidate protection and historical recovery gap — Issue #214
 
-Status: PROPOSED_INCOMPLETE. This contract does not promote a Candidate, change
+Status: PRODUCT_OWNER_ACCEPTED_PENDING_INTEGRATION. This contract does not promote a Candidate, change
 CURRENT, authorize historical deletion, or make PR #213's accepted proposal a
 new baseline.
 
@@ -15,7 +15,10 @@ proposals or head drift. It must re-read GitHub/main and PR-head bytes; it may n
 trust a filename, local catalog entry, historical receipt, or unmerged policy
 file alone. A changed reference, missing pin enumeration, missing archive,
 conflicting identity, or incomplete registry returns BLOCKED. The registry is
-not active merely because this PR exists or its CI passes.
+not active merely because this PR exists or its CI passes. The exact Product
+Owner decision is recorded at Issue #214 comment 5951189263 and its token hash
+is bound in the registry. It accepts `explicit_governance_pins={}` and
+`deletion_authorizations={}` while retaining every UNKNOWN artifact.
 The existing PR #213 lifecycle policy remains the cap/cleanup executor contract.
 Before any later promotion can use this registry, a separately verified
 integration must make its promotion helper consume this authority and reconcile
@@ -23,12 +26,24 @@ its policy's explicit pins with the registry. The registry's
 `promotion_contract_integration_ref` is null until that happens; a standalone
 resolver PASS cannot authorize promotion or create a second active authority.
 
+The existing promotion helper now requires a fresh canonical registry gate in
+addition to its old proposal, acceptance, exact archive and output checks.
+The low-level archive publisher requires the same gate before creating a new
+managed full copy. `candidate_protection_gate.require_deletion` refuses a target
+without exact path/identity grant and fresh ELIGIBLE classification. The
+Issue #212 deletion executor exists only in the separate unmerged PR #213; it
+does not yet call this gate. Consequently the deletion side is a verified
+fail-closed contract, not an activated executor integration. Neither this PR
+nor the accepted PR #213 proposal may claim complete integration yet.
+
 The local ownership catalog remains evidence of who may *possibly* delete a
 package. It is never protection authority. A package can be ELIGIBLE only when
 the registry is owner-authorized and complete, all protected survivors have
 fresh complete byte verification, the exact package has a path and identity-bound
 deletion grant, is publisher-owned, terminal, inactive, unpinned, and the
 established cleanup transaction passes. This PR contains no deletion grant.
+The accepted decision also keeps `deletion_enabled=false`; even a forged grant
+cannot yield ELIGIBLE under this registry version.
 Unknown historical objects remain UNKNOWN even if a cap is full. A matching
 identity without a byte-verified selected survivor remains unverified.
 
@@ -51,13 +66,13 @@ no-replace, under both archive caps and the disk reserve, and must not prune
 existing packages. On this Mac, that operation is BLOCKED because no exact
 source is established and all eight full-copy slots are occupied.
 
-If exact bytes cannot be found, the historical status is
-`MISSING_HISTORICAL_RECOVERY_ARTIFACT`; no new archive or receipt may be
+If exact bytes cannot be found, the accepted historical status is
+`MISSING_WITH_AVAILABLE_EVIDENCE`; no new archive or receipt may be
 fabricated. The machine-readable `bootstrap_plan` records the old CURRENT/rollback gap, all
 UNKNOWN copies, the proposed next Candidate, and the remaining physical
 headroom. It does not turn the old baseline into a recovered one or write a
 successor CURRENT. Any transition that deliberately accepts a recovery gap
-requires a separate exact Product Owner decision and a new governed promotion
+requires a separate exact Product Owner promotion decision and a new governed promotion
 contract; the existing promotion helper continues to require both exact
 archives.
 

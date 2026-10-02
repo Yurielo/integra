@@ -10,6 +10,7 @@ from unittest.mock import call, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import promote_proposed_baseline_lite as promotion
+import candidate_protection_gate as protection_gate
 
 
 class PromotionArchiveGateTests(unittest.TestCase):
@@ -40,6 +41,7 @@ class PromotionArchiveGateTests(unittest.TestCase):
         for name in ("validate_current", "validate_proposal", "verify_promotion_material"):
             self.mocks[name] = self.enterContext(patch.object(promotion, name, return_value=[]))
         self.verify = self.enterContext(patch.object(promotion, "verify_archive", return_value={}))
+        self.protection = self.enterContext(patch.object(promotion, "require_promotion", return_value=None))
         self.successor = self.enterContext(patch.object(promotion, "next_current", return_value={"new": True}))
         self.enterContext(patch.object(promotion, "ROOT", self.root))
 
@@ -77,6 +79,18 @@ class PromotionArchiveGateTests(unittest.TestCase):
         self.assertEqual(json.loads(self.output.read_text()), {"new": True})
         self.successor.assert_called_once_with(self.current, {"candidate": self.candidate},
                                               "explicit-owner-ref", previous_current_path="history.json")
+        self.protection.assert_called_once_with({"candidate": self.candidate}, self.current,
+                                                self.archive, self.old_archive)
+
+    def test_missing_canonical_protection_blocks_before_any_write(self):
+        self.protection.side_effect = ValueError('canonical protection unavailable')
+        self.assertEqual(self.run_main(), 1)
+        self.assert_unmodified()
+
+    def test_live_pending_registry_blocks_even_when_archive_checks_are_mocked_pass(self):
+        self.protection.side_effect = protection_gate.require_promotion
+        self.assertEqual(self.run_main(), 1)
+        self.assert_unmodified()
 
     def test_archive_does_not_replace_existing_governance_checks(self):
         self.mocks["verify_promotion_material"].return_value = ["invalid proposal"]
