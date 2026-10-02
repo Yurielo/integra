@@ -25,6 +25,7 @@ except ModuleNotFoundError:
 from datetime import datetime, timezone
 
 ROOT = Path(__file__).resolve().parents[1]
+MANAGED_BASE = Path.home() / 'Library/Application Support/Integra'
 sys.path.insert(0, str(ROOT))
 from integra_core.candidate_identity import (  # noqa: E402
     MANIFEST_NAME, canonical_bytes, tree_sha256, validate_manifest,
@@ -318,39 +319,43 @@ def create_archive(app: Path, archive_root: Path, *, manifest: Path | None = Non
             if _inventory(destination, exclude={INVENTORY, COMPLETE}) != planned:
                 raise ValueError("existing archive differs from requested retained files/permissions")
             return receipt
-        try:
-            from scripts import candidate_retention as retention
-        except ModuleNotFoundError:
-            import candidate_retention as retention
-        reused = retention.reusable_archive(root, identity, planned)
-        if reused is not None:
-            return reused
+        managed = root == MANAGED_BASE or root.is_relative_to(MANAGED_BASE)
+        retention = None
+        if managed:
+            try:
+                from scripts import candidate_retention as retention
+            except ModuleNotFoundError:
+                import candidate_retention as retention
+            reused = retention.reusable_archive(root, identity, planned)
+            if reused is not None:
+                return reused
         ancestor = root
         while not ancestor.exists():
             ancestor = ancestor.parent
         block = max(4096, os.statvfs(ancestor).f_frsize)
         required = sum(((item.get("size", 0) + block - 1) // block + 1) * block for item in planned)
         required += 1024 * 1024
-        # Even unknown legacy occupancy is charged. Policy never evicts it to
-        # admit this copy. The caller cannot lower the adopted free-space floor.
-        retention_lease = retention.reserve_archive(root, required, destination=destination, identity=identity)
-        reserve_bytes = max(reserve_bytes, retention.FREE_FLOOR)
-        # Admission precedes even destination creation. Staging is on the
-        # destination volume, so publication remains an atomic rename.
-        stage_root, stage_marker = workspace_lifecycle.create_workspace(
-            purpose='archive-stage', base=ancestor,
-            expected_bytes=required, reserve_bytes=reserve_bytes)
-        retention.bind_stage(*retention_lease, stage_root, stage_marker)
+        if managed:
+            retention_lease = retention.reserve_archive(
+                root, required, destination=destination, identity=identity)
+            reserve_bytes = max(reserve_bytes, retention.FREE_FLOOR)
+            stage_root, stage_marker = workspace_lifecycle.create_workspace(
+                purpose='archive-stage', base=ancestor,
+                expected_bytes=required, reserve_bytes=reserve_bytes)
+            retention.bind_stage(*retention_lease, stage_root, stage_marker)
+        elif shutil.disk_usage(ancestor).free < required + reserve_bytes:
+            raise ValueError(f"insufficient disk space: need {required + reserve_bytes} free bytes including reserve")
         destination.parent.mkdir(parents=True, exist_ok=True)
         _path(destination.parent, durable=True)
         parent = destination.parent
         while parent != ancestor:
             _sync_directory(parent.parent)
             parent = parent.parent
-        # SIGKILL leaves a marked disposable root, conservatively reserved
-        # until a subsequent invocation reaps this existing volume ancestor.
-        stage = stage_root / 'payload'
-        stage.mkdir()
+        if stage_root is not None:
+            stage = stage_root / 'payload'
+            stage.mkdir()
+        else:
+            stage = Path(tempfile.mkdtemp(prefix='.incomplete-', dir=destination.parent))
         shutil.copytree(app, stage / APP, symlinks=True, copy_function=shutil.copy2)
         shutil.copy2(retained_manifest, stage / MANIFEST_NAME, follow_symlinks=False)
         if evidence_entries:
@@ -377,13 +382,15 @@ def create_archive(app: Path, archive_root: Path, *, manifest: Path | None = Non
         _write_json(stage / COMPLETE, receipt)
         _sync_directory(stage)
         _verify(stage, identity, check_key=False)
-        retention.bind_publication(*retention_lease, stage)
+        if retention_lease is not None:
+            retention.bind_publication(*retention_lease, stage)
         _publish(stage, destination)
         _sync_directory(destination.parent)
         _sync_directory(root)
         final_receipt = verify_archive(destination, identity)
-        retention.finish_publication(*retention_lease, final_receipt)
-        retention_lease = None
+        if retention_lease is not None:
+            retention.finish_publication(*retention_lease, final_receipt)
+            retention_lease = None
         return final_receipt
     except BaseException as error:
         # The stage belongs exclusively to this invocation and cannot qualify as
@@ -397,7 +404,7 @@ def create_archive(app: Path, archive_root: Path, *, manifest: Path | None = Non
     finally:
         if stage_root is not None and stage_root.exists():
             workspace_lifecycle.cleanup_workspace(stage_root, reason='ARCHIVE_FINISHED', allow_live_owner=True)
-        if retention_lease is not None:
+        if retention_lease is not None and retention is not None:
             retention.cancel_publication(*retention_lease)
 
 

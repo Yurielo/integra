@@ -6,6 +6,11 @@ import stat
 import time
 import uuid
 
+try:
+    from scripts import candidate_protection_gate as canonical_gate
+except ModuleNotFoundError:
+    import candidate_protection_gate as canonical_gate
+
 
 def _entries(r, package):
     expected = json.loads((package / 'inventory.json').read_text())
@@ -60,6 +65,11 @@ def _parent_fd(package, relative, expected, job):
 
 
 def _guard(r, catalog, job, package, *, transaction=False):
+    if package == Path(job['source']):
+        if canonical_gate.require_deletion(package) != job.get('canonical_deletion_lease'):
+            raise ValueError('canonical deletion decision changed before withdrawal')
+    else:
+        canonical_gate.require_deletion_continuation(job.get('canonical_deletion_lease'))
     context = catalog.get('protection') or {}
     cid = job['identity']['candidate_id']
     selected = context.get('selected_archives', {}).get(cid)
@@ -100,6 +110,7 @@ def _execute(r, path, catalog, token):
             raise ValueError('prepared cleanup package disappeared')
         if not r._context_valid(catalog.get('protection')):
             raise ValueError('cleanup recovery protection context is unavailable')
+        canonical_gate.require_deletion_continuation(job.get('canonical_deletion_lease'))
         _finish_container(catalog, job)
         catalog['artifacts'].pop(job['source'], None)
         del catalog['deletions'][token]; r._persist(path, catalog)
@@ -162,6 +173,8 @@ def recover(r, path, catalog):
     except ModuleNotFoundError:
         from candidate_archive import verify_archive
     if catalog.get('deletions'):
+        for job in catalog['deletions'].values():
+            canonical_gate.require_deletion_continuation(job.get('canonical_deletion_lease'))
         if not r._context_valid(catalog.get('protection')):
             raise ValueError('cleanup recovery protection context is unavailable')
         for receipt in catalog['protection']['verified_survivors'].values():
@@ -187,6 +200,7 @@ def apply(r, path, expected_plan):
             verify_archive(Path(receipt['archive_path']), {k: receipt[k] for k in ('candidate_id', 'bundle_digest', 'manifest_digest')})
         targets = [e for e in snapshot['entries'] if e['classification'] == 'DELETABLE']
         for e in targets:
+            canonical_gate.require_deletion(Path(e['path']))
             if e['historical']:
                 raise ValueError('historical archive adoption/deletion requires separate Human Gate')
             package = r._safe(e['path'])
@@ -202,6 +216,7 @@ def apply(r, path, expected_plan):
                    'phase': 'PREPARED', 'identity': {k: e[k] for k in ('candidate_id', 'bundle_digest', 'manifest_digest')},
                    'device': e['device'], 'inode': e['inode'], 'record': record,
                    'entries': _entries(r, package)}
+            job['canonical_deletion_lease'] = canonical_gate.require_deletion(package)
             captured = {e['path']: e for e in job['entries']}
             if captured['inventory.json']['sha256'] != record['inventory_sha256'] or captured['COMPLETE.json']['sha256'] != record['complete_sha256']:
                 raise ValueError('cleanup journal metadata differs from publisher authority')

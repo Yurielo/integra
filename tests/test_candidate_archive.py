@@ -14,6 +14,7 @@ from unittest.mock import patch
 
 from integra_core.candidate_identity import candidate_id, canonical_bytes, tree_sha256
 from scripts import candidate_archive as archive
+from scripts import candidate_protection_gate
 
 
 class CandidateArchiveTests(unittest.TestCase):
@@ -117,6 +118,15 @@ class CandidateArchiveTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "exactly match"):
             self._create(manifest=other)
         self.assertFalse(self.destination.exists())
+
+    def test_managed_archive_requires_canonical_lifecycle_gate_before_copy(self):
+        with patch.object(archive, 'MANAGED_BASE', self.root), \
+                patch.object(candidate_protection_gate, 'require_archive_publication',
+                             side_effect=ValueError('authority pending')) as gate:
+            with self.assertRaisesRegex(ValueError, 'authority pending'):
+                self._create()
+            gate.assert_called_once()
+        self.assertFalse(self._expected_path().exists())
 
     def test_idempotent_existing_fully_reverifies(self):
         receipt = self._create()
