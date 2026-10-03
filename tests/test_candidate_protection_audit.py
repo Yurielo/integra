@@ -13,8 +13,12 @@ from integra_core.candidate_identity import candidate_id, canonical_bytes, tree_
 
 
 class ProtectionAuditTests(unittest.TestCase):
+    def prior_registry(self):
+        path = audit.ROOT / 'state/history/excel7_outgoing_protection_registry_v1.json'
+        return json.loads((path if path.is_file() else audit.REGISTRY).read_text())
+
     def setUp(self):
-        self.registry = json.loads(audit.REGISTRY.read_text())
+        self.registry = self.prior_registry()
         # Most resolver tests exercise the still-open proposal path.  Recreate
         # that isolated fixture from the exact accepted-unpromoted record.
         accepted = self.registry['accepted_unpromoted'][0]
@@ -40,7 +44,8 @@ class ProtectionAuditTests(unittest.TestCase):
                              recovery={**self.registry['canonical_current'],
                                        'confirmation_ref': 'issue-comment:fixture'})
         self.registry['rollback']['confirmation_ref'] = 'issue-comment:fixture'
-        self.current = json.loads((audit.ROOT / 'state/current_product_baseline_v2.json').read_text())
+        prior = audit.ROOT / 'state/history/excel7_outgoing_current_v2.json'
+        self.current = json.loads((prior if prior.is_file() else audit.ROOT / 'state/current_product_baseline_v2.json').read_text())
         self.proposals = {213: {'artifact_type': 'integra.proposed_product_baseline',
                                 'candidate': {key: self.registry['proposed'][0][key] for key in audit.IDENTITY},
                                 'owner_acceptance': {'promotion_authorized': True}}}
@@ -70,7 +75,7 @@ class ProtectionAuditTests(unittest.TestCase):
                              free_bytes=free, verifier=verifier, canonical=self.canonical)
 
     def accepted_gap_fixture(self):
-        registry = json.loads(audit.REGISTRY.read_text())
+        registry = self.prior_registry()
         accepted = registry['accepted_unpromoted'][0]
         registry['accepted_unpromoted'] = []
         registry['proposed'].append({
@@ -324,7 +329,7 @@ class ProtectionAuditTests(unittest.TestCase):
         self.assertEqual(result['eligible_bytes'], 0)
 
     def test_unverified_owner_decision_cannot_accept_bootstrap(self):
-        self.registry['historical_gaps'] = json.loads(audit.REGISTRY.read_text())['historical_gaps']
+        self.registry['historical_gaps'] = self.prior_registry()['historical_gaps']
         self.canonical['decision_token_sha256'] = 'changed'
         result = self.resolve()
         self.assertIn('PRODUCT_OWNER_DECISION_UNVERIFIED', result['blockers'])

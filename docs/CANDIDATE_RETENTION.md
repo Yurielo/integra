@@ -57,6 +57,22 @@ This repair changes development tooling, not the packaged runtime, CURRENT,
 source-product pins, semantic authority or installed application. It does not
 implement general process cleanup or claim that #180/#181 are complete.
 
+## Exact Excel #7 successor exception
+
+The Product Owner's exact `d8bd… → 5f6384…` decision is implemented by
+`scripts/successor_transaction.py` and the immutable
+`state/history/excel7_successor_transaction_v1.json` event. Historical gaps
+refer to the identities accepted in #214, independently of today's role.
+Missing historical bytes remain non-restorable and rollback-ineligible.
+The incoming archive is mandatory and reverified against its complete inventory.
+No other missing outgoing archive becomes promotable under this event.
+
+The governed merge holds the existing retention catalog lock through the last
+archive recheck and canonical application. It coordinates managed retention;
+external filesystem deletion is detected by later audit, not prevented.
+Preparation consumes no authority. Only the exact successor tree on main
+records consumption; a failed post-check cannot silently restore permission.
+
 ## Backup limitations
 
 A local archive and Git bundle protect against transient-directory cleanup

@@ -111,15 +111,80 @@ def discover_live_playlist(project_dir: Path, source: dict[str, Any], *, run_id:
         raise YouTubePlaylistRuntimeError("yt-dlp returned invalid playlist metadata")
     snapshot = _snapshot_from_yt_dlp(payload)
     discovery = discover_playlist(snapshot)
+    title = payload.get("title")
+    if not isinstance(title, str) or not title.strip():
+        title = None
     return {
         "schema_version": "1.0",
         "acquisition": {
             "source_url": url, "fetched_at": snapshot["fetched_at"], "runtime": runtime,
             "network_access_performed": True, "mode": "yt-dlp-flat-playlist-metadata",
         },
+        "playlist_title": title,
         "snapshot": snapshot,
         "discovery": discovery,
     }
+
+
+def resolve_live_playlist_sources(project_dir: Path, source: dict[str, Any], *, run_id: str | None) -> dict[str, Any]:
+    """Expand a live playlist into ordered, ordinary Process sources.
+
+    Discovery remains at the provider boundary.  The UI receives a truthful
+    inventory before it can put any member into a Process plan; the selected
+    members then use the existing single-video adapter and source lifecycle.
+    """
+    live = discover_live_playlist(project_dir, source, run_id=run_id)
+    discovery = live["discovery"]
+    acquisition = live["acquisition"]
+    context = {
+        "schema_version": "1.0",
+        "collection_id": discovery["collection_id"],
+        "playlist_native_id": discovery["playlist_native_id"],
+        "playlist_title": live["playlist_title"],
+        "snapshot_id": discovery["snapshot_id"],
+        "snapshot_sha256": discovery["snapshot_sha256"],
+        "fetched_at": discovery["fetched_at"],
+        "source_url": acquisition["source_url"],
+        "acquisition": acquisition,
+        "items": [
+            {key: item[key] for key in (
+                "video_id", "position", "title", "availability", "duration_seconds",
+                "estimated_download_bytes", "video_source_id",
+            )}
+            for item in discovery["items"]
+        ],
+    }
+    sources: list[dict[str, Any]] = []
+    unavailable: list[dict[str, Any]] = []
+    for item in discovery["items"]:
+        membership = {
+            "collection_id": context["collection_id"],
+            "playlist_native_id": context["playlist_native_id"],
+            "snapshot_id": context["snapshot_id"],
+            "snapshot_sha256": context["snapshot_sha256"],
+            "position": item["position"],
+            "video_id": item["video_id"],
+            "title": item["title"],
+            "availability": item["availability"],
+        }
+        if item["availability"] != "AVAILABLE":
+            unavailable.append(membership)
+            continue
+        sources.append({
+            "source_id": item["video_source_id"],
+            "display_name": item["title"],
+            "input": f"https://www.youtube.com/watch?v={item['video_id']}",
+            "source_type": "YOUTUBE_VIDEO",
+            "kind": "URL",
+            "properties": {
+                "remote_ingest_supported": True,
+                "playlist_membership": membership,
+                # Preserve the complete observed inventory with every selected
+                # Process source.  This is evidence, not a second execution plan.
+                "playlist_context": context,
+            },
+        })
+    return {"schema_version": "1.0", "playlist": context, "sources": sources, "unavailable": unavailable}
 
 
 def _copy_owned_media(source: Path, artifact_root: Path, video_id: str) -> str:

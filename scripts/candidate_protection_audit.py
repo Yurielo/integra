@@ -120,7 +120,7 @@ def _optional_remote_file(path: str, ref: str) -> tuple[bytes, dict] | None:
     if not isinstance(value, dict) or value.get('type') != 'file' or value.get('encoding') != 'base64':
         raise ValueError('canonical proposal file response is invalid')
     data = base64.b64decode(''.join(value['content'].split()), validate=True)
-    return data, json.loads(data)
+    return data, json.loads(data) if path.endswith('.json') else {}
 
 
 def _remote_file(path: str, ref: str) -> tuple[bytes, dict]:
@@ -141,18 +141,32 @@ def fetch_canonical(registry: dict) -> tuple[dict, dict[int, dict], dict]:
     match = re.fullmatch(r'https://github\.com/Yurielo/integra/issues/214#issuecomment-([0-9]+)', decision_ref)
     if not match:
         raise ValueError('Product Owner decision reference is invalid')
-    authority = _api(f'repos/{REPOSITORY}/issues/comments/{match.group(1)}')
-    token_lines = re.findall(r'^PRODUCT_OWNER_AUTHORIZATION:.*$', authority.get('body', ''), re.MULTILINE)
-    if (registry.get('decision_authority_ref') != authority.get('html_url')
-            or authority.get('user', {}).get('login', '').lower() != 'yurielo'
-            or len(token_lines) != 1
-            or sha(token_lines[0].encode()) != registry.get('decision_token_sha256')):
+    decision_authority = _api(f'repos/{REPOSITORY}/issues/comments/{match.group(1)}')
+    decision_token_lines = re.findall(r'^PRODUCT_OWNER_AUTHORIZATION:.*$', decision_authority.get('body', ''), re.MULTILINE)
+    if (registry.get('decision_authority_ref') != decision_authority.get('html_url')
+            or decision_authority.get('user', {}).get('login', '').lower() != 'yurielo'
+            or len(decision_token_lines) != 1
+            or sha(decision_token_lines[0].encode()) != registry.get('decision_token_sha256')):
         raise ValueError('Product Owner Issue #214 decision binding differs')
     historical_receipts = {}
     for gap in registry.get('historical_gaps', []):
         data, receipt = _remote_file(gap['receipt_path'], main)
         historical_receipts[gap['candidate_id']] = {
             'record': receipt, 'sha256': sha(data), 'path': gap['receipt_path']}
+    successor_transactions = {}
+    for reference in registry.get('successor_transactions', []):
+        if set(reference) != {'path', 'transaction_id'}:
+            raise ValueError('successor transaction pointer is invalid')
+        raw, event = _remote_file(reference['path'], main)
+        try:
+            from scripts import successor_transaction as transaction
+        except ModuleNotFoundError:
+            import successor_transaction as transaction
+        if (reference['path'] != transaction.EVENT
+                or event.get('transaction_id') != reference['transaction_id']
+                or raw != transaction.encoded(transaction.make_event(ROOT))):
+            raise ValueError('canonical consumed transaction evidence differs')
+        successor_transactions[reference['transaction_id']] = event
     proposals = {}
     captured_heads = {}
     page = 1
@@ -217,10 +231,11 @@ def fetch_canonical(registry: dict) -> tuple[dict, dict[int, dict], dict]:
     if _api(f'repos/{REPOSITORY}/git/ref/heads/main')['object']['sha'] != main:
         raise ValueError('canonical main moved during protection capture')
     return current, proposals, {'main_sha': main, 'current_sha256': sha(current_bytes),
-                                 'decision_authority_ref': authority['html_url'],
-                                 'decision_token_sha256': sha(token_lines[0].encode()),
-                                 'decision_token': token_lines[0],
+                                 'decision_authority_ref': decision_authority['html_url'],
+                                 'decision_token_sha256': sha(decision_token_lines[0].encode()),
+                                 'decision_token': decision_token_lines[0],
                                  'historical_receipts': historical_receipts,
+                                 'successor_transactions': successor_transactions,
                                  'proposal_heads': {str(n): captured_heads[n] for n in proposals},
                                  'accepted_unpromoted': accepted_unpromoted}
 
@@ -255,9 +270,8 @@ def _accepted_historical_gaps(registry: dict, canonical: dict | None,
                               blockers: list[str]) -> set[str]:
     """Recognize only the exact Issue #214 owner decision, never inferred loss."""
     token = (canonical or {}).get('decision_token', '')
-    current_id = registry.get('canonical_current', {}).get('candidate_id')
-    rollback_id = registry.get('rollback', {}).get('candidate_id')
-    expected = {'CURRENT': current_id, 'ROLLBACK': rollback_id}
+    # These roles describe the immutable #214 decision, not today's selectors.
+    expected = dict(re.findall(r'(CURRENT|ROLLBACK)_RECOVERY_GAP=(candidate-v1-[0-9a-f]{64}):MISSING_WITH_AVAILABLE_EVIDENCE', token))
     gaps = registry.get('historical_gaps')
     if gaps == []:
         if registry.get('decision_token_sha256') == ACCEPTED_GAP_DECISION_SHA256:
@@ -265,7 +279,9 @@ def _accepted_historical_gaps(registry: dict, canonical: dict | None,
         return set()
     if (registry.get('decision_token_sha256') != ACCEPTED_GAP_DECISION_SHA256
             or (canonical or {}).get('decision_token_sha256') != ACCEPTED_GAP_DECISION_SHA256
+            or set(expected) != {'CURRENT', 'ROLLBACK'}
             or not isinstance(gaps, list) or len(gaps) != 2
+            or any(not isinstance(g, dict) for g in gaps)
             or {g.get('role'): g.get('candidate_id') for g in gaps if isinstance(g, dict)} != expected
             or any(g.get('observed_state') != 'MISSING_WITH_AVAILABLE_EVIDENCE'
                    or set(g) != {'role', 'candidate_id', 'receipt_path', 'observed_state'}
@@ -278,7 +294,7 @@ def _accepted_historical_gaps(registry: dict, canonical: dict | None,
             or registry.get('unknown_historical') != 'RETAIN_FAIL_CLOSED'):
         blockers.append('HISTORICAL_GAP_DECISION_CONFLICT')
         return set()
-    return {current_id, rollback_id}
+    return set(expected.values())
 
 
 def _validate_registry(registry: dict, current: dict, proposals: dict[int, dict],
@@ -304,6 +320,14 @@ def _validate_registry(registry: dict, current: dict, proposals: dict[int, dict]
     if registry.get('promotion_contract_integration_ref') != INTEGRATION_REF:
         blockers.append('PROMOTION_CONTRACT_INTEGRATION_MISSING')
     records = current['records']
+    successor_id = 'current-v2-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e'
+    transactions = registry.get('successor_transactions', [])
+    if transactions or any(row['baseline_id'] == successor_id for row in records):
+        expected = {'path': 'state/history/excel7_successor_transaction_v1.json',
+                    'transaction_id': 'successor-v1-5fb667319ec2e1f1bb5f6ca89c54183376f2e04e680e3728833130fd9c636d40'}
+        events = (canonical or {}).get('successor_transactions', {})
+        if transactions.count(expected) != 1 or events.get(expected['transaction_id'], {}).get('result', {}).get('current_id') != successor_id:
+            blockers.append('CONSUMED_SUCCESSOR_TRANSACTION_MISSING_OR_CONFLICT')
     active = [item for item in records if item['baseline_id'] == current['current_id']]
     if len(active) != 1 or active[0] != records[-1] or len(records) < 2:
         blockers.append('CANONICAL_CURRENT_AMBIGUOUS')
@@ -336,11 +360,12 @@ def _validate_registry(registry: dict, current: dict, proposals: dict[int, dict]
     recovery = registry.get('recovery')
     if recovery is None:
         selection = registry.get('recovery_selection')
-        if (registered['candidate_id'] not in accepted_gaps
-                or not isinstance(selection, dict)
+        if (not isinstance(selection, dict)
                 or set(selection) != {'state', 'candidate_id', 'decision_ref', 'archive_path'}
                 or selection.get('state') != 'NO_VERIFIED_ARCHIVE_ACCEPTED_HISTORICAL_GAP'
-                or selection.get('candidate_id') != registered['candidate_id']
+                or selection.get('candidate_id') not in accepted_gaps
+                or selection.get('candidate_id') != next((gap['candidate_id'] for gap in registry.get('historical_gaps', [])
+                                                         if gap.get('role') == 'CURRENT'), None)
                 or selection.get('decision_ref') != registry.get('decision_authority_ref')
                 or selection.get('archive_path') is not None):
             blockers.append('RECOVERY_SELECTION_MISSING')
@@ -350,6 +375,16 @@ def _validate_registry(registry: dict, current: dict, proposals: dict[int, dict]
         _add(protected, recovery, 'CONFIRMED_RECOVERY', blockers)
         if not recovery.get('confirmation_ref'):
             blockers.append('RECOVERY_CONFIRMATION_MISSING')
+    # Historical obligations outlive both CURRENT and nearest-predecessor roles.
+    historical = (canonical or {}).get('historical_receipts', {})
+    for cid in accepted_gaps:
+        receipt = historical.get(cid, {}).get('record') or {}
+        matching = [r for r in records if r.get('candidate', {}).get('candidate_id') == cid]
+        if (len(matching) != 1 or any(matching[0]['candidate'].get(k) != receipt.get(k)
+                                    for k in ('candidate_id', 'bundle_digest'))):
+            blockers.append('HISTORICAL_ACCEPTED_IDENTITY_CONFLICT:' + cid)
+        else:
+            _add(protected, receipt, 'ACCEPTED_HISTORICAL_GAP', blockers)
     declared = {item['pr']: item for item in registry.get('proposed', [])}
     if len(declared) != len(registry.get('proposed', [])) or set(declared) != set(proposals):
         blockers.append('PROPOSAL_SET_CONFLICT')
@@ -451,6 +486,9 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
             # identity; other open proposals are protected even when no
             # archive has been published. A specific promotion still requires
             # a byte-verified selected Candidate in its own operation gate.
+            proposal_ids = {p['candidate']['candidate_id'] for p in proposals.values()}
+            if cid not in accepted_gaps and cid not in proposal_ids:
+                blockers.append('MISSING_PROTECTED_ARCHIVE:' + cid)
             continue
         if not isinstance(path, str) or not path:
             blockers.append('INVALID_SELECTED_SURVIVOR:' + cid)
@@ -534,6 +572,12 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
             'promotion_blockers': sorted(set(promotion_blockers)),
             'blockers': blockers, 'canonical': canonical,
             'protected_identities': protected,
+            'historical_availability': {cid: {
+                'identity': protected.get(cid, {}).get('identity'),
+                'historical_identity': 'VERIFIED_FROM_ACCEPTED_EVIDENCE',
+                'archive_availability': 'MISSING_WITH_AVAILABLE_EVIDENCE',
+                'restorable_from_retained_archive': False,
+                'rollback_eligible': False} for cid in sorted(accepted_gaps)},
             'full_copies': len(rows), 'archive_bytes': total,
             'protected_bytes': sum(r['allocated_bytes'] for r in rows if r['classification'] == 'PROTECTED'),
             'verified_protected_bytes': sum(r['allocated_bytes'] for r in rows if r['verified_protected_archive']),

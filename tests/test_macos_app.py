@@ -217,7 +217,7 @@ class MacOSApplicationTests(unittest.TestCase):
                 plan = build_plan(result["sources"], ["transcript"])
             self.assertEqual(plan["sources"], result["sources"])
 
-    def test_bridge_executes_youtube_playlist_through_source_first_runtime(self):
+    def test_bridge_resolves_youtube_playlist_before_the_existing_plan_is_built(self):
         bridge = ROOT / "macos/Resources/bridge.py"
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -225,7 +225,7 @@ class MacOSApplicationTests(unittest.TestCase):
             downloader.write_text(
                 "#!/bin/sh\n"
                 "if [ \"$1\" = \"--version\" ]; then echo 2026.01.01; exit 0; fi\n"
-                "for arg in \"$@\"; do [ \"$arg\" = \"--flat-playlist\" ] && { echo '{\"id\":\"PL-bridge\",\"entries\":[{\"id\":\"bridge-video\",\"title\":\"Bridge video\",\"duration\":1,\"filesize\":4}]}'; exit 0; }; done\n"
+                "for arg in \"$@\"; do [ \"$arg\" = \"--flat-playlist\" ] && { echo '{\"id\":\"PL-bridge\",\"title\":\"Bridge playlist\",\"entries\":[{\"id\":\"bridge-video\",\"title\":\"Bridge video\",\"duration\":1,\"filesize\":4},{\"id\":\"private-video\",\"title\":\"[Private video]\",\"availability\":\"private\"}]}'; exit 0; }; done\n"
                 "previous=''\n"
                 "for arg in \"$@\"; do [ \"$previous\" = \"--output\" ] && output=$arg; previous=$arg; done\n"
                 "target=$(printf '%s' \"$output\" | sed 's/%(ext)s/mp3/')\n"
@@ -241,10 +241,12 @@ class MacOSApplicationTests(unittest.TestCase):
                 )
                 return json.loads(completed.stdout)["result"]
 
-            sources = invoke("detect-sources", {"inputs": ["https://www.youtube.com/playlist?list=PL-bridge"]})
-            registry = invoke("capability-registry", {"sources": sources})
-            self.assertEqual(next(item for item in registry if item["id"] == "youtube_playlist_ingest")["ui_state"], "Доступно")
-            plan = invoke("build-plan", {"sources": sources, "selected_outputs": ["youtube_playlist_ingest"]})
+            playlist = invoke("detect-sources", {"inputs": ["https://www.youtube.com/playlist?list=PL-bridge"]})[0]
+            resolution = invoke("discover-youtube-playlist", {"source": playlist})
+            self.assertEqual(resolution["playlist"]["playlist_title"], "Bridge playlist")
+            self.assertEqual([item["display_name"] for item in resolution["sources"]], ["Bridge video"])
+            self.assertEqual(resolution["unavailable"][0]["video_id"], "private-video")
+            plan = invoke("build-plan", {"sources": resolution["sources"], "selected_outputs": ["youtube_ingest"]})
             execution = invoke("execute-plan", {"plan": plan, "name": "Bridge playlist"})
             project_id = execution["project"]["project_id"]
             run_id = execution["run"]["run_id"]
@@ -256,13 +258,14 @@ class MacOSApplicationTests(unittest.TestCase):
                 time.sleep(0.05)
             self.assertEqual(result["state"], "COMPLETED")
             outputs = result["source_results"][0]["outputs"]
-            self.assertTrue(Path(outputs["playlist_checkpoint"]).is_file())
-            self.assertTrue(Path(outputs["playlist_artifacts_directory"]).is_dir())
+            record = json.loads(Path(outputs["youtube_source_record"]).read_bytes())
+            self.assertEqual(record["playlist_membership"]["video_id"], "bridge-video")
+            self.assertEqual(record["playlist_context"]["playlist_native_id"], "PL-bridge")
 
     def test_native_source_exposes_source_first_real_actions(self):
         source = (ROOT / "macos/IntegraApp.swift").read_text()
         bridge_allow_list = source[source.index("let allowed = ["):source.index("guard allowed.contains(operation)")]
-        for operation in ("detect-sources", "discover-folder-sources", "discover-zoom-folder-sources", "capability-registry", "build-plan", "execute-plan", "run-status", "media-navigation", "seminartext-preflight", "package-preview", "package-publish"):
+        for operation in ("detect-sources", "discover-folder-sources", "discover-zoom-folder-sources", "discover-youtube-playlist", "capability-registry", "build-plan", "execute-plan", "run-status", "media-navigation", "seminartext-preflight", "package-preview", "package-publish"):
             self.assertIn(operation, source)
             self.assertIn(operation, bridge_allow_list)
         self.assertIn("NSOpenPanel", source)
@@ -271,8 +274,8 @@ class MacOSApplicationTests(unittest.TestCase):
         self.assertIn("Подтвердите записи Zoom", source)
         self.assertIn("Подтвердите источники", source)
         self.assertIn("Добавить \\(discovered.count) источников", source)
-        self.assertIn("Одиночное видео или плейлист будут загружены в проект", source)
-        self.assertIn("скачивает элементы последовательно с checkpoint", source)
+        self.assertIn("Подтвердите видео плейлиста", source)
+        self.assertIn("Добавить выбранные источники", source)
         self.assertIn("ЧТО НУЖНО ПОЛУЧИТЬ?", source)
         self.assertIn("Режим распознавания", source)
         self.assertIn("Язык исходной речи", source)
@@ -295,6 +298,14 @@ class MacOSApplicationTests(unittest.TestCase):
         self.assertIn("seekTranscriptCue", source)
         self.assertIn('object["error"] as? String', source)
         self.assertNotIn("Integra Reference Project", source)
+
+    def test_youtube_source_type_stays_internal_to_normal_source_lists(self):
+        source = (ROOT / "macos/IntegraApp.swift").read_text()
+        self.assertIn('case "YOUTUBE_VIDEO": return "YouTube"', source)
+        self.assertIn('case "YOUTUBE_PLAYLIST": return "Плейлист YouTube"', source)
+        self.assertEqual(source.count("sourcePresentationDetail(source)"), 3)
+        self.assertNotIn('detail: source["source_type"] as? String ?? "UNKNOWN"', source)
+        self.assertNotIn('detail: "\\(source["source_type"] ?? "UNKNOWN")"', source)
 
     def test_macos_build_packages_seminartext_topics_worker(self):
         build = (ROOT / "scripts/build_macos_app.sh").read_text()

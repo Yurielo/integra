@@ -1,0 +1,115 @@
+{
+  "artifact_type": "integra.exact_successor_transaction",
+  "consumption": "CONSUMED_ONLY_WHEN_THIS_TREE_IS_CANONICAL_MAIN",
+  "inputs": {
+    "accepted_head": "893eb462c2e7ee13e62ddec23d231fd822b144ed",
+    "archive_inventory_sha256": "98522a8283a26589ccac94eeaa747261f163573fd695ce56d50726803647c443",
+    "archive_path": "Build Archive/candidate-v1-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e/639d66bbbd8d7af55d091f43156d823000496191c771bef28d7fffc6fe88a302",
+    "authority": {
+      "acceptance": {
+        "authority_ref": "docs/evidence/EXCEL7_AUTHORITY_ACCEPTANCE.txt",
+        "original_payload_sha256": "11bcd27d98b7b193bb7d879582c465198e99b29e9b02cb1e12c83c7730bca60f",
+        "payload_sha256": "28fe9d832e2b4496f65f92c5b468907bfa04ac21169694e563f99859e508a14f"
+      },
+      "archive_exception": {
+        "authority_ref": "docs/evidence/EXCEL7_AUTHORITY_ARCHIVE_EXCEPTION.txt",
+        "original_payload_sha256": "b1d7c75df6a3299a338b7df8097261d234df542a7911752d49d074363438302e",
+        "payload_sha256": "398cf7283ff0a142527715fdda932c459670bc5b92e1575617b2fa2c4209ac5b"
+      },
+      "promotion": {
+        "authority_ref": "docs/evidence/EXCEL7_AUTHORITY_PROMOTION.txt",
+        "original_payload_sha256": "899260c472f2b3f2ef3d80270cc6fb3fab5d42c07976b2f0958c3715684eb710",
+        "payload_sha256": "c8c8b4228b9537b18d32e3afdf9c5f9c95168e50c74854191940dd9fbc9133c7"
+      }
+    },
+    "base_main": {
+      "commit_sha": "a4fbdcb2d324acd5358f7e64602b0305b0722cfc",
+      "tree_sha": "3d23e21602b8d9ae530bf42d6dee527c4928c548"
+    },
+    "canonical_base": "5be70ddaa0b641f0b4dfb36b95c81641166ef2eb",
+    "evidence": {
+      "candidate_evidence": {
+        "path": "docs/evidence/PROCESS_V1_YOUTUBE_PLAYLIST_E2E.json",
+        "sha256": "5ffa0755d7f441ddfb9651c5cac6e422856cb27f7ebb7c0b802a8df3dd9d5664"
+      },
+      "candidate_manifest": {
+        "path": "docs/evidence/PROCESS_V1_YOUTUBE_PLAYLIST_CANDIDATE_MANIFEST.json",
+        "sha256": "e50edf361bad7226caf3101584ec3dc73119a0254c464ecb424f1ec0a23daacf"
+      },
+      "report": {
+        "path": "docs/PROCESS_V1_YOUTUBE_PLAYLIST_PROOF.md",
+        "sha256": "12aaddec9b7a1b768f36e09f62d99bb1543b5e8f7dc8e635d499f03bf5bddd23"
+      }
+    },
+    "evidence_head": {
+      "commit_sha": "a75bc36d74853dc52cb4a983f7ac7a48232f5b8f",
+      "tree_sha": "9e9e0d869035ba1d9baa211567761dcefcb1061f"
+    },
+    "historical_evidence": [
+      {
+        "path": "docs/evidence/PROCESS_V1_ZOOM_FOLDER_CANDIDATE_ARCHIVE.json",
+        "sha256": "9ef84f01b286e7148f92baaf7681e7b48d267d872f91f8ced0bd399d2f80bd36"
+      },
+      {
+        "path": "docs/evidence/PROCESS_V1_FOLDER_DISCOVERY_CANDIDATE_ARCHIVE.json",
+        "sha256": "723301c8c3329cb9a8b1a244f35a554f7c1a3e78efb20910d6ede11150d2c0d8"
+      }
+    ],
+    "incoming": {
+      "bundle_digest": "639d66bbbd8d7af55d091f43156d823000496191c771bef28d7fffc6fe88a302",
+      "candidate_id": "candidate-v1-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e",
+      "manifest_digest": "e50edf361bad7226caf3101584ec3dc73119a0254c464ecb424f1ec0a23daacf"
+    },
+    "intended_successor": "current-v2-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e",
+    "outgoing": {
+      "bundle_digest": "fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
+      "candidate_id": "candidate-v1-d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8",
+      "current_id": "current-v2-d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8",
+      "current_sha256": "47f4023fc7905166c5134f224519d83520f95b06ac68ccd357c02d86035f900e",
+      "manifest_digest": "48cd6a5fb04677bc8b79d2a8e6212749c51bc931719fbb8923b1cdb8f7e71c56"
+    },
+    "pre_registry_sha256": "5c1b43a4ea4fbda2047c6d02c3a29a29042ad9c1261a5df469fb9464647a173f",
+    "proposal_id": "proposal-process-v1-youtube-playlist",
+    "proposal_sha256": "daf33b1f2ea99c7709a66d1d129bc53edd428b10900b46092b10d7de1bc59e84",
+    "source": {
+      "commit_sha": "1cb81f020c76e1678a6ed17aeec555525be81428",
+      "tree_sha": "d11b6ffdb99728e9030ac125c6196a6ef9fb2a30"
+    }
+  },
+  "outgoing_archive_availability": "MISSING_WITH_AVAILABLE_EVIDENCE",
+  "outgoing_restorable": false,
+  "outgoing_rollback_eligible": false,
+  "pin_reconciliation": {
+    "accepted_content_head": "893eb462c2e7ee13e62ddec23d231fd822b144ed",
+    "before": {
+      "bundle_digest": "d05c0863dcb4a205a3c0fd4e4787e8b15f70a17058335f09f46236bda64ca4ba",
+      "candidate_id": "candidate-v1-136e1a5b80644c20a4e7f9ecf66741ab069f88d66418123e6e85b409bfc714b8",
+      "head_sha": "fb0b3318c7bf3e0c3043db6835365599d42de519",
+      "manifest_digest": "dddfd523af297bd0f70f9909eadafd8f1cdd2c58afbe504559ed7da5f7f15d06",
+      "path": "state/proposed_baseline_lite_v1.json",
+      "pr": 211
+    },
+    "candidate": {
+      "bundle_digest": "639d66bbbd8d7af55d091f43156d823000496191c771bef28d7fffc6fe88a302",
+      "candidate_id": "candidate-v1-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e",
+      "manifest_digest": "e50edf361bad7226caf3101584ec3dc73119a0254c464ecb424f1ec0a23daacf"
+    },
+    "reason": "accepted #7 Candidate changed after native UI repair and Candidate recovery; final promotion retires the open proposal"
+  },
+  "result": {
+    "current_id": "current-v2-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e",
+    "files": {
+      "docs/PROCESS_V1_DEFINITION_OF_DONE.md": "549bceeb7ce2a6f6d138bae2726aeb5ee78279999e815b1bb7fc0101d87b4dfb",
+      "docs/PROCESS_V1_EXCEL_SCOPE_RECONCILIATION.md": "0b360581d819463380b53d0f651496c8af3d29247088c6a63389b5a3294d4734",
+      "state/candidate_protection_registry_v1.json": "3b9970806ca8014c8afaea58fd557134bdd8fb6b3c4c8e893112421308139fec",
+      "state/current_product_baseline_v2.json": "ccd76ed8b0c66c097880403ee332903e412fd1ed01381ec460d2b171335c8c69",
+      "state/history/excel7_accepted_proposal_lite_v1.json": "daf33b1f2ea99c7709a66d1d129bc53edd428b10900b46092b10d7de1bc59e84",
+      "state/history/excel7_outgoing_current_v2.json": "47f4023fc7905166c5134f224519d83520f95b06ac68ccd357c02d86035f900e",
+      "state/history/excel7_outgoing_protection_registry_v1.json": "5c1b43a4ea4fbda2047c6d02c3a29a29042ad9c1261a5df469fb9464647a173f",
+      "state/proposed_baseline_lite_v1.json": null
+    }
+  },
+  "schema_version": "1.0",
+  "single_use": true,
+  "transaction_id": "successor-v1-5fb667319ec2e1f1bb5f6ca89c54183376f2e04e680e3728833130fd9c636d40"
+}

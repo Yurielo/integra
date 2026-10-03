@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.proposed_product_baseline",
+  "proposal_id": "proposal-process-v1-youtube-playlist",
+  "status": "PROPOSED_BASELINE_VALID",
+  "base_current_id": "current-v2-d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8",
+  "base_main": {"commit_sha": "a4fbdcb2d324acd5358f7e64602b0305b0722cfc", "tree_sha": "3d23e21602b8d9ae530bf42d6dee527c4928c548"},
+  "proposed_source": {"commit_sha": "1cb81f020c76e1678a6ed17aeec555525be81428", "tree_sha": "d11b6ffdb99728e9030ac125c6196a6ef9fb2a30"},
+  "proposed_head": {"commit_sha": "a75bc36d74853dc52cb4a983f7ac7a48232f5b8f", "tree_sha": "9e9e0d869035ba1d9baa211567761dcefcb1061f"},
+  "intended_scope": {"wp": "Excel #7 / S08 + S10 partial", "journey": "Resolve a supported YouTube playlist to an ordered public inventory, explicitly confirm selected members, then add only those members as ordered ordinary Process sources with truthful provenance."},
+  "candidate": {"candidate_id": "candidate-v1-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e", "identity_sha256": "5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e", "bundle_digest": "639d66bbbd8d7af55d091f43156d823000496191c771bef28d7fffc6fe88a302", "manifest_digest": "e50edf361bad7226caf3101584ec3dc73119a0254c464ecb424f1ec0a23daacf"},
+  "delta": [
+    {"path":"integra_core/application_runtime.py","before_sha256":"990e846af4e7d1c3d7405663e4405ec73d2a13543d4c04b7154b6062cc0472ac","after_sha256":"3fb03f62b896168a90eab3534a2545376e605fa138e065b1fee688c491469c52"},
+    {"path":"integra_core/youtube_playlist_runtime.py","before_sha256":"7dd7cb997714a04346376f65ab8b9bcc2386791568e9ac78d96751ff49bde961","after_sha256":"10b1ec5ba81a07fb6d3d5e1c183ce8d778f89bbb4e6460318898941a8ac80bec"},
+    {"path":"integra_core/youtube_runtime.py","before_sha256":"f826088e9e1dafe3d2b4255ba5b596104b784c075953313d020cfe7335ae8794","after_sha256":"7a5ee2e08451ae44b06c8067f67b0e99aaee358d4faddd2c1ece819c976f4fc2"},
+    {"path":"macos/IntegraApp.swift","before_sha256":"f8e7e2efa86a00241bbd600017297d66c6251e9ff417bd1491967f5f38fb9834","after_sha256":"f85a8192f61983449fae7eedc13d15c24685877c3a7917be80e2e75b6f6f5350"},
+    {"path":"macos/Resources/bridge.py","before_sha256":"ff2b281ad869f41d176cb96249ae2255060aacf4806bc7e4ee4ebade96a219f9","after_sha256":"fdc4642eb3b3efae280f8d1afc160fc0dee97c49bb6d63599f879c06a4bf3a0c"},
+    {"path":"scripts/build_macos_app.sh","before_sha256":"ad81f7a08a2fbcb93b57788e64d2f028697f7f5f086bb8fa75e9eac758dc4507","after_sha256":"b905ba56beed4a8f5fdea5819d05de1bd1498634d235c6e0cbc321063e48e6b8"},
+    {"path":"scripts/test_macos_app.sh","before_sha256":"1648671bac009e76169b26c039de42a1f769b4d422014d83e850dd87810ce359","after_sha256":"bded70e8c256344412c1ae2818e1f8fd4a1d12fd4bbcaba219b5cd0a416c552c"},
+    {"path":"tests/test_macos_app.py","before_sha256":"23a2ce04e8d79e407064437cd156b039f0cea800e864d3d8ecd31d70df139283","after_sha256":"4519d9ff2e9d7d1f10165e45de288f921c4596f093b047a66e7473879d2372b9"}
+  ],
+  "historical_test_successors": [],
+  "gates": [{"name":"candidate-manifest","result":"PASS","evidence_ref":"docs/evidence/PROCESS_V1_YOUTUBE_PLAYLIST_CANDIDATE_MANIFEST.json"},{"name":"candidate-archive","result":"PASS","evidence_ref":"docs/evidence/PROCESS_V1_YOUTUBE_PLAYLIST_CANDIDATE_ARCHIVE.json"},{"name":"playlist-native-ac-proof","result":"PASS","evidence_ref":"docs/evidence/PROCESS_V1_YOUTUBE_PLAYLIST_E2E.json"}],
+  "evidence": {"candidate_manifest":{"path":"docs/evidence/PROCESS_V1_YOUTUBE_PLAYLIST_CANDIDATE_MANIFEST.json","sha256":"e50edf361bad7226caf3101584ec3dc73119a0254c464ecb424f1ec0a23daacf"},"candidate_evidence":{"path":"docs/evidence/PROCESS_V1_YOUTUBE_PLAYLIST_E2E.json","sha256":"5ffa0755d7f441ddfb9651c5cac6e422856cb27f7ebb7c0b802a8df3dd9d5664"},"report":{"path":"docs/PROCESS_V1_YOUTUBE_PLAYLIST_PROOF.md","sha256":"12aaddec9b7a1b768f36e09f62d99bb1543b5e8f7dc8e635d499f03bf5bddd23"}},
+  "owner_acceptance": {
+    "decision": "PILOT_ACCEPTED",
+    "authority_ref": "Product Owner authorization 2026-10-03: ACCEPT_PROPOSED_BASELINE proposal-process-v1-youtube-playlist candidate-v1-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e",
+    "scope": "YouTube playlist — Excel #7 / S08 + S10 partial exact Candidate baseline",
+    "promotion_authorized": false
+  },
+  "allowed_overlay_paths": ["docs/evidence/PROCESS_V1_YOUTUBE_PLAYLIST_CANDIDATE_ARCHIVE.json","docs/evidence/PROCESS_V1_YOUTUBE_PLAYLIST_CANDIDATE_MANIFEST.json","docs/evidence/PROCESS_V1_YOUTUBE_PLAYLIST_E2E.json","docs/PROCESS_V1_YOUTUBE_PLAYLIST_PROOF.md"]
+}

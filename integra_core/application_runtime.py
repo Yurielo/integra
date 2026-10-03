@@ -424,32 +424,41 @@ def execute_run(project_dir:Path,run_id:str)->dict[str,Any]:
                     atomic_json(path, record)
                     continue
             elif source["kind"] == "URL" and source["source_type"] == "YOUTUBE_VIDEO":
-                record["current_stage"] = "youtube_ingest"; record["message"] = "Downloading selected YouTube video"; atomic_json(path, record)
-                downloaded = download_video(project_dir, source, run_id=run_id)
-                downloaded_outputs = {
-                    "downloaded_media": downloaded["downloaded_path"],
-                    "youtube_source_record": downloaded["record_path"],
-                }
-                downstream = [item for item in outputs if item != "youtube_ingest"]
-                if not downstream:
-                    record["source_results"].append({"source_id": source["source_id"], "display_name": source["display_name"], "state": "COMPLETED", "outputs": downloaded_outputs})
-                else:
-                    record["current_stage"] = "media_preparation"; atomic_json(path, record)
-                    job = {"job_id": f"urn:integra:job:{uuid.uuid4()}", "kind": "YOUTUBE_MEDIA_TRANSCRIPTION", "state": "QUEUED", "progress": 0, "message": "Queued after YouTube download", "created_at": now(), "source_id": source["source_id"], "source_sha256": downloaded["content_sha256"], "owned_path": downloaded["downloaded_path"], "requested_outputs": downstream, "recognition_mode": recognition_mode, "source_speech_language": source_speech_language, "topic_detail": topic_detail, "translation_target_language": source_plan.get("translation_target_language"), "run_id": run_id, "youtube_source_record": downloaded["record_path"]}
-                    jobs = json.loads(jobs_path.read_bytes())
-                    jobs["jobs"].append(job); atomic_json(jobs_path, jobs); result = run_job(project_dir, job["job_id"])
-                    record["source_results"].append({"source_id": source["source_id"], "display_name": source["display_name"], "state": result["state"], "outputs": downloaded_outputs | result.get("outputs", {}), "job_id": job["job_id"]})
-                    if result.get("asr_reuse"):
-                        record["source_results"][-1]["asr_reuse"] = result["asr_reuse"]
-                    if result.get("recognition"):
-                        record["source_results"][-1]["recognition"] = result["recognition"]
-                    if result.get("source_speech_language"):
-                        record["source_results"][-1]["source_speech_language"] = result["source_speech_language"]
-                        record["source_speech_language"] = result["source_speech_language"]
-                    if result.get("topic_detail"):
-                        record["source_results"][-1]["topic_detail"] = result["topic_detail"]
-                    if result.get("asr_diagnostics"):
-                        record["source_results"][-1]["asr_diagnostics"] = result["asr_diagnostics"]
+                try:
+                    record["current_stage"] = "youtube_ingest"; record["message"] = "Downloading selected YouTube video"; atomic_json(path, record)
+                    downloaded = download_video(project_dir, source, run_id=run_id)
+                    downloaded_outputs = {
+                        "downloaded_media": downloaded["downloaded_path"],
+                        "youtube_source_record": downloaded["record_path"],
+                    }
+                    downstream = [item for item in outputs if item != "youtube_ingest"]
+                    if not downstream:
+                        record["source_results"].append({"source_id": source["source_id"], "display_name": source["display_name"], "state": "COMPLETED", "outputs": downloaded_outputs})
+                    else:
+                        record["current_stage"] = "media_preparation"; atomic_json(path, record)
+                        job = {"job_id": f"urn:integra:job:{uuid.uuid4()}", "kind": "YOUTUBE_MEDIA_TRANSCRIPTION", "state": "QUEUED", "progress": 0, "message": "Queued after YouTube download", "created_at": now(), "source_id": source["source_id"], "source_sha256": downloaded["content_sha256"], "owned_path": downloaded["downloaded_path"], "requested_outputs": downstream, "recognition_mode": recognition_mode, "source_speech_language": source_speech_language, "topic_detail": topic_detail, "translation_target_language": source_plan.get("translation_target_language"), "run_id": run_id, "youtube_source_record": downloaded["record_path"]}
+                        jobs = json.loads(jobs_path.read_bytes())
+                        jobs["jobs"].append(job); atomic_json(jobs_path, jobs); result = run_job(project_dir, job["job_id"])
+                        record["source_results"].append({"source_id": source["source_id"], "display_name": source["display_name"], "state": result["state"], "outputs": downloaded_outputs | result.get("outputs", {}), "job_id": job["job_id"]})
+                        if result.get("asr_reuse"):
+                            record["source_results"][-1]["asr_reuse"] = result["asr_reuse"]
+                        if result.get("recognition"):
+                            record["source_results"][-1]["recognition"] = result["recognition"]
+                        if result.get("source_speech_language"):
+                            record["source_results"][-1]["source_speech_language"] = result["source_speech_language"]
+                            record["source_speech_language"] = result["source_speech_language"]
+                        if result.get("topic_detail"):
+                            record["source_results"][-1]["topic_detail"] = result["topic_detail"]
+                        if result.get("asr_diagnostics"):
+                            record["source_results"][-1]["asr_diagnostics"] = result["asr_diagnostics"]
+                except Exception as error:
+                    if _is_run_cancelled(project_dir, run_id) or len(plan["sources"]) == 1:
+                        raise
+                    record = refresh_record()
+                    record["source_results"].append(failed_media_source(source, error))
+                    record["current_stage"] = None
+                    atomic_json(path, record)
+                    continue
             elif source["kind"] == "URL" and source["source_type"] == "YOUTUBE_PLAYLIST":
                 if outputs != ["youtube_playlist_ingest"]:
                     raise ValueError("playlist plan has unsupported outputs")

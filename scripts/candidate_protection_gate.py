@@ -56,8 +56,21 @@ def _selected_verified(registry: dict, audit: dict, identity: dict, archive: Pat
 
 
 def require_promotion(proposal: dict, current: dict, candidate_archive: Path,
-                      outgoing_archive: Path) -> None:
+                      outgoing_archive: Path | None, *, transaction: dict | None = None,
+                      expected_head: str | None = None) -> None:
     """Require complete authority as an additional gate before record writes."""
+    if transaction is not None:
+        if outgoing_archive is not None or not expected_head:
+            raise ValueError('exact missing-outgoing transaction needs external head and no false archive')
+        try:
+            from scripts.successor_transaction import require_exact_promotion
+        except ModuleNotFoundError:
+            from successor_transaction import require_exact_promotion
+        require_exact_promotion(protection.ROOT, transaction, proposal, current,
+                                candidate_archive, expected_head)
+        return
+    if outgoing_archive is None:
+        raise ValueError('outgoing CURRENT archive is required; no general exception')
     registry, audit = _snapshot()
     if not audit['promotion_ready']:
         raise ValueError('canonical protection does not authorize promotion')
