@@ -56,6 +56,7 @@ ALLOWED_REPAIR = {
     'scripts/candidate_protection_audit.py', 'scripts/candidate_protection_gate.py',
     'scripts/promote_proposed_baseline_lite.py', 'scripts/successor_transaction.py',
     'scripts/validate_governance.py', 'scripts/candidate_retention.py',
+    'scripts/proposed_baseline_lite.py',
     'tests/test_successor_transaction.py', 'tests/test_candidate_protection_audit.py',
     'tests/test_candidate_protection_gate.py', 'tests/test_promotion_archive_gate.py',
     'docs/CANDIDATE_RETENTION.md', 'docs/ISSUE_214_PROTECTION_RECOVERY_CONTRACT.md',
@@ -179,7 +180,8 @@ def validate_tree(root: Path) -> None:
         elif target.is_symlink() or target.read_bytes() != raw:
             raise ValueError('successor package differs: ' + path)
     errors = baseline.validate_current(json.loads(files[CURRENT]), root)
-    errors += baseline.verify_promotion_material(json.loads(files[RETIRED]), root, root / PROPOSAL)
+    errors += baseline.verify_promotion_material(json.loads(files[RETIRED]), root, root / PROPOSAL,
+                                               acceptance_ref=ACCEPTED_HEAD)
     # Retirement preserves the original declaration path. The material validator
     # must inspect that original path, not require the historical copy to have
     # been created in the Proposal declaration commit.
