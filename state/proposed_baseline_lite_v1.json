@@ -22,6 +22,11 @@
   "historical_test_successors": [],
   "gates": [{"name":"candidate-manifest","result":"PASS","evidence_ref":"docs/evidence/PROCESS_V1_YOUTUBE_PLAYLIST_CANDIDATE_MANIFEST.json"},{"name":"candidate-archive","result":"PASS","evidence_ref":"docs/evidence/PROCESS_V1_YOUTUBE_PLAYLIST_CANDIDATE_ARCHIVE.json"},{"name":"playlist-native-ac-proof","result":"PASS","evidence_ref":"docs/evidence/PROCESS_V1_YOUTUBE_PLAYLIST_E2E.json"}],
   "evidence": {"candidate_manifest":{"path":"docs/evidence/PROCESS_V1_YOUTUBE_PLAYLIST_CANDIDATE_MANIFEST.json","sha256":"e50edf361bad7226caf3101584ec3dc73119a0254c464ecb424f1ec0a23daacf"},"candidate_evidence":{"path":"docs/evidence/PROCESS_V1_YOUTUBE_PLAYLIST_E2E.json","sha256":"5ffa0755d7f441ddfb9651c5cac6e422856cb27f7ebb7c0b802a8df3dd9d5664"},"report":{"path":"docs/PROCESS_V1_YOUTUBE_PLAYLIST_PROOF.md","sha256":"12aaddec9b7a1b768f36e09f62d99bb1543b5e8f7dc8e635d499f03bf5bddd23"}},
-  "owner_acceptance": null,
+  "owner_acceptance": {
+    "decision": "PILOT_ACCEPTED",
+    "authority_ref": "Product Owner authorization 2026-10-03: ACCEPT_PROPOSED_BASELINE proposal-process-v1-youtube-playlist candidate-v1-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e",
+    "scope": "YouTube playlist — Excel #7 / S08 + S10 partial exact Candidate baseline",
+    "promotion_authorized": false
+  },
   "allowed_overlay_paths": ["docs/evidence/PROCESS_V1_YOUTUBE_PLAYLIST_CANDIDATE_ARCHIVE.json","docs/evidence/PROCESS_V1_YOUTUBE_PLAYLIST_CANDIDATE_MANIFEST.json","docs/evidence/PROCESS_V1_YOUTUBE_PLAYLIST_E2E.json","docs/PROCESS_V1_YOUTUBE_PLAYLIST_PROOF.md"]
 }
