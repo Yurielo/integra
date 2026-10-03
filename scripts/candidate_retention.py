@@ -124,10 +124,18 @@ def locked(path):
 
 def register_root(catalog, root):
     root = _safe(root)
-    for other in catalog['roots']:
+    # Older catalogs could retain a Validation run directory as a root before
+    # the canonical Validation parent was registered.  The parent covers the
+    # identical bytes, so keep the broader root and preserve all artifact
+    # records rather than treating that recoverable catalog shape as unsafe.
+    for other in list(catalog['roots']):
         a, b = root.resolve(), Path(other).resolve()
-        if a != b and (a in b.parents or b in a.parents):
-            raise ValueError('registered archive roots overlap')
+        if a == b:
+            return
+        if a in b.parents:
+            catalog['roots'].remove(other)
+        elif b in a.parents:
+            return
     if str(root) not in catalog['roots']:
         catalog['roots'].append(str(root))
 

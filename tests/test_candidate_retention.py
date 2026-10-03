@@ -77,6 +77,20 @@ class OwnedRetentionTests(unittest.TestCase):
                          (policy['max_full_copies'], policy['max_allocated_bytes'], policy['minimum_free_after_reservations']))
         self.assertEqual(set(policy['protected_classes']), r.PROTECTED)
 
+    def test_nested_legacy_root_is_collapsed_without_losing_catalog_records(self):
+        validation = self.root / 'Validation'
+        prior_run = validation / 'integra-212-native-example'
+        catalog = r._empty()
+        catalog['roots'] = [str(prior_run)]
+        catalog['artifacts'][str(prior_run / 'candidate')] = {'preserve': True}
+
+        r.register_root(catalog, validation)
+
+        self.assertEqual(catalog['roots'], [str(validation)])
+        self.assertEqual(catalog['artifacts'][str(prior_run / 'candidate')], {'preserve': True})
+        r.register_root(catalog, prior_run)
+        self.assertEqual(catalog['roots'], [str(validation)])
+
     def test_publication_ownership_is_journal_bound(self):
         package = self._package(); catalog = json.loads(self._catalog().read_text())
         identity, receipt, error = r._metadata(package)
