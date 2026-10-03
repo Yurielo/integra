@@ -1,0 +1,327 @@
+ASTRA NOT NEEDED.
+
+PRODUCT OWNER AUTHORIZATION:
+
+PROMOTE_CURRENT
+proposal-process-v1-youtube-playlist
+candidate-v1-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e
+
+PRODUCT OUTCOME TARGET:
+YouTube playlist — Excel #7 / S08 + S10 partial
+
+============================================================
+PHASE 1 — EXECUTE #7 PROMOTION NOW
+============================================================
+
+Execute the already-authorized governed CURRENT promotion for the exact accepted
+Candidate:
+
+`candidate-v1-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e`
+
+Complete:
+
+Proposal → CURRENT
+→ merge PR #211
+→ CURRENT_VALID
+→ final GitHub Quality Gate
+→ canonical Board transition.
+
+Do NOT rebuild or substitute Candidate.
+
+Do NOT request promotion authorization again.
+
+Verify after completion:
+
+- exact new main HEAD;
+- exact new CURRENT;
+- accepted Candidate unchanged;
+- CURRENT_VALID;
+- final Quality Gate PASS;
+- PR #211 merged;
+- Excel #7 canonical DONE;
+- final native A/C semantics preserved;
+- `YOUTUBE_VIDEO` absent from normal UI;
+- `YOUTUBE_PLAYLIST` absent from normal UI.
+
+============================================================
+BOARD
+============================================================
+
+BEFORE:
+
+`40 DONE / 4 NOT_DONE / 1 BLOCKED`
+
+REQUIRED AFTER #7:
+
+`41 DONE / 3 NOT_DONE / 1 BLOCKED`
+
+Required:
+
+`NOT_DONE: -1`
+
+`VERTICAL PRODUCT PROGRESS: +1 PRODUCT OUTCOME`
+
+Remaining NOT_DONE after #7:
+
+- Multi-source corpus
+- Combined transcript
+- Combined provenance
+
+BLOCKED:
+
+- Selected-Capability Runtime Closure
+
+============================================================
+PHASE 2 — AUTOMATIC TRANSITION
+============================================================
+
+ONLY AFTER all of the following are true:
+
+- PR #211 merged;
+- #7 promoted;
+- CURRENT_VALID;
+- Board canonical:
+  `41 DONE / 3 NOT_DONE / 1 BLOCKED`;
+
+automatically continue to the already-authorized migration:
+
+`Qwen → TranslateGemma`
+
+Do NOT ask Product Owner whether to begin.
+
+============================================================
+RESUME EXISTING TRANSLATEGEMMA WORK
+============================================================
+
+Existing parked work:
+
+branch:
+`codex/replace-qwen-translategemma`
+
+historical migration commit:
+`5b4f764`
+
+Do NOT start from scratch.
+
+Reconcile only the intended TranslateGemma migration delta onto the canonical
+post-#7 main.
+
+Preserve all newer canonical Process functionality.
+
+Do not blindly merge the old branch over current main.
+
+============================================================
+REVIEW-WHEELS
+============================================================
+
+Restore the exact required hash-locked:
+
+`.runtime-components/review-wheels`
+
+using the existing governed manifest/dependency procedure.
+
+Do NOT:
+
+- weaken hashes;
+- substitute arbitrary wheel versions;
+- silently use unpinned dependencies.
+
+Verify exact dependency identity.
+
+============================================================
+TRANSLATEGEMMA RUNTIME
+============================================================
+
+Use the exact TranslateGemma model/runtime identity authorized by the existing
+migration work.
+
+Do not arbitrarily select another model.
+
+If the exact model must be downloaded for real proof, use the existing governed
+local-model mechanism and record exact model identity/digest.
+
+============================================================
+REQUIRED MIGRATION RESULT
+============================================================
+
+Prove:
+
+- Qwen is absent from ACTIVE new-production translation execution;
+- TranslateGemma is the active translation runtime;
+- no fallback to Qwen;
+- missing/invalid TranslateGemma fails closed;
+- real `ru → en` transcript translation works;
+- cue IDs preserved;
+- ordering preserved;
+- timestamps preserved;
+- lineage preserved;
+- `MACHINE_TRANSLATION_REVIEW_REQUIRED` preserved;
+- target-language semantics preserved;
+- Translated TXT preserved;
+- Topic translation preserved;
+- original Topic structure/text preserved;
+- persistence/reopen preserved;
+- old Qwen-produced results remain readable;
+- historical Qwen provenance remains truthful;
+- old results are not retranslated merely to change provider identity.
+
+============================================================
+ACTIVE QWEN AUDIT
+============================================================
+
+Search actual production routing.
+
+Classify remaining Qwen references as:
+
+- ACTIVE runtime;
+- historical provenance;
+- tests/fixtures;
+- documentation;
+- migration history.
+
+ACTIVE Qwen translation runtime references are not permitted after migration.
+
+Do NOT delete truthful historical provenance merely because it names Qwen.
+
+============================================================
+REGRESSION
+============================================================
+
+Verify canonical Process outcomes do not regress, including:
+
+- local sources;
+- Folder discovery;
+- Zoom folder;
+- YouTube playlist;
+- Normal/Careful ASR;
+- source language;
+- ASR diagnostics;
+- Transcript translation;
+- target-language choice;
+- Translated TXT;
+- Topic summary;
+- Topic detail;
+- Topic translation;
+- Topic Review;
+- persistence/reopen;
+- recovery;
+- multi-source lifecycle.
+
+============================================================
+TRANSLATEGEMMA CANDIDATE / GOVERNANCE
+============================================================
+
+When migration product/runtime bytes stabilize:
+
+final source
+→ ONE final Candidate
+→ durable archive
+→ native self-test
+→ real TranslateGemma translation proof
+→ required regression
+→ migration evidence
+→ Proposal Lite
+→ governance validation
+→ GitHub Quality Gate.
+
+Do NOT install/deploy automatically.
+
+Do NOT promote the migration without explicit Product Owner authorization.
+
+============================================================
+NEXT OWNER GATE
+============================================================
+
+When all migration evidence passes, return:
+
+`TRANSLATEGEMMA_MIGRATION_AWAITING_BASELINE_ACCEPTANCE`
+
+with exactly ONE command:
+
+`ACCEPT_PROPOSED_BASELINE
+<TRANSLATEGEMMA-PROPOSAL-ID>
+<FINAL-CANDIDATE-ID>`
+
+Do not ask Product Owner to repeat objectively automatable tests.
+
+============================================================
+BOARD DURING TRANSLATEGEMMA
+============================================================
+
+TranslateGemma migration is authorized work but is NOT another Excel Product
+Outcome.
+
+Therefore after #7:
+
+`41 DONE / 3 NOT_DONE / 1 BLOCKED`
+
+remains unchanged throughout the migration.
+
+Do not claim vertical Board progress for the migration.
+
+============================================================
+DO NOT START
+============================================================
+
+Do NOT start:
+
+- Multi-source corpus;
+- Combined transcript;
+- Combined provenance;
+- Selected-Capability Runtime Closure;
+- Knowledge;
+- Studio;
+- PR #206;
+- Issue #210.
+
+============================================================
+NO INTERMEDIATE STOP
+============================================================
+
+Do NOT end merely because:
+
+- #7 merged;
+- TranslateGemma branch reconciled;
+- review-wheels restored;
+- model available;
+- migration compiles;
+- tests pass;
+- Candidate ready;
+- evidence ready;
+- Proposal valid.
+
+After #7 canonical DONE, continue the authorized TranslateGemma migration until
+a real Product Owner governance gate or genuine blocker is reached.
+
+============================================================
+FINAL STATUS
+============================================================
+
+Allowed final statuses:
+
+`TRANSLATEGEMMA_MIGRATION_AWAITING_BASELINE_ACCEPTANCE`
+
+or
+
+`TRANSLATEGEMMA_MIGRATION_AWAITING_CURRENT_PROMOTION`
+
+or
+
+`TRANSLATEGEMMA_MIGRATION_DONE`
+
+or
+
+`PRODUCT_OUTCOME_BLOCKED_NEW_CAUSE`
+
+for a genuinely new blocker.
+
+Do NOT request the already-authorized #7 promotion again.
+
+============================================================
+AUDIBLE SIGNAL — MANDATORY
+============================================================
+
+After completing ANY execution turn, ALWAYS play an audible completion signal,
+regardless of success, awaiting authorization, BLOCKED, failure or interruption.
+
+EXECUTE NOW.

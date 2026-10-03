@@ -161,6 +161,26 @@ fresh reconciliation after this governance mechanism is merged and a
 candidate-bound, non-skipped reuse/invalidation proof. It is neither promoted
 nor USER_ACCEPTED here.
 
+## Exact owner-authorized successor application
+
+Excel #7 uses a bounded successor event without changing the existing
+Candidate, CURRENT or Proposal schemas. `--verify-successor --expected-head`
+validates its exact tree, immutable input hashes and live GitHub prestate.
+`--merge-successor --expected-head` additionally holds the managed-retention
+lock and applies the exact reviewed PR head only after GitHub Quality Gate.
+It publishes the whole CURRENT/history/registry/retired-Proposal/Board/event
+tree through one merge. Sequential local edits remain unaccepted preparation.
+The ordinary helper still requires both archives.
+
+The persisted event names immutable accepted content, not its own future Git
+SHA. The actual final PR HEAD is verified externally. Only explicitly scoped
+governance paths may differ above the accepted-content commit; product bytes
+must remain identical. Exact repeated application returns `ALREADY_APPLIED`.
+A changed authorization input/result fails. Ambiguous merge responses cause a
+remote main read before any retry, and applied consumption remains recorded
+even if a later check fails. Existing partial preparation is compared, never
+blindly overwritten; CURRENT on main remains authoritative until merge.
+
 ## Operator sequence after this Lite PR is merged
 
 1. Rebase a product change onto the then-current `main`.

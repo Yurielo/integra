@@ -1,0 +1,246 @@
+ASTRA NOT NEEDED.
+
+PRODUCT OWNER AUTHORIZATION:
+
+ACCEPT_PROPOSED_BASELINE
+proposal-process-v1-youtube-playlist
+candidate-v1-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e
+
+PRODUCT OUTCOME TARGET:
+YouTube playlist — Excel #7 / S08 + S10 partial
+
+============================================================
+ACCEPTED FINAL CANDIDATE
+============================================================
+
+Accepted Candidate:
+
+`candidate-v1-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e`
+
+This acceptance supersedes the earlier acceptance of the lost/replaced #7
+Candidate for purposes of completing Excel #7.
+
+Do NOT request another GUI test.
+
+Accepted native evidence already proves:
+
+- real public playlist resolution;
+- four ordered playlist items;
+- A/C selected;
+- B/D excluded;
+- A/C added in A → C relative order;
+- no processing before explicit confirmation;
+- normal UI no longer exposes:
+  `YOUTUBE_VIDEO`;
+- normal UI no longer exposes:
+  `YOUTUBE_PLAYLIST`;
+- playlist/source provenance remains truthful;
+- targeted checks PASS;
+- final Candidate archive exists.
+
+============================================================
+PHASE 1 — COMPLETE #7
+============================================================
+
+Record this exact Product Owner baseline acceptance.
+
+Revalidate:
+
+- Proposal identity;
+- exact Candidate identity;
+- source A binding;
+- Candidate archive integrity;
+- native A/C evidence;
+- governance;
+- final GitHub Quality Gate.
+
+If separate explicit CURRENT promotion authorization is required:
+
+return ONLY:
+
+`PRODUCT_OUTCOME_AWAITING_CURRENT_PROMOTION`
+
+with ONE exact:
+
+`PROMOTE_CURRENT
+proposal-process-v1-youtube-playlist
+candidate-v1-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e`
+
+Do not request baseline acceptance again.
+
+Do not start TranslateGemma while #7 is merely awaiting promotion.
+
+============================================================
+IF PROMOTION CAN COMPLETE WITHOUT ANOTHER GATE
+============================================================
+
+Complete:
+
+Proposal → CURRENT
+→ merge PR #211
+→ CURRENT_VALID
+→ final Quality Gate
+→ Board canonicalization.
+
+Required Board:
+
+BEFORE:
+`40 DONE / 4 NOT_DONE / 1 BLOCKED`
+
+AFTER:
+`41 DONE / 3 NOT_DONE / 1 BLOCKED`
+
+Required:
+
+`NOT_DONE: -1`
+
+`VERTICAL PRODUCT PROGRESS: +1 PRODUCT OUTCOME`
+
+============================================================
+PHASE 2 — ONLY AFTER #7 CANONICAL DONE
+============================================================
+
+Once ALL are true:
+
+- #7 promoted;
+- PR #211 merged;
+- CURRENT_VALID;
+- Board:
+  `41 DONE / 3 NOT_DONE / 1 BLOCKED`;
+
+automatically continue to the already-authorized:
+
+`Qwen → TranslateGemma`
+
+migration.
+
+Do NOT ask Product Owner again whether to begin the migration.
+
+Existing parked migration authority:
+
+branch:
+`codex/replace-qwen-translategemma`
+
+historical commit:
+`5b4f764`
+
+Reconcile only the intended TranslateGemma migration delta onto canonical
+post-#7 main.
+
+Preserve all newer canonical Process functionality.
+
+============================================================
+TRANSLATEGEMMA REQUIREMENTS
+============================================================
+
+Complete the migration truthfully:
+
+- restore exact governed `review-wheels`;
+- use exact authorized TranslateGemma model/runtime identity;
+- remove Qwen from ACTIVE new-production translation execution;
+- no fallback to Qwen;
+- fail closed if TranslateGemma is unavailable/invalid;
+- real `ru → en` translation through TranslateGemma;
+- preserve cue IDs;
+- preserve ordering;
+- preserve timestamps;
+- preserve lineage;
+- preserve `MACHINE_TRANSLATION_REVIEW_REQUIRED`;
+- preserve Transcript translation;
+- preserve target-language choice;
+- preserve Translated TXT;
+- preserve Topic translation;
+- preserve original Topic text/structure;
+- preserve persistence/reopen;
+- preserve truthful legacy Qwen provenance for old saved results;
+- do not retranslate old results merely to change provider identity.
+
+Do not modify SeminarText/VideoText source products unless a new explicit
+Product Owner decision becomes genuinely necessary.
+
+============================================================
+TRANSLATEGEMMA GOVERNANCE
+============================================================
+
+When migration bytes stabilize:
+
+final source
+→ ONE final Candidate
+→ durable archive
+→ native self-test
+→ real translation proof
+→ required regression
+→ migration evidence
+→ Proposal Lite
+→ governance validation
+→ GitHub Quality Gate.
+
+Do NOT install/deploy automatically.
+
+Do NOT promote migration into CURRENT without Product Owner authorization.
+
+Return:
+
+`TRANSLATEGEMMA_MIGRATION_AWAITING_BASELINE_ACCEPTANCE`
+
+with ONE exact:
+
+`ACCEPT_PROPOSED_BASELINE
+<TRANSLATEGEMMA-PROPOSAL-ID>
+<FINAL-CANDIDATE-ID>`
+
+============================================================
+BOARD DURING MIGRATION
+============================================================
+
+TranslateGemma migration does NOT change the Product Outcome count.
+
+After #7 canonical DONE:
+
+`41 DONE / 3 NOT_DONE / 1 BLOCKED`
+
+remains the Board throughout TranslateGemma migration.
+
+============================================================
+DO NOT START
+============================================================
+
+Do NOT start:
+
+- Multi-source corpus;
+- Combined transcript;
+- Combined provenance;
+- Selected-Capability Runtime Closure;
+- Knowledge;
+- Studio;
+- PR #206;
+- Issue #210.
+
+============================================================
+FINAL STATUS
+============================================================
+
+If #7 requires promotion authorization, stop at that exact gate.
+
+Otherwise after #7 canonical DONE continue automatically into TranslateGemma.
+
+Final migration status must be one of:
+
+`TRANSLATEGEMMA_MIGRATION_AWAITING_BASELINE_ACCEPTANCE`
+
+`TRANSLATEGEMMA_MIGRATION_AWAITING_CURRENT_PROMOTION`
+
+`TRANSLATEGEMMA_MIGRATION_DONE`
+
+or a genuine blocker.
+
+Do NOT return generic progress statuses.
+
+============================================================
+AUDIBLE SIGNAL — MANDATORY
+============================================================
+
+After completing ANY execution turn, ALWAYS play an audible completion signal,
+regardless of success, awaiting authorization, BLOCKED, failure or interruption.
+
+EXECUTE NOW.

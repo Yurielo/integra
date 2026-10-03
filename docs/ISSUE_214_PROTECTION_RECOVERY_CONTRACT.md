@@ -87,6 +87,23 @@ contract; the existing promotion helper continues to require both exact
 archives. Protection authority may be COMPLETE while promotion remains blocked
 by the missing outgoing CURRENT archive and the separate owner promotion gate.
 
+## Historical roles and the exact Excel #7 successor
+
+`historical_gaps.role` means role at the time of the original #214 decision.
+The validator resolves that decision's exact identities through its unchanged
+token, immutable CURRENT records and receipts. Moving CURRENT to `5f6384…`
+does not transfer an archive gap to that Candidate. `af81…` remains a protected
+historical gap even after it is no longer the nearest predecessor.
+The original `recovery_selection` remains historical truth; it is not a claim
+that the active CURRENT was lost or physically recovered.
+
+The separately authorized exact Excel #7 transaction preserves #213 and every
+unrelated open Proposal, appends CURRENT, retires the exact #7 Proposal, and
+records the exact authorization/result. Its missing outgoing `d8bd…` has
+`restorable_from_retained_archive=false` and `rollback_eligible=false`.
+Physical availability, accepted historical identity and runtime executability
+are independent facts. Deletion grants remain empty and deletion disabled.
+
 ## Non-destructive verification
 
 The Issue #214 resolver reads records and hashes only selected protected

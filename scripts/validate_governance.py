@@ -3016,6 +3016,13 @@ def main() -> int:
     if proposed_baseline_path is None and default_proposal_path.is_file():
         proposed_baseline_path = str(default_proposal_path)
     proposed_baseline = load_json(Path(proposed_baseline_path)) if proposed_baseline_path else None
+    successor_path = ROOT / 'state/history/excel7_successor_transaction_v1.json'
+    successor_id = 'current-v2-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e'
+    protection_registry = load_json(ROOT / 'state/candidate_protection_registry_v1.json')
+    if (successor_path.is_file() or protection_registry.get('successor_transactions')
+            or any(row['baseline_id'] == successor_id for row in current_product_baseline_v2['records'])):
+        from successor_transaction import validate_recorded_successor
+        validate_recorded_successor(ROOT)
     load_json(SCHEMA_PATH)
     load_json(BASELINES_SCHEMA_PATH)
     load_json(OWNERSHIP_SCHEMA_PATH)

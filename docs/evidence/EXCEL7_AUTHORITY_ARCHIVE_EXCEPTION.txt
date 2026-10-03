@@ -1,0 +1,328 @@
+ASTRA NOT NEEDED.
+
+PRODUCT OWNER GOVERNANCE DECISION.
+
+PRODUCT OUTCOME TARGET:
+YouTube playlist — Excel #7 / S08 + S10 partial
+
+The Product Owner confirms that the functional/product acceptance of the final
+YouTube Candidate remains valid:
+
+Proposal:
+`proposal-process-v1-youtube-playlist`
+
+Final accepted Candidate:
+`candidate-v1-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e`
+
+Current PR #211 head:
+`893eb462…`
+
+Current outgoing CURRENT:
+`current-v2-d8bd…`
+
+The current blockers are GOVERNANCE/ARCHIVE lifecycle blockers, not failures of
+the accepted YouTube product behavior.
+
+============================================================
+AUTHORIZATION 1 — RECONCILE STALE PROTECTION PIN
+============================================================
+
+Product Owner authorizes governed reconciliation of the Candidate protection
+registry for PR #211 from the stale historical PR head/Candidate identity to
+the exact CURRENT accepted #7 identities.
+
+Do NOT weaken protection rules globally.
+
+Do NOT remove Candidate protection.
+
+Update/reconcile only the exact stale #211 protection record necessary to bind
+the already accepted:
+
+PR #211 current exact head
+
+and
+
+`candidate-v1-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e`
+
+Use exact full commit identities from repository state.
+
+Record:
+
+- previous protected PR head;
+- previous protected Candidate;
+- new exact PR head;
+- new accepted Candidate;
+- reason:
+  accepted #7 Candidate changed after native UI repair and Candidate recovery;
+- Product Owner authorization;
+- timestamp/transaction identity according to existing governance conventions.
+
+Do NOT reinterpret this as new baseline acceptance.
+
+The new Candidate has already been explicitly accepted.
+
+============================================================
+AUTHORIZATION 2 — OUTGOING CURRENT ARCHIVE RECOVERY
+============================================================
+
+Before using any exception, perform a BOUNDED search for the exact outgoing
+CURRENT Candidate archive corresponding to:
+
+`current-v2-d8bd…`
+
+and its exact Candidate identity from canonical CURRENT.
+
+Context:
+
+the Product Owner confirms that disk cleanup occurred and may have deleted
+retained Candidate archives.
+
+Search only obvious retained Integra build/archive locations:
+
+- Integra Build Archive;
+- relevant retained `/private/tmp` Integra workspaces;
+- relevant `/tmp` Integra workspaces;
+- evidence-referenced Candidate paths;
+- retained release/build workspaces.
+
+Do NOT perform a long full-disk forensic search.
+
+Do NOT inspect unrelated private user data.
+
+If exact outgoing Candidate bytes are found:
+
+- verify exact Candidate ID;
+- verify manifest digest;
+- verify bundle digest;
+- verify CURRENT binding;
+- restore exact bytes to the governed archive;
+- run normal archive verification;
+- use the normal promotion path.
+
+============================================================
+ONE-TIME EXACT OUTGOING ARCHIVE EXCEPTION
+============================================================
+
+If and ONLY if the exact outgoing CURRENT Candidate bytes cannot be recovered
+by the bounded search:
+
+Product Owner authorizes a ONE-TIME EXACT governed promotion exception for ONLY
+the outgoing CURRENT currently recorded as:
+
+`current-v2-d8bd…`
+
+Resolve and record its full exact CURRENT and Candidate identities before
+applying the exception.
+
+The exception is authorized because:
+
+- this CURRENT was previously canonically accepted/promoted;
+- its exact archive is now recorded as:
+  `MISSING_WITH_AVAILABLE_EVIDENCE`;
+- disk cleanup may have deleted the retained archive;
+- canonical CURRENT identity remains recorded;
+- historical acceptance/governance evidence remains available;
+- the incoming #7 Candidate archive is COMPLETE and byte-valid;
+- refusing all future promotion because an already-accepted outgoing archive
+  was physically deleted would permanently deadlock CURRENT advancement.
+
+============================================================
+EXCEPTION MUST BE NARROW
+============================================================
+
+Do NOT globally disable:
+
+`OUTGOING_CURRENT_EXACT_ARCHIVE_MISSING`
+
+Do NOT change the default fail-closed rule to fail-open.
+
+Do NOT permit missing archives generally.
+
+Implement/use the narrowest existing governance mechanism capable of recording:
+
+- exact outgoing CURRENT identity;
+- exact outgoing Candidate identity;
+- archive state:
+  `MISSING_WITH_AVAILABLE_EVIDENCE`;
+- reason:
+  candidate archive unavailable after disk cleanup;
+- available historical evidence identities;
+- Product Owner explicit exception authorization;
+- exact incoming accepted Candidate;
+- transaction scope:
+  ONE promotion only.
+
+After this promotion transaction, the normal archive requirement remains fully
+active for all other CURRENT/Candidate transitions.
+
+============================================================
+NO FAKE ARCHIVE
+============================================================
+
+Do NOT:
+
+- rebuild the outgoing CURRENT Candidate and pretend it is the old archive;
+- create placeholder archive bytes;
+- weaken digest checks;
+- relabel another Candidate;
+- fabricate rollback capability.
+
+If exact bytes are absent, record them truthfully as absent.
+
+============================================================
+INCOMING #7 CANDIDATE MUST REMAIN STRICT
+============================================================
+
+No exception applies to the incoming Candidate.
+
+The incoming accepted #7 Candidate:
+
+`candidate-v1-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e`
+
+must still pass ALL normal strict checks:
+
+- exact Candidate ID;
+- archive COMPLETE;
+- archive integrity;
+- manifest digest;
+- bundle digest;
+- source binding;
+- accepted Proposal binding;
+- protection registry binding;
+- Quality Gate.
+
+No bypass is authorized for incoming Candidate integrity.
+
+============================================================
+THEN EXECUTE THE ALREADY-AUTHORIZED #7 PROMOTION
+============================================================
+
+Existing Product Owner promotion authorization remains valid:
+
+PROMOTE_CURRENT
+proposal-process-v1-youtube-playlist
+candidate-v1-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e
+
+Do NOT request it again.
+
+After:
+
+- protection registry reconciliation;
+- outgoing archive exact recovery OR exact one-time exception;
+- all incoming Candidate checks;
+
+execute:
+
+Proposal → CURRENT
+→ merge PR #211
+→ CURRENT_VALID
+→ final GitHub Quality Gate
+→ canonical Board transition.
+
+============================================================
+BOARD
+============================================================
+
+BEFORE:
+
+`40 DONE / 4 NOT_DONE / 1 BLOCKED`
+
+REQUIRED AFTER:
+
+`41 DONE / 3 NOT_DONE / 1 BLOCKED`
+
+Required:
+
+`NOT_DONE: -1`
+
+`VERTICAL PRODUCT PROGRESS: +1 PRODUCT OUTCOME`
+
+Remaining NOT_DONE:
+
+- Multi-source corpus
+- Combined transcript
+- Combined provenance
+
+Existing BLOCKED:
+
+- Selected-Capability Runtime Closure
+
+============================================================
+PHASE 2 — TRANSLATEGEMMA
+============================================================
+
+ONLY after #7 is canonical DONE:
+
+automatically continue the already-authorized:
+
+`Qwen → TranslateGemma`
+
+migration.
+
+Do not ask Product Owner again whether to start it.
+
+Use the previously supplied migration requirements and preserved branch/commit:
+
+branch:
+`codex/replace-qwen-translategemma`
+
+historical commit:
+`5b4f764`
+
+Do NOT begin TranslateGemma before #7 is actually canonical DONE.
+
+============================================================
+DO NOT RESUME
+============================================================
+
+Do NOT resume unrelated:
+
+- PR #206;
+- Issue #210;
+- Multi-source corpus;
+- Combined transcript;
+- Combined provenance;
+- Selected-Capability Runtime Closure.
+
+============================================================
+FINAL STATUS
+============================================================
+
+If #7 promotion completes and TranslateGemma subsequently reaches its baseline
+gate, return:
+
+`TRANSLATEGEMMA_MIGRATION_AWAITING_BASELINE_ACCEPTANCE`
+
+with the exact required authorization.
+
+If TranslateGemma reaches promotion gate, return:
+
+`TRANSLATEGEMMA_MIGRATION_AWAITING_CURRENT_PROMOTION`.
+
+If migration becomes canonical, return:
+
+`TRANSLATEGEMMA_MIGRATION_DONE`.
+
+Return:
+
+`PRODUCT_OUTCOME_BLOCKED_NEW_CAUSE`
+
+only for a genuinely NEW cause not covered by the exact authorizations above.
+
+Do NOT return another request for:
+
+- #7 baseline acceptance;
+- #7 promotion authorization;
+- stale protection reconciliation;
+- outgoing CURRENT missing-archive exception.
+
+Those decisions are now explicitly authorized.
+
+============================================================
+AUDIBLE SIGNAL — MANDATORY
+============================================================
+
+After completing ANY execution turn, ALWAYS play an audible completion signal,
+regardless of success, awaiting authorization, BLOCKED, failure or interruption.
+
+EXECUTE NOW.

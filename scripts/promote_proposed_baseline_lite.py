@@ -6,6 +6,7 @@ import argparse
 import json
 from pathlib import Path
 import sys
+import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -19,6 +20,26 @@ def load(path: Path) -> dict:
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv = sys.argv[1:] if argv is None else argv
+    if '--verify-successor' in argv or '--merge-successor' in argv:
+        parser = argparse.ArgumentParser(description='Validate/apply the exact owner-authorized Excel #7 Git successor.')
+        group = parser.add_mutually_exclusive_group(required=True)
+        group.add_argument('--verify-successor', action='store_true')
+        group.add_argument('--merge-successor', action='store_true')
+        parser.add_argument('--expected-head', required=True)
+        args = parser.parse_args(argv)
+        try:
+            import successor_transaction as transaction
+            if args.merge_successor:
+                result = transaction.merge(ROOT, args.expected_head)
+            else:
+                event = load(ROOT / transaction.EVENT)
+                result = transaction.preflight(ROOT, event, args.expected_head)
+            print('PROMOTION: ' + result)
+            return 0
+        except (OSError, ValueError, subprocess.CalledProcessError) as error:
+            print('PROMOTION: FAIL\n- ' + str(error))
+            return 1
     parser = argparse.ArgumentParser(description="Prepare a next CURRENT baseline only after explicit owner acceptance.")
     parser.add_argument("--proposal", type=Path, required=True)
     parser.add_argument("--owner-acceptance-ref", required=True)
