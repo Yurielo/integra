@@ -288,6 +288,64 @@ class ExactSuccessorTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'package differs'):
                 transaction.validate_tree(root)
 
+    def merged_fixture(self):
+        temporary = tempfile.TemporaryDirectory(prefix='.integra-merged-lineage-', dir=Path.home())
+        self.addCleanup(temporary.cleanup)
+        root = Path(temporary.name).resolve() / 'repo'
+        subprocess.run(['git', 'clone', '--shared', '--no-checkout', str(ROOT), str(root)],
+                       check=True, capture_output=True)
+        subprocess.run(['git', 'checkout', '--detach', '533be2514f74258cc5d32fb905f1b687d1700dae'],
+                       cwd=root, check=True, capture_output=True)
+        return root
+
+    def test_merged_second_parent_acceptance_lineage_is_exact_and_read_only(self):
+        root = self.merged_fixture()
+        proposal = json.loads((root / transaction.RETIRED).read_bytes())
+        preserved = {path: (root / path).read_bytes() for path in
+            (transaction.CURRENT, transaction.REGISTRY, transaction.EVENT,
+             transaction.OLD_CURRENT, transaction.OLD_REGISTRY, transaction.RETIRED)}
+        preserved.update({item['authority_ref']: (root / item['authority_ref']).read_bytes()
+                          for item in self.event['inputs']['authority'].values()})
+        parents = subprocess.check_output(['git', 'rev-list', '--parents', '-n', '1', 'HEAD'],
+                                          cwd=root, text=True).split()
+        self.assertEqual(len(parents), 3)
+        subprocess.run(['git', 'merge-base', '--is-ancestor', transaction.ACCEPTED_HEAD, parents[2]],
+                       cwd=root, check=True, capture_output=True)
+        prior = transaction.baseline.verify_promotion_material(proposal, root, root / transaction.PROPOSAL)
+        self.assertIn('promotion pilot acceptance declaration history is unavailable', prior)
+        self.assertEqual(transaction.baseline.verify_promotion_material(
+            proposal, root, root / transaction.PROPOSAL, acceptance_ref=transaction.ACCEPTED_HEAD), [])
+        transaction.validate_tree(root)
+        transaction.validate_recorded_successor(root)
+        self.assertEqual({path: (root / path).read_bytes() for path in preserved}, preserved)
+        self.assertEqual(subprocess.check_output(['git', 'status', '--porcelain'],
+                                                cwd=root, text=True).strip(), '')
+
+    def test_merged_acceptance_anchor_wrong_missing_and_unreachable_fail(self):
+        root = self.merged_fixture()
+        proposal = json.loads((root / transaction.RETIRED).read_bytes())
+        tree = subprocess.check_output(['git', 'rev-parse', transaction.ACCEPTED_HEAD + '^{tree}'],
+                                       cwd=root, text=True).strip()
+        unreachable = subprocess.check_output(['git', '-c', 'user.name=QA', '-c',
+            'user.email=qa@example.invalid', 'commit-tree', tree, '-m', 'unreachable accepted bytes'],
+            cwd=root, text=True).strip()
+        for ref in ('', ' ', 'HEAD', '0' * 40, transaction.MAIN,
+                    self.event['inputs']['evidence_head']['commit_sha'], unreachable):
+            with self.subTest(ref=ref):
+                errors = transaction.baseline.verify_promotion_material(
+                    proposal, root, root / transaction.PROPOSAL, acceptance_ref=ref)
+                self.assertIn('promotion proposal record path or acceptance anchor is invalid', errors)
+        changed = copy.deepcopy(proposal)
+        changed['owner_acceptance']['authority_ref'] = 'different owner instruction'
+        errors = transaction.baseline.verify_promotion_material(
+            changed, root, root / transaction.PROPOSAL, acceptance_ref=transaction.ACCEPTED_HEAD)
+        self.assertIn('promotion proposal record path or acceptance anchor is invalid', errors)
+        errors = transaction.baseline.verify_promotion_material(
+            proposal, root, root / transaction.RETIRED, acceptance_ref=transaction.ACCEPTED_HEAD)
+        self.assertIn('promotion proposal record path or acceptance anchor is invalid', errors)
+        self.assertEqual(subprocess.check_output(['git', 'status', '--porcelain'],
+                                                cwd=root, text=True).strip(), '')
+
 
 class RealArchiveAndHistoryTests(unittest.TestCase):
     def setUp(self):

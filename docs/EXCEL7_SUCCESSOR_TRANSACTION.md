@@ -40,3 +40,10 @@ matrix 35 passed. The existing 42 protection/audit/promotion checks also pass.
 Governance reports CURRENT_VALID. Independent QA and diff review were completed;
 live exact-Candidate archive preflight and the production promotion gate passed.
 Final PR CI and canonical post-merge audit remain required execution checks.
+
+Post-merge validation must prove material against the immutable accepted
+content anchor, not the later main first-parent chain: a normal two-parent
+merge preserves declaration and acceptance on its second parent. The anchor
+must be an exact reachable commit containing the exact accepted Proposal; its
+declaration/acceptance constraints still apply. The CURRENT, transaction,
+authority payloads and Candidate are unchanged by this verification repair.

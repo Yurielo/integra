@@ -451,7 +451,8 @@ def proposal_state(proposal: object, current: dict[str, Any], root: Path) -> tup
     return "PROPOSED_BASELINE_VALID / AWAITING_OWNER_ACCEPTANCE", []
 
 
-def verify_promotion_material(proposal: dict[str, Any], root: Path, proposal_path: Path | None = None) -> list[str]:
+def verify_promotion_material(proposal: dict[str, Any], root: Path, proposal_path: Path | None = None,
+                              *, acceptance_ref: str | None = None) -> list[str]:
     """Verify the exact source, candidate manifest/bundle and named evidence.
 
     This deliberately has no authority side effect.  It is used by the helper
@@ -489,10 +490,22 @@ def verify_promotion_material(proposal: dict[str, Any], root: Path, proposal_pat
     # self-reference.  It must therefore be the only change immediately after
     # the exact evidence overlay it names.
     try:
-        parent = _git(root, "rev-parse", "HEAD^")
         relative_proposal = proposal_path.resolve().relative_to(root.resolve()).as_posix() if proposal_path else None
+        if acceptance_ref is not None:
+            # A consumed successor preserves acceptance on its merge's second
+            # parent. Validate that exact immutable, reachable record rather
+            # than searching only the later main first-parent chain.
+            if not isinstance(acceptance_ref, str) or re.fullmatch(r"[0-9a-f]{40}", acceptance_ref) is None:
+                raise ValueError("invalid acceptance commit")
+            subprocess.run(["git", "-C", str(root), "merge-base", "--is-ancestor",
+                            acceptance_ref, "HEAD"], check=True, capture_output=True)
+            if (proposal.get("owner_acceptance") is None or relative_proposal is None
+                    or json.loads(_git(root, "show", f"{acceptance_ref}:{relative_proposal}")) != proposal):
+                raise ValueError("acceptance record differs")
+            commit = acceptance_ref
+        parent = _git(root, "rev-parse", f"{commit}^")
     except (OSError, subprocess.CalledProcessError, ValueError):
-        errors.append("promotion proposal record path is invalid")
+        errors.append("promotion proposal record path or acceptance anchor is invalid")
         relative_proposal = None
         parent = ""
     acceptance = proposal.get("owner_acceptance")
@@ -509,7 +522,7 @@ def verify_promotion_material(proposal: dict[str, Any], root: Path, proposal_pat
             expected_prior = json.loads(json.dumps(proposal))
             expected_prior["owner_acceptance"] = None
             revisions = _git(root, "rev-list", "--first-parent", "--reverse",
-                             f"{overlay['commit_sha']}..HEAD").splitlines()
+                             f"{overlay['commit_sha']}..{commit}").splitlines()
         except (OSError, subprocess.CalledProcessError, ValueError, TypeError):
             errors.append("promotion pilot acceptance predecessor is unavailable")
         else:
