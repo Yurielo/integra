@@ -282,6 +282,7 @@ EXPECTED_PROJECTS_SOURCES_IMPLEMENTATION = {
 }
 EXPECTED_TRANSCRIPT_TOPIC_STUDIO_IMPLEMENTATION = {
     "docs/architecture/TRANSCRIPT_AND_TOPIC_STUDIO_V1.md",
+    "integra_core/translategemma_runtime.py",
     "integra_core/transcript_topic_studio.py",
     "schemas/transcript_topic_studio_v1.schema.json",
     "schemas/transcript_topic_studio_evidence_v1.schema.json",
@@ -310,6 +311,7 @@ EXPECTED_KNOWLEDGE_IMPLEMENTATION = {
 EXPECTED_MEDIA_IMPLEMENTATION = {
     "docs/architecture/MEDIA_INTEGRATION_V1.md",
     "integra_core/media.py",
+    "integra_core/translategemma_runtime.py",
     "schemas/media_derivative_v1.schema.json",
     "schemas/media_capability_report_v1.schema.json",
     "schemas/media_qa_report_v1.schema.json",
@@ -1955,7 +1957,7 @@ def validate_transcript_topic_studio_evidence(
     expected_owners = {
         "media_preparation": ["videotext"],
         "asr": ["videotext"],
-        "translation": ["videotext"],
+        "translation": ["integra.translation"],
         "word_timeline": ["seminartext"],
         "topics": ["seminartext"],
         "review_mechanics": ["seminartext", "videotext"],
@@ -2004,13 +2006,14 @@ def validate_transcript_topic_studio_evidence(
 
     try:
         component_commits = {item["id"]: item["commit_sha"] for item in baselines["components"]}
+        component_commits["integra.translation"] = "f" * 40
         owners = expected_owners
         bindings = []
         for capability, component_ids in owners.items():
             contracts = {
                 "media_preparation": ["project_schema_v7"],
                 "asr": ["project_schema_v7"],
-                "translation": ["project_schema_v7"],
+                "translation": ["integra_translation_v1"],
                 "word_timeline": ["canonical_evidence_v1"],
                 "topics": ["topic_review_workflow_v2"],
                 "review_mechanics": ["topic_review_workflow_v2", "project_schema_v7"],
@@ -2026,11 +2029,13 @@ def validate_transcript_topic_studio_evidence(
                         "model_id": (
                             "ggml-large-v3.bin" if capability == "asr"
                             else "gemma3:4b" if capability == "topics"
+                            else "translategemma:4b-it-q4_K_M" if capability == "translation"
                             else None
                         ),
                         "model_sha256": (
                             "64d182b440b98d5203c4f9bd541544d84c605196c4f7b845dfa11fb23594d1e2" if capability == "asr"
                             else "ed1e8a40017e648c133188919a5a0105ce1916726dbc657fecb5ccb5d717c46d" if capability == "topics"
+                            else "c49d986b0764f5881c476eb21435bb62b7abc62347aab3d4a6071e811be510a1" if capability == "translation"
                             else None
                         ),
                     }
@@ -2222,9 +2227,10 @@ def validate_multi_source_alignment_evidence(
         component_commits = {
             item["id"]: item["commit_sha"] for item in baselines["components"]
         }
+        component_commits["integra.translation"] = "f" * 40
         owners = {
             "media_preparation": ["videotext"], "asr": ["videotext"],
-            "translation": ["videotext"], "word_timeline": ["seminartext"],
+            "translation": ["integra.translation"], "word_timeline": ["seminartext"],
             "topics": ["seminartext"],
             "review_mechanics": ["seminartext", "videotext"],
             "quality_validation": ["seminartext", "videotext"],
@@ -2232,7 +2238,7 @@ def validate_multi_source_alignment_evidence(
         contracts = {
             "media_preparation": ["project_schema_v7"],
             "asr": ["project_schema_v7"],
-            "translation": ["project_schema_v7"],
+            "translation": ["integra_translation_v1"],
             "word_timeline": ["canonical_evidence_v1"],
             "topics": ["topic_review_workflow_v2"],
             "review_mechanics": ["topic_review_workflow_v2", "project_schema_v7"],
@@ -2248,13 +2254,17 @@ def validate_multi_source_alignment_evidence(
                     "contract_id": contracts[capability][index],
                     "model_id": (
                         "ggml-large-v3.bin" if capability == "asr"
-                        else "gemma3:4b" if capability == "topics" else None
+                        else "gemma3:4b" if capability == "topics"
+                        else "translategemma:4b-it-q4_K_M" if capability == "translation"
+                        else None
                     ),
                     "model_sha256": (
                         "64d182b440b98d5203c4f9bd541544d84c605196c4f7b845dfa11fb23594d1e2"
                         if capability == "asr"
                         else "ed1e8a40017e648c133188919a5a0105ce1916726dbc657fecb5ccb5d717c46d"
-                        if capability == "topics" else None
+                        if capability == "topics"
+                        else "c49d986b0764f5881c476eb21435bb62b7abc62347aab3d4a6071e811be510a1"
+                        if capability == "translation" else None
                     ),
                 } for index, component_id in enumerate(component_ids)],
                 "config_sha256": "3" * 64,

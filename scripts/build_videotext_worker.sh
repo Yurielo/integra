@@ -7,6 +7,8 @@ test "$(git -C "$checkout" rev-parse HEAD)" = "2e098d1705b6815628bee1e023f474271
 test -z "$(git -C "$checkout" status --porcelain -- Sources)"
 test "$(shasum -a 256 "$checkout/Sources/videotext/Services/SRTService.swift" | awk '{print $1}')" = "417017a6a3becc395e88e2554e8d7c2dca51b09de9743e8c5c0cf81ac9ba6205"
 mkdir -p "$output"
+# VideoText links its historical adapter to satisfy shared component types, but
+# the Integra worker intentionally exposes no translation request route.
 xcrun swiftc -parse-as-library -O -framework SwiftUI -framework AppKit -framework AVKit -framework AVFoundation -framework UserNotifications \
   -o "$output/translation-worker" $(find "$checkout/Sources/videotext" -name '*.swift' ! -path '*/App/*' ! -path '*/UI/*' | sort) \
   "$repo_root/workers/videotext_translation_worker.swift" "$repo_root/workers/videotext_media_worker.swift"
@@ -16,7 +18,7 @@ from pathlib import Path
 root = Path(sys.argv[1])
 identity = {
     "component": "videotext", "commit_sha": "2e098d1705b6815628bee1e023f4742718eabf02",
-    "translation_adapter_sha256": "83e55d3cb82522cb431ee20617510b0c39f79ae0fa5309daedf5c7ff9911a577",
+    "translation_runtime": "integra.translation",
     "srt_service_sha256": "417017a6a3becc395e88e2554e8d7c2dca51b09de9743e8c5c0cf81ac9ba6205",
     "media_adapters_sha256": "4c3d7fee2777291b297679b28b1727d8e54ed74e6d0172da58e83702570cdca5",
     "audio_adapter_sha256": "ab525fe985a0fa1af8ba9ccf6b94e78b0095b0a240f057e8e381116acbd3d9f6",

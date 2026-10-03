@@ -69,16 +69,21 @@ def uid(namespace, native, digest=H):
 
 def component(component_id, capability):
     seminartext_contract = "topic_review_workflow_v2" if capability in {"topics", "review_mechanics"} else "canonical_evidence_v1"
-    contract = seminartext_contract if component_id == "seminartext" else "project_schema_v7"
+    contract = (seminartext_contract if component_id == "seminartext" else
+                "integra_translation_v1" if component_id == "integra.translation" else "project_schema_v7")
     model_id = None
     model_sha = None
     if component_id == "videotext" and capability == "asr":
         model_id, model_sha = "ggml-large-v3.bin", VT_WHISPER_SHA
     elif component_id == "seminartext" and capability == "topics":
         model_id, model_sha = "gemma3:4b", ST_TOPIC_SHA
+    elif component_id == 'integra.translation':
+        from integra_core.translategemma_runtime import MODEL, MODEL_DIGEST
+        model_id, model_sha = MODEL, MODEL_DIGEST
     return {
         "component_id": component_id,
-        "commit_sha": ST_COMMIT if component_id == "seminartext" else VT_COMMIT,
+        "commit_sha": (ST_COMMIT if component_id == "seminartext" else
+                       "f" * 40 if component_id == "integra.translation" else VT_COMMIT),
         "contract_id": contract,
         "model_id": model_id,
         "model_sha256": model_sha,
@@ -89,7 +94,7 @@ def bindings():
     owners = {
         "media_preparation": ["videotext"],
         "asr": ["videotext"],
-        "translation": ["videotext"],
+        "translation": ["integra.translation"],
         "word_timeline": ["seminartext"],
         "topics": ["seminartext"],
         "review_mechanics": ["seminartext", "videotext"],

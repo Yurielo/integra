@@ -3,17 +3,18 @@
   "status": "ACCEPTED",
   "issue": 48,
   "implementation": [
-    {"path": "docs/architecture/TRANSCRIPT_AND_TOPIC_STUDIO_V1.md", "sha256": "612b8745815406fcc5df7b5e5881c6fd2d20e122f805debe509cf77b4b93c505"},
-    {"path": "integra_core/transcript_topic_studio.py", "sha256": "1843565688b9bd73502a5bde76c8635f396249be684877123cf0fd6a32b609f7"},
-    {"path": "schemas/transcript_topic_studio_v1.schema.json", "sha256": "6918f36baa9aedbc01419561098344d72f4d820fd68d6f0e7a46731a6e5c959e"},
-    {"path": "schemas/transcript_topic_studio_evidence_v1.schema.json", "sha256": "0a770fce7153de6f3b41a6342caf644c1606479d4f02f536f0aa324bca5ce461"},
-    {"path": "tests/test_transcript_topic_studio.py", "sha256": "6696500e86c68914c9733126b436be81e9b834c5ec30efe5c3215b166dca8853"}
+    {"path": "docs/architecture/TRANSCRIPT_AND_TOPIC_STUDIO_V1.md", "sha256": "d0d873f88fa21a3bfa5d1520a7e1ea0dd6d6068972bc4685b6845f94b03539ae"},
+    {"path": "integra_core/translategemma_runtime.py", "sha256": "f4fae2bf5eb2da32162959698f41eb2df617ebf01d1744085009f798fe8b0947"},
+    {"path": "integra_core/transcript_topic_studio.py", "sha256": "bf6ad5b08efd3a2c5108166badf1987c748777bc2cfae60109f97cff1ff746c1"},
+    {"path": "schemas/transcript_topic_studio_v1.schema.json", "sha256": "606ff62a33799a3e6ada1fefe921f31e27c326205024fe4ab02bec5ef8b3f59f"},
+    {"path": "schemas/transcript_topic_studio_evidence_v1.schema.json", "sha256": "90a9d9d2d2bb184e3b92e63851f1555e8c8278de6a007f9e48f9b429cc5c040a"},
+    {"path": "tests/test_transcript_topic_studio.py", "sha256": "0e20bc3c6de9ddeec1752b447eb3b812ba00f3c2cb994418b7bd30f1bbac9ca2"}
   ],
   "dependencies": ["R6", "PROJECTS_AND_SOURCES_V1"],
   "capability_owners": {
     "media_preparation": ["videotext"],
     "asr": ["videotext"],
-    "translation": ["videotext"],
+    "translation": ["integra.translation"],
     "word_timeline": ["seminartext"],
     "topics": ["seminartext"],
     "review_mechanics": ["seminartext", "videotext"],

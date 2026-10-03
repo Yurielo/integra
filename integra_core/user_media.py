@@ -20,7 +20,7 @@ from .protocol import canonical_json, content_sha256
 from .publishing import sha256_bytes, validate_package
 from .seminartext_runtime import generate_topics
 from .word_timeline_runtime import generate_word_timeline
-from .videotext_runtime import preflight as videotext_translation_preflight, translate as translate_videotext
+from .translategemma_runtime import preflight as translation_preflight, translate as translate_translategemma
 from . import seminartext_asr_runtime as asr
 from . import videotext_media_runtime as videotext_media
 from . import asr_reuse
@@ -285,7 +285,7 @@ def _translation_provenance(
     source_language = value.get("source_language")
     target_language = value.get("target_language")
     cues = value.get("cues")
-    if (value.get("component") != "videotext" or value.get("capability") != "translation" or
+    if (value.get("component") != "integra.translation" or value.get("capability") != "translation" or
         source_language != expected_source_language or target_language != expected_target_language or
         source_language == target_language or not isinstance(cues, list) or not cues):
         raise ValueError("translation result does not match the requested languages")
@@ -323,10 +323,10 @@ def _translation_provenance(
         "output_sha256": hashlib.sha256(translation_path.read_bytes()).hexdigest(),
         "semantic_status": "MACHINE_TRANSLATION_REVIEW_REQUIRED",
         "runtime": {
-            "component": "videotext",
-            "commit_sha": runtime["commit_sha"],
-            "adapter_sha256": runtime["adapter_sha256"],
-            "model": runtime["model"],
+            "component": runtime["component"], "provider": runtime["provider"],
+            "model": runtime["model"], "model_id": runtime["model_id"],
+            "template_version": runtime["template_version"],
+            "runtime_identity_sha256": runtime["runtime_identity_sha256"],
         },
     }
 
@@ -458,9 +458,10 @@ def run_job(project_dir: Path, job_id: str) -> dict[str, Any]:
             if (not isinstance(target_language, str) or target_language not in {"ru", "en"} or
                     target_language == source_speech_language):
                 raise ValueError("Выбранный язык перевода не поддерживается.")
-            translation_runtime = videotext_translation_preflight()
-            translation = translate_videotext(
-                subtitles, translation_path, target=target_language, runtime=translation_runtime)
+            translation_runtime = translation_preflight()
+            translation = translate_translategemma(
+                subtitles, translation_path, source=source_speech_language,
+                target=target_language, runtime=translation_runtime)
             provenance = _translation_provenance(
                 translation, source_id=job["source_id"], transcript_path=work / "transcript.json",
                 subtitles=subtitles, translation_path=translation_path,

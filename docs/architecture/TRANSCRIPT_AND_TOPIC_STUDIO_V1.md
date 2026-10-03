@@ -14,17 +14,20 @@ authority from SeminarText or VideoText into Integra.
 
 ## Capability ownership
 
-- VideoText owns media preparation, ASR and translation outputs.
+- VideoText owns media preparation and ASR outputs. Integra owns the bounded
+  TranslateGemma translation runtime and derivative output provenance.
 - SeminarText owns Canonical Word Timeline and Topic proposals.
 - SeminarText and VideoText jointly supply review-mechanics and quality signals.
 - Integra owns only the studio index, clustered package and an explicitly
   authorized `ReviewDecision` record. Operations v1 exclusively owns jobs and
   checkpoints.
 
-Every binding includes the accepted R5 selection-record SHA-256, exact pinned
-R1 component commit, an R1-supported contract selected for that R5 capability,
-the pinned model identity when one exists (including the VideoText ASR model
-and the R6 SeminarText `gemma3:4b` manifest/weights identity),
+Every binding includes the accepted R5 selection-record SHA-256, an exact
+component commit and runtime contract. Source-owned capabilities require their
+pinned R1 commit; the Integra translation component records the exact Integra
+build commit at execution time and its local TranslateGemma runtime identity.
+Pinned model identity is retained when one exists (including the VideoText ASR
+model and the R6 SeminarText `gemma3:4b` manifest/weights identity),
 and configuration SHA-256. Unknown commits, contracts and models fail closed.
 Artifacts bind the hash of that complete capability record. Operations v1
 binds job admission and resume; Studio never duplicates that lifecycle.

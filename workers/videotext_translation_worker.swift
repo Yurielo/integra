@@ -16,35 +16,15 @@ struct IntegraVideoTextTranslationWorker {
                 try subtitles(requestPath: arguments[1])
                 return
             }
-            guard let input = value("--srt", in: arguments), let output = value("--output", in: arguments),
-                  let targetValue = value("--target", in: arguments),
-                  let target = ArtifactLanguage(rawValue: targetValue) else {
-                throw WorkerError.invalidArguments
-            }
-            let sourceURL = URL(fileURLWithPath: input)
-            let source = try String(contentsOf: sourceURL, encoding: .utf8)
-            let service = SRTService()
-            let parsed = try service.parseWithReport(source)
-            guard parsed.skippedZeroDurationCount == 0 else { throw WorkerError.invalidSRT }
-            try validate(parsed.cues, service: service, duration: nil)
-            let cues = parsed.cues
-            let original = source.contains(where: { $0.unicodeScalars.contains { (0x0400...0x04FF).contains($0.value) } }) ? ArtifactLanguage.ru : .en
-            let result = try await TranslationAdapter().translate(cues: cues, source: original, target: target, onProgress: { _ in }, onLog: { _ in })
-            let translated = result.cues.map { ["id": $0.id, "start_seconds": $0.start, "end_seconds": $0.end, "text": $0.text] as [String: Any] }
-            let issues = result.issues.map { ["cue_id": $0.cueID, "reason_codes": $0.reasonCodes, "candidate_text": $0.candidateText as Any] as [String: Any] }
-            let payload: [String: Any] = ["schema_version": "1.0", "component": "videotext", "capability": "translation", "source_language": original.rawValue, "target_language": target.rawValue, "model": result.model, "semantic_status": "MACHINE_TRANSLATION_REVIEW_REQUIRED", "cues": translated, "issues": issues]
-            let data = try JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys, .prettyPrinted])
-            try data.write(to: URL(fileURLWithPath: output), options: .atomic)
+            // Translation inference is Integra-owned and runs through the
+            // TranslateGemma runtime. This worker remains intentionally
+            // limited to VideoText-owned media and subtitle mechanics.
+            throw WorkerError.invalidArguments
         } catch {
             // Component errors may contain private text or filesystem paths.
             fputs("VideoText worker failed: invalid request, subtitle data, or component operation.\n", stderr)
             exit(2)
         }
-    }
-
-    static func value(_ name: String, in arguments: [String]) -> String? {
-        guard let index = arguments.firstIndex(of: name), arguments.indices.contains(index + 1) else { return nil }
-        return arguments[index + 1]
     }
 
     struct SubtitleRequest: Decodable {

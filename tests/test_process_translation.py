@@ -39,8 +39,8 @@ class ProcessTranslationTests(unittest.TestCase):
         return job
 
     @staticmethod
-    def _translation(subtitles, output, *, target, runtime):
-        payload = {"schema_version": "1.0", "component": "videotext", "capability": "translation",
+    def _translation(subtitles, output, *, source, target, runtime):
+        payload = {"schema_version": "1.0", "component": "integra.translation", "capability": "translation",
                    "source_language": "ru", "target_language": target, "model": runtime["model"],
                    "semantic_status": "MACHINE_TRANSLATION_REVIEW_REQUIRED", "issues": [],
                    "cues": [{"id": "1", "start_seconds": 0.0, "end_seconds": 1.25,
@@ -50,12 +50,14 @@ class ProcessTranslationTests(unittest.TestCase):
 
     @staticmethod
     def _runtime():
-        return {"component": "videotext", "commit_sha": "pinned", "adapter_sha256": "adapter", "model": "qwen3:8b"}
+        return {"component": "integra.translation", "provider": "ollama",
+                "model": "translategemma:4b-it-q4_K_M", "model_id": "digest",
+                "template_version": "translategemma-ollama-v1", "runtime_identity_sha256": "identity"}
 
     def test_translation_is_real_result_with_source_bound_provenance(self):
         job = self._job(("translation",))
-        with patch("integra_core.user_media.videotext_translation_preflight", side_effect=self._runtime), \
-             patch("integra_core.user_media.translate_videotext", side_effect=self._translation) as translated:
+        with patch("integra_core.user_media.translation_preflight", side_effect=self._runtime), \
+             patch("integra_core.user_media.translate_translategemma", side_effect=self._translation) as translated:
             result = run_job(self.project, job["job_id"])
         self.assertEqual(result["state"], "COMPLETED")
         translated.assert_called_once()
@@ -79,24 +81,24 @@ class ProcessTranslationTests(unittest.TestCase):
         self.assertEqual(Path(reopened["outputs"]["translation_txt"]).read_bytes(), translated_text.read_bytes())
 
     def test_translation_accepts_json_timestamp_roundoff_within_half_millisecond(self):
-        def rounded_translation(subtitles, output, *, target, runtime):
-            payload = self._translation(subtitles, output, target=target, runtime=runtime)
+        def rounded_translation(subtitles, output, *, source, target, runtime):
+            payload = self._translation(subtitles, output, source=source, target=target, runtime=runtime)
             payload["cues"][0]["id"] = 1
             payload["cues"][0]["end_seconds"] = 1.2499999999999998
             output.write_text(json.dumps(payload), encoding="utf-8")
             return payload
 
         job = self._job(("translation",))
-        with patch("integra_core.user_media.videotext_translation_preflight", side_effect=self._runtime), \
-             patch("integra_core.user_media.translate_videotext", side_effect=rounded_translation):
+        with patch("integra_core.user_media.translation_preflight", side_effect=self._runtime), \
+             patch("integra_core.user_media.translate_translategemma", side_effect=rounded_translation):
             result = run_job(self.project, job["job_id"])
 
         self.assertEqual(result["state"], "COMPLETED")
 
     def test_translation_failure_preserves_verified_transcript_for_a_later_retry(self):
         job = self._job(("translation",))
-        with patch("integra_core.user_media.videotext_translation_preflight", side_effect=self._runtime), \
-             patch("integra_core.user_media.translate_videotext", side_effect=ValueError("translation unavailable")):
+        with patch("integra_core.user_media.translation_preflight", side_effect=self._runtime), \
+             patch("integra_core.user_media.translate_translategemma", side_effect=ValueError("translation unavailable")):
             with self.assertRaisesRegex(ValueError, "translation unavailable"):
                 run_job(self.project, job["job_id"])
         failed = json.loads((self.project / "jobs.json").read_bytes())["jobs"][0]
@@ -107,8 +109,8 @@ class ProcessTranslationTests(unittest.TestCase):
 
     def test_text_materialization_failure_does_not_publish_translation_outputs(self):
         job = self._job(("translation",))
-        with patch("integra_core.user_media.videotext_translation_preflight", side_effect=self._runtime), \
-             patch("integra_core.user_media.translate_videotext", side_effect=self._translation), \
+        with patch("integra_core.user_media.translation_preflight", side_effect=self._runtime), \
+             patch("integra_core.user_media.translate_translategemma", side_effect=self._translation), \
              patch("integra_core.user_media._materialize_translation_txt", side_effect=ValueError("disk unavailable")):
             with self.assertRaisesRegex(ValueError, "disk unavailable"):
                 run_job(self.project, job["job_id"])
@@ -120,13 +122,13 @@ class ProcessTranslationTests(unittest.TestCase):
 
     def test_translation_rejects_a_source_duplicate_or_runtime_substitution(self):
         job = self._job(("translation",))
-        def duplicate(subtitles, output, *, target, runtime):
-            payload = self._translation(subtitles, output, target=target, runtime=runtime)
+        def duplicate(subtitles, output, *, source, target, runtime):
+            payload = self._translation(subtitles, output, source=source, target=target, runtime=runtime)
             payload["cues"][0]["text"] = "Hello Integra, this is a complete test sentence."
             output.write_text(json.dumps(payload), encoding="utf-8")
             return payload
-        with patch("integra_core.user_media.videotext_translation_preflight", side_effect=self._runtime), \
-             patch("integra_core.user_media.translate_videotext", side_effect=duplicate):
+        with patch("integra_core.user_media.translation_preflight", side_effect=self._runtime), \
+             patch("integra_core.user_media.translate_translategemma", side_effect=duplicate):
             with self.assertRaisesRegex(ValueError, "duplicates"):
                 run_job(self.project, job["job_id"])
 
@@ -157,7 +159,7 @@ class ProcessTranslationTests(unittest.TestCase):
 
     def test_unsupported_or_same_language_target_fails_without_fallback(self):
         job = self._job(("translation",), target_language="ru")
-        with patch("integra_core.user_media.videotext_translation_preflight") as preflight, \
+        with patch("integra_core.user_media.translation_preflight") as preflight, \
              self.assertRaisesRegex(ValueError, "не поддерживается"):
             run_job(self.project, job["job_id"])
         preflight.assert_not_called()

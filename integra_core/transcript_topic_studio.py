@@ -40,7 +40,7 @@ ARTIFACT_KINDS = {
 CAPABILITY_OWNERS = {
     "media_preparation": ("videotext",),
     "asr": ("videotext",),
-    "translation": ("videotext",),
+    "translation": ("integra.translation",),
     "word_timeline": ("seminartext",),
     "topics": ("seminartext",),
     "review_mechanics": ("seminartext", "videotext"),
@@ -55,10 +55,11 @@ PINNED_COMPONENT_CONTRACTS = {
     "seminartext": {"canonical_evidence_v1", "canonical_knowledge_v1", "topic_review_workflow_v2"},
     "videotext": {"project_schema_v7", "project_store_v7", "build_identity_0_6_4"},
 }
+INTEGRA_RUNTIME_COMPONENTS = {"integra.translation": {"integra_translation_v1"}}
 CAPABILITY_CONTRACTS = {
     "media_preparation": ("project_schema_v7",),
     "asr": ("project_schema_v7",),
-    "translation": ("project_schema_v7",),
+    "translation": ("integra_translation_v1",),
     "word_timeline": ("canonical_evidence_v1",),
     "topics": ("topic_review_workflow_v2",),
     "review_mechanics": ("topic_review_workflow_v2", "project_schema_v7"),
@@ -174,6 +175,8 @@ def register_artifact(
     binding = studio["component_bindings"].get(capability)
     if binding is None:
         raise StudioError("artifact capability has no accepted binding")
+    if kind == 'TRANSLATION' and any(c['component_id'] != 'integra.translation' for c in binding['components']):
+        raise StudioError('legacy translation bindings are read-only; no new Qwen execution')
     if semantic_status not in SEMANTIC_STATES and semantic_status != "NOT_APPLICABLE":
         raise StudioError("artifact semantic status is invalid")
     if kind in {"MACHINE_TRANSCRIPT", "TRANSLATION", "TOPIC_SET", "TOPIC_HIERARCHY"}:
@@ -703,7 +706,7 @@ def validate_studio(studio: dict[str, Any], registry: dict[str, Any]) -> None:
     if studio["studio_id"] != expected_studio_id:
         raise StudioError("studio identity differs from source binding")
     _validate_registry_binding(studio, registry)
-    validated_bindings = _validate_bindings(list(studio["component_bindings"].values()))
+    validated_bindings = _validate_bindings(list(studio["component_bindings"].values()), allow_legacy_translation=True)
     if studio["component_bindings"] != validated_bindings:
         raise StudioError("component binding keys differ from capabilities")
     if studio["semantic_authority"] != "MACHINE_OUTPUT_REQUIRES_HUMAN_DECISION":
@@ -755,7 +758,7 @@ def _validate_registry_binding(studio: dict[str, Any], registry: dict[str, Any])
         raise StudioError("studio source is not present in authoritative registry snapshot")
 
 
-def _validate_bindings(bindings: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+def _validate_bindings(bindings: list[dict[str, Any]], *, allow_legacy_translation: bool = False) -> dict[str, dict[str, Any]]:
     if not isinstance(bindings, list) or not bindings:
         raise StudioError("component bindings are required")
     result: dict[str, dict[str, Any]] = {}
@@ -775,6 +778,11 @@ def _validate_bindings(bindings: list[dict[str, Any]]) -> dict[str, dict[str, An
         if not isinstance(components, list) or not components:
             raise StudioError("component binding components are required")
         component_ids: list[str] = []
+        legacy_translation = (allow_legacy_translation and capability == 'translation'
+                              and len(components) == 1 and isinstance(components[0], dict)
+                              and components[0].get('component_id') == 'videotext')
+        expected_contracts = ('project_schema_v7',) if legacy_translation else CAPABILITY_CONTRACTS[capability]
+        expected_owners = ('videotext',) if legacy_translation else CAPABILITY_OWNERS[capability]
         for component_index, component in enumerate(components):
             component_fields = {
                 "component_id", "commit_sha", "contract_id", "model_id", "model_sha256"
@@ -785,22 +793,37 @@ def _validate_bindings(bindings: list[dict[str, Any]]) -> dict[str, dict[str, An
             _git_sha(component["commit_sha"], "component commit")
             _text(component["contract_id"], "component contract")
             component_id = component["component_id"]
-            if component["commit_sha"] != PINNED_COMPONENT_COMMITS.get(component_id):
-                raise StudioError("component commit differs from accepted R1 baseline")
-            if component["contract_id"] not in PINNED_COMPONENT_CONTRACTS.get(component_id, set()):
-                raise StudioError("component contract differs from accepted R1 baseline")
-            if component["contract_id"] != CAPABILITY_CONTRACTS[capability][component_index]:
+            if component_id in PINNED_COMPONENT_COMMITS:
+                if component["commit_sha"] != PINNED_COMPONENT_COMMITS[component_id]:
+                    raise StudioError("component commit differs from accepted R1 baseline")
+                allowed_contracts = PINNED_COMPONENT_CONTRACTS.get(component_id, set())
+            elif component_id in INTEGRA_RUNTIME_COMPONENTS:
+                # An Integra-owned runtime records the exact Integra build
+                # commit at execution time. It must never impersonate a
+                # pinned source-product commit or model identity.
+                allowed_contracts = INTEGRA_RUNTIME_COMPONENTS[component_id]
+            else:
+                raise StudioError("component is not an accepted source or Integra runtime")
+            if component["contract_id"] not in allowed_contracts:
+                if component_id in PINNED_COMPONENT_COMMITS:
+                    raise StudioError("component contract differs from accepted R1 baseline")
+                raise StudioError("component contract differs from accepted Integra runtime contract")
+            if component_index >= len(expected_contracts) or component["contract_id"] != expected_contracts[component_index]:
                 raise StudioError("component contract differs from accepted R5 capability contract")
             if (component["model_id"] is None) != (component["model_sha256"] is None):
                 raise StudioError("component model identity is incomplete")
             if component["model_id"] is not None:
                 _text(component["model_id"], "model ID")
                 _sha(component["model_sha256"], "model hash")
-                if PINNED_COMPONENT_MODELS.get(component_id, {}).get(component["model_id"]) != component["model_sha256"]:
+                if component_id in PINNED_COMPONENT_COMMITS and PINNED_COMPONENT_MODELS.get(component_id, {}).get(component["model_id"]) != component["model_sha256"]:
                     raise StudioError("component model differs from accepted R1 baseline")
             component_ids.append(component["component_id"])
-        if tuple(component_ids) != CAPABILITY_OWNERS[capability]:
+        if tuple(component_ids) != expected_owners:
             raise StudioError("components differ from accepted ordered R5 capability owners")
+        if capability == 'translation' and not legacy_translation:
+            from .translategemma_runtime import MODEL, MODEL_DIGEST
+            if components[0]['model_id'] != MODEL or components[0]['model_sha256'] != MODEL_DIGEST:
+                raise StudioError('translation model differs from exact TranslateGemma pin')
         if capability == "asr" and (
             components[0]["model_id"] != "ggml-large-v3.bin"
             or components[0]["model_sha256"] != PINNED_COMPONENT_MODELS["videotext"]["ggml-large-v3.bin"]

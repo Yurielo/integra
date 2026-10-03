@@ -113,7 +113,7 @@ class MediaBoundaryTests(unittest.TestCase):
             # Isolate unrelated adapters while retaining the real component
             # preflight under test (verified worker, missing ffprobe).
             for name in ("preflight", "ffmpeg_preflight", "seminartext_preflight",
-                         "word_timeline_preflight", "videotext_preflight"):
+                         "word_timeline_preflight", "translation_preflight"):
                 stack.enter_context(patch.object(capabilities, name, return_value={"state": "READY"}))
             registry = {item["id"]: item for item in capabilities.capability_registry([source])}
         for name in ("burn_subtitles", "audio_analysis", "speed_video"):

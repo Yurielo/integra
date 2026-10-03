@@ -30,11 +30,15 @@
   "implementation": [
     {
       "path": "docs/architecture/MEDIA_INTEGRATION_V1.md",
-      "sha256": "ac368b0bc82de16f10fcf155c26c2966842ba0e154b22537c9ccd98ef533ba69"
+      "sha256": "959b1abfba4610d81b03541b6c956114fc552249cf72dcfe7a12a77f125a1396"
     },
     {
       "path": "integra_core/media.py",
-      "sha256": "3e29bcfa0a452e74e58ffd50dcfc7b78e71d6299446b8f1548b7953fcb989f84"
+      "sha256": "f9a1fd19eaadedd1159dffc86f0d8b7bf71044397da7e098acb545b8052dbfbc"
+    },
+    {
+      "path": "integra_core/translategemma_runtime.py",
+      "sha256": "f4fae2bf5eb2da32162959698f41eb2df617ebf01d1744085009f798fe8b0947"
     },
     {
       "path": "schemas/media_capability_report_v1.schema.json",
@@ -54,7 +58,7 @@
     },
     {
       "path": "schemas/media_recipe_v1.schema.json",
-      "sha256": "2a5d07141fc5b80db10e1651dbb4e9d4c041cb26b7114712a504618976dd71e0"
+      "sha256": "803642fc876b821f309a8a87f460a00b382cbc29a61ec0f88f4e66672d6329d8"
     },
     {
       "path": "tests/fixtures/media_v1/ffprobe_fixture.py",
@@ -62,7 +66,7 @@
     },
     {
       "path": "tests/test_media.py",
-      "sha256": "c02663135af71fb30e3e70fd4a14b1047b1dbad1d0991977db1c2f8fa27299f1"
+      "sha256": "aea8a873e4cd871a9e126d3cbb874f33d05580538569a9364b6a25ac549dd058"
     }
   ],
   "issue": 14,
