@@ -141,12 +141,12 @@ def fetch_canonical(registry: dict) -> tuple[dict, dict[int, dict], dict]:
     match = re.fullmatch(r'https://github\.com/Yurielo/integra/issues/214#issuecomment-([0-9]+)', decision_ref)
     if not match:
         raise ValueError('Product Owner decision reference is invalid')
-    authority = _api(f'repos/{REPOSITORY}/issues/comments/{match.group(1)}')
-    token_lines = re.findall(r'^PRODUCT_OWNER_AUTHORIZATION:.*$', authority.get('body', ''), re.MULTILINE)
-    if (registry.get('decision_authority_ref') != authority.get('html_url')
-            or authority.get('user', {}).get('login', '').lower() != 'yurielo'
-            or len(token_lines) != 1
-            or sha(token_lines[0].encode()) != registry.get('decision_token_sha256')):
+    decision_authority = _api(f'repos/{REPOSITORY}/issues/comments/{match.group(1)}')
+    decision_token_lines = re.findall(r'^PRODUCT_OWNER_AUTHORIZATION:.*$', decision_authority.get('body', ''), re.MULTILINE)
+    if (registry.get('decision_authority_ref') != decision_authority.get('html_url')
+            or decision_authority.get('user', {}).get('login', '').lower() != 'yurielo'
+            or len(decision_token_lines) != 1
+            or sha(decision_token_lines[0].encode()) != registry.get('decision_token_sha256')):
         raise ValueError('Product Owner Issue #214 decision binding differs')
     historical_receipts = {}
     for gap in registry.get('historical_gaps', []):
@@ -217,9 +217,9 @@ def fetch_canonical(registry: dict) -> tuple[dict, dict[int, dict], dict]:
     if _api(f'repos/{REPOSITORY}/git/ref/heads/main')['object']['sha'] != main:
         raise ValueError('canonical main moved during protection capture')
     return current, proposals, {'main_sha': main, 'current_sha256': sha(current_bytes),
-                                 'decision_authority_ref': authority['html_url'],
-                                 'decision_token_sha256': sha(token_lines[0].encode()),
-                                 'decision_token': token_lines[0],
+                                 'decision_authority_ref': decision_authority['html_url'],
+                                 'decision_token_sha256': sha(decision_token_lines[0].encode()),
+                                 'decision_token': decision_token_lines[0],
                                  'historical_receipts': historical_receipts,
                                  'proposal_heads': {str(n): captured_heads[n] for n in proposals},
                                  'accepted_unpromoted': accepted_unpromoted}
