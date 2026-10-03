@@ -4,7 +4,7 @@
   "issue": 48,
   "implementation": [
     {"path": "docs/architecture/TRANSCRIPT_AND_TOPIC_STUDIO_V1.md", "sha256": "d0d873f88fa21a3bfa5d1520a7e1ea0dd6d6068972bc4685b6845f94b03539ae"},
-    {"path": "integra_core/translategemma_runtime.py", "sha256": "f4fae2bf5eb2da32162959698f41eb2df617ebf01d1744085009f798fe8b0947"},
+    {"path": "integra_core/translategemma_runtime.py", "sha256": "339cb8dabc323740d4b99f1a8646297b75863cf004f59a112712f7fb486c17c3"},
     {"path": "integra_core/transcript_topic_studio.py", "sha256": "bf6ad5b08efd3a2c5108166badf1987c748777bc2cfae60109f97cff1ff746c1"},
     {"path": "schemas/transcript_topic_studio_v1.schema.json", "sha256": "606ff62a33799a3e6ada1fefe921f31e27c326205024fe4ab02bec5ef8b3f59f"},
     {"path": "schemas/transcript_topic_studio_evidence_v1.schema.json", "sha256": "90a9d9d2d2bb184e3b92e63851f1555e8c8278de6a007f9e48f9b429cc5c040a"},
