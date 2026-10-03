@@ -34,11 +34,24 @@ class TranslateGemmaRuntimeTests(unittest.TestCase):
                     patch.object(runtime, '_verify_model_bytes') as verify, \
                     patch.object(runtime.subprocess, 'check_output', return_value='ollama version 1\n'):
                 record = runtime.preflight()
-                verify.assert_called_once_with()
+                verify.assert_called_once_with(hash_layers=True)
         self.assertEqual(record['model_id'], runtime.MODEL_DIGEST)
         self.assertEqual(record['weights_sha256'], runtime.WEIGHTS_DIGEST)
         self.assertEqual(record['ollama_sha256'], runtime.hashlib.sha256(b'public test executable').hexdigest())
         self.assertEqual(len(record['runtime_identity_sha256']), 64)
+
+    def test_capability_preflight_retains_identity_checks_without_rehashing_layers(self):
+        with tempfile.TemporaryDirectory() as directory:
+            executable = Path(directory) / 'ollama'
+            executable.write_bytes(b'public test executable')
+            with patch.object(runtime, 'resolve_ollama', return_value=executable), \
+                    patch.object(runtime, '_model_digest', return_value=runtime.MODEL_DIGEST), \
+                    patch.object(runtime, '_verify_model_bytes') as verify, \
+                    patch.object(runtime.subprocess, 'check_output', return_value='ollama version 1\n'):
+                record = runtime.preflight(hash_model=False)
+                verify.assert_called_once_with(hash_layers=False)
+        self.assertEqual(record['model_id'], runtime.MODEL_DIGEST)
+        self.assertEqual(record['weights_sha256'], runtime.WEIGHTS_DIGEST)
 
     def test_manifest_and_layer_corruption_are_rejected(self):
         with tempfile.TemporaryDirectory() as directory:

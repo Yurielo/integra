@@ -86,7 +86,7 @@ def _sha_file(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _verify_model_bytes() -> None:
+def _verify_model_bytes(*, hash_layers: bool = True) -> None:
     try:
         root = Path(os.environ.get('OLLAMA_MODELS', Path.home() / '.ollama/models'))
         manifest = root / 'manifests/registry.ollama.ai/library/translategemma/4b-it-q4_K_M'
@@ -101,17 +101,23 @@ def _verify_model_bytes() -> None:
             if not re.fullmatch(r'sha256:[0-9a-f]{64}', name):
                 raise ValueError("TranslateGemma model layer identity is invalid")
             blob = root / 'blobs' / name.replace(':', '-')
-            if blob.stat().st_size != layer['size'] or _sha_file(blob) != name[7:]:
+            if blob.is_symlink() or not blob.is_file() or blob.stat().st_size != layer['size']:
+                raise ValueError("TranslateGemma model layer bytes differ")
+            if hash_layers and _sha_file(blob) != name[7:]:
                 raise ValueError("TranslateGemma model layer bytes differ")
     except (OSError, KeyError, TypeError, json.JSONDecodeError) as error:
         raise ValueError("TranslateGemma retained model bytes are unavailable or invalid") from error
 
 
-def preflight() -> dict[str, Any]:
-    """Return the exact local model identity, never downloading or selecting a fallback."""
+def preflight(*, hash_model: bool = True) -> dict[str, Any]:
+    """Return the pinned local identity without downloading or selecting a fallback.
+
+    UI capability discovery may skip rereading every content-addressed layer;
+    actual translation and Candidate validation retain the full byte hash.
+    """
     executable = resolve_ollama()
     model_id = _model_digest()
-    _verify_model_bytes()
+    _verify_model_bytes(hash_layers=hash_model)
     try:
         version = subprocess.check_output([str(executable), '--version'], text=True, timeout=10).strip()
     except (OSError, subprocess.SubprocessError) as error:

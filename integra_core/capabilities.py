@@ -100,7 +100,7 @@ def capability_registry(sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
         except ValueError as error: topics_reason=str(error)
         try: word_timeline_preflight(); timeline_ready=True
         except ValueError as error: timeline_reason=str(error)
-        try: translation_preflight(); translation_ready=True
+        try: translation_preflight(hash_model=False); translation_ready=True
         except ValueError as error: translation_reason=str(error)
     if youtube_video or "YOUTUBE_PLAYLIST" in types:
         try: youtube_preflight(); youtube_ready=True
