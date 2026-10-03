@@ -485,6 +485,7 @@ struct SidebarItem {
     // user-facing source list uses the established product label instead.
     switch source["source_type"] as? String {
     case "YOUTUBE_VIDEO": return "YouTube"
+    case "YOUTUBE_PLAYLIST": return "Плейлист YouTube"
     default: return source["source_type"] as? String ?? "Источник"
     }
   }

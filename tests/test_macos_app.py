@@ -299,6 +299,7 @@ class MacOSApplicationTests(unittest.TestCase):
     def test_youtube_source_type_stays_internal_to_normal_source_lists(self):
         source = (ROOT / "macos/IntegraApp.swift").read_text()
         self.assertIn('case "YOUTUBE_VIDEO": return "YouTube"', source)
+        self.assertIn('case "YOUTUBE_PLAYLIST": return "Плейлист YouTube"', source)
         self.assertEqual(source.count("sourcePresentationDetail(source)"), 3)
         self.assertNotIn('detail: source["source_type"] as? String ?? "UNKNOWN"', source)
         self.assertNotIn('detail: "\\(source["source_type"] ?? "UNKNOWN")"', source)
