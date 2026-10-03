@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.candidate_archive",
+  "status": "COMPLETE",
+  "candidate_id": "candidate-v1-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e",
+  "bundle_digest": "639d66bbbd8d7af55d091f43156d823000496191c771bef28d7fffc6fe88a302",
+  "manifest_digest": "e50edf361bad7226caf3101584ec3dc73119a0254c464ecb424f1ec0a23daacf",
+  "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e/639d66bbbd8d7af55d091f43156d823000496191c771bef28d7fffc6fe88a302",
+  "inventory_sha256": "98522a8283a26589ccac94eeaa747261f163573fd695ce56d50726803647c443",
+  "verification": "ARCHIVAL_BYTE_INTEGRITY",
+  "runtime_validation": "NOT_PERFORMED",
+  "app_size_bytes": 2201658461
+}
