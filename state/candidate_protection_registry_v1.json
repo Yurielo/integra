@@ -24,8 +24,18 @@
   },
   "decision_authority_ref": "https://github.com/Yurielo/integra/issues/214#issuecomment-5951189263",
   "decision_token_sha256": "c0fbc7699ae3caa6ea56a59987410977515881043f2ce2fd9b4f39382cc132f8",
-  "deletion_authorizations": {},
-  "deletion_enabled": false,
+  "deletion_authorizations": {
+    "Build Archive/candidate-v1-c332eb0cac0d7e4060c15060e48bbf4db1c07c6da590d3db22a96adb64e75f6d/fc04f4bfddcacf4a889ae67be3b07790ce466a6124a16092dba87ec795b1e40f": {
+      "authority_ref": "https://github.com/Yurielo/integra/issues/214#issuecomment-5976933634",
+      "bundle_digest": "fc04f4bfddcacf4a889ae67be3b07790ce466a6124a16092dba87ec795b1e40f",
+      "candidate_id": "candidate-v1-c332eb0cac0d7e4060c15060e48bbf4db1c07c6da590d3db22a96adb64e75f6d",
+      "manifest_digest": "98e502395e4667c589f2e6beff0d2afbf9778d0999df502280340d3c417d19c9",
+      "path": "Build Archive/candidate-v1-c332eb0cac0d7e4060c15060e48bbf4db1c07c6da590d3db22a96adb64e75f6d/fc04f4bfddcacf4a889ae67be3b07790ce466a6124a16092dba87ec795b1e40f"
+    }
+  },
+  "deletion_decision_authority_ref": "https://github.com/Yurielo/integra/issues/214#issuecomment-5976936494",
+  "deletion_decision_token_sha256": "2bc898600fbb735d4b5844d8dc8fff1508cf2cff4c33b7af0f0e06eb8dbb72ef",
+  "deletion_enabled": true,
   "exact_legacy_retirement": {
     "catalog_path": "state/issue214_exact_legacy_retirement_v1.json",
     "catalog_sha256": "f146bfb1c3ed397275071528ee1aa0945dbde75a0b1669357051c3a6136e2c76",

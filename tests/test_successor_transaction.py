@@ -321,6 +321,23 @@ class ExactSuccessorTests(unittest.TestCase):
         self.assertEqual(subprocess.check_output(['git', 'status', '--porcelain'],
                                                 cwd=root, text=True).strip(), '')
 
+    def test_consumed_successor_allows_only_later_deletion_authority_fields(self):
+        root = self.merged_fixture()
+        registry_path = root / transaction.REGISTRY
+        registry = json.loads(registry_path.read_bytes())
+        registry.update(
+            deletion_authorizations={'Build Archive/exact': {
+                'path': 'Build Archive/exact', 'authority_ref': 'fixture-owner'}},
+            deletion_decision_authority_ref='issue-comment:fixture-delete',
+            deletion_decision_token_sha256='1' * 64,
+            deletion_enabled=True)
+        registry_path.write_bytes(transaction.encoded(registry))
+        transaction.validate_recorded_successor(root)
+        registry['latest_accepted_candidate_id'] = 'candidate-v1-' + '0' * 64
+        registry_path.write_bytes(transaction.encoded(registry))
+        with self.assertRaisesRegex(ValueError, 'outside deletion authority'):
+            transaction.validate_recorded_successor(root)
+
     def test_merged_acceptance_anchor_wrong_missing_and_unreachable_fail(self):
         root = self.merged_fixture()
         proposal = json.loads((root / transaction.RETIRED).read_bytes())

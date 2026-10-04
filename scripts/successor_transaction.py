@@ -203,7 +203,33 @@ def validate_recorded_successor(root: Path) -> None:
         raise ValueError('consumed transaction pointer is missing or differs')
     current = json.loads((root / CURRENT).read_bytes())
     if current['current_id'] == NEW_ID:
-        validate_tree(root)
+        # The consumed transaction freezes its result and historical package,
+        # but it is not a permanent lock on later independently authorized
+        # deletion decisions in the active protection registry.
+        for path, raw in files.items():
+            if path == REGISTRY:
+                continue
+            target = root / path
+            if raw is None:
+                if target.exists() or target.is_symlink():
+                    raise ValueError('active Proposal is not retired')
+            elif target.is_symlink() or target.read_bytes() != raw:
+                raise ValueError('successor package differs: ' + path)
+        accepted_registry = json.loads(files[REGISTRY])
+        mutable_deletion_fields = {
+            'deletion_authorizations', 'deletion_decision_authority_ref',
+            'deletion_decision_token_sha256', 'deletion_enabled'}
+        if ({key: value for key, value in registry.items()
+             if key not in mutable_deletion_fields}
+                != {key: value for key, value in accepted_registry.items()
+                    if key not in mutable_deletion_fields}):
+            raise ValueError('successor protection registry changed outside deletion authority')
+        errors = baseline.validate_current(current, root)
+        errors += baseline.verify_promotion_material(
+            json.loads(files[RETIRED]), root, root / PROPOSAL,
+            acceptance_ref=ACCEPTED_HEAD)
+        if errors:
+            raise ValueError('; '.join(errors))
         return
     accepted = json.loads(files[CURRENT])
     if current['records'][:len(accepted['records'])] != accepted['records']:

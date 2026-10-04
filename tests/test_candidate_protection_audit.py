@@ -244,18 +244,39 @@ class ProtectionAuditTests(unittest.TestCase):
         grant['authority_ref'] = 'issue-comment:future-fixture'
         self.registry['deletion_authorizations'] = {old['path']: grant}
         self.registry['deletion_enabled'] = True
-        self.canonical['decision_token'] = ('PRODUCT_OWNER_AUTHORIZATION: FIXTURE '
-             'EXPLICIT_GOVERNANCE_PINS={} DELETION_AUTHORIZATIONS=sha256:'
-             + audit.digest(self.registry['deletion_authorizations']) + ' DELETION_ENABLED=true')
+        deletion_token = ('PRODUCT_OWNER_AUTHORIZATION: AUTHORIZE_GOVERNED_RETIREMENT_AND_DELETION '
+             f'CANDIDATE_ID={old["candidate_id"]} BUNDLE_DIGEST={old["bundle_digest"]} '
+             f'MANIFEST_DIGEST={old["manifest_digest"]} AUTHORITY_REF={grant["authority_ref"]} '
+             'REASON=SUPERSEDED_BRIDGE_TIMEOUT_REGRESSION DELETION_AUTHORIZATIONS=sha256:'
+             + audit.digest(self.registry['deletion_authorizations'])
+             + ' DELETION_ENABLED=true SCOPE=EXACT_C332_ONLY')
+        self.registry['deletion_decision_authority_ref'] = 'issue-comment:deletion-fixture'
+        self.registry['deletion_decision_token_sha256'] = audit.sha(deletion_token.encode())
+        self.canonical.update(
+            deletion_decision_authority_ref='issue-comment:deletion-fixture',
+            deletion_decision_token_sha256=audit.sha(deletion_token.encode()),
+            deletion_decision_token=deletion_token)
         result = self.resolve()
         self.assertEqual(result['authority_state'], 'COMPLETE')
         self.assertEqual(result['entries'][-1]['classification'], 'ELIGIBLE')
         self.packages.pop(0)
         self.assertEqual(self.resolve()['entries'][-1]['classification'], 'UNKNOWN')
         self.packages.insert(0, self.package(self.registry['canonical_current']))
-        self.canonical['decision_token'] += ' STALE'
+        self.canonical['deletion_decision_token'] += ' STALE'
         self.registry['deletion_authorizations'][old['path']]['authority_ref'] = 'changed'
         self.assertEqual(self.resolve()['entries'][-1]['classification'], 'UNKNOWN')
+
+    def test_separate_deletion_decision_is_fail_closed(self):
+        old = self.package({'candidate_id': 'candidate-v1-' + '9'*64,
+                            'bundle_digest': '8'*64, 'manifest_digest': '7'*64})
+        self.packages.append(old)
+        grant = {k: old[k] for k in ('path', *audit.IDENTITY)}
+        grant['authority_ref'] = 'issue-comment:fixture-grant'
+        self.registry['deletion_authorizations'] = {old['path']: grant}
+        self.registry['deletion_enabled'] = True
+        result = self.resolve()
+        self.assertIn('PRODUCT_OWNER_DELETION_DECISION_UNVERIFIED', result['blockers'])
+        self.assertEqual(result['entries'][-1]['classification'], 'UNKNOWN')
 
     def test_explicit_pin_protects_and_missing_pin_enumeration_blocks(self):
         pinned = {'candidate_id': 'candidate-v1-' + '9'*64,
@@ -318,14 +339,14 @@ class ProtectionAuditTests(unittest.TestCase):
         self.assertIn('PROMOTION_CONTRACT_INTEGRATION_MISSING', result['blockers'])
         self.assertFalse(result['promotion_ready'])
 
-    def test_exact_issue_214_decision_cannot_authorize_pins_or_deletion(self):
+    def test_exact_issue_214_decision_cannot_authorize_pins_or_deletion_by_itself(self):
         self.registry['decision_token_sha256'] = 'c0fbc7699ae3caa6ea56a59987410977515881043f2ce2fd9b4f39382cc132f8'
         self.canonical['decision_token_sha256'] = self.registry['decision_token_sha256']
         self.registry['explicit_governance_pins'] = {'unexpected': {}}
         self.registry['deletion_authorizations'] = {'Build Archive/unexpected': {}}
         result = self.resolve()
         self.assertIn('OWNER_AUTHORIZED_PINS_DIFFER', result['blockers'])
-        self.assertIn('OWNER_AUTHORIZED_DELETION_GRANTS_DIFFER', result['blockers'])
+        self.assertIn('PRODUCT_OWNER_DELETION_DECISION_UNVERIFIED', result['blockers'])
         self.assertEqual(result['eligible_bytes'], 0)
 
     def test_unverified_owner_decision_cannot_accept_bootstrap(self):

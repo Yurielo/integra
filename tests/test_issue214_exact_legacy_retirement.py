@@ -26,8 +26,14 @@ class ExactLegacyRetirementTests(unittest.TestCase):
                     'bundle_digest': 'b' * 64, 'manifest_digest': 'c' * 64,
                     'allocated_bytes': retire._measure(self.package)}
 
-    def test_real_catalog_is_exactly_bound_and_empty_regular_grants_remain(self):
+    def test_real_catalog_is_exactly_bound_and_regular_grant_stays_separate(self):
         registry = json.loads(retire.authority.REGISTRY.read_text())
+        with self.assertRaisesRegex(ValueError, 'fail-closed'):
+            retire._catalog(registry)
+        registry.pop('deletion_decision_authority_ref', None)
+        registry.pop('deletion_decision_token_sha256', None)
+        registry['deletion_authorizations'] = {}
+        registry['deletion_enabled'] = False
         self.assertEqual(len(retire._catalog(registry)), 6)
         registry['deletion_authorizations'] = {'foreign': {'authority_ref': 'fake'}}
         with self.assertRaisesRegex(ValueError, 'fail-closed'):
