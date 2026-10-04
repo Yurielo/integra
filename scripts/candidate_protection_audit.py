@@ -148,6 +148,26 @@ def fetch_canonical(registry: dict) -> tuple[dict, dict[int, dict], dict]:
             or len(decision_token_lines) != 1
             or sha(decision_token_lines[0].encode()) != registry.get('decision_token_sha256')):
         raise ValueError('Product Owner Issue #214 decision binding differs')
+    deletion_authority = None
+    deletion_token_lines: list[str] = []
+    deletion_ref = registry.get('deletion_decision_authority_ref')
+    deletion_sha = registry.get('deletion_decision_token_sha256')
+    if deletion_ref is not None or deletion_sha is not None:
+        deletion_match = re.fullmatch(
+            r'https://github\.com/Yurielo/integra/issues/214#issuecomment-([0-9]+)',
+            str(deletion_ref))
+        if not deletion_match or not isinstance(deletion_sha, str) or not HASH.fullmatch(deletion_sha):
+            raise ValueError('Product Owner deletion decision reference is invalid')
+        deletion_authority = _api(
+            f'repos/{REPOSITORY}/issues/comments/{deletion_match.group(1)}')
+        deletion_token_lines = re.findall(
+            r'^PRODUCT_OWNER_AUTHORIZATION:.*$',
+            deletion_authority.get('body', ''), re.MULTILINE)
+        if (deletion_ref != deletion_authority.get('html_url')
+                or deletion_authority.get('user', {}).get('login', '').lower() != 'yurielo'
+                or len(deletion_token_lines) != 1
+                or sha(deletion_token_lines[0].encode()) != deletion_sha):
+            raise ValueError('Product Owner deletion decision binding differs')
     historical_receipts = {}
     for gap in registry.get('historical_gaps', []):
         data, receipt = _remote_file(gap['receipt_path'], main)
@@ -230,7 +250,7 @@ def fetch_canonical(registry: dict) -> tuple[dict, dict[int, dict], dict]:
         raise ValueError('open PR set or head changed during protection capture')
     if _api(f'repos/{REPOSITORY}/git/ref/heads/main')['object']['sha'] != main:
         raise ValueError('canonical main moved during protection capture')
-    return current, proposals, {'main_sha': main, 'current_sha256': sha(current_bytes),
+    canonical = {'main_sha': main, 'current_sha256': sha(current_bytes),
                                  'decision_authority_ref': decision_authority['html_url'],
                                  'decision_token_sha256': sha(decision_token_lines[0].encode()),
                                  'decision_token': decision_token_lines[0],
@@ -238,6 +258,12 @@ def fetch_canonical(registry: dict) -> tuple[dict, dict[int, dict], dict]:
                                  'successor_transactions': successor_transactions,
                                  'proposal_heads': {str(n): captured_heads[n] for n in proposals},
                                  'accepted_unpromoted': accepted_unpromoted}
+    if deletion_authority is not None:
+        canonical.update(
+            deletion_decision_authority_ref=deletion_authority['html_url'],
+            deletion_decision_token_sha256=sha(deletion_token_lines[0].encode()),
+            deletion_decision_token=deletion_token_lines[0])
+    return current, proposals, canonical
 
 
 def _identity(value: dict) -> dict:
@@ -310,10 +336,6 @@ def _validate_registry(registry: dict, current: dict, proposals: dict[int, dict]
     if registry.get('decision_token_sha256') == ACCEPTED_GAP_DECISION_SHA256:
         if registry.get('explicit_governance_pins') != {}:
             blockers.append('OWNER_AUTHORIZED_PINS_DIFFER')
-        if registry.get('deletion_authorizations') != {}:
-            blockers.append('OWNER_AUTHORIZED_DELETION_GRANTS_DIFFER')
-        if registry.get('deletion_enabled') is not False:
-            blockers.append('OWNER_AUTHORIZED_DELETION_DISABLED')
     if (registry.get('status') != 'PRODUCT_OWNER_AUTHORIZED_ACTIVE'
             or registry.get('activation_authority_ref') != registry.get('decision_authority_ref')):
         blockers.append('REGISTRY_NOT_OWNER_ACTIVATED')
@@ -443,15 +465,35 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
     if not decision_verified:
         blockers.append('PRODUCT_OWNER_DECISION_UNVERIFIED')
     token = (canonical or {}).get('decision_token', '')
-    for field, key in (('EXPLICIT_GOVERNANCE_PINS', 'explicit_governance_pins'),
-                       ('DELETION_AUTHORIZATIONS', 'deletion_authorizations')):
-        declared = re.search(r'(?:^| )' + field + r'=(\{\}|sha256:[0-9a-f]{64})(?: |$)', token)
-        value = registry.get(key)
-        if not declared or (declared.group(1) == '{}' and value != {}) or (
-                declared.group(1).startswith('sha256:') and
-                (not isinstance(value, dict) or digest(value) != declared.group(1)[7:])):
-            blockers.append('OWNER_' + field + '_BINDING_MISSING_OR_CONFLICT')
-    deletion_state = re.search(r'(?:^| )DELETION_ENABLED=(true|false)(?: |$)', token)
+    declared = re.search(
+        r'(?:^| )EXPLICIT_GOVERNANCE_PINS=(\{\}|sha256:[0-9a-f]{64})(?: |$)', token)
+    pins = registry.get('explicit_governance_pins')
+    if not declared or (declared.group(1) == '{}' and pins != {}) or (
+            declared.group(1).startswith('sha256:') and
+            (not isinstance(pins, dict) or digest(pins) != declared.group(1)[7:])):
+        blockers.append('OWNER_EXPLICIT_GOVERNANCE_PINS_BINDING_MISSING_OR_CONFLICT')
+
+    deletion_ref = registry.get('deletion_decision_authority_ref')
+    deletion_sha = registry.get('deletion_decision_token_sha256')
+    deletion_token = (canonical or {}).get('deletion_decision_token', token)
+    if deletion_ref is not None or deletion_sha is not None:
+        if (not canonical
+                or canonical.get('deletion_decision_authority_ref') != deletion_ref
+                or canonical.get('deletion_decision_token_sha256') != deletion_sha):
+            blockers.append('PRODUCT_OWNER_DELETION_DECISION_UNVERIFIED')
+    elif registry.get('deletion_enabled') is True or registry.get('deletion_authorizations'):
+        blockers.append('PRODUCT_OWNER_DELETION_DECISION_UNVERIFIED')
+    declared = re.search(
+        r'(?:^| )DELETION_AUTHORIZATIONS=(\{\}|sha256:[0-9a-f]{64})(?: |$)',
+        deletion_token)
+    authorizations = registry.get('deletion_authorizations')
+    if not declared or (declared.group(1) == '{}' and authorizations != {}) or (
+            declared.group(1).startswith('sha256:') and
+            (not isinstance(authorizations, dict)
+             or digest(authorizations) != declared.group(1)[7:])):
+        blockers.append('OWNER_DELETION_AUTHORIZATIONS_BINDING_MISSING_OR_CONFLICT')
+    deletion_state = re.search(
+        r'(?:^| )DELETION_ENABLED=(true|false)(?: |$)', deletion_token)
     # The accepted #214 token explicitly denies grants. It predates the
     # DELETION_ENABLED field; only its false state is valid under that token.
     if deletion_state is None:
@@ -459,6 +501,20 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
             blockers.append('OWNER_DELETION_STATE_UNAUTHORIZED')
     elif (deletion_state.group(1) == 'true') != registry.get('deletion_enabled'):
         blockers.append('OWNER_DELETION_STATE_CONFLICT')
+    if registry.get('deletion_enabled') is True and isinstance(authorizations, dict):
+        for grant in authorizations.values():
+            if not isinstance(grant, dict):
+                continue
+            expected_fields = {
+                'CANDIDATE_ID': grant.get('candidate_id'),
+                'BUNDLE_DIGEST': grant.get('bundle_digest'),
+                'MANIFEST_DIGEST': grant.get('manifest_digest'),
+                'AUTHORITY_REF': grant.get('authority_ref')}
+            if (any(not value or f'{key}={value}' not in deletion_token
+                    for key, value in expected_fields.items())
+                    or 'REASON=SUPERSEDED_BRIDGE_TIMEOUT_REGRESSION' not in deletion_token
+                    or 'SCOPE=EXACT_C332_ONLY' not in deletion_token):
+                blockers.append('OWNER_DELETION_GRANT_IDENTITY_BINDING_MISSING_OR_CONFLICT')
     accepted_gaps = _accepted_historical_gaps(registry, canonical, blockers)
     protected = _validate_registry(registry, current, proposals, blockers, accepted_gaps, canonical)
     historical = (canonical or {}).get('historical_receipts', {})
