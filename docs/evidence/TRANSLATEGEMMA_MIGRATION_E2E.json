@@ -1,0 +1,36 @@
+{
+  "artifact_type": "integra.translategemma_migration_evidence",
+  "schema_version": "1.0",
+  "candidate_id": "candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81",
+  "manifest_identity_sha256": "15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81",
+  "bundle_digest": "c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
+  "product_source": {
+    "commit_sha": "ee35be3e9174de670166f86ce8e1cfc3aa8e04fa",
+    "tree_sha": "f3409d4467337a906550da47a2222bee2e407671"
+  },
+  "archive": {
+    "status": "COMPLETE",
+    "inventory_sha256": "091a1587292cef9c87567cf0164d4a865c748d75587e3bbc8d70a873184385fd",
+    "manifest_digest": "faf503cf088cbf0d9b7ea005cf7d5523bcf36bf575759377450993262cc5bdf5"
+  },
+  "native_self_test": "PASS",
+  "real_translation": {
+    "result": "PASS",
+    "source_language": "ru",
+    "target_language": "en",
+    "source_sha256": "e7eb4a2a05a5a16e5905b700fb0a464bc067c3a7fcdbc024cffc16ac8823319a",
+    "output_sha256": "7f7c63c06f40b5ad0fe35dcc92e230b1de061115a735b1b6a49ca4f551bc2f50",
+    "cue_ids": [1, 2],
+    "cue_intervals_seconds": [[0.0, 3.0], [3.1, 6.0]],
+    "translated_text": ["Welcome to the seminar.", "Today, we are starting practical work."],
+    "semantic_status": "MACHINE_TRANSLATION_REVIEW_REQUIRED",
+    "model": "translategemma:4b-it-q4_K_M",
+    "model_id": "c49d986b0764f5881c476eb21435bb62b7abc62347aab3d4a6071e811be510a1",
+    "runtime_identity_sha256": "7ef2ecdc736aa95571213313f7c6f5c5612c2d17045996dcd4b34a0863ea4eae"
+  },
+  "source_bytes_unchanged": true,
+  "qwen_active_runtime_used": false,
+  "install_performed": false,
+  "deploy_performed": false,
+  "promotion_performed": false
+}
