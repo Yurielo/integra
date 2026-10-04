@@ -120,7 +120,12 @@
       "sha256": "c67475456dfac101a71b706ab7fa75f25ce62f8db03ab854dabe796106e91f4f"
     }
   },
-  "owner_acceptance": null,
+  "owner_acceptance": {
+    "decision": "PILOT_ACCEPTED",
+    "authority_ref": "PRODUCT OWNER AUTHORIZATION: ACCEPT_PROPOSED_BASELINE proposal-translation-runtime-translategemma-v1 candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81",
+    "scope": "Qwen to TranslateGemma canonical migration baseline acceptance only",
+    "promotion_authorized": false
+  },
   "allowed_overlay_paths": [
     "docs/TRANSLATEGEMMA_MIGRATION_PROOF.md",
     "docs/evidence/TRANSLATEGEMMA_MIGRATION_CANDIDATE_ARCHIVE.json",
