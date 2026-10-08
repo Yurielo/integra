@@ -18,7 +18,7 @@
   "result": {
     "current_id": "current-v2-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81",
     "files": {
-      "state/candidate_protection_registry_v1.json": "d52151b6f56e74860b6ff612b6691adfa3239992da758c5e20a6f0d39aa43400",
+      "state/candidate_protection_registry_v1.json": "3a18db5e28774810a84a386e393e73d831ef490cae599a34629f3560228592ca",
       "state/current_product_baseline_v2.json": "517c1f5f7b8ce4141b0ea54839f29d95887cc824298cd96330d274bab7abc9b4",
       "state/history/open_proposal_15d9b29fd7a57bf1_accepted_proposal_lite_v1.json": "1fd49cc2d8dcb2ee42c483d5433e6cc6130676b19c1904334f19f261193a7093",
       "state/history/open_proposal_15d9b29fd7a57bf1_outgoing_current_v2.json": "ccd76ed8b0c66c097880403ee332903e412fd1ed01381ec460d2b171335c8c69",

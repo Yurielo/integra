@@ -119,6 +119,7 @@ def preflight(root: Path, *, pr: int, expected_head: str, expected_base: str,
 def package(root: Path, pinned: dict) -> tuple[dict, dict[str, bytes | None]]:
     """Make deterministic POST-state bytes, without a self-referential PR SHA."""
     proposal, current, registry = pinned["proposal"], pinned["current"], copy.deepcopy(pinned["registry"])
+    outgoing_identity = {key: registry["canonical_current"][key] for key in protection.IDENTITY}
     paths = _paths(proposal)
     raw_current, raw_registry = encoded(current), encoded(pinned["registry"])
     successor = baseline.next_current(current, proposal, pinned["authorization"],
@@ -128,7 +129,7 @@ def package(root: Path, pinned: dict) -> tuple[dict, dict[str, bytes | None]]:
     registry["canonical_current"] = {"path": CURRENT, "sha256": protection.sha(successor_raw),
                                      "current_id": successor["current_id"], **candidate}
     registry["latest_accepted_candidate_id"] = candidate["candidate_id"]
-    registry["rollback"] = {**{key: registry["canonical_current"][key] for key in protection.IDENTITY},
+    registry["rollback"] = {**outgoing_identity,
                             "confirmation_ref": paths["event"]}
     registry["proposed"] = [row for row in registry["proposed"] if row.get("pr") != pinned["pr"]]
     registry["selected_survivors"][candidate["candidate_id"]] = (

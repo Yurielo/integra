@@ -126,10 +126,10 @@
     "state": "NO_VERIFIED_ARCHIVE_ACCEPTED_HISTORICAL_GAP"
   },
   "rollback": {
-    "bundle_digest": "c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
-    "candidate_id": "candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81",
+    "bundle_digest": "639d66bbbd8d7af55d091f43156d823000496191c771bef28d7fffc6fe88a302",
+    "candidate_id": "candidate-v1-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e",
     "confirmation_ref": "state/history/open_proposal_15d9b29fd7a57bf1_promotion_transaction_v1.json",
-    "manifest_digest": "faf503cf088cbf0d9b7ea005cf7d5523bcf36bf575759377450993262cc5bdf5"
+    "manifest_digest": "e50edf361bad7226caf3101584ec3dc73119a0254c464ecb424f1ec0a23daacf"
   },
   "schema_version": "1.0",
   "selected_survivors": {
