@@ -31,6 +31,11 @@
     "candidate_evidence": {"path": "docs/evidence/KNOWLEDGE_K1_PACKAGED_BRIDGE.json", "sha256": "e84fac1f27c3f207d54e1f87bc2bb32351783f4b5b300b6f8436efe2949ad34d"},
     "report": {"path": "docs/KNOWLEDGE_K1_PROOF.md", "sha256": "facfdb07602b4e7777ac82a044242b96c0545d5f5c81c6e244467ed07e67cabf"}
   },
-  "owner_acceptance": null,
+  "owner_acceptance": {
+    "decision": "PILOT_ACCEPTED",
+    "authority_ref": "PRODUCT OWNER AUTHORIZATION: ACCEPT_PROPOSED_BASELINE proposal-knowledge-k1-reviewed-process-notebook-v1 candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f",
+    "scope": "Knowledge K1 reviewed process notebook proposed baseline acceptance only",
+    "promotion_authorized": false
+  },
   "allowed_overlay_paths": ["docs/KNOWLEDGE_K1_PROOF.md", "docs/evidence/KNOWLEDGE_K1_CANDIDATE_ARCHIVE.json", "docs/evidence/KNOWLEDGE_K1_CANDIDATE_MANIFEST.json", "docs/evidence/KNOWLEDGE_K1_PACKAGED_BRIDGE.json"]
 }
