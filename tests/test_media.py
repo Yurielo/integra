@@ -8,6 +8,8 @@ from pathlib import Path
 import tempfile
 import unittest
 import wave
+from unittest.mock import patch
+from integra_core import translategemma_runtime
 
 from integra_core.identity import derive_imported_id
 from integra_core.media import (
@@ -102,7 +104,7 @@ def _steps() -> list[dict]:
             },
         }, "model": None, "inputs": [_artifact("subtitles", "subtitle-cues")]},
         {"kind": "translation", "parameters": {"source_language": "ru", "target_language": "en"},
-         "model": _model("translation-model"), "inputs": [_artifact("transcript", "translation-input")]},
+         "model": {"id": translategemma_runtime.MODEL, "version": translategemma_runtime.MODEL_DIGEST, "identity_sha256": translategemma_runtime.WEIGHTS_DIGEST}, "inputs": [_artifact("transcript", "translation-input")]},
         {"kind": "tts", "parameters": {"language": "en", "voice_id": "voice", "voice_provider_version": "1", "mix_mode": "replace"},
          "model": _model("tts-model"), "inputs": [_artifact("translated_subtitles", "tts-input")]},
         {"kind": "speed", "parameters": {"factor": 1.25}, "model": None, "inputs": []},
@@ -306,6 +308,14 @@ def _register(root: Path, recipe: dict, plan: dict, output: dict, output_payload
 
 
 class MediaIntegrationTests(unittest.TestCase):
+    def setUp(self) -> None:
+        # These model-residency tests measure a tiny real public fixture rather
+        # than downloading multi-GB weights. Runtime/model pin tests separately
+        # verify the unchanged production digest and reject substitutions.
+        binding = patch.object(translategemma_runtime, "WEIGHTS_DIGEST", hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
+        binding.start()
+        self.addCleanup(binding.stop)
+
     def test_published_schemas_are_closed_and_match_runtime_bindings(self) -> None:
         root = Path(__file__).resolve().parents[1]
         recipe_schema = json.loads((root / "schemas/media_recipe_v1.schema.json").read_text())
@@ -326,7 +336,10 @@ class MediaIntegrationTests(unittest.TestCase):
         self.assertEqual(set(branches), set(CAPABILITY_IMPLEMENTATIONS))
         for kind, binding in CAPABILITY_IMPLEMENTATIONS.items():
             properties = branches[kind]["properties"]
-            self.assertEqual(properties["videotext_operations"]["const"], binding["videotext_operations"])
+            if kind == "translation":
+                self.assertIn(binding["videotext_operations"], properties["videotext_operations"]["enum"])
+            else:
+                self.assertEqual(properties["videotext_operations"]["const"], binding["videotext_operations"])
             self.assertEqual(properties["videotext_artifact_kind"]["const"], binding["artifact_kind"])
             self.assertFalse(branches[kind]["additionalProperties"])
         derivative = json.loads((root / "schemas/media_derivative_v1.schema.json").read_text())
@@ -342,7 +355,7 @@ class MediaIntegrationTests(unittest.TestCase):
 
     def test_exact_pinned_videotext_functions_are_exposed(self) -> None:
         expected = {"clip": ["cutAccurate"], "subtitles": ["burnSubtitles"],
-                    "translation": ["translate"], "tts": ["synthesize"],
+                    "translation": ["translate_with_translategemma"], "tts": ["synthesize"],
                     "speed": ["adjustSpeed"], "blur": ["applyStaticBlur"],
                     "watermark": ["applyWatermark"], "audio_enhancement": ["enhance"],
                     "filler_mute": ["analyze", "muteAudioIntervals"],
@@ -362,7 +375,7 @@ class MediaIntegrationTests(unittest.TestCase):
         recipe = _recipe(); plan = _plan(recipe)
         validate_media_operation_plan(plan, recipe)
         self.assertEqual(plan["resource_request"]["collection_kind"], "PLAYLIST")
-        self.assertEqual([item["id"] for item in plan["model_bindings"]], ["translation-model", "tts-model", "uvr-dereverb-model"])
+        self.assertEqual([item["id"] for item in plan["model_bindings"]], ["translategemma:4b-it-q4_K_M", "tts-model", "uvr-dereverb-model"])
         self.assertEqual(
             plan["capability_report"]["models"][0]["status"],
             "MEASURED_AVAILABLE",

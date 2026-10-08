@@ -82,11 +82,14 @@ def generate(app: Path, source_root: Path, build_command: str, word_python: Path
         "site_packages_tree_sha256": tree_sha256(word_root / "site-packages"),
         "weights_actual_sha256": sha256_file(word_root / "model" / "pytorch_model.bin"),
     })
+    from integra_core.translategemma_runtime import preflight as translation_preflight
+    translation = translation_preflight()
     identity = {
         "source": source_identity(source_root),
         "build_command": {"path": "scripts/build_macos_app.sh", "identity": build_command,
                           "script_sha256": sha256_file(ROOT / "scripts" / "build_macos_app.sh")},
-        "components": {"seminartext": seminar, "videotext": video, "booktext": book},
+        "components": {"seminartext": seminar, "videotext": video, "booktext": book,
+                       "integra.translation": translation},
         "execution": {
             "gui_python": executable_identity(Path("/usr/bin/python3")),
             "word_alignment_python": executable_identity(word_python),

@@ -71,7 +71,7 @@ class ASRReuseTests(unittest.TestCase):
         self.assertEqual(careful["recognition"]["executed_mode"], "careful")
 
     def test_downstream_failure_does_not_discard_successful_asr(self):
-        with patch("integra_core.user_media.translate_videotext", side_effect=ValueError("downstream unavailable")):
+        with patch("integra_core.user_media.translate_translategemma", side_effect=ValueError("downstream unavailable")):
             with self.assertRaisesRegex(ValueError, "downstream unavailable"):
                 self.execute(("translation",))
         failed = json.loads(self.jobs_path.read_bytes())["jobs"][0]

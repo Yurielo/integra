@@ -87,12 +87,14 @@ class TranslatedTextTests(unittest.TestCase):
 
     @staticmethod
     def _runtime():
-        return {"component": "videotext", "commit_sha": "pinned", "adapter_sha256": "adapter", "model": "qwen3:8b"}
+        return {"component": "integra.translation", "provider": "ollama",
+                "model": "translategemma:4b-it-q4_K_M", "model_id": "digest",
+                "template_version": "translategemma-ollama-v1", "runtime_identity_sha256": "identity"}
 
     @staticmethod
-    def _translation(subtitles: Path, output: Path, *, target: str, runtime: dict):
+    def _translation(subtitles: Path, output: Path, *, source: str, target: str, runtime: dict):
         payload = {
-            "schema_version": "1.0", "component": "videotext", "capability": "translation",
+            "schema_version": "1.0", "component": "integra.translation", "capability": "translation",
             "source_language": "ru", "target_language": target, "model": runtime["model"],
             "semantic_status": "MACHINE_TRANSLATION_REVIEW_REQUIRED", "issues": [],
             "cues": [{"id": "1", "start_seconds": 0.0, "end_seconds": 1.25,
@@ -107,8 +109,8 @@ class TranslatedTextTests(unittest.TestCase):
             return self._recognized(args[2])
         patches = [
             patch("integra_core.user_media.asr_reuse.transcribe_or_reuse", side_effect=recognize),
-            patch("integra_core.user_media.videotext_translation_preflight", side_effect=self._runtime),
-            patch("integra_core.user_media.translate_videotext", side_effect=self._translation),
+            patch("integra_core.user_media.translation_preflight", side_effect=self._runtime),
+            patch("integra_core.user_media.translate_translategemma", side_effect=self._translation),
         ]
         if materialize is not None:
             patches.append(patch("integra_core.user_media._materialize_translation_txt", side_effect=materialize))
@@ -174,7 +176,7 @@ class TranslatedTextTests(unittest.TestCase):
             }],
         })
 
-        with patch("integra_core.user_media.translate_videotext", side_effect=AssertionError("must not translate")):
+        with patch("integra_core.user_media.translate_translategemma", side_effect=AssertionError("must not translate")):
             reopened = read_run(self.project, run_id)
         outputs = reopened["source_results"][0]["outputs"]
         translated_text = Path(outputs["translation_txt"])

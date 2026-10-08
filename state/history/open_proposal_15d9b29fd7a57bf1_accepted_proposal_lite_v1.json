@@ -1,0 +1,136 @@
+{
+  "allowed_overlay_paths": [
+    "docs/TRANSLATEGEMMA_MIGRATION_PROOF.md",
+    "docs/evidence/TRANSLATEGEMMA_MIGRATION_CANDIDATE_ARCHIVE.json",
+    "docs/evidence/TRANSLATEGEMMA_MIGRATION_CANDIDATE_MANIFEST.json",
+    "docs/evidence/TRANSLATEGEMMA_MIGRATION_E2E.json",
+    "docs/evidence/TRANSLATEGEMMA_MIGRATION_TESTS.txt"
+  ],
+  "artifact_type": "integra.proposed_product_baseline",
+  "base_current_id": "current-v2-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e",
+  "base_main": {
+    "commit_sha": "a75bc36d74853dc52cb4a983f7ac7a48232f5b8f",
+    "tree_sha": "9e9e0d869035ba1d9baa211567761dcefcb1061f"
+  },
+  "candidate": {
+    "bundle_digest": "c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
+    "candidate_id": "candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81",
+    "identity_sha256": "15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81",
+    "manifest_digest": "faf503cf088cbf0d9b7ea005cf7d5523bcf36bf575759377450993262cc5bdf5"
+  },
+  "delta": [
+    {
+      "after_sha256": "d76076250ee4135bfd546450009416e7bad900c135db708854cf815c482a0eea",
+      "before_sha256": "79c0a22f7b0671b3bfb64c98c38504e40e7f1697b28dd874ccabc800902cc012",
+      "path": "integra_core/candidate_identity.py"
+    },
+    {
+      "after_sha256": "1e23c5238d37a46d72f9561339673326f41b1fa9585f27ec6765e132f7155914",
+      "before_sha256": "59450ec7bbd2938c303415905231931238a8b243ea261b78d4e9eae7c53706d0",
+      "path": "integra_core/capabilities.py"
+    },
+    {
+      "after_sha256": "f9a1fd19eaadedd1159dffc86f0d8b7bf71044397da7e098acb545b8052dbfbc",
+      "before_sha256": "3e29bcfa0a452e74e58ffd50dcfc7b78e71d6299446b8f1548b7953fcb989f84",
+      "path": "integra_core/media.py"
+    },
+    {
+      "after_sha256": "67e7b827616f71c886d49a6d7e6ce1d8879aa963a712d03b87387c78be1e9e4c",
+      "before_sha256": "72e3aa0769048a3d270158d26a1e18ce360d16fc6e43950b8df36451eab8930b",
+      "path": "integra_core/topic_translation.py"
+    },
+    {
+      "after_sha256": "bf6ad5b08efd3a2c5108166badf1987c748777bc2cfae60109f97cff1ff746c1",
+      "before_sha256": "1843565688b9bd73502a5bde76c8635f396249be684877123cf0fd6a32b609f7",
+      "path": "integra_core/transcript_topic_studio.py"
+    },
+    {
+      "after_sha256": "339cb8dabc323740d4b99f1a8646297b75863cf004f59a112712f7fb486c17c3",
+      "before_sha256": null,
+      "path": "integra_core/translategemma_runtime.py"
+    },
+    {
+      "after_sha256": "a5dcdf9b5040d9eccb54da555285c96317e61816fd182ebe588dbff659bb8e7a",
+      "before_sha256": "c3d7e33245dfc4045d74bd38f716ce948e5050611b54c4e501a0f1cad4212e89",
+      "path": "integra_core/user_media.py"
+    },
+    {
+      "after_sha256": "73bd0d821f1a7da7b639f9657137b00ffbc6eda463fc72f4a2e4bd4f680f4a3e",
+      "before_sha256": "27b6996c0c3fccc2f57c066aac11163260ab3238e9e126218a260d168cff7b19",
+      "path": "integra_core/videotext_runtime.py"
+    },
+    {
+      "after_sha256": "c2fc0ad755c84a4067b65df39267b86d72e547a5683988db8f674b3d402d2a78",
+      "before_sha256": "b905ba56beed4a8f5fdea5819d05de1bd1498634d235c6e0cbc321063e48e6b8",
+      "path": "scripts/build_macos_app.sh"
+    },
+    {
+      "after_sha256": "ccaeb550aa1653aed47eac450310ae2e4bb9ec60f519d4ae359fb10e652f2d85",
+      "before_sha256": "25210c1cea8fc8449c2f8f82034950f2be7853d3a9f2047106398a8a114df097",
+      "path": "scripts/candidate_manifest.py"
+    },
+    {
+      "after_sha256": "a49b1df03f466ac8d5ed134f9034f1d78d1616629c3ef5a65a213ec6e22e0617",
+      "before_sha256": "378e1abbde93aedb2cd76d1b61d2d3747e611a5fbcae4b12421136e33bf92d5d",
+      "path": "workers/videotext_translation_worker.swift"
+    }
+  ],
+  "evidence": {
+    "candidate_evidence": {
+      "path": "docs/evidence/TRANSLATEGEMMA_MIGRATION_E2E.json",
+      "sha256": "d2bfef00cffff53cd439a720cce5d9c23cec4df7ae9be9edacf9dcc418d6a611"
+    },
+    "candidate_manifest": {
+      "path": "docs/evidence/TRANSLATEGEMMA_MIGRATION_CANDIDATE_MANIFEST.json",
+      "sha256": "faf503cf088cbf0d9b7ea005cf7d5523bcf36bf575759377450993262cc5bdf5"
+    },
+    "report": {
+      "path": "docs/TRANSLATEGEMMA_MIGRATION_PROOF.md",
+      "sha256": "c67475456dfac101a71b706ab7fa75f25ce62f8db03ab854dabe796106e91f4f"
+    }
+  },
+  "gates": [
+    {
+      "evidence_ref": "docs/evidence/TRANSLATEGEMMA_MIGRATION_CANDIDATE_MANIFEST.json",
+      "name": "candidate-manifest",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/TRANSLATEGEMMA_MIGRATION_CANDIDATE_ARCHIVE.json",
+      "name": "candidate-archive",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/TRANSLATEGEMMA_MIGRATION_E2E.json",
+      "name": "native-self-test-and-real-ru-en-translation",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/TRANSLATEGEMMA_MIGRATION_TESTS.txt",
+      "name": "focused-causal-regressions",
+      "result": "PASS"
+    }
+  ],
+  "historical_test_successors": [],
+  "intended_scope": {
+    "journey": "Replace active new-production translation execution with the exact fail-closed local TranslateGemma runtime while preserving source bytes, review-required derivative semantics and read-only compatibility for historical Qwen-bound records.",
+    "wp": "Qwen to TranslateGemma runtime migration"
+  },
+  "owner_acceptance": {
+    "authority_ref": "PRODUCT OWNER AUTHORIZATION: ACCEPT_PROPOSED_BASELINE proposal-translation-runtime-translategemma-v1 candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81",
+    "decision": "PILOT_ACCEPTED",
+    "promotion_authorized": false,
+    "scope": "Qwen to TranslateGemma canonical migration baseline acceptance only"
+  },
+  "proposal_id": "proposal-translation-runtime-translategemma-v1",
+  "proposed_head": {
+    "commit_sha": "031da002859254be6a7cc24ba6dd986d2a2cbe7d",
+    "tree_sha": "1ebc6ba512f740e230094a988d0036a2a0faa857"
+  },
+  "proposed_source": {
+    "commit_sha": "ee35be3e9174de670166f86ce8e1cfc3aa8e04fa",
+    "tree_sha": "f3409d4467337a906550da47a2222bee2e407671"
+  },
+  "schema_version": "1.0",
+  "status": "PROPOSED_BASELINE_VALID"
+}

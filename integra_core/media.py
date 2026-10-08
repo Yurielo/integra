@@ -62,9 +62,11 @@ CAPABILITY_IMPLEMENTATIONS = {
         "implementations": [{"function": "burnSubtitles", "path": "Sources/videotext/Adapters/MediaAdapters.swift", "sha256": "4c3d7fee2777291b297679b28b1727d8e54ed74e6d0172da58e83702570cdca5"}],
     },
     "translation": {
-        "videotext_operations": ["translate"],
+        # The field name is retained for recipe-schema compatibility. The
+        # operation and implementation are Integra-owned, not VideoText.
+        "videotext_operations": ["translate_with_translategemma"],
         "artifact_kind": "subtitles",
-        "implementations": [{"function": "translate", "path": "Sources/videotext/Adapters/TranslationAdapter.swift", "sha256": "83e55d3cb82522cb431ee20617510b0c39f79ae0fa5309daedf5c7ff9911a577"}],
+        "implementations": [{"function": "translate", "path": "integra_core/translategemma_runtime.py", "sha256": "f4fae2bf5eb2da32162959698f41eb2df617ebf01d1744085009f798fe8b0947"}],
     },
     "tts": {
         "videotext_operations": ["synthesize"],
@@ -121,6 +123,11 @@ INPUT_CONTRACTS = {
     "filler_mute": ("transcript_revision", "filler_analysis"),
 }
 SAFE_MODEL_ID = re.compile(r"^[A-Za-z0-9_.:-]{1,256}$")
+LEGACY_TRANSLATION_IMPLEMENTATION = {
+    "videotext_operations": ["translate"], "artifact_kind": "subtitles",
+    "implementations": [{"function": "translate", "path": "Sources/videotext/Adapters/TranslationAdapter.swift",
+                         "sha256": "83e55d3cb82522cb431ee20617510b0c39f79ae0fa5309daedf5c7ff9911a577"}],
+}
 class MediaError(RuntimeError):
     """Raised when media provenance or operational truth is incomplete."""
 
@@ -207,7 +214,7 @@ def create_media_recipe(
     return recipe
 
 
-def validate_media_recipe(recipe: dict[str, Any]) -> None:
+def validate_media_recipe(recipe: dict[str, Any], *, allow_legacy_translation: bool = False) -> None:
     fields = {
         "schema_version", "recipe_id", "operation_id", "source", "source_sha256",
         "source_locator", "component", "contract_binding", "steps",
@@ -243,7 +250,7 @@ def validate_media_recipe(recipe: dict[str, Any]) -> None:
     if kinds[-1] != "qa":
         raise MediaError("media recipe must finish with QA")
     for sequence, step in enumerate(steps):
-        _validate_step(step, sequence)
+        _validate_step(step, sequence, allow_legacy_translation=allow_legacy_translation)
     _validate_input_identities(recipe)
     model_identities: dict[str, tuple[str, str]] = {}
     for step in steps:
@@ -829,11 +836,11 @@ def loads_media_recipe(payload: bytes) -> dict[str, Any]:
         recipe = json.loads(payload)
     except (UnicodeDecodeError, json.JSONDecodeError) as error:
         raise MediaError("media recipe serialization is invalid") from error
-    validate_media_recipe(recipe)
+    validate_media_recipe(recipe, allow_legacy_translation=True)
     return recipe
 
 
-def _validate_step(step: dict[str, Any], sequence: int) -> None:
+def _validate_step(step: dict[str, Any], sequence: int, *, allow_legacy_translation: bool = False) -> None:
     fields = {
         "sequence", "kind", "videotext_operations", "videotext_artifact_kind",
         "implementations", "inputs", "parameters", "model", "config_sha256",
@@ -844,6 +851,9 @@ def _validate_step(step: dict[str, Any], sequence: int) -> None:
     if kind not in CAPABILITY_IMPLEMENTATIONS:
         raise MediaError("media recipe operation is unsupported")
     expected = CAPABILITY_IMPLEMENTATIONS[kind]
+    if (allow_legacy_translation and kind == 'translation'
+            and step['videotext_operations'] == ['translate']):
+        expected = LEGACY_TRANSLATION_IMPLEMENTATION
     if (
         step["videotext_operations"] != expected["videotext_operations"]
         or step["videotext_artifact_kind"] != expected["artifact_kind"]
@@ -859,6 +869,10 @@ def _validate_step(step: dict[str, Any], sequence: int) -> None:
     model = step["model"]
     if kind in MODEL_OPERATIONS:
         _validate_model(model)
+        if kind == "translation" and expected is not LEGACY_TRANSLATION_IMPLEMENTATION:
+            from .translategemma_runtime import MODEL, MODEL_DIGEST, WEIGHTS_DIGEST
+            if model != {"id": MODEL, "version": MODEL_DIGEST, "identity_sha256": WEIGHTS_DIGEST}:
+                raise MediaError("new translation requires the exact governed TranslateGemma model")
     elif model is not None:
         raise MediaError("media operation contains an unexpected model binding")
 

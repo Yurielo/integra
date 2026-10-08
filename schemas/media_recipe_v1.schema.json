@@ -280,7 +280,6 @@
                 "type": "array",
                 "minItems": 0,
                 "maxItems": 0,
-                "prefixItems": [],
                 "items": false
               },
               "parameters": {
@@ -471,9 +470,7 @@
                 "const": "translation"
               },
               "videotext_operations": {
-                "const": [
-                  "translate"
-                ]
+                "enum": [["translate_with_translategemma"], ["translate"]]
               },
               "videotext_artifact_kind": {
                 "const": "subtitles"
@@ -484,11 +481,11 @@
                 "maxItems": 1,
                 "prefixItems": [
                   {
-                    "const": {
+                    "enum": [{
                       "function": "translate",
-                      "path": "Sources/videotext/Adapters/TranslationAdapter.swift",
-                      "sha256": "83e55d3cb82522cb431ee20617510b0c39f79ae0fa5309daedf5c7ff9911a577"
-                    }
+                      "path": "integra_core/translategemma_runtime.py",
+                      "sha256": "f4fae2bf5eb2da32162959698f41eb2df617ebf01d1744085009f798fe8b0947"
+                    }, {"function": "translate", "path": "Sources/videotext/Adapters/TranslationAdapter.swift", "sha256": "83e55d3cb82522cb431ee20617510b0c39f79ae0fa5309daedf5c7ff9911a577"}]
                   }
                 ],
                 "items": false
@@ -582,13 +579,17 @@
                   }
                 }
               },
-              "model": {
-                "$ref": "#/$defs/model"
-              },
-              "config_sha256": {
-                "$ref": "#/$defs/sha256"
-              }
-            }
+              "model": {"$ref": "#/$defs/model"},
+              "config_sha256": {"$ref": "#/$defs/sha256"}
+            },
+            "allOf": [{
+              "if": {"properties": {"videotext_operations": {"const": ["translate_with_translategemma"]}}},
+              "then": {"properties": {
+                "implementations": {"prefixItems": [{"properties": {"path": {"const": "integra_core/translategemma_runtime.py"}}}]},
+                "model": {"const": {"id": "translategemma:4b-it-q4_K_M", "version": "c49d986b0764f5881c476eb21435bb62b7abc62347aab3d4a6071e811be510a1", "identity_sha256": "bdbf939b402e2f88fbe3e918beb777813009335756b4c17be7fe008dfe4815d4"}}
+              }},
+              "else": {"properties": {"implementations": {"prefixItems": [{"properties": {"path": {"const": "Sources/videotext/Adapters/TranslationAdapter.swift"}}}]}}}
+            }]
           },
           {
             "type": "object",
@@ -793,7 +794,6 @@
                 "type": "array",
                 "minItems": 0,
                 "maxItems": 0,
-                "prefixItems": [],
                 "items": false
               },
               "parameters": {
@@ -867,7 +867,6 @@
                 "type": "array",
                 "minItems": 0,
                 "maxItems": 0,
-                "prefixItems": [],
                 "items": false
               },
               "parameters": {
@@ -1057,7 +1056,6 @@
                 "type": "array",
                 "minItems": 0,
                 "maxItems": 0,
-                "prefixItems": [],
                 "items": false
               },
               "parameters": {
@@ -1363,7 +1361,6 @@
                 "type": "array",
                 "minItems": 0,
                 "maxItems": 0,
-                "prefixItems": [],
                 "items": false
               },
               "parameters": {

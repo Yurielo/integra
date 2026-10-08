@@ -204,6 +204,40 @@ class ExactSuccessorTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             transaction.validate_event(ROOT, event)
 
+    def test_recorded_consumption_does_not_reapply_old_active_proposal_constraint(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            for path, raw in self.files.items():
+                if raw is not None:
+                    target = root / path
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes(raw)
+            (root / transaction.EVENT).write_bytes(transaction.encoded(self.event))
+            (root / transaction.PROPOSAL).write_text('{"proposal_id":"a-later-proposal"}')
+            # Immutable event reconstruction is fixture-bound here; all saved
+            # package/history bytes and the consumed pointer are really read.
+            with patch.object(transaction, 'validate_event', return_value=self.files):
+                transaction.validate_recorded_successor(root)
+                (root / transaction.CURRENT).write_bytes(self.files[transaction.CURRENT] + b' ')
+                with self.assertRaisesRegex(ValueError, 'CURRENT bytes changed'):
+                    transaction.validate_recorded_successor(root)
+
+    def test_recorded_consumption_still_rejects_changed_history(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            for path, raw in self.files.items():
+                if raw is not None:
+                    target = root / path
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes(raw)
+            (root / transaction.EVENT).write_bytes(transaction.encoded(self.event))
+            with patch.object(transaction, 'validate_event', return_value=self.files):
+                for path in (transaction.OLD_CURRENT, transaction.OLD_REGISTRY, transaction.RETIRED):
+                    (root / path).write_bytes(b'{}')
+                    with self.subTest(path=path), self.assertRaisesRegex(ValueError, 'history changed'):
+                        transaction.validate_recorded_successor(root)
+                    (root / path).write_bytes(self.files[path])
+
     def test_real_successor_tree_and_committed_pr_package(self):
         with tempfile.TemporaryDirectory(prefix='.integra-successor-git-', dir=Path.home()) as temporary:
             root = Path(temporary).resolve() / 'repo'

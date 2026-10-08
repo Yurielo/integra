@@ -1,0 +1,36 @@
+{
+  "artifact_type": "integra.open_proposal_promotion_transaction",
+  "inputs": {
+    "archive_inventory_sha256": "091a1587292cef9c87567cf0164d4a865c748d75587e3bbc8d70a873184385fd",
+    "authorization": "Product Owner direct authorization 2026-10-08: PROMOTE_CURRENT proposal-translation-runtime-translategemma-v1 candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81",
+    "base": "b40c2db091ab2a81a8eff59eaeef537a8c8ab8dd",
+    "candidate": {
+      "bundle_digest": "c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
+      "candidate_id": "candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81",
+      "manifest_digest": "faf503cf088cbf0d9b7ea005cf7d5523bcf36bf575759377450993262cc5bdf5"
+    },
+    "head": "8cca315d4ac01e1345792603a8656fb81c3d9559",
+    "outgoing_current_id": "current-v2-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e",
+    "pr": 222,
+    "proposal_id": "proposal-translation-runtime-translategemma-v1",
+    "proposal_sha256": "1fd49cc2d8dcb2ee42c483d5433e6cc6130676b19c1904334f19f261193a7093"
+  },
+  "result": {
+    "current_id": "current-v2-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81",
+    "files": {
+      "state/candidate_protection_registry_v1.json": "d52151b6f56e74860b6ff612b6691adfa3239992da758c5e20a6f0d39aa43400",
+      "state/current_product_baseline_v2.json": "517c1f5f7b8ce4141b0ea54839f29d95887cc824298cd96330d274bab7abc9b4",
+      "state/history/open_proposal_15d9b29fd7a57bf1_accepted_proposal_lite_v1.json": "1fd49cc2d8dcb2ee42c483d5433e6cc6130676b19c1904334f19f261193a7093",
+      "state/history/open_proposal_15d9b29fd7a57bf1_outgoing_current_v2.json": "ccd76ed8b0c66c097880403ee332903e412fd1ed01381ec460d2b171335c8c69",
+      "state/history/open_proposal_15d9b29fd7a57bf1_outgoing_protection_registry_v1.json": "120b39a46dcf3e9bd66e7023c94973d5c5b4884ae86151bab8624c97d7b1b110",
+      "state/proposed_baseline_lite_v1.json": null
+    }
+  },
+  "schema_version": "1.0",
+  "semantics": {
+    "post": "CURRENT_PROTECTED_PROPOSAL_CONSUMED",
+    "pre": "OPEN_PROPOSAL_PROTECTED",
+    "retry": "EXACT_ALREADY_APPLIED_ONLY"
+  },
+  "transaction_id": "open-proposal-v1-5c61fe314bc3b43c48738cfa2237eaf210e4dc323378e625c2f7762052e2172e"
+}

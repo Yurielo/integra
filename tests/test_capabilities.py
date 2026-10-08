@@ -47,7 +47,9 @@ class CapabilityRegistryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             overrides=self.media_runtime(Path(directory)); old={key:os.environ.get(key) for key in overrides}
             try:
-                os.environ.update(overrides); registry={item["id"]:item for item in capability_registry([source])}
+                os.environ.update(overrides)
+                with patch("integra_core.capabilities.translation_preflight", side_effect=ValueError("not configured")):
+                    registry={item["id"]:item for item in capability_registry([source])}
             finally:
                 for key,value in old.items():
                     if value is None: os.environ.pop(key,None)
@@ -63,6 +65,21 @@ class CapabilityRegistryTests(unittest.TestCase):
         for identifier in ("review","evidence","knowledge","clips"):
             self.assertEqual(registry[identifier]["ui_state"],"В разработке")
             self.assertFalse(registry[identifier]["runtime_available"])
+
+    def test_registry_uses_lightweight_translation_preflight(self):
+        source={"source_id":"s","display_name":"v.mp4","input":"/v.mp4","source_type":"LOCAL_VIDEO","kind":"MEDIA","properties":{}}
+        with tempfile.TemporaryDirectory() as directory:
+            overrides=self.media_runtime(Path(directory)); old={key:os.environ.get(key) for key in overrides}
+            try:
+                os.environ.update(overrides)
+                with patch("integra_core.capabilities.translation_preflight", return_value={"state":"READY"}) as translation:
+                    registry={item["id"]:item for item in capability_registry([source])}
+            finally:
+                for key,value in old.items():
+                    if value is None: os.environ.pop(key,None)
+                    else: os.environ[key]=value
+        translation.assert_called_once_with(hash_model=False)
+        self.assertTrue(registry["translation"]["runtime_available"])
 
     def test_planner_resolves_hidden_prerequisites_and_rejects_unimplemented(self):
         with tempfile.TemporaryDirectory() as directory:

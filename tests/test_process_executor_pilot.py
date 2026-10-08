@@ -407,7 +407,7 @@ class ProcessExecutorPilotTests(unittest.TestCase):
                 }
                 manifest_path.write_bytes(candidate_identity.canonical_bytes(manifest))
                 # The malformed fixture reaches the nested-metadata regression.
-                with self.assertRaises(AttributeError):
+                with self.assertRaises((AttributeError, ValueError)):
                     candidate_identity.validate_bundle(app)
                 with patch.object(provider.subprocess, "Popen") as launch:
                     envelope = self.assert_failed()

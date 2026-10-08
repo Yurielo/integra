@@ -12,7 +12,7 @@ from .protocol import content_sha256
 from .user_media import SUPPORTED as MEDIA_EXTENSIONS, ffmpeg_preflight, preflight
 from .seminartext_runtime import preflight as seminartext_preflight
 from .word_timeline_runtime import preflight as word_timeline_preflight
-from .videotext_runtime import preflight as videotext_preflight
+from .translategemma_runtime import preflight as translation_preflight
 from .booktext_runtime import preflight as booktext_preflight, validate_page_selection
 from .youtube_runtime import preflight as youtube_preflight
 from .videotext_media_runtime import preflight as media_component_preflight
@@ -100,7 +100,7 @@ def capability_registry(sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
         except ValueError as error: topics_reason=str(error)
         try: word_timeline_preflight(); timeline_ready=True
         except ValueError as error: timeline_reason=str(error)
-        try: videotext_preflight(); translation_ready=True
+        try: translation_preflight(hash_model=False); translation_ready=True
         except ValueError as error: translation_reason=str(error)
     if youtube_video or "YOUTUBE_PLAYLIST" in types:
         try: youtube_preflight(); youtube_ready=True
@@ -114,7 +114,7 @@ def capability_registry(sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
         _capability("subtitles","Субтитры (SRT)","Основная обработка",{"LOCAL_VIDEO","LOCAL_AUDIO","YOUTUBE_VIDEO"},"integra.local_media_adapter",True,["transcript"],available=(media or youtube_video) and media_ready and (not youtube_video or youtube_ready),reason=youtube_reason or media_reason),
         _capability("word_timeline","Word Timeline","Основная обработка",{"LOCAL_VIDEO","LOCAL_AUDIO","YOUTUBE_VIDEO"},"seminartext",True,["transcript"],available=(media or youtube_video) and timeline_ready and (not youtube_video or youtube_ready),reason=youtube_reason or timeline_reason),
         _capability("topics","Темы и таймкоды","Основная обработка",{"LOCAL_VIDEO","LOCAL_AUDIO","YOUTUBE_VIDEO"},"seminartext",True,["word_timeline"],available=(media or youtube_video) and topics_ready and timeline_ready and (not youtube_video or youtube_ready),reason=youtube_reason or topics_reason or timeline_reason),
-        _capability("translation","Перевод","Основная обработка",{"LOCAL_VIDEO","LOCAL_AUDIO","YOUTUBE_VIDEO"},"videotext",True,["transcript"],available=(media or youtube_video) and translation_ready and (not youtube_video or youtube_ready),reason=youtube_reason or translation_reason),
+        _capability("translation","Перевод","Основная обработка",{"LOCAL_VIDEO","LOCAL_AUDIO","YOUTUBE_VIDEO"},"integra.translation",True,["transcript"],available=(media or youtube_video) and translation_ready and (not youtube_video or youtube_ready),reason=youtube_reason or translation_reason),
         _capability("review","Проверка / Review","Смысловая обработка",{"LOCAL_VIDEO","LOCAL_AUDIO","PDF","DOCX","PPTX","TXT","MARKDOWN","IMAGE"},"seminartext",False,["topics"]),
         _capability("evidence","Evidence","Смысловая обработка",{"LOCAL_VIDEO","LOCAL_AUDIO","PDF","DOCX","PPTX","TXT","MARKDOWN","IMAGE"},"seminartext",False,["review"]),
         _capability("knowledge","База знаний","Смысловая обработка",{"LOCAL_VIDEO","LOCAL_AUDIO","PDF","DOCX","PPTX","TXT","MARKDOWN","IMAGE"},"seminartext",False,["evidence"]),

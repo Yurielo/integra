@@ -4,8 +4,8 @@ Status: `ACCEPTED`
 
 ## Purpose
 
-R9B exposes VideoText's accepted media capabilities through one closed Integra
-recipe and derivative-output contract. VideoText remains a pinned read-only
+R9B exposes accepted media capabilities through one closed Integra recipe and
+derivative-output contract. VideoText remains a pinned read-only
 worker at commit `2e098d1705b6815628bee1e023f4742718eabf02`; its standalone
 repository and projects are not modified.
 
@@ -14,11 +14,21 @@ TTS/dubbing, speed adjustment, static blur, watermarking, audio enhancement,
 filler-word mute and media QA. Each recipe step records the exact VideoText
 function name, expected VideoText artifact kind, source implementation path
 and SHA-256, complete parameters, optional model identity and configuration
-hash. Auxiliary inputs such as subtitle cues, translation/TTS text, watermark
+hash. TranslateGemma inference is the explicit exception: Integra owns the
+local `translategemma:4b-it-q4_K_M` request, cue serialization and runtime
+identity, while VideoText continues to own subtitle parsing/normalization and
+media operations. Auxiliary inputs such as subtitle cues, translation/TTS text, watermark
 image, transcript revision and filler analysis are exact ArtifactReferences;
 their content hashes are part of both the recipe and execution plan. A recipe
 is immutable and bound to the input artifact IDs and bytes, source locator,
 operation ID, component commit/tree and source contracts.
+
+New translation recipes require the exact TranslateGemma tag, full manifest
+digest as model version, and physical weight digest as model identity. Saved
+legacy VideoText/Qwen recipes remain schema-readable and `loads_media_recipe`
+preserves their original IDs, hashes and provider. They are read-only:
+creation, serialization as a new recipe and execution do not enable the old
+Qwen route. The unchanged source applications retain their own capabilities.
 
 ## Operational boundary
 

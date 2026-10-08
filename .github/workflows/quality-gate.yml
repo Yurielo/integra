@@ -22,8 +22,15 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          # Matches the hashlocked Linux wheels and avoids the pre-3.13
+          # conditional typing-extensions dependency of referencing.
+          python-version: "3.13"
       - name: Validate governance state
         run: python3 scripts/validate_governance.py
       - name: Run tests
-        run: python3 -m unittest discover -s tests -v
+        # Actual Draft 2020-12 legacy/new translation contract checks use the
+        # accepted review versions with exact Linux wheel hashes.
+        # The separate macOS wheel-hash cache is unchanged.
+        run: |
+          python3 -m pip install --require-hashes --only-binary=:all: --no-deps -r scripts/review-ci-requirements.txt
+          python3 -m unittest discover -s tests -v

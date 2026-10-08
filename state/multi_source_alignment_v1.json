@@ -13,7 +13,7 @@
     {"path": "integra_core/multi_source_alignment.py", "sha256": "59cdf2d95e109f61a1a96c7ab35f8b27a0de4a0e2338caef7d8b5cc599853196"},
     {"path": "schemas/multi_source_alignment_v1.schema.json", "sha256": "c824ffbbced6c25c22fc4f085ecf26e92715f1c6b991e693839e3cf6f7e09284"},
     {"path": "schemas/multi_source_alignment_evidence_v1.schema.json", "sha256": "c4ee25cf72ad7aaff15778c6c781157717d2d76ac72bb3639fd2735257e6240c"},
-    {"path": "tests/test_multi_source_alignment.py", "sha256": "c2173fe625f7e4a27d4a1c15c890ca1dc1d833c2c2d3ee3d0847eba101a97887"}
+    {"path": "tests/test_multi_source_alignment.py", "sha256": "1104892ad33f6f450878a33e150c05fd201896808136c2c4e6dd4090b5445fe4"}
   ],
   "node_kinds": [
     "AUDIO",

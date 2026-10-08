@@ -96,6 +96,12 @@ def validate_bundle(app: Path) -> dict[str, Any]:
     if manifest["bundle"]["digest"] != actual_digest:
         raise ValueError("candidate manifest bundle digest differs from the app")
     components = manifest["identity"].get("components", {})
+    if not isinstance(components, dict):
+        raise ValueError("candidate component identities are invalid")
+    if "integra.translation" in components:
+        from .translategemma_runtime import preflight as translation_preflight
+        if components["integra.translation"] != translation_preflight():
+            raise ValueError("candidate TranslateGemma runtime/model differs from manifest")
     seminar = resources / "runtime" / "seminartext"
     runtime = json.loads((seminar / "runtime.json").read_text(encoding="utf-8"))
     if runtime.get("commit_sha") != components.get("seminartext", {}).get("commit_sha"):

@@ -125,9 +125,8 @@ class RealVideoTextSubtitleTests(unittest.TestCase):
         self.assertFalse(self.target.exists())
         self.assertEqual(self.source.read_text(), original)
 
-    def test_translation_route_rejects_zero_duration_before_provider(self):
-        original = ('1\n00:00:00,000 --> 00:00:00,000\nZero\n\n'
-                    '2\n00:00:01,000 --> 00:00:02,000\nValid\n')
+    def test_legacy_translation_route_is_unavailable_in_media_worker(self):
+        original = '1\n00:00:01,000 --> 00:00:02,000\nValid\n'
         self.source.write_text(original)
         completed = subprocess.run([
             self.runtime['worker'], '--srt', str(self.source),
@@ -136,12 +135,11 @@ class RealVideoTextSubtitleTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 2)
         self.assertFalse(self.target.exists())
         self.assertEqual(self.source.read_text(), original)
-        # The native route must reject skipped cues before it can call Ollama.
+        # Translation inference must not be bundled into the VideoText worker.
         worker_source = (Path(__file__).resolve().parents[1]/
                          'workers/videotext_translation_worker.swift').read_text()
-        translation_route = worker_source.split('let sourceURL', 1)[1].split('let translated', 1)[0]
-        self.assertLess(translation_route.index('parsed.skippedZeroDurationCount == 0'),
-                        translation_route.index('TranslationAdapter().translate'))
+        self.assertNotIn('TranslationAdapter', worker_source)
+        self.assertNotIn('guard let input = value("--srt"', worker_source)
 
     def test_actual_runtime_manifest_and_binary_drift_rejected(self):
         worker = self.root/'translation-worker'

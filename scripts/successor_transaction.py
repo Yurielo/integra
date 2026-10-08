@@ -203,18 +203,12 @@ def validate_recorded_successor(root: Path) -> None:
         raise ValueError('consumed transaction pointer is missing or differs')
     current = json.loads((root / CURRENT).read_bytes())
     if current['current_id'] == NEW_ID:
-        # The consumed transaction freezes its result and historical package,
-        # but it is not a permanent lock on later independently authorized
-        # deletion decisions in the active protection registry.
-        for path, raw in files.items():
-            if path == REGISTRY:
-                continue
-            target = root / path
-            if raw is None:
-                if target.exists() or target.is_symlink():
-                    raise ValueError('active Proposal is not retired')
-            elif target.is_symlink() or target.read_bytes() != raw:
-                raise ValueError('successor package differs: ' + path)
+        if (root / CURRENT).read_bytes() != files[CURRENT]:
+            raise ValueError('consumed successor CURRENT bytes changed')
+        # Consumption is historical, not a perpetual application preflight.
+        # New governed product bytes and Proposals use their current validators.
+        # The active protection registry may evolve only through the separately
+        # authorized exact-deletion fields introduced after this transaction.
         accepted_registry = json.loads(files[REGISTRY])
         mutable_deletion_fields = {
             'deletion_authorizations', 'deletion_decision_authority_ref',
@@ -224,21 +218,15 @@ def validate_recorded_successor(root: Path) -> None:
                 != {key: value for key, value in accepted_registry.items()
                     if key not in mutable_deletion_fields}):
             raise ValueError('successor protection registry changed outside deletion authority')
-        errors = baseline.validate_current(current, root)
-        errors += baseline.verify_promotion_material(
-            json.loads(files[RETIRED]), root, root / PROPOSAL,
-            acceptance_ref=ACCEPTED_HEAD)
-        if errors:
-            raise ValueError('; '.join(errors))
-        return
-    accepted = json.loads(files[CURRENT])
-    if current['records'][:len(accepted['records'])] != accepted['records']:
-        raise ValueError('later CURRENT rewrote consumed successor history')
-    refs = [ref for r in current['records'][len(accepted['records']):]
-            for ref in r.get('historical_predecessors', [])
-            if ref.get('sha256') == event['result']['files'][CURRENT]]
-    if not refs or any((root / ref['path']).read_bytes() != files[CURRENT] for ref in refs):
-        raise ValueError('consumed successor lacks immutable predecessor bytes')
+    else:
+        accepted = json.loads(files[CURRENT])
+        if current['records'][:len(accepted['records'])] != accepted['records']:
+            raise ValueError('later CURRENT rewrote consumed successor history')
+        refs = [ref for r in current['records'][len(accepted['records']):]
+                for ref in r.get('historical_predecessors', [])
+                if ref.get('sha256') == event['result']['files'][CURRENT]]
+        if not refs or any((root / ref['path']).read_bytes() != files[CURRENT] for ref in refs):
+            raise ValueError('consumed successor lacks immutable predecessor bytes')
     for path in (OLD_CURRENT, OLD_REGISTRY, RETIRED):
         if (root / path).read_bytes() != files[path]:
             raise ValueError('consumed transaction history changed: ' + path)

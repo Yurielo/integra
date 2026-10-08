@@ -25,6 +25,7 @@ from integra_core.projects_sources import (
     register_youtube_video,
 )
 from integra_core.protocol import canonical_json, content_sha256
+from integra_core.translategemma_runtime import MODEL, MODEL_DIGEST
 from integra_core.transcript_topic_studio import (
     add_quality_finding,
     new_studio,
@@ -48,7 +49,7 @@ ST_TOPIC_SHA = "ed1e8a40017e648c133188919a5a0105ce1916726dbc657fecb5ccb5d717c46d
 def _studio_bindings() -> list[dict]:
     owners = {
         "media_preparation": ["videotext"], "asr": ["videotext"],
-        "translation": ["videotext"], "word_timeline": ["seminartext"],
+        "translation": ["integra.translation"], "word_timeline": ["seminartext"],
         "topics": ["seminartext"], "review_mechanics": ["seminartext", "videotext"],
         "quality_validation": ["seminartext", "videotext"],
     }
@@ -60,6 +61,7 @@ def _studio_bindings() -> list[dict]:
                 "topic_review_workflow_v2"
                 if component_id == "seminartext" and capability in {"topics", "review_mechanics"}
                 else "canonical_evidence_v1" if component_id == "seminartext"
+                else "integra_translation_v1" if component_id == "integra.translation"
                 else "project_schema_v7"
             )
             model_id = model_hash = None
@@ -67,9 +69,11 @@ def _studio_bindings() -> list[dict]:
                 model_id, model_hash = "ggml-large-v3.bin", VT_WHISPER_SHA
             if component_id == "seminartext" and capability == "topics":
                 model_id, model_hash = "gemma3:4b", ST_TOPIC_SHA
+            if component_id == "integra.translation":
+                model_id, model_hash = MODEL, MODEL_DIGEST
             components.append({
                 "component_id": component_id,
-                "commit_sha": ST_COMMIT if component_id == "seminartext" else VT_COMMIT,
+                "commit_sha": ST_COMMIT if component_id == "seminartext" else "f" * 40 if component_id == "integra.translation" else VT_COMMIT,
                 "contract_id": contract,
                 "model_id": model_id,
                 "model_sha256": model_hash,

@@ -58,12 +58,14 @@ class ProcessTopicTranslationTests(unittest.TestCase):
 
     @staticmethod
     def _runtime():
-        return {"state": "READY", "component": "videotext", "commit_sha": "pinned-video", "adapter_sha256": "adapter", "model": "qwen3:8b"}
+        return {"state": "READY", "component": "integra.translation", "provider": "ollama",
+                "model": "translategemma:4b-it-q4_K_M", "model_id": "digest",
+                "template_version": "translategemma-ollama-v1", "runtime_identity_sha256": "identity"}
 
     @staticmethod
-    def _translation(_srt: Path, output: Path, *, target: str, runtime: dict):
+    def _translation(_srt: Path, output: Path, *, source: str, target: str, runtime: dict):
         payload = {
-            "schema_version": "1.0", "component": "videotext", "capability": "translation",
+            "schema_version": "1.0", "component": "integra.translation", "capability": "translation",
             "source_language": "ru", "target_language": target, "model": runtime["model"], "issues": [],
             "cues": [
                 {"id": 1, "text": "First topic"}, {"id": 2, "text": "First short description."},
@@ -96,7 +98,7 @@ class ProcessTopicTranslationTests(unittest.TestCase):
         self.assertEqual(translated["topics"][0]["translation"], {"title": "First topic", "summary": "First short description."})
         self.assertEqual(translated["topics"][1]["source_span"], {"start_segment_id": 5, "evidence_start_id": 5, "evidence_end_id": 9})
         self.assertEqual((provenance["requested_target_language"], provenance["executed_target_language"]), ("en", "en"))
-        self.assertEqual(provenance["runtime"]["commit_sha"], "pinned-video")
+        self.assertEqual(provenance["runtime"]["component"], "integra.translation")
         self.assertTrue(Path(outputs["topic_translation_txt"]).read_text(encoding="utf-8").startswith("1.250–12.500\nFirst topic"))
 
     def test_reopen_reads_saved_translation_without_reinvoking_provider(self):
@@ -133,8 +135,8 @@ class ProcessTopicTranslationTests(unittest.TestCase):
 
     def test_provider_issues_cannot_publish_successful_topic_translation(self):
         run = prepare_topic_translation_run(self.project, self.parent_id, self.source_id)
-        def invalid(_srt, output, *, target, runtime):
-            payload = self._translation(_srt, output, target=target, runtime=runtime)
+        def invalid(_srt, output, *, source, target, runtime):
+            payload = self._translation(_srt, output, source=source, target=target, runtime=runtime)
             payload["issues"] = [{"cue_id": 1, "reason_codes": ["target-language-mismatch"]}]
             output.write_text(json.dumps(payload), encoding="utf-8")
             return payload

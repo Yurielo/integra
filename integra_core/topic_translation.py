@@ -1,9 +1,9 @@
-"""Fail-closed S15 Topic translation through the pinned VideoText adapter.
+"""Fail-closed S15 Topic translation through Integra's TranslateGemma adapter.
 
 The machine Topic snapshot remains the authority for its original Russian
 wording, order and source spans.  This module translates only the two S15 text
-fields (``title`` and ``summary``) through the already governed VideoText
-translation path and records a separately bound derivative.
+fields (``title`` and ``summary``) through the governed Integra translation
+path and records a separately bound derivative.
 """
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from .protocol import canonical_json
-from .videotext_runtime import preflight, translate
+from .translategemma_runtime import preflight, translate
 
 
 SOURCE_LANGUAGE = "ru"
@@ -70,9 +70,8 @@ def _machine_topics(project_dir: Path, topics_path: Any) -> tuple[Path, dict[str
 def _write_transport(path: Path, topics: list[dict[str, Any]]) -> dict[int, tuple[int, str]]:
     """Encode S15 fields as one reversible, temporary SRT transport.
 
-    VideoText owns translation validation.  The artificial timing is never
-    exposed as a Topic timestamp; it exists solely to use its established SRT
-    input contract without introducing a second translation provider.
+    The artificial timing is never exposed as a Topic timestamp; it preserves
+    the exact field order while Integra owns translation inference.
     """
     blocks: list[str] = []
     expected: dict[int, tuple[int, str]] = {}
@@ -92,29 +91,29 @@ def _write_transport(path: Path, topics: list[dict[str, Any]]) -> dict[int, tupl
 
 def _validated_translation(value: Any, expected: dict[int, tuple[int, str]]) -> dict[int, str]:
     if not isinstance(value, dict):
-        raise ValueError("VideoText Topic translation output is invalid")
-    if (value.get("component") != "videotext" or value.get("capability") != "translation"
+        raise ValueError("Topic translation output is invalid")
+    if (value.get("component") != "integra.translation" or value.get("capability") != "translation"
             or value.get("source_language") != SOURCE_LANGUAGE or value.get("target_language") != TARGET_LANGUAGE):
-        raise ValueError("VideoText Topic translation runtime differs from the required contract")
+        raise ValueError("Topic translation runtime differs from the required contract")
     if value.get("issues"):
-        raise ValueError("VideoText Topic translation requires review; no translated Topics were published")
+        raise ValueError("Topic translation requires review; no translated Topics were published")
     cues = value.get("cues")
     if not isinstance(cues, list) or len(cues) != len(expected):
-        raise ValueError("VideoText Topic translation cue count differs from its source")
+        raise ValueError("Topic translation cue count differs from its source")
     translated: dict[int, str] = {}
     for cue in cues:
         if not isinstance(cue, dict):
-            raise ValueError("VideoText Topic translation cue is invalid")
+            raise ValueError("Topic translation cue is invalid")
         try:
             cue_id = int(cue.get("id"))
         except (TypeError, ValueError) as error:
-            raise ValueError("VideoText Topic translation cue identity is invalid") from error
+            raise ValueError("Topic translation cue identity is invalid") from error
         text = cue.get("text")
         if cue_id not in expected or cue_id in translated or not isinstance(text, str) or not text.strip():
-            raise ValueError("VideoText Topic translation cues do not bind to their source")
+            raise ValueError("Topic translation cues do not bind to their source")
         translated[cue_id] = text.strip()
     if set(translated) != set(expected):
-        raise ValueError("VideoText Topic translation omitted a source field")
+        raise ValueError("Topic translation omitted a source field")
     return translated
 
 
@@ -146,7 +145,7 @@ def translate_topics(project_dir: Path, *, source_id: str, source_run_id: str,
     raw = artifact_dir / "topic_translation_raw.json"
     expected = _write_transport(transport, source_topics)
     runtime = preflight()
-    response = translate(transport, raw, target=TARGET_LANGUAGE, runtime=runtime)
+    response = translate(transport, raw, source=SOURCE_LANGUAGE, target=TARGET_LANGUAGE, runtime=runtime)
     translated = _validated_translation(response, expected)
     source_digest = _sha256(source_path)
     presented = []
