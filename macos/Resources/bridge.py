@@ -313,15 +313,17 @@ def _record_review_outputs(project_dir, run_id, source_id, updates, *, preserve_
         if not isinstance(source, dict) or source.get("state") != "COMPLETED":
             raise ValueError("completed source result is unavailable")
         outputs = source.setdefault("outputs", {})
-        from integra_core.transcript_output import resolve_persisted_project_path
+        from integra_core.transcript_output import (resolve_persisted_project_directory,
+                                                     resolve_persisted_project_path)
         for key, value in tuple(outputs.items()):
             if isinstance(value, str) and Path(value).is_absolute() and key in {"topics", "canonical_evidence", "machine_evidence_record", "topic_review_drafts",
                                                    "topic_review_package", "topic_review_decisions", "reviewed_topics",
                                                    "process_topic_review_package", "process_topic_review_decisions",
                                                    "process_reviewed_topics", "process_topic_review_receipt",
-                                                   "reviewed_topics_markdown", "canonical_knowledge", "knowledge_markdown",
-                                                   "package_dir"}:
+                                                   "reviewed_topics_markdown", "canonical_knowledge", "knowledge_markdown"}:
                 outputs[key] = str(resolve_persisted_project_path(project_dir, value, key))
+            elif isinstance(value, str) and Path(value).is_absolute() and key == "package_dir":
+                outputs[key] = str(resolve_persisted_project_directory(project_dir, value, key))
         if expected_outputs is not None:
             expected_outputs = dict(expected_outputs)
             for key, value in tuple(expected_outputs.items()):
@@ -530,8 +532,12 @@ def _knowledge_review(root, request, apply=False):
     else:
         if not isinstance(outputs.get("canonical_evidence"), str) or not isinstance(outputs.get("topics"), str):
             raise ValueError("reviewed Evidence and real topics are required")
+        exact_fragments = request.get("exact_fragments", False)
+        if not isinstance(exact_fragments, bool):
+            raise ValueError("exact_fragments must be a boolean")
         result = prepare_topic_review(values["project_dir"], source_id=values["source_id"],
-            canonical_evidence_path=outputs["canonical_evidence"], topics_path=outputs["topics"])
+            canonical_evidence_path=outputs["canonical_evidence"], topics_path=outputs["topics"],
+            exact_fragments=exact_fragments)
         from integra_core.seminartext_evidence_runtime import _inside, _sha256
         media = _inside(Path(values["media_path"]), values["project_dir"], "review media")
         evidence = json.loads(Path(outputs["canonical_evidence"]).read_text(encoding="utf-8"))
