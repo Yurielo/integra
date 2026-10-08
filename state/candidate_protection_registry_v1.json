@@ -36,6 +36,32 @@
   "deletion_decision_authority_ref": "https://github.com/Yurielo/integra/issues/214#issuecomment-5976936494",
   "deletion_decision_token_sha256": "2bc898600fbb735d4b5844d8dc8fff1508cf2cff4c33b7af0f0e06eb8dbb72ef",
   "deletion_enabled": true,
+  "withdrawal_deletion_authorizations": {
+    "Build Archive/candidate-v1-4c60663b9c5b7c991dc67f66b3a8e531ead4cf0f90435ef02c25055ad36018cc/b523d1cb5f0cf68526bf69a63131a462da1cdf088a369b06d612cfe6907bd851": {
+      "authority_ref": "https://github.com/Yurielo/integra/issues/224#issuecomment-6069206361",
+      "bundle_digest": "b523d1cb5f0cf68526bf69a63131a462da1cdf088a369b06d612cfe6907bd851",
+      "candidate_id": "candidate-v1-4c60663b9c5b7c991dc67f66b3a8e531ead4cf0f90435ef02c25055ad36018cc",
+      "lifecycle": "WITHDRAWN_SUPERSEDED",
+      "manifest_digest": "12488f7131a7df9a280af142ab13e371865ff258247c186a28cba42bd2672559",
+      "path": "Build Archive/candidate-v1-4c60663b9c5b7c991dc67f66b3a8e531ead4cf0f90435ef02c25055ad36018cc/b523d1cb5f0cf68526bf69a63131a462da1cdf088a369b06d612cfe6907bd851",
+      "reason": "SUPERSEDED_CANDIDATE_ARCHIVE_SLOT_FOR_FINAL_KNOWLEDGE_K1",
+      "scope": "EXACT_4C606_ONLY"
+    }
+  },
+  "withdrawn_candidate_lifecycles": [
+    {
+      "authority_body_sha256": "42b637e68cfe45fe5d2eb4583d6290a4b38f67938b4890c2765a986ef5e60fa6",
+      "authority_ref": "https://github.com/Yurielo/integra/issues/224#issuecomment-6069206361",
+      "bundle_digest": "b523d1cb5f0cf68526bf69a63131a462da1cdf088a369b06d612cfe6907bd851",
+      "candidate_id": "candidate-v1-4c60663b9c5b7c991dc67f66b3a8e531ead4cf0f90435ef02c25055ad36018cc",
+      "history_path": "state/history/knowledge_k1_candidate_4c606_withdrawal_v1.json",
+      "history_sha256": "86f2908d3c4e9cef58ecb6fafbd5af0fc8c5186646f7e38625cc6f33acf9a556",
+      "manifest_digest": "12488f7131a7df9a280af142ab13e371865ff258247c186a28cba42bd2672559",
+      "previous_status": "AWAITING_OWNER_ACCEPTANCE",
+      "reason": "SUPERSEDED_CANDIDATE_ARCHIVE_SLOT_FOR_FINAL_KNOWLEDGE_K1",
+      "resulting_status": "WITHDRAWN_SUPERSEDED"
+    }
+  ],
   "exact_legacy_retirement": {
     "catalog_path": "state/issue214_exact_legacy_retirement_v1.json",
     "catalog_sha256": "f146bfb1c3ed397275071528ee1aa0945dbde75a0b1669357051c3a6136e2c76",

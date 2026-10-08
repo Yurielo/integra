@@ -131,6 +131,66 @@ def _remote_file(path: str, ref: str) -> tuple[bytes, dict]:
     return data, json.loads(data)
 
 
+def _withdrawal_records(registry: dict, main: str) -> list[dict]:
+    """Read immutable owner-withdrawal evidence declared by the registry.
+
+    A pending Candidate is not made disposable merely by removing it from a
+    selector.  Each exceptional withdrawal has both a user-authored GitHub
+    decision and an immutable repository history event.  This helper only
+    reads those two sources; eligibility is decided later from the complete
+    protection graph.
+    """
+    records = registry.get('withdrawn_candidate_lifecycles', [])
+    if not isinstance(records, list):
+        raise ValueError('withdrawn Candidate lifecycle enumeration is invalid')
+    result = []
+    expected = {'candidate_id', 'bundle_digest', 'manifest_digest',
+                'previous_status', 'resulting_status', 'reason',
+                'authority_ref', 'authority_body_sha256',
+                'history_path', 'history_sha256'}
+    for record in records:
+        if not isinstance(record, dict) or set(record) != expected:
+            raise ValueError('withdrawn Candidate lifecycle record is invalid')
+        _identity(record)
+        if (record['previous_status'] != 'AWAITING_OWNER_ACCEPTANCE'
+                or record['resulting_status'] != 'WITHDRAWN_SUPERSEDED'
+                or not isinstance(record['reason'], str) or not record['reason']
+                or not isinstance(record['authority_body_sha256'], str)
+                or not HASH.fullmatch(record['authority_body_sha256'])
+                or not isinstance(record['history_path'], str)
+                or not isinstance(record['history_sha256'], str)
+                or not HASH.fullmatch(record['history_sha256'])):
+            raise ValueError('withdrawn Candidate lifecycle semantics are invalid')
+        match = re.fullmatch(
+            r'https://github\.com/Yurielo/integra/issues/([0-9]+)#issuecomment-([0-9]+)',
+            record['authority_ref'])
+        if not match:
+            raise ValueError('withdrawn Candidate authority reference is invalid')
+        authority = _api(f'repos/{REPOSITORY}/issues/comments/{match.group(2)}')
+        body = authority.get('body', '')
+        required = (f'candidate-v1-{record["candidate_id"].split("candidate-v1-", 1)[1]}',
+                    record['bundle_digest'], record['manifest_digest'],
+                    'WITHDRAW_OWNER_ACCEPTANCE_REQUEST',
+                    'does not accept this Candidate',
+                    'does not intend to promote')
+        if (authority.get('html_url') != record['authority_ref']
+                or authority.get('user', {}).get('login', '').lower() != 'yurielo'
+                or sha(body.encode()) != record['authority_body_sha256']
+                or any(value not in body for value in required)):
+            raise ValueError('withdrawn Candidate Product Owner decision differs')
+        raw, history = _remote_file(record['history_path'], main)
+        if sha(raw) != record['history_sha256'] or not isinstance(history, dict):
+            raise ValueError('withdrawn Candidate lifecycle history differs')
+        immutable = {key: history.get(key) for key in expected - {'history_path', 'history_sha256'}}
+        declared = {key: record[key] for key in expected - {'history_path', 'history_sha256'}}
+        if immutable != declared or history.get('artifact_type') != 'integra.candidate_lifecycle_disposition' or history.get('schema_version') != '1.0':
+            raise ValueError('withdrawn Candidate immutable lifecycle history is invalid')
+        result.append(record)
+    if len({record['candidate_id'] for record in result}) != len(result):
+        raise ValueError('withdrawn Candidate lifecycle identities are duplicated')
+    return result
+
+
 def fetch_canonical(registry: dict) -> tuple[dict, dict[int, dict], dict]:
     """Pin exact main and proposal heads, then detect drift before returning."""
     main = _api(f'repos/{REPOSITORY}/git/ref/heads/main')['object']['sha']
@@ -263,6 +323,7 @@ def fetch_canonical(registry: dict) -> tuple[dict, dict[int, dict], dict]:
             deletion_decision_authority_ref=deletion_authority['html_url'],
             deletion_decision_token_sha256=sha(deletion_token_lines[0].encode()),
             deletion_decision_token=deletion_token_lines[0])
+    canonical['withdrawn_candidate_lifecycles'] = _withdrawal_records(registry, main)
     return current, proposals, canonical
 
 
@@ -453,6 +514,63 @@ def _validate_registry(registry: dict, current: dict, proposals: dict[int, dict]
     return protected
 
 
+def _validate_withdrawn_lifecycles(registry: dict, canonical: dict | None,
+                                   protected: dict, blockers: list[str]) -> dict[str, dict]:
+    """Validate exceptional pending-acceptance withdrawals without erasing them.
+
+    These are deliberately separate from the Issue #214 legacy deletion grant.
+    A withdrawal may be eligible only after its durable event, its owner record,
+    and the complete protection graph all agree.
+    """
+    records = registry.get('withdrawn_candidate_lifecycles', [])
+    grants = registry.get('withdrawal_deletion_authorizations', {})
+    if not isinstance(records, list) or not isinstance(grants, dict):
+        blockers.append('WITHDRAWN_CANDIDATE_LIFECYCLE_ENUMERATION_INVALID')
+        return {}
+    canonical_records = (canonical or {}).get('withdrawn_candidate_lifecycles', [])
+    if not isinstance(canonical_records, list):
+        blockers.append('WITHDRAWN_CANDIDATE_LIFECYCLE_AUTHORITY_UNVERIFIED')
+        return {}
+    by_id = {record.get('candidate_id'): record for record in records if isinstance(record, dict)}
+    if len(by_id) != len(records) or by_id != {
+            record.get('candidate_id'): record for record in canonical_records if isinstance(record, dict)}:
+        blockers.append('WITHDRAWN_CANDIDATE_LIFECYCLE_CANONICAL_CONFLICT')
+        return {}
+    expected_paths = set()
+    for cid, record in by_id.items():
+        required = {'candidate_id', 'bundle_digest', 'manifest_digest',
+                    'previous_status', 'resulting_status', 'reason',
+                    'authority_ref', 'authority_body_sha256',
+                    'history_path', 'history_sha256'}
+        if set(record) != required or cid in protected:
+            blockers.append('WITHDRAWN_CANDIDATE_LIFECYCLE_PROTECTED_OR_INVALID:' + str(cid))
+            continue
+        try:
+            _identity(record)
+        except ValueError:
+            blockers.append('WITHDRAWN_CANDIDATE_LIFECYCLE_IDENTITY_INVALID:' + str(cid))
+            continue
+        matches = [(path, grant) for path, grant in grants.items()
+                   if isinstance(grant, dict) and grant.get('candidate_id') == cid]
+        if len(matches) != 1:
+            blockers.append('WITHDRAWN_CANDIDATE_DELETION_GRANT_MISSING_OR_AMBIGUOUS:' + str(cid))
+            continue
+        path, grant = matches[0]
+        required_grant = {'path', *IDENTITY, 'authority_ref', 'lifecycle', 'reason', 'scope'}
+        if (set(grant) != required_grant or path != grant.get('path')
+                or any(grant.get(key) != record.get(key) for key in IDENTITY)
+                or grant.get('authority_ref') != record['authority_ref']
+                or grant.get('lifecycle') != record['resulting_status']
+                or grant.get('reason') != record['reason']
+                or not isinstance(grant.get('scope'), str) or not grant['scope']):
+            blockers.append('WITHDRAWN_CANDIDATE_DELETION_GRANT_CONFLICT:' + str(cid))
+            continue
+        expected_paths.add(path)
+    if set(grants) != expected_paths:
+        blockers.append('WITHDRAWN_CANDIDATE_DELETION_GRANT_SCOPE_CONFLICT')
+    return grants
+
+
 def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages: list[dict],
             *, free_bytes: int, verifier=verify_archive, canonical: dict | None = None,
             for_deletion: bool = False) -> dict:
@@ -517,6 +635,7 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
                 blockers.append('OWNER_DELETION_GRANT_IDENTITY_BINDING_MISSING_OR_CONFLICT')
     accepted_gaps = _accepted_historical_gaps(registry, canonical, blockers)
     protected = _validate_registry(registry, current, proposals, blockers, accepted_gaps, canonical)
+    withdrawal_grants = _validate_withdrawn_lifecycles(registry, canonical, protected, blockers)
     historical = (canonical or {}).get('historical_receipts', {})
     for gap in registry.get('historical_gaps', []):
         cid = gap['candidate_id']
@@ -610,7 +729,7 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
     # A future complete authority may classify exact owned terminal objects as
     # eligible. Incomplete authority never gets that result.
     if not blockers and registry.get('deletion_enabled') is True:
-        authorized = registry['deletion_authorizations']
+        authorized = {**registry['deletion_authorizations'], **withdrawal_grants}
         for row in rows:
             grant = authorized.get(row['path'])
             if (row['classification'] == 'UNKNOWN' and row.get('publisher_owned') is True

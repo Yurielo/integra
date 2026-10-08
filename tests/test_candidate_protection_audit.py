@@ -266,6 +266,46 @@ class ProtectionAuditTests(unittest.TestCase):
         self.registry['deletion_authorizations'][old['path']]['authority_ref'] = 'changed'
         self.assertEqual(self.resolve()['entries'][-1]['classification'], 'UNKNOWN')
 
+    def test_withdrawn_pending_candidate_is_audited_before_exact_deletion(self):
+        """A recorded withdrawal is terminal, but never silently forgotten."""
+        old = self.package({'candidate_id': 'candidate-v1-' + '9'*64,
+                            'bundle_digest': '8'*64, 'manifest_digest': '7'*64})
+        self.packages.append(old)
+        record = {
+            **{key: old[key] for key in audit.IDENTITY},
+            'previous_status': 'AWAITING_OWNER_ACCEPTANCE',
+            'resulting_status': 'WITHDRAWN_SUPERSEDED',
+            'reason': 'EXACT_TEST_WITHDRAWAL',
+            'authority_ref': 'issue-comment:withdrawal-fixture',
+            'authority_body_sha256': 'a'*64,
+            'history_path': 'state/history/fixture-withdrawal.json',
+            'history_sha256': 'b'*64,
+        }
+        grant = {**{key: old[key] for key in ('path', *audit.IDENTITY)},
+                 'authority_ref': record['authority_ref'],
+                 'lifecycle': record['resulting_status'],
+                 'reason': record['reason'], 'scope': 'EXACT_FIXTURE_ONLY'}
+        self.registry['withdrawn_candidate_lifecycles'] = [record]
+        self.registry['withdrawal_deletion_authorizations'] = {old['path']: grant}
+        self.registry['deletion_authorizations'] = {}
+        self.registry['deletion_enabled'] = True
+        deletion_token = ('PRODUCT_OWNER_AUTHORIZATION: FIXTURE '
+                          'EXPLICIT_GOVERNANCE_PINS={} '
+                          'DELETION_AUTHORIZATIONS={} DELETION_ENABLED=true')
+        self.registry['deletion_decision_authority_ref'] = 'issue-comment:legacy-fixture'
+        self.registry['deletion_decision_token_sha256'] = audit.sha(deletion_token.encode())
+        self.canonical.update(
+            deletion_decision_authority_ref='issue-comment:legacy-fixture',
+            deletion_decision_token_sha256=audit.sha(deletion_token.encode()),
+            deletion_decision_token=deletion_token,
+            withdrawn_candidate_lifecycles=[record])
+        result = self.resolve()
+        self.assertEqual(result['authority_state'], 'COMPLETE')
+        self.assertEqual(result['entries'][-1]['classification'], 'ELIGIBLE')
+        self.registry['withdrawal_deletion_authorizations'][old['path']]['reason'] = 'tampered'
+        self.assertIn('WITHDRAWN_CANDIDATE_DELETION_GRANT_CONFLICT:' + old['candidate_id'],
+                      self.resolve()['blockers'])
+
     def test_separate_deletion_decision_is_fail_closed(self):
         old = self.package({'candidate_id': 'candidate-v1-' + '9'*64,
                             'bundle_digest': '8'*64, 'manifest_digest': '7'*64})
