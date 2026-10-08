@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.proposed_product_baseline",
+  "proposal_id": "proposal-knowledge-k1-reviewed-process-notebook-v1",
+  "status": "PROPOSED_BASELINE_VALID",
+  "base_current_id": "current-v2-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81",
+  "base_main": {"commit_sha": "031da002859254be6a7cc24ba6dd986d2a2cbe7d", "tree_sha": "1ebc6ba512f740e230094a988d0036a2a0faa857"},
+  "proposed_source": {"commit_sha": "a9567d64fc3345d16b16dd0fbf5953680fb884d4", "tree_sha": "6cf4084932c694905abf322a31bb9213047277a3"},
+  "proposed_head": {"commit_sha": "312946d42c9712e4ee3b7974fe657762e8092c1d", "tree_sha": "60f160c4c15b12f804da9adcb16437828f127c85"},
+  "intended_scope": {"wp": "Knowledge K1", "journey": "Present a reviewed Process notebook from persisted, validated review artifacts with exact source/evidence navigation; fail closed on stale, missing, or malformed persisted inputs; do not rerun Process, author semantic knowledge, promote Canonical Knowledge, alter CURRENT, change translation runtime, or start K2."},
+  "candidate": {"candidate_id": "candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f", "identity_sha256": "675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f", "bundle_digest": "e3215a28c9ce0a1a54c35dc535bad42a9334cae7ddc5eb3b0533a480e0296d95", "manifest_digest": "aa581c025edfc09cb7e2c59bf7d1ee98c78a5c17bc3d670e33b0fa351ce6b3e6"},
+  "delta": [
+    {"path": "integra_core/knowledge_notebook.py", "before_sha256": null, "after_sha256": "d731a78da0d78e777971385aefa24c880cb7c5744656d7e9808be06cf57fd0f5"},
+    {"path": "integra_core/reviewed_result_package.py", "before_sha256": "2ff2215b1ae156499fee4785a480550d40a1c9f0473dc4f011abaf79511f8cd4", "after_sha256": "d64a896b8350f3ccd527babc80c8c91a4f9959dd4f557cd3db6efb694232dba4"},
+    {"path": "integra_core/seminartext_evidence_runtime.py", "before_sha256": "8e7c33cd7602c562b56caae9742cd000189bf712dbaddf24805260ff9a1b2140", "after_sha256": "380be1d7b440cf469d6d3f2cba478ea1e00edc6b1b21f97bb471005762b46896"},
+    {"path": "integra_core/seminartext_topic_review_runtime.py", "before_sha256": "79ddc3b7f23b23b04cf5ede2365e94ea0e26d3fbfb0d9963e31eae0760412f1a", "after_sha256": "c2156b61d0f1b89affa31b2b557cfe2ad9d239feb8a5483f480eb324a2085a82"},
+    {"path": "integra_core/transcript_output.py", "before_sha256": "35c7aaad4f63d3e760e106f10cb078f8e4eaaaa759ee27b56a98d2ca48f6bcad", "after_sha256": "597c080bb21295228a86818732fa655a1a259f0425a60cbdbe043521836f300d"},
+    {"path": "macos/Info.plist", "before_sha256": "a419740dd9515b629f857004c2d2a58cb7d1078beeca855a0e8b61430971124c", "after_sha256": "da9f440b24b2a5720d53d9bf9aee062b3bb57044ecc479996965a1631e30f9ab"},
+    {"path": "macos/IntegraApp.swift", "before_sha256": "f85a8192f61983449fae7eedc13d15c24685877c3a7917be80e2e75b6f6f5350", "after_sha256": "7c0976c3cf1d6b615150a3c0df5c66175c55faaaabdcea93dff750814b6dc0de"},
+    {"path": "macos/Resources/bridge.py", "before_sha256": "fdc4642eb3b3efae280f8d1afc160fc0dee97c49bb6d63599f879c06a4bf3a0c", "after_sha256": "0ecc20d4f38db43ec6519abd26c7983a7ce97932c4484250b36827e10efa8528"}
+  ],
+  "historical_test_successors": [],
+  "gates": [
+    {"name": "candidate-manifest", "result": "PASS", "evidence_ref": "docs/evidence/KNOWLEDGE_K1_CANDIDATE_MANIFEST.json"},
+    {"name": "candidate-archive", "result": "PASS", "evidence_ref": "docs/evidence/KNOWLEDGE_K1_CANDIDATE_ARCHIVE.json"},
+    {"name": "packaged-bridge-k1", "result": "PASS", "evidence_ref": "docs/evidence/KNOWLEDGE_K1_PACKAGED_BRIDGE.json"},
+    {"name": "regression-and-governance", "result": "PASS", "evidence_ref": "docs/KNOWLEDGE_K1_PROOF.md"}
+  ],
+  "evidence": {
+    "candidate_manifest": {"path": "docs/evidence/KNOWLEDGE_K1_CANDIDATE_MANIFEST.json", "sha256": "aa581c025edfc09cb7e2c59bf7d1ee98c78a5c17bc3d670e33b0fa351ce6b3e6"},
+    "candidate_evidence": {"path": "docs/evidence/KNOWLEDGE_K1_PACKAGED_BRIDGE.json", "sha256": "e84fac1f27c3f207d54e1f87bc2bb32351783f4b5b300b6f8436efe2949ad34d"},
+    "report": {"path": "docs/KNOWLEDGE_K1_PROOF.md", "sha256": "facfdb07602b4e7777ac82a044242b96c0545d5f5c81c6e244467ed07e67cabf"}
+  },
+  "owner_acceptance": null,
+  "allowed_overlay_paths": ["docs/KNOWLEDGE_K1_PROOF.md", "docs/evidence/KNOWLEDGE_K1_CANDIDATE_ARCHIVE.json", "docs/evidence/KNOWLEDGE_K1_CANDIDATE_MANIFEST.json", "docs/evidence/KNOWLEDGE_K1_PACKAGED_BRIDGE.json"]
+}
