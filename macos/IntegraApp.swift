@@ -30,6 +30,7 @@ final class Bridge: @unchecked Sendable {
       "prepare-transcript-review", "apply-transcript-review", "prepare-topic-review",
       "prepare-process-topic-review", "apply-process-topic-review", "process-topics",
       "prepare-knowledge-review", "apply-knowledge-review", "create-machine-evidence",
+      "knowledge-sources", "knowledge-open", "knowledge-save", "knowledge-navigation", "knowledge-package",
       "shutdown-active-runs",
     ]
     guard allowed.contains(operation) else { throw BridgeError.failed("Unsupported operation") }
@@ -224,7 +225,7 @@ struct SidebarItem {
     .init(title: "Выполняется", id: "operations", header: false, enabled: true),
     .init(title: "Требует проверки — В разработке", id: "review", header: false, enabled: false),
     .init(title: "ЗНАНИЯ", id: "", header: true, enabled: false),
-    .init(title: "База знаний — В разработке", id: "knowledge", header: false, enabled: false),
+    .init(title: "База знаний", id: "knowledge", header: false, enabled: true),
     .init(title: "Поиск — В разработке", id: "search", header: false, enabled: false),
     .init(title: "СОЗДАТЬ", id: "", header: true, enabled: false),
     .init(title: "Видео и клипы — В разработке", id: "clips", header: false, enabled: false),
@@ -276,6 +277,25 @@ struct SidebarItem {
       }
     }
     runOperationsProbeIfRequested()
+    if let url = pendingKnowledgeURL { pendingKnowledgeURL = nil; openKnowledgeURL(url) }
+  }
+
+  private var pendingKnowledgeURL: URL?
+  func application(_ application: NSApplication, open urls: [URL]) {
+    guard urls.count == 1, let url = urls.first else { return }
+    if bridge == nil { pendingKnowledgeURL = url } else { openKnowledgeURL(url) }
+  }
+
+  private func openKnowledgeURL(_ url: URL) {
+    guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+      components.scheme == "integra", components.host == "knowledge", components.path == "/fragment",
+      components.user == nil, components.password == nil, components.port == nil,
+      let queries = components.queryItems, queries.count == 6 else { status.stringValue = "Недопустимая ссылка на источник"; return }
+    let required: Set<String> = ["project_id", "run_id", "source_id", "fragment_id", "source_revision_sha256", "notebook_id"]
+    guard Set(queries.map { $0.name }) == required, queries.allSatisfy({ $0.value != nil }) else { status.stringValue = "Неполная ссылка на источник"; return }
+    let request = Dictionary(uniqueKeysWithValues: queries.map { ($0.name, $0.value! as Any) })
+    window.makeKeyAndOrderFront(nil)
+    presentKnowledgeNavigation(request)
   }
 
   func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
@@ -423,6 +443,7 @@ struct SidebarItem {
     case "history": renderHistory()
     case "operations": renderOperations()
     case "materials", "ready": renderOutputs()
+    case "knowledge": renderKnowledge()
     case "diagnostics": renderDiagnostics()
     default: break
     }
@@ -2043,6 +2064,210 @@ struct SidebarItem {
       add(NSTextField(labelWithString: "Готовых материалов в текущей сессии нет"))
     }
   }
+  private var knowledgeNotebook: [String: Any] = [:]
+  private var knowledgeIdentity: [String: Any] = [:]
+
+  private func renderKnowledge() {
+    reset("База знаний", "Тематические конспекты из завершённых обработок. Проверка фрагментов не означает принятия канонических знаний.")
+    add(button("Добавить результат Process", #selector(selectKnowledgeSource)))
+    let bridge = self.bridge!
+    let generation = navigationGeneration
+    serviceQueue.async {
+      do {
+        let sources = try bridge.json("knowledge-sources")["result"] as? [[String: Any]] ?? []
+        DispatchQueue.main.async {
+          guard self.navigationGeneration == generation else { return }
+          let saved = sources.filter { ($0["notebook_status"] as? String) != "NOT_ADDED" }
+          if saved.isEmpty { self.add(NSTextField(labelWithString: "Сохранённых конспектов пока нет")) }
+          for source in saved {
+            let control = self.button("Открыть конспект · \(source["source_name"] ?? "Источник")", #selector(self.openKnowledgeSource(_:)), enabled: source["eligible"] as? Bool == true)
+            control.toolTip = "\(source["project_id"] ?? "")\n\(source["run_id"] ?? "")\n\(source["source_id"] ?? "")"
+            self.add(control)
+            if let reason = source["reason"] as? String { self.add(NSTextField(wrappingLabelWithString: "Недоступен: \(reason)")) }
+          }
+        }
+      } catch { DispatchQueue.main.async { self.status.stringValue = error.localizedDescription } }
+    }
+  }
+
+  @objc private func selectKnowledgeSource() {
+    let bridge = self.bridge!
+    let generation = navigationGeneration
+    status.stringValue = "Проверяю сохранённые результаты…"
+    serviceQueue.async {
+      do {
+        let sources = try bridge.json("knowledge-sources")["result"] as? [[String: Any]] ?? []
+        DispatchQueue.main.async {
+          guard self.navigationGeneration == generation else { return }
+          let alert = NSAlert(); alert.messageText = "Добавить результат Process"
+          alert.informativeText = "Выберите завершённый источник с сохранёнными темами и точным временем слов. Повторная обработка не запускается."
+          let list = NSPopUpButton(frame: NSRect(x: 0, y: 0, width: 620, height: 28))
+          for source in sources {
+            list.addItem(withTitle: "\(source["project_name"] ?? "Проект") · \(source["source_name"] ?? "Источник")" + (source["eligible"] as? Bool == true ? "" : " — недоступен"))
+          }
+          alert.accessoryView = list; alert.addButton(withTitle: "Добавить"); alert.addButton(withTitle: "Отмена")
+          guard !sources.isEmpty else { self.status.stringValue = "Нет сохранённых результатов Process"; return }
+          guard alert.runModal() == .alertFirstButtonReturn, sources.indices.contains(list.indexOfSelectedItem) else { return }
+          let selected = sources[list.indexOfSelectedItem]
+          guard selected["eligible"] as? Bool == true else { self.status.stringValue = "Источник недоступен: \(selected["reason"] ?? "Неполный результат")"; return }
+          self.loadKnowledge(["project_id": selected["project_id"]!, "run_id": selected["run_id"]!, "source_id": selected["source_id"]!], create: true)
+        }
+      } catch { DispatchQueue.main.async { self.status.stringValue = error.localizedDescription } }
+    }
+  }
+
+  @objc private func openKnowledgeSource(_ sender: NSButton) {
+    let ids = sender.toolTip?.split(separator: "\n").map(String.init) ?? []
+    guard ids.count == 3 else { return }
+    loadKnowledge(["project_id": ids[0], "run_id": ids[1], "source_id": ids[2]], create: false)
+  }
+
+  private func loadKnowledge(_ identity: [String: Any], create: Bool) {
+    navigationGeneration += 1
+    let generation = navigationGeneration
+    status.stringValue = "Открываю конспект без повторной обработки…"
+    let bridge = self.bridge!
+    serviceQueue.async {
+      do {
+        var request = identity; request["create"] = create
+        let notebook = try bridge.json("knowledge-open", request: request)["result"] as? [String: Any] ?? [:]
+        DispatchQueue.main.async { guard self.navigationGeneration == generation else { return }; self.knowledgeIdentity = identity; self.knowledgeNotebook = notebook; self.renderKnowledgeNotebook() }
+      } catch { DispatchQueue.main.async { self.status.textColor = .systemRed; self.status.stringValue = error.localizedDescription } }
+    }
+  }
+
+  private func renderKnowledgeNotebook() {
+    let notebook = knowledgeNotebook
+    let complete = notebook["status"] as? String == "REVIEWED_FRAGMENTS_V2"
+    reset("Тематический конспект", complete ? "Проверенные фрагменты. Это не Canonical Knowledge ACCEPTED." : "Проверка не завершена. Отложенные фрагменты нельзя экспортировать как проверенные.")
+    add(NSTextField(wrappingLabelWithString: "Источник: \(notebook["source_id"] ?? "")\nВерсия источника: \(notebook["source_revision_sha256"] ?? "")\nКонспект: \(notebook["notebook_id"] ?? "")\nТочность: диапазон слов. Исходный машинный текст не считается проверенным человеком."))
+    add(button("Все конспекты", #selector(showKnowledgeLanding)))
+    if !complete { add(button("Проверить фрагменты", #selector(reviewKnowledge))) }
+    if complete { add(button("Экспортировать конспект в Obsidian", #selector(exportKnowledge))) }
+    if let reviewed = notebook["reviewed"] as? [String: Any], let lineage = reviewed["fragment_lineage"] as? [[String: Any]] {
+      let units = (reviewed["semantic_knowledge"] as? [[String: Any]] ?? []) + (reviewed["non_semantic_excluded"] as? [[String: Any]] ?? [])
+      for unit in units {
+        add(NSTextField(wrappingLabelWithString: "\(unit["title"] ?? "Фрагмент")\n\(unit["summary"] ?? "")\n" + (unit["disposition"] as? String == "NON_SEMANTIC_EXCLUDED" ? "Исключён из конспекта" : "Включён в конспект")))
+        for ref in unit["fragment_refs"] as? [String] ?? [] {
+          if let fragment = lineage.first(where: { $0["id"] as? String == ref }) { addKnowledgeEvidence(fragment, id: ref) }
+        }
+      }
+    } else {
+      for topic in notebook["topics"] as? [[String: Any]] ?? [] {
+        add(NSTextField(wrappingLabelWithString: "\(topic["title"] ?? "Тема")\n\(topic["summary"] ?? "")"))
+        addKnowledgeEvidence(topic, id: topic["id"] as? String ?? "")
+      }
+    }
+    status.stringValue = complete ? "Конспект сохранён; источник и версии проверены" : "Решения сохраняются только после явного выбора"
+  }
+
+  private func addKnowledgeEvidence(_ fragment: [String: Any], id: String) {
+    add(NSTextField(wrappingLabelWithString: "Цитата: \(fragment["quote"] ?? "")\nКонтекст: \(fragment["context"] ?? fragment["quote"] ?? "")\nСлова: \(fragment["word_start_id"] ?? "") — \(fragment["word_end_id"] ?? "")\nВерсия текста: \(fragment["transcript_revision_id"] ?? "")"))
+    let control = button("Открыть точный фрагмент источника", #selector(playKnowledgeFragment(_:)))
+    control.toolTip = id; add(control)
+  }
+
+  @objc private func showKnowledgeLanding() { renderKnowledge() }
+
+  @objc private func playKnowledgeFragment(_ sender: NSButton) {
+    var request = knowledgeIdentity; request["fragment_id"] = sender.toolTip ?? ""
+    request["notebook_id"] = knowledgeNotebook["notebook_id"]
+    request["source_revision_sha256"] = knowledgeNotebook["source_revision_sha256"]
+    presentKnowledgeNavigation(request)
+  }
+
+  private func presentKnowledgeNavigation(_ request: [String: Any]) {
+    let bridge = self.bridge!
+    let generation = navigationGeneration
+    serviceQueue.async {
+      do {
+        let result = try bridge.json("knowledge-navigation", request: request)["result"] as? [String: Any] ?? [:]
+        guard let path = result["media_path"] as? String, let start = result["start_seconds"] as? Double, let end = result["end_seconds"] as? Double else { throw BridgeError.invalidResponse }
+        DispatchQueue.main.async {
+          guard self.navigationGeneration == generation else { return }
+          let alert = NSAlert(); alert.messageText = "Точный фрагмент источника"
+          alert.informativeText = String(format: "%.3f–%.3f с\n", start, end) + "\(result["quote"] ?? "")\nВерсия источника проверена по хешу."
+          let player = AVPlayer(url: URL(fileURLWithPath: path))
+          let view = AVPlayerView(frame: NSRect(x: 0, y: 0, width: 620, height: 260)); view.player = player
+          alert.accessoryView = view; alert.addButton(withTitle: "Закрыть")
+          player.currentItem?.forwardPlaybackEndTime = CMTime(seconds: end, preferredTimescale: 600)
+          player.seek(to: CMTime(seconds: start, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero) { ready in if ready { player.play() } }
+          _ = alert.runModal(); player.pause()
+        }
+      } catch { DispatchQueue.main.async { self.status.textColor = .systemRed; self.status.stringValue = error.localizedDescription } }
+    }
+  }
+
+  @objc private func reviewKnowledge() {
+    guard let topics = knowledgeNotebook["topics"] as? [[String: Any]], let hash = knowledgeNotebook["state_sha256"] as? String else { return }
+    let saved = knowledgeNotebook["decisions"] as? [[String: Any]] ?? []
+    let alert = NSAlert(); alert.messageText = "Проверка тематического конспекта"
+    alert.informativeText = "Принять, изменить или отложить каждый фрагмент. При изменении границ оставшиеся слова явно исключаются. Исходный текст и машинные темы не изменяются."
+    let stack = FlippedStackView(); stack.orientation = .vertical; stack.alignment = .leading; stack.spacing = 10
+    var forms: [(String, NSPopUpButton, NSTextField, NSTextField, NSTextField, NSTextField)] = []
+    let actions = ["ACCEPT", "EDIT", "REJECT", "DEFER"]
+    for topic in topics {
+      guard let id = topic["id"] as? String else { return }
+      let prior = saved.first { $0["topic_id"] as? String == id } ?? [:]
+      let label = NSTextField(wrappingLabelWithString: "Цитата: \(topic["quote"] ?? "")"); label.widthAnchor.constraint(equalToConstant: 600).isActive = true; stack.addArrangedSubview(label)
+      let action = NSPopUpButton(); action.addItems(withTitles: ["Выберите решение", "Принять", "Изменить", "Исключить", "Отложить"])
+      if let previous = prior["action"] as? String, let index = actions.firstIndex(of: previous) { action.selectItem(at: index+1) }
+      stack.addArrangedSubview(action)
+      let title = NSTextField(string: prior["new_title"] as? String ?? topic["title"] as? String ?? "")
+      title.placeholderString = "Название"; title.widthAnchor.constraint(equalToConstant: 600).isActive = true; stack.addArrangedSubview(title)
+      let summary = NSTextField(string: prior["new_summary"] as? String ?? topic["summary"] as? String ?? "")
+      summary.placeholderString = "Конспект"; summary.widthAnchor.constraint(equalToConstant: 600).isActive = true; stack.addArrangedSubview(summary)
+      stack.addArrangedSubview(NSTextField(labelWithString: "Точные границы — первый и последний ID слова"))
+      let first = NSTextField(string: prior["word_start_id"] as? String ?? topic["word_start_id"] as? String ?? "")
+      let last = NSTextField(string: prior["word_end_id"] as? String ?? topic["word_end_id"] as? String ?? "")
+      first.widthAnchor.constraint(equalToConstant: 600).isActive = true; last.widthAnchor.constraint(equalToConstant: 600).isActive = true
+      stack.addArrangedSubview(first); stack.addArrangedSubview(last)
+      forms.append((id, action, title, summary, first, last))
+    }
+    let reviewer = NSTextField(string: "integra-local-human"); reviewer.placeholderString = "Идентификатор проверяющего"; stack.addArrangedSubview(reviewer)
+    let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 640, height: 440)); scroll.hasVerticalScroller = true
+    stack.setFrameSize(NSSize(width: 620, height: stack.fittingSize.height)); scroll.documentView = stack; alert.accessoryView = scroll
+    alert.addButton(withTitle: "Сохранить решения"); alert.addButton(withTitle: "Отмена")
+    while true {
+      guard alert.runModal() == .alertFirstButtonReturn else { return }
+      if forms.allSatisfy({ $0.1.indexOfSelectedItem > 0 }) { break }
+      alert.informativeText = "Для каждого фрагмента выберите решение; спорное можно отложить."
+    }
+    let decisions: [[String: Any]] = forms.map { form in
+      let original = topics.first { $0["id"] as? String == form.0 } ?? [:]
+      let edited = form.2.stringValue != original["title"] as? String || form.3.stringValue != original["summary"] as? String || form.4.stringValue != original["word_start_id"] as? String || form.5.stringValue != original["word_end_id"] as? String
+      let selected = actions[form.1.indexOfSelectedItem-1]
+      let action = selected == "ACCEPT" && edited ? "EDIT" : selected
+      var decision: [String: Any] = ["topic_id": form.0, "action": action, "reason": "Explicit local human K1 fragment review"]
+      if action == "EDIT" || action == "DEFER" {
+        decision["new_title"] = form.2.stringValue; decision["new_summary"] = form.3.stringValue
+        decision["word_start_id"] = form.4.stringValue; decision["word_end_id"] = form.5.stringValue
+      }
+      return decision
+    }
+    var request = knowledgeIdentity; request["expected_state_sha256"] = hash; request["decisions"] = decisions; request["reviewer_id"] = reviewer.stringValue
+    let bridge = self.bridge!
+    let generation = navigationGeneration
+    serviceQueue.async {
+      do {
+        let notebook = try bridge.json("knowledge-save", request: request)["result"] as? [String: Any] ?? [:]
+        DispatchQueue.main.async { guard self.navigationGeneration == generation else { return }; self.knowledgeNotebook = notebook; self.renderKnowledgeNotebook() }
+      } catch { DispatchQueue.main.async { self.status.textColor = .systemRed; self.status.stringValue = error.localizedDescription } }
+    }
+  }
+
+  @objc private func exportKnowledge() {
+    let request = knowledgeIdentity; let bridge = self.bridge!
+    let generation = navigationGeneration
+    serviceQueue.async {
+      do {
+        let result = try bridge.json("knowledge-package", request: request)["result"] as? [String: Any] ?? [:]
+        guard let path = result["package_dir"] as? String else { throw BridgeError.invalidResponse }
+        DispatchQueue.main.async { guard self.navigationGeneration == generation else { return }; self.publishSelectedPackage(URL(fileURLWithPath: path), kind: "obsidian") }
+      } catch { DispatchQueue.main.async { self.status.stringValue = error.localizedDescription } }
+    }
+  }
+
   @objc private func publishObsidian() { publication(kind: "obsidian") }
   @objc private func publishOneDrive() { publication(kind: "onedrive") }
   private func publication(kind: String) {
@@ -2057,6 +2282,11 @@ struct SidebarItem {
       chooser.accessoryView = list; chooser.addButton(withTitle: "Выбрать"); chooser.addButton(withTitle: "Отмена")
       guard chooser.runModal() == .alertFirstButtonReturn, packages.indices.contains(list.indexOfSelectedItem), let package = packages[list.indexOfSelectedItem]["package_dir"] as? String else { return }
       let packagePath = URL(fileURLWithPath: package)
+      publishSelectedPackage(packagePath, kind: kind)
+    } catch { status.textColor = .systemRed; status.stringValue = error.localizedDescription }
+  }
+  private func publishSelectedPackage(_ packagePath: URL, kind: String) {
+    do {
       let manifestPath = packagePath.appendingPathComponent("package.json").path
       guard FileManager.default.fileExists(atPath: manifestPath) else {
         status.textColor = .systemRed

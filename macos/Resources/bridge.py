@@ -29,6 +29,7 @@ OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-projec
 OPERATIONS.add("build-reviewed-package")
 OPERATIONS.add("transcript-text")
 OPERATIONS.add("shutdown-active-runs")
+OPERATIONS.update({"knowledge-sources", "knowledge-open", "knowledge-save", "knowledge-navigation", "knowledge-package"})
 
 def _safe_error(error):
     message = str(error).replace(str(Path.home()), "<HOME>")
@@ -630,6 +631,13 @@ def _build_reviewed_package(root, request):
     manifest, files = build_reviewed_result_package(project_dir=project, source_id=values["source_id"],
         decisions_path=decisions, project_id=request["project_id"],
         project_slug=request["project_id"].removeprefix("urn:integra:project:"))
+    response = _store_reviewed_package(project, manifest, files)
+    _record_review_outputs(project, request["run_id"], values["source_id"], {"package_dir": response["package_dir"]}, expected_outputs=expected)
+    return response
+
+
+def _store_reviewed_package(project, manifest, files):
+    """One shared immutable package store for Process review and K1."""
     exports = project / "reviewed-exports"
     if exports.is_symlink(): raise ValueError("export directory must not be a symlink")
     exports.mkdir(exist_ok=True)
@@ -653,9 +661,69 @@ def _build_reviewed_package(root, request):
                 os.rename(stage, target)
     finally:
         os.close(descriptor)
-    _record_review_outputs(project, request["run_id"], values["source_id"], {"package_dir": str(target)}, expected_outputs=expected)
     return {"status": "PACKAGE_CREATED", "package_dir": str(target), "package_id": manifest["package_id"],
             "result_kind": manifest["result_kind"], "published": False}
+
+
+def _knowledge_sources(root):
+    from integra_core.knowledge_notebook import source_inputs, open_notebook
+    available = []
+    # Discovery must not reconcile jobs or access processing runtimes.
+    for item in _recent_runs(root, reconcile=False):
+        project, run = item["project"], item["run"]
+        for source in run.get("source_results", []):
+            request = {"project_id": project["project_id"], "run_id": run["run_id"], "source_id": source.get("source_id")}
+            entry = request | {"project_name": project.get("name", "Проект"),
+                               "source_name": source.get("display_name") or source.get("source_id"),
+                               "eligible": False, "notebook_status": "NOT_ADDED"}
+            try:
+                directory = _project_dir(root, project["project_id"])
+                source_inputs(directory, **request)
+                entry["eligible"] = True
+                try:
+                    saved = open_notebook(directory, **request)
+                except ValueError as error:
+                    if str(error) != "Knowledge notebook has not been added":
+                        raise
+                else:
+                    entry.update(notebook_status=saved["status"], notebook_id=saved["notebook_id"])
+            except (ValueError, OSError, KeyError, TypeError) as error:
+                entry.update(eligible=False, reason=_safe_error(error))
+            available.append(entry)
+    return available
+
+
+def _knowledge(root, request, action):
+    from integra_core.knowledge_notebook import open_notebook, save_notebook, notebook_navigation, notebook_package
+    project = _project_dir(root, _project(root, request.get("project_id"))["project_id"])
+    identity = {key: request.get(key) for key in ("project_id", "run_id", "source_id")}
+    if action == "navigation":
+        result = notebook_navigation(project, **identity, fragment_id=request.get("fragment_id"), notebook_id=request.get("notebook_id"))
+        expected = request.get("source_revision_sha256")
+        if expected is not None and result["source_revision_sha256"] != expected:
+            raise ValueError("exported source link belongs to a different source revision")
+        return result
+    if action == "open" and request.get("create") is not True:
+        return open_notebook(project, **identity)
+    # Reuse the existing project/artifact lease service for notebook writes.
+    from integra_core.identity import derive_imported_id
+    version = content_sha256(identity)
+    entity = derive_imported_id("artifact", "integra.knowledge_k1_write", identity["project_id"], version)
+    lease, store = _lease(root, {"project_id": identity["project_id"], "package_id": entity,
+                               "version_sha256": version}, "integra.knowledge_review")
+    try:
+        if action == "open":
+            return open_notebook(project, **identity, create=True)
+        if action == "save":
+            return save_notebook(project, **identity, expected_state_sha256=request.get("expected_state_sha256"),
+                                 decisions=request.get("decisions"), reviewer_id=request.get("reviewer_id"))
+        if action == "package":
+            manifest, files = notebook_package(project, **identity)
+            return _store_reviewed_package(project, manifest, files)
+        raise ValueError("unknown Knowledge action")
+    finally:
+        store.release(lease["project_id"], lease["mutable_entity"]["entity_id"], lease["lease_id"],
+                      lease["writer"], lease["generation"], _instant(_now()))
 
 
 def _package(path_value):
@@ -745,6 +813,8 @@ def main():
         elif operation == "recent-runs": result = _recent_runs(root)
         elif operation == "shutdown-active-runs": result = _shutdown_active_runs(root)
         elif operation == "available-packages": result = _available_packages(root)
+        elif operation == "knowledge-sources": result = _knowledge_sources(root)
+        elif operation.startswith("knowledge-"): result = _knowledge(root, request, operation.removeprefix("knowledge-"))
         elif operation == "media-navigation": result = _media_navigation(root, request)
         elif operation == "create-media-clip": result = _create_media_clip(root, request)
         elif operation == "prepare-transcript-review": result = _prepare_transcript_review(root, request)

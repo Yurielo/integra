@@ -15,13 +15,16 @@ from pathlib import Path, PurePosixPath
 import re
 import subprocess
 import tempfile
+import uuid
+from urllib.parse import urlencode
 from datetime import datetime, timezone
 
 from .identity import derive_imported_id
 from .protocol import canonical_json, content_sha256
 from .publishing import PublishingError, validate_source_export
 from .seminartext_evidence_runtime import _inside, _review_root, _sha256
-from .seminartext_topic_review_runtime import _environment, _locked, _python, apply_topic_review, preflight
+from .seminartext_topic_review_runtime import (_environment, _locked, _python, apply_topic_review, preflight,
+                                               _choices, _v2_choice_records, v2_replay_choices)
 
 
 TYPE = "integra.reviewed_result_package"
@@ -123,6 +126,45 @@ def _span(item, evidence):
             "word_start_sequence": first["sequence"], "word_end_sequence": last["sequence"]}
 
 
+def _validate_navigation_context(context, manifest, evidence):
+    fields = {"project_id", "run_id", "source_id", "source_revision_sha256", "notebook_id"}
+    _require(isinstance(context, dict) and set(context) == fields, "notebook navigation context fields differ")
+    _require(context["project_id"] == manifest["project_id"] and context["source_id"] == manifest["source_id"],
+             "notebook navigation project/source differs")
+    _require(isinstance(context["run_id"], str) and re.fullmatch(r"urn:integra:run:[0-9a-f-]{36}", context["run_id"]) is not None,
+             "notebook navigation run identity differs")
+    _require(str(uuid.UUID(context["run_id"].removeprefix("urn:integra:run:"))) == context["run_id"].removeprefix("urn:integra:run:"),
+             "notebook navigation run identity is invalid")
+    _require(isinstance(context["notebook_id"], str) and context["notebook_id"].startswith("urn:integra:artifact:")
+             and len(context["notebook_id"]) <= 256, "notebook navigation identity differs")
+    _require(isinstance(context["source_revision_sha256"], str) and re.fullmatch(r"[0-9a-f]{64}", context["source_revision_sha256"]) is not None,
+             "notebook navigation source revision is invalid")
+    canonical_id = "source_source_" + hashlib.sha256(context["source_id"].encode()).hexdigest()[:24]
+    source = _index(evidence["sources"]).get(canonical_id)
+    _require(source is not None and source.get("content_sha256") == context["source_revision_sha256"],
+             "notebook navigation source revision differs from Evidence")
+
+
+def _notebook_markdown(result, context):
+    """Managed presentation over V2 fragments; the component receipt stays intact."""
+    fragments = _index(result["fragment_lineage"])
+    lines = ["# Проверяемый тематический конспект", "", "Статус: REVIEWED_FRAGMENTS_V2.", "",
+             "Проверенные фрагменты; Canonical Knowledge не создавался.", ""]
+    for unit in result["semantic_knowledge"]:
+        lines.extend(["## " + unit["title"], "", unit["summary"], ""])
+        for fragment_id in unit["fragment_refs"]:
+            fragment = fragments[fragment_id]
+            query = {key: context[key] for key in ("project_id", "run_id", "source_id")}
+            query.update(fragment_id=fragment_id, source_revision_sha256=context["source_revision_sha256"],
+                         notebook_id=context["notebook_id"])
+            url = "integra://knowledge/fragment?" + urlencode(query)
+            start, end = fragment["locator"]["start_seconds"], fragment["locator"]["end_seconds"]
+            lines.extend([f"[Открыть источник: {start}–{end} с.]({url})", "",
+                          f"Точная граница: {fragment['word_start_id']} — {fragment['word_end_id']}.", "",
+                          "> " + fragment["quote"].replace("\n", "\n> "), ""])
+    return "\n".join(lines).encode("utf-8")
+
+
 def _validate(manifest, files):
     expected_fields = {"schema_version", "artifact_type", "package_id", "version_sha256", "project_id", "project_slug",
                        "source_id", "created_at", "files", "semantic_authority", "source_artifacts_modified", "result_kind", "result", "provenance"}
@@ -158,6 +200,9 @@ def _validate(manifest, files):
     roles = {"evidence", "decisions", "review_package", "receipt", "binding", "topic_output", "draft_input"}
     roles |= {"knowledge_input", "compiled_evidence", "source_evidence", "derived_manifest"} if kind == V1 else {"word_timeline"}
     refs = manifest["provenance"]
+    if isinstance(refs, dict) and "navigation" in refs:
+        _require(kind == V2, "notebook navigation requires reviewed fragments V2")
+        roles.add("navigation")
     _require(isinstance(refs, dict) and set(refs) == roles, "provenance roles differ")
     records = {name: record(ref) for name, ref in refs.items()}
     _require(set(manifest["result"]) == {"path", "sha256", "markdown"}, "result reference differs")
@@ -177,8 +222,10 @@ def _validate(manifest, files):
     _require(binding == {"source_id": manifest["source_id"], "evidence_sha256": refs["evidence"]["sha256"],
                         "topics_sha256": refs["topic_output"]["sha256"], "package_sha256": refs["review_package"]["sha256"],
                         "review_mode": V1 if kind == V1 else "EXACT_FRAGMENTS_V2",
+                        **({"exact_fragments": True} if binding.get("exact_fragments") is True else {}),
                         **({"timeline_sha256": refs["word_timeline"]["sha256"]} if kind == V2 else {})}, "portable original binding differs")
-    _require(drafts["generator"]["configuration_sha256"] == content_sha256({"topic_output_sha256": refs["topic_output"]["sha256"], "canonical_evidence_sha256": refs["evidence"]["sha256"]}), "draft generator input differs")
+    _require(drafts["generator"]["configuration_sha256"] == content_sha256({"topic_output_sha256": refs["topic_output"]["sha256"], "canonical_evidence_sha256": refs["evidence"]["sha256"],
+        **({"exact_fragments": True} if binding.get("exact_fragments") is True else {})}), "draft generator input differs")
     topics = _index(package["topics"])
     draft_topics = _index(drafts["topics"])
     _require(set(topics) == set(draft_topics), "draft topic inventory differs")
@@ -290,25 +337,28 @@ def _validate(manifest, files):
         _require(all(item["disposition"] == "SEMANTIC_KNOWLEDGE" for item in result["semantic_knowledge"])
             and all(item["disposition"] == "NON_SEMANTIC_EXCLUDED" for item in result["non_semantic_excluded"]), "V2 container contradicts disposition")
         fragments = _index(result["fragment_lineage"])
-        _require(len(units) == len(topics) == len(fragments), "V2 result count differs")
+        expected_records = _v2_choice_records(package, evidence,
+            _choices(package, decisions["reviewer"]["actor_id"], v2_replay_choices(decisions), v2=True))
+        expected_by_topic = {record["target_ids"][0]: record for record in expected_records}
+        _require(len(units) == len(fragments) == sum(len(item["source_fragments"]) for item in decision_records.values()), "V2 result count differs")
         for target, decision in by_topic.items():
-            _require(decision["operations"] in (["ACCEPT"], ["EXCLUDE"]) and len(decision["source_fragments"]) == len(decision["results"]) == 1, "unsupported V2 transformation")
-            fragment, unit_input = decision["source_fragments"][0], decision["results"][0]
-            original = topics[target]
-            _require(all(fragment[key] == original[key] for key in ("source_id", "transcript_revision_id", "word_start_id", "word_end_id", "evidence_refs")), "V2 changes original bounds")
-            lineage = fragments[fragment["id"]]
-            _require(all(lineage[key] == value for key, value in fragment.items()) and all(lineage[key] == value for key, value in _span(fragment, evidence).items()), "V2 lineage quote/range differs")
-            unit = units[unit_input["id"]]
-            _require(all(unit[key] == value for key, value in unit_input.items()), "V2 result differs from decision")
-            disposition = "SEMANTIC_KNOWLEDGE" if decision["operations"] == ["ACCEPT"] else "NON_SEMANTIC_EXCLUDED"
-            _require(unit["disposition"] == disposition and unit["title"] == original["proposed_title"] and unit["summary"] == original["proposed_summary"], "V2 decision meaning differs")
-            _require(unit["fragment_refs"] == [fragment["id"]], "V2 fragment consumption differs")
-            _require(all(unit[key] == value for key, value in _span(fragment, evidence).items() if key != "quote"), "V2 result range differs")
-            provenance = unit["provenance"]
-            _require(provenance["review_decision_id"] == decision["id"] and provenance["decision_artifact_sha256"] == refs["decisions"]["sha256"] and provenance["canonical_evidence_sha256"] == refs["evidence"]["sha256"] and provenance["word_timeline_sha256"] == refs["word_timeline"]["sha256"], "V2 result lineage differs")
-            actor = lineage["review_decision_provenance"]
-            _require(actor["actor_id"] == decisions["reviewer"]["actor_id"] and actor["actor_type"] == decisions["reviewer"]["actor_type"]
-                and actor["review_decision_id"] == decision["id"] and actor["decision_artifact_sha256"] == refs["decisions"]["sha256"], "V2 fragment actor differs")
+            _require({key: value for key, value in decision.items() if key != "timestamp"} == expected_by_topic[target], "unsupported or altered V2 transformation")
+            local_fragments = {fragment["id"]: fragment for fragment in decision["source_fragments"]}
+            for fragment in local_fragments.values():
+                lineage = fragments[fragment["id"]]
+                _require(all(lineage[key] == value for key, value in fragment.items()) and all(lineage[key] == value for key, value in _span(fragment, evidence).items()), "V2 lineage quote/range differs")
+                actor = lineage["review_decision_provenance"]
+                _require(actor["actor_id"] == decisions["reviewer"]["actor_id"] and actor["actor_type"] == decisions["reviewer"]["actor_type"]
+                    and actor["review_decision_id"] == decision["id"] and actor["decision_artifact_sha256"] == refs["decisions"]["sha256"], "V2 fragment actor differs")
+            for unit_input in decision["results"]:
+                unit = units[unit_input["id"]]
+                fragment = local_fragments[unit_input["fragment_refs"][0]]
+                _require(all(unit[key] == value for key, value in unit_input.items()), "V2 result differs from decision")
+                _require(unit["source_id"] == fragment["source_id"] and unit["transcript_revision_id"] == fragment["transcript_revision_id"]
+                    and unit["word_start_id"] == fragment["word_start_id"] and unit["word_end_id"] == fragment["word_end_id"], "V2 result source differs")
+                _require(all(unit[key] == value for key, value in _span(fragment, evidence).items() if key != "quote"), "V2 result range differs")
+                provenance = unit["provenance"]
+                _require(provenance["review_decision_id"] == decision["id"] and provenance["decision_artifact_sha256"] == refs["decisions"]["sha256"] and provenance["canonical_evidence_sha256"] == refs["evidence"]["sha256"] and provenance["word_timeline_sha256"] == refs["word_timeline"]["sha256"], "V2 result lineage differs")
         markdown = ["# Проверенные фрагменты", "", "Результат проверки точных фрагментов; Canonical Knowledge не создавался.", ""]
         for disposition, label in (("semantic_knowledge", "Включён в знания"), ("non_semantic_excluded", "Исключён из знаний")):
             for unit in result[disposition]:
@@ -317,8 +367,15 @@ def _validate(manifest, files):
                     f"Источник: {manifest['source_id']}; {unit['locator']['start_seconds']}–{unit['locator']['end_seconds']} с.", "",
                     "> " + quote.replace("\n", "\n> "), ""])
         _require(payload(manifest["result"]["markdown"]) == "\n".join(markdown).encode(), "readable fragments contradict verified result")
-    accepted = sum(item.get("action") == "ACCEPT" or item.get("operations") == ["ACCEPT"] for item in decision_records.values())
-    _require(receipt["accepted"] == accepted and receipt["rejected"] == len(topics) - accepted, "receipt counts differ")
+        if "navigation" in records:
+            context = records["navigation"]
+            _validate_navigation_context(context, manifest, evidence)
+            _require(files.get("view/notebook.md") == _notebook_markdown(result, context),
+                     "notebook source links contradict verified fragments")
+            expected_files.add("view/notebook.md")
+    accepted = sum(item.get("action") == "ACCEPT" for item in decision_records.values()) if kind == V1 else len(result["semantic_knowledge"])
+    rejected = len(topics) - accepted if kind == V1 else len(result["non_semantic_excluded"])
+    _require(receipt["accepted"] == accepted and receipt["rejected"] == rejected, "receipt counts differ")
     _require(set(files) == expected_files, "unexpected unbound package files")
 
 
@@ -330,7 +387,7 @@ def validate_reviewed_result_package(manifest, files):
         raise PublishingError("Reviewed result package validation failed: " + str(error)) from error
 
 
-def build_reviewed_result_package(*, project_dir, source_id, decisions_path, project_id, project_slug):
+def build_reviewed_result_package(*, project_dir, source_id, decisions_path, project_id, project_slug, navigation_context=None):
     root = Path(project_dir).resolve(strict=True)
     decision_file = _inside(Path(decisions_path), root, "saved review decisions")
     package_dir = decision_file.parent
@@ -341,9 +398,8 @@ def build_reviewed_result_package(*, project_dir, source_id, decisions_path, pro
     receipt_path = _inside(package_dir / "result/result.json", root, "completed review receipt")
     ledger = json.loads(decision_file.read_text())
     v2 = ledger.get("schema_version") == "2.0.0"
-    choices = [{"topic_id": item["target_ids"][0],
-                "action": ("ACCEPT" if item["operations"] == ["ACCEPT"] else "REJECT") if v2 else item["action"],
-                "reason": item["reason"]} for item in ledger["decisions"]]
+    choices = v2_replay_choices(ledger) if v2 else [{"topic_id": item["target_ids"][0],
+                "action": item["action"], "reason": item["reason"]} for item in ledger["decisions"]]
     before = _sha256(decision_file)
     replay = apply_topic_review(root, source_id=source_id, expected_package_sha256=package_dir.name,
                                reviewer_id=ledger["reviewer"]["actor_id"], decisions=choices,
@@ -371,6 +427,8 @@ def build_reviewed_result_package(*, project_dir, source_id, decisions_path, pro
         kind = V2 if replay["status"] == "REVIEWED_TOPICS_CREATED" else V1
         portable_binding = {key: binding[key] for key in ("source_id", "evidence_sha256", "topics_sha256", "package_sha256")}
         portable_binding["review_mode"] = "EXACT_FRAGMENTS_V2" if kind == V2 else V1
+        if binding.get("exact_fragments") is True:
+            portable_binding["exact_fragments"] = True
         if kind == V2:
             add("word_timeline", Path(binding["timeline_path"]), "provenance/word_timeline.json")
             portable_binding["timeline_sha256"] = binding["timeline_sha256"]
@@ -390,6 +448,14 @@ def build_reviewed_result_package(*, project_dir, source_id, decisions_path, pro
         provenance["binding"] = {"path": "provenance/binding.json", "sha256": _sha(files["provenance/binding.json"])}
         files["result/result.json"] = _inside(result_path, root, "review result").read_bytes()
         files["result/result.md"] = _inside(markdown_path, root, "review Markdown").read_bytes()
+        if navigation_context is not None:
+            _require(kind == V2, "notebook navigation requires reviewed fragments V2")
+            context = dict(navigation_context)
+            _validate_navigation_context(context, {"project_id": project_id, "source_id": source_id},
+                                         json.loads(files["provenance/canonical_evidence.json"]))
+            files["provenance/navigation.json"] = canonical_json(context) + b"\n"
+            provenance["navigation"] = {"path": "provenance/navigation.json", "sha256": _sha(files["provenance/navigation.json"])}
+            files["view/notebook.md"] = _notebook_markdown(json.loads(files["result/result.json"]), context)
         result_ref = {"path": "result/result.json", "sha256": _sha(files["result/result.json"]),
                       "markdown": {"path": "result/result.md", "sha256": _sha(files["result/result.md"])}}
         manifest = {"artifact_type": TYPE, "schema_version": "1.0", "project_id": project_id, "project_slug": project_slug,

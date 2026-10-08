@@ -30,7 +30,8 @@ class MachineEvidenceIntegrationTests(unittest.TestCase):
         self.args = dict(source_id="urn:integra:source:machine-test", media_path=str(self.media),
             transcript_path=str(self.text), word_timeline_path=str(self.timeline))
         self.environment = patch.dict(os.environ, {"INTEGRA_SEMINARTEXT_CHECKOUT": str(CHECKOUT),
-            "PYTHONPATH": str(ROOT / ".runtime-components/review-python"), "PYTHONDONTWRITEBYTECODE": "1"})
+            "PYTHONPATH": os.environ.get("INTEGRA_TEST_REVIEW_PYTHONPATH", str(ROOT / ".runtime-components/review-python")),
+            "PYTHONDONTWRITEBYTECODE": "1"})
         self.environment.start()
         self.addCleanup(self.environment.stop)
 

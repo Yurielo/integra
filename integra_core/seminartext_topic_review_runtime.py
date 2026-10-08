@@ -10,6 +10,7 @@ from contextlib import contextmanager
 import fcntl
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -142,6 +143,9 @@ def _presentation(package_path):
             "package_path": str(package_path), "package_sha256": _sha256(package_path),
             "topics": [{"id": item["id"], "title": item["proposed_title"],
                         "summary": item["proposed_summary"], "quote": item["quote"],
+                        "word_start_id": item["word_start_id"], "word_end_id": item["word_end_id"],
+                        "transcript_revision_id": item["transcript_revision_id"],
+                        "source_id": item["source_id"], "evidence_refs": item["evidence_refs"],
                         "start_seconds": item["locator"]["start_seconds"],
                         "end_seconds": item["locator"]["end_seconds"]} for item in package["topics"]]}
 
@@ -218,7 +222,8 @@ def _bound_mode(binding, package, snapshot_path):
     """Recover pre-V2 metadata only when unchanged evidence proves the V1 path."""
     if snapshot_path.is_symlink() or _sha256(snapshot_path) != binding["evidence_sha256"]:
         raise ValueError("Evidence snapshot changed")
-    mode = _review_mode(package, json.loads(snapshot_path.read_text()))
+    mode = ("EXACT_FRAGMENTS_V2" if binding.get("exact_fragments") is True else
+            _review_mode(package, json.loads(snapshot_path.read_text())))
     recorded = binding.get("review_mode")
     if "review_mode" not in binding and mode == "CANONICAL_KNOWLEDGE_V1":
         return mode
@@ -227,7 +232,8 @@ def _bound_mode(binding, package, snapshot_path):
     return mode
 
 
-def prepare_topic_review(project_dir, *, source_id, canonical_evidence_path, topics_path):
+def prepare_topic_review(project_dir, *, source_id, canonical_evidence_path, topics_path, exact_fragments=False):
+    """Prepare the pinned review package; opt-in K1 mode never selects the V1 compiler."""
     runtime = preflight()["runtime"]
     root = Path(project_dir).resolve(strict=True)
     evidence = _inside(Path(canonical_evidence_path), root, "Canonical Evidence")
@@ -235,8 +241,11 @@ def prepare_topic_review(project_dir, *, source_id, canonical_evidence_path, top
     with _locked(root, source_id) as directory:
         binding = {"source_id": source_id, "evidence_path": str(evidence), "evidence_sha256": _sha256(evidence),
                    "topics_path": str(topics), "topics_sha256": _sha256(topics)}
+        if exact_fragments:
+            binding["exact_fragments"] = True
         drafts = prepare_topic_review_input(root, source_id=source_id,
-                                           canonical_evidence_path=str(evidence), topics_path=str(topics))
+                                           canonical_evidence_path=str(evidence), topics_path=str(topics),
+                                           exact_fragments=exact_fragments)
         binding["boundary_mappings"] = drafts["boundary_mappings"]
         with tempfile.TemporaryDirectory(prefix=".prepare-", dir=directory) as temporary:
             stage = Path(temporary)
@@ -248,7 +257,8 @@ def prepare_topic_review(project_dir, *, source_id, canonical_evidence_path, top
             _invoke(runtime, REVIEW_TOOL, "prepare", component, "--drafts", drafts["topic_drafts_path"], "--output", stage / "review")
             package_path = stage / "review/review_package.json"
             snapshot = json.loads((component / "evidence/canonical_bundle.json").read_text())
-            binding["review_mode"] = _review_mode(json.loads(package_path.read_text()), snapshot)
+            binding["review_mode"] = ("EXACT_FRAGMENTS_V2" if exact_fragments else
+                                      _review_mode(json.loads(package_path.read_text()), snapshot))
             if binding["review_mode"] == "EXACT_FRAGMENTS_V2":
                 timeline = _inside(evidence.parent / "word_timeline.json", root, "component Word Timeline")
                 timeline_bytes = timeline.read_bytes()
@@ -277,7 +287,7 @@ def prepare_topic_review(project_dir, *, source_id, canonical_evidence_path, top
             return _presentation(target / "review/review_package.json")
 
 
-def _choices(package, reviewer_id, decisions):
+def _choices(package, reviewer_id, decisions, *, v2=False):
     if not isinstance(reviewer_id, str) or re.fullmatch(r"[a-z][a-z0-9._:-]{2,127}", reviewer_id) is None:
         raise ValueError("reviewer identifier must be a stable lowercase identifier")
     if not isinstance(decisions, list) or not decisions:
@@ -285,17 +295,105 @@ def _choices(package, reviewer_id, decisions):
     by_id = {item["id"]: item for item in package["topics"]}
     choices = {}
     for item in decisions:
-        if not isinstance(item, dict) or set(item) != {"topic_id", "action", "reason"}:
+        required = {"topic_id", "action", "reason"}
+        optional = {"new_title", "new_summary", "word_start_id", "word_end_id"}
+        editing = isinstance(item, dict) and v2 and item.get("action") in {"EDIT", "RENAME"}
+        if (not isinstance(item, dict) or not required.issubset(item)
+                or (not editing and set(item) != required)
+                or (editing and not set(item).issubset(required | optional))):
             raise ValueError("each decision requires topic_id, action and reason")
         topic_id = item["topic_id"]
         if not isinstance(topic_id, str) or topic_id not in by_id or topic_id in choices:
             raise ValueError("unknown or duplicate topic decision")
-        if item["action"] not in ("ACCEPT", "REJECT") or not isinstance(item["reason"], str) or not item["reason"].strip():
+        if item["action"] not in (("ACCEPT", "REJECT", "EDIT", "RENAME") if v2 else ("ACCEPT", "REJECT")) or not isinstance(item["reason"], str) or not item["reason"].strip():
             raise ValueError("an explicit ACCEPT/REJECT action and reason are required")
+        if editing:
+            if (not isinstance(item.get("new_title"), str) or not item["new_title"].strip()
+                    or not isinstance(item.get("new_summary"), str)):
+                raise ValueError("an exact fragment edit requires title and summary")
+            if ("word_start_id" in item) != ("word_end_id" in item):
+                raise ValueError("an exact fragment edit requires both word endpoints")
+            if any(not isinstance(item[key], str) or not item[key] for key in ("word_start_id", "word_end_id") if key in item):
+                raise ValueError("an exact fragment edit requires canonical word IDs")
         choices[topic_id] = dict(item)
+        if editing:
+            choices[topic_id].update(action="EDIT",
+                word_start_id=item.get("word_start_id", by_id[topic_id]["word_start_id"]),
+                word_end_id=item.get("word_end_id", by_id[topic_id]["word_end_id"]))
     if set(choices) != set(by_id):
         raise ValueError("every topic requires an explicit decision")
     return [choices[key] for key in sorted(choices)]
+
+
+def _v2_choice_records(package, evidence, choices):
+    """Translate bounded UI choices into the existing lossless V2 partition."""
+    by_id = {topic["id"]: topic for topic in package["topics"]}
+    words = {word["id"]: word for word in evidence["words"]}
+    records = []
+    for choice in choices:
+        topic = by_id[choice["topic_id"]]
+        token = hashlib.sha256(topic["id"].encode()).hexdigest()
+        first, last = words[topic["word_start_id"]], words[topic["word_end_id"]]
+        selected_first = words.get(choice.get("word_start_id", first["id"]))
+        selected_last = words.get(choice.get("word_end_id", last["id"]))
+        if (selected_first is None or selected_last is None
+                or any(word["source_id"] != topic["source_id"] or word["transcript_revision_id"] != topic["transcript_revision_id"]
+                       for word in (selected_first, selected_last))
+                or not first["sequence"] <= selected_first["sequence"] <= selected_last["sequence"] <= last["sequence"]):
+            raise ValueError("edited word range must stay inside the original exact Topic")
+        if choice["action"] in {"EDIT", "RENAME"} and any(word.get("alignment_status") == "unaligned"
+               or any(isinstance(word.get(key), bool) or not isinstance(word.get(key), (int, float))
+                      or not math.isfinite(word[key]) for key in ("start_seconds", "end_seconds"))
+               for word in (selected_first, selected_last)):
+            raise ValueError("exact fragment endpoints require available aligned timing")
+        source_words = {word["sequence"]: word for word in words.values()
+                        if word["source_id"] == topic["source_id"] and word["transcript_revision_id"] == topic["transcript_revision_id"]}
+        if any(sequence not in source_words for sequence in range(first["sequence"], last["sequence"] + 1)):
+            raise ValueError("the original exact Topic has a non-contiguous Word Timeline")
+        ranges = []
+        if selected_first["sequence"] > first["sequence"]:
+            ranges.append(("_prefix", first, source_words[selected_first["sequence"] - 1], False))
+        ranges.append(("", selected_first, selected_last, choice["action"] != "REJECT"))
+        if selected_last["sequence"] < last["sequence"]:
+            ranges.append(("_suffix", source_words[selected_last["sequence"] + 1], last, False))
+        editing = choice["action"] in {"EDIT", "RENAME"}
+        operations = ["RENAME"] if editing else ["ACCEPT" if choice["action"] == "ACCEPT" else "EXCLUDE"]
+        if len(ranges) > 1:
+            operations += ["TRIM", "EXCLUDE"]
+        fragments, units = [], []
+        for suffix, start, end, included in ranges:
+            fragment_id = "fragment_" + token + suffix
+            fragments.append({"id": fragment_id, "source_topic_id": topic["id"],
+                "source_id": topic["source_id"], "transcript_revision_id": topic["transcript_revision_id"],
+                "word_start_id": start["id"], "word_end_id": end["id"], "evidence_refs": topic["evidence_refs"]})
+            units.append({"id": "reviewed_fragment_" + token + suffix,
+                "disposition": "SEMANTIC_KNOWLEDGE" if included else "NON_SEMANTIC_EXCLUDED",
+                "title": choice["new_title"] if included and editing else topic["proposed_title"],
+                "summary": choice["new_summary"] if included and editing else topic["proposed_summary"],
+                "sequence": topic["sequence"], "fragment_refs": [fragment_id], "evidence_refs": topic["evidence_refs"]})
+        records.append({"id": "decision_" + token, "operations": operations, "target_ids": [topic["id"]],
+            "expected_topics": [{"topic_id": topic["id"], "topic_sha256": topic["topic_sha256"]}],
+            "source_fragments": fragments, "results": units, "reason": choice["reason"]})
+    return records
+
+
+def v2_replay_choices(ledger):
+    """Recover the exact bounded UI intent, including edits and trimmed ranges."""
+    choices = []
+    for decision in ledger["decisions"]:
+        semantic = [unit for unit in decision["results"] if unit["disposition"] == "SEMANTIC_KNOWLEDGE"]
+        editing = "RENAME" in decision["operations"]
+        choice = {"topic_id": decision["target_ids"][0],
+                  "action": "EDIT" if editing else ("ACCEPT" if semantic else "REJECT"), "reason": decision["reason"]}
+        if editing:
+            if len(semantic) != 1 or len(semantic[0]["fragment_refs"]) != 1:
+                raise ValueError("unsupported edited V2 composition")
+            fragments = {fragment["id"]: fragment for fragment in decision["source_fragments"]}
+            fragment = fragments[semantic[0]["fragment_refs"][0]]
+            choice.update(new_title=semantic[0]["title"], new_summary=semantic[0]["summary"])
+            choice.update(word_start_id=fragment["word_start_id"], word_end_id=fragment["word_end_id"])
+        choices.append(choice)
+    return choices
 
 
 def _apply_fragments_v2(root, package_dir, runtime, source_id, package_path, package,
@@ -309,28 +407,10 @@ def _apply_fragments_v2(root, package_dir, runtime, source_id, package_path, pac
         previous = json.loads(_inside(decision_path, root, "persisted fragment decisions").read_text())
         if previous.get("artifact_id") != "review_decisions_" + key:
             raise ValueError("this package already has different persisted decisions")
-    by_id = {topic["id"]: topic for topic in package["topics"]}
-    records = []
-    for number, choice in enumerate(choices):
-        topic = by_id[choice["topic_id"]]
-        token = hashlib.sha256(topic["id"].encode()).hexdigest()
-        fragment_id = "fragment_" + token
-        records.append({
-            "id": "decision_" + token,
-            "operations": ["ACCEPT" if choice["action"] == "ACCEPT" else "EXCLUDE"],
-            "target_ids": [topic["id"]],
-            "expected_topics": [{"topic_id": topic["id"], "topic_sha256": topic["topic_sha256"]}],
-            "source_fragments": [{"id": fragment_id, "source_topic_id": topic["id"],
-                "source_id": topic["source_id"], "transcript_revision_id": topic["transcript_revision_id"],
-                "word_start_id": topic["word_start_id"], "word_end_id": topic["word_end_id"],
-                "evidence_refs": topic["evidence_refs"]}],
-            "results": [{"id": "reviewed_fragment_" + token,
-                "disposition": "SEMANTIC_KNOWLEDGE" if choice["action"] == "ACCEPT" else "NON_SEMANTIC_EXCLUDED",
-                "title": topic["proposed_title"], "summary": topic["proposed_summary"],
-                "sequence": topic["sequence"], "fragment_refs": [fragment_id], "evidence_refs": topic["evidence_refs"]}],
-            "reason": choice["reason"],
-            "timestamp": previous["decisions"][number]["timestamp"] if previous else _now(),
-        })
+    evidence = json.loads((package_dir / "project/evidence/canonical_bundle.json").read_text())
+    records = _v2_choice_records(package, evidence, choices)
+    for number, record in enumerate(records):
+        record["timestamp"] = previous["decisions"][number]["timestamp"] if previous else _now()
     ledger = {"schema_version": "2.0.0", "artifact_type": "seminartext.topic_review_decisions",
               "artifact_id": "review_decisions_" + key, "review_package_id": package["artifact_id"],
               "review_package_sha256": package_sha256,
@@ -403,11 +483,11 @@ def apply_topic_review(project_dir, *, source_id, expected_package_sha256, revie
             if _sha256(current) != binding[name + "_sha256"]:
                 raise ValueError(f"{name} changed after review preparation")
         package = json.loads(package_path.read_text())
-        choices = _choices(package, reviewer_id, decisions)
         snapshot_path = _inside(package_dir / "project/evidence/canonical_bundle.json", root, "Evidence snapshot")
         if _sha256(snapshot_path) != binding["evidence_sha256"]:
             raise ValueError("Evidence snapshot changed")
         mode = _bound_mode(binding, package, snapshot_path)
+        choices = _choices(package, reviewer_id, decisions, v2=mode == "EXACT_FRAGMENTS_V2")
         if mode == "EXACT_FRAGMENTS_V2":
             if boundaries_acknowledged is not True:
                 raise ValueError("explicit confirmation of the displayed exact boundaries is required")

@@ -410,13 +410,16 @@ def create_machine_evidence(project_dir: Path, *, source_id: str, media_path: st
 
 
 def prepare_topic_review_input(project_dir: Path, *, source_id: str, canonical_evidence_path: str,
-                               topics_path: str) -> dict[str, Any]:
+                               topics_path: str, exact_fragments: bool = False) -> dict[str, Any]:
     """Bind real SeminarText topic proposals to canonical evidence for review.
 
     This is a lossless contract adapter, not a topic generator and not a review
     decision.  It refuses any source result that is not explicitly marked
-    ``REVIEW_REQUIRED``.
+    ``REVIEW_REQUIRED``. The opt-in fragment mode retains the exact aligned
+    word overlap; the default Process mode retains its complete-segment mapping.
     """
+    if not isinstance(exact_fragments, bool):
+        raise ValueError("exact fragment mode must be an explicit boolean")
     root = Path(project_dir).resolve(strict=True)
     evidence_path = _inside(Path(canonical_evidence_path), root, "Canonical Evidence")
     topics_file = _inside(Path(topics_path), root, "SeminarText topic drafts")
@@ -449,7 +452,8 @@ def prepare_topic_review_input(project_dir: Path, *, source_id: str, canonical_e
     project = evidence.get("project") if isinstance(evidence.get("project"), dict) else {}
     if not isinstance(project.get("id"), str) or not isinstance(project.get("title"), str):
         raise ValueError("Canonical Evidence has an invalid project")
-    token = hashlib.sha256((source_id + _sha256(topics_file)).encode("utf-8")).hexdigest()[:20]
+    token = hashlib.sha256((source_id + _sha256(topics_file)
+                           + (":exact-fragments-v2" if exact_fragments else "")).encode("utf-8")).hexdigest()[:20]
     seminar_id = f"seminar_{token}"
     words_by_id = {item.get("id"): item for item in timeline if isinstance(item.get("id"), str)}
     evidence_items: list[dict[str, Any]] = []
@@ -478,10 +482,11 @@ def prepare_topic_review_input(project_dir: Path, *, source_id: str, canonical_e
                                    key=lambda segment: segment.get("sequence", -1))
         if not selected_segments:
             raise ValueError("SeminarText topic cannot be mapped to a complete BenchmarkSegment")
-        first, last = words_by_id[selected_segments[0]["word_start_id"]], words_by_id[selected_segments[-1]["word_end_id"]]
+        first, last = ((aligned_first, aligned_last) if exact_fragments else
+                       (words_by_id[selected_segments[0]["word_start_id"]], words_by_id[selected_segments[-1]["word_end_id"]]))
         if not isinstance(first.get("id"), str) or not isinstance(last.get("id"), str):
             raise ValueError("Canonical Evidence Word Timeline has invalid IDs")
-        expected = first.get("sequence")
+        expected = words_by_id[selected_segments[0]["word_start_id"]].get("sequence")
         if not isinstance(expected, int):
             raise ValueError("Canonical Evidence Word Timeline has invalid sequences")
         for segment in selected_segments:
@@ -489,7 +494,7 @@ def prepare_topic_review_input(project_dir: Path, *, source_id: str, canonical_e
             if segment_first.get("sequence") != expected or not isinstance(segment_last.get("sequence"), int):
                 raise ValueError("BenchmarkSegment mapping is not a complete contiguous source span")
             expected = segment_last["sequence"] + 1
-        if expected != last.get("sequence", -2) + 1:
+        if expected != words_by_id[selected_segments[-1]["word_end_id"]].get("sequence", -2) + 1:
             raise ValueError("BenchmarkSegment mapping has an invalid final boundary")
         evidence_id = f"evidence_topic_{token}_{sequence:04d}"
         evidence_items.append({"id": evidence_id, "claim": "Source passage selected for human topic review.",
@@ -504,7 +509,7 @@ def prepare_topic_review_input(project_dir: Path, *, source_id: str, canonical_e
                              "lifecycle_status": "REVIEW_REQUIRED"})
         boundary_mappings.append({
             "topic_draft_id": f"topic_draft_{token}_{sequence:04d}",
-            "mapping": "COMPLETE_BENCHMARK_SEGMENTS",
+            "mapping": "EXACT_ALIGNED_WORD_RANGE" if exact_fragments else "COMPLETE_BENCHMARK_SEGMENTS",
             "machine_topic": {"index": sequence, "start_seconds": start, "end_seconds": end,
                               "start_segment_id": proposal.get("start_segment_id"),
                               "evidence_start_id": proposal.get("evidence_start_id"),
@@ -522,7 +527,8 @@ def prepare_topic_review_input(project_dir: Path, *, source_id: str, canonical_e
               "seminar": {"id": seminar_id, "title": project["title"]},
               "generator": {"id": "generator_integra_seminartext_topics", "version": "1.0",
                             "configuration_sha256": content_sha256({"topic_output_sha256": _sha256(topics_file),
-                                                                      "canonical_evidence_sha256": _sha256(evidence_path)})},
+                                                                      "canonical_evidence_sha256": _sha256(evidence_path),
+                                                                      **({"exact_fragments": True} if exact_fragments else {})})},
               "evidence": evidence_items, "topics": draft_topics}
     drafts_sha = content_sha256(drafts)
     directory = _review_root(root, source_id) / "topic-drafts"; directory.mkdir(parents=True, exist_ok=True)

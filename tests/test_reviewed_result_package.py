@@ -11,16 +11,16 @@ from integra_core.reviewed_result_package import build_reviewed_result_package, 
 from tests import test_seminartext_topic_review_runtime as fixtures
 
 
-@unittest.skipUnless((fixtures.ROOT / ".runtime-components/seminartext-pinned/seminartext_modules/human_review_workflow.py").is_file(), "requires pinned SeminarText checkout")
+@unittest.skipUnless((fixtures.PINNED / "seminartext_modules/human_review_workflow.py").is_file(), "requires pinned SeminarText checkout")
 class ReviewedResultPackageTests(unittest.TestCase):
     def setUp(self):
         self.fixture = fixtures.TopicReviewRuntimeTests()
         self.fixture.setUp()
         self.addCleanup(self.fixture.doCleanups)
 
-    def build(self, result):
+    def build(self, result, **kwargs):
         return build_reviewed_result_package(project_dir=self.fixture.project, source_id=self.fixture.source_id,
-            decisions_path=result["decisions_path"], project_id="urn:integra:project:00000000-0000-0000-0000-000000000001", project_slug="synthetic")
+            decisions_path=result["decisions_path"], project_id="urn:integra:project:00000000-0000-0000-0000-000000000001", project_slug="synthetic", **kwargs)
 
     def reviewed(self, v2=False):
         package = self.fixture.prepare_fragments() if v2 else self.fixture.prepare()
@@ -43,6 +43,54 @@ class ReviewedResultPackageTests(unittest.TestCase):
         self.assertFalse(any(path.startswith("view/") for path in files))
         self.assertEqual(self.build(result), (manifest, files))
         validate_reviewed_result_package(manifest, files)
+
+    def test_v2_edited_partition_package_replays_without_losing_edits(self):
+        from integra_core.seminartext_topic_review_runtime import prepare_topic_review
+        package = prepare_topic_review(self.fixture.project, source_id=self.fixture.source_id,
+            canonical_evidence_path=self.fixture.evidence, topics_path=str(self.fixture.topics), exact_fragments=True)
+        choices = self.fixture.decisions(package)
+        words = sorted(json.loads(Path(self.fixture.evidence).read_text())["words"], key=lambda item: item["sequence"])
+        choices[0].update(action="RENAME", new_title="Сохранённая правка", new_summary="Проверенное описание",
+                          word_start_id=words[1]["id"], word_end_id=words[30]["id"])
+        result = self.fixture.apply(package, choices, boundaries_acknowledged=True)
+        manifest, files = self.build(result)
+        self.assertEqual(manifest["result_kind"], "REVIEWED_FRAGMENTS_V2")
+        self.assertEqual(self.build(result), (manifest, files))
+        payload = json.loads(files[manifest["result"]["path"]])
+        self.assertEqual(payload["semantic_knowledge"][0]["title"], "Сохранённая правка")
+        self.assertEqual(payload["semantic_knowledge"][0]["word_end_id"], words[30]["id"])
+        self.assertEqual(len(payload["fragment_lineage"]), 4)
+        validate_reviewed_result_package(manifest, files)
+
+    def test_v2_notebook_links_bind_exact_source_revision_and_fragments(self):
+        from urllib.parse import urlencode
+        result = self.reviewed(v2=True)
+        evidence = json.loads(Path(self.fixture.evidence).read_text())
+        context = {"project_id": "urn:integra:project:00000000-0000-0000-0000-000000000001",
+            "run_id": "urn:integra:run:00000000-0000-0000-0000-000000000002", "source_id": self.fixture.source_id,
+            "source_revision_sha256": evidence["sources"][0]["content_sha256"],
+            "notebook_id": "urn:integra:artifact:synthetic-notebook"}
+        manifest, files = self.build(result, navigation_context=context)
+        self.assertEqual(self.build(result, navigation_context=context), (manifest, files))
+        reviewed = json.loads(files[manifest["result"]["path"]])
+        fragment_id = reviewed["semantic_knowledge"][0]["fragment_refs"][0]
+        expected = "integra://knowledge/fragment?" + urlencode({"project_id": context["project_id"], "run_id": context["run_id"],
+            "source_id": context["source_id"], "fragment_id": fragment_id, "source_revision_sha256": context["source_revision_sha256"],
+            "notebook_id": context["notebook_id"]})
+        self.assertIn(expected.encode(), files["view/notebook.md"])
+        original_notebook = files["view/notebook.md"]
+        files["view/notebook.md"] = original_notebook.replace(urlencode({"notebook_id": context["notebook_id"]}).encode(),
+                                                            b"notebook_id=urn%3Aintegra%3Aartifact%3Aforged-notebook")
+        self.rehash_outer(manifest, files)
+        with self.assertRaisesRegex(PublishingError, "source links"):
+            validate_reviewed_result_package(manifest, files)
+        files["view/notebook.md"] = original_notebook
+        files["view/notebook.md"] = files["view/notebook.md"].replace(fragment_id.encode(), b"invented_fragment")
+        self.rehash_outer(manifest, files)
+        with self.assertRaisesRegex(PublishingError, "source links"):
+            validate_reviewed_result_package(manifest, files)
+        with self.assertRaisesRegex(ValueError, "source revision differs"):
+            self.build(result, navigation_context=context | {"source_revision_sha256": "0" * 64})
 
     @staticmethod
     def rehash_outer(manifest, files):
