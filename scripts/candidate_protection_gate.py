@@ -114,7 +114,8 @@ def require_deletion(path: Path) -> None:
     except ValueError as error:
         raise ValueError('deletion target is outside managed authority') from error
     rows = [item for item in audit['entries'] if item['path'] == relative]
-    grant = registry['deletion_authorizations'].get(relative)
+    grant = {**registry.get('deletion_authorizations', {}),
+             **registry.get('withdrawal_deletion_authorizations', {})}.get(relative)
     if (len(rows) != 1 or rows[0]['classification'] != 'ELIGIBLE'
             or not isinstance(grant, dict)
             or not grant.get('authority_ref')
@@ -153,7 +154,8 @@ def require_deletion_continuation(lease: dict) -> None:
             or not registry.get('activation_authority_ref')
             or not registry.get('promotion_contract_integration_ref')
             or registry.get('deletion_enabled') is not True
-            or registry.get('deletion_authorizations', {}).get(lease.get('path')) != lease.get('grant')):
+            or {**registry.get('deletion_authorizations', {}),
+                **registry.get('withdrawal_deletion_authorizations', {})}.get(lease.get('path')) != lease.get('grant')):
         raise ValueError('canonical deletion authority is unavailable')
     current, proposals, canonical = protection.fetch_canonical(registry)
     if protection.digest(canonical) != lease.get('canonical_sha256'):
