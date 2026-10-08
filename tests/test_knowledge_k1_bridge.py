@@ -112,6 +112,64 @@ class KnowledgeK1BridgeTests(unittest.TestCase):
             self.call("navigation", fragment_id=opened["topics"][0]["id"],
                       source_revision_sha256="0" * 64)
 
+    def discovery(self):
+        item = {"project": self.project, "run": json.loads(self.run_file.read_bytes())}
+        with patch.object(bridge, "_recent_runs", return_value=[item]), \
+                patch.object(bridge, "_reconcile_stale", side_effect=AssertionError("no reconciliation")), \
+                patch.object(notebook, "create_machine_evidence", side_effect=AssertionError("no Evidence regeneration")):
+            return bridge._knowledge_sources(self.app)[0]
+
+    def test_saved_notebook_remains_visible_when_source_missing_or_stale(self):
+        opened = self.call("open", create=True)
+        before = self.media.read_bytes()
+        self.media.unlink()
+        unavailable = self.discovery()
+        self.assertFalse(unavailable["eligible"])
+        self.assertFalse(unavailable["notebook_available"])
+        self.assertEqual(unavailable["notebook_id"], opened["notebook_id"])
+        self.assertEqual(unavailable["notebook_status"], "REVIEW_REQUIRED")
+        self.assertIn("reason", unavailable)
+        self.media.write_bytes(before)
+        self.media.write_bytes(before + b"changed")
+        stale = self.discovery()
+        self.assertEqual(stale["notebook_id"], opened["notebook_id"])
+        self.assertFalse(stale["notebook_available"])
+        self.assertIn("hash/revision", stale["reason"])
+        self.assertEqual(self.run_file.read_bytes(), self.run_before)
+
+    def test_saved_prior_notebook_is_not_mistaken_for_current_revision(self):
+        opened = self.call("open", create=True)
+        self.topics.write_bytes(self.topics.read_bytes() + b" ")
+        found = self.discovery()
+        self.assertTrue(found["eligible"])
+        self.assertFalse(found["notebook_available"])
+        self.assertEqual(found["notebook_id"], opened["notebook_id"])
+        self.assertEqual(found["saved_notebook_count"], 1)
+        self.assertIn("артефакты Process изменились", found["reason"])
+
+    def test_invalid_saved_receipt_stays_visible_but_never_available(self):
+        opened = self.call("open", create=True)
+        path = notebook._state_path(self.root, self.ids["source_id"], opened["notebook_id"])
+        state = json.loads(path.read_bytes())
+        state["status"] = "REVIEWED_FRAGMENTS_V2"
+        self.write(path, state)
+        found = self.discovery()
+        self.assertEqual(found["notebook_status"], "UNAVAILABLE")
+        self.assertFalse(found["notebook_available"])
+        self.assertIn("receipt", found["reason"])
+
+    def test_material_title_revisions_and_assurance_come_from_persisted_contracts(self):
+        record = json.loads(self.run_file.read_bytes())
+        record["source_results"][0]["display_name"] = "Публичная демонстрационная запись"
+        self.write(self.run_file, record)
+        opened = self.call("open", create=True)
+        self.assertEqual(opened["source_title"], "Публичная демонстрационная запись")
+        self.assertEqual(opened["source_processing_state"], "COMPLETED")
+        self.assertEqual(opened["topics_revision_sha256"], notebook._sha256(self.topics))
+        self.assertEqual(opened["transcript_artifact_sha256"], notebook._sha256(self.text))
+        self.assertEqual(opened["transcript_revisions"][0]["transcript_provenance"]["verification_state"], "machine_unverified")
+        self.assertEqual(self.call("open"), opened)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -2080,7 +2080,7 @@ struct SidebarItem {
           let saved = sources.filter { ($0["notebook_status"] as? String) != "NOT_ADDED" }
           if saved.isEmpty { self.add(NSTextField(labelWithString: "Сохранённых конспектов пока нет")) }
           for source in saved {
-            let control = self.button("Открыть конспект · \(source["source_name"] ?? "Источник")", #selector(self.openKnowledgeSource(_:)), enabled: source["eligible"] as? Bool == true)
+            let control = self.button("Открыть конспект · \(source["source_name"] ?? "Источник")", #selector(self.openKnowledgeSource(_:)), enabled: source["notebook_available"] as? Bool == true)
             control.toolTip = "\(source["project_id"] ?? "")\n\(source["run_id"] ?? "")\n\(source["source_id"] ?? "")"
             self.add(control)
             if let reason = source["reason"] as? String { self.add(NSTextField(wrappingLabelWithString: "Недоступен: \(reason)")) }
@@ -2140,7 +2140,26 @@ struct SidebarItem {
     let notebook = knowledgeNotebook
     let complete = notebook["status"] as? String == "REVIEWED_FRAGMENTS_V2"
     reset("Тематический конспект", complete ? "Проверенные фрагменты. Это не Canonical Knowledge ACCEPTED." : "Проверка не завершена. Отложенные фрагменты нельзя экспортировать как проверенные.")
-    add(NSTextField(wrappingLabelWithString: "Источник: \(notebook["source_id"] ?? "")\nВерсия источника: \(notebook["source_revision_sha256"] ?? "")\nКонспект: \(notebook["notebook_id"] ?? "")\nТочность: диапазон слов. Исходный машинный текст не считается проверенным человеком."))
+    let processing = notebook["source_processing_state"] as? String == "COMPLETED" ? "Обработка завершена" : "Состояние обработки неизвестно"
+    add(NSTextField(wrappingLabelWithString: "Источник: \(notebook["source_title"] ?? "Источник")\n\(processing)\nID источника: \(notebook["source_id"] ?? "")\nВерсия источника: \(notebook["source_revision_sha256"] ?? "")\nВерсия тем: \(notebook["topics_revision_sha256"] ?? "")\nВерсия файла расшифровки: \(notebook["transcript_artifact_sha256"] ?? "")\nКонспект: \(notebook["notebook_id"] ?? "")\nТочность: диапазон слов."))
+    for revision in notebook["transcript_revisions"] as? [[String: Any]] ?? [] {
+      let provenance = revision["transcript_provenance"] as? [String: Any] ?? [:]
+      let verification: String
+      switch provenance["verification_state"] as? String {
+      case "machine_unverified": verification = "Машинная расшифровка: не проверена человеком"
+      case "selectively_verified": verification = "Расшифровка выборочно проверена человеком; остальные участки не подтверждены"
+      case "fully_human_verified": verification = "Расшифровка полностью проверена человеком"
+      default: verification = "Состояние проверки расшифровки неизвестно"
+      }
+      let origin: String
+      switch provenance["origin"] as? String {
+      case "machine_generated": origin = "Машинное распознавание"
+      case "human_verified": origin = "Проверенный человеком текст"
+      case "human_corrected": origin = "Исправленный человеком текст"
+      default: origin = "Происхождение текста не подтверждено"
+      }
+      add(NSTextField(wrappingLabelWithString: "\(verification)\nПроисхождение: \(origin)\nВерсия текста: \(revision["id"] ?? "")\nПроверка тематических фрагментов не изменяет статус исходной расшифровки."))
+    }
     add(button("Все конспекты", #selector(showKnowledgeLanding)))
     if !complete { add(button("Проверить фрагменты", #selector(reviewKnowledge))) }
     if complete { add(button("Экспортировать конспект в Obsidian", #selector(exportKnowledge))) }

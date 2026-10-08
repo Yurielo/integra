@@ -33,4 +33,4 @@ jobs:
         # The separate macOS wheel-hash cache is unchanged.
         run: |
           python3 -m pip install --require-hashes --only-binary=:all: --no-deps -r scripts/review-ci-requirements.txt
-          python3 -m unittest discover -s tests -v
+          ./scripts/run_review_tests.sh

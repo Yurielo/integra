@@ -665,6 +665,28 @@ def _store_reviewed_package(project, manifest, files):
             "result_kind": manifest["result_kind"], "published": False}
 
 
+def _saved_knowledge_notebooks(directory, identity):
+    """Discover saved identity without depending on still-available source bytes."""
+    from integra_core.knowledge_notebook import _read_state, _review_root
+    source_id = identity.get("source_id")
+    if not isinstance(source_id, str) or not source_id:
+        raise ValueError("saved notebook source identity is unavailable")
+    parent = _review_root(directory, source_id) / "knowledge"
+    if parent.is_symlink():
+        raise ValueError("saved notebook directory is unsafe")
+    if not parent.exists():
+        return []
+    if not parent.is_dir():
+        raise ValueError("saved notebook directory is unavailable")
+    saved = []
+    for path in sorted(parent.glob("*.json")):
+        state = _read_state(path, directory)
+        binding = state.get("source_binding", {})
+        if all(binding.get(key) == identity[key] for key in ("project_id", "run_id", "source_id")):
+            saved.append(state)
+    return saved
+
+
 def _knowledge_sources(root):
     from integra_core.knowledge_notebook import source_inputs, open_notebook
     available = []
@@ -675,9 +697,18 @@ def _knowledge_sources(root):
             request = {"project_id": project["project_id"], "run_id": run["run_id"], "source_id": source.get("source_id")}
             entry = request | {"project_name": project.get("name", "Проект"),
                                "source_name": source.get("display_name") or source.get("source_id"),
-                               "eligible": False, "notebook_status": "NOT_ADDED"}
+                               "eligible": False, "notebook_available": False,
+                               "notebook_status": "NOT_ADDED", "saved_notebook_count": 0}
             try:
                 directory = _project_dir(root, project["project_id"])
+                try:
+                    prior = _saved_knowledge_notebooks(directory, request)
+                except (ValueError, OSError, KeyError, TypeError) as error:
+                    entry.update(notebook_status="UNAVAILABLE", reason=_safe_error(error))
+                    raise
+                if prior:
+                    entry.update(notebook_status=prior[-1]["status"], notebook_id=prior[-1]["notebook_id"],
+                                 saved_notebook_count=len(prior))
                 source_inputs(directory, **request)
                 entry["eligible"] = True
                 try:
@@ -685,12 +716,27 @@ def _knowledge_sources(root):
                 except ValueError as error:
                     if str(error) != "Knowledge notebook has not been added":
                         raise
+                    if prior:
+                        entry["reason"] = "Сохранённая версия конспекта недоступна: исходные артефакты Process изменились"
                 else:
-                    entry.update(notebook_status=saved["status"], notebook_id=saved["notebook_id"])
+                    entry.update(notebook_status=saved["status"], notebook_id=saved["notebook_id"],
+                                 notebook_available=True)
             except (ValueError, OSError, KeyError, TypeError) as error:
                 entry.update(eligible=False, reason=_safe_error(error))
             available.append(entry)
     return available
+
+
+def _knowledge_material(project, identity, notebook):
+    """Presentation facts come from persisted Process, never inferred assurance."""
+    from integra_core.knowledge_notebook import source_inputs
+    _, paths, binding, result = source_inputs(project, **identity)
+    return notebook | {
+        "source_title": result.get("display_name") or paths["media"].name,
+        "source_processing_state": result["state"],
+        "topics_revision_sha256": binding["artifacts"]["topics"]["sha256"],
+        "transcript_artifact_sha256": binding["artifacts"]["transcript"]["sha256"],
+    }
 
 
 def _knowledge(root, request, action):
@@ -704,7 +750,7 @@ def _knowledge(root, request, action):
             raise ValueError("exported source link belongs to a different source revision")
         return result
     if action == "open" and request.get("create") is not True:
-        return open_notebook(project, **identity)
+        return _knowledge_material(project, identity, open_notebook(project, **identity))
     # Reuse the existing project/artifact lease service for notebook writes.
     from integra_core.identity import derive_imported_id
     version = content_sha256(identity)
@@ -713,10 +759,11 @@ def _knowledge(root, request, action):
                                "version_sha256": version}, "integra.knowledge_review")
     try:
         if action == "open":
-            return open_notebook(project, **identity, create=True)
+            return _knowledge_material(project, identity, open_notebook(project, **identity, create=True))
         if action == "save":
-            return save_notebook(project, **identity, expected_state_sha256=request.get("expected_state_sha256"),
-                                 decisions=request.get("decisions"), reviewer_id=request.get("reviewer_id"))
+            saved = save_notebook(project, **identity, expected_state_sha256=request.get("expected_state_sha256"),
+                                  decisions=request.get("decisions"), reviewer_id=request.get("reviewer_id"))
+            return _knowledge_material(project, identity, saved)
         if action == "package":
             manifest, files = notebook_package(project, **identity)
             return _store_reviewed_package(project, manifest, files)

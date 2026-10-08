@@ -1,0 +1,129 @@
+{
+  "artifact_type": "integra.knowledge_k1_recovery_checkpoint",
+  "issue": 224,
+  "branch": "codex/issue-224-knowledge-k1",
+  "preserved_parent_commit": "ff61416eaf844495b8cabc8c1dd1d2277410d511",
+  "accepted_main": "b6e77acba5d96cbd26acff8b62e1d7d201ce5204",
+  "recovery_evidence": "docs/evidence/KNOWLEDGE_K1_CURRENT_ARCHIVE_RECOVERY.json",
+  "archive_recovery": "PASS",
+  "remaining_blocker": {
+    "classification": "ARCHIVE_CAPACITY_NO_AUTHORIZED_DISPOSAL",
+    "operation": "scripts.candidate_retention.build_preflight(Path('/Users/yurielokhin/Library/Application Support/Integra/Build Archive'), 3000000000, archive_copy=True)",
+    "error": "build blocked by 8-copy / 20-GiB archive cap",
+    "event": "BUILD_HEADROOM_REJECTED",
+    "observed_at": "2026-10-08T20:35:20.265165+00:00",
+    "full_copies": 8,
+    "maximum_full_copies": 8,
+    "requested_new_copy_count": 1,
+    "allocated_bytes": 18290028544,
+    "requested_bytes": 3000000000,
+    "maintenance_result": "NO_ELIGIBLE_TERMINAL_COPIES",
+    "candidate_build_started": false,
+    "other_candidate_deleted": false,
+    "limits_weakened": false,
+    "existing_capacity_gate_not_archive_recovery_failure": true,
+    "causally_required": "K1 requires a durable verified Candidate archive before its baseline-acceptance gate"
+  },
+  "smallest_next_action_proposal": {
+    "authorization_required": true,
+    "decision": "Product Owner may retire exactly the following currently review-pending copy as UNUSED and authorize its existing governed retention deletion, conditional on fresh protection/ownership/inactivity/full-byte checks; no CURRENT or rollback deletion",
+    "candidate_id": "candidate-v1-4c60663b9c5b7c991dc67f66b3a8e531ead4cf0f90435ef02c25055ad36018cc",
+    "bundle_digest": "b523d1cb5f0cf68526bf69a63131a462da1cdf088a369b06d612cfe6907bd851",
+    "manifest_digest": "12488f7131a7df9a280af142ab13e371865ff258247c186a28cba42bd2672559",
+    "inventory_sha256": "7f185ebd4dd0445d63b08ff707e29d3092d1f0b8527607c559b08f6b6302b5bf",
+    "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-4c60663b9c5b7c991dc67f66b3a8e531ead4cf0f90435ef02c25055ad36018cc/b523d1cb5f0cf68526bf69a63131a462da1cdf088a369b06d612cfe6907bd851",
+    "current_observed_disposition": "AWAITING_OWNER_ACCEPTANCE",
+    "active_canonical_role_found": false,
+    "archival_verification": "COMPLETE/PASS",
+    "allocated_bytes": 2280730624,
+    "disposition_changed": false,
+    "deletion_executed": false,
+    "continue_after_authorization": "Resume same K1; no K2 or other outcome"
+  },
+  "accepted_main_governance": "PASS",
+  "accepted_main_current_state": "CURRENT_VALID",
+  "accepted_main_quality_gate": {
+    "run_id": 37833458432,
+    "event": "push",
+    "conclusion": "success"
+  },
+  "focused_tests": {
+    "passed": 75,
+    "skipped": 0,
+    "groups": {
+      "knowledge_modules": 28,
+      "review_adapters_package_and_launcher": 37,
+      "machine_evidence_integration": 9,
+      "additional_ci_guard_regression": 1
+    }
+  },
+  "swift_typecheck": "PASS: swiftc -parse-as-library -typecheck macos/IntegraApp.swift",
+  "diff_check": "PASS",
+  "full_regression": {
+    "command": "INTEGRA_TEST_REVIEW_PYTHONPATH=<isolated-review-python> INTEGRA_TEST_SEMINARTEXT_CHECKOUT=<pinned-checkout> ./scripts/run_review_tests.sh",
+    "tests_run": 1051,
+    "passed": 993,
+    "failures": 4,
+    "errors": 1,
+    "skipped": 53,
+    "new_ci_guard_test": "Added afterwards; separately passed; the full suite is not claimed PASS",
+    "feature_baseline_binding_failures": [
+      "test_current_baseline_exact_contract_passes",
+      "test_historical_certification_records_are_not_rewritten",
+      "test_valid_superseding_baseline_suppresses_only_explained_historical_drift"
+    ],
+    "feature_governance_state": "FAIL_CLOSED: K1 governed source changes have no proven archived Candidate / Proposal yet; accepted CURRENT and historical attestations were not rewritten",
+    "reproduced_with_clean_accepted_main_bridge": [
+      {
+        "test": "test_bridge_requires_explicit_review_then_persists_canonical_evidence_output",
+        "operation": "second build-reviewed-package",
+        "error": "package_dir file is unavailable"
+      },
+      {
+        "test": "test_bridge_preserves_arbitrary_review_as_fragments_not_canonical_knowledge",
+        "error": "'KNOWLEDGE_CREATED' != 'REVIEWED_TOPICS_CREATED'"
+      }
+    ],
+    "unrelated_repair_performed": false
+  },
+  "clean_main_comparison": {
+    "full_tests_run": 1030,
+    "failures": 4,
+    "errors": 28,
+    "skipped": 53,
+    "comparability": "INVALID for source-runtime tests: linked fixture checkout is correctly rejected by the existing runtime safety check; do not interpret those failures as product regressions",
+    "same_skip_count_observed": true,
+    "follow_up": "Own source-fixture symlink replaced by an independent local clone at exact pin 13644d262776aacdf36221b9a9fc7ebd0a7c0737; the two bridge failures were independently reproduced with an explicit safe checkout",
+    "corrected_affected_tests": {
+      "tests_run": 118,
+      "passed": 114,
+      "failures": 4,
+      "errors": 0,
+      "skipped": 0,
+      "governance_tests": "PASS",
+      "failure_cause": "Existing default COMPLETE_BENCHMARK_SEGMENTS mapping selects CANONICAL_KNOWLEDGE_V1 while four old tests expect EXACT_FRAGMENTS_V2; K1 explicitly opts into exact fragment mode",
+      "failed_tests": [
+        "test_arbitrary_ranges_all_excluded_and_failed_component_retry",
+        "test_arbitrary_ranges_create_real_reviewed_fragments_without_widening",
+        "test_arbitrary_ranges_reject_changed_word_timeline",
+        "test_v2_binding_missing_mode_never_defaults"
+      ]
+    }
+  },
+  "canonical_state_changed": false,
+  "candidate_rebuilt_or_substituted": false,
+  "current_promoted": false,
+  "new_k1_candidate_archived": false,
+  "native_gui_acceptance_claimed": false,
+  "proposal_ready": false,
+  "merge_performed": false,
+  "board": "41 DONE / 3 NOT_DONE / 1 BLOCKED",
+  "board_changed": false,
+  "k2_started": false,
+  "source_repositories_changed": false,
+  "protected_datasets_accessed": false,
+  "semantic_acceptance_claimed": false,
+  "product_rules_read": true,
+  "applicable_product_rules": ["PR-001", "PR-002", "PR-003", "PR-007", "PR-008", "PR-010", "PR-011", "PR-012", "PR-013"],
+  "product_rule_conflicts": []
+}
