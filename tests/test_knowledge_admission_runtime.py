@@ -8,9 +8,42 @@ import unittest
 from unittest.mock import patch
 
 from integra_core import knowledge_admission_runtime as runtime
+from integra_core import knowledge
+from scripts.package_knowledge_admission_runtime import package_view_schema
 
 
 class KnowledgeAdmissionRuntimeTests(unittest.TestCase):
+    def test_packaged_view_schema_is_exact_and_required_without_repo_fallback(self):
+        with tempfile.TemporaryDirectory() as directory:
+            resources = Path(directory) / "Contents/Resources"
+            package_view_schema(resources)
+            target = resources / "schemas/knowledge_view_v1.schema.json"
+            self.assertEqual(target.read_bytes(), (Path(__file__).resolve().parents[1] /
+                             "schemas/knowledge_view_v1.schema.json").read_bytes())
+            with patch.object(knowledge, "__file__", str(resources / "integra_core/knowledge.py")):
+                with self.assertRaisesRegex(knowledge.KnowledgeError, "schema differs"):
+                    knowledge._validate_view_shape({})
+                target.write_text("invalid JSON")
+                with self.assertRaises(json.JSONDecodeError):
+                    knowledge._validate_view_shape({})
+                target.unlink()
+                with self.assertRaises(FileNotFoundError):
+                    knowledge._validate_view_shape({})
+
+    def test_schema_packager_rejects_existing_or_symlink_destination(self):
+        with tempfile.TemporaryDirectory() as directory:
+            resources = Path(directory)
+            package_view_schema(resources)
+            target = resources / "schemas/knowledge_view_v1.schema.json"
+            original = target.read_bytes()
+            with self.assertRaisesRegex(ValueError, "fresh owned destination"):
+                package_view_schema(resources)
+            self.assertEqual(target.read_bytes(), original)
+            target.unlink()
+            target.symlink_to(resources / "missing")
+            with self.assertRaisesRegex(ValueError, "fresh owned destination"):
+                package_view_schema(resources)
+
     def test_accepted_source_pin_and_contract_are_exact(self):
         pin = runtime._pin()
         self.assertEqual(pin["commit_sha"], "61ee27de67174377afa0f4955b3cb5abeecb4f03")
