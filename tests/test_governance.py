@@ -2,6 +2,7 @@ import copy
 import importlib.util
 import json
 import shutil
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -832,12 +833,28 @@ class GovernanceValidationTests(unittest.TestCase):
         self.assertTrue(any("implementation hash differs" in error for error in errors))
 
     def test_knowledge_integration_evidence_is_valid(self):
+        # Validate the immutable historical certification against its own
+        # accepted bytes; changed current product bytes require a successor.
+        temp = tempfile.TemporaryDirectory(); self.addCleanup(temp.cleanup)
+        root = Path(temp.name)
+        active = next(item for item in self.current_product_baseline_v2["records"] if item["baseline_id"] == self.current_product_baseline_v2["current_id"])
+        for item in self.knowledge_integration["implementation"]:
+            target = root / item["path"]; target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(subprocess.run(["git", "-C", str(ROOT), "show", f"{active['main']['commit_sha']}:{item['path']}"],
+                check=True, capture_output=True).stdout)
         self.assertEqual(
             VALIDATOR.validate_knowledge_integration_evidence(
-                self.knowledge_integration, self.baselines
+                self.knowledge_integration, self.baselines, root
             ),
             [],
         )
+
+    def test_knowledge_integration_current_drift_is_not_implicitly_superseded(self):
+        errors = VALIDATOR.validate_knowledge_integration_evidence(self.knowledge_integration, self.baselines)
+        old = {item["path"]: item["sha256"] for item in self.knowledge_integration["implementation"]}
+        for path in ("integra_core/knowledge.py", "schemas/knowledge_view_v1.schema.json"):
+            if VALIDATOR.sha256_file(ROOT / path) != old[path]:
+                self.assertIn("R9A implementation hash differs: " + path, errors)
 
     def test_knowledge_integration_cannot_claim_machine_acceptance(self):
         evidence = copy.deepcopy(self.knowledge_integration)
