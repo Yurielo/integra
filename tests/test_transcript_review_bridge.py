@@ -144,7 +144,9 @@ class TranscriptReviewBridgeTests(unittest.TestCase):
             outputs["topics"] = str(topic_file)
             (project / "runs" / f"{run_id.removeprefix('urn:integra:run:')}.json").write_text(json.dumps(persisted))
             environment["PYTHONPATH"] = str(ROOT / ".runtime-components/review-python")
-            package = invoke("prepare-knowledge-review", request)
+            # Exact-fragment review is chosen before a reviewer sees the
+            # package; switching modes later would change reviewed ranges.
+            package = invoke("prepare-knowledge-review", request | {"exact_fragments": partial})
             self.assertEqual(package["status"], "REVIEW_REQUIRED")
             self.assertEqual(package["media_path"], str(media.resolve()))
             knowledge = invoke("apply-knowledge-review", request | {"expected_package_sha256": package["package_sha256"],

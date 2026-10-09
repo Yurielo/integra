@@ -29,6 +29,7 @@ OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-projec
 OPERATIONS.add("build-reviewed-package")
 OPERATIONS.add("transcript-text")
 OPERATIONS.add("shutdown-active-runs")
+OPERATIONS.update({"knowledge-sources", "knowledge-open", "knowledge-save", "knowledge-navigation", "knowledge-package"})
 
 def _safe_error(error):
     message = str(error).replace(str(Path.home()), "<HOME>")
@@ -312,15 +313,17 @@ def _record_review_outputs(project_dir, run_id, source_id, updates, *, preserve_
         if not isinstance(source, dict) or source.get("state") != "COMPLETED":
             raise ValueError("completed source result is unavailable")
         outputs = source.setdefault("outputs", {})
-        from integra_core.transcript_output import resolve_persisted_project_path
+        from integra_core.transcript_output import (resolve_persisted_project_directory,
+                                                     resolve_persisted_project_path)
         for key, value in tuple(outputs.items()):
             if isinstance(value, str) and Path(value).is_absolute() and key in {"topics", "canonical_evidence", "machine_evidence_record", "topic_review_drafts",
                                                    "topic_review_package", "topic_review_decisions", "reviewed_topics",
                                                    "process_topic_review_package", "process_topic_review_decisions",
                                                    "process_reviewed_topics", "process_topic_review_receipt",
-                                                   "reviewed_topics_markdown", "canonical_knowledge", "knowledge_markdown",
-                                                   "package_dir"}:
+                                                   "reviewed_topics_markdown", "canonical_knowledge", "knowledge_markdown"}:
                 outputs[key] = str(resolve_persisted_project_path(project_dir, value, key))
+            elif isinstance(value, str) and Path(value).is_absolute() and key == "package_dir":
+                outputs[key] = str(resolve_persisted_project_directory(project_dir, value, key))
         if expected_outputs is not None:
             expected_outputs = dict(expected_outputs)
             for key, value in tuple(expected_outputs.items()):
@@ -529,8 +532,12 @@ def _knowledge_review(root, request, apply=False):
     else:
         if not isinstance(outputs.get("canonical_evidence"), str) or not isinstance(outputs.get("topics"), str):
             raise ValueError("reviewed Evidence and real topics are required")
+        exact_fragments = request.get("exact_fragments", False)
+        if not isinstance(exact_fragments, bool):
+            raise ValueError("exact_fragments must be a boolean")
         result = prepare_topic_review(values["project_dir"], source_id=values["source_id"],
-            canonical_evidence_path=outputs["canonical_evidence"], topics_path=outputs["topics"])
+            canonical_evidence_path=outputs["canonical_evidence"], topics_path=outputs["topics"],
+            exact_fragments=exact_fragments)
         from integra_core.seminartext_evidence_runtime import _inside, _sha256
         media = _inside(Path(values["media_path"]), values["project_dir"], "review media")
         evidence = json.loads(Path(outputs["canonical_evidence"]).read_text(encoding="utf-8"))
@@ -630,6 +637,13 @@ def _build_reviewed_package(root, request):
     manifest, files = build_reviewed_result_package(project_dir=project, source_id=values["source_id"],
         decisions_path=decisions, project_id=request["project_id"],
         project_slug=request["project_id"].removeprefix("urn:integra:project:"))
+    response = _store_reviewed_package(project, manifest, files)
+    _record_review_outputs(project, request["run_id"], values["source_id"], {"package_dir": response["package_dir"]}, expected_outputs=expected)
+    return response
+
+
+def _store_reviewed_package(project, manifest, files):
+    """One shared immutable package store for Process review and K1."""
     exports = project / "reviewed-exports"
     if exports.is_symlink(): raise ValueError("export directory must not be a symlink")
     exports.mkdir(exist_ok=True)
@@ -653,9 +667,116 @@ def _build_reviewed_package(root, request):
                 os.rename(stage, target)
     finally:
         os.close(descriptor)
-    _record_review_outputs(project, request["run_id"], values["source_id"], {"package_dir": str(target)}, expected_outputs=expected)
     return {"status": "PACKAGE_CREATED", "package_dir": str(target), "package_id": manifest["package_id"],
             "result_kind": manifest["result_kind"], "published": False}
+
+
+def _saved_knowledge_notebooks(directory, identity):
+    """Discover saved identity without depending on still-available source bytes."""
+    from integra_core.knowledge_notebook import _read_state, _review_root
+    source_id = identity.get("source_id")
+    if not isinstance(source_id, str) or not source_id:
+        raise ValueError("saved notebook source identity is unavailable")
+    parent = _review_root(directory, source_id) / "knowledge"
+    if parent.is_symlink():
+        raise ValueError("saved notebook directory is unsafe")
+    if not parent.exists():
+        return []
+    if not parent.is_dir():
+        raise ValueError("saved notebook directory is unavailable")
+    saved = []
+    for path in sorted(parent.glob("*.json")):
+        state = _read_state(path, directory)
+        binding = state.get("source_binding", {})
+        if all(binding.get(key) == identity[key] for key in ("project_id", "run_id", "source_id")):
+            saved.append(state)
+    return saved
+
+
+def _knowledge_sources(root):
+    from integra_core.knowledge_notebook import source_inputs, open_notebook
+    available = []
+    # Discovery must not reconcile jobs or access processing runtimes.
+    for item in _recent_runs(root, reconcile=False):
+        project, run = item["project"], item["run"]
+        for source in run.get("source_results", []):
+            request = {"project_id": project["project_id"], "run_id": run["run_id"], "source_id": source.get("source_id")}
+            entry = request | {"project_name": project.get("name", "Проект"),
+                               "source_name": source.get("display_name") or source.get("source_id"),
+                               "eligible": False, "notebook_available": False,
+                               "notebook_status": "NOT_ADDED", "saved_notebook_count": 0}
+            try:
+                directory = _project_dir(root, project["project_id"])
+                try:
+                    prior = _saved_knowledge_notebooks(directory, request)
+                except (ValueError, OSError, KeyError, TypeError) as error:
+                    entry.update(notebook_status="UNAVAILABLE", reason=_safe_error(error))
+                    raise
+                if prior:
+                    entry.update(notebook_status=prior[-1]["status"], notebook_id=prior[-1]["notebook_id"],
+                                 saved_notebook_count=len(prior))
+                source_inputs(directory, **request)
+                entry["eligible"] = True
+                try:
+                    saved = open_notebook(directory, **request)
+                except ValueError as error:
+                    if str(error) != "Knowledge notebook has not been added":
+                        raise
+                    if prior:
+                        entry["reason"] = "Сохранённая версия конспекта недоступна: исходные артефакты Process изменились"
+                else:
+                    entry.update(notebook_status=saved["status"], notebook_id=saved["notebook_id"],
+                                 notebook_available=True)
+            except (ValueError, OSError, KeyError, TypeError) as error:
+                entry.update(eligible=False, reason=_safe_error(error))
+            available.append(entry)
+    return available
+
+
+def _knowledge_material(project, identity, notebook):
+    """Presentation facts come from persisted Process, never inferred assurance."""
+    from integra_core.knowledge_notebook import source_inputs
+    _, paths, binding, result = source_inputs(project, **identity)
+    return notebook | {
+        "source_title": result.get("display_name") or paths["media"].name,
+        "source_processing_state": result["state"],
+        "topics_revision_sha256": binding["artifacts"]["topics"]["sha256"],
+        "transcript_artifact_sha256": binding["artifacts"]["transcript"]["sha256"],
+    }
+
+
+def _knowledge(root, request, action):
+    from integra_core.knowledge_notebook import open_notebook, save_notebook, notebook_navigation, notebook_package
+    project = _project_dir(root, _project(root, request.get("project_id"))["project_id"])
+    identity = {key: request.get(key) for key in ("project_id", "run_id", "source_id")}
+    if action == "navigation":
+        result = notebook_navigation(project, **identity, fragment_id=request.get("fragment_id"), notebook_id=request.get("notebook_id"))
+        expected = request.get("source_revision_sha256")
+        if expected is not None and result["source_revision_sha256"] != expected:
+            raise ValueError("exported source link belongs to a different source revision")
+        return result
+    if action == "open" and request.get("create") is not True:
+        return _knowledge_material(project, identity, open_notebook(project, **identity))
+    # Reuse the existing project/artifact lease service for notebook writes.
+    from integra_core.identity import derive_imported_id
+    version = content_sha256(identity)
+    entity = derive_imported_id("artifact", "integra.knowledge_k1_write", identity["project_id"], version)
+    lease, store = _lease(root, {"project_id": identity["project_id"], "package_id": entity,
+                               "version_sha256": version}, "integra.knowledge_review")
+    try:
+        if action == "open":
+            return _knowledge_material(project, identity, open_notebook(project, **identity, create=True))
+        if action == "save":
+            saved = save_notebook(project, **identity, expected_state_sha256=request.get("expected_state_sha256"),
+                                  decisions=request.get("decisions"), reviewer_id=request.get("reviewer_id"))
+            return _knowledge_material(project, identity, saved)
+        if action == "package":
+            manifest, files = notebook_package(project, **identity)
+            return _store_reviewed_package(project, manifest, files)
+        raise ValueError("unknown Knowledge action")
+    finally:
+        store.release(lease["project_id"], lease["mutable_entity"]["entity_id"], lease["lease_id"],
+                      lease["writer"], lease["generation"], _instant(_now()))
 
 
 def _package(path_value):
@@ -745,6 +866,8 @@ def main():
         elif operation == "recent-runs": result = _recent_runs(root)
         elif operation == "shutdown-active-runs": result = _shutdown_active_runs(root)
         elif operation == "available-packages": result = _available_packages(root)
+        elif operation == "knowledge-sources": result = _knowledge_sources(root)
+        elif operation.startswith("knowledge-"): result = _knowledge(root, request, operation.removeprefix("knowledge-"))
         elif operation == "media-navigation": result = _media_navigation(root, request)
         elif operation == "create-media-clip": result = _create_media_clip(root, request)
         elif operation == "prepare-transcript-review": result = _prepare_transcript_review(root, request)

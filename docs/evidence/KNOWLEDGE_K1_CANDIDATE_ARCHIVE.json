@@ -1,0 +1,11 @@
+{
+  "archive_path": "~/Library/Application Support/Integra/Build Archive/candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f/e3215a28c9ce0a1a54c35dc535bad42a9334cae7ddc5eb3b0533a480e0296d95",
+  "artifact_type": "integra.candidate_archive",
+  "bundle_digest": "e3215a28c9ce0a1a54c35dc535bad42a9334cae7ddc5eb3b0533a480e0296d95",
+  "candidate_id": "candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f",
+  "file_count": 29610,
+  "inventory_sha256": "f85eab8b9a4701cdfca6d0b2f926c91c0529687fa63bc8b8926d01a0255a32e1",
+  "manifest_digest": "aa581c025edfc09cb7e2c59bf7d1ee98c78a5c17bc3d670e33b0fa351ce6b3e6",
+  "status": "COMPLETE",
+  "verification": "ARCHIVAL_BYTE_INTEGRITY"
+}

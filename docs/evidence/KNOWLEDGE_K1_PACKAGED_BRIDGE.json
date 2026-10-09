@@ -1,0 +1,8 @@
+{
+  "candidate_id": "candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f",
+  "bundle_digest": "e3215a28c9ce0a1a54c35dc535bad42a9334cae7ddc5eb3b0533a480e0296d95",
+  "manifest_identity_sha256": "675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f",
+  "product_source": {"commit_sha": "a9567d64fc3345d16b16dd0fbf5953680fb884d4", "tree_sha": "6cf4084932c694905abf322a31bb9213047277a3"},
+  "checks": {"candidate_archive": "PASS", "packaged_bridge_knowledge_k1": "9/9 PASS", "packaged_notebook_import": "PASS", "packaged_self_test": "PASS"},
+  "scope": "Knowledge K1 reviewed process notebook; bounded persisted-review consumption only; no CURRENT promotion"
+}

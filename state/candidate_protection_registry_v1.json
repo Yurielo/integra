@@ -15,12 +15,12 @@
   "artifact_type": "integra.candidate_protection_registry",
   "bootstrap_authorization_ref": "https://github.com/Yurielo/integra/issues/214#issuecomment-5951189263",
   "canonical_current": {
-    "bundle_digest": "c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
-    "candidate_id": "candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81",
-    "current_id": "current-v2-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81",
-    "manifest_digest": "faf503cf088cbf0d9b7ea005cf7d5523bcf36bf575759377450993262cc5bdf5",
+    "bundle_digest": "e3215a28c9ce0a1a54c35dc535bad42a9334cae7ddc5eb3b0533a480e0296d95",
+    "candidate_id": "candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f",
+    "current_id": "current-v2-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f",
+    "manifest_digest": "aa581c025edfc09cb7e2c59bf7d1ee98c78a5c17bc3d670e33b0fa351ce6b3e6",
     "path": "state/current_product_baseline_v2.json",
-    "sha256": "517c1f5f7b8ce4141b0ea54839f29d95887cc824298cd96330d274bab7abc9b4"
+    "sha256": "bdd2ea30b3102c59cd8e47bc56a0d53c6b57d3bfb0347e667663b1be951e52e2"
   },
   "decision_authority_ref": "https://github.com/Yurielo/integra/issues/214#issuecomment-5951189263",
   "decision_token_sha256": "c0fbc7699ae3caa6ea56a59987410977515881043f2ce2fd9b4f39382cc132f8",
@@ -36,32 +36,6 @@
   "deletion_decision_authority_ref": "https://github.com/Yurielo/integra/issues/214#issuecomment-5976936494",
   "deletion_decision_token_sha256": "2bc898600fbb735d4b5844d8dc8fff1508cf2cff4c33b7af0f0e06eb8dbb72ef",
   "deletion_enabled": true,
-  "withdrawal_deletion_authorizations": {
-    "Build Archive/candidate-v1-4c60663b9c5b7c991dc67f66b3a8e531ead4cf0f90435ef02c25055ad36018cc/b523d1cb5f0cf68526bf69a63131a462da1cdf088a369b06d612cfe6907bd851": {
-      "authority_ref": "https://github.com/Yurielo/integra/issues/224#issuecomment-6069206361",
-      "bundle_digest": "b523d1cb5f0cf68526bf69a63131a462da1cdf088a369b06d612cfe6907bd851",
-      "candidate_id": "candidate-v1-4c60663b9c5b7c991dc67f66b3a8e531ead4cf0f90435ef02c25055ad36018cc",
-      "lifecycle": "WITHDRAWN_SUPERSEDED",
-      "manifest_digest": "12488f7131a7df9a280af142ab13e371865ff258247c186a28cba42bd2672559",
-      "path": "Build Archive/candidate-v1-4c60663b9c5b7c991dc67f66b3a8e531ead4cf0f90435ef02c25055ad36018cc/b523d1cb5f0cf68526bf69a63131a462da1cdf088a369b06d612cfe6907bd851",
-      "reason": "SUPERSEDED_CANDIDATE_ARCHIVE_SLOT_FOR_FINAL_KNOWLEDGE_K1",
-      "scope": "EXACT_4C606_ONLY"
-    }
-  },
-  "withdrawn_candidate_lifecycles": [
-    {
-      "authority_body_sha256": "42b637e68cfe45fe5d2eb4583d6290a4b38f67938b4890c2765a986ef5e60fa6",
-      "authority_ref": "https://github.com/Yurielo/integra/issues/224#issuecomment-6069206361",
-      "bundle_digest": "b523d1cb5f0cf68526bf69a63131a462da1cdf088a369b06d612cfe6907bd851",
-      "candidate_id": "candidate-v1-4c60663b9c5b7c991dc67f66b3a8e531ead4cf0f90435ef02c25055ad36018cc",
-      "history_path": "state/history/knowledge_k1_candidate_4c606_withdrawal_v1.json",
-      "history_sha256": "86f2908d3c4e9cef58ecb6fafbd5af0fc8c5186646f7e38625cc6f33acf9a556",
-      "manifest_digest": "12488f7131a7df9a280af142ab13e371865ff258247c186a28cba42bd2672559",
-      "previous_status": "AWAITING_OWNER_ACCEPTANCE",
-      "reason": "SUPERSEDED_CANDIDATE_ARCHIVE_SLOT_FOR_FINAL_KNOWLEDGE_K1",
-      "resulting_status": "WITHDRAWN_SUPERSEDED"
-    }
-  ],
   "exact_legacy_retirement": {
     "catalog_path": "state/issue214_exact_legacy_retirement_v1.json",
     "catalog_sha256": "f146bfb1c3ed397275071528ee1aa0945dbde75a0b1669357051c3a6136e2c76",
@@ -88,7 +62,7 @@
     }
   ],
   "issue_ref": "https://github.com/Yurielo/integra/issues/214",
-  "latest_accepted_candidate_id": "candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81",
+  "latest_accepted_candidate_id": "candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f",
   "limits": {
     "max_attributed_bytes": 21474836480,
     "max_full_copies": 8,
@@ -152,16 +126,17 @@
     "state": "NO_VERIFIED_ARCHIVE_ACCEPTED_HISTORICAL_GAP"
   },
   "rollback": {
-    "bundle_digest": "639d66bbbd8d7af55d091f43156d823000496191c771bef28d7fffc6fe88a302",
-    "candidate_id": "candidate-v1-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e",
-    "confirmation_ref": "state/history/open_proposal_15d9b29fd7a57bf1_promotion_transaction_v1.json",
-    "manifest_digest": "e50edf361bad7226caf3101584ec3dc73119a0254c464ecb424f1ec0a23daacf"
+    "bundle_digest": "c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
+    "candidate_id": "candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81",
+    "confirmation_ref": "state/history/open_proposal_675acf457d65e763_promotion_transaction_v1.json",
+    "manifest_digest": "faf503cf088cbf0d9b7ea005cf7d5523bcf36bf575759377450993262cc5bdf5"
   },
   "schema_version": "1.0",
   "selected_survivors": {
     "candidate-v1-14b3c10e4d779ff8b5a520bf15e2b7087673aec2cd0abd25aac4e1d0ded77892": null,
     "candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81": "Build Archive/candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81/c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
     "candidate-v1-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e": "Build Archive/candidate-v1-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e/639d66bbbd8d7af55d091f43156d823000496191c771bef28d7fffc6fe88a302",
+    "candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f": "Build Archive/candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f/e3215a28c9ce0a1a54c35dc535bad42a9334cae7ddc5eb3b0533a480e0296d95",
     "candidate-v1-7a254e707443a278606ffa956cc76e8374f5c20115077351e093230547f8bd62": null,
     "candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29": "Validation/integra-212-native-35e6f9101278/candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29/fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
     "candidate-v1-9c969dab6d8aab30458bd202dd792d709e1faea8db207306e3ccb46c886c1e98": null,
@@ -177,5 +152,31 @@
       "transaction_id": "successor-v1-5fb667319ec2e1f1bb5f6ca89c54183376f2e04e680e3728833130fd9c636d40"
     }
   ],
-  "unknown_historical": "RETAIN_FAIL_CLOSED"
+  "unknown_historical": "RETAIN_FAIL_CLOSED",
+  "withdrawal_deletion_authorizations": {
+    "Build Archive/candidate-v1-4c60663b9c5b7c991dc67f66b3a8e531ead4cf0f90435ef02c25055ad36018cc/b523d1cb5f0cf68526bf69a63131a462da1cdf088a369b06d612cfe6907bd851": {
+      "authority_ref": "https://github.com/Yurielo/integra/issues/224#issuecomment-6069206361",
+      "bundle_digest": "b523d1cb5f0cf68526bf69a63131a462da1cdf088a369b06d612cfe6907bd851",
+      "candidate_id": "candidate-v1-4c60663b9c5b7c991dc67f66b3a8e531ead4cf0f90435ef02c25055ad36018cc",
+      "lifecycle": "WITHDRAWN_SUPERSEDED",
+      "manifest_digest": "12488f7131a7df9a280af142ab13e371865ff258247c186a28cba42bd2672559",
+      "path": "Build Archive/candidate-v1-4c60663b9c5b7c991dc67f66b3a8e531ead4cf0f90435ef02c25055ad36018cc/b523d1cb5f0cf68526bf69a63131a462da1cdf088a369b06d612cfe6907bd851",
+      "reason": "SUPERSEDED_CANDIDATE_ARCHIVE_SLOT_FOR_FINAL_KNOWLEDGE_K1",
+      "scope": "EXACT_4C606_ONLY"
+    }
+  },
+  "withdrawn_candidate_lifecycles": [
+    {
+      "authority_body_sha256": "42b637e68cfe45fe5d2eb4583d6290a4b38f67938b4890c2765a986ef5e60fa6",
+      "authority_ref": "https://github.com/Yurielo/integra/issues/224#issuecomment-6069206361",
+      "bundle_digest": "b523d1cb5f0cf68526bf69a63131a462da1cdf088a369b06d612cfe6907bd851",
+      "candidate_id": "candidate-v1-4c60663b9c5b7c991dc67f66b3a8e531ead4cf0f90435ef02c25055ad36018cc",
+      "history_path": "state/history/knowledge_k1_candidate_4c606_withdrawal_v1.json",
+      "history_sha256": "86f2908d3c4e9cef58ecb6fafbd5af0fc8c5186646f7e38625cc6f33acf9a556",
+      "manifest_digest": "12488f7131a7df9a280af142ab13e371865ff258247c186a28cba42bd2672559",
+      "previous_status": "AWAITING_OWNER_ACCEPTANCE",
+      "reason": "SUPERSEDED_CANDIDATE_ARCHIVE_SLOT_FOR_FINAL_KNOWLEDGE_K1",
+      "resulting_status": "WITHDRAWN_SUPERSEDED"
+    }
+  ]
 }

@@ -6,7 +6,7 @@ from pathlib import Path
 import tempfile
 
 
-def _owned(path, root, label="transcript"):
+def _owned(path, root, label="transcript", *, directory=False):
     path = Path(path)
     if not path.is_absolute():
         raise ValueError(f"{label} path must be absolute")
@@ -23,12 +23,15 @@ def _owned(path, root, label="transcript"):
         if current.samefile(root):
             break
         current = current.parent
-    if not path.is_file():
+    if directory:
+        if not path.is_dir():
+            raise ValueError(f"{label} directory is unavailable")
+    elif not path.is_file():
         raise ValueError(f"{label} file is unavailable")
     return resolved
 
 
-def resolve_persisted_project_path(project_dir, persisted_path, label):
+def _resolve_persisted_project_path(project_dir, persisted_path, label, *, directory=False):
     """Resolve a stored project artifact after a project-root relocation.
 
     A persisted path is accepted directly only when it is currently owned.  A
@@ -43,7 +46,7 @@ def resolve_persisted_project_path(project_dir, persisted_path, label):
     if ".." in path.parts:
         raise ValueError(f"{label} path must not contain traversal")
     try:
-        return _owned(path, root, label)
+        return _owned(path, root, label, directory=directory)
     except ValueError as direct_error:
         # A path already lexically under the current root is never a legacy
         # reference. Preserve its strict containment/symlink failure instead
@@ -59,7 +62,17 @@ def resolve_persisted_project_path(project_dir, persisted_path, label):
                    if parts[index] == "projects" and parts[index + 1] == root.name]
         if len(anchors) != 1 or anchors[0] + 2 >= len(parts):
             raise ValueError(f"{label} must be owned by this Integra project")
-        return _owned(root.joinpath(*parts[anchors[0] + 2:]), root, label)
+        return _owned(root.joinpath(*parts[anchors[0] + 2:]), root, label, directory=directory)
+
+
+def resolve_persisted_project_path(project_dir, persisted_path, label):
+    """Resolve an owned persisted file after a project-root relocation."""
+    return _resolve_persisted_project_path(project_dir, persisted_path, label)
+
+
+def resolve_persisted_project_directory(project_dir, persisted_path, label):
+    """Resolve an owned persisted directory after a project-root relocation."""
+    return _resolve_persisted_project_path(project_dir, persisted_path, label, directory=True)
 
 
 def resolve_transcript_text(project_dir, source_id, transcript_path):

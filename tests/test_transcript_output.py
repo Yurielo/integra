@@ -6,7 +6,9 @@ import tempfile
 import unittest
 import uuid
 
-from integra_core.transcript_output import resolve_persisted_project_path, resolve_transcript_text
+from integra_core.transcript_output import (resolve_persisted_project_directory,
+                                            resolve_persisted_project_path,
+                                            resolve_transcript_text)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -81,6 +83,16 @@ class TranscriptOutputTests(unittest.TestCase):
         current_path.write_text("restored project artifact")
         self.assertEqual(resolve_persisted_project_path(current_root, str(old_path), "artifact"), current_path.resolve())
         self.assertEqual(resolve_persisted_project_path(current_root, str(current_path), "artifact"), current_path.resolve())
+
+    def test_relocated_persisted_directory_rebases_only_same_project_identity(self):
+        project_id = str(uuid.uuid4())
+        old_root = self.root / "old-data" / "projects" / project_id
+        current_root = self.root / "current-data" / "projects" / project_id
+        old_path = old_root / "reviewed-exports" / "package"
+        current_path = current_root / "reviewed-exports" / "package"
+        old_path.mkdir(parents=True); current_path.mkdir(parents=True)
+        self.assertEqual(resolve_persisted_project_directory(current_root, str(old_path), "package"), current_path.resolve())
+        self.assertEqual(resolve_persisted_project_directory(current_root, str(current_path), "package"), current_path.resolve())
 
     def test_relocated_path_rejects_external_relative_and_other_project(self):
         project_id = str(uuid.uuid4())

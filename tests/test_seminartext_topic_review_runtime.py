@@ -10,21 +10,26 @@ from integra_core.seminartext_evidence_runtime import prepare_transcript_review,
 from integra_core.seminartext_topic_review_runtime import prepare_topic_review, apply_topic_review, _choices
 
 ROOT = Path(__file__).resolve().parents[1]
+PINNED = Path(os.environ.get("INTEGRA_TEST_SEMINARTEXT_RUNTIME") or os.environ.get("INTEGRA_TEST_SEMINARTEXT_CHECKOUT", ROOT / ".runtime-components/seminartext-pinned"))
 
 
-@unittest.skipUnless((ROOT / ".runtime-components/seminartext-pinned/seminartext_modules/human_review_workflow.py").is_file(), "requires pinned SeminarText integration checkout")
+@unittest.skipUnless((PINNED / "seminartext_modules/human_review_workflow.py").is_file(), "requires pinned SeminarText integration checkout")
 class TopicReviewRuntimeTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.project = Path(self.temporary.name)
         self.environment = patch.dict(os.environ, {
-            "INTEGRA_SEMINARTEXT_CHECKOUT": str(ROOT / ".runtime-components/seminartext-pinned"),
-            "PYTHONPATH": str(ROOT / ".runtime-components/review-python"),
+            "INTEGRA_SEMINARTEXT_CHECKOUT": str(PINNED),
+            "PYTHONPATH": os.environ.get("INTEGRA_TEST_REVIEW_PYTHONPATH", str(ROOT / ".runtime-components/review-python")),
             "PYTHONDONTWRITEBYTECODE": "1",
         })
         self.environment.start()
         self.addCleanup(self.environment.stop)
+        if os.environ.get("INTEGRA_TEST_SEMINARTEXT_RUNTIME"):
+            os.environ.pop("INTEGRA_SEMINARTEXT_CHECKOUT", None)
+            runtime = patch("integra_core.seminartext_evidence_runtime.BUNDLED_RUNTIME_ROOT", PINNED)
+            runtime.start(); self.addCleanup(runtime.stop)
         media = self.project / "source.mp4"; media.write_bytes(b"synthetic owned media fixture")
         self.tokens = [f"слово{index}" for index in range(100)]
         text = self.project / "transcript.txt"; text.write_text(" ".join(self.tokens) + "\n", encoding="utf-8")
@@ -100,7 +105,8 @@ class TopicReviewRuntimeTests(unittest.TestCase):
         topics = json.loads(self.topics.read_text())
         topics["topics"][0]["end_seconds"] = 10.8
         self.topics.write_text(json.dumps(topics))
-        prepared = self.prepare()
+        prepared = prepare_topic_review(self.project, source_id=self.source_id, canonical_evidence_path=self.evidence,
+                                        topics_path=str(self.topics), exact_fragments=True)
         self.assertEqual(prepared["review_mode"], "EXACT_FRAGMENTS_V2")
         return prepared
 
@@ -123,6 +129,51 @@ class TopicReviewRuntimeTests(unittest.TestCase):
         self.assertEqual(payload["semantic_knowledge"][0]["word_end_sequence"], 10)
         self.assertIn(" ".join(self.tokens[:11]), Path(result["reviewed_topics_markdown_path"]).read_text())
         self.assertEqual(self.apply(prepared, self.decisions(prepared), boundaries_acknowledged=True), result)
+
+    def test_forced_v2_preserves_exact_mapping_and_distinct_whole_span_identity(self):
+        legacy = self.prepare()
+        exact = prepare_topic_review(self.project, source_id=self.source_id, canonical_evidence_path=self.evidence,
+                                     topics_path=str(self.topics), exact_fragments=True)
+        self.assertEqual(exact["review_mode"], "EXACT_FRAGMENTS_V2")
+        self.assertNotEqual(exact["package_sha256"], legacy["package_sha256"])
+        result = self.apply(exact, self.decisions(exact), boundaries_acknowledged=True)
+        self.assertEqual(result["status"], "REVIEWED_TOPICS_CREATED")
+        self.assertNotIn("canonical_knowledge_path", result)
+
+    def test_exact_v2_edit_trims_losslessly_and_replays(self):
+        exact = prepare_topic_review(self.project, source_id=self.source_id, canonical_evidence_path=self.evidence,
+                                     topics_path=str(self.topics), exact_fragments=True)
+        evidence = json.loads(Path(self.evidence).read_text())
+        words = sorted(evidence["words"], key=lambda word: word["sequence"])
+        choices = self.decisions(exact)
+        choices[0].update(action="EDIT", new_title="Уточнённая тема", new_summary="Уточнённое описание",
+                          word_start_id=words[2]["id"], word_end_id=words[40]["id"])
+        original = Path(self.evidence).read_bytes()
+        result = self.apply(exact, choices, boundaries_acknowledged=True)
+        reviewed = json.loads(Path(result["reviewed_topics_path"]).read_text())
+        self.assertEqual(len(reviewed["fragment_lineage"]), 4)
+        unit = reviewed["semantic_knowledge"][0]
+        self.assertEqual((unit["title"], unit["word_start_id"], unit["word_end_id"]),
+                         ("Уточнённая тема", words[2]["id"], words[40]["id"]))
+        self.assertEqual([(fragment["word_start_sequence"], fragment["word_end_sequence"]) for fragment in reviewed["fragment_lineage"]],
+                         [(0, 1), (2, 40), (41, 49), (50, 99)])
+        self.assertEqual(Path(self.evidence).read_bytes(), original)
+        self.assertEqual(self.apply(exact, choices, boundaries_acknowledged=True), result)
+        self.assertFalse(list(self.project.rglob("canonical_knowledge.json")))
+
+    def test_v2_edit_cannot_escape_original_or_defer_as_reviewed(self):
+        exact = prepare_topic_review(self.project, source_id=self.source_id, canonical_evidence_path=self.evidence,
+                                     topics_path=str(self.topics), exact_fragments=True)
+        choices = self.decisions(exact)
+        choices[0].update(action="EDIT", new_title="Правка", new_summary="",
+                          word_start_id=exact["topics"][0]["word_start_id"],
+                          word_end_id=exact["topics"][1]["word_end_id"])
+        with self.assertRaisesRegex(ValueError, "inside the original"):
+            self.apply(exact, choices, boundaries_acknowledged=True)
+        choices = self.decisions(exact); choices[0]["action"] = "DEFER"
+        with self.assertRaises(ValueError):
+            self.apply(exact, choices, boundaries_acknowledged=True)
+        self.assertFalse(list(self.project.rglob("decisions.json")))
 
     def test_arbitrary_ranges_all_excluded_and_failed_component_retry(self):
         prepared = self.prepare_fragments()
@@ -167,7 +218,8 @@ class TopicReviewRuntimeTests(unittest.TestCase):
         del binding["review_mode"]
         binding_path.write_text(json.dumps(binding))
         with self.assertRaisesRegex(ValueError, "persisted review mode"):
-            self.prepare()
+            prepare_topic_review(self.project, source_id=self.source_id, canonical_evidence_path=self.evidence,
+                                 topics_path=str(self.topics), exact_fragments=True)
         with self.assertRaisesRegex(ValueError, "persisted review mode"):
             self.apply(prepared, self.decisions(prepared), boundaries_acknowledged=True)
         self.assertFalse(list(self.project.rglob("decisions.json")))
