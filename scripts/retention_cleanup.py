@@ -11,6 +11,60 @@ try:
 except ModuleNotFoundError:
     import candidate_protection_gate as canonical_gate
 
+try:
+    from scripts import candidate_lifecycle as lifecycle
+except ModuleNotFoundError:
+    import candidate_lifecycle as lifecycle
+
+
+def _retirement_checkpoint(r, path, catalog, job, *, completed=False, error=None):
+    receipt = job.get('retirement_receipt')
+    if receipt is None:
+        return  # Historical pre-repair journals retain their original evidence.
+    receipt = lifecycle.update_retirement(receipt, source=job['source'],
+                                         trash=job['trash'], completed=completed,
+                                         error=error)
+    job['retirement_receipt'] = receipt
+    catalog.setdefault('retirements', {})[receipt['transaction_id']] = receipt
+    r._persist(path, catalog)
+
+
+def _prepare_receipt(r, catalog, job, manifest, verification):
+    context = catalog.get('protection') or {}
+    record = lifecycle.replay(job['record'], context.get('canonical_lifecycles', {}),
+                              context.get('protected', {}).get(job['identity']['candidate_id'], []))
+    policy = context.get('standing_policy') or {}
+    eligibility = lifecycle.terminal_eligibility(
+        job['identity'], record, context.get('protected', {}).get(record['candidate_id'], []),
+        owned=True, integrity_verified=True, context_valid=r._context_valid(context),
+        inactive=not r._publisher_live(record) and r._inactive(Path(job['source'])),
+        standing_policy=policy)
+    if eligibility['eligible']:
+        return lifecycle.prepare_retirement(
+            job['identity'], record, manifest, verification,
+            transaction_id=job['transaction_id'],
+            canonical_snapshot=context['canonical_snapshot'], policy=policy)
+    # Keep the existing exact Candidate-specific authorization path compatible;
+    # it does not acquire standing policy merely because a receipt is created.
+    if record.get('status') not in r.TERMINAL or not record.get('disposition_ref'):
+        raise ValueError('retirement standing eligibility or exact disposition is unproven')
+    return {'schema_version': '1.0',
+            'artifact_type': 'integra.candidate_physical_retirement',
+            **job['identity'], 'source': manifest.get('identity', {}).get('source', manifest.get('source')),
+            'retained_manifest': manifest,
+            'publisher_attestation': record,
+            'complete_sha256': record['complete_sha256'],
+            'inventory_sha256': record['inventory_sha256'],
+            'lifecycle_before_retirement': record['status'],
+            'proposal_refs': [], 'acceptance_refs': [], 'promotion_refs': [],
+            'verification_evidence': verification,
+            'reason': 'EXACT_CANDIDATE_SPECIFIC_DISPOSITION',
+            'policy_authority_ref': record['disposition_ref'],
+            'transaction_id': job['transaction_id'],
+            'canonical_snapshot': job['canonical_deletion_lease'],
+            'timestamp': time.time(), 'state': 'PREPARED',
+            'execution_result': 'NOT_EXECUTED', 'physical_available': True}
+
 
 def _entries(r, package):
     expected = json.loads((package / 'inventory.json').read_text())
@@ -99,7 +153,7 @@ def _finish_container(catalog, job):
         pass  # Other bundles/evidence remain; never recurse on the parent.
 
 
-def _execute(r, path, catalog, token):
+def _execute_payload(r, path, catalog, token):
     job = catalog['deletions'][token]
     source, trash = Path(job['source']), Path(job['trash'])
     if source.exists() and trash.exists():
@@ -112,6 +166,7 @@ def _execute(r, path, catalog, token):
             raise ValueError('cleanup recovery protection context is unavailable')
         canonical_gate.require_deletion_continuation(job.get('canonical_deletion_lease'))
         _finish_container(catalog, job)
+        _retirement_checkpoint(r, path, catalog, job, completed=True)
         catalog['artifacts'].pop(job['source'], None)
         del catalog['deletions'][token]; r._persist(path, catalog)
         return job['source']
@@ -133,6 +188,7 @@ def _execute(r, path, catalog, token):
             os.close(fd)
     job['transaction_context_sha256'] = r._digest(catalog['protection'])
     job['phase'] = 'DELETING'; r._persist(path, catalog)
+    _retirement_checkpoint(r, path, catalog, job)
     expected = {e['path']: e for e in job['entries']}
     deadline = time.monotonic() + 900
     refresh = time.monotonic()
@@ -162,9 +218,20 @@ def _execute(r, path, catalog, token):
     # Remove only the now-empty owned Candidate container. Otherwise repeated
     # promotion would still accumulate top-level candidate-v1-* directories.
     _finish_container(catalog, job)
+    _retirement_checkpoint(r, path, catalog, job, completed=True)
     catalog['artifacts'].pop(job['source'], None)
     del catalog['deletions'][token]; r._persist(path, catalog)
     return job['source']
+
+
+def _execute(r, path, catalog, token):
+    try:
+        return _execute_payload(r, path, catalog, token)
+    except BaseException as error:
+        job = catalog.get('deletions', {}).get(token)
+        if job is not None:
+            _retirement_checkpoint(r, path, catalog, job, error=error)
+        raise
 
 
 def recover(r, path, catalog):
@@ -199,28 +266,36 @@ def apply(r, path, expected_plan):
         for receipt in catalog['protection']['verified_survivors'].values():
             verify_archive(Path(receipt['archive_path']), {k: receipt[k] for k in ('candidate_id', 'bundle_digest', 'manifest_digest')})
         targets = [e for e in snapshot['entries'] if e['classification'] == 'DELETABLE']
+        verified_targets = {}
         for e in targets:
             canonical_gate.require_deletion(Path(e['path']))
-            if e['historical']:
+            if e['historical'] and not e.get('standing_retirement_eligible'):
                 raise ValueError('historical archive adoption/deletion requires separate Human Gate')
             package = r._safe(e['path'])
             if (package / '.git').exists() or not r._inactive(package):
                 raise ValueError('active/worktree archive cannot be deleted')
-            verify_archive(package, {k: e[k] for k in ('candidate_id', 'bundle_digest', 'manifest_digest')})
+            verified_targets[str(package)] = verify_archive(
+                package, {k: e[k] for k in ('candidate_id', 'bundle_digest', 'manifest_digest')})
         for e in targets:
             package = r._safe(e['path']); token = uuid.uuid4().hex
             record = catalog['artifacts'][str(package)]
             if not r._ownership(package, record, json.loads((package / 'COMPLETE.json').read_text())):
                 raise ValueError('publisher ownership changed')
             job = {'source': str(package), 'trash': str(package.parent / ('.retention-trash-' + token)),
+                   'transaction_id': 'retirement-v1-' + token,
                    'phase': 'PREPARED', 'identity': {k: e[k] for k in ('candidate_id', 'bundle_digest', 'manifest_digest')},
                    'device': e['device'], 'inode': e['inode'], 'record': record,
                    'entries': _entries(r, package)}
             job['canonical_deletion_lease'] = canonical_gate.require_deletion(package)
+            manifest = json.loads((package / 'Integra.app/Contents/Resources/candidate-manifest.json').read_text())
+            verification = verified_targets[str(package)]
+            job['retirement_receipt'] = _prepare_receipt(r, catalog, job, manifest, verification)
             captured = {e['path']: e for e in job['entries']}
             if captured['inventory.json']['sha256'] != record['inventory_sha256'] or captured['COMPLETE.json']['sha256'] != record['complete_sha256']:
                 raise ValueError('cleanup journal metadata differs from publisher authority')
             _guard(r, catalog, job, package)
-            catalog['deletions'][token] = job; r._persist(path, catalog)
+            catalog['deletions'][token] = job
+            catalog.setdefault('retirements', {})[job['transaction_id']] = job['retirement_receipt']
+            r._persist(path, catalog)
             deleted.append(_execute(r, path, catalog, token))
     return deleted

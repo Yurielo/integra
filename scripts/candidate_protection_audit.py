@@ -324,6 +324,70 @@ def fetch_canonical(registry: dict) -> tuple[dict, dict[int, dict], dict]:
             deletion_decision_token_sha256=sha(deletion_token_lines[0].encode()),
             deletion_decision_token=deletion_token_lines[0])
     canonical['withdrawn_candidate_lifecycles'] = _withdrawal_records(registry, main)
+    # Canonical promotion events are authoritative lifecycle lineage. Local
+    # publisher labels, path age and bundle similarity cannot supply it.
+    events = {}
+    for row in current['records']:
+        cid = row.get('candidate', {}).get('candidate_id', '')
+        if not CID.fullmatch(cid):
+            continue
+        prefix = 'state/history/open_proposal_' + cid[13:29]
+        path = prefix + '_promotion_transaction_v1.json'
+        captured = _optional_remote_file(path, main)
+        if captured is None:
+            continue
+        _, event = captured
+        proposal_path = prefix + '_accepted_proposal_lite_v1.json'
+        raw, retired = _remote_file(proposal_path, main)
+        identity = event.get('inputs', {}).get('candidate', {})
+        if (event.get('artifact_type') != 'integra.open_proposal_promotion_transaction'
+                or event.get('result', {}).get('current_id') != row['baseline_id']
+                or event.get('result', {}).get('files', {}).get(proposal_path) != sha(raw)
+                or any(identity.get(k) != retired.get('candidate', {}).get(k) for k in IDENTITY)
+                or any(identity.get(k) != row['candidate'].get(k) for k in ('candidate_id', 'bundle_digest'))
+                or event.get('inputs', {}).get('proposal_sha256') != sha(raw)):
+            raise ValueError('canonical promotion lifecycle evidence conflicts: ' + cid)
+        event = {**event, 'inputs': {**event['inputs'], 'source': retired['proposed_source']},
+                 'retained_proposal': retired, 'retained_proposal_path': proposal_path}
+        events[path] = event
+    for reference in registry.get('successor_transactions', []):
+        event = successor_transactions[reference['transaction_id']]
+        proposal_path = 'state/history/excel7_accepted_proposal_lite_v1.json'
+        raw, retired = _remote_file(proposal_path, main)
+        if event['result']['files'].get(proposal_path) != sha(raw):
+            raise ValueError('successor retained Proposal hash differs')
+        events[reference['path']] = {**event, 'retained_proposal': retired,
+                                    'retained_proposal_path': proposal_path}
+    canonical['promotion_events'] = events
+    canonical['current_json'] = current
+    policy_path = 'state/candidate_lifecycle_retention_policy_v1.json'
+    policy = _optional_remote_file(policy_path, main)
+    if policy is not None:
+        raw, value = policy
+        try:
+            from scripts.validate_retention_policy import validate as validate_policy
+        except ModuleNotFoundError:
+            from validate_retention_policy import validate as validate_policy
+        if (value.get('artifact_type') != 'integra.candidate_lifecycle_retention_policy'
+                or validate_policy(value)
+                or value.get('status') != 'PRODUCT_OWNER_AUTHORIZED_ACTIVE'
+                or not value.get('authority_ref') or not HASH.fullmatch(value.get('authority_payload_sha256', ''))
+                or value.get('max_full_copies') != 8
+                or value.get('max_attributed_bytes') != 21474836480
+                or value.get('minimum_free_after_reservations') != 16106127360
+                or value.get('absolute_hold_prefixes') != ['721d', '073396', '97be', '14b3']
+                or not (ROOT / policy_path).is_file()
+                or (ROOT / policy_path).read_bytes() != raw):
+            raise ValueError('canonical standing retention policy unavailable or differs')
+        canonical['standing_policy'] = {**value, 'sha256': sha(raw), 'path': policy_path}
+    try:
+        from scripts import candidate_lifecycle
+    except ModuleNotFoundError:
+        import candidate_lifecycle
+    canonical['canonical_lifecycles'] = candidate_lifecycle.collect_lifecycle_events(
+        current, events, {'main_sha': main, 'current_sha256': sha(current_bytes)})
+    if _api(f'repos/{REPOSITORY}/git/ref/heads/main')['object']['sha'] != main:
+        raise ValueError('canonical main moved during lifecycle capture')
     return current, proposals, canonical
 
 
@@ -571,6 +635,40 @@ def _validate_withdrawn_lifecycles(registry: dict, canonical: dict | None,
     return grants
 
 
+def protected_domain(registry: dict, current: dict, proposals: dict,
+                     canonical: dict) -> dict:
+    """Derive obligations independently of physical survivor selectors."""
+    blockers = []
+    gaps = _accepted_historical_gaps(registry, canonical, blockers)
+    protected = _validate_registry(registry, current, proposals, blockers, gaps, canonical)
+    _validate_withdrawn_lifecycles(registry, canonical, protected, blockers)
+    if blockers:
+        raise ValueError('canonical protection domain invalid: ' + ','.join(sorted(set(blockers))))
+    return protected
+
+
+def reconcile_survivors(registry: dict, current: dict, proposals: dict,
+                        canonical: dict, *, incoming: dict | None = None) -> dict:
+    """Recompute the exact obligation domain, never select by age or similarity.
+
+    Losing a selector does not authorize physical retirement. Missing selectors
+    for an existing obligation remain a failure, not a guessed archive path.
+    """
+    protected = protected_domain(registry, current, proposals, canonical)
+    selected = registry.get('selected_survivors', {})
+    result = {}
+    for cid in sorted(protected):
+        if incoming and cid == incoming['candidate_id']:
+            if any(protected[cid]['identity'].get(k) != incoming.get(k) for k in IDENTITY):
+                raise ValueError('incoming survivor identity conflicts')
+            result[cid] = f"Build Archive/{cid}/{incoming['bundle_digest']}"
+        elif cid in selected:
+            result[cid] = selected[cid]
+        else:
+            raise ValueError('MISSING_SURVIVOR:' + cid)
+    return result
+
+
 def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages: list[dict],
             *, free_bytes: int, verifier=verify_archive, canonical: dict | None = None,
             for_deletion: bool = False) -> dict:
@@ -649,6 +747,8 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
     if not isinstance(selected, dict) or set(selected) != set(protected):
         blockers.append('SELECTED_SURVIVOR_SET_INCOMPLETE')
         selected = selected if isinstance(selected, dict) else {}
+        blockers.extend('MISSING_SURVIVOR:' + cid for cid in sorted(set(protected) - set(selected)))
+        blockers.extend('EXTRA_SURVIVOR:' + cid for cid in sorted(set(selected) - set(protected)))
     rows = []
     known_paths = {item['path'] for item in packages}
     verified = set()
@@ -673,10 +773,12 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
             continue
         if path not in known_paths:
             blockers.append('MISSING_PROTECTED_ARCHIVE:' + cid)
+            blockers.append('UNAVAILABLE_SURVIVOR:' + cid)
             continue
         package = next(item for item in packages if item['path'] == path)
         if any(package.get(k) != v for k, v in role['identity'].items()):
             blockers.append('PROTECTED_ARCHIVE_IDENTITY_CONFLICT:' + cid)
+            blockers.append('CONFLICTING_SURVIVOR:' + cid)
             continue
         try:
             receipt = verifier(Path(package['absolute_path']), role['identity'])
@@ -739,6 +841,39 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
                     and grant.get('authority_ref')):
                 row['classification'] = 'ELIGIBLE'
                 row['reasons'] = ['EXACT_OWNER_AUTHORIZED_TERMINAL']
+    try:
+        from scripts import candidate_lifecycle as lifecycle
+    except ModuleNotFoundError:
+        import candidate_lifecycle as lifecycle
+    for row in rows:
+        local = row.get('catalog_record') or {k: row.get(k) for k in IDENTITY}
+        local.setdefault('status', row.get('lifecycle', 'UNKNOWN'))
+        role = protected.get(row.get('candidate_id'), {})
+        replayed = lifecycle.replay(local, (canonical or {}).get('canonical_lifecycles', {}),
+                                    role.get('reasons', []))
+        row['local_lifecycle'] = row.get('lifecycle', 'UNKNOWN')
+        row['reconciled_lifecycle'] = replayed.get('status', 'UNKNOWN')
+        # Protected survivors were fully rehashed above in this same immutable
+        # snapshot. Avoid reopening their tens of thousands of files twice.
+        integrity_verified = row['path'] in verified_paths
+        if not role:
+            try:
+                verifier(Path(row['absolute_path']), {k: row[k] for k in IDENTITY})
+                integrity_verified = row.get('metadata_error') is None
+            except (OSError, ValueError, KeyError, TypeError):
+                pass
+        row['integrity_verified'] = integrity_verified
+        decision = lifecycle.terminal_eligibility(
+            {k: row.get(k) for k in IDENTITY}, replayed, role.get('reasons', []),
+            owned=row.get('publisher_owned') is True,
+            integrity_verified=integrity_verified, context_valid=not blockers,
+            inactive=row.get('inactive') is True,
+            standing_policy=(canonical or {}).get('standing_policy'))
+        row['standing_retirement_eligible'] = decision['eligible']
+        row['standing_retirement_reasons'] = decision['reasons']
+        if decision['eligible'] and row['classification'] == 'UNKNOWN':
+            row['classification'] = 'ELIGIBLE'
+            row['reasons'] = ['STANDING_TERMINAL_RETIREMENT']
     result = {'artifact_type': 'integra.candidate_protection_audit',
             'registry_status': registry.get('status'),
             'decision_authority_verified': decision_verified,
@@ -834,7 +969,8 @@ def scan_local(registry: dict, base: Path) -> list[dict]:
             rows.append({'path': relative, 'absolute_path': str(package),
                          **identity, 'allocated_bytes': amount,
                          'metadata_error': error, 'publisher_owned': owned,
-                         'lifecycle': lifecycle, 'inactive': inactive})
+                         'lifecycle': lifecycle, 'inactive': inactive,
+                         'catalog_record': record})
     return rows
 
 

@@ -14,6 +14,11 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 
+sys.dont_write_bytecode = True
+os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from archive_execution_guard import require_execution_path
+
 
 def bundle_digest(root):
     digest = hashlib.sha256()
@@ -54,6 +59,8 @@ def main():
     parser.add_argument("output", type=Path)
     parser.add_argument("--ocr", action="store_true", help="Run real local OCR as well (may take minutes)")
     args = parser.parse_args()
+    require_execution_path(args.app)
+    require_execution_path(args.output)
     resources = args.app.resolve(strict=True) / "Contents/Resources"
     args.output.mkdir(parents=True, exist_ok=False)
     root = args.output.resolve()

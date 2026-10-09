@@ -232,12 +232,19 @@ def _context_valid(context):
         selected = registry['selected_survivors']
         base = Path.home() / 'Library/Application Support/Integra'
         expected = {cid: str(base / relative) for cid, relative in selected.items() if relative}
+        canonical = audit.get('canonical') or {}
+        expected_events = audit.get('canonical_lifecycles', canonical.get('canonical_lifecycles'))
+        expected_policy = audit.get('standing_policy', canonical.get('standing_policy'))
         return bool(context and context.get('protected') and context.get('inputs')
                     and set(context['protected']) == set(selected)
                     and set(context.get('selected_archives', {})) == set(expected)
                     and set(context.get('verified_survivors', {})) == set(expected)
                     and all(_sha(p) == digest for p, digest in context['inputs'].items())
                     and context.get('selected_archives') == expected
+                    and (audit.get('registry_sha256') is None
+                         or context.get('registry_sha256') == audit['registry_sha256'])
+                    and (expected_events is None or context.get('canonical_lifecycles') == expected_events)
+                    and (expected_policy is None or context.get('standing_policy') == expected_policy)
                     and audit['authority_state'] == 'COMPLETE')
     except (OSError, ValueError, KeyError, TypeError, ImportError, subprocess.SubprocessError):
         return False
@@ -248,6 +255,10 @@ def plan(catalog, *, free_bytes=None):
         from scripts.candidate_protection_gate import require_deletion
     except ModuleNotFoundError:
         from candidate_protection_gate import require_deletion
+    try:
+        from scripts import candidate_lifecycle as lifecycle
+    except ModuleNotFoundError:
+        import candidate_lifecycle as lifecycle
     seen = set(); before = sum(_measure(_safe(p), seen) for p in catalog['roots'])
     rows = []; context = catalog.get('protection'); valid = _context_valid(context); attributed = set()
     # Root/container metadata is attributed to UNKNOWN, once, not a package.
@@ -258,8 +269,12 @@ def plan(catalog, *, free_bytes=None):
     complete_roots = all(str(_safe(p)) in catalog['roots'] for p in managed_roots())
     for package in _packages(catalog):
         identity, receipt, error = _metadata(package)
-        record = catalog['artifacts'].get(str(package)); owned = _ownership(package, record, receipt)
-        amount = _measure(package, attributed); status = (record or {}).get('status', 'LEGACY_UNCONFIRMED')
+        local_record = catalog['artifacts'].get(str(package))
+        record = lifecycle.replay(local_record or {},
+                                  (context or {}).get('canonical_lifecycles', {}),
+                                  (context or {}).get('protected', {}).get(identity.get('candidate_id'), []))
+        owned = _ownership(package, local_record, receipt)
+        amount = _measure(package, attributed); status = record.get('status', 'LEGACY_UNCONFIRMED')
         cid = identity.get('candidate_id'); reasons = []
         selected = (context or {}).get('selected_archives', {}).get(cid)
         if cid in protected_ids and (not selected or selected == str(package) or (record or {}).get('pin_ref')):
@@ -268,9 +283,15 @@ def plan(catalog, *, free_bytes=None):
             reasons.append('AWAITING_OWNER_ACCEPTANCE')
         if (record or {}).get('pin_ref'):
             reasons.append('EXPLICIT_GOVERNANCE_PROVENANCE')
+        standing = lifecycle.terminal_eligibility(
+            identity, record, (context or {}).get('protected', {}).get(cid, []),
+            owned=owned, integrity_verified=not error,
+            context_valid=valid and complete_roots,
+            inactive=not _publisher_live(record) and _inactive(package),
+            standing_policy=(context or {}).get('standing_policy'))
         if reasons:
             classification = 'PROTECTED'
-        elif not valid or not complete_roots or error or not owned or status not in TERMINAL or _publisher_live(record) or not _inactive(package):
+        elif not valid or not complete_roots or error or not owned or (status not in TERMINAL and not standing['eligible']) or _publisher_live(record) or not _inactive(package) or cid and cid.startswith(lifecycle.HOLDS):
             classification = 'UNKNOWN'
         else:
             classification = 'DELETABLE'
@@ -284,7 +305,11 @@ def plan(catalog, *, free_bytes=None):
         rows.append({'path': str(package), **identity, 'allocated_bytes': amount,
                      'classification': classification, 'protected_reasons': reasons,
                      'ownership': 'PUBLISHER_BOUND' if owned else 'LEGACY_OR_UNKNOWN_UNCONFIRMED',
-                     'lifecycle': status, 'metadata_error': error, 'device': package.stat().st_dev,
+                     'lifecycle': status,
+                     'local_lifecycle': (local_record or {}).get('status', 'LEGACY_UNCONFIRMED'),
+                     'standing_retirement_eligible': standing['eligible'],
+                     'standing_retirement_reasons': standing['reasons'],
+                     'metadata_error': error, 'device': package.stat().st_dev,
                      'inode': package.stat().st_ino, 'historical': bool((record or {}).get('historical'))})
     survivors_valid = all(any(r.get('candidate_id') == cid and not r['metadata_error']
                                   and all(r.get(k) == context.get('verified_survivors', {}).get(cid, {}).get(k)
@@ -413,9 +438,9 @@ def reserve_archive(root, allocated_bytes, *, destination=None, identity=None):
         from scripts.candidate_protection_gate import require_archive_publication
     except ModuleNotFoundError:
         from candidate_protection_gate import require_archive_publication
-    require_archive_publication(_safe(root), allocated_bytes)
     if not os.environ.get('INTEGRA_RETENTION_BUILD_LEASE'):
         maintenance(root, reason='BEFORE_ARCHIVE_COPY')
+    require_archive_publication(_safe(root), allocated_bytes)
     path = catalog_path(root)
     with locked(path) as catalog:
         register_root(catalog, root)
@@ -492,6 +517,8 @@ def build_preflight(root, expected_bytes, *, archive_copy=True):
     path = catalog_path(root)
     with locked(path) as catalog:
         register_root(catalog, root); _recover_leases(catalog); snapshot = plan(catalog)
+        if not snapshot['protection_context_valid']:
+            raise ValueError('build admission blocked: fresh canonical protection unavailable')
         reserved = sum(r['expected_bytes'] for r in catalog['leases'].values())
         if snapshot['full_copies'] + sum(r.get('copies', 1) for r in catalog['leases'].values()) + int(archive_copy) > MAX_COPIES or snapshot['BEFORE_BYTES'] + reserved + (expected_bytes if archive_copy else 0) > MAX_BYTES:
             emit('BUILD_HEADROOM_REJECTED', copies=snapshot['full_copies'],
@@ -536,6 +563,8 @@ def reserved_build(root, expected_bytes, *, archive_copy):
     try:
         with locked(path) as catalog:
             register_root(catalog, root); _recover_leases(catalog); snapshot = plan(catalog)
+            if not snapshot['protection_context_valid']:
+                raise ValueError('atomic build admission blocked: fresh canonical protection unavailable')
             copies = int(archive_copy)
             if snapshot['full_copies'] + sum(r.get('copies', 1) for r in catalog['leases'].values()) + copies > MAX_COPIES or snapshot['BEFORE_BYTES'] + sum(r['expected_bytes'] for r in catalog['leases'].values()) + copies * expected_bytes > MAX_BYTES:
                 raise ValueError('atomic build admission exceeds archive cap')
@@ -607,9 +636,37 @@ def sync_protection(catalog, current_path, proposals, rollback_archive, recovery
                (registry['recovery'] is None or
                 str(_safe(recovery_archive)) != selected.get(registry['recovery']['candidate_id']))):
         raise ValueError('catalog survivor selection differs from canonical registry')
-    context = {'protected': {cid: role['reasons'] for cid, role in audit['protected_identities'].items()},
+    reconcile_catalog(catalog, registry, audit, base, current_path=current_path)
+
+
+def reconcile_catalog(catalog, registry, audit, base, *, current_path=None):
+    """Mirror a verified complete canonical snapshot, under the caller's lock.
+
+    This is deterministic bookkeeping only. It does not select roles, create
+    acceptance, or withdraw pending authority. No payload is changed.
+    """
+    try:
+        from scripts.candidate_archive import verify_archive
+        from scripts import candidate_lifecycle as lifecycle
+    except ModuleNotFoundError:
+        from candidate_archive import verify_archive
+        import candidate_lifecycle as lifecycle
+    if audit.get('authority_state') != 'COMPLETE':
+        raise ValueError('catalog reconciliation needs complete canonical authority')
+    base = _safe(base)
+    protected = audit['protected_identities']
+    if set(registry['selected_survivors']) != set(protected):
+        raise ValueError('catalog reconciliation survivor domain differs')
+    selected = {cid: str(base / relative)
+                for cid, relative in registry['selected_survivors'].items() if relative}
+    canonical = audit.get('canonical', {})
+    events = audit.get('canonical_lifecycles', canonical.get('canonical_lifecycles', {}))
+    policy = audit.get('standing_policy', canonical.get('standing_policy', {}))
+    context = {'protected': {cid: role['reasons'] for cid, role in protected.items()},
                'inputs': {}, 'selected_archives': selected,
-               'verified_survivors': {}, 'registry_sha256': _sha(protection.REGISTRY)}
+               'verified_survivors': {}, 'registry_sha256': audit.get('registry_sha256'),
+               'canonical_snapshot': canonical,
+               'canonical_lifecycles': events, 'standing_policy': policy}
     verified = {}
     for cid, name in selected.items():
         package = _safe(name)
@@ -618,13 +675,19 @@ def sync_protection(catalog, current_path, proposals, rollback_archive, recovery
         rows = [row for row in audit['entries'] if row['path'] == str(package.relative_to(base))]
         if len(rows) != 1 or rows[0]['classification'] != 'PROTECTED' or not rows[0]['verified_protected_archive']:
             raise ValueError('canonical protected survivor is not verified')
-        receipt = verify_archive(package, {key: rows[0][key] for key in protection.IDENTITY})
+        receipt = verify_archive(package, {key: rows[0][key] for key in lifecycle.IDENTITY})
         verified[cid] = receipt
         context['inputs'][str(package / 'COMPLETE.json')] = _sha(package / 'COMPLETE.json')
         context['inputs'][str(package / 'inventory.json')] = _sha(package / 'inventory.json')
     context['verified_survivors'] = verified
-    context['current_path'] = str(_safe(current_path))
+    if current_path is not None:
+        context['current_path'] = str(_safe(current_path))
+    else:
+        context['current_id'] = registry['canonical_current']['current_id']
     catalog['protection'] = context
+    for name, record in list(catalog['artifacts'].items()):
+        catalog['artifacts'][name] = lifecycle.replay(
+            record, events, context['protected'].get(record.get('candidate_id'), []))
 
 
 def disposition(catalog, package, status, authority_ref):

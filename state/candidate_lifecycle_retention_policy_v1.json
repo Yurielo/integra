@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.candidate_lifecycle_retention_policy",
+  "status": "PRODUCT_OWNER_AUTHORIZED_ACTIVE",
+  "authority_ref": "Product Owner direct instruction 2026-10-09, attachment 08532c6d-2a26-4dce-822b-945deec4b62f",
+  "authority_payload_sha256": "803ca32ffe5629f919e60cdee5661005463f71d793de3b3f2ef636a9ce1e513d",
+  "policy_id": "terminal-owned-archive-retirement-v1",
+  "requires": ["canonical_terminal_lineage", "governed_ownership", "complete_immutable_history", "fresh_protection", "fresh_integrity", "inactive_writer", "no_active_role", "no_pending_authority", "no_unresolved_transaction", "no_integrity_incident", "no_required_physical_representation"],
+  "absolute_hold_prefixes": ["721d", "073396", "97be", "14b3"],
+  "max_full_copies": 8,
+  "max_attributed_bytes": 21474836480,
+  "minimum_free_after_reservations": 16106127360,
+  "does_not_authorize": ["acceptance", "rejection", "rollback_selection", "recovery_selection", "withdrawal", "UNKNOWN_ownership_adoption", "K2_continuation"]
+}

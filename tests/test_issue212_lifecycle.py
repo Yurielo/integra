@@ -55,7 +55,7 @@ class LifecycleTests(unittest.TestCase):
     def test_missing_authority_preserves_terminal_and_blocks_new_build(self):
         package, survivor = self.ready()
         with patch.object(r, '_context_valid', return_value=False), patch.object(r, 'MAX_COPIES', 2):
-            with self.assertRaisesRegex(ValueError, 'archive cap'):
+            with self.assertRaisesRegex(ValueError, 'fresh canonical protection unavailable'):
                 r.build_preflight(self.destination, 1)
         self.assertTrue(package.exists()); self.assertTrue(survivor.exists())
 
