@@ -8,6 +8,11 @@ from pathlib import Path
 import subprocess
 import sys
 
+sys.dont_write_bytecode = True
+os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from archive_execution_guard import require_execution_path
+
 CURRENT_ID = "candidate-v1-65bf72d1262146c9137aca433b51ae3974d98bc4c8ed37042db13b46e0318a1d"
 
 
@@ -59,6 +64,8 @@ def main():
     parser.add_argument("--baseline-app", type=Path)
     args = parser.parse_args()
     app = args.app.resolve(strict=True)
+    require_execution_path(app)
+    require_execution_path(args.output)
     resources = app / "Contents/Resources"
     sys.path.insert(0, str(resources))
     from integra_core.candidate_identity import validate_bundle, sha256_file

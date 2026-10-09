@@ -121,6 +121,7 @@ class CandidateArchiveTests(unittest.TestCase):
 
     def test_managed_archive_requires_canonical_lifecycle_gate_before_copy(self):
         with patch.object(archive, 'MANAGED_BASE', self.root), \
+                patch('scripts.candidate_retention.maintenance', return_value=[]), \
                 patch.object(candidate_protection_gate, 'require_archive_publication',
                              side_effect=ValueError('authority pending')) as gate:
             with self.assertRaisesRegex(ValueError, 'authority pending'):

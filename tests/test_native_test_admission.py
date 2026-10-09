@@ -69,7 +69,18 @@ class NativeTestAdmissionTests(unittest.TestCase):
 
 
 class ArchivedPythonImportTests(unittest.TestCase):
-    setUp = fixtures.CandidateArchiveTests.setUp
+    def setUp(self):
+        if self._testMethodName == 'test_real_output_guard_accepts_fresh_descendant_and_rejects_workspace_root':
+            from test_retention_repair_cycle import RealRetentionFixture
+            self.retention_fixture = RealRetentionFixture(self)
+            for label in ('recovery', 'current'):
+                self.retention_fixture.record(self.retention_fixture.bootstrap_archive(label))
+            self.retention_fixture.publish_state()
+            self.retention_fixture.refresh()
+            self.root = self.retention_fixture.root
+            self.destination = self.retention_fixture.archive_root
+        else:
+            fixtures.CandidateArchiveTests.setUp(self)
     _manifest = fixtures.CandidateArchiveTests._manifest
     _create = fixtures.CandidateArchiveTests._create
     _package = fixtures.CandidateArchiveTests._package

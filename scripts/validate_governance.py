@@ -2996,6 +2996,7 @@ def validate_ready_app_evidence(
 
 
 def main() -> int:
+    from validate_retention_policy import validate_file as validate_retention_policy_file
     state = load_json(STATE_PATH)
     baselines = load_json(BASELINES_PATH)
     ownership = load_json(OWNERSHIP_PATH)
@@ -3088,7 +3089,8 @@ def main() -> int:
             proposed_baseline, ROOT, Path(proposed_baseline_path)
         )
     errors = (
-        validate_state(state)
+        validate_retention_policy_file(ROOT)
+        + validate_state(state)
         + validate_component_baselines(baselines)
         + validate_data_ownership(ownership)
         + validate_worker_protocol(worker_protocol)

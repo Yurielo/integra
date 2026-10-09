@@ -13,6 +13,14 @@ active governance/provenance obligations remain protected. The exact historical
 migration requires a separate Human Gate. The historical recovery evidence
 below remains unchanged.
 
+The Product Owner's 2026-10-09 standing terminal-retirement decision is
+implemented by Issue #228 and
+[`CANDIDATE_LIFECYCLE_RETENTION_POLICY.md`](CANDIDATE_LIFECYCLE_RETENTION_POLICY.md).
+It permits only fully proven owned terminal archives with no remaining canonical
+obligation. It does not authorize legacy ownership adoption, pending-decision
+withdrawal or retirement of the four explicit holds. The policy is execution
+authority only after canonical delivery; Phase A never deletes real archives.
+
 ## Lifecycle
 
 1. Build in a fresh, uniquely owned workspace. The low-level historical

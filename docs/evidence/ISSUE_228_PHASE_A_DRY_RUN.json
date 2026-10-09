@@ -1,0 +1,213 @@
+{
+  "artifact_type": "integra.retention_repair_phase_a_dry_run",
+  "issue": 228,
+  "canonical_main": "b5aedfc8ff3b7c8bfff7e09f892eed0ca9130371",
+  "current_id": "current-v2-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f",
+  "execution_authority": "NONE_DRY_RUN",
+  "prospective_policy": true,
+  "catalog_sha256_before": "8115cc0ed8ecb545588ab5567a21f47222ad00c2066c5bda6ec9773a28bd3c15",
+  "catalog_sha256_after": "8115cc0ed8ecb545588ab5567a21f47222ad00c2066c5bda6ec9773a28bd3c15",
+  "obsolete_selectors": [
+    "candidate-v1-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e"
+  ],
+  "real_retirements": 0,
+  "payload_mutations": 0,
+  "capacity": {
+    "full_copies": 8,
+    "archive_bytes": 18238939136,
+    "free_bytes": 60325191680,
+    "eligible_bytes": 2280747008,
+    "max_full_copies": 8,
+    "max_attributed_bytes": 21474836480,
+    "minimum_free_after_reservations": 16106127360
+  },
+  "authority_state": "COMPLETE",
+  "blockers": [],
+  "next_build": {
+    "admission_proven": false,
+    "eligible_terminal_archives": [
+      "candidate-v1-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e"
+    ],
+    "reason": "READ_ONLY_NOT_A_CAPACITY_RESERVATION",
+    "requested_bytes": 2516582400,
+    "requires_canonical_reconciliation": true
+  },
+  "entries": [
+    {
+      "candidate_id": "candidate-v1-073396d37f3f70fe2a550a481cbacdb645204a188d8b4a6c1ad18cdfac77e4a8",
+      "bundle_digest": "c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
+      "manifest_digest": "aa08d2ea861c218c893c287e189bf96beb3096f555913b9d3c7b391e6e5061f4",
+      "path": "Build Archive/candidate-v1-073396d37f3f70fe2a550a481cbacdb645204a188d8b4a6c1ad18cdfac77e4a8/c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
+      "allocated_bytes": 2281103360,
+      "discovered_lifecycle": "LEGACY_UNCONFIRMED",
+      "local_catalog_lifecycle": "AWAITING_OWNER_ACCEPTANCE",
+      "reconciled_lifecycle": "AWAITING_OWNER_ACCEPTANCE",
+      "canonical_roles": [],
+      "classification": "UNKNOWN",
+      "publisher_owned": false,
+      "integrity_verified": false,
+      "standing_retirement_eligible": false,
+      "standing_retirement_reasons": [
+        "ACTIVE_OR_ACTIVITY_UNPROVEN",
+        "AWAITING_OWNER_ACCEPTANCE",
+        "EXPLICIT_TASK_HOLD",
+        "IMMUTABLE_HISTORY_INCOMPLETE",
+        "INTEGRITY_UNPROVEN_OR_INCIDENT",
+        "LIFECYCLE_NOT_TERMINAL",
+        "OWNERSHIP_UNKNOWN_OR_UNCONFIRMED"
+      ]
+    },
+    {
+      "candidate_id": "candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81",
+      "bundle_digest": "c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
+      "manifest_digest": "faf503cf088cbf0d9b7ea005cf7d5523bcf36bf575759377450993262cc5bdf5",
+      "path": "Build Archive/candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81/c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
+      "allocated_bytes": 2280759296,
+      "discovered_lifecycle": "AWAITING_OWNER_ACCEPTANCE",
+      "local_catalog_lifecycle": "AWAITING_OWNER_ACCEPTANCE",
+      "reconciled_lifecycle": "CONFIRMED_ROLLBACK",
+      "canonical_roles": [
+        "CONFIRMED_ROLLBACK"
+      ],
+      "classification": "PROTECTED",
+      "publisher_owned": true,
+      "integrity_verified": true,
+      "standing_retirement_eligible": false,
+      "standing_retirement_reasons": [
+        "CONFIRMED_ROLLBACK",
+        "LIFECYCLE_NOT_TERMINAL"
+      ]
+    },
+    {
+      "candidate_id": "candidate-v1-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e",
+      "bundle_digest": "639d66bbbd8d7af55d091f43156d823000496191c771bef28d7fffc6fe88a302",
+      "manifest_digest": "e50edf361bad7226caf3101584ec3dc73119a0254c464ecb424f1ec0a23daacf",
+      "path": "Build Archive/candidate-v1-5f6384c8d68c96cc84432e3c72039ef1cdb0642f6399c6d5df60387774a7ed1e/639d66bbbd8d7af55d091f43156d823000496191c771bef28d7fffc6fe88a302",
+      "allocated_bytes": 2280747008,
+      "discovered_lifecycle": "AWAITING_OWNER_ACCEPTANCE",
+      "local_catalog_lifecycle": "AWAITING_OWNER_ACCEPTANCE",
+      "reconciled_lifecycle": "HISTORICAL_PROMOTED",
+      "canonical_roles": [],
+      "classification": "ELIGIBLE",
+      "publisher_owned": true,
+      "integrity_verified": true,
+      "standing_retirement_eligible": true,
+      "standing_retirement_reasons": []
+    },
+    {
+      "candidate_id": "candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f",
+      "bundle_digest": "e3215a28c9ce0a1a54c35dc535bad42a9334cae7ddc5eb3b0533a480e0296d95",
+      "manifest_digest": "aa581c025edfc09cb7e2c59bf7d1ee98c78a5c17bc3d670e33b0fa351ce6b3e6",
+      "path": "Build Archive/candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f/e3215a28c9ce0a1a54c35dc535bad42a9334cae7ddc5eb3b0533a480e0296d95",
+      "allocated_bytes": 2280861696,
+      "discovered_lifecycle": "AWAITING_OWNER_ACCEPTANCE",
+      "local_catalog_lifecycle": "AWAITING_OWNER_ACCEPTANCE",
+      "reconciled_lifecycle": "CURRENT",
+      "canonical_roles": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE"
+      ],
+      "classification": "PROTECTED",
+      "publisher_owned": true,
+      "integrity_verified": true,
+      "standing_retirement_eligible": false,
+      "standing_retirement_reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "LIFECYCLE_NOT_TERMINAL"
+      ]
+    },
+    {
+      "candidate_id": "candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5",
+      "bundle_digest": "f7c053a536e1c415adcc2e32b2f5a52248edfea17afaebc6cbca6c716d65cfa9",
+      "manifest_digest": "241b9ae31d16d28d3ba7d174f0776f31fb148bb4c52df2a6545c94e2c0130282",
+      "path": "Build Archive/candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5/f7c053a536e1c415adcc2e32b2f5a52248edfea17afaebc6cbca6c716d65cfa9",
+      "allocated_bytes": 2280730624,
+      "discovered_lifecycle": "AWAITING_OWNER_ACCEPTANCE",
+      "local_catalog_lifecycle": "AWAITING_OWNER_ACCEPTANCE",
+      "reconciled_lifecycle": "AWAITING_OWNER_ACCEPTANCE",
+      "canonical_roles": [],
+      "classification": "UNKNOWN",
+      "publisher_owned": true,
+      "integrity_verified": true,
+      "standing_retirement_eligible": false,
+      "standing_retirement_reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "EXPLICIT_TASK_HOLD",
+        "IMMUTABLE_HISTORY_INCOMPLETE",
+        "LIFECYCLE_NOT_TERMINAL"
+      ]
+    },
+    {
+      "candidate_id": "candidate-v1-97be0af4389d8696154ab1e897425d3f660573673369f391e3287b9f9418d38a",
+      "bundle_digest": "74ad6e346aff04b08b1962b8643e1c9da368632e311d8566a932f608674fbed0",
+      "manifest_digest": "3e2f8985dbff081d2e17950c564c120c5151951e4cb2faaa6b6d2f330109bf98",
+      "path": "Build Archive/candidate-v1-97be0af4389d8696154ab1e897425d3f660573673369f391e3287b9f9418d38a/74ad6e346aff04b08b1962b8643e1c9da368632e311d8566a932f608674fbed0",
+      "allocated_bytes": 2280747008,
+      "discovered_lifecycle": "LEGACY_UNCONFIRMED",
+      "local_catalog_lifecycle": "UNTRACKED",
+      "reconciled_lifecycle": "LEGACY_UNCONFIRMED",
+      "canonical_roles": [],
+      "classification": "UNKNOWN",
+      "publisher_owned": false,
+      "integrity_verified": true,
+      "standing_retirement_eligible": false,
+      "standing_retirement_reasons": [
+        "ACTIVE_OR_ACTIVITY_UNPROVEN",
+        "EXPLICIT_TASK_HOLD",
+        "IMMUTABLE_HISTORY_INCOMPLETE",
+        "LIFECYCLE_NOT_TERMINAL",
+        "OWNERSHIP_UNKNOWN_OR_UNCONFIRMED"
+      ]
+    },
+    {
+      "candidate_id": "candidate-v1-14b3c10e4d779ff8b5a520bf15e2b7087673aec2cd0abd25aac4e1d0ded77892",
+      "bundle_digest": "ab53369d4d46fc8a4dece0b8e0f777f5017731b2256ff34ecb27738a849d8c94",
+      "manifest_digest": "55eb3562826006ca90be7f698877bfd709882eabe6605e1b12431b3f3cc791fb",
+      "path": "Candidate Builds/topic-translation-47be46d",
+      "allocated_bytes": 2273267712,
+      "discovered_lifecycle": "LEGACY_UNCONFIRMED",
+      "local_catalog_lifecycle": "UNTRACKED",
+      "reconciled_lifecycle": "LEGACY_UNCONFIRMED",
+      "canonical_roles": [
+        "OPEN_PROPOSAL"
+      ],
+      "classification": "PROTECTED",
+      "publisher_owned": false,
+      "integrity_verified": false,
+      "standing_retirement_eligible": false,
+      "standing_retirement_reasons": [
+        "ACTIVE_OR_ACTIVITY_UNPROVEN",
+        "EXPLICIT_TASK_HOLD",
+        "IMMUTABLE_HISTORY_INCOMPLETE",
+        "INTEGRITY_UNPROVEN_OR_INCIDENT",
+        "LIFECYCLE_NOT_TERMINAL",
+        "OPEN_PROPOSAL",
+        "OWNERSHIP_UNKNOWN_OR_UNCONFIRMED"
+      ]
+    },
+    {
+      "candidate_id": "candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29",
+      "bundle_digest": "fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
+      "manifest_digest": "667539142be8f7909dc56acb60be1e1fa30c05c6cec44ab931f32fcc8dd36c39",
+      "path": "Validation/integra-212-native-35e6f9101278/candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29/fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
+      "allocated_bytes": 2280722432,
+      "discovered_lifecycle": "AWAITING_OWNER_ACCEPTANCE",
+      "local_catalog_lifecycle": "AWAITING_OWNER_ACCEPTANCE",
+      "reconciled_lifecycle": "AWAITING_OWNER_ACCEPTANCE",
+      "canonical_roles": [
+        "ACCEPTED_UNPROMOTED"
+      ],
+      "classification": "PROTECTED",
+      "publisher_owned": true,
+      "integrity_verified": true,
+      "standing_retirement_eligible": false,
+      "standing_retirement_reasons": [
+        "ACCEPTED_UNPROMOTED",
+        "AWAITING_OWNER_ACCEPTANCE",
+        "IMMUTABLE_HISTORY_INCOMPLETE",
+        "LIFECYCLE_NOT_TERMINAL"
+      ]
+    }
+  ]
+}

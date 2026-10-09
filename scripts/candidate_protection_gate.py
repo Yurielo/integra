@@ -105,8 +105,6 @@ def require_archive_publication(archive_root: Path, estimated_bytes: int) -> Non
 def require_deletion(path: Path) -> None:
     """No deletion without an exact grant and a fresh eligible classification."""
     registry, audit = _snapshot(for_deletion=True)
-    if registry.get('deletion_enabled') is not True:
-        raise ValueError('canonical protection disables deletion')
     base = Path.home() / 'Library/Application Support/Integra'
     path = path.resolve()
     try:
@@ -116,6 +114,17 @@ def require_deletion(path: Path) -> None:
     rows = [item for item in audit['entries'] if item['path'] == relative]
     grant = {**registry.get('deletion_authorizations', {}),
              **registry.get('withdrawal_deletion_authorizations', {})}.get(relative)
+    if (len(rows) == 1 and rows[0].get('standing_retirement_eligible') is True
+            and rows[0].get('reasons') == ['STANDING_TERMINAL_RETIREMENT']):
+        policy = audit['canonical'].get('standing_policy')
+        if not policy:
+            raise ValueError('standing terminal retirement policy unavailable')
+        grant = {'kind': 'STANDING_TERMINAL_RETIREMENT', 'path': relative,
+                 **{k: rows[0][k] for k in protection.IDENTITY},
+                 'authority_ref': policy['authority_ref'], 'policy_sha256': policy['sha256'],
+                 'lifecycle_evidence': audit['canonical']['canonical_lifecycles'][rows[0]['candidate_id']]}
+    elif registry.get('deletion_enabled') is not True:
+        raise ValueError('canonical protection disables deletion')
     if (len(rows) != 1 or rows[0]['classification'] != 'ELIGIBLE'
             or not isinstance(grant, dict)
             or not grant.get('authority_ref')
@@ -150,14 +159,25 @@ def require_deletion_continuation(lease: dict) -> None:
     if hashlib.sha256(data).hexdigest() != lease.get('registry_sha256'):
         raise ValueError('canonical deletion registry changed')
     registry = json.loads(data)
+    standing = (lease.get('grant') or {}).get('kind') == 'STANDING_TERMINAL_RETIREMENT'
     if (registry.get('status') != 'PRODUCT_OWNER_AUTHORIZED_ACTIVE'
             or not registry.get('activation_authority_ref')
             or not registry.get('promotion_contract_integration_ref')
-            or registry.get('deletion_enabled') is not True
-            or {**registry.get('deletion_authorizations', {}),
-                **registry.get('withdrawal_deletion_authorizations', {})}.get(lease.get('path')) != lease.get('grant')):
+            or (not standing and (registry.get('deletion_enabled') is not True
+                or {**registry.get('deletion_authorizations', {}),
+                    **registry.get('withdrawal_deletion_authorizations', {})}.get(lease.get('path')) != lease.get('grant')))):
         raise ValueError('canonical deletion authority is unavailable')
     current, proposals, canonical = protection.fetch_canonical(registry)
+    if standing:
+        policy = canonical.get('standing_policy') or {}
+        identity = lease.get('identity') or {}
+        grant = lease['grant']
+        if (policy.get('status') != 'PRODUCT_OWNER_AUTHORIZED_ACTIVE'
+                or policy.get('sha256') != grant.get('policy_sha256')
+                or policy.get('authority_ref') != grant.get('authority_ref')
+                or grant.get('lifecycle_evidence') != canonical.get('canonical_lifecycles', {}).get(identity.get('candidate_id'))
+                or any(grant.get(k) != identity.get(k) for k in protection.IDENTITY)):
+            raise ValueError('standing terminal retirement authority/identity changed')
     if protection.digest(canonical) != lease.get('canonical_sha256'):
         raise ValueError('canonical deletion inputs changed')
     blockers = []
@@ -187,3 +207,5 @@ def require_deletion_continuation(lease: dict) -> None:
         if (expected_survivors[cid].get('path') != relative
                 or protection.sha(receipt.read_bytes()) != expected_survivors[cid].get('receipt_sha256')):
             raise ValueError('protected survivor disappeared or changed: ' + cid)
+        if standing:
+            protection.verify_archive(base / relative, protected[cid]['identity'])

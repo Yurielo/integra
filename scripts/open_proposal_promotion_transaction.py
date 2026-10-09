@@ -103,6 +103,8 @@ def preflight(root: Path, *, pr: int, expected_head: str, expected_base: str,
         raise ValueError("; ".join(errors))
     base = Path.home() / "Library/Application Support/Integra"
     virtual = _virtual_pre_registry(registry, proposal, pr, expected_head)
+    virtual['selected_survivors'] = protection.reconcile_survivors(
+        virtual, current, proposals, canonical, incoming=proposal['candidate'])
     packages = protection.scan_local(virtual, base)
     audit = protection.resolve(virtual, current, proposals, packages,
                                free_bytes=shutil.disk_usage(base).free, canonical=canonical)
@@ -113,7 +115,8 @@ def preflight(root: Path, *, pr: int, expected_head: str, expected_base: str,
     receipt = candidate_archive.verify_archive(archive, _identity(proposal["candidate"]))
     return {"pr": pr, "head": expected_head, "base": expected_base, "proposal": proposal,
             "current": current, "registry": registry, "canonical": canonical,
-            "authorization": authorization, "archive": str(archive), "receipt": receipt}
+            "authorization": authorization, "archive": str(archive), "receipt": receipt,
+            "proposals": proposals}
 
 
 def package(root: Path, pinned: dict) -> tuple[dict, dict[str, bytes | None]]:
@@ -132,8 +135,10 @@ def package(root: Path, pinned: dict) -> tuple[dict, dict[str, bytes | None]]:
     registry["rollback"] = {**outgoing_identity,
                             "confirmation_ref": paths["event"]}
     registry["proposed"] = [row for row in registry["proposed"] if row.get("pr") != pinned["pr"]]
-    registry["selected_survivors"][candidate["candidate_id"]] = (
-        f"Build Archive/{candidate['candidate_id']}/{candidate['bundle_digest']}")
+    post_proposals = {n: p for n, p in pinned['proposals'].items() if n != pinned['pr']}
+    post_canonical = {**pinned['canonical'], 'current_sha256': protection.sha(successor_raw)}
+    registry['selected_survivors'] = protection.reconcile_survivors(
+        registry, successor, post_proposals, post_canonical, incoming=candidate)
     event = {"artifact_type": "integra.open_proposal_promotion_transaction", "schema_version": "1.0",
              "transaction_id": "open-proposal-v1-" + digest({k: pinned[k] for k in ("pr", "head", "base", "authorization")}),
              "inputs": {"pr": pinned["pr"], "head": pinned["head"], "base": pinned["base"],
@@ -151,7 +156,7 @@ def package(root: Path, pinned: dict) -> tuple[dict, dict[str, bytes | None]]:
     return event, files
 
 
-def validate_post(root: Path, event: dict, files: dict[str, bytes | None]) -> None:
+def validate_post(root: Path, event: dict, files: dict[str, bytes | None]) -> dict:
     for path, raw in files.items():
         target = root / path
         if raw is None:
@@ -170,9 +175,30 @@ def validate_post(root: Path, event: dict, files: dict[str, bytes | None]) -> No
                                free_bytes=shutil.disk_usage(base).free, canonical=canonical)
     if audit["authority_state"] != "COMPLETE":
         raise ValueError("post-state protection audit fails: " + ",".join(audit["blockers"]))
+    identity = event['inputs']['candidate']
+    lifecycle = canonical.get('canonical_lifecycles', {}).get(identity['candidate_id'])
+    if not lifecycle or any(lifecycle.get(k) != identity[k] for k in protection.IDENTITY):
+        raise ValueError('post-state exact canonical lifecycle missing or conflicts')
+    audit['registry_sha256'] = protection.sha(files[REGISTRY])
+    return audit
 
 
 def apply(root: Path, *, pr: int, expected_head: str, expected_base: str, authorization: str) -> str:
+    try:
+        from scripts import candidate_retention as retention
+    except ModuleNotFoundError:
+        import candidate_retention as retention
+    base = Path.home() / 'Library/Application Support/Integra'
+    # The same lock used by cleanup spans the final archive verification,
+    # canonical transition, post-validation and catalog lifecycle mirror.
+    with retention.locked(retention.catalog_path(base / 'Build Archive')) as catalog:
+        return _apply_locked(root, pr=pr, expected_head=expected_head,
+                             expected_base=expected_base, authorization=authorization,
+                             catalog=catalog, base=base)
+
+
+def _apply_locked(root: Path, *, pr: int, expected_head: str, expected_base: str,
+                  authorization: str, catalog: dict, base: Path) -> str:
     pinned = preflight(root, pr=pr, expected_head=expected_head, expected_base=expected_base, authorization=authorization)
     event, files = package(root, pinned)
     checks = protection._api(f"repos/{protection.REPOSITORY}/commits/{expected_head}/check-runs")["check_runs"]
@@ -196,6 +222,22 @@ def apply(root: Path, *, pr: int, expected_head: str, expected_base: str, author
         if result.returncode: raise ValueError("canonical merge push failed: " + result.stderr.strip())
     finally:
         Path(index).unlink(missing_ok=True)
+    # Validate the actual pushed tree in a clean Git context; never overwrite
+    # the proposal worktree or claim success from a merely prepared package.
+    with tempfile.TemporaryDirectory(prefix='integra-promotion-post-') as directory:
+        checkout = Path(directory) / 'checkout'
+        subprocess.run(['git', 'worktree', 'add', '--detach', str(checkout), merge], cwd=root, check=True,
+                       capture_output=True)
+        try:
+            audit = validate_post(checkout, event, files)
+            try:
+                from scripts import candidate_retention as retention
+            except ModuleNotFoundError:
+                import candidate_retention as retention
+            retention.reconcile_catalog(catalog, json.loads(files[REGISTRY]), audit, base)
+        finally:
+            subprocess.run(['git', 'worktree', 'remove', str(checkout)], cwd=root, check=True,
+                           capture_output=True)
     return merge
 
 
