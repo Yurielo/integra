@@ -102,6 +102,15 @@ def validate_bundle(app: Path) -> dict[str, Any]:
         from .translategemma_runtime import preflight as translation_preflight
         if components["integra.translation"] != translation_preflight():
             raise ValueError("candidate TranslateGemma runtime/model differs from manifest")
+    if "seminartext.knowledge_admission" in components:
+        admission = resources / "runtime/knowledge-admission"
+        pin = components["seminartext.knowledge_admission"]
+        if json.loads((admission / "runtime.json").read_bytes()) != pin:
+            raise ValueError("candidate Knowledge admission pin differs from manifest")
+        for relative, expected in pin["files"].items():
+            path = admission / relative
+            if path.is_symlink() or not path.resolve().is_relative_to(admission.resolve()) or sha256_file(path) != expected:
+                raise ValueError("candidate Knowledge admission runtime bytes differ")
     seminar = resources / "runtime" / "seminartext"
     runtime = json.loads((seminar / "runtime.json").read_text(encoding="utf-8"))
     if runtime.get("commit_sha") != components.get("seminartext", {}).get("commit_sha"):
