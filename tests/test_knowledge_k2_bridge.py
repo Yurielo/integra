@@ -192,5 +192,22 @@ class KnowledgeK2RealBridgeTests(unittest.TestCase):
         self.assertIsNone(self.call("open")["revision_sha256"])
 
 
+class KnowledgeK2PackagedSchemaBridgeTests(KnowledgeK2RealBridgeTests):
+    """Real apply/reopen/export with packaged schema lookup, no repo fallback."""
+
+    def setUp(self):
+        super().setUp()
+        import shutil
+        from integra_core import knowledge
+        from scripts.package_knowledge_admission_runtime import package_view_schema
+        resources = self.root / "schema-layout/Contents/Resources"
+        package_view_schema(resources)
+        shutil.copytree(ROOT / "integra_core/_vendor", resources / "integra_core/_vendor",
+                        ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+        projection = patch.object(knowledge, "__file__", str(resources / "integra_core/knowledge.py"))
+        projection.start()
+        self.addCleanup(projection.stop)
+
+
 if __name__ == "__main__":
     unittest.main()
