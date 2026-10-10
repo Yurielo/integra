@@ -686,8 +686,13 @@ def reconcile_catalog(catalog, registry, audit, base, *, current_path=None):
         context['current_id'] = registry['canonical_current']['current_id']
     catalog['protection'] = context
     for name, record in list(catalog['artifacts'].items()):
-        catalog['artifacts'][name] = lifecycle.replay(
+        reconciled = lifecycle.replay(
             record, events, context['protected'].get(record.get('candidate_id'), []))
+        # Pending Candidate withdrawal is a separately validated canonical
+        # terminal event, not a promotion.  Mirror it only after the complete
+        # protection resolver has accepted its exact Product Owner evidence.
+        catalog['artifacts'][name] = lifecycle.replay_withdrawal(
+            reconciled, canonical.get('withdrawn_candidate_lifecycles', []))
 
 
 def disposition(catalog, package, status, authority_ref):

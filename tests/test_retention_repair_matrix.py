@@ -144,6 +144,39 @@ class RetentionRepairMatrix(unittest.TestCase):
         self.assertEqual(replay['status'], 'HISTORICAL_PROMOTED')
         self.assertEqual(replay['lifecycle_evidence']['acceptance_refs'], EVIDENCE['acceptance_refs'])
 
+    def test_08a_validated_withdrawal_is_mirrored_to_catalog_not_inferred(self):
+        f = self.fixture()
+        receipt = f.bootstrap_archive('withdrawn-pending')
+        f.catalog.write_bytes(tx.encoded(f.owner_catalog))
+        withdrawal = {
+            **{key: receipt[key] for key in p.IDENTITY},
+            'previous_status': 'AWAITING_OWNER_ACCEPTANCE',
+            'resulting_status': 'WITHDRAWN_SUPERSEDED',
+            'reason': 'ISOLATED_EXACT_SUPERSESSION',
+            'authority_ref': 'https://github.com/Yurielo/integra/issues/1#issuecomment-2',
+            'authority_body_sha256': 'a' * 64,
+            'history_path': 'state/history/isolated-withdrawal.json',
+            'history_sha256': 'b' * 64,
+        }
+        # The fixture transport supplies an already-validated canonical event;
+        # reconciliation must not create one from an unprotected pending row.
+        f.withdrawals = [withdrawal]
+        f.registry['withdrawn_candidate_lifecycles'] = [withdrawal]
+        relative = str(Path(receipt['archive_path']).relative_to(f.base))
+        f.registry['withdrawal_deletion_authorizations'] = {
+            relative: {**{key: receipt[key] for key in p.IDENTITY},
+                       'path': relative, 'authority_ref': withdrawal['authority_ref'],
+                       'lifecycle': withdrawal['resulting_status'],
+                       'reason': withdrawal['reason'], 'scope': 'ISOLATED_EXACT_WITHDRAWAL'}
+        }
+        f.publish_state()
+        with r.locked(f.catalog) as catalog:
+            r.refresh_protection(catalog)
+        record = json.loads(f.catalog.read_bytes())['artifacts'][receipt['archive_path']]
+        self.assertEqual(record['status'], 'WITHDRAWN_SUPERSEDED')
+        self.assertEqual(record['disposition_ref'], withdrawal['authority_ref'])
+        self.assertEqual(record['withdrawal_lifecycle_evidence'], withdrawal)
+
     def test_09_every_standing_condition_is_required(self):
         self.assertTrue(self.eligible()['eligible'])
         for flag in ('owned', 'integrity_verified', 'context_valid', 'inactive'):

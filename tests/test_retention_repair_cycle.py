@@ -53,10 +53,12 @@ class RealRetentionFixture:
             'accepted_unpromoted': [], 'explicit_governance_pins': {},
             'historical_gaps': [], 'successor_transactions': [],
             'selected_survivors': {}, 'deletion_enabled': False, 'deletion_authorizations': {},
+            'withdrawn_candidate_lifecycles': [],
             'standing_retention_policy': {'status': 'PRODUCT_OWNER_AUTHORIZED_ACTIVE',
                                          'authority_ref': 'fixture-standing-owner', 'sha256': 'f' * 64},
             'lifecycle_events': []}
         self.events = {}; self.proposals = {}; self.accepted_unpromoted = {}
+        self.withdrawals = []
         self.free = 64 * 1024**3; self.counter = 1
         self.main = '1' * 40
         self.remote = None
@@ -117,7 +119,7 @@ class RealRetentionFixture:
             'proposal_heads': {str(n): row['head_sha'] for n, row in
                               ((row['pr'], row) for row in self.registry['proposed'])},
             'accepted_unpromoted': copy.deepcopy(self.accepted_unpromoted),
-            'withdrawn_candidate_lifecycles': [],
+            'withdrawn_candidate_lifecycles': copy.deepcopy(self.withdrawals),
             'promotion_events': copy.deepcopy(events),
             'lifecycle_events': copy.deepcopy(events),
             'standing_retention_policy': copy.deepcopy(self.registry['standing_retention_policy'])}
