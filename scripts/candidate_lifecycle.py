@@ -46,6 +46,28 @@ def evidence_matches(identity, evidence):
                 and evidence.get('proposal_refs'))
 
 
+def withdrawal_evidence_matches(identity, evidence):
+    """Recognize a canonical, exact withdrawal as terminal lineage.
+
+    The protection resolver independently verifies the referenced Product Owner
+    decision and immutable history before the catalog can receive this record;
+    the cleanup gate independently verifies the matching deletion grant.  This
+    predicate deliberately does not treat a missing Proposal, elapsed time, or
+    a local disposition string as withdrawal evidence.
+    """
+    return bool(exact_identity(identity) and isinstance(evidence, dict)
+                and all(evidence.get(key) == identity[key] for key in IDENTITY)
+                and evidence.get('previous_status') == 'AWAITING_OWNER_ACCEPTANCE'
+                and evidence.get('resulting_status') == 'WITHDRAWN_SUPERSEDED'
+                and isinstance(evidence.get('reason'), str) and evidence['reason']
+                and isinstance(evidence.get('authority_ref'), str) and evidence['authority_ref']
+                and isinstance(evidence.get('authority_body_sha256'), str)
+                and re.fullmatch(r'[0-9a-f]{64}', evidence['authority_body_sha256'])
+                and isinstance(evidence.get('history_path'), str) and evidence['history_path']
+                and isinstance(evidence.get('history_sha256'), str)
+                and re.fullmatch(r'[0-9a-f]{64}', evidence['history_sha256']))
+
+
 def exact_source(source):
     return bool(isinstance(source, dict) and all(
         isinstance(source.get(key), str) and re.fullmatch(r'[0-9a-f]{40}', source[key])
@@ -202,7 +224,9 @@ def terminal_eligibility(identity, record, roles, *, owned,
     if record.get('status') not in TERMINAL:
         reasons.append('LIFECYCLE_NOT_TERMINAL')
     evidence = record.get('lifecycle_evidence')
-    if not evidence_matches(identity, evidence):
+    withdrawal = record.get('withdrawal_lifecycle_evidence')
+    if not (evidence_matches(identity, evidence)
+            or withdrawal_evidence_matches(identity, withdrawal)):
         reasons.append('IMMUTABLE_HISTORY_INCOMPLETE')
     policy = standing_policy or {}
     if (policy.get('status') != 'PRODUCT_OWNER_AUTHORIZED_ACTIVE'

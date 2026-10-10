@@ -176,6 +176,11 @@ class RetentionRepairMatrix(unittest.TestCase):
         self.assertEqual(record['status'], 'WITHDRAWN_SUPERSEDED')
         self.assertEqual(record['disposition_ref'], withdrawal['authority_ref'])
         self.assertEqual(record['withdrawal_lifecycle_evidence'], withdrawal)
+        # The canonical resolver must expose the exact withdrawn identity as
+        # eligible.  Physical deletion still has a separate exact-grant gate.
+        audit_row = next(row for row in f.audit()['entries']
+                         if row.get('candidate_id') == receipt['candidate_id'])
+        self.assertEqual(audit_row['classification'], 'ELIGIBLE')
 
     def test_09_every_standing_condition_is_required(self):
         self.assertTrue(self.eligible()['eligible'])

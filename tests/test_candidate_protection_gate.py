@@ -125,6 +125,33 @@ class OperationGateTests(unittest.TestCase):
                 lease = gate.require_deletion(target)
                 self.assertEqual(lease['identity'], identity)
 
+    def test_withdrawn_terminal_uses_its_exact_grant_not_promotion_lineage(self):
+        target = self.base / 'Build Archive/withdrawn'
+        identity = {'candidate_id': 'candidate-v1-' + '4'*64,
+                    'bundle_digest': '5'*64, 'manifest_digest': '6'*64}
+        relative = 'Build Archive/withdrawn'
+        self.audit['entries'].append(self.row(identity, relative, 'ELIGIBLE'))
+        self.audit['entries'][-1].update(
+            standing_retirement_eligible=True,
+            reasons=['STANDING_TERMINAL_RETIREMENT'])
+        self.audit['canonical'] = {'canonical_lifecycles': {}}
+        self.registry['deletion_enabled'] = True
+        self.registry['withdrawal_deletion_authorizations'] = {
+            relative: {'path': relative, **identity, 'authority_ref': 'fixture-withdrawal'}
+        }
+        with patch.object(gate, '_snapshot', return_value=(self.registry, self.audit)), \
+                patch.object(gate.protection, 'REGISTRY', self.root / 'registry.json'):
+            (self.root / 'registry.json').write_text(json.dumps(self.registry))
+            self.audit['registry_sha256'] = gate.protection.sha(
+                (self.root / 'registry.json').read_bytes())
+            for selected in self.registry['selected_survivors'].values():
+                receipt = self.base / selected / 'COMPLETE.json'
+                receipt.parent.mkdir(parents=True, exist_ok=True)
+                receipt.write_text('fixture receipt')
+            lease = gate.require_deletion(target)
+        self.assertEqual(lease['identity'], identity)
+        self.assertEqual(lease['grant']['authority_ref'], 'fixture-withdrawal')
+
     def test_executor_uses_registry_for_plan_and_withdrawal(self):
         target = self.root / 'Build Archive/old'
         target.mkdir(parents=True)

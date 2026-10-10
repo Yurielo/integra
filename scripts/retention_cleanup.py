@@ -39,7 +39,9 @@ def _prepare_receipt(r, catalog, job, manifest, verification):
         owned=True, integrity_verified=True, context_valid=r._context_valid(context),
         inactive=not r._publisher_live(record) and r._inactive(Path(job['source'])),
         standing_policy=policy)
-    if eligibility['eligible']:
+    if (eligibility['eligible']
+            and lifecycle.evidence_matches(job['identity'],
+                                           record.get('lifecycle_evidence'))):
         return lifecycle.prepare_retirement(
             job['identity'], record, manifest, verification,
             transaction_id=job['transaction_id'],
