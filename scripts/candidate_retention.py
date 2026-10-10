@@ -28,7 +28,11 @@ ROOT = Path(__file__).resolve().parents[1]
 MAX_COPIES = 8
 MAX_BYTES = 20 * 1024**3
 FREE_FLOOR = 15 * 1024**3
-TERMINAL = {'COMPLETED', 'REJECTED', 'SUPERSEDED', 'UNUSED'}
+# A validated exact withdrawal is a terminal lifecycle transition.  It is
+# deliberately distinct from ordinary supersession and requires its own
+# canonical evidence and exact deletion grant in the cleanup path.
+TERMINAL = {'COMPLETED', 'REJECTED', 'SUPERSEDED', 'UNUSED',
+            'WITHDRAWN_SUPERSEDED'}
 PROTECTED = {'CURRENT', 'LATEST_ACCEPTED_BASELINE', 'CONFIRMED_ROLLBACK',
              'CONFIRMED_RECOVERY', 'AWAITING_OWNER_ACCEPTANCE', 'EXPLICIT_GOVERNANCE_PROVENANCE'}
 

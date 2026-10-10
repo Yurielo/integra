@@ -182,6 +182,64 @@ class RetentionRepairMatrix(unittest.TestCase):
                          if row.get('candidate_id') == receipt['candidate_id'])
         self.assertEqual(audit_row['classification'], 'ELIGIBLE')
 
+    def test_08b_withdrawal_replays_when_preparing_physical_retirement(self):
+        """The cleanup receipt must retain the same exact withdrawal lineage."""
+        identity = dict(IDENTITY)
+        withdrawal = {
+            **identity,
+            'previous_status': 'AWAITING_OWNER_ACCEPTANCE',
+            'resulting_status': 'WITHDRAWN_SUPERSEDED',
+            'reason': 'ISOLATED_EXACT_SUPERSESSION',
+            'authority_ref': 'https://github.com/Yurielo/integra/issues/1#issuecomment-2',
+            'authority_body_sha256': 'a' * 64,
+            'history_path': 'state/history/isolated-withdrawal.json',
+            'history_sha256': 'b' * 64,
+        }
+        record = {**identity, 'status': 'AWAITING_OWNER_ACCEPTANCE',
+                  'complete_sha256': 'd' * 64, 'inventory_sha256': 'e' * 64}
+        source = self._testMethodName  # a harmless unique fixture path label
+        job = {'identity': identity, 'record': record, 'source': source,
+               'transaction_id': 'retirement-v1-fixture',
+               'canonical_deletion_lease': {'fixture': True}}
+        catalog = {'protection': {
+            'canonical_lifecycles': {},
+            'withdrawn_candidate_lifecycles': [withdrawal],
+            'protected': {}, 'standing_policy': POLICY,
+            'canonical_snapshot': {'main_sha': 'f' * 40},
+        }}
+        manifest = {'candidate_id': identity['candidate_id'],
+                    'bundle': {'digest': identity['bundle_digest']},
+                    'source': {'commit_sha': 'd' * 40}}
+        with patch.object(r, '_publisher_live', return_value=False), \
+                patch.object(r, '_inactive', return_value=True), \
+                patch.object(r, '_context_valid', return_value=True):
+            receipt = cleanup._prepare_receipt(
+                r, catalog, job, manifest, {'fixture': 'verified'})
+        self.assertEqual(receipt['reason'], 'EXACT_CANDIDATE_SPECIFIC_DISPOSITION')
+        self.assertEqual(receipt['lifecycle_before_retirement'], 'WITHDRAWN_SUPERSEDED')
+        self.assertEqual(receipt['policy_authority_ref'], withdrawal['authority_ref'])
+
+    def test_08c_unproven_withdrawal_cannot_prepare_physical_retirement(self):
+        identity = dict(IDENTITY)
+        record = {**identity, 'status': 'AWAITING_OWNER_ACCEPTANCE',
+                  'complete_sha256': 'd' * 64, 'inventory_sha256': 'e' * 64}
+        job = {'identity': identity, 'record': record, 'source': self._testMethodName,
+               'transaction_id': 'retirement-v1-fixture',
+               'canonical_deletion_lease': {'fixture': True}}
+        catalog = {'protection': {'canonical_lifecycles': {},
+                                  'withdrawn_candidate_lifecycles': [],
+                                  'protected': {}, 'standing_policy': POLICY,
+                                  'canonical_snapshot': {'main_sha': 'f' * 40}}}
+        manifest = {'candidate_id': identity['candidate_id'],
+                    'bundle': {'digest': identity['bundle_digest']},
+                    'source': {'commit_sha': 'd' * 40}}
+        with patch.object(r, '_publisher_live', return_value=False), \
+                patch.object(r, '_inactive', return_value=True), \
+                patch.object(r, '_context_valid', return_value=True):
+            with self.assertRaisesRegex(ValueError, 'retirement standing eligibility'):
+                cleanup._prepare_receipt(
+                    r, catalog, job, manifest, {'fixture': 'verified'})
+
     def test_09_every_standing_condition_is_required(self):
         self.assertTrue(self.eligible()['eligible'])
         for flag in ('owned', 'integrity_verified', 'context_valid', 'inactive'):
