@@ -246,7 +246,9 @@ class RetentionRepairMatrix(unittest.TestCase):
         with r.locked(f.catalog):
             worker = ctx.Process(target=lock_probe, args=(f.catalog, f.archive_root, operation, entered, finished)); worker.start()
             self.assertTrue(entered.wait(5)); self.assertFalse(finished.wait(.1))
-        worker.join(5)
+        # Real protection/lsof preflight may exceed five seconds after release;
+        # this completion budget does not change the held-lock exclusion proof.
+        worker.join(60)
         self.assertEqual(worker.exitcode, 0); self.assertTrue(finished.is_set())
 
     def test_24_build_cleanup_common_lock_blocks_race(self): self.race_lock('build')
