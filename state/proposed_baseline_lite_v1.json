@@ -1,17 +1,17 @@
 {
   "allowed_overlay_paths": [
-    "docs/KNOWLEDGE_K2_REPAIR_PROOF.md",
-    "docs/evidence/ISSUE_227_DIAGNOSTIC_INDEX.json",
-    "docs/evidence/ISSUE_227_OWNER_TEST_LAUNCHER.py",
-    "docs/evidence/ISSUE_227_PACKAGED_QA.py",
-    "docs/evidence/ISSUE_227_RETENTION_AUTHORIZATION.json",
-    "docs/evidence/ISSUE_227_RETENTION_OPERATOR.py",
-    "docs/evidence/ISSUE_227_RETENTION_OPERATOR_TESTS.py",
-    "docs/evidence/ISSUE_227_RETENTION_POSTPUBLICATION.json",
-    "docs/evidence/KNOWLEDGE_K2_REPAIR_ARCHIVE.json",
-    "docs/evidence/KNOWLEDGE_K2_REPAIR_CANDIDATE_MANIFEST.json",
-    "docs/evidence/KNOWLEDGE_K2_REPAIR_NATIVE_UI.json",
-    "docs/evidence/KNOWLEDGE_K2_REPAIR_PACKAGED_E2E.json"
+    "docs/KNOWLEDGE_K2_GUI_REPAIR_PROOF.md",
+    "docs/evidence/issue227_gui_repair/archive.json",
+    "docs/evidence/issue227_gui_repair/candidate-manifest.json",
+    "docs/evidence/issue227_gui_repair/focused-tests.log",
+    "docs/evidence/issue227_gui_repair/native-gui-witness.json",
+    "docs/evidence/issue227_gui_repair/native-launcher.log",
+    "docs/evidence/issue227_gui_repair/owner-test.py",
+    "docs/evidence/issue227_gui_repair/packaged-e2e.json",
+    "docs/evidence/issue227_gui_repair/retention-authorization.json",
+    "docs/evidence/issue227_gui_repair/retention-operator-tests.py",
+    "docs/evidence/issue227_gui_repair/retention-operator.py",
+    "docs/evidence/issue227_gui_repair/retention-postpublication.json"
   ],
   "artifact_type": "integra.proposed_product_baseline",
   "base_current_id": "current-v2-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f",
@@ -20,10 +20,10 @@
     "tree_sha": "60f160c4c15b12f804da9adcb16437828f127c85"
   },
   "candidate": {
-    "bundle_digest": "1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
-    "candidate_id": "candidate-v1-aee63800b39e2d4ff897ed34f2e1cb99d1b598acae4071db647ac225f041e1c0",
-    "identity_sha256": "aee63800b39e2d4ff897ed34f2e1cb99d1b598acae4071db647ac225f041e1c0",
-    "manifest_digest": "2999c61811fd08a03933f81b88135f189530818272dc66e442cf9032bcb5c4d5"
+    "bundle_digest": "9c558edc7928241696a8d40f21b4a35fd3099d3194b41b912eb1237c870d0a9e",
+    "candidate_id": "candidate-v1-077114f64a201b8c5d94c154c3a58f29dd93dba622481e549c0b193b7bd7571d",
+    "identity_sha256": "077114f64a201b8c5d94c154c3a58f29dd93dba622481e549c0b193b7bd7571d",
+    "manifest_digest": "bbb42f10ec5e156a876dabc4bc0349df89ddd3a2295b1811cc2b2cbb6870c606"
   },
   "delta": [
     {
@@ -52,7 +52,7 @@
       "path": "integra_core/reviewed_result_package.py"
     },
     {
-      "after_sha256": "4b9e4dd3464f3b3f157b5c1694b40b3482c795a40edb593244eb6a2b9937b63a",
+      "after_sha256": "b8dae317a8cd7acbba1241ee0ba3a44ed2f71fb7d028296e28079b6faf6a2f0f",
       "before_sha256": "7c0976c3cf1d6b615150a3c0df5c66175c55faaaabdcea93dff750814b6dc0de",
       "path": "macos/IntegraApp.swift"
     },
@@ -89,46 +89,46 @@
   ],
   "evidence": {
     "candidate_evidence": {
-      "path": "docs/evidence/KNOWLEDGE_K2_REPAIR_PACKAGED_E2E.json",
-      "sha256": "3e2084b943ad4e01393dea118e6a87cd97cf4adefdefa40ea55336a7a27b8dc3"
+      "path": "docs/evidence/issue227_gui_repair/packaged-e2e.json",
+      "sha256": "a1fe7dfefdbcef48d2731473f4a45f654f004e6451d1365f9fa038ffdd587c2e"
     },
     "candidate_manifest": {
-      "path": "docs/evidence/KNOWLEDGE_K2_REPAIR_CANDIDATE_MANIFEST.json",
-      "sha256": "2999c61811fd08a03933f81b88135f189530818272dc66e442cf9032bcb5c4d5"
+      "path": "docs/evidence/issue227_gui_repair/candidate-manifest.json",
+      "sha256": "bbb42f10ec5e156a876dabc4bc0349df89ddd3a2295b1811cc2b2cbb6870c606"
     },
     "report": {
-      "path": "docs/KNOWLEDGE_K2_REPAIR_PROOF.md",
-      "sha256": "76d7d1d266bce891e68587e3b486f7878c57303680c928d9cd62302325e32fc6"
+      "path": "docs/KNOWLEDGE_K2_GUI_REPAIR_PROOF.md",
+      "sha256": "56b609fc1fe33e3a1c98f6d271d62f430f08e3816d10910a1478bf6f1219c18d"
     }
   },
   "gates": [
     {
-      "evidence_ref": "docs/evidence/KNOWLEDGE_K2_REPAIR_CANDIDATE_MANIFEST.json",
+      "evidence_ref": "docs/evidence/issue227_gui_repair/candidate-manifest.json",
       "name": "candidate-manifest",
       "result": "PASS"
     },
     {
-      "evidence_ref": "docs/evidence/KNOWLEDGE_K2_REPAIR_ARCHIVE.json",
+      "evidence_ref": "docs/evidence/issue227_gui_repair/archive.json",
       "name": "candidate-archive",
       "result": "PASS"
     },
     {
-      "evidence_ref": "docs/evidence/KNOWLEDGE_K2_REPAIR_PACKAGED_E2E.json",
+      "evidence_ref": "docs/evidence/issue227_gui_repair/packaged-e2e.json",
       "name": "packaged-self-test-and-k2-e2e",
       "result": "PASS"
     },
     {
-      "evidence_ref": "docs/evidence/KNOWLEDGE_K2_REPAIR_NATIVE_UI.json",
-      "name": "native-k2-confirmed-apply-and-reopen",
+      "evidence_ref": "docs/evidence/issue227_gui_repair/native-gui-witness.json",
+      "name": "production-native-gui-review-apply-reopen",
       "result": "PASS"
     },
     {
-      "evidence_ref": "docs/evidence/ISSUE_227_RETENTION_POSTPUBLICATION.json",
+      "evidence_ref": "docs/evidence/issue227_gui_repair/retention-postpublication.json",
       "name": "one-use-owner-retention-exception",
       "result": "PASS"
     },
     {
-      "evidence_ref": "docs/KNOWLEDGE_K2_REPAIR_PROOF.md",
+      "evidence_ref": "docs/evidence/issue227_gui_repair/focused-tests.log",
       "name": "source-focused-regression",
       "result": "PASS"
     }
@@ -141,12 +141,12 @@
   "owner_acceptance": null,
   "proposal_id": "proposal-knowledge-k2-canonical-knowledge-from-reviewed-fragments-v1",
   "proposed_head": {
-    "commit_sha": "d53dc7f39cd6fdca744ec13e2c9a624248261ae3",
-    "tree_sha": "c14d8d1e1540a885280973dfbe1f1d94f900def6"
+    "commit_sha": "9855a9836b4e3c0acdd23d73fe9590b6ea6b0c21",
+    "tree_sha": "2ff947bbd3bd1b81fc5de67af901ede740990efb"
   },
   "proposed_source": {
-    "commit_sha": "e6cd7612a764fbfed5f8f713e838b39caac97f4a",
-    "tree_sha": "bf702d6bf9c188dec1a37b390160f0a26e372129"
+    "commit_sha": "e504491fe5f09dae94ecdf9ebe179a08d945e8d8",
+    "tree_sha": "190df566fc30c4a992bb3c478763ec827dd27894"
   },
   "schema_version": "1.0",
   "status": "PROPOSED_BASELINE_VALID"
