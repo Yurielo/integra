@@ -55,12 +55,7 @@ final class KnowledgeReviewDialog: NSObject {
   }
 
   // Input checks used by the real review form and the native regression probe.
-  func validateReview(reviewer: NSTextField,
-                      entries: [(NSPopUpButton, NSTextField, Bool, Bool)]) -> String? {
-    if reviewer.stringValue.range(of: "^[a-z][a-z0-9._:-]{2,127}$", options: .regularExpression) == nil {
-      invalidField = reviewer
-      return "Введите ID проверяющего латиницей (3–128 символов). Решения сохранены в этой форме."
-    }
+  func validateReview(entries: [(NSPopUpButton, NSTextField, Bool, Bool)]) -> String? {
     for (index, entry) in entries.enumerated() {
       if entry.0.indexOfSelectedItem == 0 {
         invalidField = entry.0
@@ -2143,6 +2138,9 @@ struct SidebarItem {
   private var knowledgeNotebook: [String: Any] = [:]
   private var knowledgeIdentity: [String: Any] = [:]
   private var knowledgeK2: [String: Any] = [:]
+  // The local owner makes the semantic decision; the stable identifier only
+  // preserves the required provenance in the admission receipt.
+  private let knowledgeOwnerReviewerID = "integra-local-owner"
 
   private func renderKnowledge() {
     reset("База знаний", "Тематические конспекты из завершённых обработок. Проверка фрагментов не означает принятия канонических знаний.")
@@ -2218,7 +2216,7 @@ struct SidebarItem {
     let complete = notebook["status"] as? String == "REVIEWED_FRAGMENTS_V2"
     reset("Тематический конспект", complete ? "Проверенные фрагменты. Это не Canonical Knowledge ACCEPTED." : "Проверка не завершена. Отложенные фрагменты нельзя экспортировать как проверенные.")
     let processing = notebook["source_processing_state"] as? String == "COMPLETED" ? "Обработка завершена" : "Состояние обработки неизвестно"
-    add(NSTextField(wrappingLabelWithString: "Источник: \(notebook["source_title"] ?? "Источник")\n\(processing)\nID источника: \(notebook["source_id"] ?? "")\nВерсия источника: \(notebook["source_revision_sha256"] ?? "")\nВерсия тем: \(notebook["topics_revision_sha256"] ?? "")\nВерсия файла расшифровки: \(notebook["transcript_artifact_sha256"] ?? "")\nКонспект: \(notebook["notebook_id"] ?? "")\nТочность: диапазон слов."))
+    add(NSTextField(wrappingLabelWithString: "Источник: \(notebook["source_title"] ?? "Источник")\n\(processing)\nТочность навигации: диапазон слов. Технические идентификаторы и версии сохранены в локальном журнале, но не нужны для проверки конспекта."))
     for revision in notebook["transcript_revisions"] as? [[String: Any]] ?? [] {
       let provenance = revision["transcript_provenance"] as? [String: Any] ?? [:]
       let verification: String
@@ -2235,7 +2233,7 @@ struct SidebarItem {
       case "human_corrected": origin = "Исправленный человеком текст"
       default: origin = "Происхождение текста не подтверждено"
       }
-      add(NSTextField(wrappingLabelWithString: "\(verification)\nПроисхождение: \(origin)\nВерсия текста: \(revision["id"] ?? "")\nПроверка тематических фрагментов не изменяет статус исходной расшифровки."))
+      add(NSTextField(wrappingLabelWithString: "\(verification)\nПроисхождение: \(origin)\nПроверка тематических фрагментов не изменяет статус исходной расшифровки."))
     }
     add(button("Все конспекты", #selector(showKnowledgeLanding)))
     if !complete { add(button("Проверить фрагменты", #selector(reviewKnowledge))) }
@@ -2261,7 +2259,7 @@ struct SidebarItem {
   }
 
   private func addKnowledgeEvidence(_ fragment: [String: Any], id: String) {
-    add(NSTextField(wrappingLabelWithString: "Цитата: \(fragment["quote"] ?? "")\nКонтекст: \(fragment["context"] ?? fragment["quote"] ?? "")\nСлова: \(fragment["word_start_id"] ?? "") — \(fragment["word_end_id"] ?? "")\nВерсия текста: \(fragment["transcript_revision_id"] ?? "")"))
+    add(NSTextField(wrappingLabelWithString: "Цитата: \(fragment["quote"] ?? "")\nКонтекст: \(fragment["context"] ?? fragment["quote"] ?? "")\nОткройте точный фрагмент источника для проверки контекста."))
     let control = button("Открыть точный фрагмент источника", #selector(playKnowledgeFragment(_:)))
     control.toolTip = id; add(control)
   }
@@ -2402,15 +2400,47 @@ struct SidebarItem {
     return String(describing: value)
   }
 
-  private func knowledgeRecordText(_ record: [String: Any]) -> String {
-    let labels = ["preferred_label": "Название понятия", "aliases": "Варианты названия", "description": "Описание понятия",
-                  "title": "Название темы", "summary": "Описание", "relation_type": "Тип связи",
-                  "source_concept_id": "От понятия", "target_concept_id": "К понятию"]
-    let lines = record.keys.sorted().compactMap { key -> String? in
-      guard let label = labels[key] else { return nil }
-      return "\(label): \(knowledgeText(record[key]))"
+  private func knowledgeConceptLabels() -> [String: String] {
+    var labels: [String: String] = [:]
+    for concept in knowledgeK2["available_concepts"] as? [[String: Any]] ?? [] {
+      if let id = concept["id"] as? String, let label = concept["label"] as? String { labels[id] = label }
     }
-    return (["ID: \(knowledgeText(record["id"]))"] + lines).joined(separator: "\n")
+    for proposal in knowledgeK2["proposals"] as? [[String: Any]] ?? [] {
+      guard proposal["entity_kind"] as? String == "concepts",
+            let record = proposal["after"] as? [String: Any],
+            let id = record["id"] as? String,
+            let label = record["preferred_label"] as? String else { continue }
+      labels[id] = label
+    }
+    let records = ((knowledgeK2["knowledge_view"] as? [String: Any])?["records"] as? [String: Any]) ?? [:]
+    for concept in records["concepts"] as? [[String: Any]] ?? [] {
+      if let id = concept["id"] as? String, let label = concept["preferred_label"] as? String { labels[id] = label }
+    }
+    return labels
+  }
+
+  private func knowledgeConceptLabel(_ value: Any?, labels: [String: String]) -> String {
+    guard let id = value as? String else { return "Понятие" }
+    return labels[id] ?? "Понятие"
+  }
+
+  private func knowledgeRecordText(_ record: [String: Any], labels: [String: String]) -> String {
+    if let label = record["preferred_label"] as? String {
+      var lines = ["Понятие: \(label)"]
+      if let description = record["description"] as? String, !description.isEmpty { lines.append("Описание: \(description)") }
+      let aliases = record["aliases"] as? [String] ?? []
+      if !aliases.isEmpty { lines.append("Другие названия: \(aliases.joined(separator: ", "))") }
+      return lines.joined(separator: "\n")
+    }
+    if let title = record["title"] as? String {
+      var lines = ["Тема: \(title)"]
+      if let summary = record["summary"] as? String, !summary.isEmpty { lines.append("Описание: \(summary)") }
+      return lines.joined(separator: "\n")
+    }
+    if let relation = record["relation_type"] as? String {
+      return "Связь: \(knowledgeConceptLabel(record["source_concept_id"], labels: labels)) — \(knowledgeRelationTitle(relation)) → \(knowledgeConceptLabel(record["target_concept_id"], labels: labels))"
+    }
+    return "Запись знаний"
   }
 
   private func knowledgeEvidenceText(_ evidence: [String: Any]) -> String {
@@ -2418,31 +2448,47 @@ struct SidebarItem {
     let assurance = evidence["transcript_assurance"] as? [String: Any] ?? [:]
     let verification = ["machine_unverified": "Машинная расшифровка, не проверена человеком", "selectively_verified": "Расшифровка проверена выборочно", "fully_human_verified": "Расшифровка полностью проверена человеком"][assurance["verification_state"] as? String ?? ""] ?? "Статус проверки расшифровки см. в конспекте"
     let precision = evidence["precision"] as? String == "CUE_RANGE" ? "диапазон реплик" : "диапазон слов"
-    return "Цитата: \(knowledgeText(evidence["quote"]))\nКонтекст: \(knowledgeText(evidence["context"]))\nИсточник: \(knowledgeText(evidence["source_id"]))\nВерсия источника: \(knowledgeText(evidence["source_revision_sha256"] ?? knowledgeNotebook["source_revision_sha256"]))\nВерсия текста: \(knowledgeText(evidence["transcript_revision_id"]))\n\(verification)\nФрагмент: \(knowledgeText(evidence["fragment_id"] ?? evidence["id"]))\nОснование: \(knowledgeText(evidence["evidence_id"] ?? evidence["id"]))\nТочность: \(precision) · \(knowledgeText(locator["start_seconds"] ?? evidence["start_seconds"]))–\(knowledgeText(locator["end_seconds"] ?? evidence["end_seconds"])) с\nГраницы: \(knowledgeText(evidence["word_start_id"] ?? locator["word_start_id"] ?? locator["cue_start_id"] ?? evidence["cue_start_id"])) — \(knowledgeText(evidence["word_end_id"] ?? locator["word_end_id"] ?? locator["cue_end_id"] ?? evidence["cue_end_id"]))"
+    return "Цитата: \(knowledgeText(evidence["quote"]))\nКонтекст: \(knowledgeText(evidence["context"]))\n\(verification)\nТочность: \(precision) · \(knowledgeText(locator["start_seconds"] ?? evidence["start_seconds"]))–\(knowledgeText(locator["end_seconds"] ?? evidence["end_seconds"])) с\nДля проверки откройте точный фрагмент источника."
   }
 
-  private func knowledgeProposalText(_ proposal: [String: Any]) -> String {
+  private func knowledgeProposalText(_ proposal: [String: Any], labels: [String: String]) -> String {
     let kind = ["concepts": "Понятие", "topics": "Тема", "relations": "Связь"][proposal["entity_kind"] as? String ?? ""] ?? "Запись"
     let before = proposal["before"] as? [String: Any]
     let after = proposal["after"] as? [String: Any] ?? [:]
     let state = ["PROVISIONAL": "Предложено автоматически", "REVIEW_REQUIRED": "Требует смысловой проверки", "DEFERRED": "Отложено", "ACCEPTED": "Принято", "REJECTED": "Отклонено"][proposal["review_status"] as? String ?? ""] ?? knowledgeText(proposal["review_status"])
-    let provenance = proposal["generation_provenance"] as? [String: Any] ?? [:]
-    var text = "\(kind) · \(state)\nПредложение: \(knowledgeText(proposal["id"]))\nДействие: \(before == nil ? "Создать новую запись" : "Изменить существующую запись")\nСейчас: \(before.map(knowledgeRecordText) ?? "Записи нет")\nПредлагается:\n\(knowledgeRecordText(after))\nПроисхождение предложения: \(knowledgeText(provenance))"
+    var text = "\(kind) · \(state)\nДействие: \(before == nil ? "Создать новую запись" : "Изменить существующую запись")\nСейчас: \(before.map { knowledgeRecordText($0, labels: labels) } ?? "Записи нет")\nПредлагается:\n\(knowledgeRecordText(after, labels: labels))"
     let duplicates = proposal["possible_duplicate_ids"] as? [String] ?? []
-    if !duplicates.isEmpty { text += "\nВозможные совпадения названий: \(duplicates.joined(separator: ", ")). Совпадение названия не объединяет понятия." }
+    if !duplicates.isEmpty { text += "\nЕсть похожее название. Это не объединяет понятия автоматически." }
     for evidence in proposal["evidence"] as? [[String: Any]] ?? [] { text += "\n\n" + knowledgeEvidenceText(evidence) }
     return text
+  }
+
+  private func knowledgeActionTitle(_ action: Any?) -> String {
+    ["ACCEPT": "Принять", "EDIT": "Изменить и принять", "REJECT": "Отклонить", "DEFER": "Отложить"][action as? String ?? ""] ?? "Не выбрано"
+  }
+
+  private func knowledgeEditedFieldsText(_ fields: [String: Any]) -> String {
+    let labels = ["preferred_label": "Название понятия", "aliases": "Другие названия",
+                  "description": "Описание понятия", "title": "Название темы",
+                  "summary": "Описание", "relation_type": "Тип связи"]
+    let values = fields.keys.sorted().compactMap { key -> String? in
+      guard let label = labels[key] else { return nil }
+      let value = key == "relation_type" ? knowledgeRelationTitle(fields[key] as? String ?? "") : knowledgeText(fields[key])
+      return "\(label): \(value)"
+    }
+    return values.isEmpty ? "" : "\nИзменения: \(values.joined(separator: "; "))"
   }
 
   private func renderCanonicalKnowledge() {
     let current = knowledgeK2
     let hasRevision = current["revision_sha256"] as? String != nil
+    let conceptLabels = knowledgeConceptLabels()
     reset("Структурированные знания", "Смысловая проверка понятий и связей. Принятие знаний не изменяет проверку исходной расшифровки.")
     add(button("Вернуться к конспекту", #selector(returnToKnowledgeNotebook)))
     add(button("Выбрать проверенные фрагменты", #selector(prepareCanonicalKnowledge)))
     let proposals = current["proposals"] as? [[String: Any]] ?? []
     if !proposals.isEmpty {
-      add(NSTextField(wrappingLabelWithString: "Пакет предложений: \(knowledgeText(current["package_sha256"]))\nЧисло предложений: \(proposals.count). Для каждого требуется отдельное решение."))
+      add(NSTextField(wrappingLabelWithString: "Подготовлено предложений: \(proposals.count). Для каждого требуется ваше отдельное решение."))
       if current["package_applied"] as? Bool != true {
         add(button("Проверить смысловые предложения", #selector(reviewCanonicalKnowledge)))
         add(button("Предложить связь понятий", #selector(proposeKnowledgeRelation)))
@@ -2455,16 +2501,16 @@ struct SidebarItem {
            let decision = (current["semantic_decisions"] as? [[String: Any]] ?? []).first(where: { $0["proposal_id"] as? String == proposal["id"] as? String }) {
           display["review_status"] = ["ACCEPT": "ACCEPTED", "EDIT": "ACCEPTED", "REJECT": "REJECTED", "DEFER": "DEFERRED"][decision["action"] as? String ?? ""]
         }
-        add(NSTextField(wrappingLabelWithString: knowledgeProposalText(display)))
+        add(NSTextField(wrappingLabelWithString: knowledgeProposalText(display, labels: conceptLabels)))
       }
     }
     for decision in current["semantic_decisions"] as? [[String: Any]] ?? [] {
       let action = ["ACCEPT": "Принято", "EDIT": "Принято с изменением", "REJECT": "Отклонено", "DEFER": "Отложено"][decision["action"] as? String ?? ""] ?? knowledgeText(decision["action"])
-      let reviewer = current["semantic_reviewer"] as? [String: Any] ?? [:]
-      add(NSTextField(wrappingLabelWithString: "Решение: \(action) · \(knowledgeText(decision["proposal_id"]))\nПроверяющий: \(knowledgeText(reviewer["actor_id"]))\nОбоснование: \(knowledgeText(decision["reason"]))"))
+      let proposal = proposals.first { $0["id"] as? String == decision["proposal_id"] as? String } ?? [:]
+      add(NSTextField(wrappingLabelWithString: "Решение: \(action)\n\(knowledgeProposalText(proposal, labels: conceptLabels))\nОбоснование: \(knowledgeText(decision["reason"]))"))
     }
     if hasRevision {
-      add(NSTextField(wrappingLabelWithString: "Каноническая версия: \(knowledgeText(current["revision_sha256"]))\nРодительская версия: \(knowledgeText(current["parent_revision_sha256"]))\nВладелец: SeminarText. Здесь показано сохранённое представление."))
+      add(NSTextField(wrappingLabelWithString: "Изменения сохранены в новой неизменяемой версии. Здесь показано сохранённое представление."))
       add(button("Обновить сохранённое представление", #selector(openCanonicalKnowledge)))
       add(button("Предпросмотр / экспорт знаний в Obsidian", #selector(exportCanonicalKnowledge)))
       let view = current["knowledge_view"] as? [String: Any] ?? [:]
@@ -2472,21 +2518,22 @@ struct SidebarItem {
       add(NSTextField(labelWithString: "Принятые понятия, темы и связи"))
       for key in ["topics", "concepts", "relations"] {
         for record in records[key] as? [[String: Any]] ?? [] {
-          add(NSTextField(wrappingLabelWithString: knowledgeRecordText(record)))
+          add(NSTextField(wrappingLabelWithString: knowledgeRecordText(record, labels: conceptLabels)))
           for evidenceID in record["evidence_refs"] as? [String] ?? [] {
-            let source = button("Открыть источник · \(evidenceID)", #selector(playCanonicalKnowledgeEvidence(_:)))
+            let source = button("Открыть точный фрагмент источника", #selector(playCanonicalKnowledgeEvidence(_:)))
             source.toolTip = evidenceID; add(source)
           }
         }
       }
       let terms = view["terms"] as? [[String: Any]] ?? []
       if !terms.isEmpty {
-        add(NSTextField(wrappingLabelWithString: "Термины — названия и варианты понятий:\n" + terms.map { "\(knowledgeText($0["value"] ?? $0["label"])) → \(knowledgeText($0["concept_id"]))" }.joined(separator: "\n")))
+        add(NSTextField(wrappingLabelWithString: "Термины — названия и варианты понятий:\n" + terms.map { "\(knowledgeText($0["value"] ?? $0["label"])) → \(knowledgeConceptLabel($0["concept_id"], labels: conceptLabels))" }.joined(separator: "\n")))
       }
-      let graph = view["graph"] as? [String: Any] ?? [:]
-      add(NSTextField(wrappingLabelWithString: "Граф знаний · \(knowledgeText(graph["graph_sha256"]))\n" + (graph["edges"] as? [[String: Any]] ?? []).map { "\(knowledgeText($0["from_id"])) → \(knowledgeText($0["kind"])) → \(knowledgeText($0["to_id"]))" }.joined(separator: "\n")))
       if let diff = current["diff"] as? [String: Any] {
-        add(NSTextField(wrappingLabelWithString: "Изменения версии (механическое сравнение записей):\nДобавлено: \(knowledgeText(diff["added_ids"]))\nУдалено: \(knowledgeText(diff["removed_ids"]))\nИзменены байты: \(knowledgeText(diff["changed_ids"]))\nСмысловые противоречия этим сравнением не определяются."))
+        let added = (diff["added_ids"] as? [Any] ?? []).count
+        let removed = (diff["removed_ids"] as? [Any] ?? []).count
+        let changed = (diff["changed_ids"] as? [Any] ?? []).count
+        add(NSTextField(wrappingLabelWithString: "Изменения версии: добавлено \(added), удалено \(removed), изменено \(changed). Механическое сравнение не определяет смысловые противоречия."))
       }
     }
     status.stringValue = hasRevision ? "Сохранённая каноническая версия проверена" : "Предложения остаются предварительными до вашего явного решения"
@@ -2536,13 +2583,11 @@ struct SidebarItem {
   @objc private func reviewCanonicalKnowledge() {
     let proposals = knowledgeK2["proposals"] as? [[String: Any]] ?? []
     guard !proposals.isEmpty, let hash = knowledgeK2["package_sha256"] as? String else { return }
+    let conceptLabels = knowledgeConceptLabels()
     let reviewDialog = KnowledgeReviewDialog()
     let alert = reviewDialog.alert; alert.messageText = "Смысловая проверка знаний — шаг 1 из 2"
-    alert.informativeText = "Выберите решение и заполните обоснование для каждого предложения. Затем проверьте пакет на шаге 2 и явно подтвердите применение. Изменённые поля принимаются только через «Изменить и принять»."
+    alert.informativeText = "Выберите решение и заполните обоснование для каждого предложения. Затем проверьте пакет на шаге 2 и явно подтвердите применение. Решения будут сохранены от имени владельца этого приложения. Изменённые поля принимаются только через «Изменить и принять»."
     let stack = FlippedStackView(); stack.orientation = .vertical; stack.alignment = .leading; stack.spacing = 12
-    addKnowledgeReviewLabel("ID проверяющего: латинские строчные буквы, цифры, точка, дефис или подчёркивание; от 3 до 128 символов", to: stack)
-    let reviewer = NSTextField(string: ""); reviewer.placeholderString = "Например: reviewer.ivanov"
-    reviewer.widthAnchor.constraint(equalToConstant: 620).isActive = true; stack.addArrangedSubview(reviewer)
     var forms: [(String, NSPopUpButton, [(String, NSTextField)], NSTextField)] = []
     var relationForms: [String: NSPopUpButton] = [:]
     let relationTypes = knowledgeK2["supported_relation_types"] as? [String] ?? []
@@ -2571,7 +2616,7 @@ struct SidebarItem {
       }
       let reason = NSTextField(string: ""); reason.placeholderString = "Обоснование решения"
       reason.widthAnchor.constraint(equalToConstant: 620).isActive = true; stack.addArrangedSubview(reason)
-      addKnowledgeReviewLabel(knowledgeProposalText(proposal), to: stack)
+      addKnowledgeReviewLabel(knowledgeProposalText(proposal, labels: conceptLabels), to: stack)
       forms.append((id, action, fields, reason))
     }
     alert.accessoryView = reviewDialog.accessory(knowledgeReviewScroll(stack))
@@ -2584,7 +2629,7 @@ struct SidebarItem {
           }
           return (form.1, form.3, changed, !form.2.isEmpty || relationForms[form.0] != nil)
       }
-      return reviewDialog.validateReview(reviewer: reviewer, entries: entries)
+      return reviewDialog.validateReview(entries: entries)
     }
     reviewDialog.configure(primaryTitle: "Проверить пакет решений → шаг 2")
     defer { reviewDialog.validate = { nil } }
@@ -2608,13 +2653,14 @@ struct SidebarItem {
     }
     let confirmationDialog = KnowledgeReviewDialog()
     let confirm = confirmationDialog.alert; confirm.messageText = "Применить пакет решений — шаг 2 из 2"
-    confirm.informativeText = "Пакет SHA-256: \(hash)\nПроверяющий: \(reviewer.stringValue)\nВключены только перечисленные ниже решения. Принятые записи создадут новую неизменяемую каноническую версию. Отложенные и отклонённые предложения не принимаются."
+    confirm.informativeText = "Включены только перечисленные ниже решения. Принятые записи создадут новую неизменяемую версию. Отложенные и отклонённые предложения не принимаются."
     let enumeration = FlippedStackView(); enumeration.orientation = .vertical; enumeration.alignment = .leading; enumeration.spacing = 10
     let explicit = NSButton(checkboxWithTitle: "Я подтверждаю именно этот пакет и перечисленные решения", target: nil, action: nil)
     explicit.state = .off; enumeration.addArrangedSubview(explicit)
     for decision in decisions {
       let proposal = proposals.first { $0["id"] as? String == decision["proposal_id"] as? String } ?? [:]
-      addKnowledgeReviewLabel("\(knowledgeText(decision["proposal_id"]))\nРешение: \(knowledgeText(decision["action"]))\nОбоснование: \(knowledgeText(decision["reason"]))\nИзменения: \(knowledgeText(decision["edited_fields"]))\n\(knowledgeProposalText(proposal))", to: enumeration)
+      let fields = decision["edited_fields"] as? [String: Any] ?? [:]
+      addKnowledgeReviewLabel("Решение: \(knowledgeActionTitle(decision["action"]))\nОбоснование: \(knowledgeText(decision["reason"]))\(knowledgeEditedFieldsText(fields))\n\n\(knowledgeProposalText(proposal, labels: conceptLabels))", to: enumeration)
     }
     confirm.accessoryView = confirmationDialog.accessory(knowledgeReviewScroll(enumeration))
     confirmationDialog.validate = {
@@ -2628,7 +2674,7 @@ struct SidebarItem {
     defer { confirmationDialog.validate = { nil } }
     guard confirmationDialog.run() == .alertFirstButtonReturn else { status.stringValue = "Пакет не подтверждён; знания не изменены"; return }
     var request = knowledgeIdentity
-    request["package_sha256"] = hash; request["reviewer_id"] = reviewer.stringValue
+    request["package_sha256"] = hash; request["reviewer_id"] = knowledgeOwnerReviewerID
     request["decisions"] = decisions; request["explicit_confirmation"] = true
     request["confirmed_proposal_ids"] = forms.map { $0.0 }.sorted()
     performKnowledgeK2("apply", request: request)
@@ -2651,12 +2697,12 @@ struct SidebarItem {
     let fragments = (knowledgeK2["eligible_fragments"] as? [[String: Any]] ?? []).filter { selectedIDs.contains($0["id"] as? String ?? "") }
     guard concepts.count >= 2, !types.isEmpty, !fragments.isEmpty else { status.stringValue = "Для связи нужны два понятия и точное проверенное основание"; return }
     let alert = NSAlert(); alert.messageText = "Предложить связь понятий"
-    alert.informativeText = "Выберите существующие ID понятий и точные основания связи. Связь останется предварительной и потребует отдельного смыслового решения. При принятии оба понятия должны быть приняты."
+    alert.informativeText = "Выберите два понятия, тип связи и точное основание. Связь останется предварительной и потребует отдельного смыслового решения. При принятии оба понятия должны быть приняты."
     let stack = FlippedStackView(); stack.orientation = .vertical; stack.alignment = .leading; stack.spacing = 12
     let source = NSPopUpButton(); let target = NSPopUpButton(); let kind = NSPopUpButton()
     source.addItem(withTitle: "Выберите первое понятие"); target.addItem(withTitle: "Выберите второе понятие"); kind.addItem(withTitle: "Выберите тип связи")
     for concept in concepts {
-      let label = "\(knowledgeText(concept["label"])) · \(knowledgeText(concept["id"]))"
+      let label = knowledgeText(concept["label"])
       source.addItem(withTitle: label); target.addItem(withTitle: label)
     }
     kind.addItems(withTitles: types.map(knowledgeRelationTitle))

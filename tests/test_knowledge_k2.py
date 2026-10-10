@@ -141,6 +141,22 @@ class KnowledgeK2Tests(unittest.TestCase):
             self.apply(prepared)
         self.assertEqual(k2.open_knowledge(self.root, **self.ids), accepted)
 
+    def test_local_owner_identity_preserves_human_provenance_without_automatic_decisions(self):
+        prepared = self.prepare()
+        with self.assertRaises(ValueError):
+            self.apply(prepared, decisions=[])
+        explicit_decisions = self.decisions(prepared)
+        accepted = self.apply(prepared, decisions=explicit_decisions,
+                              reviewer_id="integra-local-owner")
+        self.assertEqual(accepted["semantic_reviewer"], {
+            "actor_type": "human_domain_reviewer", "actor_id": "integra-local-owner"
+        })
+        revision = json.loads(self.revision_path(accepted).read_bytes())
+        self.assertEqual(revision["source_evidence"]["admission"]["decisions"]["reviewer"], {
+            "actor_type": "human_domain_reviewer", "actor_id": "integra-local-owner"
+        })
+        self.assertEqual(accepted["semantic_decisions"], explicit_decisions)
+
     def test_changed_source_notebook_fragment_and_missing_evidence_fail_closed(self):
         reviewed = self.reviewed(); prepared = self.prepare(reviewed)
         original = self.media.read_bytes(); self.media.write_bytes(original + b"changed")
