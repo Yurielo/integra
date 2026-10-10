@@ -98,7 +98,10 @@ class KnowledgeK2BridgeRouteTests(unittest.TestCase):
         self.assertIn("explicit.state = .off", review)
         self.assertIn('request["confirmed_proposal_ids"] = forms.map { $0.0 }.sorted()', review)
         self.assertIn('request["package_sha256"] = hash', review)
-        self.assertIn('guard confirm.runModal() == .alertFirstButtonReturn, explicit.state == .on', review)
+        self.assertIn('guard confirmationDialog.run() == .alertFirstButtonReturn', review)
+        self.assertIn('guard explicit.state == .on else', review)
+        self.assertNotIn('while true', review)
+        self.assertLess(review.index('enumeration.addArrangedSubview(explicit)'), review.index('for decision in decisions'))
         self.assertIn("Принятие знаний не изменяет проверку исходной расшифровки", source)
 
 
