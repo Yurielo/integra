@@ -1,0 +1,153 @@
+{
+  "allowed_overlay_paths": [
+    "docs/KNOWLEDGE_K2_REPAIR_PROOF.md",
+    "docs/evidence/ISSUE_227_DIAGNOSTIC_INDEX.json",
+    "docs/evidence/ISSUE_227_OWNER_TEST_LAUNCHER.py",
+    "docs/evidence/ISSUE_227_PACKAGED_QA.py",
+    "docs/evidence/ISSUE_227_RETENTION_AUTHORIZATION.json",
+    "docs/evidence/ISSUE_227_RETENTION_OPERATOR.py",
+    "docs/evidence/ISSUE_227_RETENTION_OPERATOR_TESTS.py",
+    "docs/evidence/ISSUE_227_RETENTION_POSTPUBLICATION.json",
+    "docs/evidence/KNOWLEDGE_K2_REPAIR_ARCHIVE.json",
+    "docs/evidence/KNOWLEDGE_K2_REPAIR_CANDIDATE_MANIFEST.json",
+    "docs/evidence/KNOWLEDGE_K2_REPAIR_NATIVE_UI.json",
+    "docs/evidence/KNOWLEDGE_K2_REPAIR_PACKAGED_E2E.json"
+  ],
+  "artifact_type": "integra.proposed_product_baseline",
+  "base_current_id": "current-v2-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f",
+  "base_main": {
+    "commit_sha": "312946d42c9712e4ee3b7974fe657762e8092c1d",
+    "tree_sha": "60f160c4c15b12f804da9adcb16437828f127c85"
+  },
+  "candidate": {
+    "bundle_digest": "1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+    "candidate_id": "candidate-v1-aee63800b39e2d4ff897ed34f2e1cb99d1b598acae4071db647ac225f041e1c0",
+    "identity_sha256": "aee63800b39e2d4ff897ed34f2e1cb99d1b598acae4071db647ac225f041e1c0",
+    "manifest_digest": "2999c61811fd08a03933f81b88135f189530818272dc66e442cf9032bcb5c4d5"
+  },
+  "delta": [
+    {
+      "after_sha256": "4cd5db42ca7462c404f9b4e694e2ca3f1688d3b8fcb8964de32010d39ffb095f",
+      "before_sha256": "d76076250ee4135bfd546450009416e7bad900c135db708854cf815c482a0eea",
+      "path": "integra_core/candidate_identity.py"
+    },
+    {
+      "after_sha256": "1f762b3f83e9568cda96dbfbfd7364c4365204788203a16c217c2ac1007e6601",
+      "before_sha256": "c4a94f533b44ca13fcc365aadbd7bd6a47bb656329c4b6b0144a7ff98850e9ea",
+      "path": "integra_core/knowledge.py"
+    },
+    {
+      "after_sha256": "b2f62726fc0046812a43773ce401f1f4d39c8eeb984c3198c28a562af356efbe",
+      "before_sha256": null,
+      "path": "integra_core/knowledge_admission_runtime.py"
+    },
+    {
+      "after_sha256": "acfcc3a8c81f3c4e6b7de43e071c490c49a0f7bd94214e0097fb8afa9b6afa1c",
+      "before_sha256": null,
+      "path": "integra_core/knowledge_k2.py"
+    },
+    {
+      "after_sha256": "6947559594415c3ff36b6ab4d21456a518de5ce6d2729bf04799b8bfe2a4136c",
+      "before_sha256": "d64a896b8350f3ccd527babc80c8c91a4f9959dd4f557cd3db6efb694232dba4",
+      "path": "integra_core/reviewed_result_package.py"
+    },
+    {
+      "after_sha256": "4b9e4dd3464f3b3f157b5c1694b40b3482c795a40edb593244eb6a2b9937b63a",
+      "before_sha256": "7c0976c3cf1d6b615150a3c0df5c66175c55faaaabdcea93dff750814b6dc0de",
+      "path": "macos/IntegraApp.swift"
+    },
+    {
+      "after_sha256": "4372d64d525e815f7e4c551148bf4b9f98d5eec411b7bf1a709093301511bb2f",
+      "before_sha256": "0ecc20d4f38db43ec6519abd26c7983a7ce97932c4484250b36827e10efa8528",
+      "path": "macos/Resources/bridge.py"
+    },
+    {
+      "after_sha256": "9c670923e80ddd4874474e1602e71dd62dc4ee58268debb970502691e9e052a3",
+      "before_sha256": "393fd94482c4832217a6591d3c7497433be53d3674b43b7f373f92859751f488",
+      "path": "schemas/knowledge_view_v1.schema.json"
+    },
+    {
+      "after_sha256": "f74f282344fc8c8da9ce13c56a73d908501d6eaa2d0751af85a94b30895565eb",
+      "before_sha256": "c2fc0ad755c84a4067b65df39267b86d72e547a5683988db8f674b3d402d2a78",
+      "path": "scripts/build_macos_app.sh"
+    },
+    {
+      "after_sha256": "dc336b7ad3c4864af8d46545a124b6d8a74edfb44cccdc4bf15c80a5ddbb7298",
+      "before_sha256": "ccaeb550aa1653aed47eac450310ae2e4bb9ec60f519d4ae359fb10e652f2d85",
+      "path": "scripts/candidate_manifest.py"
+    },
+    {
+      "after_sha256": "6f780ba935f192af1ae1687c328b3cfaf09d776853c0acc89db159d3534fc961",
+      "before_sha256": null,
+      "path": "scripts/package_knowledge_admission_runtime.py"
+    },
+    {
+      "after_sha256": "8dfb46df134d465228d5d45fb713392b780f552adcda466a84bf341d71bd28a7",
+      "before_sha256": null,
+      "path": "state/knowledge_admission_component_v1.json"
+    }
+  ],
+  "evidence": {
+    "candidate_evidence": {
+      "path": "docs/evidence/KNOWLEDGE_K2_REPAIR_PACKAGED_E2E.json",
+      "sha256": "3e2084b943ad4e01393dea118e6a87cd97cf4adefdefa40ea55336a7a27b8dc3"
+    },
+    "candidate_manifest": {
+      "path": "docs/evidence/KNOWLEDGE_K2_REPAIR_CANDIDATE_MANIFEST.json",
+      "sha256": "2999c61811fd08a03933f81b88135f189530818272dc66e442cf9032bcb5c4d5"
+    },
+    "report": {
+      "path": "docs/KNOWLEDGE_K2_REPAIR_PROOF.md",
+      "sha256": "76d7d1d266bce891e68587e3b486f7878c57303680c928d9cd62302325e32fc6"
+    }
+  },
+  "gates": [
+    {
+      "evidence_ref": "docs/evidence/KNOWLEDGE_K2_REPAIR_CANDIDATE_MANIFEST.json",
+      "name": "candidate-manifest",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/KNOWLEDGE_K2_REPAIR_ARCHIVE.json",
+      "name": "candidate-archive",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/KNOWLEDGE_K2_REPAIR_PACKAGED_E2E.json",
+      "name": "packaged-self-test-and-k2-e2e",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/KNOWLEDGE_K2_REPAIR_NATIVE_UI.json",
+      "name": "native-k2-confirmed-apply-and-reopen",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/ISSUE_227_RETENTION_POSTPUBLICATION.json",
+      "name": "one-use-owner-retention-exception",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/KNOWLEDGE_K2_REPAIR_PROOF.md",
+      "name": "source-focused-regression",
+      "result": "PASS"
+    }
+  ],
+  "historical_test_successors": [],
+  "intended_scope": {
+    "journey": "Existing K1 reviewed notebook -> explicit ReviewDecision package -> immutable source-owned Canonical Knowledge revision and validated graph/diff -> exact Evidence navigation -> persistence/reopen -> managed Obsidian export. Prepare this repaired Candidate for Owner Test only; no Owner acceptance, CURRENT promotion, merge, K3, imports, multi-source, upstream processing, real semantic acceptance or Process Board changes.",
+    "wp": "Knowledge K2"
+  },
+  "owner_acceptance": null,
+  "proposal_id": "proposal-knowledge-k2-canonical-knowledge-from-reviewed-fragments-v1",
+  "proposed_head": {
+    "commit_sha": "d53dc7f39cd6fdca744ec13e2c9a624248261ae3",
+    "tree_sha": "c14d8d1e1540a885280973dfbe1f1d94f900def6"
+  },
+  "proposed_source": {
+    "commit_sha": "e6cd7612a764fbfed5f8f713e838b39caac97f4a",
+    "tree_sha": "bf702d6bf9c188dec1a37b390160f0a26e372129"
+  },
+  "schema_version": "1.0",
+  "status": "PROPOSED_BASELINE_VALID"
+}
