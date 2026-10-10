@@ -1,0 +1,104 @@
+{
+  "all_ten_fingerprints": {
+    "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-073396d37f3f70fe2a550a481cbacdb645204a188d8b4a6c1ad18cdfac77e4a8/c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15": {
+      "device": 16777233,
+      "file_count": 29636,
+      "inode": 46278285,
+      "inventory_sha256": "c1dc229d90137bfc232aa941e763b4eeec7cce6f64a4460775961d14992c46b0",
+      "logical_bytes": 2209317508
+    },
+    "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-077114f64a201b8c5d94c154c3a58f29dd93dba622481e549c0b193b7bd7571d/9c558edc7928241696a8d40f21b4a35fd3099d3194b41b912eb1237c870d0a9e": {
+      "device": 16777233,
+      "file_count": 29628,
+      "inode": 50921453,
+      "inventory_sha256": "ba1e233fcdd75710386519b5bc0b20afbfd5c37c1562ad70fe8e66ec1d028a77",
+      "logical_bytes": 2209573631
+    },
+    "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81/c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15": {
+      "device": 16777233,
+      "file_count": 29611,
+      "inode": 46629144,
+      "inventory_sha256": "26f7c4dd2c9686e712c37a9d65d75c6618024d9cdf57f95d6af36b92eb11f094",
+      "logical_bytes": 2209032253
+    },
+    "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-323a4d9a18b3a830e7e154110158f386b71360cc84c5143ec8c28f3add0b5ec0/337fe45da6349cf263779231cbf40946e6c5265566769b461e201e10a53aefa9": {
+      "device": 16777233,
+      "file_count": 29627,
+      "inode": 49485329,
+      "inventory_sha256": "40ee705423743a34e59df3b64779206015a4cccfc4d808b5bd66f2511bf56313",
+      "logical_bytes": 2209522414
+    },
+    "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f/e3215a28c9ce0a1a54c35dc535bad42a9334cae7ddc5eb3b0533a480e0296d95": {
+      "device": 16777233,
+      "file_count": 29612,
+      "inode": 48465579,
+      "inventory_sha256": "d53e00ef5c670af0e91e56066c1db491c3dfb5a2b1f63aff4d461bb4555c84e7",
+      "logical_bytes": 2209132847
+    },
+    "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5/f7c053a536e1c415adcc2e32b2f5a52248edfea17afaebc6cbca6c716d65cfa9": {
+      "device": 16777233,
+      "file_count": 29610,
+      "inode": 45635682,
+      "inventory_sha256": "d458c038d49e5d746eb3636294523e05e0dee9ea33c388a86d12282fcd8a1115",
+      "logical_bytes": 2208998551
+    },
+    "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-97be0af4389d8696154ab1e897425d3f660573673369f391e3287b9f9418d38a/74ad6e346aff04b08b1962b8643e1c9da368632e311d8566a932f608674fbed0": {
+      "device": 16777233,
+      "file_count": 29610,
+      "inode": 45340801,
+      "inventory_sha256": "24b2859d6ec556a3adceca9893348748afa2bffd71715857a40b1b40c31932cd",
+      "logical_bytes": 2209021254
+    },
+    "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-aee63800b39e2d4ff897ed34f2e1cb99d1b598acae4071db647ac225f041e1c0/1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0": {
+      "device": 16777233,
+      "file_count": 29628,
+      "inode": 50335442,
+      "inventory_sha256": "0857da53c46d39e049b9e369a6d26458c8ec02924724b0668a5784e2dab70d43",
+      "logical_bytes": 2209551999
+    },
+    "/Users/yurielokhin/Library/Application Support/Integra/Candidate Builds/topic-translation-47be46d": {
+      "device": 16777233,
+      "file_count": 29600,
+      "inode": 39460476,
+      "inventory_sha256": "92aec2be5a0a396e4d8f8fed02c08f0ac09e70578dde7ba3b75289e332f510a7",
+      "logical_bytes": 2201564709
+    },
+    "/Users/yurielokhin/Library/Application Support/Integra/Validation/integra-212-native-35e6f9101278/candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29/fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582": {
+      "device": 16777233,
+      "file_count": 29609,
+      "inode": 44318629,
+      "inventory_sha256": "a3ab4cd95a54fb1a59c6581b8ebf92a484e1669c4806bb01da16b9c3630bd7ed",
+      "logical_bytes": 2208992066
+    }
+  },
+  "archive": {
+    "app_size_bytes": 2202203898,
+    "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-077114f64a201b8c5d94c154c3a58f29dd93dba622481e549c0b193b7bd7571d/9c558edc7928241696a8d40f21b4a35fd3099d3194b41b912eb1237c870d0a9e",
+    "artifact_type": "integra.candidate_archive",
+    "bundle_digest": "9c558edc7928241696a8d40f21b4a35fd3099d3194b41b912eb1237c870d0a9e",
+    "candidate_id": "candidate-v1-077114f64a201b8c5d94c154c3a58f29dd93dba622481e549c0b193b7bd7571d",
+    "file_count": 29626,
+    "inventory_sha256": "c7c69b53346a42b031d93620999e6153be8d00a5e350a25ceed3831dc6b726a9",
+    "manifest_digest": "bbb42f10ec5e156a876dabc4bc0349df89ddd3a2295b1811cc2b2cbb6870c606",
+    "retained_size_bytes": 2202210903,
+    "runtime_validation": "NOT_PERFORMED",
+    "schema_version": "1.0",
+    "status": "COMPLETE",
+    "verification": "ARCHIVAL_BYTE_INTEGRITY"
+  },
+  "canonical_protection_summary": {
+    "archive_bytes": 22802120704,
+    "blockers": [],
+    "free_bytes": 47406620672,
+    "full_copies": 10,
+    "authority_state": "COMPLETE",
+    "decision_authority_verified": true
+  },
+  "full_receipt": {
+    "path": "/Users/yurielokhin/Library/Application Support/Integra/Retention Exceptions/issue-227-e504491-gui-one-use/post-publication.json",
+    "sha256": "62abf12f6228ad0c0fb3c9310889932bf70e5bdcdc425301837b078577020592"
+  },
+  "permanent_policy_unchanged": true,
+  "preserved_nine": true,
+  "status": "COMPLETE_EXACT_OWNER_EXCEPTION"
+}
