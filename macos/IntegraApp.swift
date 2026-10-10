@@ -16,6 +16,81 @@ enum BridgeError: Error, LocalizedError {
   }
 }
 
+// Validate before ending the native modal session. A failed check must not
+// dismiss/re-run NSAlert or discard the user's in-memory decisions.
+final class KnowledgeReviewDialog: NSObject {
+  let alert = NSAlert()
+  let feedback = NSTextField(wrappingLabelWithString: "")
+  var validate: () -> String? = { nil }
+  var invalidField: NSView?
+
+  func accessory(_ scroll: NSScrollView) -> NSView {
+    let view = NSView(frame: NSRect(x: 0, y: 0, width: 660, height: 500))
+    feedback.frame = NSRect(x: 0, y: 444, width: 640, height: 56)
+    scroll.frame = NSRect(x: 0, y: 0, width: 660, height: 440)
+    view.addSubview(feedback); view.addSubview(scroll)
+    return view
+  }
+
+  func configure(primaryTitle: String) {
+    feedback.textColor = .systemRed
+    alert.addButton(withTitle: primaryTitle)
+    alert.addButton(withTitle: "Отмена")
+    alert.layout()
+    alert.buttons[0].target = self
+    alert.buttons[0].action = #selector(submit)
+  }
+
+  func validateSubmission() -> Bool {
+    if let message = validate() {
+      feedback.stringValue = message
+      if let field = invalidField {
+        field.scrollToVisible(field.bounds)
+        alert.window.makeFirstResponder(field)
+      }
+      return false
+    }
+    feedback.stringValue = ""
+    return true
+  }
+
+  // Input checks used by the real review form and the native regression probe.
+  func validateReview(reviewer: NSTextField,
+                      entries: [(NSPopUpButton, NSTextField, Bool, Bool)]) -> String? {
+    if reviewer.stringValue.range(of: "^[a-z][a-z0-9._:-]{2,127}$", options: .regularExpression) == nil {
+      invalidField = reviewer
+      return "Введите ID проверяющего латиницей (3–128 символов). Решения сохранены в этой форме."
+    }
+    for (index, entry) in entries.enumerated() {
+      if entry.0.indexOfSelectedItem == 0 {
+        invalidField = entry.0
+        return "Предложение \(index + 1): выберите решение."
+      }
+      if entry.1.stringValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        invalidField = entry.1
+        return "Предложение \(index + 1): заполните обоснование решения."
+      }
+      if entry.0.indexOfSelectedItem == 1 && entry.2 {
+        invalidField = entry.0
+        return "Предложение \(index + 1): поля изменены — выберите «Изменить и принять» или восстановите исходные значения."
+      }
+      if entry.0.indexOfSelectedItem == 2 && !entry.3 {
+        invalidField = entry.0
+        return "Предложение \(index + 1): изменение не поддерживается. Выберите принять, отклонить или отложить."
+      }
+    }
+    return nil
+  }
+
+  @objc func submit() {
+    guard validateSubmission() else { return }
+    NSApp.stopModal(withCode: .alertFirstButtonReturn)
+    alert.window.orderOut(nil)
+  }
+
+  func run() -> NSApplication.ModalResponse { alert.runModal() }
+}
+
 final class Bridge: @unchecked Sendable {
   private let resources: URL
   init(resources: URL) { self.resources = resources }
@@ -2311,7 +2386,7 @@ struct SidebarItem {
         DispatchQueue.main.async {
           guard self.navigationGeneration == generation else { return }
           self.status.textColor = .systemRed
-          self.status.stringValue = "Знания не изменены: \(error.localizedDescription)"
+          self.status.stringValue = "Не удалось завершить операцию: \(error.localizedDescription). Обновите сохранённый вид перед повторным применением."
         }
       }
     }
@@ -2461,20 +2536,24 @@ struct SidebarItem {
   @objc private func reviewCanonicalKnowledge() {
     let proposals = knowledgeK2["proposals"] as? [[String: Any]] ?? []
     guard !proposals.isEmpty, let hash = knowledgeK2["package_sha256"] as? String else { return }
-    let alert = NSAlert(); alert.messageText = "Смысловая проверка знаний"
-    alert.informativeText = "Проверьте изменения и точные цитаты. Для каждого предложения выберите решение. Изменение полей применяется только через «Изменить и принять»."
+    let reviewDialog = KnowledgeReviewDialog()
+    let alert = reviewDialog.alert; alert.messageText = "Смысловая проверка знаний — шаг 1 из 2"
+    alert.informativeText = "Выберите решение и заполните обоснование для каждого предложения. Затем проверьте пакет на шаге 2 и явно подтвердите применение. Изменённые поля принимаются только через «Изменить и принять»."
     let stack = FlippedStackView(); stack.orientation = .vertical; stack.alignment = .leading; stack.spacing = 12
+    addKnowledgeReviewLabel("ID проверяющего: латинские строчные буквы, цифры, точка, дефис или подчёркивание; от 3 до 128 символов", to: stack)
+    let reviewer = NSTextField(string: ""); reviewer.placeholderString = "Например: reviewer.ivanov"
+    reviewer.widthAnchor.constraint(equalToConstant: 620).isActive = true; stack.addArrangedSubview(reviewer)
     var forms: [(String, NSPopUpButton, [(String, NSTextField)], NSTextField)] = []
     var relationForms: [String: NSPopUpButton] = [:]
     let relationTypes = knowledgeK2["supported_relation_types"] as? [String] ?? []
     let actions = ["ACCEPT", "EDIT", "REJECT", "DEFER"]
     let fieldLabels = ["preferred_label": "Название понятия", "aliases": "Варианты названия (через запятую)", "description": "Описание понятия", "title": "Название темы", "summary": "Описание"]
-    for proposal in proposals {
+    for (index, proposal) in proposals.enumerated() {
       guard let id = proposal["id"] as? String else { return }
-      addKnowledgeReviewLabel(knowledgeProposalText(proposal), to: stack)
+      let after = proposal["after"] as? [String: Any] ?? [:]
+      addKnowledgeReviewLabel("Предложение \(index + 1) из \(proposals.count): \(knowledgeText(after["preferred_label"] ?? after["title"] ?? after["relation_type"]))", to: stack)
       let action = NSPopUpButton(); action.addItems(withTitles: ["Выберите решение", "Принять", "Изменить и принять", "Отклонить", "Отложить"])
       stack.addArrangedSubview(action)
-      let after = proposal["after"] as? [String: Any] ?? [:]
       var fields: [(String, NSTextField)] = []
       for key in proposal["editable_fields"] as? [String] ?? [] {
         if key == "relation_type" {
@@ -2492,32 +2571,24 @@ struct SidebarItem {
       }
       let reason = NSTextField(string: ""); reason.placeholderString = "Обоснование решения"
       reason.widthAnchor.constraint(equalToConstant: 620).isActive = true; stack.addArrangedSubview(reason)
+      addKnowledgeReviewLabel(knowledgeProposalText(proposal), to: stack)
       forms.append((id, action, fields, reason))
     }
-    addKnowledgeReviewLabel("Устойчивый ID проверяющего: латинские строчные буквы, цифры, точка, дефис или подчёркивание; от 3 символов", to: stack)
-    let reviewer = NSTextField(string: ""); reviewer.placeholderString = "Например: reviewer.ivanov"
-    reviewer.widthAnchor.constraint(equalToConstant: 620).isActive = true; stack.addArrangedSubview(reviewer)
-    alert.accessoryView = knowledgeReviewScroll(stack)
-    alert.addButton(withTitle: "Проверить пакет решений"); alert.addButton(withTitle: "Отмена")
-    while true {
-      guard alert.runModal() == .alertFirstButtonReturn else { return }
-      let complete = forms.allSatisfy({ $0.1.indexOfSelectedItem > 0 && !$0.3.stringValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) && reviewer.stringValue.range(of: "^[a-z][a-z0-9._:-]{2,127}$", options: .regularExpression) != nil
-      if complete {
-        let changedWithoutEdit = forms.contains { form in
-          guard form.1.indexOfSelectedItem == 1 else { return false }
+    alert.accessoryView = reviewDialog.accessory(knowledgeReviewScroll(stack))
+    reviewDialog.validate = {
+      let entries = forms.map { form -> (NSPopUpButton, NSTextField, Bool, Bool) in
           let original = proposals.first { $0["id"] as? String == form.0 }?["after"] as? [String: Any] ?? [:]
-          if form.2.contains(where: { $0.1.stringValue != (knowledgeText(original[$0.0]) == "—" ? "" : knowledgeText(original[$0.0])) }) { return true }
+          var changed = form.2.contains(where: { $0.1.stringValue != (self.knowledgeText(original[$0.0]) == "—" ? "" : self.knowledgeText(original[$0.0])) })
           if let relation = relationForms[form.0], relationTypes.indices.contains(relation.indexOfSelectedItem) {
-            return relationTypes[relation.indexOfSelectedItem] != original["relation_type"] as? String
+            changed = changed || relationTypes[relation.indexOfSelectedItem] != original["relation_type"] as? String
           }
-          return false
-        }
-        if !changedWithoutEdit { break }
-        alert.informativeText = "Поля изменены. Для принятия изменённого предложения выберите «Изменить и принять»."
-        continue
+          return (form.1, form.3, changed, !form.2.isEmpty || relationForms[form.0] != nil)
       }
-      alert.informativeText = "Для каждого предложения нужны явное решение и обоснование; укажите устойчивый ID проверяющего латиницей."
+      return reviewDialog.validateReview(reviewer: reviewer, entries: entries)
     }
+    reviewDialog.configure(primaryTitle: "Проверить пакет решений → шаг 2")
+    defer { reviewDialog.validate = { nil } }
+    guard reviewDialog.run() == .alertFirstButtonReturn else { return }
     var decisions: [[String: Any]] = []
     for form in forms {
       let action = actions[form.1.indexOfSelectedItem - 1]
@@ -2535,18 +2606,27 @@ struct SidebarItem {
       }
       decisions.append(decision)
     }
-    let confirm = NSAlert(); confirm.messageText = "Подтвердить точный пакет смысловых решений?"
+    let confirmationDialog = KnowledgeReviewDialog()
+    let confirm = confirmationDialog.alert; confirm.messageText = "Применить пакет решений — шаг 2 из 2"
     confirm.informativeText = "Пакет SHA-256: \(hash)\nПроверяющий: \(reviewer.stringValue)\nВключены только перечисленные ниже решения. Принятые записи создадут новую неизменяемую каноническую версию. Отложенные и отклонённые предложения не принимаются."
     let enumeration = FlippedStackView(); enumeration.orientation = .vertical; enumeration.alignment = .leading; enumeration.spacing = 10
+    let explicit = NSButton(checkboxWithTitle: "Я подтверждаю именно этот пакет и перечисленные решения", target: nil, action: nil)
+    explicit.state = .off; enumeration.addArrangedSubview(explicit)
     for decision in decisions {
       let proposal = proposals.first { $0["id"] as? String == decision["proposal_id"] as? String } ?? [:]
       addKnowledgeReviewLabel("\(knowledgeText(decision["proposal_id"]))\nРешение: \(knowledgeText(decision["action"]))\nОбоснование: \(knowledgeText(decision["reason"]))\nИзменения: \(knowledgeText(decision["edited_fields"]))\n\(knowledgeProposalText(proposal))", to: enumeration)
     }
-    let explicit = NSButton(checkboxWithTitle: "Я подтверждаю именно этот пакет и перечисленные решения", target: nil, action: nil)
-    explicit.state = .off; enumeration.addArrangedSubview(explicit)
-    confirm.accessoryView = knowledgeReviewScroll(enumeration)
-    confirm.addButton(withTitle: "Применить подтверждённые решения"); confirm.addButton(withTitle: "Отмена")
-    guard confirm.runModal() == .alertFirstButtonReturn, explicit.state == .on else { status.stringValue = "Пакет не подтверждён; знания не изменены"; return }
+    confirm.accessoryView = confirmationDialog.accessory(knowledgeReviewScroll(enumeration))
+    confirmationDialog.validate = {
+      guard explicit.state == .on else {
+        confirmationDialog.invalidField = explicit
+        return "Отметьте явное подтверждение пакета. Применение ещё не выполнялось; решения остаются в этом окне."
+      }
+      return nil
+    }
+    confirmationDialog.configure(primaryTitle: "Применить подтверждённые решения")
+    defer { confirmationDialog.validate = { nil } }
+    guard confirmationDialog.run() == .alertFirstButtonReturn else { status.stringValue = "Пакет не подтверждён; знания не изменены"; return }
     var request = knowledgeIdentity
     request["package_sha256"] = hash; request["reviewer_id"] = reviewer.stringValue
     request["decisions"] = decisions; request["explicit_confirmation"] = true
