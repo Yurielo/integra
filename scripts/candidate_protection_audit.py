@@ -851,6 +851,13 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
         role = protected.get(row.get('candidate_id'), {})
         replayed = lifecycle.replay(local, (canonical or {}).get('canonical_lifecycles', {}),
                                     role.get('reasons', []))
+        # A pending Candidate withdrawal has its own exact canonical lineage;
+        # it is not a promotion event and therefore cannot be represented by
+        # ``replay`` alone.  The withdrawal list was validated above against
+        # the Product Owner record, immutable history, exact grant, and the
+        # complete protection graph.
+        replayed = lifecycle.replay_withdrawal(
+            replayed, (canonical or {}).get('withdrawn_candidate_lifecycles', []))
         row['local_lifecycle'] = row.get('lifecycle', 'UNKNOWN')
         row['reconciled_lifecycle'] = replayed.get('status', 'UNKNOWN')
         # Protected survivors were fully rehashed above in this same immutable
