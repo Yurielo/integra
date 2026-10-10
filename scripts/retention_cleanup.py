@@ -33,6 +33,13 @@ def _prepare_receipt(r, catalog, job, manifest, verification):
     context = catalog.get('protection') or {}
     record = lifecycle.replay(job['record'], context.get('canonical_lifecycles', {}),
                               context.get('protected', {}).get(job['identity']['candidate_id'], []))
+    # A separately verified withdrawal is terminal lifecycle evidence, not a
+    # promotion.  Protection planning and the deletion gate already replay it;
+    # the physical-retirement receipt must use that same canonical evidence.
+    # Without this replay an otherwise authorized withdrawal reaches cleanup as
+    # a stale pending record and fails after the costly immutable-byte check.
+    record = lifecycle.replay_withdrawal(
+        record, context.get('withdrawn_candidate_lifecycles', []))
     policy = context.get('standing_policy') or {}
     eligibility = lifecycle.terminal_eligibility(
         job['identity'], record, context.get('protected', {}).get(record['candidate_id'], []),
