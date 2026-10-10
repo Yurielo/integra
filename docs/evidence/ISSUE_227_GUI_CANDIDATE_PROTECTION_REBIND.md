@@ -61,3 +61,24 @@ exact-head CI before canonical activation. Afterwards only the accepted locked
 `refresh_protection` API may reconcile catalog protection/lifecycle evidence to
 the new main. This document is prospective evidence, not self-activation authority.
 Actual post-merge/refresh results are recorded separately in Issue227.
+
+## Proven QA-harness completion-budget repair
+
+The first retention-focused discovery run completed 60 tests with one failure:
+`test_24_build_cleanup_common_lock_blocks_race` observed `exitcode=None` at
+`worker.join(5)`. An unchanged isolated rerun reproduced that exact failure.
+A diagnostic using the same real tiny-archive fixture confirmed exclusion while
+the parent held the catalog lock, then observed the real unchanged build preflight
+complete with exit 0 and `finished=true` 9.4287 seconds after lock release.
+The original five-second deadline was explicitly recorded as failing, not hidden
+or relabelled PASS. Actual production snapshot/plan/subprocess calls were retained.
+
+The only QA-harness change increases that post-release completion wait to 60
+seconds. The five-second worker-start wait, held-lock `finished.wait(.1)` exclusion,
+exit-status-zero and completion-event assertions are unchanged. No lsof, canonical
+protection, archive verification or production timeout is replaced/disabled. This
+is a test completion-budget defect, not a claimed production retention defect.
+Independent review approved the narrow change; the new exact bookkeeping HEAD
+must rerun focused/full/governance/CI gates. The earlier full run is superseded and
+must not be reported PASS. Candidate/source implementation and permanent policy
+remain unchanged; this additional changed file is test-only.
