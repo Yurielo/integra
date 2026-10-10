@@ -114,8 +114,13 @@ def require_deletion(path: Path) -> None:
     rows = [item for item in audit['entries'] if item['path'] == relative]
     grant = {**registry.get('deletion_authorizations', {}),
              **registry.get('withdrawal_deletion_authorizations', {})}.get(relative)
+    # A standing retirement has canonical promotion lineage.  An exact
+    # owner-authorized withdrawal is terminal through different immutable
+    # evidence and must use its separately validated exact grant below.
     if (len(rows) == 1 and rows[0].get('standing_retirement_eligible') is True
-            and rows[0].get('reasons') == ['STANDING_TERMINAL_RETIREMENT']):
+            and rows[0].get('reasons') == ['STANDING_TERMINAL_RETIREMENT']
+            and rows[0].get('candidate_id') in
+            audit.get('canonical', {}).get('canonical_lifecycles', {})):
         policy = audit['canonical'].get('standing_policy')
         if not policy:
             raise ValueError('standing terminal retirement policy unavailable')
