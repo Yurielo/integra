@@ -104,6 +104,29 @@ class KnowledgeK2BridgeRouteTests(unittest.TestCase):
         self.assertLess(review.index('enumeration.addArrangedSubview(explicit)'), review.index('for decision in decisions'))
         self.assertIn("Принятие знаний не изменяет проверку исходной расшифровки", source)
 
+    def test_native_ui_uses_owner_identity_without_exposing_technical_review_fields(self):
+        source = (ROOT / "macos/IntegraApp.swift").read_text()
+        review = source[source.index("@objc private func reviewCanonicalKnowledge()"):source.index("private func knowledgeRelationTitle")]
+        presentation = source[source.index("private func knowledgeRecordText"):source.index("private func renderCanonicalKnowledge()")]
+        render = source[source.index("private func renderCanonicalKnowledge()"):source.index("private func returnToKnowledgeNotebook()")]
+        relation = source[source.index("@objc private func proposeKnowledgeRelation()"):source.index("private func playCanonicalKnowledgeEvidence")]
+        self.assertIn('knowledgeOwnerReviewerID = "integra-local-owner"', source)
+        self.assertIn('request["reviewer_id"] = knowledgeOwnerReviewerID', review)
+        self.assertIn("Решения будут сохранены от имени владельца этого приложения", review)
+        self.assertNotIn("ID проверяющего", review)
+        self.assertNotIn("reviewer = NSTextField", review)
+        self.assertNotIn("Пакет SHA-256", review)
+        self.assertNotIn('knowledgeText(decision["proposal_id"])', review)
+        self.assertNotIn("Происхождение предложения", presentation)
+        self.assertNotIn("Возможные совпадения названий:", presentation)
+        self.assertNotIn('knowledgeText(evidence["source_id"])', presentation)
+        self.assertNotIn('knowledgeText(evidence["evidence_id"]', presentation)
+        self.assertNotIn("Пакет предложений:", render)
+        self.assertNotIn("Каноническая версия:", render)
+        self.assertNotIn("Граф знаний ·", render)
+        self.assertNotIn("ID понятий", relation)
+        self.assertNotIn('concept["id"])', relation)
+
 
 @unittest.skipUnless((fixture.PINNED / "seminartext_modules/human_review_workflow.py").is_file()
                      and (os.environ.get("INTEGRA_KNOWLEDGE_ADMISSION_CHECKOUT") or
