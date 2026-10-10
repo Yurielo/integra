@@ -1,0 +1,60 @@
+{
+  "logs": [
+    {
+      "bytes": 774926,
+      "path": "/private/tmp/integra-227-repair-native-qa-stderr.txt",
+      "sha256": "20935a20a6c916f274c595d514673272f40d4c5a00312450579f70e148b8ba92"
+    },
+    {
+      "bytes": 1675,
+      "path": "/private/tmp/integra-227-native-ui-stderr.txt",
+      "sha256": "bf39058fd0facfd64586e9f4815083ea3f8e4282602d7a004cbbb00e9dfbc9a4"
+    },
+    {
+      "bytes": 1675,
+      "path": "/private/tmp/integra-227-native-ui-run2-stderr.txt",
+      "sha256": "1375b48b24a3d8b860790b345a4a2bc9acd90cb5eb178313d6f623adfbdc9c3f"
+    },
+    {
+      "bytes": 1562,
+      "path": "/private/tmp/integra-227-native-ui-run3.txt",
+      "sha256": "93265045a52d4abe3f06e7e22c34608c2e0781efc940b7f7b0ddb61e0e1013f8"
+    },
+    {
+      "bytes": 311569,
+      "path": "/private/tmp/integra-227-native-ui-run3-stderr.txt",
+      "sha256": "a512613c4dea0b09bf9dc28a84d1f425f97cf9fd1b138e2ba02e9c555c696dd5"
+    },
+    {
+      "bytes": 329507,
+      "path": "/private/tmp/integra-227-repair-full-source.txt",
+      "sha256": "6c5377eb69e7e1c8e0b99b0293e8f94a034f1a97fb8a7191e51b782640984d69"
+    },
+    {
+      "bytes": 7119,
+      "path": "/private/tmp/integra-227-repair-focused.txt",
+      "sha256": "0b1b4405288b27c590964af8e64db78e33d8e80bf14b8cf3c909c365c3546be6"
+    },
+    {
+      "bytes": 70577,
+      "path": "/private/tmp/integra-227-exception-retention-tests.txt",
+      "sha256": "8fbe1ffbbf5d72b03dde1047bba0d8e21f44efa78c9de9194c9d5bc115059107"
+    },
+    {
+      "bytes": 5502,
+      "path": "/private/tmp/integra-227-protection-focused.txt",
+      "sha256": "1a1741edb2bd85378e9bea8f6ac881577b4a05cd81bc9c36bbeaedc8908e76d7"
+    }
+  ],
+  "predeclaration_full_suite": {
+    "duration_seconds": 984.976,
+    "errors": 0,
+    "failure_scope": "Three current/historical governance tests; exact twelve current-to-source product hashes remain undeclared until Proposal C. Final C suite must be rerun; these failures are not hidden.",
+    "failures": 3,
+    "passed": 1093,
+    "run": 1160,
+    "skip_scope": "Existing opt-in/platform media, ASR, Topic, native-build and translation prerequisites. No K2 focused tests skipped.",
+    "skipped": 64,
+    "status": "FAIL_BEFORE_PROPOSAL_DECLARATION"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "status": "PASS_NATIVE_UI_INTERACTION",
+  "candidate_id": "candidate-v1-aee63800b39e2d4ff897ed34f2e1cb99d1b598acae4071db647ac225f041e1c0",
+  "bundle_digest": "1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+  "manifest_digest": "2999c61811fd08a03933f81b88135f189530818272dc66e442cf9032bcb5c4d5",
+  "product_source": {"commit_sha": "e6cd7612a764fbfed5f8f713e838b39caac97f4a", "tree_sha": "bf702d6bf9c188dec1a37b390160f0a26e372129"},
+  "interaction_tool": "cua_repl native accessibility controls",
+  "execution_copy": "/private/tmp/integra-owned-issue236-k2-fixture-hraxjhrf/execution/Integra.app",
+  "fixture": "accepted Issue #236 synthetic two-reviewed-unit fixture; no production project",
+  "journey": [
+    "База знаний → Добавить результат Process → selected SYNTHETIC QA ONLY — Issue 236",
+    "Открытый тематический конспект: exact two reviewed fragments, machine transcript remains unverified",
+    "Структурировать знания / открыть принятую версию → 5 provisional proposals",
+    "Проверить смысловые предложения: all 5 action controls initially Выберите решение",
+    "Explicit synthetic decisions: ACCEPT Concept, DEFER Topic, ACCEPT Relation, ACCEPT Concept, DEFER Topic; nonempty reasons; reviewer synthetic-native-qa",
+    "Проверить пакет решений → exact package hash and enumerated actions; confirmation checkbox initially 0",
+    "Confirmation checkbox explicitly set to 1 → Применить подтверждённые решения",
+    "Сохранённая каноническая версия проверена; 2 Concepts and 1 Relation rendered; 2 Topics deferred",
+    "Обновить сохранённое представление → same canonical revision and rendered graph/diff",
+    "Открыть источник → exact source quote, 0.100–54.800 seconds, Версия источника проверена по хешу",
+    "Предпросмотр / экспорт знаний в Obsidian → isolated empty QA target → state=DRY_RUN, collisions empty, cloud_verified=0 → Отмена (not publish)",
+    "Native app quit normally; launcher performs read-only final reopen/archive verification and owned-copy cleanup"
+  ],
+  "proposal_package_sha256": "3480c8ee2179ffab7cee4f13303216047505812a8a257aa58eb46c39adb878a1",
+  "canonical_revision_sha256": "15a5cdce3d42331587e6094efb9e28821077b1687c53a6f0e9c171f8adbb8657",
+  "parent_revision_sha256": null,
+  "graph_sha256": "00d7a2980f944460a2c672f0dc33051a3de3b35fcab6c0cd6d6f9847d8371db0",
+  "concept_ids": ["concept_24ce9f02025f14e5492ab963a9256bba1a01cbc380fc94c1a45d78a6b44e658c", "concept_4aceb0557963500858a08630e45daa922b2926c25eb113e15816e217a8e95749"],
+  "relation_id": "relation_79c41461a8993b52c732ead534f2cbe61a204e552a9096206e35f1aa3406f797",
+  "exact_source_navigation": true,
+  "managed_export_preview_only": true,
+  "semantic_product_acceptance": false,
+  "owner_acceptance": false,
+  "current_changed": false,
+  "process_board_changed": false,
+  "diagnostic_limitations": {
+    "first_two_ui_fixture_setup_attempts": "knowledge-open exit2; exact error: jsonschema import subprocess timed out after15seconds; full stdout/stderr retained separately. No production repair or historical-root-cause claim.",
+    "successful_ui_attempt": "Mandatory packaged self-test precedes fixture bridge exercise; fixture files are created before it. Actual self-test and every bridge operation PASS; Candidate unchanged. This is not evidence proving the cause of the first two timeouts.",
+    "historical_single_knowledge_open_exit2": "UNVERIFIED; not claimed diagnosed or fixed",
+    "synthetic_media": "dummy media payload; exact Evidence quote/time/hash navigation is proven, playable real-media decoding is not claimed by this fixture"
+  }
+}
