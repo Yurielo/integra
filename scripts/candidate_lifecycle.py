@@ -133,6 +133,40 @@ def replay(record, events, protected_roles):
     return result
 
 
+def replay_withdrawal(record, withdrawals):
+    """Apply one already-validated exceptional withdrawal to a catalog record.
+
+    ``candidate_protection_audit`` is the authority that validates the Product
+    Owner record and immutable history.  This helper deliberately performs no
+    discovery and never infers a withdrawal from a missing Proposal, age, or
+    package similarity.  It merely lets the local ownership catalog mirror that
+    canonical, exact terminal transition during protection reconciliation.
+    """
+    result = deepcopy(record)
+    if not exact_identity(result) or not isinstance(withdrawals, list):
+        return result
+    matches = [item for item in withdrawals if isinstance(item, dict)
+               and all(item.get(key) == result.get(key) for key in IDENTITY)]
+    if len(matches) != 1:
+        return result
+    withdrawal = matches[0]
+    if (withdrawal.get('previous_status') != 'AWAITING_OWNER_ACCEPTANCE'
+            or withdrawal.get('resulting_status') != 'WITHDRAWN_SUPERSEDED'
+            or not withdrawal.get('authority_ref')):
+        return result
+    if result.get('status') == 'WITHDRAWN_SUPERSEDED':
+        if result.get('withdrawal_lifecycle_evidence') == withdrawal:
+            return result
+        return result
+    if result.get('status') != withdrawal['previous_status']:
+        return result
+    result['status'] = withdrawal['resulting_status']
+    result['disposition_ref'] = withdrawal['authority_ref']
+    result['withdrawal_lifecycle_evidence'] = deepcopy(withdrawal)
+    result['lifecycle_authority'] = 'CANONICAL_EXACT_WITHDRAWAL_REPLAY'
+    return result
+
+
 def terminal_eligibility(identity, record, roles, *, owned,
                          integrity_verified, context_valid, inactive,
                          standing_policy=None):

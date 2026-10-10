@@ -116,13 +116,6 @@
       "manifest_digest": "ea6003528896581fdc4c5e8b14953de7de58b980707e9e12a9fc3fb43b60ebde",
       "path": "state/proposed_baseline_lite_v1.json",
       "pr": 206
-    },
-    {
-      "bundle_digest": "9c558edc7928241696a8d40f21b4a35fd3099d3194b41b912eb1237c870d0a9e",
-      "candidate_id": "candidate-v1-077114f64a201b8c5d94c154c3a58f29dd93dba622481e549c0b193b7bd7571d",
-      "head_sha": "1d413700d3775c680fa488cc6ce55ecdcf45c05b",
-      "manifest_digest": "bbb42f10ec5e156a876dabc4bc0349df89ddd3a2295b1811cc2b2cbb6870c606",
-      "pr": 239
     }
   ],
   "recovery": null,
@@ -140,7 +133,6 @@
   },
   "schema_version": "1.0",
   "selected_survivors": {
-    "candidate-v1-077114f64a201b8c5d94c154c3a58f29dd93dba622481e549c0b193b7bd7571d": "Build Archive/candidate-v1-077114f64a201b8c5d94c154c3a58f29dd93dba622481e549c0b193b7bd7571d/9c558edc7928241696a8d40f21b4a35fd3099d3194b41b912eb1237c870d0a9e",
     "candidate-v1-14b3c10e4d779ff8b5a520bf15e2b7087673aec2cd0abd25aac4e1d0ded77892": null,
     "candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81": "Build Archive/candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81/c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
     "candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f": "Build Archive/candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f/e3215a28c9ce0a1a54c35dc535bad42a9334cae7ddc5eb3b0533a480e0296d95",
@@ -161,6 +153,16 @@
   ],
   "unknown_historical": "RETAIN_FAIL_CLOSED",
   "withdrawal_deletion_authorizations": {
+    "Build Archive/candidate-v1-077114f64a201b8c5d94c154c3a58f29dd93dba622481e549c0b193b7bd7571d/9c558edc7928241696a8d40f21b4a35fd3099d3194b41b912eb1237c870d0a9e": {
+      "authority_ref": "https://github.com/Yurielo/integra/issues/227#issuecomment-6101965743",
+      "bundle_digest": "9c558edc7928241696a8d40f21b4a35fd3099d3194b41b912eb1237c870d0a9e",
+      "candidate_id": "candidate-v1-077114f64a201b8c5d94c154c3a58f29dd93dba622481e549c0b193b7bd7571d",
+      "lifecycle": "WITHDRAWN_SUPERSEDED",
+      "manifest_digest": "bbb42f10ec5e156a876dabc4bc0349df89ddd3a2295b1811cc2b2cbb6870c606",
+      "path": "Build Archive/candidate-v1-077114f64a201b8c5d94c154c3a58f29dd93dba622481e549c0b193b7bd7571d/9c558edc7928241696a8d40f21b4a35fd3099d3194b41b912eb1237c870d0a9e",
+      "reason": "SUPERSEDED_STALE_K2_PROPOSAL_LITE_AFTER_OWNER_GUI_REPAIR",
+      "scope": "EXACT_077114_STALE_PROPOSAL_SUPERSESSION"
+    },
     "Build Archive/candidate-v1-4c60663b9c5b7c991dc67f66b3a8e531ead4cf0f90435ef02c25055ad36018cc/b523d1cb5f0cf68526bf69a63131a462da1cdf088a369b06d612cfe6907bd851": {
       "authority_ref": "https://github.com/Yurielo/integra/issues/224#issuecomment-6069206361",
       "bundle_digest": "b523d1cb5f0cf68526bf69a63131a462da1cdf088a369b06d612cfe6907bd851",
@@ -173,6 +175,18 @@
     }
   },
   "withdrawn_candidate_lifecycles": [
+    {
+      "authority_body_sha256": "647aa4889f029191b173d2a775fb52f36fc0e9686411fe4a19064525d259ed91",
+      "authority_ref": "https://github.com/Yurielo/integra/issues/227#issuecomment-6101965743",
+      "bundle_digest": "9c558edc7928241696a8d40f21b4a35fd3099d3194b41b912eb1237c870d0a9e",
+      "candidate_id": "candidate-v1-077114f64a201b8c5d94c154c3a58f29dd93dba622481e549c0b193b7bd7571d",
+      "history_path": "state/history/knowledge_k2_candidate_077114_withdrawal_v1.json",
+      "history_sha256": "450b949526f9ddd31bcb63448d4c654d21f53f49a6ccb6fc49270fb57bbfd750",
+      "manifest_digest": "bbb42f10ec5e156a876dabc4bc0349df89ddd3a2295b1811cc2b2cbb6870c606",
+      "previous_status": "AWAITING_OWNER_ACCEPTANCE",
+      "reason": "SUPERSEDED_STALE_K2_PROPOSAL_LITE_AFTER_OWNER_GUI_REPAIR",
+      "resulting_status": "WITHDRAWN_SUPERSEDED"
+    },
     {
       "authority_body_sha256": "42b637e68cfe45fe5d2eb4583d6290a4b38f67938b4890c2765a986ef5e60fa6",
       "authority_ref": "https://github.com/Yurielo/integra/issues/224#issuecomment-6069206361",

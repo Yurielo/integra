@@ -63,6 +63,28 @@ class CandidateLifecycleTests(unittest.TestCase):
         self.assertEqual(lifecycle.replay(record, {}, [])['status'], 'AWAITING_OWNER_ACCEPTANCE')
         self.assertFalse(self.eligibility(record)['eligible'])
 
+    def test_exact_withdrawal_replays_only_the_matching_pending_record(self):
+        withdrawal = {**self.identity,
+                      'previous_status': 'AWAITING_OWNER_ACCEPTANCE',
+                      'resulting_status': 'WITHDRAWN_SUPERSEDED',
+                      'reason': 'EXACT_TEST_SUPERSESSION',
+                      'authority_ref': 'https://github.com/Yurielo/integra/issues/1#issuecomment-2',
+                      'authority_body_sha256': '3' * 64,
+                      'history_path': 'state/history/exact-withdrawal.json',
+                      'history_sha256': '4' * 64}
+        result = lifecycle.replay_withdrawal(self.record, [withdrawal])
+        self.assertEqual(result['status'], 'WITHDRAWN_SUPERSEDED')
+        self.assertEqual(result['disposition_ref'], withdrawal['authority_ref'])
+        self.assertEqual(result['withdrawal_lifecycle_evidence'], withdrawal)
+        self.assertEqual(result['lifecycle_authority'], 'CANONICAL_EXACT_WITHDRAWAL_REPLAY')
+        self.assertEqual(self.record['status'], 'AWAITING_OWNER_ACCEPTANCE')
+        self.assertEqual(lifecycle.replay_withdrawal(
+            {**self.record, 'bundle_digest': '9' * 64}, [withdrawal]),
+            {**self.record, 'bundle_digest': '9' * 64})
+        self.assertEqual(lifecycle.replay_withdrawal(
+            {**self.record, 'status': 'CURRENT'}, [withdrawal]),
+            {**self.record, 'status': 'CURRENT'})
+
     def test_identity_bundle_and_manifest_substitution_cannot_replay(self):
         for key in lifecycle.IDENTITY:
             with self.subTest(key=key):
