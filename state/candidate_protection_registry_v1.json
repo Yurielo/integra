@@ -218,12 +218,12 @@
       "resulting_status": "WITHDRAWN_SUPERSEDED"
     },
     {
-      "authority_body_sha256": "c1d12cadb6dede23d9819ad596d8dfa8c0b268e2339c66ae7798d9c790753769",
+      "authority_body_sha256": "a9a9cf749ed2f82161dbfd691fdcd7db0b371df4a5c6261bd2168738c501a283",
       "authority_ref": "https://github.com/Yurielo/integra/issues/227#issuecomment-6109629732",
       "bundle_digest": "b55c93d11e82fd328a928c38e019a77b614d3b4203cb54b9a5b6e1a859de285d",
       "candidate_id": "candidate-v1-81418be852b342e322981a67d22809973151a6bfa9694fcfb40e60aed7929541",
       "history_path": "state/history/knowledge_k2_candidate_81418_withdrawal_v1.json",
-      "history_sha256": "3d3fb048202971ed9282bb75531434f84cc1386fbea1243b1390ee0d190b8fe7",
+      "history_sha256": "bc4780fd22be50c70499a30a9637561c542f61c551121a36409e0e11dc13ea06",
       "manifest_digest": "9efaa737507e189e468a68e1e9abb17b5fee10513b62c1246efce8587f1d1368",
       "previous_status": "AWAITING_OWNER_ACCEPTANCE",
       "reason": "PREMATURE_K2_CANDIDATE_PUBLICATION_BEFORE_PREOWNER_REGRESSION",
