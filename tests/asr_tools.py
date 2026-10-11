@@ -81,8 +81,14 @@ def require_subtitle_runtime():
             Path(candidate).resolve(strict=True)
             / "Contents/Resources/runtime/videotext/translation-worker"
         )
-        expected = "22ba7bbfd827a1f2937f3757070b74b2e5d4d1200ebea954c48c1eaac1162d28"
         try:
+            manifest = json.loads(
+                (Path(candidate).resolve(strict=True)
+                 / "Contents/Resources/candidate-manifest.json").read_text(encoding="utf-8")
+            )
+            expected = manifest["identity"]["components"]["videotext"]["worker_sha256"]
+            if not isinstance(expected, str) or len(expected) != 64:
+                raise ValueError("Candidate manifest lacks a valid VideoText worker pin")
             if not worker.is_file() or hashlib.sha256(worker.read_bytes()).hexdigest() != expected:
                 raise ValueError("Candidate bundled VideoText runtime differs from pinned bytes")
         except (OSError, ValueError) as error:
