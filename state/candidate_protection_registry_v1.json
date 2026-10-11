@@ -116,6 +116,14 @@
       "manifest_digest": "ea6003528896581fdc4c5e8b14953de7de58b980707e9e12a9fc3fb43b60ebde",
       "path": "state/proposed_baseline_lite_v1.json",
       "pr": 206
+    },
+    {
+      "bundle_digest": "175f74f53d5d821fafafb27fd80809b0c793944c808bbcc968c699249ce234f8",
+      "candidate_id": "candidate-v1-cbdbdc7a722d2b4c2c47fbffd08fd2014df43e62872fe9c24995d158190a3e24",
+      "head_sha": "0d28ad0fcadf06b5bfcdf42bd1062d7da18b8e73",
+      "manifest_digest": "929bbf5a0599ba0c4957711e3e5a88011f3bede220a488d9d5b8347d3e03e101",
+      "path": "state/proposed_baseline_lite_v1.json",
+      "pr": 251
     }
   ],
   "recovery": null,
@@ -141,6 +149,7 @@
     "candidate-v1-9c969dab6d8aab30458bd202dd792d709e1faea8db207306e3ccb46c886c1e98": null,
     "candidate-v1-af81b2867f893e8e529a2d4f64d6c1370dd1249b46eb999d427fb408229680fa": null,
     "candidate-v1-c5f5b6ea7e8495c967c0b999dd24bdf7a3162c1fb34035cb0dcedbd5fe323cd2": null,
+    "candidate-v1-cbdbdc7a722d2b4c2c47fbffd08fd2014df43e62872fe9c24995d158190a3e24": "Build Archive/candidate-v1-cbdbdc7a722d2b4c2c47fbffd08fd2014df43e62872fe9c24995d158190a3e24/175f74f53d5d821fafafb27fd80809b0c793944c808bbcc968c699249ce234f8",
     "candidate-v1-d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8": null,
     "candidate-v1-f4673faeb53b6d4ca3b71dda9cb383a175cb01c24519f907ec2e9d2cbea5eafc": null
   },
