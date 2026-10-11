@@ -162,6 +162,16 @@
   ],
   "unknown_historical": "RETAIN_FAIL_CLOSED",
   "withdrawal_deletion_authorizations": {
+    "Build Archive/candidate-v1-cbdbdc7a722d2b4c2c47fbffd08fd2014df43e62872fe9c24995d158190a3e24/175f74f53d5d821fafafb27fd80809b0c793944c808bbcc968c699249ce234f8": {
+      "authority_ref": "https://github.com/Yurielo/integra/issues/227#issuecomment-6114200449",
+      "bundle_digest": "175f74f53d5d821fafafb27fd80809b0c793944c808bbcc968c699249ce234f8",
+      "candidate_id": "candidate-v1-cbdbdc7a722d2b4c2c47fbffd08fd2014df43e62872fe9c24995d158190a3e24",
+      "lifecycle": "WITHDRAWN_SUPERSEDED",
+      "manifest_digest": "929bbf5a0599ba0c4957711e3e5a88011f3bede220a488d9d5b8347d3e03e101",
+      "path": "Build Archive/candidate-v1-cbdbdc7a722d2b4c2c47fbffd08fd2014df43e62872fe9c24995d158190a3e24/175f74f53d5d821fafafb27fd80809b0c793944c808bbcc968c699249ce234f8",
+      "reason": "REJECTED_BY_OWNER_TEST_GUI_INTERACTION_AND_PROVENANCE_LEAK",
+      "scope": "EXACT_CBDBDC_REJECTED_K2_OWNER_TEST"
+    },
     "Build Archive/candidate-v1-323a4d9a18b3a830e7e154110158f386b71360cc84c5143ec8c28f3add0b5ec0/337fe45da6349cf263779231cbf40946e6c5265566769b461e201e10a53aefa9": {
       "authority_ref": "https://github.com/Yurielo/integra/issues/227#issuecomment-6106429865",
       "bundle_digest": "337fe45da6349cf263779231cbf40946e6c5265566769b461e201e10a53aefa9",
@@ -214,6 +224,18 @@
     }
   },
   "withdrawn_candidate_lifecycles": [
+    {
+      "authority_body_sha256": "f2eaa94826152467b328cb0a1287b459c6e487ec8c5b8c2221eefd21310f3984",
+      "authority_ref": "https://github.com/Yurielo/integra/issues/227#issuecomment-6114200449",
+      "bundle_digest": "175f74f53d5d821fafafb27fd80809b0c793944c808bbcc968c699249ce234f8",
+      "candidate_id": "candidate-v1-cbdbdc7a722d2b4c2c47fbffd08fd2014df43e62872fe9c24995d158190a3e24",
+      "history_path": "state/history/knowledge_k2_candidate_cbdbdc_withdrawal_v1.json",
+      "history_sha256": "d390b17a80a7d65cfd473e59b751c7fd3be04dbb3fbcbe1ad20f630d4347fe8f",
+      "manifest_digest": "929bbf5a0599ba0c4957711e3e5a88011f3bede220a488d9d5b8347d3e03e101",
+      "previous_status": "AWAITING_OWNER_ACCEPTANCE",
+      "reason": "REJECTED_BY_OWNER_TEST_GUI_INTERACTION_AND_PROVENANCE_LEAK",
+      "resulting_status": "WITHDRAWN_SUPERSEDED"
+    },
     {
       "authority_body_sha256": "50472dc547220de7a46416bfdbc50e7d176d2e1d875d30f4d39876644dac3d46",
       "authority_ref": "https://github.com/Yurielo/integra/issues/227#issuecomment-6106429865",
