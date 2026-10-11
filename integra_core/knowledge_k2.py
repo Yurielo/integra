@@ -166,6 +166,21 @@ def _view(revision, evidence_payload, admission):
                                admission.canonical_bytes(revision["canonical_knowledge"]), created_at=timestamp)
 
 
+def _present_decisions(revision):
+    """Return human review choices without leaking persistence-only metadata.
+
+    The canonical source-owned revision deliberately retains the bound proposal
+    digest and timestamp for auditability.  They are not a semantic choice made
+    by the reviewer and must not be reintroduced into the normal K2 UI/result
+    contract after a local owner identity is supplied automatically.
+    """
+    visible = {"proposal_id", "action", "reason", "edited_fields"}
+    return [
+        {key: copy.deepcopy(value) for key, value in decision.items() if key in visible}
+        for decision in revision["semantic_decisions"]
+    ]
+
+
 def _presentation(root, base, opened, evidence_payload, reviewed_payload, work, admission):
     fragments = _fragment_views(opened, json.loads(evidence_payload))
     indexed = {item["id"]: item for item in fragments}
@@ -204,7 +219,7 @@ def _presentation(root, base, opened, evidence_payload, reviewed_payload, work, 
         "confirmed_proposal_ids": sorted(item["id"] for item in proposals), "revision_sha256": work["revision_sha256"],
         "parent_revision_sha256": revision["parent_revision_sha256"] if revision else None,
         "revision_history": copy.deepcopy(work["revision_history"]), "knowledge_view": view, "diff": diff,
-        "semantic_decisions": copy.deepcopy(revision["semantic_decisions"]) if revision else [],
+        "semantic_decisions": _present_decisions(revision) if revision else [],
         "semantic_reviewer": copy.deepcopy(revision["source_evidence"]["admission"]["decisions"]["reviewer"]) if revision else None,
         "supported_relation_types": RELATIONS, "available_concepts": [{"id": key, "label": value} for key, value in sorted(available.items())],
         "automatic_acceptance": False, "upstream_processing_performed": False,
