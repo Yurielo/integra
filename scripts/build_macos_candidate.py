@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build, validate, optionally archive, then remove one owned Candidate."""
+"""Build disposable engineering packages; publish only explicit Owner Candidates."""
 from __future__ import annotations
 
 import argparse
@@ -53,12 +53,14 @@ def _execute_build_inside_workspace(archive_root: Path | None) -> int:
     subprocess.run([sys.executable, str(ROOT / "scripts" / "candidate_manifest.py"),
                     "validate", str(app)], check=True, timeout=900)
     result: dict = {"workspace": str(workspace), "app": str(app), "retained_archive": None,
-                    "candidate_manifest": json.loads((app / "Contents/Resources/candidate-manifest.json").read_text())}
+                    "candidate_manifest": json.loads((app / "Contents/Resources/candidate-manifest.json").read_text()),
+                    "lifecycle": "ENGINEERING_QA_BUILD"}
     if archive_root is not None:
         completed = subprocess.run([sys.executable, str(ROOT / "scripts" / "candidate_archive.py"), "create",
                                     "--app", str(app), "--archive-root", str(archive_root)],
                                    check=True, capture_output=True, text=True, timeout=1800)
         result["retained_archive"] = json.loads(completed.stdout)
+        result["lifecycle"] = "AWAITING_OWNER_ACCEPTANCE"
     print(json.dumps(result, sort_keys=True), flush=True)
     return 0
 
@@ -71,6 +73,8 @@ def main() -> int:
     parser.add_argument("--reserve-bytes", type=int, default=DEFAULT_RESERVE_BYTES)
     parser.add_argument("--timeout-seconds", type=float, default=3600)
     parser.add_argument("--archive-root", type=Path)
+    parser.add_argument("--publish-owner-candidate", action="store_true",
+                        help="publish a retained Candidate only after pre-owner gates pass")
     parser.add_argument("--native-tests", action="store_true", help="run native tests under the same build admission")
     parser.add_argument("--package-tests", action="store_true", help="verify a disposable READY_APP package under admission")
     parser.add_argument("--inside-owned-workspace", action="store_true", help=argparse.SUPPRESS)
@@ -81,6 +85,10 @@ def main() -> int:
         parser.error('choose one native validation mode')
     if (args.native_tests or args.package_tests) and args.archive_root is not None:
         parser.error("native test workspaces are disposable; archive publication is a separate Candidate operation")
+    if args.archive_root is not None and not args.publish_owner_candidate:
+        parser.error("archive publication requires --publish-owner-candidate; use a disposable engineering build before pre-owner gates pass")
+    if args.publish_owner_candidate and args.archive_root is None:
+        parser.error("--publish-owner-candidate requires --archive-root")
     if args.expected_bytes < DEFAULT_EXPECTED_BYTES or args.reserve_bytes < DEFAULT_RESERVE_BYTES:
         parser.error("full Candidate builds require at least the documented expected bytes and hard disk reserve")
     if args.inside_owned_workspace:
@@ -94,7 +102,7 @@ def main() -> int:
     child = [sys.executable, str(Path(__file__).resolve()), "--inside-owned-workspace",
              "--expected-bytes", str(args.expected_bytes), "--reserve-bytes", str(args.reserve_bytes)]
     if args.archive_root is not None:
-        child.extend(["--archive-root", str(args.archive_root.resolve())])
+        child.extend(["--archive-root", str(args.archive_root.resolve()), "--publish-owner-candidate"])
     if args.native_tests:
         child.append("--native-tests")
     if args.package_tests:
