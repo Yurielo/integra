@@ -105,10 +105,20 @@ class GovernanceValidationTests(unittest.TestCase):
         )
 
     def _baseline_fixture_root(self) -> Path:
-        """Build a tiny isolated root for current-baseline mutation tests."""
+        """Materialize the active CURRENT bytes for isolated contract tests.
+
+        These tests deliberately exercise the historical CURRENT contract, not
+        the product bytes of a feature branch.  Reading the working tree made
+        a valid in-progress product change look like a rewrite of CURRENT.
+        Git's immutable baseline commit is the sole source for this fixture.
+        """
         temp = tempfile.TemporaryDirectory()
         self.addCleanup(temp.cleanup)
         root = Path(temp.name)
+        # The active record follows hash-bound predecessor records.  Retain
+        # the complete immutable history graph so a historical certification
+        # can be checked without reading feature-branch product bytes.
+        shutil.copytree(ROOT / "state" / "history", root / "state" / "history")
         paths = {
             item["path"]
             for item in next(item for item in self.current_product_baseline_v2["records"]
@@ -118,19 +128,49 @@ class GovernanceValidationTests(unittest.TestCase):
             "state/native_macos_app_v1.json",
             "state/ready_app_v1.json",
         }
+        for evidence_path in (
+            ROOT / "state" / "native_macos_app_v1.json",
+            ROOT / "state" / "ready_app_v1.json",
+        ):
+            evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+            paths.update(
+                item["path"]
+                for item in evidence["implementation"]
+                if isinstance(item, dict) and isinstance(item.get("path"), str)
+            )
         active = next(item for item in self.current_product_baseline_v2["records"]
                       if item["baseline_id"] == self.current_product_baseline_v2["current_id"])
         paths.update(item["path"] for item in active["historical_predecessors"])
+        predecessor_hashes = {
+            item["path"]: item["sha256"]
+            for item in active["historical_predecessors"]
+        }
         for relative in paths:
             destination = root / relative
             destination.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(ROOT / relative, destination)
+            result = subprocess.run(
+                ["git", "show", f"{active['main']['commit_sha']}:{relative}"],
+                cwd=ROOT,
+                capture_output=True,
+            )
+            if result.returncode == 0:
+                destination.write_bytes(result.stdout)
+                continue
+            # A predecessor is written while a later promotion preserves the
+            # outgoing record, so it need not exist in the earlier source
+            # commit.  Its immutable hash is already part of CURRENT; copy it
+            # only when that exact retained evidence is present locally.
+            source = ROOT / relative
+            self.assertIn(relative, predecessor_hashes)
+            self.assertEqual(VALIDATOR.sha256_file(source), predecessor_hashes[relative])
+            destination.write_bytes(source.read_bytes())
         return root
 
     def test_current_baseline_exact_contract_passes(self):
+        root = self._baseline_fixture_root()
         self.assertEqual(
             VALIDATOR.validate_current(
-                self.current_product_baseline_v2, ROOT, self.proposed_baseline
+                self.current_product_baseline_v2, root
             ), []
         )
 
@@ -178,35 +218,33 @@ class GovernanceValidationTests(unittest.TestCase):
         )
 
     def test_valid_superseding_baseline_suppresses_only_explained_historical_drift(self):
-        native = json.loads(
-            (ROOT / "state" / "native_macos_app_v1.json").read_text(encoding="utf-8")
-        )
-        ready = json.loads(
-            (ROOT / "state" / "ready_app_v1.json").read_text(encoding="utf-8")
-        )
+        root = self._baseline_fixture_root()
+        native = json.loads((root / "state" / "native_macos_app_v1.json").read_text(encoding="utf-8"))
+        ready = json.loads((root / "state" / "ready_app_v1.json").read_text(encoding="utf-8"))
         self.assertEqual(
             VALIDATOR.validate_native_macos_app_evidence(
-                native, current_baseline=self.current_baseline,
-                proposal=self.proposed_baseline, current_product_baseline=self.current_product_baseline_v2,
+                native, root=root, current_baseline=self.current_baseline,
+                current_product_baseline=self.current_product_baseline_v2,
             ),
             [],
         )
         self.assertEqual(
             VALIDATOR.validate_ready_app_evidence(
-                ready, current_baseline=self.current_baseline,
-                proposal=self.proposed_baseline, current_product_baseline=self.current_product_baseline_v2,
+                ready, root=root, current_baseline=self.current_baseline,
+                current_product_baseline=self.current_product_baseline_v2,
             ),
             [],
         )
 
     def test_historical_certification_records_are_not_rewritten(self):
-        native_path = ROOT / "state" / "native_macos_app_v1.json"
-        ready_path = ROOT / "state" / "ready_app_v1.json"
+        root = self._baseline_fixture_root()
+        native_path = root / "state" / "native_macos_app_v1.json"
+        ready_path = root / "state" / "ready_app_v1.json"
         native_before = native_path.read_bytes()
         ready_before = ready_path.read_bytes()
         self.assertEqual(
             VALIDATOR.validate_current(
-                self.current_product_baseline_v2, ROOT, self.proposed_baseline
+                self.current_product_baseline_v2, root
             ), []
         )
         self.assertEqual(native_path.read_bytes(), native_before)
