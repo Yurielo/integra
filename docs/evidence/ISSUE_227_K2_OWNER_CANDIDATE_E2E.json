@@ -1,0 +1,18 @@
+{
+  "artifact_type": "integra.issue_227.k2_owner_candidate_e2e",
+  "schema_version": "1.0",
+  "status": "PASS",
+  "candidate_id": "candidate-v1-cbdbdc7a722d2b4c2c47fbffd08fd2014df43e62872fe9c24995d158190a3e24",
+  "manifest_identity_sha256": "cbdbdc7a722d2b4c2c47fbffd08fd2014df43e62872fe9c24995d158190a3e24",
+  "manifest_digest": "929bbf5a0599ba0c4957711e3e5a88011f3bede220a488d9d5b8347d3e03e101",
+  "bundle_digest": "175f74f53d5d821fafafb27fd80809b0c793944c808bbcc968c699249ce234f8",
+  "product_source": {"commit_sha": "d60a5bc7dfd3bcbfce57856071b744b4d9bdf506", "tree_sha": "ef9c4ad399b9669e427b687c8d62b1301dae5ce0"},
+  "fixture": {"source": "Issue #236 accepted isolated QA fixture", "reviewed_units": 2, "concepts": 2, "relations": 1, "semantic_product_acceptance": false},
+  "production_gui_lifecycle": {"status": "PASS", "steps": ["Knowledge Base -> accepted notebook -> Structure knowledge -> Semantic proposals", "manual ACCEPT decisions with human rationales", "explicit confirmation required before Apply", "unconfirmed Apply keeps modal and decisions open with an actionable validation message", "confirmed Apply creates two Concepts and one Relation", "close and reopen retains the immutable applied revision and graph"], "reviewer_id_field_present": false, "stable_local_owner_provenance": "integra-local-owner", "technical_identifiers_required_from_user": false, "semantic_decisions_remain_explicit": true},
+  "knowledge_k2_apply": "PASS",
+  "persistence_reopen": "PASS",
+  "focused_suite": "45 passed",
+  "full_suite": "1211 passed, 130 skipped",
+  "current_changed": false,
+  "process_board_changed": false
+}
