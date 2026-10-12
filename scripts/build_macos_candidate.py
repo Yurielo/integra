@@ -24,6 +24,33 @@ PINNED_COMPONENT_COMMITS = {
 }
 
 
+def _is_clean_pinned_source(path: Path, expected_commit: str) -> bool:
+    """Return whether a Git runtime input is both exact-pinned and clean."""
+    revision = subprocess.run(
+        ["git", "-C", str(path), "rev-parse", "HEAD"],
+        check=False, capture_output=True, text=True,
+    ).stdout.strip()
+    if revision != expected_commit:
+        return False
+    dirty = subprocess.run(
+        ["git", "-C", str(path), "status", "--porcelain", "--", "Sources"],
+        check=False, capture_output=True, text=True,
+    ).stdout.strip()
+    return not dirty
+
+
+def _registered_component_worktrees(path: Path) -> list[Path]:
+    """Return locally registered worktrees for a component checkout."""
+    listing = subprocess.run(
+        ["git", "-C", str(path), "worktree", "list", "--porcelain"],
+        check=False, capture_output=True, text=True,
+    )
+    if getattr(listing, "returncode", 0):
+        return []
+    return [Path(line.removeprefix("worktree ")).resolve()
+            for line in listing.stdout.splitlines() if line.startswith("worktree ")]
+
+
 def _pinned_runtime_paths() -> dict[str, Path]:
     """Find the local worktrees that own each pinned build input.
 
@@ -56,15 +83,26 @@ def _pinned_runtime_paths() -> dict[str, Path]:
             if not path.is_dir():
                 continue
             expected_commit = PINNED_COMPONENT_COMMITS.get(name)
+            inputs = [path]
             if expected_commit:
-                revision = subprocess.run(
-                    ["git", "-C", str(path), "rev-parse", "HEAD"],
-                    check=False, capture_output=True, text=True,
-                ).stdout.strip()
-                if revision != expected_commit:
-                    continue
-            if path.is_dir():
-                resolved[name] = path
+                # The primary pinned checkout is intentionally allowed to be
+                # used for interactive component development.  For a governed
+                # Integra build, locate a clean registered worktree at the
+                # same declared pin instead of consuming its uncommitted
+                # source bytes.
+                inputs.extend(_registered_component_worktrees(path))
+            for input_path in inputs:
+                if expected_commit:
+                    # A matching commit is not enough for a packaged runtime
+                    # input.  A dirty source tree would silently package bytes
+                    # which are neither the declared pin nor reviewable from
+                    # its provenance.  Prefer another registered clean
+                    # worktree and fail closed when no such input exists.
+                    if not _is_clean_pinned_source(input_path, expected_commit):
+                        continue
+                resolved[name] = input_path
+                break
+            if name in resolved:
                 break
         else:
             raise ValueError(f"pinned local build input is unavailable: {relative}")
