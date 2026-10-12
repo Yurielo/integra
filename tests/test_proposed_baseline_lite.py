@@ -376,6 +376,32 @@ class ProposedOverlayLineageTests(unittest.TestCase):
         root, proposal, path = self._lineage()
         self.assertEqual(verify_promotion_material(proposal, root, path), [])
 
+    def test_proposal_declaration_survives_exact_canonical_protection_sync(self):
+        root, proposal, path = self._lineage()
+        feature = self._git(root, "branch", "--show-current")
+        self._git(root, "branch", "canonical-sync", proposal["base_main"]["commit_sha"])
+        self._git(root, "checkout", "-q", "canonical-sync")
+        registry = root / "state/candidate_protection_registry_v1.json"
+        registry.write_text("canonical protection update\n")
+        evidence = root / "docs/evidence/ISSUE_227_PROPOSAL_PROTECTION_BINDING.md"
+        evidence.parent.mkdir(parents=True, exist_ok=True)
+        evidence.write_text("proposal content identity\n")
+        canonical = self._commit(root, "canonical protection registration")
+        self._git(root, "update-ref", "refs/remotes/origin/main", canonical)
+        self._git(root, "checkout", "-q", feature)
+        self._git(root, "-c", "user.name=Test", "-c", "user.email=test@example.invalid",
+                  "merge", "--no-ff", "canonical-sync", "-m", "sync canonical protection")
+        self.assertEqual(validate_proposal(proposal, self._current(root), root), [])
+        self.assertEqual(verify_promotion_material(proposal, root, path), [])
+
+    def test_arbitrary_product_change_after_proposal_declaration_fails(self):
+        root, proposal, path = self._lineage()
+        product = root / "integra_core/runtime.py"
+        product.write_text("unreviewed post-declaration change\n")
+        self._commit(root, "unreviewed product change")
+        errors = verify_promotion_material(proposal, root, path)
+        self.assertIn("promotion proposal has noncanonical changes after declaration", errors)
+
     def test_acceptance_lineage_survives_merge_without_proposal_change(self):
         root, proposal, path = self._lineage()
         accepted = copy.deepcopy(proposal)
