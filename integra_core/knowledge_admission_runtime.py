@@ -32,11 +32,11 @@ def _pin():
     if path.is_symlink():
         raise ValueError("unsafe Knowledge admission pin")
     pin = json.loads(path.read_bytes())
-    if digest(pin) != "a745b5d17bb2c99eec489a43026c25f97a04dc919414b40d1bf17243883e719e":
+    if digest(pin) != "a94b8d433a4f79d954236e4435ac40af9f1f70f86d3fc8f87e2d74e3e8070e7d":
         raise ValueError("Knowledge admission governed pin digest changed")
     if pin.get("component") != "seminartext" or pin.get("capability") != "reviewed_knowledge_admission":
         raise ValueError("wrong Knowledge admission component")
-    if pin.get("commit_sha") != "61ee27de67174377afa0f4955b3cb5abeecb4f03" or pin.get("tree_sha") != "066a4029d791585410afd0aa45de974638b5e1ff":
+    if pin.get("commit_sha") != "a39de3143e78e25be8ecce242a5fe812c9af137c" or pin.get("tree_sha") != "0abf57be59522955d997b38848b118001dc7151c":
         raise ValueError("Knowledge admission pin is not the accepted source revision")
     return pin
 

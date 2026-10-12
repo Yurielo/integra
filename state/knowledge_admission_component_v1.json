@@ -3,17 +3,17 @@
   "component": "seminartext",
   "capability": "reviewed_knowledge_admission",
   "repository": "Yurielo/seminartext",
-  "commit_sha": "61ee27de67174377afa0f4955b3cb5abeecb4f03",
-  "tree_sha": "066a4029d791585410afd0aa45de974638b5e1ff",
+  "commit_sha": "a39de3143e78e25be8ecce242a5fe812c9af137c",
+  "tree_sha": "0abf57be59522955d997b38848b118001dc7151c",
   "source_tree_clean": true,
-  "source_pr": 136,
+  "source_pr": 139,
   "contract": {
     "id": "seminartext.reviewed_knowledge_admission_v1",
-    "sha256": "0c2903e427d85b6fe731a8153920a63dea37e0f660e2430776c7d94409f4daa6"
+    "sha256": "cc76c7b2ebd1e867a66f831ef89f5a330bee49d385d8e95b625347c4d093a3b2"
   },
   "files": {
-    "seminartext_modules/reviewed_knowledge_admission.py": "5131e98e40f5875eb95b3e63e6ac1954b4ca5ad7df8d146ae188769759a889fb",
-    "schemas/reviewed_knowledge_admission_v1.schema.json": "0c2903e427d85b6fe731a8153920a63dea37e0f660e2430776c7d94409f4daa6",
+    "seminartext_modules/reviewed_knowledge_admission.py": "221161a59f9ba31bb76b8bcdb3879735ec06c03c46629bb303a0da18bfa49cb2",
+    "schemas/reviewed_knowledge_admission_v1.schema.json": "cc76c7b2ebd1e867a66f831ef89f5a330bee49d385d8e95b625347c4d093a3b2",
     "seminartext_modules/human_review_workflow.py": "7187819a19360fe023c9ddcc3a723ca638a1b1b74769c02c41829cd344da72dc",
     "seminartext_modules/project_knowledge_bridge.py": "39bc3191cbfa07e32b9a2526ede428289fd020e93f9bd13539321ebb39165a5f",
     "schemas/validate_canonical_evidence_v1.py": "889e6cdf3dc2dd7504f76923c04e2d8d1eceabdb828d0c110ddc1059b107860e",

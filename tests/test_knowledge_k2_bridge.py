@@ -96,13 +96,13 @@ class KnowledgeK2BridgeRouteTests(unittest.TestCase):
         self.assertIn('"Выберите решение", "Принять", "Изменить и принять", "Отклонить", "Отложить"', review)
         self.assertNotIn("action.selectItem(at:", review)
         self.assertIn("explicit.state = .off", review)
-        self.assertIn('request["confirmed_proposal_ids"] = forms.map { $0.0 }.sorted()', review)
+        self.assertIn('request["confirmed_proposal_ids"] = proposals.compactMap { $0["id"] as? String }.sorted()', review)
         self.assertIn('request["package_sha256"] = hash', review)
         self.assertIn('guard confirmationDialog.run() == .alertFirstButtonReturn', review)
         self.assertIn('guard explicit.state == .on else', review)
         self.assertNotIn('while true', review)
         self.assertLess(review.index('enumeration.addArrangedSubview(explicit)'), review.index('for decision in decisions'))
-        self.assertIn("Принятие знаний не изменяет проверку исходной расшифровки", source)
+        self.assertIn("Машинный результат не становится человеческим или авторитетным", source)
 
     def test_native_ui_uses_owner_identity_without_exposing_technical_review_fields(self):
         source = (ROOT / "macos/IntegraApp.swift").read_text()
@@ -112,7 +112,7 @@ class KnowledgeK2BridgeRouteTests(unittest.TestCase):
         relation = source[source.index("@objc private func proposeKnowledgeRelation()"):source.index("private func playCanonicalKnowledgeEvidence")]
         self.assertIn('knowledgeOwnerReviewerID = "integra-local-owner"', source)
         self.assertIn('request["reviewer_id"] = knowledgeOwnerReviewerID', review)
-        self.assertIn("Решения будут сохранены от имени владельца этого приложения", review)
+        self.assertIn("Этот вопрос нельзя решить автоматически без риска изменить смысл", review)
         self.assertNotIn("ID проверяющего", review)
         self.assertNotIn("reviewer = NSTextField", review)
         self.assertNotIn("Пакет SHA-256", review)
@@ -126,6 +126,18 @@ class KnowledgeK2BridgeRouteTests(unittest.TestCase):
         self.assertNotIn("Граф знаний ·", render)
         self.assertNotIn("ID понятий", relation)
         self.assertNotIn('concept["id"])', relation)
+
+    def test_normal_path_requires_no_fragment_or_proposal_decision(self):
+        source = (ROOT / "macos/IntegraApp.swift").read_text()
+        notebook = source[source.index("private func renderKnowledgeNotebook()"):source.index("@objc private func reviewKnowledge()")]
+        knowledge = source[source.index("private func renderCanonicalKnowledge()"):source.index("@objc private func returnToKnowledgeNotebook()")]
+        self.assertIn('let machineReady = notebook["status"] as? String == "MACHINE_DERIVED_FRAGMENTS_V1"', notebook)
+        self.assertIn("Готово — решений от вас не требуется", notebook)
+        self.assertIn('if !humanReviewed && !machineReady { add(button("Решить смысловое исключение"', notebook)
+        self.assertIn("Готово — решений от вас не требуется", knowledge)
+        self.assertIn('add(button("Уточнить связь между понятиями"', knowledge)
+        self.assertIn('action == "open", result["package_sha256"] == nil', source)
+        self.assertIn('self.prepareCanonicalKnowledge()', source)
 
 
 @unittest.skipUnless((fixture.PINNED / "seminartext_modules/human_review_workflow.py").is_file()

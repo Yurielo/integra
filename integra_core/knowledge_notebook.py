@@ -21,6 +21,9 @@ from .seminartext_topic_review_runtime import _locked, prepare_topic_review, app
 from .transcript_output import resolve_persisted_project_path, resolve_transcript_text
 
 
+MACHINE_DERIVED = "MACHINE_DERIVED_FRAGMENTS_V1"
+
+
 def source_inputs(project_dir, *, project_id, run_id, source_id):
     """Strict read-only eligibility; never reconcile or regenerate a Process run."""
     root = Path(project_dir).resolve(strict=True)
@@ -100,6 +103,76 @@ def _persist(path, state):
     return state
 
 
+def _persist_immutable(path, payload, root, label):
+    """Write a content-bound local receipt without overwriting any prior one."""
+    if not path.is_relative_to(root):
+        raise ValueError(f"{label} escaped project")
+    if path.parent.is_symlink() or path.is_symlink():
+        raise ValueError(f"unsafe {label} path")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    encoded = canonical_json(payload) + b"\n"
+    if path.exists():
+        if path.read_bytes() != encoded:
+            raise ValueError(f"immutable {label} changed")
+        return
+    with tempfile.NamedTemporaryFile(dir=path.parent, prefix=".machine-derived-", delete=True) as staged:
+        staged.write(encoded); staged.flush(); os.fsync(staged.fileno())
+        os.link(staged.name, path)
+
+
+def _machine_derived_result(evidence, package):
+    """Create an explicitly non-authoritative K1 result from exact Topic bytes."""
+    fragments, units = [], []
+    for topic in package["topics"]:
+        fragment_id = "machine_fragment_" + hashlib.sha256(topic["id"].encode()).hexdigest()
+        fragment = {
+            "id": fragment_id,
+            "source_id": topic["source_id"],
+            "transcript_revision_id": topic["transcript_revision_id"],
+            "word_start_id": topic["word_start_id"],
+            "word_end_id": topic["word_end_id"],
+            "quote": topic["quote"],
+            "locator": topic["locator"],
+            "review_decision_provenance": {
+                "actor_type": "system_validator",
+                "authority": "NONAUTHORITATIVE_MACHINE_DERIVED",
+            },
+        }
+        fragments.append(fragment)
+        units.append({
+            "id": "machine_unit_" + hashlib.sha256(topic["id"].encode()).hexdigest(),
+            "title": topic["proposed_title"],
+            "summary": topic["proposed_summary"],
+            "fragment_refs": [fragment_id],
+            "provenance": {
+                "boundary_authority": "MACHINE_DERIVED",
+                "semantic_authority": "NONE",
+            },
+        })
+    payload = {
+        "schema_version": "1.0.0",
+        "artifact_type": "seminartext.machine_derived_fragment_result",
+        "artifact_id": "machine_result_" + hashlib.sha256(canonical_json({"package": package["artifact_id"], "sha256": content_sha256(package)})).hexdigest(),
+        # The source-owned contract binds Canonical Evidence through its
+        # canonical (indent-preserving) serialization, not Integra's compact
+        # store serialization.  Keeping this distinction explicit prevents a
+        # machine-derived result from claiming a valid source binding merely
+        # because two JSON encodings carry the same values.
+        "canonical_evidence": {"artifact_id": evidence["artifact_id"],
+                               "sha256": hashlib.sha256(
+                                   json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True).encode("utf-8") + b"\n"
+                               ).hexdigest()},
+        "fragment_lineage": fragments,
+        "semantic_knowledge": units,
+        "application_status": "MACHINE_DERIVED",
+        "provenance": {
+            "actor_type": "system_validator",
+            "authority": "NONAUTHORITATIVE_MACHINE_DERIVED",
+        },
+    }
+    return payload
+
+
 def _validate(root, state, binding):
     if state["source_binding"] != binding:
         raise ValueError("Knowledge source/transcript/Topic revision is stale")
@@ -152,9 +225,14 @@ def _presentation(root, state, binding):
     if state["status"] == "REVIEWED_FRAGMENTS_V2":
         result_ref = state["review_artifacts"]["reviewed_topics"]
         reviewed = json.loads((root / result_ref["path"]).read_bytes())
+    elif state["status"] == MACHINE_DERIVED:
+        result_ref = state["review_artifacts"]["machine_derived"]
+        reviewed = json.loads((root / result_ref["path"]).read_bytes())
     return {"notebook_id": state["notebook_id"], "state_sha256": state["state_sha256"],
             "status": state["status"], "automatic_acceptance": False,
-            "semantic_authority": "REVIEWED_FRAGMENTS_ONLY_NOT_CANONICAL_KNOWLEDGE",
+            "semantic_authority": ("MACHINE_DERIVED_PROVISIONAL_NOT_HUMAN_REVIEWED"
+                                   if state["status"] == MACHINE_DERIVED
+                                   else "REVIEWED_FRAGMENTS_ONLY_NOT_CANONICAL_KNOWLEDGE"),
             "precision": "WORD_RANGE", "project_id": binding["project_id"], "run_id": binding["run_id"],
             "source_id": binding["source_id"], "source_revision_sha256": binding["source_revision_sha256"],
             "transcript_revisions": evidence["transcript_revisions"],
@@ -181,13 +259,19 @@ def open_notebook(project_dir, *, project_id, run_id, source_id, create=False):
         evidence = Path(created["canonical_evidence_path"])
     package = prepare_topic_review(root, source_id=source_id, canonical_evidence_path=str(evidence),
                                    topics_path=str(paths["topics"]), exact_fragments=True)
-    refs = {"evidence": evidence, "package": Path(package["package_path"]),
+    package_path = Path(package["package_path"])
+    package_payload = json.loads(package_path.read_bytes())
+    machine = _machine_derived_result(json.loads(evidence.read_bytes()), package_payload)
+    machine_path = _review_root(root, source_id) / "knowledge" / "machine-derived" / (machine["artifact_id"] + ".json")
+    _persist_immutable(machine_path, machine, root, "machine-derived Knowledge result")
+    refs = {"evidence": evidence, "package": package_path,
             "binding": Path(package["package_path"]).parent.parent / "binding.json"}
+    refs["machine_derived"] = machine_path
     # Source files could have changed while the adapter prepared its snapshot.
     if source_inputs(root, project_id=project_id, run_id=run_id, source_id=source_id)[2] != binding:
         raise ValueError("Process source changed during Knowledge preparation")
     state = {"schema_version": "1.0", "artifact_type": "integra.knowledge_notebook_v1",
-             "notebook_id": notebook_id, "source_binding": binding, "status": "REVIEW_REQUIRED",
+             "notebook_id": notebook_id, "source_binding": binding, "status": MACHINE_DERIVED,
              "choices": [], "review_artifacts": {role: {"path": value.relative_to(root).as_posix(),
                     "sha256": _sha256(value)} for role, value in refs.items()}}
     with _locked(root, source_id):
