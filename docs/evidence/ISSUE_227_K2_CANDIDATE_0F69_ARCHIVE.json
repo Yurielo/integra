@@ -1,0 +1,20 @@
+{
+  "artifact_type": "integra.candidate_archive",
+  "schema_version": "1.0",
+  "status": "COMPLETE",
+  "verification": "ARCHIVAL_BYTE_INTEGRITY",
+  "candidate_id": "candidate-v1-0f69e617c0841f27afe2238a28d6c25ae5a80ce0fedf01cf0c114638de575032",
+  "bundle_digest": "3d4d33a983455572157b06460c3faaef5afd0b977a0e3d2717101588a25718e5",
+  "manifest_digest": "3aed49cda900a6af0d0e8abcae4f3db114d988ad9bf16c62c53ba6671d06cbfe",
+  "inventory_sha256": "d07e2a9692c85ef28d92d4ba97b4a0be0bf4d9d33d0365b0110689245963b25f",
+  "file_count": 29626,
+  "retained_size_bytes": 2202212083,
+  "archive_path": "~/Library/Application Support/Integra/Build Archive/candidate-v1-0f69e617c0841f27afe2238a28d6c25ae5a80ce0fedf01cf0c114638de575032/3d4d33a983455572157b06460c3faaef5afd0b977a0e3d2717101588a25718e5",
+  "packaged_manifest_validation": "PASS",
+  "packaged_app_self_test": "PASS",
+  "source": {
+    "commit_sha": "9d28dcdbf74ab039414ed943b12ceddc0f345663",
+    "tree_sha": "1cc7ecbfb2e589d7275f8257e8cec5cff23b731a",
+    "dirty": false
+  }
+}
