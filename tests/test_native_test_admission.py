@@ -33,6 +33,8 @@ class NativeTestAdmissionTests(unittest.TestCase):
             def git(command, **_kwargs):
                 if "worktree" in command:
                     return listing
+                if "status" in command:
+                    return SimpleNamespace(stdout="")
                 return SimpleNamespace(stdout=builder.PINNED_COMPONENT_COMMITS[
                     "INTEGRA_SEMINARTEXT_BUILD_CHECKOUT"
                     if "seminartext" in command[2]
@@ -50,6 +52,16 @@ class NativeTestAdmissionTests(unittest.TestCase):
                                  str((primary / ".runtime-components/seminartext-pinned").resolve()))
                 self.assertEqual(os.environ["INTEGRA_REVIEW_WHEELS"],
                                  str((primary / ".runtime-components/review-wheels").resolve()))
+
+    def test_pinned_source_input_rejects_dirty_sources_at_exact_commit(self):
+        """A dirty source tree cannot supply candidate packaging bytes."""
+        expected = builder.PINNED_COMPONENT_COMMITS["INTEGRA_VIDEOTEXT_BUILD_CHECKOUT"]
+        def git(command, **_kwargs):
+            if "rev-parse" in command:
+                return SimpleNamespace(stdout=expected)
+            return SimpleNamespace(stdout=" M Sources/changed.swift\n")
+        with patch.object(builder.subprocess, "run", side_effect=git):
+            self.assertFalse(builder._is_clean_pinned_source(Path("/runtime"), expected))
 
     def test_packaging_child_requires_shared_admission_and_fresh_output(self):
         active = []
