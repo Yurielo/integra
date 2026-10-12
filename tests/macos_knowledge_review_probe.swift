@@ -10,10 +10,12 @@ let dialog = KnowledgeReviewDialog()
 let reason = NSTextField(string: "")
 let choice = NSPopUpButton()
 choice.addItems(withTitles: ["Выберите решение", "Принять", "Изменить и принять"])
+let secondChoice = NSPopUpButton()
+secondChoice.addItems(withTitles: ["Выберите решение", "Принять", "Изменить и принять"])
 let edited = NSTextField(string: "Original")
 let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 660, height: 440))
 let content = NSView(frame: NSRect(x: 0, y: 0, width: 640, height: 1200))
-content.addSubview(reason); content.addSubview(choice)
+content.addSubview(reason); content.addSubview(choice); content.addSubview(secondChoice)
 content.addSubview(edited); scroll.documentView = content
 dialog.alert.accessoryView = dialog.accessory(scroll)
 dialog.validate = {
@@ -47,6 +49,14 @@ choice.selectItem(at: 2)
 precondition(dialog.validateReview(entries: [(choice, reason, false, false)]) != nil)
 choice.selectItem(at: 0)
 precondition(dialog.validateReview(entries: [(choice, reason, false, true)]) != nil)
+// K1 presents one independent selector per fragment. A choice in the first
+// must survive validation of an incomplete second fragment.
+choice.selectItem(at: 1)
+secondChoice.selectItem(at: 0)
+precondition(dialog.validateSelections([choice, secondChoice]) == "Фрагмент 2: выберите решение.")
+precondition(choice.indexOfSelectedItem == 1)
+secondChoice.selectItem(at: 1)
+precondition(dialog.validateSelections([choice, secondChoice]) == nil)
 dialog.validate = { nil }; confirmation.validate = { nil }
 print("NATIVE_DIALOG_GUARDS_PASS")
 if interactive {
