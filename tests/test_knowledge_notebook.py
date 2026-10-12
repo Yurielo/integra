@@ -70,6 +70,10 @@ class KnowledgeNotebookTests(unittest.TestCase):
         reviewed = self.save(pending, choices)
         self.assertEqual(reviewed["status"], "REVIEWED_FRAGMENTS_V2")
         self.assertFalse(reviewed["automatic_acceptance"])
+        # The normal UI may not expose opaque word identifiers. An EDIT must
+        # still retain the exact original source coordinates internally.
+        self.assertEqual(reviewed["reviewed"]["fragment_lineage"][0]["word_start_id"], opened["topics"][0]["word_start_id"])
+        self.assertEqual(reviewed["reviewed"]["fragment_lineage"][0]["word_end_id"], opened["topics"][0]["word_end_id"])
         with patch("integra_core.application_runtime.execute_run", side_effect=AssertionError("must not process")), patch.object(notebook, "create_machine_evidence", side_effect=AssertionError("must not recreate")), patch.object(notebook, "prepare_topic_review", side_effect=AssertionError("must not prepare")):
             self.assertEqual(self.open(), reviewed)
             fragment = reviewed["reviewed"]["fragment_lineage"][0]
