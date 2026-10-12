@@ -38,6 +38,11 @@ class KnowledgeAdmissionRuntimeTests(unittest.TestCase):
             original = target.read_bytes()
             with self.assertRaisesRegex(ValueError, "fresh owned destination"):
                 package_view_schema(resources)
+            self.assertEqual(target.read_bytes(), original)
+            target.unlink()
+            target.symlink_to(resources / "missing")
+            with self.assertRaisesRegex(ValueError, "fresh owned destination"):
+                package_view_schema(resources)
 
     def test_packager_exposes_fresh_review_runtime_only_for_preflight(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -54,11 +59,6 @@ class KnowledgeAdmissionRuntimeTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             with self.assertRaisesRegex(ValueError, "packaged review runtime is unavailable"):
                 _with_packaged_review_runtime(Path(directory))
-            self.assertEqual(target.read_bytes(), original)
-            target.unlink()
-            target.symlink_to(resources / "missing")
-            with self.assertRaisesRegex(ValueError, "fresh owned destination"):
-                package_view_schema(resources)
 
     def test_accepted_source_pin_and_contract_are_exact(self):
         pin = runtime._pin()
