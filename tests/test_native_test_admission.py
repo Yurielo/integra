@@ -15,6 +15,32 @@ from scripts import build_macos_candidate as builder, candidate_archive as archi
 
 
 class NativeTestAdmissionTests(unittest.TestCase):
+    def test_owned_candidate_build_resolves_ignored_pinned_runtime_from_registered_worktree(self):
+        """Disposable workspaces must not lose checked runtime build inputs."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source, primary = root / "source", root / "primary"
+            source.mkdir(); primary.mkdir()
+            for relative in (
+                ".runtime-components/seminartext-pinned",
+                ".runtime-components/videotext-pinned",
+                ".runtime-components/booktext-pinned",
+                ".runtime-components/review-wheels",
+                ".runtime-word-alignment/lib/python3.13/site-packages",
+            ):
+                (primary / relative).mkdir(parents=True)
+            listing = SimpleNamespace(stdout=f"worktree {source}\nworktree {primary}\n")
+            environment = {key: value for key, value in os.environ.items()
+                           if not key.startswith("INTEGRA_")}
+            with patch.object(builder, "ROOT", source), \
+                    patch.object(builder.subprocess, "run", return_value=listing), \
+                    patch.dict(os.environ, environment, clear=True):
+                builder._bind_pinned_runtime_environment()
+                self.assertEqual(os.environ["INTEGRA_SEMINARTEXT_BUILD_CHECKOUT"],
+                                 str((primary / ".runtime-components/seminartext-pinned").resolve()))
+                self.assertEqual(os.environ["INTEGRA_REVIEW_WHEELS"],
+                                 str((primary / ".runtime-components/review-wheels").resolve()))
+
     def test_packaging_child_requires_shared_admission_and_fresh_output(self):
         active = []
         @contextmanager

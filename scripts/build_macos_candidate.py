@@ -17,6 +17,58 @@ from temp_workspace_lifecycle import (  # noqa: E402
 import candidate_retention  # noqa: E402
 
 
+def _pinned_runtime_root() -> Path:
+    """Find the local source checkout that owns the pinned build inputs.
+
+    A full Candidate is deliberately built inside a disposable owned
+    workspace.  Runtime components are ignored local build inputs, so they
+    are not copied into that workspace.  Resolve them from the primary local
+    worktree instead and let ``build_macos_app.sh`` verify every declared pin
+    and digest before packaging.  Never fall back to an unverified path.
+    """
+    candidates = [ROOT]
+    listing = subprocess.run(
+        ["git", "-C", str(ROOT), "worktree", "list", "--porcelain"],
+        check=True, capture_output=True, text=True,
+    )
+    candidates.extend(
+        Path(line.removeprefix("worktree ")).resolve()
+        for line in listing.stdout.splitlines() if line.startswith("worktree ")
+    )
+    required = (
+        ".runtime-components/seminartext-pinned",
+        ".runtime-components/videotext-pinned",
+        ".runtime-components/booktext-pinned",
+        ".runtime-components/review-wheels",
+        ".runtime-word-alignment/lib/python3.13/site-packages",
+    )
+    for candidate in candidates:
+        if all((candidate / relative).is_dir() for relative in required):
+            return candidate
+    raise ValueError("pinned local build runtime is unavailable from every registered worktree")
+
+
+def _bind_pinned_runtime_environment() -> None:
+    """Bind owned-workspace builds to verified local pinned runtime inputs.
+
+    Explicit operator-provided paths retain precedence.  The packaging script
+    independently checks the pinned commits and hashes, so this binding only
+    supplies a location; it cannot relax runtime identity verification.
+    """
+    root = _pinned_runtime_root()
+    values = {
+        "INTEGRA_SEMINARTEXT_BUILD_CHECKOUT": root / ".runtime-components/seminartext-pinned",
+        "INTEGRA_VIDEOTEXT_BUILD_CHECKOUT": root / ".runtime-components/videotext-pinned",
+        "INTEGRA_BOOKTEXT_BUILD_CHECKOUT": root / ".runtime-components/booktext-pinned",
+        "INTEGRA_REVIEW_WHEELS": root / ".runtime-components/review-wheels",
+        "INTEGRA_WORD_ALIGNMENT_SITE_PACKAGES": (
+            root / ".runtime-word-alignment/lib/python3.13/site-packages"
+        ),
+    }
+    for name, value in values.items():
+        os.environ.setdefault(name, str(value))
+
+
 def _build_inside_workspace(archive_root: Path | None, expected_bytes: int = DEFAULT_EXPECTED_BYTES,
                             *, native_tests: bool = False, package_tests: bool = False) -> int:
     root = archive_root or (Path.home() / 'Library/Application Support/Integra/Build Archive')
@@ -92,6 +144,9 @@ def main() -> int:
         parser.error("--publish-owner-candidate requires --archive-root")
     if args.expected_bytes < DEFAULT_EXPECTED_BYTES or args.reserve_bytes < DEFAULT_RESERVE_BYTES:
         parser.error("full Candidate builds require at least the documented expected bytes and hard disk reserve")
+    # Bind ignored local runtime inputs before creating the owned workspace so
+    # its supervised child inherits only verified source locations.
+    _bind_pinned_runtime_environment()
     if args.inside_owned_workspace:
         return _build_inside_workspace(args.archive_root, args.expected_bytes,
                                        native_tests=args.native_tests, package_tests=args.package_tests)
