@@ -63,6 +63,11 @@ class CandidateLifecycleTests(unittest.TestCase):
         self.assertEqual(lifecycle.replay(record, {}, [])['status'], 'AWAITING_OWNER_ACCEPTANCE')
         self.assertFalse(self.eligibility(record)['eligible'])
 
+    def test_pre_owner_validation_is_not_an_owner_hold_or_terminal(self):
+        record = {**self.record, 'status': 'CANDIDATE_BOUND_VALIDATION'}
+        self.assertEqual(lifecycle.replay(record, {}, []), record)
+        self.assertFalse(self.eligibility(record)['eligible'])
+
     def test_exact_withdrawal_replays_only_the_matching_pending_record(self):
         withdrawal = {**self.identity,
                       'previous_status': 'AWAITING_OWNER_ACCEPTANCE',

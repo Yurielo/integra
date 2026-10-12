@@ -284,7 +284,8 @@ def _publish(stage: Path, destination: Path) -> None:
 
 
 def create_archive(app: Path, archive_root: Path, *, manifest: Path | None = None,
-                   evidence: list[Path] | None = None, reserve_bytes: int = RESERVE_BYTES) -> dict:
+                   evidence: list[Path] | None = None, reserve_bytes: int = RESERVE_BYTES,
+                   lifecycle_status: str = "AWAITING_OWNER_ACCEPTANCE") -> dict:
     """Copy and verify a fresh immutable package; preserve partial attempts."""
     stage = None
     stage_root = None
@@ -337,7 +338,8 @@ def create_archive(app: Path, archive_root: Path, *, manifest: Path | None = Non
         required += 1024 * 1024
         if managed:
             retention_lease = retention.reserve_archive(
-                root, required, destination=destination, identity=identity)
+                root, required, destination=destination, identity=identity,
+                lifecycle_status=lifecycle_status)
             reserve_bytes = max(reserve_bytes, retention.FREE_FLOOR)
             stage_root, stage_marker = workspace_lifecycle.create_workspace(
                 purpose='archive-stage', base=ancestor,
@@ -417,6 +419,7 @@ def main() -> None:
     create.add_argument("--manifest", type=Path)
     create.add_argument("--evidence", type=Path, action="append", default=[])
     create.add_argument("--reserve-bytes", type=int, default=RESERVE_BYTES)
+    create.add_argument("--lifecycle-status", default="AWAITING_OWNER_ACCEPTANCE")
     verify = commands.add_parser("verify")
     verify.add_argument("archive", type=Path)
     for key in sorted(IDENTITY_KEYS):
@@ -427,7 +430,8 @@ def main() -> None:
     try:
         if args.command == "create":
             receipt = create_archive(args.app, args.archive_root, manifest=args.manifest,
-                                     evidence=args.evidence, reserve_bytes=args.reserve_bytes)
+                                     evidence=args.evidence, reserve_bytes=args.reserve_bytes,
+                                     lifecycle_status=args.lifecycle_status)
         elif args.command == "verify":
             expected = {key: getattr(args, key) for key in IDENTITY_KEYS if getattr(args, key) is not None}
             receipt = verify_archive(args.archive, expected)
