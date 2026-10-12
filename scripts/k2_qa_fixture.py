@@ -63,10 +63,10 @@ def payloads(project):
     }
 
 
-def workspace_fd(workspace):
+def workspace_fd(workspace, *, purpose=PURPOSE):
     """No-follow, live-owner validation before any fixture output is created."""
-    if workspace.parent != BASE or not workspace.name.startswith("integra-owned-" + PURPOSE + "-"):
-        raise ValueError("fixture requires the exact disposable issue236 lifecycle workspace")
+    if workspace.parent != BASE or not workspace.name.startswith("integra-owned-" + purpose + "-"):
+        raise ValueError("fixture requires the exact disposable lifecycle workspace")
     fd = _directory(workspace)
     try:
         metadata = os.fstat(fd)
@@ -80,7 +80,7 @@ def workspace_fd(workspace):
                     "expected_bytes", "reserve_bytes", "owner", "child", "state", "events"}
         if (set(marker) != required or marker["schema_version"] != SCHEMA
                 or marker["artifact_type"] != "integra.disposable_workspace"
-                or marker["root"] != str(workspace) or marker["purpose"] != PURPOSE
+                or marker["root"] != str(workspace) or marker["purpose"] != purpose
                 or not _process_is_live(marker["owner"])):
             raise ValueError("fixture workspace ownership/purpose must be live and exact")
         return fd
@@ -89,8 +89,8 @@ def workspace_fd(workspace):
         raise
 
 
-def prepare(workspace):
-    fd = workspace_fd(workspace)
+def prepare(workspace, *, purpose=PURPOSE):
+    fd = workspace_fd(workspace, purpose=purpose)
     try:
         # Exclusive mkdir refuses an existing project, file, link or foreign data.
         os.mkdir("projects", 0o700, dir_fd=fd)
