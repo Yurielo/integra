@@ -47,6 +47,12 @@ def _root():
     return root.resolve(strict=True)
 
 def _request():
+    # A direct, no-payload bridge invocation from an interactive terminal must
+    # be a dry empty request, not wait forever for an EOF that a terminal does
+    # not provide. AppKit supplies a pipe (and therefore still uses the exact
+    # JSON request protocol); this only closes the interactive diagnostic path.
+    if sys.stdin.isatty():
+        return {}
     raw = sys.stdin.buffer.read()
     if not raw: return {}
     value = json.loads(raw)

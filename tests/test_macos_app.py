@@ -1,4 +1,6 @@
 import json
+import os
+import pty
 import hashlib
 import os
 from pathlib import Path
@@ -121,6 +123,22 @@ class MacOSApplicationTests(unittest.TestCase):
             self.assertFalse(payload["writes_performed"]); self.assertFalse(payload["external_actions_performed"])
             self.assertFalse(payload["cloud_verified"])
             self.assertEqual(len(payload["domain_contract_sha256"]), 64)
+
+    def test_closed_bridge_empty_tty_request_does_not_wait_for_terminal_eof(self):
+        bridge = ROOT / "macos/Resources/bridge.py"
+        master, slave = pty.openpty()
+        try:
+            process = subprocess.Popen(["python3", str(bridge), "obsidian-preview"],
+                                       stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                       text=True)
+        finally:
+            os.close(slave)
+        try:
+            stdout, stderr = process.communicate(timeout=5)
+        finally:
+            os.close(master)
+        self.assertEqual(process.returncode, 0, stderr)
+        self.assertEqual(json.loads(stdout)["state"], "DRY_RUN_REQUIRES_PACKAGE")
 
     @unittest.skipUnless(
         platform.system() == "Darwin" and macos_build_runtime_available(),
