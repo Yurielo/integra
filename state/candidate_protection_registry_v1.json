@@ -120,7 +120,8 @@
     {
       "bundle_digest": "3d4d33a983455572157b06460c3faaef5afd0b977a0e3d2717101588a25718e5",
       "candidate_id": "candidate-v1-0f69e617c0841f27afe2238a28d6c25ae5a80ce0fedf01cf0c114638de575032",
-      "head_sha": "3afd77f1d94d409265c6d03d5adb002a8ebce357",
+      "proposal_id": "proposal-knowledge-k2-canonical-knowledge-from-reviewed-fragments-v3",
+      "proposal_sha256": "05d81bb459bc0d222766f83c6e40420666a51ba2d026f5ca843127d5c165b85d",
       "manifest_digest": "3aed49cda900a6af0d0e8abcae4f3db114d988ad9bf16c62c53ba6671d06cbfe",
       "path": "state/proposed_baseline_lite_v1.json",
       "pr": 256

@@ -124,6 +124,39 @@ def _optional_remote_file(path: str, ref: str) -> tuple[bytes, dict] | None:
     return data, json.loads(data) if path.endswith('.json') else {}
 
 
+def proposed_reference_matches(reference: dict, *, current_head: str | None,
+                               base_ref: str | None, proposal: dict | None,
+                               proposal_sha256: str | None) -> bool:
+    """Validate a protected proposal by immutable content, not a mutable PR tip.
+
+    Legacy records remain exact-head pinned.  New records may bind the exact
+    proposal bytes and Candidate identity while allowing the PR branch tip to
+    advance (for example when its canonical main base is synchronized).
+    """
+    if not isinstance(reference, dict) or not isinstance(proposal, dict):
+        return False
+    identity = {key: reference.get(key) for key in IDENTITY}
+    common = {'pr', 'path', *IDENTITY}
+    if reference.get('path') != 'state/proposed_baseline_lite_v1.json':
+        return False
+    if (proposal.get('artifact_type') != 'integra.proposed_product_baseline'
+            or proposal.get('path') not in (None, reference.get('path'))):
+        return False
+    candidate = proposal.get('candidate')
+    if not isinstance(candidate, dict) or any(candidate.get(key) != identity[key] for key in IDENTITY):
+        return False
+    if set(reference) == common | {'head_sha'}:
+        return (isinstance(current_head, str) and reference.get('head_sha') == current_head)
+    stable = common | {'proposal_id', 'proposal_sha256'}
+    if set(reference) != stable:
+        return False
+    return bool(current_head and base_ref == 'main'
+                and reference.get('proposal_id') == proposal.get('proposal_id')
+                and isinstance(proposal_sha256, str)
+                and HASH.fullmatch(proposal_sha256)
+                and reference.get('proposal_sha256') == proposal_sha256)
+
+
 def _remote_file(path: str, ref: str) -> tuple[bytes, dict]:
     value = _api(f'repos/{REPOSITORY}/contents/{path}?ref={ref}')
     if not isinstance(value, dict) or value.get('type') != 'file' or value.get('encoding') != 'base64':
@@ -250,6 +283,8 @@ def fetch_canonical(registry: dict) -> tuple[dict, dict[int, dict], dict]:
         successor_transactions[reference['transaction_id']] = event
     proposals = {}
     captured_heads = {}
+    captured_bases = {}
+    proposal_digests = {}
     page = 1
     while True:
         pull_page = _api(f'repos/{REPOSITORY}/pulls?state=open&per_page=100&page={page}')
@@ -258,15 +293,21 @@ def fetch_canonical(registry: dict) -> tuple[dict, dict[int, dict], dict]:
         for pr in pull_page:
             number, head = pr['number'], pr['head']['sha']
             captured_heads[number] = head
+            captured_bases[number] = (pr.get('base') or {}).get('ref')
             result = _optional_remote_file('state/proposed_baseline_lite_v1.json', head)
             if result is not None:
                 proposals[number] = result[1]
+                proposal_digests[number] = sha(result[0])
         if len(pull_page) < 100:
             break
         page += 1
     for reference in registry['proposed']:
-        if captured_heads.get(reference['pr']) != reference['head_sha']:
-            raise ValueError(f'proposal PR #{reference["pr"]} is closed or has changed head')
+        number = reference.get('pr')
+        if not proposed_reference_matches(
+                reference, current_head=captured_heads.get(number),
+                base_ref=captured_bases.get(number), proposal=proposals.get(number),
+                proposal_sha256=proposal_digests.get(number)):
+            raise ValueError(f'proposal PR #{number} is closed, has changed proposal, or has an invalid binding')
     accepted_unpromoted = {}
     for reference in registry.get('accepted_unpromoted', []):
         required = {'pr', 'head_sha', *IDENTITY, 'authority_ref', 'authorization_sha256', 'status'}

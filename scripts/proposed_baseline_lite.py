@@ -38,6 +38,14 @@ R9A_SUCCESSOR_PATHS = {"integra_core/knowledge.py", "schemas/knowledge_view_v1.s
 PILOT_ACCEPTANCE_FIELDS = {
     "decision", "authority_ref", "scope", "promotion_authorized",
 }
+CANONICAL_PROTECTION_SYNC_PATHS = {
+    "docs/evidence/ISSUE_227_PROPOSAL_PROTECTION_BINDING.md",
+    "scripts/candidate_protection_audit.py",
+    "scripts/proposed_baseline_lite.py",
+    "state/candidate_protection_registry_v1.json",
+    "tests/test_candidate_protection_audit.py",
+    "tests/test_proposed_baseline_lite.py",
+}
 
 
 def sha256_file(path: Path) -> str:
@@ -83,6 +91,81 @@ def _changed_paths(root: Path, left: str, right: str) -> list[str]:
     result = subprocess.run(["git", "-C", str(root), "diff", "--no-renames", "--name-only", "-z", left, right],
                             check=True, capture_output=True).stdout
     return [item.decode("utf-8") for item in result.split(b"\0") if item]
+
+
+def _proposal_declaration_commit(root: Path, overlay_sha: str, proposal: dict,
+                                 relative_proposal: str) -> tuple[str | None, list[str]]:
+    """Find the one-file declaration and allow only a narrow main sync after it.
+
+    This keeps the immutable declaration anchored directly to its evidence
+    overlay while allowing the open PR to incorporate the canonical protection
+    fix that was needed to protect that very Proposal. Arbitrary branch changes
+    after declaration remain forbidden.
+    """
+    errors: list[str] = []
+    try:
+        revisions = _git(root, "rev-list", "--first-parent", "--reverse",
+                         f"{overlay_sha}..HEAD").splitlines()
+    except (OSError, subprocess.CalledProcessError):
+        return None, ["promotion proposal declaration history is unavailable"]
+    declaration = None
+    for revision in revisions:
+        try:
+            paths = _changed_paths(root, f"{revision}^", revision)
+        except (OSError, subprocess.CalledProcessError):
+            return None, ["promotion proposal declaration history is unavailable"]
+        if relative_proposal not in paths:
+            continue
+        try:
+            value = json.loads(_git(root, "show", f"{revision}:{relative_proposal}"))
+        except (OSError, subprocess.CalledProcessError, ValueError, TypeError):
+            errors.append("promotion proposal declaration content is unavailable")
+            continue
+        if value != proposal:
+            errors.append("promotion proposal changed after its evidence overlay")
+        elif declaration is not None:
+            errors.append("promotion proposal has multiple declaration commits")
+        else:
+            declaration = revision
+    if declaration is None:
+        errors.append("promotion proposal declaration history is unavailable")
+        return None, errors
+    try:
+        parent = _git(root, "rev-parse", f"{declaration}^")
+    except (OSError, subprocess.CalledProcessError):
+        return declaration, errors + ["promotion proposal declaration parent is unavailable"]
+    if parent != overlay_sha:
+        errors.append("promotion proposal declaration is not directly atop evidence overlay")
+    if _changed_paths(root, parent, declaration) != [relative_proposal]:
+        errors.append("promotion declaration overlay must contain only the PROPOSED record")
+
+    tail = revisions[revisions.index(declaration) + 1:]
+    if tail:
+        if len(tail) != 1:
+            errors.append("promotion proposal has noncanonical changes after declaration")
+            return declaration, errors
+        merge = tail[0]
+        try:
+            parents = _git(root, "rev-list", "--parents", "-n", "1", merge).split()
+        except (OSError, subprocess.CalledProcessError):
+            errors.append("promotion post-declaration change is not an exact canonical protection sync")
+            return declaration, errors
+        if len(parents) != 3 or parents[1] != declaration:
+            errors.append("promotion proposal has noncanonical changes after declaration")
+            return declaration, errors
+        try:
+            main = _git(root, "rev-parse", "--verify", "refs/remotes/origin/main")
+            paths = _changed_paths(root, parents[1], merge)
+            proposal_blob = _git(root, "rev-parse", f"{declaration}:{relative_proposal}")
+            head_blob = _git(root, "rev-parse", f"HEAD:{relative_proposal}")
+        except (OSError, subprocess.CalledProcessError, IndexError):
+            errors.append("promotion canonical-main synchronization identity is unavailable")
+        else:
+            if (parents[2] != main or not paths
+                    or any(path not in CANONICAL_PROTECTION_SYNC_PATHS for path in paths)
+                    or proposal_blob != head_blob):
+                errors.append("promotion post-declaration change is not an exact canonical protection sync")
+    return declaration, errors
 
 
 def _valid_relative_path(value: object) -> bool:
@@ -555,10 +638,12 @@ def verify_promotion_material(proposal: dict[str, Any], root: Path, proposal_pat
         parent = ""
     acceptance = proposal.get("owner_acceptance")
     if acceptance is None:
-        if parent != overlay.get("commit_sha"):
-            errors.append("promotion proposal record is not directly atop evidence overlay")
-        if relative_proposal is None or _changed_paths(root, parent, commit) != [relative_proposal]:
-            errors.append("promotion declaration overlay must contain only the PROPOSED record")
+        if relative_proposal is None:
+            errors.append("promotion proposal record path is unavailable")
+        else:
+            _, declaration_errors = _proposal_declaration_commit(
+                root, overlay["commit_sha"], proposal, relative_proposal)
+            errors.extend(declaration_errors)
     else:
         # A durable pilot acceptance is a one-file amendment of the original
         # declaration. Governance code may have advanced between those two
