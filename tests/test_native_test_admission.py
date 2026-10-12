@@ -46,12 +46,16 @@ class NativeTestAdmissionTests(unittest.TestCase):
                            if not key.startswith("INTEGRA_")}
             with patch.object(builder, "ROOT", source), \
                     patch.object(builder.subprocess, "run", side_effect=git), \
+                    patch.object(builder, "_knowledge_admission_checkout",
+                                 return_value=primary / "knowledge-admission"), \
                     patch.dict(os.environ, environment, clear=True):
                 builder._bind_pinned_runtime_environment()
                 self.assertEqual(os.environ["INTEGRA_SEMINARTEXT_BUILD_CHECKOUT"],
                                  str((primary / ".runtime-components/seminartext-pinned").resolve()))
                 self.assertEqual(os.environ["INTEGRA_REVIEW_WHEELS"],
                                  str((primary / ".runtime-components/review-wheels").resolve()))
+                self.assertEqual(os.environ[builder.KNOWLEDGE_ADMISSION_ENV],
+                                 str(primary / "knowledge-admission"))
 
     def test_pinned_source_input_rejects_dirty_sources_at_exact_commit(self):
         """A dirty source tree cannot supply candidate packaging bytes."""
@@ -62,6 +66,18 @@ class NativeTestAdmissionTests(unittest.TestCase):
             return SimpleNamespace(stdout=" M Sources/changed.swift\n")
         with patch.object(builder.subprocess, "run", side_effect=git):
             self.assertFalse(builder._is_clean_pinned_source(Path("/runtime"), expected))
+
+    def test_knowledge_admission_checkout_requires_clean_exact_source_worktree(self):
+        expected = builder.KNOWLEDGE_ADMISSION_COMMIT
+        clean = Path("/accepted/seminartext")
+        def git(command, **_kwargs):
+            if "worktree" in command:
+                return SimpleNamespace(stdout=f"worktree {clean}\n", returncode=0)
+            if "rev-parse" in command:
+                return SimpleNamespace(stdout=expected)
+            return SimpleNamespace(stdout="")
+        with patch.object(builder.subprocess, "run", side_effect=git):
+            self.assertEqual(builder._knowledge_admission_checkout(), clean)
 
     def test_packaging_child_requires_shared_admission_and_fresh_output(self):
         active = []
