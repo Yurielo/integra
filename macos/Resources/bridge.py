@@ -806,15 +806,21 @@ def _knowledge_k2(root, request, action):
                                "version_sha256": version}, "integra.knowledge_review")
     try:
         if action == "prepare":
-            return prepare_knowledge(project, **identity, notebook_id=request.get("notebook_id"),
+            values = dict(notebook_id=request.get("notebook_id"),
                 expected_state_sha256=request.get("expected_state_sha256"),
                 selected_fragment_ids=request.get("selected_fragment_ids"),
                 relation_inputs=request.get("relation_inputs"), entity_edits=request.get("entity_edits"))
+            if request.get("automatic") is True:
+                values["automatic"] = True
+            return prepare_knowledge(project, **identity, **values)
         if action == "apply":
-            return apply_knowledge(project, **identity, package_sha256=request.get("package_sha256"),
+            values = dict(package_sha256=request.get("package_sha256"),
                 decisions=request.get("decisions"), reviewer_id=request.get("reviewer_id"),
                 explicit_confirmation=request.get("explicit_confirmation"),
                 confirmed_proposal_ids=request.get("confirmed_proposal_ids"))
+            if request.get("automatic") is True:
+                values["automatic"] = True
+            return apply_knowledge(project, **identity, **values)
         if action == "package":
             manifest, files = knowledge_package(project, **identity, revision_sha256=request.get("revision_sha256"))
             return _store_reviewed_package(project, manifest, files)

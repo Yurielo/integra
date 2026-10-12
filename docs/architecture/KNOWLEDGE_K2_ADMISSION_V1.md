@@ -8,27 +8,38 @@ The original BenchmarkSegment admission remains unchanged.
 ## Exact source contract
 
 The separate capability pin in `state/knowledge_admission_component_v1.json`
-binds SeminarText PR #136, commit
-`61ee27de67174377afa0f4955b3cb5abeecb4f03`, tree
-`066a4029d791585410afd0aa45de974638b5e1ff`, the versioned admission schema and
+binds SeminarText PR #139, commit
+`a39de3143e78e25be8ecce242a5fe812c9af137c`, tree
+`0abf57be59522955d997b38848b118001dc7151c`, the versioned admission schema and
 all twelve owner dependencies. The existing Process runtime pin is unchanged.
 The packaged owner runtime is isolated from the older Process adapter; the
 supported review interpreter executes canonical compilation and validation.
 Missing or changed pins, dependencies, source or producer bytes fail closed.
 
-## Review and immutable revisions
+## Owner interaction by exception and immutable revisions
 
-Selection preserves exact reviewed fragment boundaries and word or cue
-precision. Concept and Topic proposals retain stable IDs independent of their
-labels. Controlled Relations require explicit endpoints, type and Evidence.
-Proposals start `PROVISIONAL / REVIEW_REQUIRED`; no review choice is preselected.
-Each proposal requires an explicit ACCEPT, EDIT, REJECT or DEFER decision,
-reviewer identity, reason and confirmation of the complete enumerated package
-hash. Neither K1 review nor transcript assurance supplies semantic authority.
-Equal labels do not merge Concept identities.
+Selection preserves exact source fragment boundaries and word or cue precision.
+Concept and Topic proposals retain stable IDs independent of their labels.
+For the ordinary Stage-1 path, exact machine-derived K1 units are compiled
+only as enumerated `DEFER` records by `system_validator`: they remain
+provisional, are not human-reviewed, and create no accepted canonical record.
+This allows independent processing to finish without treating silence as an
+acceptance, rejection, or semantic confirmation.
 
-The owner receipt binds original Evidence and reviewed-fragment payloads,
-source/revision/fragment identities, proposal package, producer and review.
+Human interaction is reserved for a real semantic exception: an explicit
+semantic edit or rejection, an identity collision, a replacement/update, or a
+controlled Relation with explicit endpoints, type, and Evidence.  The normal
+interface presents only a plain-language question and can safely offer
+"Решить позже"; a deferred exception does not block unrelated source work.
+Human review still requires an explicit enumerated package confirmation.  A
+reviewer identity, proposal digest and timestamp are automatic audit metadata,
+not ordinary user input or semantic decisions.  Neither K1 review nor
+transcript assurance supplies semantic authority. Equal labels never merge
+Concept identities automatically.
+
+The owner receipt binds original Evidence and either the exact human-reviewed
+or exact machine-derived fragment payload, source/revision/fragment identities,
+proposal package, producer and decision execution mode.
 Accepted changes produce a new immutable revision with its exact parent.
 Rejected and deferred proposals remain visible in the decision receipt without
 becoming accepted canonical records. Integra revalidates the complete owner

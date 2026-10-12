@@ -25,6 +25,7 @@ from .seminartext_topic_review_runtime import _locked
 RELATIONS = ["associated_with", "contradicts", "depends_on", "refines", "supports"]
 EDITABLE = {"concepts": ["preferred_label", "description", "aliases"],
             "topics": ["title", "summary"], "relations": ["relation_type"]}
+MACHINE_DERIVED = "MACHINE_DERIVED_FRAGMENTS_V1"
 
 
 def _runtime():
@@ -46,13 +47,14 @@ def _evidence_id(fragment_id):
 
 def _inputs(project_dir, identities):
     opened = k1.open_notebook(project_dir, **identities)
-    if opened["status"] != "REVIEWED_FRAGMENTS_V2":
-        raise ValueError("K2 requires explicitly reviewed K1 fragments")
+    if opened["status"] not in {"REVIEWED_FRAGMENTS_V2", MACHINE_DERIVED}:
+        raise ValueError("Knowledge requires saved exact source fragments")
     root, _, binding, _ = k1.source_inputs(project_dir, **identities)
     state = k1._read_state(k1._state_path(root, identities["source_id"], opened["notebook_id"]), root)
     k1._validate(root, state, binding)
     evidence_payload = _inside(root / state["review_artifacts"]["evidence"]["path"], root, "K1 Evidence").read_bytes()
-    reviewed_payload = _inside(root / state["review_artifacts"]["reviewed_topics"]["path"], root, "K1 reviewed fragments").read_bytes()
+    artifact_key = "machine_derived" if opened["status"] == MACHINE_DERIVED else "reviewed_topics"
+    reviewed_payload = _inside(root / state["review_artifacts"][artifact_key]["path"], root, "K1 source fragments").read_bytes()
     base = _review_root(root, identities["source_id"]) / "knowledge-k2" / opened["notebook_id"].removeprefix("urn:integra:artifact:")
     return root, base, opened, evidence_payload, reviewed_payload
 
@@ -98,9 +100,9 @@ def _validate_live_bindings(package, admission, opened, reviewed_payload):
     reviewed = json.loads(reviewed_payload)
     expected_k1 = {"artifact_id": reviewed["artifact_id"], "sha256": _hash(reviewed_payload),
         "notebook_id": opened["notebook_id"], "notebook_sha256": opened["state_sha256"],
-        "review_state": "REVIEWED_FRAGMENTS_V2"}
+        "review_state": opened["status"]}
     if package.get("k1_binding") != expected_k1 or reviewed != opened["reviewed"]:
-        raise ValueError("Knowledge receipt belongs to a different current K1 reviewed artifact")
+        raise ValueError("Knowledge receipt belongs to a different current K1 reviewed/source-fragment artifact")
     if package.get("contract") != {"id": admission.CONTRACT_ID, "sha256": admission.CONTRACT_SHA256}:
         raise ValueError("proposal owner contract changed")
     expected_producer = {"component_id": "integra", "runtime_id": "integra_knowledge_k2_v1",
@@ -181,6 +183,44 @@ def _present_decisions(revision):
     ]
 
 
+def _exception_questions(proposals, current):
+    """Classify only high-impact or ambiguous work for a human decision.
+
+    New source-bound records remain machine-derived/provisional.  Relations,
+    identity collisions and updates can change how existing knowledge is
+    understood, so they stay exception-only human work.
+    """
+    questions = []
+    current_concepts = current.get("concepts", [])
+    for proposal in proposals:
+        record, kind = proposal["record"], proposal["entity_kind"]
+        if kind == "relations":
+            questions.append({
+                "proposal_id": proposal["id"], "kind": "RELATION",
+                "question": "Нужно ваше решение: подтвердить предложенную связь между понятиями?",
+                "options": ["Подтвердить связь", "Не добавлять", "Решить позже"],
+            })
+            continue
+        if proposal["operation"] == "UPDATE":
+            questions.append({
+                "proposal_id": proposal["id"], "kind": "UPDATE",
+                "question": "Нужно ваше решение: заменить существующее описание знаний?",
+                "options": ["Подтвердить изменение", "Не изменять", "Решить позже"],
+            })
+            continue
+        if kind == "concepts":
+            label = record.get("preferred_label", "").casefold()
+            matches = [item["id"] for item in current_concepts
+                       if item.get("preferred_label", "").casefold() == label and item.get("id") != record.get("id")]
+            if matches:
+                questions.append({
+                    "proposal_id": proposal["id"], "kind": "IDENTITY",
+                    "question": "Нужно ваше решение: похоже, новое понятие может совпадать с уже сохранённым. Как считать?",
+                    "options": ["Разные понятия", "Решить позже"],
+                })
+    return questions
+
+
 def _presentation(root, base, opened, evidence_payload, reviewed_payload, work, admission):
     fragments = _fragment_views(opened, json.loads(evidence_payload))
     indexed = {item["id"]: item for item in fragments}
@@ -212,8 +252,18 @@ def _presentation(root, base, opened, evidence_payload, reviewed_payload, work, 
             admission.canonical_bytes(revision["source_evidence"]), admission.canonical_bytes(revision["canonical_knowledge"]))
     available = {item["id"]: item["preferred_label"] for item in current["concepts"]}
     available.update({item["after"]["id"]: item["after"]["preferred_label"] for item in proposals if item["entity_kind"] == "concepts"})
+    # A newly prepared package may have an earlier machine-defer receipt as
+    # its parent.  Its own exception questions still take precedence over that
+    # parent state: otherwise the UI would misleadingly report the work as
+    # ready while a relation/update/identity decision is waiting.
+    package_is_current = bool(package and (not revision or revision["proposal_package_sha256"] != work["package_sha256"]))
+    exception_questions = _exception_questions(package["proposals"], current) if package_is_current else []
+    automatic = bool(revision and revision["source_evidence"]["admission"]["decisions"].get("execution_mode") == "SYSTEM_NONAUTHORITATIVE_DEFER")
+    status = ("REVIEW_REQUIRED" if exception_questions else
+              ("MACHINE_DERIVED_PROVISIONAL_READY" if automatic else
+               ("CANONICAL_KNOWLEDGE" if revision else "REVIEW_REQUIRED")))
     return {"notebook_id": opened["notebook_id"], "state_sha256": opened["state_sha256"],
-        "status": "CANONICAL_KNOWLEDGE" if revision else "REVIEW_REQUIRED", "semantic_authority": "READ_ONLY_SOURCE_LIFECYCLE",
+        "status": status, "semantic_authority": "READ_ONLY_SOURCE_LIFECYCLE",
         "eligible_fragments": fragments, "package_sha256": work["package_sha256"], "proposals": proposals,
         "package_applied": bool(revision and revision["proposal_package_sha256"] == work["package_sha256"]),
         "confirmed_proposal_ids": sorted(item["id"] for item in proposals), "revision_sha256": work["revision_sha256"],
@@ -222,7 +272,8 @@ def _presentation(root, base, opened, evidence_payload, reviewed_payload, work, 
         "semantic_decisions": _present_decisions(revision) if revision else [],
         "semantic_reviewer": copy.deepcopy(revision["source_evidence"]["admission"]["decisions"]["reviewer"]) if revision else None,
         "supported_relation_types": RELATIONS, "available_concepts": [{"id": key, "label": value} for key, value in sorted(available.items())],
-        "automatic_acceptance": False, "upstream_processing_performed": False,
+        "automatic_acceptance": False, "automatic_defer": automatic and not exception_questions,
+        "exception_questions": exception_questions, "upstream_processing_performed": False,
         **{key: opened[key] for key in ("project_id", "run_id", "source_id", "source_revision_sha256")}}
 
 
@@ -234,7 +285,7 @@ def open_knowledge(project_dir, *, project_id, run_id, source_id):
 
 
 def prepare_knowledge(project_dir, *, project_id, run_id, source_id, notebook_id, expected_state_sha256,
-                      selected_fragment_ids, relation_inputs=None, entity_edits=None):
+                      selected_fragment_ids, relation_inputs=None, entity_edits=None, automatic=False):
     identities = dict(project_id=project_id, run_id=run_id, source_id=source_id)
     root, base, opened, evidence_payload, reviewed_payload = _inputs(project_dir, identities)
     admission, _ = _runtime()
@@ -317,7 +368,7 @@ def prepare_knowledge(project_dir, *, project_id, run_id, source_id, notebook_id
             "source_revision_sha256": source["content_sha256"], "source_sha256": source["content_sha256"],
             "transcript_revision_id": revision["id"], "transcript_sha256": revision["text_sha256"], "evidence_sha256": _hash(evidence_payload)},
         "k1_binding": {"artifact_id": reviewed["artifact_id"], "sha256": _hash(reviewed_payload),
-            "notebook_id": notebook_id, "notebook_sha256": opened["state_sha256"], "review_state": "REVIEWED_FRAGMENTS_V2"},
+            "notebook_id": notebook_id, "notebook_sha256": opened["state_sha256"], "review_state": opened["status"]},
         "parent_revision_sha256": work["revision_sha256"], "proposals": sorted(proposals, key=lambda item: item["id"])}
     package_sha256 = admission.digest(package)
     with _locked(root, source_id):
@@ -328,15 +379,24 @@ def prepare_knowledge(project_dir, *, project_id, run_id, source_id, notebook_id
         _safe_destination(root, base / "state.json")
         work.update(package_sha256=package_sha256)
         work = k1._persist(base / "state.json", work)
-    return _presentation(root, base, opened, evidence_payload, reviewed_payload, work, admission)
+    prepared = _presentation(root, base, opened, evidence_payload, reviewed_payload, work, admission)
+    if automatic:
+        if _exception_questions(package["proposals"], current):
+            return prepared
+        return apply_knowledge(project_dir, **identities, package_sha256=package_sha256,
+                               decisions=None, reviewer_id=None, explicit_confirmation=None,
+                               confirmed_proposal_ids=None, automatic=True)
+    return prepared
 
 
 def apply_knowledge(project_dir, *, project_id, run_id, source_id, package_sha256, decisions, reviewer_id,
-                    explicit_confirmation, confirmed_proposal_ids):
+                    explicit_confirmation, confirmed_proposal_ids, automatic=False):
     identities = dict(project_id=project_id, run_id=run_id, source_id=source_id)
     root, base, opened, evidence_payload, reviewed_payload = _inputs(project_dir, identities)
     admission, _ = _runtime()
-    if not isinstance(reviewer_id, str) or not re.fullmatch(r"[a-z][a-z0-9._:-]{2,127}", reviewer_id):
+    if automatic and (reviewer_id is not None or decisions is not None or explicit_confirmation is not None or confirmed_proposal_ids is not None):
+        raise ValueError("automatic non-authoritative admission cannot include human decisions")
+    if not automatic and (not isinstance(reviewer_id, str) or not re.fullmatch(r"[a-z][a-z0-9._:-]{2,127}", reviewer_id)):
         raise ValueError("explicit stable human reviewer identity required")
     with _locked(root, source_id):
         work = _read_work(root, base, opened)
@@ -344,7 +404,16 @@ def apply_knowledge(project_dir, *, project_id, run_id, source_id, package_sha25
             raise ValueError("proposal package is stale; reopen Knowledge")
         package = _read_package(root, base, package_sha256, admission, opened, reviewed_payload)
         proposals = {item["id"]: item for item in package["proposals"]}
-        if explicit_confirmation is not True or confirmed_proposal_ids != sorted(proposals):
+        if automatic:
+            if opened["status"] != MACHINE_DERIVED or _exception_questions(package["proposals"], {"concepts": []}):
+                raise ValueError("automatic path is unavailable for this semantic exception")
+            decisions = [{"proposal_id": proposal_id, "action": "DEFER",
+                          "reason": "No semantic exception detected; retained as machine-derived provisional knowledge."}
+                         for proposal_id in sorted(proposals)]
+            reviewer_id = "integra_system"
+            explicit_confirmation = False
+            confirmed_proposal_ids = sorted(proposals)
+        elif explicit_confirmation is not True or confirmed_proposal_ids != sorted(proposals):
             raise ValueError("explicit confirmation of the exact enumerated proposal package required")
         if not isinstance(decisions, list) or len(decisions) != len(proposals):
             raise ValueError("each proposal needs explicit ACCEPT/EDIT/REJECT/DEFER")
@@ -359,8 +428,9 @@ def apply_knowledge(project_dir, *, project_id, run_id, source_id, package_sha25
             seen.add(choice["proposal_id"])
             choices.append({**copy.deepcopy(choice), "proposal_sha256": admission.digest(proposals[choice["proposal_id"]]), "timestamp": timestamp})
         ledger = {"schema_version": "1.0.0", "package_id": package["artifact_id"], "package_sha256": package_sha256,
-            "reviewer": {"actor_type": "human_domain_reviewer", "actor_id": reviewer_id},
-            "explicit_confirmation": True, "confirmed_proposal_ids": confirmed_proposal_ids,
+            "reviewer": {"actor_type": "system_validator" if automatic else "human_domain_reviewer", "actor_id": reviewer_id},
+            "execution_mode": "SYSTEM_NONAUTHORITATIVE_DEFER" if automatic else "HUMAN_REVIEW",
+            "explicit_confirmation": explicit_confirmation, "confirmed_proposal_ids": confirmed_proposal_ids,
             "decisions": sorted(choices, key=lambda item: item["proposal_id"])}
         parent_hash = package["parent_revision_sha256"]
         if work["revision_sha256"] != parent_hash:

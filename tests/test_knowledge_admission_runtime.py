@@ -62,8 +62,8 @@ class KnowledgeAdmissionRuntimeTests(unittest.TestCase):
 
     def test_accepted_source_pin_and_contract_are_exact(self):
         pin = runtime._pin()
-        self.assertEqual(pin["commit_sha"], "61ee27de67174377afa0f4955b3cb5abeecb4f03")
-        self.assertEqual(pin["source_pr"], 136)
+        self.assertEqual(pin["commit_sha"], "a39de3143e78e25be8ecce242a5fe812c9af137c")
+        self.assertEqual(pin["source_pr"], 139)
         self.assertEqual(pin["contract"]["id"], "seminartext.reviewed_knowledge_admission_v1")
         self.assertEqual(len(pin["files"]), 12)
 
