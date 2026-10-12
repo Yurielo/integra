@@ -36,6 +36,9 @@ class KnowledgeK2Tests(unittest.TestCase):
         opened = self.open(create=True)
         return self.save(opened, self.choices(opened))
 
+    def machine_derived(self):
+        return self.open(create=True)
+
     def prepare(self, opened=None, **kwargs):
         opened = opened or self.reviewed()
         return k2.prepare_knowledge(self.root, **self.ids, notebook_id=opened["notebook_id"],
@@ -86,6 +89,57 @@ class KnowledgeK2Tests(unittest.TestCase):
         revision = json.loads(self.revision_path(accepted).read_bytes())
         runtime.owner().validate_revision(revision, k2._inputs(self.root, self.ids)[3])
         self.assertEqual(revision["owner"], "seminartext")
+
+    def test_machine_derived_normal_path_is_non_authoritative_and_needs_no_human_choice(self):
+        """Ordinary source units become usable provisional knowledge by defer only.
+
+        This is the owner-by-exception normal path: the receipt must remain
+        machine-derived, enumerate every proposal, and create no canonical
+        records or human-review claim.
+        """
+        machine = self.machine_derived()
+        self.assertEqual(machine["status"], k2.MACHINE_DERIVED)
+        result = self.prepare(machine, automatic=True)
+        self.assertEqual(result["status"], "MACHINE_DERIVED_PROVISIONAL_READY")
+        self.assertTrue(result["automatic_defer"])
+        self.assertFalse(result["automatic_acceptance"])
+        self.assertEqual(result["exception_questions"], [])
+        self.assertEqual(result["knowledge_view"]["records"]["concepts"], [])
+        self.assertEqual(result["knowledge_view"]["records"]["relations"], [])
+        revision = json.loads(self.revision_path(result).read_bytes())
+        ledger = revision["source_evidence"]["admission"]["decisions"]
+        self.assertEqual(ledger["execution_mode"], "SYSTEM_NONAUTHORITATIVE_DEFER")
+        self.assertEqual(ledger["reviewer"]["actor_type"], "system_validator")
+        self.assertFalse(ledger["explicit_confirmation"])
+        self.assertTrue(all(item["action"] == "DEFER" for item in ledger["decisions"]))
+        with patch.object(k2, "prepare_knowledge", side_effect=AssertionError("must not regenerate")):
+            self.assertEqual(k2.open_knowledge(self.root, **self.ids), result)
+
+    def test_relation_is_a_real_exception_while_independent_machine_units_continue(self):
+        """A high-impact relation stops only its dependent semantic operation."""
+        machine = self.machine_derived()
+        normal = self.prepare(machine, automatic=True)
+        concepts = normal["available_concepts"]
+        relation = {"source_concept_id": concepts[0]["id"], "target_concept_id": concepts[1]["id"],
+                    "relation_type": "associated_with",
+                    "fragment_ids": [normal["eligible_fragments"][0]["id"]]}
+        pending = self.prepare(machine, relation_inputs=[relation], automatic=True)
+        self.assertEqual(pending["status"], "REVIEW_REQUIRED")
+        self.assertFalse(pending["automatic_defer"])
+        self.assertEqual(len(pending["exception_questions"]), 1)
+        question = pending["exception_questions"][0]
+        self.assertEqual(question["kind"], "RELATION")
+        self.assertIn("Решить позже", question["options"])
+        self.assertTrue(question["question"].startswith("Нужно ваше решение:"))
+        self.assertEqual(pending["revision_sha256"], normal["revision_sha256"])
+        # Deferring the exception remains a valid, truthful human choice and
+        # does not invent a canonical relation.
+        decisions = [{"proposal_id": item["id"], "action": "DEFER",
+                      "reason": "Synthetic exception deferral; no semantic authority asserted"}
+                     for item in pending["proposals"]]
+        deferred = self.apply(pending, decisions=decisions)
+        self.assertEqual(deferred["knowledge_view"]["records"]["relations"], [])
+        self.assertEqual({item["action"] for item in deferred["semantic_decisions"]}, {"DEFER"})
 
     def test_reject_defer_immutable_parent_label_edit_and_existing_diff(self):
         reviewed = self.reviewed()

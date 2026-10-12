@@ -26,11 +26,8 @@ precondition(dialog.alert.buttons[0].target === dialog)
 precondition(dialog.alert.buttons[0].action == #selector(KnowledgeReviewDialog.submit))
 precondition(!dialog.validateSubmission())
 choice.selectItem(at: 1)
-precondition(!dialog.validateSubmission())
-reason.stringValue = "Synthetic explicit decision"
 edited.stringValue = "Edited"
 precondition(!dialog.validateSubmission())
-precondition(reason.stringValue == "Synthetic explicit decision")
 precondition(edited.stringValue == "Edited")
 choice.selectItem(at: 2)
 precondition(dialog.validateSubmission())
@@ -41,7 +38,7 @@ let explicit = NSButton(checkboxWithTitle: "Confirm", target: nil, action: nil)
 explicit.state = .off
 confirmation.validate = { explicit.state == .on ? nil : "explicit confirmation required" }
 precondition(!confirmation.validateSubmission())
-precondition(explicit.state == .off && reason.stringValue == "Synthetic explicit decision")
+precondition(explicit.state == .off && edited.stringValue == "Edited")
 explicit.state = .on
 precondition(confirmation.validateSubmission())
 precondition(dialog.feedback.superview !== scroll.documentView)
@@ -63,7 +60,7 @@ if interactive {
   // CUA-driven manual/native lifecycle test of the exact production controller.
   // This small control harness has no runtime, project, Candidate or apply API.
   dialog.alert.messageText = "QA dialog control — NOT an Integra Candidate"
-  dialog.alert.informativeText = "Выберите решение и обоснование. Пустая проверка должна оставить это же окно открытым."
+  dialog.alert.informativeText = "Выберите решение. Неполная проверка должна оставить это же окно открытым."
   choice.frame = NSRect(x: 0, y: 1100, width: 620, height: 24)
   reason.frame = NSRect(x: 0, y: 1060, width: 620, height: 24)
   edited.frame = NSRect(x: 0, y: 1020, width: 620, height: 24)
