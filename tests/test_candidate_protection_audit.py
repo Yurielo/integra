@@ -13,6 +13,47 @@ from integra_core.candidate_identity import candidate_id, canonical_bytes, tree_
 
 
 class ProtectionAuditTests(unittest.TestCase):
+    def test_proposed_candidate_can_be_protected_by_exact_proposal_bytes(self):
+        identity = {'candidate_id': 'candidate-v1-' + 'a'*64,
+                    'bundle_digest': 'b'*64, 'manifest_digest': 'c'*64}
+        proposal = {'artifact_type': 'integra.proposed_product_baseline',
+                    'proposal_id': 'proposal-k2-fixture', 'candidate': identity}
+        digest = 'd'*64
+        reference = {'pr': 256, 'path': 'state/proposed_baseline_lite_v1.json',
+                     'proposal_id': proposal['proposal_id'], 'proposal_sha256': digest,
+                     **identity}
+        self.assertTrue(audit.proposed_reference_matches(
+            reference, current_head='e'*40, base_ref='main', proposal=proposal,
+            proposal_sha256=digest))
+        self.assertFalse(audit.proposed_reference_matches(
+            reference, current_head='e'*40, base_ref='main', proposal=proposal,
+            proposal_sha256='f'*64))
+        changed = copy.deepcopy(proposal)
+        changed['candidate']['bundle_digest'] = 'f'*64
+        self.assertFalse(audit.proposed_reference_matches(
+            reference, current_head='e'*40, base_ref='main', proposal=changed,
+            proposal_sha256=digest))
+        self.assertFalse(audit.proposed_reference_matches(
+            reference, current_head=None, base_ref='main', proposal=proposal,
+            proposal_sha256=digest))
+        self.assertFalse(audit.proposed_reference_matches(
+            reference, current_head='e'*40, base_ref='feature', proposal=proposal,
+            proposal_sha256=digest))
+
+    def test_legacy_proposed_candidate_still_requires_exact_pr_head(self):
+        identity = {'candidate_id': 'candidate-v1-' + 'a'*64,
+                    'bundle_digest': 'b'*64, 'manifest_digest': 'c'*64}
+        proposal = {'artifact_type': 'integra.proposed_product_baseline',
+                    'candidate': identity}
+        reference = {'pr': 213, 'head_sha': 'd'*40,
+                     'path': 'state/proposed_baseline_lite_v1.json', **identity}
+        self.assertTrue(audit.proposed_reference_matches(
+            reference, current_head='d'*40, base_ref='main', proposal=proposal,
+            proposal_sha256=None))
+        self.assertFalse(audit.proposed_reference_matches(
+            reference, current_head='e'*40, base_ref='main', proposal=proposal,
+            proposal_sha256=None))
+
     def prior_registry(self):
         path = audit.ROOT / 'state/history/excel7_outgoing_protection_registry_v1.json'
         return json.loads((path if path.is_file() else audit.REGISTRY).read_text())
