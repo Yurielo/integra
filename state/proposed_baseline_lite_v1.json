@@ -1,0 +1,145 @@
+{
+  "allowed_overlay_paths": [
+    "docs/evidence/ISSUE_227_K2_CANDIDATE_0F69_ARCHIVE.json",
+    "docs/evidence/ISSUE_227_K2_CANDIDATE_0F69_GUI_E2E.json",
+    "docs/evidence/ISSUE_227_K2_CANDIDATE_0F69_MANIFEST.json",
+    "docs/evidence/ISSUE_227_K2_CANDIDATE_0F69_PROTECTION_REGISTRATION.md",
+    "docs/evidence/ISSUE_227_K2_CANDIDATE_0F69_REPORT.md",
+    "scripts/prepare_candidate_execution_copy.py",
+    "scripts/temp_workspace_lifecycle.py",
+    "state/candidate_protection_registry_v1.json",
+    "tests/test_prepare_candidate_execution_copy.py"
+  ],
+  "artifact_type": "integra.proposed_product_baseline",
+  "base_current_id": "current-v2-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f",
+  "base_main": {
+    "commit_sha": "312946d42c9712e4ee3b7974fe657762e8092c1d",
+    "tree_sha": "60f160c4c15b12f804da9adcb16437828f127c85"
+  },
+  "candidate": {
+    "bundle_digest": "3d4d33a983455572157b06460c3faaef5afd0b977a0e3d2717101588a25718e5",
+    "candidate_id": "candidate-v1-0f69e617c0841f27afe2238a28d6c25ae5a80ce0fedf01cf0c114638de575032",
+    "identity_sha256": "0f69e617c0841f27afe2238a28d6c25ae5a80ce0fedf01cf0c114638de575032",
+    "manifest_digest": "3aed49cda900a6af0d0e8abcae4f3db114d988ad9bf16c62c53ba6671d06cbfe"
+  },
+  "delta": [
+    {
+      "after_sha256": "4cd5db42ca7462c404f9b4e694e2ca3f1688d3b8fcb8964de32010d39ffb095f",
+      "before_sha256": "d76076250ee4135bfd546450009416e7bad900c135db708854cf815c482a0eea",
+      "path": "integra_core/candidate_identity.py"
+    },
+    {
+      "after_sha256": "1f762b3f83e9568cda96dbfbfd7364c4365204788203a16c217c2ac1007e6601",
+      "before_sha256": "c4a94f533b44ca13fcc365aadbd7bd6a47bb656329c4b6b0144a7ff98850e9ea",
+      "path": "integra_core/knowledge.py"
+    },
+    {
+      "after_sha256": "b2f62726fc0046812a43773ce401f1f4d39c8eeb984c3198c28a562af356efbe",
+      "before_sha256": null,
+      "path": "integra_core/knowledge_admission_runtime.py"
+    },
+    {
+      "after_sha256": "b7dfd7251f18c8353215c37970d4d173ae33daf5f2078953e6eced420abf3845",
+      "before_sha256": null,
+      "path": "integra_core/knowledge_k2.py"
+    },
+    {
+      "after_sha256": "6947559594415c3ff36b6ab4d21456a518de5ce6d2729bf04799b8bfe2a4136c",
+      "before_sha256": "d64a896b8350f3ccd527babc80c8c91a4f9959dd4f557cd3db6efb694232dba4",
+      "path": "integra_core/reviewed_result_package.py"
+    },
+    {
+      "after_sha256": "9bab00f23959f4ec0e4827c04aa91fd62b37896572adc00d7de10a03fae86127",
+      "before_sha256": "7c0976c3cf1d6b615150a3c0df5c66175c55faaaabdcea93dff750814b6dc0de",
+      "path": "macos/IntegraApp.swift"
+    },
+    {
+      "after_sha256": "ab7f5f8ce53205f1f245ce464e7c497efd574ed9ec352aa3e818c7f6c7071c36",
+      "before_sha256": "0ecc20d4f38db43ec6519abd26c7983a7ce97932c4484250b36827e10efa8528",
+      "path": "macos/Resources/bridge.py"
+    },
+    {
+      "after_sha256": "9c670923e80ddd4874474e1602e71dd62dc4ee58268debb970502691e9e052a3",
+      "before_sha256": "393fd94482c4832217a6591d3c7497433be53d3674b43b7f373f92859751f488",
+      "path": "schemas/knowledge_view_v1.schema.json"
+    },
+    {
+      "after_sha256": "f74f282344fc8c8da9ce13c56a73d908501d6eaa2d0751af85a94b30895565eb",
+      "before_sha256": "c2fc0ad755c84a4067b65df39267b86d72e547a5683988db8f674b3d402d2a78",
+      "path": "scripts/build_macos_app.sh"
+    },
+    {
+      "after_sha256": "dc336b7ad3c4864af8d46545a124b6d8a74edfb44cccdc4bf15c80a5ddbb7298",
+      "before_sha256": "ccaeb550aa1653aed47eac450310ae2e4bb9ec60f519d4ae359fb10e652f2d85",
+      "path": "scripts/candidate_manifest.py"
+    },
+    {
+      "after_sha256": "772d662afa5d1a9ae1675f616c0711ac484cee6f0e3f1c805092e0a2259acb6c",
+      "before_sha256": null,
+      "path": "scripts/package_knowledge_admission_runtime.py"
+    },
+    {
+      "after_sha256": "8dfb46df134d465228d5d45fb713392b780f552adcda466a84bf341d71bd28a7",
+      "before_sha256": null,
+      "path": "state/knowledge_admission_component_v1.json"
+    },
+    {
+      "after_sha256": "a3303bff756edd30291c0cd697fdb23ed6a9fd3bdb49e619a39ccf444c2c9e6f",
+      "before_sha256": "4519d9ff2e9d7d1f10165e45de288f921c4596f093b047a66e7473879d2372b9",
+      "path": "tests/test_macos_app.py"
+    }
+  ],
+  "evidence": {
+    "candidate_evidence": {
+      "path": "docs/evidence/ISSUE_227_K2_CANDIDATE_0F69_GUI_E2E.json",
+      "sha256": "ca807e264a094f19c51b8edcac897762c178f68cfc99d91ce33cfe9fc3eff86a"
+    },
+    "candidate_manifest": {
+      "path": "docs/evidence/ISSUE_227_K2_CANDIDATE_0F69_MANIFEST.json",
+      "sha256": "3aed49cda900a6af0d0e8abcae4f3db114d988ad9bf16c62c53ba6671d06cbfe"
+    },
+    "report": {
+      "path": "docs/evidence/ISSUE_227_K2_CANDIDATE_0F69_REPORT.md",
+      "sha256": "c6032622c5cb7ee092e21ccc1639f363a86964bf4dab03d57625059fc2a38cf1"
+    }
+  },
+  "gates": [
+    {
+      "evidence_ref": "docs/evidence/ISSUE_227_K2_CANDIDATE_0F69_ARCHIVE.json",
+      "name": "candidate-archive-integrity",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/ISSUE_227_K2_CANDIDATE_0F69_MANIFEST.json",
+      "name": "candidate-manifest-and-packaged-self-test",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/ISSUE_227_K2_CANDIDATE_0F69_GUI_E2E.json",
+      "name": "production-native-k1-and-k2-gui-e2e",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/ISSUE_227_K2_CANDIDATE_0F69_REPORT.md",
+      "name": "focused-and-full-regression",
+      "result": "PASS"
+    }
+  ],
+  "historical_test_successors": [],
+  "intended_scope": {
+    "journey": "Existing K1 reviewed notebook -> explicit human ReviewDecision package -> immutable source-owned Canonical Knowledge revision and validated Concept/Relation graph -> exact Evidence navigation -> persistence/reopen -> managed Obsidian export. Prepare this exact Candidate for Owner Test only; no Owner acceptance, CURRENT promotion, product PR merge, K3, imports, multi-source, upstream processing, real semantic acceptance or Process Board changes.",
+    "wp": "Knowledge K2"
+  },
+  "owner_acceptance": null,
+  "proposal_id": "proposal-knowledge-k2-canonical-knowledge-from-reviewed-fragments-v3",
+  "proposed_head": {
+    "commit_sha": "a11a6e7d2894d761340cf6aafc557b54d654de1a",
+    "tree_sha": "bc6177d8356c373098ac1deb6c93d43b259c3c96"
+  },
+  "proposed_source": {
+    "commit_sha": "9d28dcdbf74ab039414ed943b12ceddc0f345663",
+    "tree_sha": "1cc7ecbfb2e589d7275f8257e8cec5cff23b731a"
+  },
+  "schema_version": "1.0",
+  "status": "PROPOSED_BASELINE_VALID"
+}
