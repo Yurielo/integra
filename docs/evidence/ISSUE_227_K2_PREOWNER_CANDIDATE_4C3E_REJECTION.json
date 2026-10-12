@@ -1,0 +1,8 @@
+{
+  "artifact_type": "integra.pre_owner_candidate_rejection",
+  "candidate_id": "candidate-v1-4c3eb3773d9c3c62ddc0c67047e4af97f1efd1f2a038223c8c83933f643dac1a",
+  "bundle_digest": "837c87a7a7da367b8b6f169c832ffbc0a29d4558b79eebd6a7371f2a1b9bf4cd",
+  "manifest_digest": "531e69ae3104e16de577a01363fc437e0aa9a2305339375f10b454548f7bd05f",
+  "failed_gate": "full-suite: macOS bridge empty interactive request must not wait for EOF",
+  "evidence_ref": "docs/evidence/ISSUE_227_K2_PREOWNER_CANDIDATE_4C3E_REJECTION.json"
+}

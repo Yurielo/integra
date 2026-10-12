@@ -98,6 +98,16 @@ class K2QAFixtureTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             fixture.prepare(ROOT)
 
+    def test_fixture_can_use_exact_k2_gui_workspace_purpose(self):
+        gui_temp = tempfile.TemporaryDirectory(prefix="integra-owned-issue227-k2-gui-e2e-", dir=fixture.BASE)
+        self.addCleanup(gui_temp.cleanup)
+        self.workspace = Path(gui_temp.name).resolve()
+        self.marker["purpose"] = "issue227-k2-gui-e2e"
+        self.marker["root"] = str(self.workspace)
+        self.write_marker()
+        project = fixture.prepare(self.workspace, purpose="issue227-k2-gui-e2e")
+        self.assertTrue((project / "QA_ONLY.json").is_file())
+
     def test_two_unit_guard_rejects_insufficient_review_before_k2(self):
         operations = []
         def bridge(operation, request):
