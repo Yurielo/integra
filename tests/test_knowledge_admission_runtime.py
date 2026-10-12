@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 from integra_core import knowledge_admission_runtime as runtime
 from integra_core import knowledge
-from scripts.package_knowledge_admission_runtime import package_view_schema
+from scripts.package_knowledge_admission_runtime import package_view_schema, _with_packaged_review_runtime
 
 
 class KnowledgeAdmissionRuntimeTests(unittest.TestCase):
@@ -38,6 +38,22 @@ class KnowledgeAdmissionRuntimeTests(unittest.TestCase):
             original = target.read_bytes()
             with self.assertRaisesRegex(ValueError, "fresh owned destination"):
                 package_view_schema(resources)
+
+    def test_packager_exposes_fresh_review_runtime_only_for_preflight(self):
+        with tempfile.TemporaryDirectory() as directory:
+            resources = Path(directory)
+            site_packages = resources / "runtime/review-python/site-packages"
+            site_packages.mkdir(parents=True)
+            with patch.dict("os.environ", {"PYTHONPATH": "existing"}, clear=False):
+                previous = _with_packaged_review_runtime(resources)
+                self.assertEqual(previous, "existing")
+                self.assertEqual(runtime.os.environ["PYTHONPATH"],
+                                 str(site_packages) + runtime.os.pathsep + "existing")
+
+    def test_packager_rejects_missing_review_runtime_before_admission_preflight(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(ValueError, "packaged review runtime is unavailable"):
+                _with_packaged_review_runtime(Path(directory))
             self.assertEqual(target.read_bytes(), original)
             target.unlink()
             target.symlink_to(resources / "missing")
