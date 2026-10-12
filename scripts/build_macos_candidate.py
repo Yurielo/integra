@@ -17,14 +17,14 @@ from temp_workspace_lifecycle import (  # noqa: E402
 import candidate_retention  # noqa: E402
 
 
-def _pinned_runtime_root() -> Path:
-    """Find the local source checkout that owns the pinned build inputs.
+def _pinned_runtime_paths() -> dict[str, Path]:
+    """Find the local worktrees that own each pinned build input.
 
     A full Candidate is deliberately built inside a disposable owned
     workspace.  Runtime components are ignored local build inputs, so they
-    are not copied into that workspace.  Resolve them from the primary local
-    worktree instead and let ``build_macos_app.sh`` verify every declared pin
-    and digest before packaging.  Never fall back to an unverified path.
+    are not copied into that workspace.  Resolve each from a registered local
+    worktree and let ``build_macos_app.sh`` verify every declared pin and
+    digest before packaging.  Never fall back to an unverified path.
     """
     candidates = [ROOT]
     listing = subprocess.run(
@@ -35,17 +35,23 @@ def _pinned_runtime_root() -> Path:
         Path(line.removeprefix("worktree ")).resolve()
         for line in listing.stdout.splitlines() if line.startswith("worktree ")
     )
-    required = (
-        ".runtime-components/seminartext-pinned",
-        ".runtime-components/videotext-pinned",
-        ".runtime-components/booktext-pinned",
-        ".runtime-components/review-wheels",
-        ".runtime-word-alignment/lib/python3.13/site-packages",
-    )
-    for candidate in candidates:
-        if all((candidate / relative).is_dir() for relative in required):
-            return candidate
-    raise ValueError("pinned local build runtime is unavailable from every registered worktree")
+    required = {
+        "INTEGRA_SEMINARTEXT_BUILD_CHECKOUT": ".runtime-components/seminartext-pinned",
+        "INTEGRA_VIDEOTEXT_BUILD_CHECKOUT": ".runtime-components/videotext-pinned",
+        "INTEGRA_BOOKTEXT_BUILD_CHECKOUT": ".runtime-components/booktext-pinned",
+        "INTEGRA_REVIEW_WHEELS": ".runtime-components/review-wheels",
+        "INTEGRA_WORD_ALIGNMENT_SITE_PACKAGES": ".runtime-word-alignment/lib/python3.13/site-packages",
+    }
+    resolved: dict[str, Path] = {}
+    for name, relative in required.items():
+        for candidate in candidates:
+            path = candidate / relative
+            if path.is_dir():
+                resolved[name] = path
+                break
+        else:
+            raise ValueError(f"pinned local build input is unavailable: {relative}")
+    return resolved
 
 
 def _bind_pinned_runtime_environment() -> None:
@@ -55,17 +61,7 @@ def _bind_pinned_runtime_environment() -> None:
     independently checks the pinned commits and hashes, so this binding only
     supplies a location; it cannot relax runtime identity verification.
     """
-    root = _pinned_runtime_root()
-    values = {
-        "INTEGRA_SEMINARTEXT_BUILD_CHECKOUT": root / ".runtime-components/seminartext-pinned",
-        "INTEGRA_VIDEOTEXT_BUILD_CHECKOUT": root / ".runtime-components/videotext-pinned",
-        "INTEGRA_BOOKTEXT_BUILD_CHECKOUT": root / ".runtime-components/booktext-pinned",
-        "INTEGRA_REVIEW_WHEELS": root / ".runtime-components/review-wheels",
-        "INTEGRA_WORD_ALIGNMENT_SITE_PACKAGES": (
-            root / ".runtime-word-alignment/lib/python3.13/site-packages"
-        ),
-    }
-    for name, value in values.items():
+    for name, value in _pinned_runtime_paths().items():
         os.environ.setdefault(name, str(value))
 
 
