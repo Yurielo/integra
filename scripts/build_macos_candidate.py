@@ -22,6 +22,8 @@ PINNED_COMPONENT_COMMITS = {
     "INTEGRA_VIDEOTEXT_BUILD_CHECKOUT": "2e098d1705b6815628bee1e023f4742718eabf02",
     "INTEGRA_BOOKTEXT_BUILD_CHECKOUT": "46396649214275eb18054b670a842bace02d02e1",
 }
+KNOWLEDGE_ADMISSION_ENV = "INTEGRA_KNOWLEDGE_ADMISSION_CHECKOUT"
+KNOWLEDGE_ADMISSION_COMMIT = "61ee27de67174377afa0f4955b3cb5abeecb4f03"
 
 
 def _is_clean_pinned_source(path: Path, expected_commit: str) -> bool:
@@ -33,7 +35,7 @@ def _is_clean_pinned_source(path: Path, expected_commit: str) -> bool:
     if revision != expected_commit:
         return False
     dirty = subprocess.run(
-        ["git", "-C", str(path), "status", "--porcelain", "--", "Sources"],
+        ["git", "-C", str(path), "status", "--porcelain"],
         check=False, capture_output=True, text=True,
     ).stdout.strip()
     return not dirty
@@ -49,6 +51,15 @@ def _registered_component_worktrees(path: Path) -> list[Path]:
         return []
     return [Path(line.removeprefix("worktree ")).resolve()
             for line in listing.stdout.splitlines() if line.startswith("worktree ")]
+
+
+def _knowledge_admission_checkout() -> Path:
+    """Locate the separately pinned SeminarText-owned K2 contract source."""
+    source_repository = Path.home() / "Documents" / "seminartext"
+    for worktree in _registered_component_worktrees(source_repository):
+        if _is_clean_pinned_source(worktree, KNOWLEDGE_ADMISSION_COMMIT):
+            return worktree
+    raise ValueError("pinned Knowledge admission source is unavailable")
 
 
 def _pinned_runtime_paths() -> dict[str, Path]:
@@ -118,6 +129,11 @@ def _bind_pinned_runtime_environment() -> None:
     """
     for name, value in _pinned_runtime_paths().items():
         os.environ.setdefault(name, str(value))
+    # This separately accepted capability is not part of the Process runtime
+    # pin.  Its own preflight rechecks commit, tree and every bound file;
+    # supplying a clean exact worktree only makes that existing contract
+    # available inside the disposable Candidate workspace.
+    os.environ.setdefault(KNOWLEDGE_ADMISSION_ENV, str(_knowledge_admission_checkout()))
 
 
 def _build_inside_workspace(archive_root: Path | None, expected_bytes: int = DEFAULT_EXPECTED_BYTES,
