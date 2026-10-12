@@ -15,7 +15,8 @@ from temp_workspace_lifecycle import _process_start_token
 
 class CandidateExecutionCopyTests(unittest.TestCase):
     def setUp(self):
-        self.temp = tempfile.TemporaryDirectory(prefix="integra-owned-" + execution.PURPOSE + "-", dir="/private/tmp")
+        self.temp = tempfile.TemporaryDirectory(prefix="integra-owned-" + execution.PURPOSE + "-",
+                                                dir=str(execution.DEFAULT_ROOT))
         self.addCleanup(self.temp.cleanup)
         self.workspace = Path(self.temp.name).resolve()
         marker = {"schema_version": execution.SCHEMA, "artifact_type": "integra.disposable_workspace",

@@ -29,6 +29,7 @@ except ModuleNotFoundError:
 
 MARKER = ".integra-owned-workspace.json"
 SCHEMA = "1.0"
+DEFAULT_ROOT = Path("/private/tmp" if sys.platform == "darwin" else "/tmp")
 DEFAULT_EXPECTED_BYTES = 2_400 * 1024 * 1024
 DEFAULT_RESERVE_BYTES = 15 * 1024 * 1024 * 1024
 LOCK = ".integra-workspace-reservations.lock"
@@ -77,7 +78,7 @@ def _group_is_live(process_group: int | None) -> bool:
 
 
 def _base(value: str | Path | None) -> Path:
-    path = Path(value or os.environ.get("INTEGRA_WORKSPACE_ROOT") or "/private/tmp").expanduser().resolve(strict=True)
+    path = Path(value or os.environ.get("INTEGRA_WORKSPACE_ROOT") or str(DEFAULT_ROOT)).expanduser().resolve(strict=True)
     if path.is_symlink() or not path.is_dir():
         raise ValueError("owned workspace base must be an existing non-symlink directory")
     return path
