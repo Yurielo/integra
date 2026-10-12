@@ -77,6 +77,17 @@ final class KnowledgeReviewDialog: NSObject {
     return nil
   }
 
+  // K1 has the same explicit per-fragment decision requirement as K2, but
+  // does not require a semantic-reason field. Keep the validation in the
+  // same modal session so an incomplete submission never discards a choice.
+  func validateSelections(_ controls: [NSPopUpButton]) -> String? {
+    for (index, control) in controls.enumerated() where control.indexOfSelectedItem == 0 {
+      invalidField = control
+      return "Фрагмент \(index + 1): выберите решение."
+    }
+    return nil
+  }
+
   @objc func submit() {
     guard validateSubmission() else { return }
     NSApp.stopModal(withCode: .alertFirstButtonReturn)
@@ -2298,15 +2309,22 @@ struct SidebarItem {
   @objc private func reviewKnowledge() {
     guard let topics = knowledgeNotebook["topics"] as? [[String: Any]], let hash = knowledgeNotebook["state_sha256"] as? String else { return }
     let saved = knowledgeNotebook["decisions"] as? [[String: Any]] ?? []
-    let alert = NSAlert(); alert.messageText = "Проверка тематического конспекта"
-    alert.informativeText = "Принять, изменить или отложить каждый фрагмент. При изменении границ оставшиеся слова явно исключаются. Исходный текст и машинные темы не изменяются."
+    let reviewDialog = KnowledgeReviewDialog()
+    let alert = reviewDialog.alert; alert.messageText = "Проверка тематического конспекта"
+    alert.informativeText = "Примите, измените, исключите или отложите каждый фрагмент. Точные координаты источника сохраняются вместе с фрагментом; исходный текст и машинные темы не изменяются."
     let stack = FlippedStackView(); stack.orientation = .vertical; stack.alignment = .leading; stack.spacing = 10
-    var forms: [(String, NSPopUpButton, NSTextField, NSTextField, NSTextField, NSTextField)] = []
+    var forms: [(String, NSPopUpButton, NSTextField, NSTextField, [String: Any])] = []
     let actions = ["ACCEPT", "EDIT", "REJECT", "DEFER"]
-    for topic in topics {
+    for (index, topic) in topics.enumerated() {
       guard let id = topic["id"] as? String else { return }
       let prior = saved.first { $0["topic_id"] as? String == id } ?? [:]
-      let label = NSTextField(wrappingLabelWithString: "Цитата: \(topic["quote"] ?? "")"); label.widthAnchor.constraint(equalToConstant: 600).isActive = true; stack.addArrangedSubview(label)
+      let label = NSTextField(wrappingLabelWithString: "Фрагмент \(index + 1) из \(topics.count)\nЦитата: \(topic["quote"] ?? "")")
+      label.widthAnchor.constraint(equalToConstant: 600).isActive = true; stack.addArrangedSubview(label)
+      if let start = topic["start_seconds"] as? Double, let end = topic["end_seconds"] as? Double {
+        stack.addArrangedSubview(NSTextField(labelWithString: String(format: "Источник: %.3f–%.3f с. Точные координаты сохранены в журнале проверки.", start, end)))
+      } else {
+        stack.addArrangedSubview(NSTextField(labelWithString: "Точные координаты источника сохранены в журнале проверки."))
+      }
       let action = NSPopUpButton(); action.addItems(withTitles: ["Выберите решение", "Принять", "Изменить", "Исключить", "Отложить"])
       if let previous = prior["action"] as? String, let index = actions.firstIndex(of: previous) { action.selectItem(at: index+1) }
       stack.addArrangedSubview(action)
@@ -2314,35 +2332,27 @@ struct SidebarItem {
       title.placeholderString = "Название"; title.widthAnchor.constraint(equalToConstant: 600).isActive = true; stack.addArrangedSubview(title)
       let summary = NSTextField(string: prior["new_summary"] as? String ?? topic["summary"] as? String ?? "")
       summary.placeholderString = "Конспект"; summary.widthAnchor.constraint(equalToConstant: 600).isActive = true; stack.addArrangedSubview(summary)
-      stack.addArrangedSubview(NSTextField(labelWithString: "Точные границы — первый и последний ID слова"))
-      let first = NSTextField(string: prior["word_start_id"] as? String ?? topic["word_start_id"] as? String ?? "")
-      let last = NSTextField(string: prior["word_end_id"] as? String ?? topic["word_end_id"] as? String ?? "")
-      first.widthAnchor.constraint(equalToConstant: 600).isActive = true; last.widthAnchor.constraint(equalToConstant: 600).isActive = true
-      stack.addArrangedSubview(first); stack.addArrangedSubview(last)
-      forms.append((id, action, title, summary, first, last))
+      forms.append((id, action, title, summary, topic))
     }
-    let reviewer = NSTextField(string: "integra-local-human"); reviewer.placeholderString = "Идентификатор проверяющего"; stack.addArrangedSubview(reviewer)
-    let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 640, height: 440)); scroll.hasVerticalScroller = true
-    stack.setFrameSize(NSSize(width: 620, height: stack.fittingSize.height)); scroll.documentView = stack; alert.accessoryView = scroll
-    alert.addButton(withTitle: "Сохранить решения"); alert.addButton(withTitle: "Отмена")
-    while true {
-      guard alert.runModal() == .alertFirstButtonReturn else { return }
-      if forms.allSatisfy({ $0.1.indexOfSelectedItem > 0 }) { break }
-      alert.informativeText = "Для каждого фрагмента выберите решение; спорное можно отложить."
-    }
+    reviewDialog.validate = { reviewDialog.validateSelections(forms.map { $0.1 }) }
+    alert.accessoryView = reviewDialog.accessory(knowledgeReviewScroll(stack))
+    reviewDialog.configure(primaryTitle: "Сохранить решения")
+    defer { reviewDialog.validate = { nil } }
+    guard reviewDialog.run() == .alertFirstButtonReturn else { return }
     let decisions: [[String: Any]] = forms.map { form in
-      let original = topics.first { $0["id"] as? String == form.0 } ?? [:]
-      let edited = form.2.stringValue != original["title"] as? String || form.3.stringValue != original["summary"] as? String || form.4.stringValue != original["word_start_id"] as? String || form.5.stringValue != original["word_end_id"] as? String
+      let edited = form.2.stringValue != (form.4["title"] as? String ?? "") ||
+        form.3.stringValue != (form.4["summary"] as? String ?? "")
       let selected = actions[form.1.indexOfSelectedItem-1]
       let action = selected == "ACCEPT" && edited ? "EDIT" : selected
       var decision: [String: Any] = ["topic_id": form.0, "action": action, "reason": "Explicit local human K1 fragment review"]
       if action == "EDIT" || action == "DEFER" {
         decision["new_title"] = form.2.stringValue; decision["new_summary"] = form.3.stringValue
-        decision["word_start_id"] = form.4.stringValue; decision["word_end_id"] = form.5.stringValue
+        decision["word_start_id"] = form.4["word_start_id"] as? String ?? ""
+        decision["word_end_id"] = form.4["word_end_id"] as? String ?? ""
       }
       return decision
     }
-    var request = knowledgeIdentity; request["expected_state_sha256"] = hash; request["decisions"] = decisions; request["reviewer_id"] = reviewer.stringValue
+    var request = knowledgeIdentity; request["expected_state_sha256"] = hash; request["decisions"] = decisions; request["reviewer_id"] = knowledgeOwnerReviewerID
     let bridge = self.bridge!
     let generation = navigationGeneration
     serviceQueue.async {
