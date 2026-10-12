@@ -18,7 +18,7 @@ import stat
 from archive_execution_guard import require_execution_path
 from candidate_archive import verify_archive
 from qa_source_copy import _directory, _regular, read_verified_file, write_receipt
-from temp_workspace_lifecycle import MARKER, SCHEMA, _process_is_live
+from temp_workspace_lifecycle import DEFAULT_ROOT, MARKER, SCHEMA, _process_is_live
 
 
 PURPOSE = "issue227-k2-gui-e2e"
@@ -29,7 +29,7 @@ def _workspace() -> tuple[Path, tuple[int, int]]:
     if not value:
         raise ValueError("Candidate execution copy requires an owned workspace")
     root = Path(value).resolve(strict=True)
-    if root.parent != Path("/private/tmp") or not root.name.startswith("integra-owned-" + PURPOSE + "-"):
+    if root.parent != DEFAULT_ROOT.resolve(strict=True) or not root.name.startswith("integra-owned-" + PURPOSE + "-"):
         raise ValueError("Candidate execution copy requires the exact governed QA workspace")
     descriptor = _directory(root)
     try:

@@ -25,7 +25,9 @@ This is a synthetic QA fixture run, not semantic acceptance of real seminar cont
 ## Automated checks and state boundaries
 
 - Focused K2 suite: 45 passed.
-- Full supported suite: 1,225 passed, 130 skipped; the skip count is the existing supported-suite policy baseline.
+- Full supported suite on the macOS host: 1,225 passed, 130 skipped.
+- The first exact-head GitHub CI run exposed two errors: the owned-workspace lifecycle and Candidate execution-copy guard hard-coded macOS-only `/private/tmp`, while CI runs on Linux. The helper now selects only `/private/tmp` on macOS or `/tmp` on Linux and retains the exact per-user owned directory, mode-0700, live-owner marker and purpose checks. This changes QA tooling only, not packaged application bytes or the existing Candidate.
+- The test fixture uses the same exact platform-specific base; focused validation and the subsequent exact-head full CI run are recorded separately from the earlier macOS full-suite run.
 - Current baseline and Process Board were not changed.
 - Candidate is still in pre-owner validation state; this evidence does not accept it or promote CURRENT.
 - Owner acceptance and product PR merge have not been performed.
