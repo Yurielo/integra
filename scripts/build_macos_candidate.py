@@ -17,6 +17,13 @@ from temp_workspace_lifecycle import (  # noqa: E402
 import candidate_retention  # noqa: E402
 
 
+PINNED_COMPONENT_COMMITS = {
+    "INTEGRA_SEMINARTEXT_BUILD_CHECKOUT": "13644d262776aacdf36221b9a9fc7ebd0a7c0737",
+    "INTEGRA_VIDEOTEXT_BUILD_CHECKOUT": "2e098d1705b6815628bee1e023f4742718eabf02",
+    "INTEGRA_BOOKTEXT_BUILD_CHECKOUT": "46396649214275eb18054b670a842bace02d02e1",
+}
+
+
 def _pinned_runtime_paths() -> dict[str, Path]:
     """Find the local worktrees that own each pinned build input.
 
@@ -46,6 +53,16 @@ def _pinned_runtime_paths() -> dict[str, Path]:
     for name, relative in required.items():
         for candidate in candidates:
             path = candidate / relative
+            if not path.is_dir():
+                continue
+            expected_commit = PINNED_COMPONENT_COMMITS.get(name)
+            if expected_commit:
+                revision = subprocess.run(
+                    ["git", "-C", str(path), "rev-parse", "HEAD"],
+                    check=False, capture_output=True, text=True,
+                ).stdout.strip()
+                if revision != expected_commit:
+                    continue
             if path.is_dir():
                 resolved[name] = path
                 break
