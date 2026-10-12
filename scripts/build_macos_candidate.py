@@ -57,10 +57,11 @@ def _execute_build_inside_workspace(archive_root: Path | None) -> int:
                     "lifecycle": "ENGINEERING_QA_BUILD"}
     if archive_root is not None:
         completed = subprocess.run([sys.executable, str(ROOT / "scripts" / "candidate_archive.py"), "create",
-                                    "--app", str(app), "--archive-root", str(archive_root)],
+                                    "--app", str(app), "--archive-root", str(archive_root),
+                                    "--lifecycle-status", candidate_retention.PRE_OWNER],
                                    check=True, capture_output=True, text=True, timeout=1800)
         result["retained_archive"] = json.loads(completed.stdout)
-        result["lifecycle"] = "AWAITING_OWNER_ACCEPTANCE"
+        result["lifecycle"] = candidate_retention.PRE_OWNER
     print(json.dumps(result, sort_keys=True), flush=True)
     return 0
 
@@ -74,7 +75,7 @@ def main() -> int:
     parser.add_argument("--timeout-seconds", type=float, default=3600)
     parser.add_argument("--archive-root", type=Path)
     parser.add_argument("--publish-owner-candidate", action="store_true",
-                        help="publish a retained Candidate only after pre-owner gates pass")
+                        help="publish an immutable Candidate for Candidate-bound pre-owner validation")
     parser.add_argument("--native-tests", action="store_true", help="run native tests under the same build admission")
     parser.add_argument("--package-tests", action="store_true", help="verify a disposable READY_APP package under admission")
     parser.add_argument("--inside-owned-workspace", action="store_true", help=argparse.SUPPRESS)
@@ -86,7 +87,7 @@ def main() -> int:
     if (args.native_tests or args.package_tests) and args.archive_root is not None:
         parser.error("native test workspaces are disposable; archive publication is a separate Candidate operation")
     if args.archive_root is not None and not args.publish_owner_candidate:
-        parser.error("archive publication requires --publish-owner-candidate; use a disposable engineering build before pre-owner gates pass")
+        parser.error("archive publication requires --publish-owner-candidate; use a disposable engineering build before Candidate-bound validation")
     if args.publish_owner_candidate and args.archive_root is None:
         parser.error("--publish-owner-candidate requires --archive-root")
     if args.expected_bytes < DEFAULT_EXPECTED_BYTES or args.reserve_bytes < DEFAULT_RESERVE_BYTES:

@@ -28,7 +28,8 @@ REPOSITORY = 'Yurielo/integra'
 IDENTITY = ('candidate_id', 'bundle_digest', 'manifest_digest')
 CID = re.compile(r'^candidate-v1-[0-9a-f]{64}$')
 HASH = re.compile(r'^[0-9a-f]{64}$')
-TERMINAL = {'COMPLETED', 'REJECTED', 'SUPERSEDED', 'UNUSED'}
+TERMINAL = {'COMPLETED', 'REJECTED', 'SUPERSEDED', 'UNUSED',
+            'REJECTED_PRE_OWNER_VALIDATION'}
 ROOT_NAMES = {'Build Archive', 'Recovery Archive', 'Build Archive Recovery',
               'Candidate Builds', 'Validation'}
 ACCEPTED_GAP_DECISION_SHA256 = 'c0fbc7699ae3caa6ea56a59987410977515881043f2ce2fd9b4f39382cc132f8'
@@ -442,6 +443,26 @@ def _identity(value: dict) -> dict:
                 (not isinstance(result['manifest_digest'], str) or not HASH.fullmatch(result['manifest_digest'])))):
         raise ValueError('invalid Candidate identity tuple')
     return result
+
+
+def pre_owner_rejection_matches(row: dict) -> bool:
+    """Recognize a local technical rejection before any Owner handoff.
+
+    A pre-owner Candidate has immutable archived bytes but is not an open
+    Proposal and has never been offered for Owner acceptance.  It may become
+    reclaimable only after a bounded, exact failed-gate receipt is attached to
+    that same archive record.  This deliberately cannot recognize an
+    ``AWAITING_OWNER_ACCEPTANCE`` Candidate.
+    """
+    record = row.get('catalog_record') or {}
+    evidence = record.get('pre_owner_failure_evidence')
+    return bool(record.get('status') == 'REJECTED_PRE_OWNER_VALIDATION'
+                and isinstance(evidence, dict)
+                and evidence.get('artifact_type') == 'integra.pre_owner_candidate_rejection'
+                and isinstance(evidence.get('failed_gate'), str) and evidence['failed_gate']
+                and isinstance(evidence.get('evidence_ref'), str) and evidence['evidence_ref']
+                and all(evidence.get(key) == row.get(key)
+                        for key in IDENTITY))
 
 
 def _add(protected: dict, identity: dict, reason: str, blockers: list[str]) -> None:
@@ -882,6 +903,14 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
                     and grant.get('authority_ref')):
                 row['classification'] = 'ELIGIBLE'
                 row['reasons'] = ['EXACT_OWNER_AUTHORIZED_TERMINAL']
+            elif (row['classification'] == 'UNKNOWN'
+                    and row.get('publisher_owned') is True
+                    and row.get('lifecycle') == 'REJECTED_PRE_OWNER_VALIDATION'
+                    and row.get('inactive') is True
+                    and row.get('metadata_error') is None
+                    and pre_owner_rejection_matches(row)):
+                row['classification'] = 'ELIGIBLE'
+                row['reasons'] = ['PRE_OWNER_TECHNICAL_REJECTION']
     try:
         from scripts import candidate_lifecycle as lifecycle
     except ModuleNotFoundError:
