@@ -19,9 +19,33 @@ def package_view_schema(resources):
     shutil.copyfile(ROOT / "schemas/knowledge_view_v1.schema.json", destination)
 
 
+def _with_packaged_review_runtime(resources):
+    """Expose the already-packaged review dependencies to K2 preflight.
+
+    K2 admission and K1 review intentionally share the same pinned
+    ``jsonschema`` closure.  During assembly that closure exists only under
+    the fresh app Resources tree, not under the source checkout.  Binding it
+    for the packaging preflight preserves the normal runtime lookup without
+    copying or relaxing either contract.
+    """
+    site_packages = resources / "runtime/review-python/site-packages"
+    if not site_packages.is_dir():
+        raise ValueError("packaged review runtime is unavailable")
+    previous = os.environ.get("PYTHONPATH")
+    os.environ["PYTHONPATH"] = str(site_packages) + (os.pathsep + previous if previous else "")
+    return previous
+
+
 def main():
     resources = Path(sys.argv[1])
-    pin = preflight()
+    previous_pythonpath = _with_packaged_review_runtime(resources)
+    try:
+        pin = preflight()
+    finally:
+        if previous_pythonpath is None:
+            os.environ.pop("PYTHONPATH", None)
+        else:
+            os.environ["PYTHONPATH"] = previous_pythonpath
     source = Path(pin["runtime"])
     destination = resources / "runtime/knowledge-admission"
     if destination.exists():
