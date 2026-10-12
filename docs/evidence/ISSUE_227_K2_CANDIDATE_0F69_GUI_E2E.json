@@ -1,0 +1,57 @@
+{
+  "artifact_type": "integra.issue_227.k2_owner_candidate_e2e",
+  "schema_version": "1.0",
+  "status": "PASS",
+  "candidate_id": "candidate-v1-0f69e617c0841f27afe2238a28d6c25ae5a80ce0fedf01cf0c114638de575032",
+  "manifest_identity_sha256": "0f69e617c0841f27afe2238a28d6c25ae5a80ce0fedf01cf0c114638de575032",
+  "manifest_digest": "3aed49cda900a6af0d0e8abcae4f3db114d988ad9bf16c62c53ba6671d06cbfe",
+  "bundle_digest": "3d4d33a983455572157b06460c3faaef5afd0b977a0e3d2717101588a25718e5",
+  "product_source": {
+    "commit_sha": "9d28dcdbf74ab039414ed943b12ceddc0f345663",
+    "tree_sha": "1cc7ecbfb2e589d7275f8257e8cec5cff23b731a"
+  },
+  "evidence_method": "Packaged macOS application launched from a supervised disposable execution copy; native UI driven and inspected through accessibility state. This is a GUI run, not a bridge/API-only test.",
+  "fixture": {
+    "source": "Issue #236 accepted isolated QA fixture",
+    "project_id": "02d62b4a-c2a5-54a4-a6e1-51d63a75096e",
+    "reviewed_units": 2,
+    "concepts": 2,
+    "relations": 1,
+    "semantic_product_acceptance": false,
+    "source_project_modified": false
+  },
+  "production_gui_lifecycle": {
+    "status": "PASS",
+    "steps": [
+      "Knowledge Base -> add/open isolated process-result notebook with two source fragments.",
+      "Open K1 review, choose a decision for fragment 1, leave fragment 2 incomplete, and submit.",
+      "Validation keeps the modal open, preserves fragment 1 choice, and identifies fragment 2 as requiring a decision.",
+      "Choose a decision for fragment 2, save, and observe both reviewed fragments in the persisted notebook.",
+      "Confirm ordinary UI has no reviewer-ID input and no opaque word/provenance IDs; displayed provenance remains truthful as machine-produced and not human-verified.",
+      "Open structured knowledge and manually review proposals with human rationales; duplicate topic proposals are rejected and the two distinct concept proposals are accepted.",
+      "For the relation, manually select source and target concepts, relation kind, and both evidence bases; accept the proposal explicitly.",
+      "Attempt Apply without the required package confirmation; modal remains open, decisions remain present, and the UI states that confirmation is required and no application occurred.",
+      "Confirm explicitly and Apply; the packaged production UI reports successful application of two Concepts and one Relation.",
+      "Close the view, reopen the accepted knowledge version, and observe both Concepts and the Relation with source-navigation evidence still available."
+    ],
+    "reviewer_id_field_present": false,
+    "stable_local_owner_provenance": "integra-local-owner",
+    "technical_identifiers_required_from_user": false,
+    "semantic_decisions_remain_explicit": true,
+    "validation_error_preserves_modal_and_input": true,
+    "explicit_confirmation_guard": true,
+    "apply_result": "2 Concepts + 1 Relation",
+    "persistence_reopen": "PASS"
+  },
+  "knowledge_k2_apply": "PASS",
+  "focused_suite": "45 passed",
+  "full_suite": "1225 passed, 130 skipped",
+  "candidate_archive": {
+    "status": "COMPLETE",
+    "inventory_sha256": "d07e2a9692c85ef28d92d4ba97b4a0be0bf4d9d33d0365b0110689245963b25f",
+    "file_count": 29626,
+    "retained_size_bytes": 2202212083
+  },
+  "current_changed": false,
+  "process_board_changed": false
+}
