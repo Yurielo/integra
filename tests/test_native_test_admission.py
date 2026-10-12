@@ -30,10 +30,20 @@ class NativeTestAdmissionTests(unittest.TestCase):
             ):
                 (primary / relative).mkdir(parents=True)
             listing = SimpleNamespace(stdout=f"worktree {source}\nworktree {primary}\n")
+            def git(command, **_kwargs):
+                if "worktree" in command:
+                    return listing
+                return SimpleNamespace(stdout=builder.PINNED_COMPONENT_COMMITS[
+                    "INTEGRA_SEMINARTEXT_BUILD_CHECKOUT"
+                    if "seminartext" in command[2]
+                    else "INTEGRA_VIDEOTEXT_BUILD_CHECKOUT"
+                    if "videotext" in command[2]
+                    else "INTEGRA_BOOKTEXT_BUILD_CHECKOUT"
+                ])
             environment = {key: value for key, value in os.environ.items()
                            if not key.startswith("INTEGRA_")}
             with patch.object(builder, "ROOT", source), \
-                    patch.object(builder.subprocess, "run", return_value=listing), \
+                    patch.object(builder.subprocess, "run", side_effect=git), \
                     patch.dict(os.environ, environment, clear=True):
                 builder._bind_pinned_runtime_environment()
                 self.assertEqual(os.environ["INTEGRA_SEMINARTEXT_BUILD_CHECKOUT"],
