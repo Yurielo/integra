@@ -116,6 +116,15 @@
       "manifest_digest": "ea6003528896581fdc4c5e8b14953de7de58b980707e9e12a9fc3fb43b60ebde",
       "path": "state/proposed_baseline_lite_v1.json",
       "pr": 206
+    },
+    {
+      "bundle_digest": "4e97db25f3263ae458a5d4ca7d5fec6a9ea98391c3b04b2acc2ba81802c91cda",
+      "candidate_id": "candidate-v1-6a4d585d2746bc861e82a0ecee66b8f167e98f1027acbd54ac8889399f84c9f1",
+      "manifest_digest": "10e6a847246a4c6a9dd12ae1821d6b208e94277f8bca85218d939270f8960b36",
+      "path": "state/proposed_baseline_lite_v1.json",
+      "pr": 262,
+      "proposal_id": "proposal-knowledge-k2-stage1-owner-interaction-by-exception-v1",
+      "proposal_sha256": "139d76883644aa7f0f43bc00d277a73601d8b7bcc64c011be468e838a2c7a09c"
     }
   ],
   "recovery": null,
@@ -136,6 +145,7 @@
     "candidate-v1-14b3c10e4d779ff8b5a520bf15e2b7087673aec2cd0abd25aac4e1d0ded77892": null,
     "candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81": "Build Archive/candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81/c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
     "candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f": "Build Archive/candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f/e3215a28c9ce0a1a54c35dc535bad42a9334cae7ddc5eb3b0533a480e0296d95",
+    "candidate-v1-6a4d585d2746bc861e82a0ecee66b8f167e98f1027acbd54ac8889399f84c9f1": "Build Archive/candidate-v1-6a4d585d2746bc861e82a0ecee66b8f167e98f1027acbd54ac8889399f84c9f1/4e97db25f3263ae458a5d4ca7d5fec6a9ea98391c3b04b2acc2ba81802c91cda",
     "candidate-v1-7a254e707443a278606ffa956cc76e8374f5c20115077351e093230547f8bd62": null,
     "candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29": "Validation/integra-212-native-35e6f9101278/candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29/fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
     "candidate-v1-9c969dab6d8aab30458bd202dd792d709e1faea8db207306e3ccb46c886c1e98": null,
