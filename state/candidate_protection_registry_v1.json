@@ -226,12 +226,12 @@
   },
   "withdrawn_candidate_lifecycles": [
     {
-      "authority_body_sha256": "de89322525f7264cc54787bc12760a272ea2df54091f8afbc6e214a742323f3a",
+      "authority_body_sha256": "a11713084922cf454555f8d612114d13fff7729153877e346b79f811b94ef556",
       "authority_ref": "https://github.com/Yurielo/integra/issues/227#issuecomment-6170021917",
       "bundle_digest": "3d4d33a983455572157b06460c3faaef5afd0b977a0e3d2717101588a25718e5",
       "candidate_id": "candidate-v1-0f69e617c0841f27afe2238a28d6c25ae5a80ce0fedf01cf0c114638de575032",
       "history_path": "state/history/knowledge_k2_candidate_0f69_withdrawal_v1.json",
-      "history_sha256": "22996023e182994b21a67732be7f90dd72c44e89727125fe923d64300f94ea78",
+      "history_sha256": "5617194836285758baa854c357a364925d035e476b6b1ec92fd7565b77403749",
       "manifest_digest": "3aed49cda900a6af0d0e8abcae4f3db114d988ad9bf16c62c53ba6671d06cbfe",
       "previous_status": "AWAITING_OWNER_ACCEPTANCE",
       "reason": "REJECTED_BY_OWNER_TEST_STAGE1_OPERATOR_QUEUE_UX",
