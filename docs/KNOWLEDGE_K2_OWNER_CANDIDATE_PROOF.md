@@ -38,4 +38,3 @@ acceptance and not a claim about real customer/domain content.
 The Candidate is intentionally `AWAITING_OWNER_ACCEPTANCE`. The following
 Proposal Lite declaration is a separate one-file overlay. No CURRENT or Process
 Board state is modified by this evidence packet.
-
