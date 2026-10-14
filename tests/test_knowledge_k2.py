@@ -123,7 +123,10 @@ class KnowledgeK2Tests(unittest.TestCase):
         relation = {"source_concept_id": concepts[0]["id"], "target_concept_id": concepts[1]["id"],
                     "relation_type": "associated_with",
                     "fragment_ids": [normal["eligible_fragments"][0]["id"]]}
-        pending = self.prepare(machine, relation_inputs=[relation], automatic=True)
+        # The native relation dialog uses the ordinary prepare path.  It must
+        # still surface a real exception after the independent machine result
+        # was completed automatically.
+        pending = self.prepare(machine, relation_inputs=[relation])
         self.assertEqual(pending["status"], "REVIEW_REQUIRED")
         self.assertFalse(pending["automatic_defer"])
         self.assertEqual(len(pending["exception_questions"]), 1)

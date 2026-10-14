@@ -2527,6 +2527,12 @@ struct SidebarItem {
     add(button("Вернуться к конспекту", #selector(returnToKnowledgeNotebook)))
     if automaticCompleted {
       add(NSTextField(wrappingLabelWithString: "Материал сохранён как предварительный машинный результат. Он не считается подтверждённым человеком; точные ссылки на источник и журнал происхождения сохранены автоматически."))
+      // The normal path is deliberately finished without human intervention.
+      // A person can nevertheless initiate one genuinely high-impact semantic
+      // operation when it is needed; the resulting relation remains an
+      // exception and is never inferred from the automatic result.
+      add(NSTextField(wrappingLabelWithString: "Если нужно явно связать два понятия, Integra задаст один короткий смысловой вопрос только для этой связи."))
+      add(button("Уточнить связь между понятиями", #selector(proposeKnowledgeRelation)))
       status.stringValue = "Готово — решений от вас не требуется"
       return
     }

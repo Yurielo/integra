@@ -141,6 +141,16 @@ class KnowledgeK2BridgeRouteTests(unittest.TestCase):
         self.assertIn('let automaticCompleted = automaticReady && current["package_applied"] as? Bool == true', source)
         self.assertIn('if automaticCompleted {', source)
 
+    def test_normal_completion_keeps_only_the_optional_relation_exception_reachable(self):
+        source = (ROOT / "macos/IntegraApp.swift").read_text()
+        knowledge = source[source.index("private func renderCanonicalKnowledge()"):source.index("private func returnToKnowledgeNotebook()")]
+        automatic = knowledge[knowledge.index("if automaticCompleted {"):knowledge.index("// An exception must not turn")]
+        self.assertIn("Готово — решений от вас не требуется", automatic)
+        self.assertIn('add(button("Уточнить связь между понятиями", #selector(proposeKnowledgeRelation)))', automatic)
+        self.assertLess(automatic.index('add(button("Уточнить связь между понятиями", #selector(proposeKnowledgeRelation)))'),
+                        automatic.index("return"))
+        self.assertIn("один короткий смысловой вопрос", automatic)
+
     def test_exception_path_hides_unrelated_machine_queue_from_the_product_surface(self):
         source = (ROOT / "macos/IntegraApp.swift").read_text()
         knowledge = source[source.index("private func renderCanonicalKnowledge()"):source.index("private func returnToKnowledgeNotebook()")]
