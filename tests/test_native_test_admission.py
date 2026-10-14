@@ -124,6 +124,35 @@ class NativeTestAdmissionTests(unittest.TestCase):
             self.assertEqual(builder._build_inside_workspace(None, native_tests=True), 0)
         self.assertFalse(active)
 
+    def test_engineering_gui_is_disposable_and_requires_issue227_workspace(self):
+        """Interactive K2 QA never creates or claims an Owner Candidate."""
+        active = []
+        @contextmanager
+        def reservation(root, expected, *, archive_copy):
+            self.assertFalse(archive_copy); active.append(True)
+            try:
+                yield
+            finally:
+                active.pop()
+        with tempfile.TemporaryDirectory(prefix='integra-owned-issue227-k2-gui-e2e-') as directory:
+            workspace = Path(directory)
+            app = workspace / 'candidate/Integra.app'
+            app.mkdir(parents=True)
+            calls = []
+            def launch(command, **kwargs):
+                calls.append((command, kwargs))
+                if command[0].endswith('package_ready_app.sh'):
+                    return SimpleNamespace(stdout=str(app) + "\n", returncode=0)
+                return SimpleNamespace(returncode=0)
+            with patch.object(builder.candidate_retention, 'reserved_build', reservation), \
+                    patch.dict(os.environ, INTEGRA_OWNED_WORKSPACE=str(workspace)), \
+                    patch.object(builder.subprocess, 'run', side_effect=launch):
+                self.assertEqual(builder._build_inside_workspace(None, engineering_gui=True), 0)
+            self.assertTrue(active == [])
+            self.assertEqual(calls[-1][0], [str((app / 'Contents/MacOS/Integra').resolve()),
+                                             '--integra-data-root', str(workspace.resolve())])
+            self.assertEqual(calls[-1][1]['env']['INTEGRA_APP_DATA_ROOT'], str(workspace.resolve()))
+
     def test_failed_admission_never_launches_native_tests(self):
         with patch.object(builder.candidate_retention, 'reserved_build', side_effect=ValueError('cap exceeded')), \
                 patch.object(builder.subprocess, 'run') as launch:

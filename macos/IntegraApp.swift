@@ -96,7 +96,13 @@ final class KnowledgeReviewDialog: NSObject {
 
 final class Bridge: @unchecked Sendable {
   private let resources: URL
-  init(resources: URL) { self.resources = resources }
+  // A packaged QA run must remain bound to its owned workspace even when
+  // LaunchServices removes inherited environment variables from the app.
+  private let dataRoot: String?
+  init(resources: URL, dataRoot: String? = nil) {
+    self.resources = resources
+    self.dataRoot = dataRoot
+  }
   func call(_ operation: String, request: [String: Any] = [:]) throws -> Data {
     let allowed = [
       "workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job",
@@ -124,6 +130,7 @@ final class Bridge: @unchecked Sendable {
     process.executableURL = URL(fileURLWithPath: "/usr/bin/python3")
     process.arguments = [script.path, operation]
     var environment = ProcessInfo.processInfo.environment
+    if let dataRoot { environment["INTEGRA_APP_DATA_ROOT"] = dataRoot }
     environment["PYTHONDONTWRITEBYTECODE"] = "1"
     process.environment = environment
     process.standardOutput = output
@@ -326,7 +333,15 @@ struct SidebarItem {
       NSApp.terminate(nil)
       return
     }
-    bridge = Bridge(resources: resources)
+    let dataRoot: String?
+    if let index = CommandLine.arguments.firstIndex(of: "--integra-data-root"),
+       CommandLine.arguments.indices.contains(index + 1)
+    {
+      dataRoot = CommandLine.arguments[index + 1]
+    } else {
+      dataRoot = ProcessInfo.processInfo.environment["INTEGRA_APP_DATA_ROOT"]
+    }
+    bridge = Bridge(resources: resources, dataRoot: dataRoot)
     if let recent = try? bridge.json("recent-runs")["result"] as? [[String: Any]],
       let latest = recent.first, let project = latest["project"] as? [String: Any],
       let run = latest["run"] as? [String: Any]
@@ -2391,7 +2406,10 @@ struct SidebarItem {
           // The ordinary machine-derived path has no semantic decision to
           // collect.  Continue directly to its non-authoritative deferred
           // receipt rather than exposing a technical "prepare/apply" step.
-          if action == "open", result["package_sha256"] == nil,
+          // JSON null reaches AppKit as NSNull rather than a missing Swift
+          // dictionary key.  Treat both as an unopened K2 package so the
+          // ordinary machine-derived path proceeds without a human action.
+          if action == "open", result["package_sha256"] as? String == nil,
              self.knowledgeNotebook["status"] as? String == "MACHINE_DERIVED_FRAGMENTS_V1" {
             self.prepareCanonicalKnowledge()
             return
@@ -2501,23 +2519,36 @@ struct SidebarItem {
     let current = knowledgeK2
     let hasRevision = current["revision_sha256"] as? String != nil
     let conceptLabels = knowledgeConceptLabels()
-    reset("Знания", "Integra сохраняет предварительные знания с точной ссылкой на источник. Машинный результат не становится человеческим или авторитетным без отдельного решения.")
-    add(button("Вернуться к конспекту", #selector(returnToKnowledgeNotebook)))
     let automaticReady = current["automatic_defer"] as? Bool == true
+    let automaticCompleted = automaticReady && current["package_applied"] as? Bool == true
+    reset("Знания", automaticCompleted
+          ? "Готово — решений от вас не требуется. Предварительные знания сохранены с точными ссылками на источник."
+          : "Integra сохраняет предварительные знания с точной ссылкой на источник. Машинный результат не становится человеческим или авторитетным без отдельного решения.")
+    add(button("Вернуться к конспекту", #selector(returnToKnowledgeNotebook)))
+    if automaticCompleted {
+      add(NSTextField(wrappingLabelWithString: "Материал сохранён как предварительный машинный результат. Он не считается подтверждённым человеком; точные ссылки на источник и журнал происхождения сохранены автоматически."))
+      status.stringValue = "Готово — решений от вас не требуется"
+      return
+    }
+    // An exception must not turn the normal machine-derived queue into a
+    // manual operating console.  Show the person only the one semantic
+    // question that cannot be resolved safely; unrelated provisional work
+    // stays automatic and its audit detail remains in the local journal.
+    if let questions = current["exception_questions"] as? [[String: Any]], !questions.isEmpty {
+      add(NSTextField(wrappingLabelWithString: "Нужно ваше решение: \(questions.count). Только эти смысловые исключения требуют участия человека."))
+      add(button("Ответить на смысловой вопрос", #selector(reviewCanonicalKnowledge)))
+      status.stringValue = "Нужно ваше решение: \(questions.count)"
+      return
+    }
     if !automaticReady { add(button("Сформировать предварительные знания", #selector(prepareCanonicalKnowledge))) }
     let proposals = current["proposals"] as? [[String: Any]] ?? []
     if !proposals.isEmpty {
       if automaticReady {
         add(NSTextField(wrappingLabelWithString: "Готово — решений от вас не требуется. Предварительные знания сохранены с точными ссылками на источник; они не считаются принятыми человеком."))
-      } else if let questions = current["exception_questions"] as? [[String: Any]], !questions.isEmpty {
-        add(NSTextField(wrappingLabelWithString: "Нужно ваше решение: \(questions.count). Только эти смысловые исключения требуют участия человека."))
       } else {
         add(NSTextField(wrappingLabelWithString: "Подготовлены предварительные знания. Они останутся машинными и неавторитетными без человеческого решения."))
       }
       if current["package_applied"] as? Bool != true {
-        if let questions = current["exception_questions"] as? [[String: Any]], !questions.isEmpty {
-          add(button("Ответить на смысловой вопрос", #selector(reviewCanonicalKnowledge)))
-        }
         // Adding a relation is an explicit high-impact semantic operation.
         // It remains available after the normal machine-only path, but never
         // turns ordinary preliminary knowledge into a required review queue.
@@ -2566,7 +2597,7 @@ struct SidebarItem {
         add(NSTextField(wrappingLabelWithString: "Изменения версии: добавлено \(added), удалено \(removed), изменено \(changed). Механическое сравнение не определяет смысловые противоречия."))
       }
     }
-    status.stringValue = hasRevision ? "Сохранённая каноническая версия проверена" : "Предложения остаются предварительными до вашего явного решения"
+    status.stringValue = hasRevision ? "Сохранённый результат проверен" : "Предварительные предложения ожидают решения"
   }
 
   @objc private func returnToKnowledgeNotebook() { renderKnowledgeNotebook() }
