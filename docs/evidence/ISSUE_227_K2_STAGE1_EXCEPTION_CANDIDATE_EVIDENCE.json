@@ -1,0 +1,37 @@
+{
+  "artifact_type": "integra.issue_227.k2_stage1_exception_candidate_evidence",
+  "schema_version": "1.0",
+  "status": "PASS",
+  "candidate_id": "candidate-v1-6a4d585d2746bc861e82a0ecee66b8f167e98f1027acbd54ac8889399f84c9f1",
+  "manifest_identity_sha256": "6a4d585d2746bc861e82a0ecee66b8f167e98f1027acbd54ac8889399f84c9f1",
+  "manifest_digest": "10e6a847246a4c6a9dd12ae1821d6b208e94277f8bca85218d939270f8960b36",
+  "bundle_digest": "4e97db25f3263ae458a5d4ca7d5fec6a9ea98391c3b04b2acc2ba81802c91cda",
+  "product_source": {
+    "commit_sha": "51010bfc927f2aae9dc0187b59bc32a35a24cb3a",
+    "tree_sha": "beba68378c17e4d0483c55f52ebf8f92ee575a90"
+  },
+  "fixture": {
+    "source": "Issue #236 accepted isolated QA fixture",
+    "semantic_product_acceptance": false
+  },
+  "pre_owner_evidence": {
+    "focused_suite": "32 passed, 19 skipped",
+    "full_suite": "1238 passed, 132 skipped",
+    "production_gui_normal_path": "PASS",
+    "production_gui_relation_exception_path": "PASS",
+    "confirmation_validation_preserves_modal_and_input": "PASS",
+    "apply_creates_two_concepts_and_one_relation": "PASS",
+    "close_reopen_persistence": "PASS",
+    "reviewer_id_or_technical_identifier_required_from_user": false
+  },
+  "archive": {
+    "verification": "ARCHIVAL_BYTE_INTEGRITY",
+    "inventory_sha256": "675f635d2cb107ce7ba8fb21fb583735cfb90689d8c69845278a062114f94300",
+    "file_count": 29626,
+    "retained_size_bytes": 2202227133,
+    "lifecycle": "CANDIDATE_BOUND_VALIDATION"
+  },
+  "current_changed": false,
+  "process_board_changed": false,
+  "owner_acceptance": false
+}
