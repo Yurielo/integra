@@ -757,8 +757,16 @@ def _knowledge(root, request, action):
     project = _project_dir(root, _project(root, request.get("project_id"))["project_id"])
     identity = {key: request.get(key) for key in ("project_id", "run_id", "source_id")}
     if action == "navigation":
-        result = notebook_navigation(project, **identity, fragment_id=request.get("fragment_id"), notebook_id=request.get("notebook_id"))
+        # A caller-provided source revision is an immutable navigation
+        # binding.  Verify it before resolving a fragment so a stale link is
+        # reported as such even when a provisional machine-derived notebook
+        # has not produced reviewed-fragment lineage yet.
         expected = request.get("source_revision_sha256")
+        if expected is not None:
+            opened = open_notebook(project, **identity)
+            if opened["source_revision_sha256"] != expected:
+                raise ValueError("exported source link belongs to a different source revision")
+        result = notebook_navigation(project, **identity, fragment_id=request.get("fragment_id"), notebook_id=request.get("notebook_id"))
         if expected is not None and result["source_revision_sha256"] != expected:
             raise ValueError("exported source link belongs to a different source revision")
         return result

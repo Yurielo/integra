@@ -136,8 +136,21 @@ class KnowledgeK2BridgeRouteTests(unittest.TestCase):
         self.assertIn('if !humanReviewed && !machineReady { add(button("Решить смысловое исключение"', notebook)
         self.assertIn("Готово — решений от вас не требуется", knowledge)
         self.assertIn('add(button("Уточнить связь между понятиями"', knowledge)
-        self.assertIn('action == "open", result["package_sha256"] == nil', source)
+        self.assertIn('action == "open", result["package_sha256"] as? String == nil', source)
         self.assertIn('self.prepareCanonicalKnowledge()', source)
+        self.assertIn('let automaticCompleted = automaticReady && current["package_applied"] as? Bool == true', source)
+        self.assertIn('if automaticCompleted {', source)
+
+    def test_exception_path_hides_unrelated_machine_queue_from_the_product_surface(self):
+        source = (ROOT / "macos/IntegraApp.swift").read_text()
+        knowledge = source[source.index("private func renderCanonicalKnowledge()"):source.index("private func returnToKnowledgeNotebook()")]
+        exception = knowledge[knowledge.index('if let questions = current["exception_questions"]'):
+                              knowledge.index('if !automaticReady')]
+        self.assertIn('add(button("Ответить на смысловой вопрос", #selector(reviewCanonicalKnowledge)))', exception)
+        self.assertIn('status.stringValue = "Нужно ваше решение: \\(questions.count)"', exception)
+        self.assertIn('return', exception)
+        self.assertLess(knowledge.index('if let questions = current["exception_questions"]'),
+                        knowledge.index('if !automaticReady'))
 
 
 @unittest.skipUnless((fixture.PINNED / "seminartext_modules/human_review_workflow.py").is_file()

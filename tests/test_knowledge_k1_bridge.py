@@ -127,7 +127,7 @@ class KnowledgeK1BridgeTests(unittest.TestCase):
         self.assertFalse(unavailable["eligible"])
         self.assertFalse(unavailable["notebook_available"])
         self.assertEqual(unavailable["notebook_id"], opened["notebook_id"])
-        self.assertEqual(unavailable["notebook_status"], "REVIEW_REQUIRED")
+        self.assertEqual(unavailable["notebook_status"], "MACHINE_DERIVED_FRAGMENTS_V1")
         self.assertIn("reason", unavailable)
         self.media.write_bytes(before)
         self.media.write_bytes(before + b"changed")
