@@ -331,6 +331,8 @@ class MacOSApplicationTests(unittest.TestCase):
         self.assertIn("Исходный файл для точного фрагмента недоступен", viewer)
         self.assertIn("Не удалось открыть исходное видео", viewer)
         self.assertIn("forwardPlaybackEndTime", viewer)
+        self.assertLess(viewer.index("stack.addArrangedSubview(playerView)"),
+                        viewer.index("playerView.widthAnchor.constraint"))
 
     def test_youtube_source_type_stays_internal_to_normal_source_lists(self):
         source = (ROOT / "macos/IntegraApp.swift").read_text()
