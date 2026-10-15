@@ -15,6 +15,7 @@ import re
 import stat
 import subprocess
 import sys
+import time
 
 try:
     from scripts import candidate_archive
@@ -37,6 +38,31 @@ INTEGRATION_REF = 'https://github.com/Yurielo/integra/pull/215'
 HISTORICAL_RECEIPTS = {
     'CURRENT': 'docs/evidence/PROCESS_V1_ZOOM_FOLDER_CANDIDATE_ARCHIVE.json',
     'ROLLBACK': 'docs/evidence/PROCESS_V1_FOLDER_DISCOVERY_CANDIDATE_ARCHIVE.json'}
+CANONICAL_READ_ATTEMPTS = 3
+
+
+def _read_api(endpoint: str) -> subprocess.CompletedProcess[str]:
+    """Read canonical GitHub state with bounded retries for transport timeouts.
+
+    Every retry requests the same immutable endpoint.  A non-zero response or
+    exhausted timeout budget remains a fail-closed audit error; this helper
+    never substitutes local state for GitHub authority.
+    """
+    for attempt in range(CANONICAL_READ_ATTEMPTS):
+        try:
+            result = subprocess.run(['gh', 'api', endpoint], capture_output=True,
+                                    text=True, timeout=30)
+        except subprocess.TimeoutExpired:
+            if attempt + 1 == CANONICAL_READ_ATTEMPTS:
+                raise
+            time.sleep(attempt + 1)
+            continue
+        if result.returncode == 0 or 'HTTP 404' in result.stderr:
+            return result
+        if attempt + 1 == CANONICAL_READ_ATTEMPTS:
+            return result
+        time.sleep(attempt + 1)
+    raise AssertionError('unreachable canonical API retry state')
 
 
 def sha(data: bytes) -> str:
@@ -104,7 +130,10 @@ def bootstrap_plan(registry: dict, audit: dict) -> dict:
 
 
 def _api(endpoint: str) -> object:
-    run = subprocess.run(['gh', 'api', endpoint], capture_output=True, text=True, timeout=30)
+    try:
+        run = _read_api(endpoint)
+    except subprocess.TimeoutExpired as error:
+        raise ValueError('canonical GitHub read timed out: ' + endpoint) from error
     if run.returncode:
         raise ValueError('canonical GitHub read failed: ' + endpoint)
     return json.loads(run.stdout)
@@ -112,7 +141,10 @@ def _api(endpoint: str) -> object:
 
 def _optional_remote_file(path: str, ref: str) -> tuple[bytes, dict] | None:
     endpoint = f'repos/{REPOSITORY}/contents/{path}?ref={ref}'
-    run = subprocess.run(['gh', 'api', endpoint], capture_output=True, text=True, timeout=30)
+    try:
+        run = _read_api(endpoint)
+    except subprocess.TimeoutExpired as error:
+        raise ValueError('canonical GitHub read timed out: ' + endpoint) from error
     if run.returncode:
         if 'HTTP 404' in run.stderr:
             return None
