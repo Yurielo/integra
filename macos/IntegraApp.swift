@@ -288,6 +288,11 @@ struct SidebarItem {
   private var topicDetail = "auto"
   private var projectID: String?, runID: String?, timer: Timer?
   private var mediaPlayer: AVPlayer?, mediaWindow: NSWindow?
+  // AVPlayerView must remain attached to a real window.  An NSAlert accessory
+  // view can paint black even when the source asset and AVFoundation playback
+  // are both valid, so Knowledge evidence uses its own retained window/player.
+  private var knowledgePlayer: AVPlayer?, knowledgeMediaWindow: NSWindow?
+  private var knowledgePlayerStatusObserver: NSKeyValueObservation?
   private var reviewPlayer: AVPlayer?
   private var terminationPending = false
   private var retryPending = false
@@ -2308,17 +2313,81 @@ struct SidebarItem {
         guard let path = result["media_path"] as? String, let start = result["start_seconds"] as? Double, let end = result["end_seconds"] as? Double else { throw BridgeError.invalidResponse }
         DispatchQueue.main.async {
           guard self.navigationGeneration == generation else { return }
-          let alert = NSAlert(); alert.messageText = "Точный фрагмент источника"
-          alert.informativeText = String(format: "%.3f–%.3f с\n", start, end) + "\(result["quote"] ?? "")\nВерсия источника проверена по хешу."
-          let player = AVPlayer(url: URL(fileURLWithPath: path))
-          let view = AVPlayerView(frame: NSRect(x: 0, y: 0, width: 620, height: 260)); view.player = player
-          alert.accessoryView = view; alert.addButton(withTitle: "Закрыть")
-          player.currentItem?.forwardPlaybackEndTime = CMTime(seconds: end, preferredTimescale: 600)
-          player.seek(to: CMTime(seconds: start, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero) { ready in if ready { player.play() } }
-          _ = alert.runModal(); player.pause()
+          self.renderKnowledgeFragment(path: path, start: start, end: end, quote: result["quote"] as? String ?? "")
         }
       } catch { DispatchQueue.main.async { self.status.textColor = .systemRed; self.status.stringValue = error.localizedDescription } }
     }
+  }
+
+  private func renderKnowledgeFragment(path: String, start: Double, end: Double, quote: String) {
+    let source = URL(fileURLWithPath: path)
+    guard FileManager.default.fileExists(atPath: source.path), !source.hasDirectoryPath else {
+      status.textColor = .systemRed
+      status.stringValue = "Исходный файл для точного фрагмента недоступен. Проверьте, что исходник остаётся в проекте."
+      return
+    }
+    knowledgePlayer?.pause()
+    knowledgePlayerStatusObserver = nil
+    let asset = AVURLAsset(url: source)
+    let item = AVPlayerItem(asset: asset)
+    let player = AVPlayer(playerItem: item)
+    let playerView = AVPlayerView()
+    playerView.player = player
+    playerView.controlsStyle = .floating
+    let window = NSWindow(
+      contentRect: NSRect(x: 0, y: 0, width: 760, height: 520),
+      styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
+    window.title = "Точный фрагмент источника"
+    let stack = FlippedStackView()
+    stack.orientation = .vertical
+    stack.alignment = .leading
+    stack.spacing = 10
+    stack.edgeInsets = NSEdgeInsets(top: 18, left: 22, bottom: 22, right: 22)
+    let range = NSTextField(labelWithString: String(format: "Фрагмент: %.3f–%.3f с", start, end))
+    range.font = .systemFont(ofSize: 16, weight: .semibold)
+    stack.addArrangedSubview(range)
+    stack.addArrangedSubview(NSTextField(wrappingLabelWithString: quote))
+    stack.addArrangedSubview(NSTextField(labelWithString: "Версия источника проверена по хешу."))
+    let playbackStatus = NSTextField(labelWithString: "Загружаю воспроизведение…")
+    playbackStatus.textColor = .secondaryLabelColor
+    stack.addArrangedSubview(playbackStatus)
+    playerView.translatesAutoresizingMaskIntoConstraints = false
+    playerView.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
+    playerView.heightAnchor.constraint(equalToConstant: 360).isActive = true
+    stack.addArrangedSubview(playerView)
+    let scroll = NSScrollView()
+    scroll.hasVerticalScroller = true
+    scroll.documentView = stack
+    stack.translatesAutoresizingMaskIntoConstraints = false
+    stack.widthAnchor.constraint(equalTo: scroll.contentView.widthAnchor, constant: -44).isActive = true
+    window.contentView = scroll
+    knowledgePlayer = player
+    knowledgeMediaWindow = window
+    knowledgePlayerStatusObserver = item.observe(\.status, options: [.initial, .new]) { [weak self, weak player, weak playbackStatus] observedItem, _ in
+      DispatchQueue.main.async {
+        guard let self, let player, let playbackStatus else { return }
+        switch observedItem.status {
+        case .readyToPlay:
+          playbackStatus.textColor = .secondaryLabelColor
+          playbackStatus.stringValue = "Воспроизводится точный фрагмент источника."
+          player.currentItem?.forwardPlaybackEndTime = CMTime(seconds: end, preferredTimescale: 600)
+          player.seek(to: CMTime(seconds: start, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero) { ready in
+            if ready { player.play() }
+            else { playbackStatus.textColor = .systemRed; playbackStatus.stringValue = "Не удалось перейти к выбранному моменту исходного видео." }
+          }
+        case .failed:
+          let reason = observedItem.error?.localizedDescription ?? "неизвестная ошибка воспроизведения"
+          playbackStatus.textColor = .systemRed
+          playbackStatus.stringValue = "Не удалось открыть исходное видео: \(reason)"
+          self.status.textColor = .systemRed
+          self.status.stringValue = playbackStatus.stringValue
+        default:
+          break
+        }
+      }
+    }
+    window.center()
+    window.makeKeyAndOrderFront(nil)
   }
 
   @objc private func reviewKnowledge() {

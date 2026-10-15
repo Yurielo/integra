@@ -317,6 +317,21 @@ class MacOSApplicationTests(unittest.TestCase):
         self.assertIn('object["error"] as? String', source)
         self.assertNotIn("Integra Reference Project", source)
 
+    def test_knowledge_fragment_viewer_uses_retained_window_and_reports_playback_failure(self):
+        source = (ROOT / "macos/IntegraApp.swift").read_text()
+        start = source.index("private func presentKnowledgeNavigation")
+        end = source.index("@objc private func reviewKnowledge", start)
+        viewer = source[start:end]
+        self.assertIn("renderKnowledgeFragment", viewer)
+        self.assertNotIn("NSAlert", viewer)
+        self.assertIn("knowledgeMediaWindow", viewer)
+        self.assertIn("knowledgePlayerStatusObserver", viewer)
+        self.assertIn("AVPlayerItem(asset: asset)", viewer)
+        self.assertIn("fileExists(atPath: source.path)", viewer)
+        self.assertIn("Исходный файл для точного фрагмента недоступен", viewer)
+        self.assertIn("Не удалось открыть исходное видео", viewer)
+        self.assertIn("forwardPlaybackEndTime", viewer)
+
     def test_youtube_source_type_stays_internal_to_normal_source_lists(self):
         source = (ROOT / "macos/IntegraApp.swift").read_text()
         self.assertIn('case "YOUTUBE_VIDEO": return "YouTube"', source)
