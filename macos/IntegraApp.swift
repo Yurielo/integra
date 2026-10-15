@@ -2352,9 +2352,12 @@ struct SidebarItem {
     playbackStatus.textColor = .secondaryLabelColor
     stack.addArrangedSubview(playbackStatus)
     playerView.translatesAutoresizingMaskIntoConstraints = false
+    // A view must enter the stack's hierarchy before any constraint can bind
+    // it to that stack.  Binding first aborts AppKit at runtime and prevents
+    // source-fragment navigation from ever reaching the media player.
+    stack.addArrangedSubview(playerView)
     playerView.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
     playerView.heightAnchor.constraint(equalToConstant: 360).isActive = true
-    stack.addArrangedSubview(playerView)
     let scroll = NSScrollView()
     scroll.hasVerticalScroller = true
     scroll.documentView = stack
