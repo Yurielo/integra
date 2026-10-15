@@ -36,6 +36,9 @@ class K2QAFixtureTests(unittest.TestCase):
         self.assertEqual(len(topics), 2)
         self.assertEqual(tuple(item["title"] for item in topics), fixture.TITLES)
         self.assertLess(topics[0]["end_seconds"], topics[1]["start_seconds"])
+        self.assertGreater(len(first["source.mp4"]), 1000)
+        self.assertEqual(first["source.mp4"][4:8], b"ftyp")
+        self.assertLess(topics[-1]["end_seconds"], 7)
         self.assertTrue(all(item["semantic_status"] == "REVIEW_REQUIRED" for item in topics))
         self.assertFalse(json.loads(first["QA_ONLY.json"])["production_acceptance"])
 
