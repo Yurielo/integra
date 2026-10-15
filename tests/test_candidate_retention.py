@@ -212,6 +212,36 @@ class OwnedRetentionTests(unittest.TestCase):
         p = self._plan(); self.assertGreater(p['PROTECTED_BYTES'], 0)
         self.assertNotIn(str(survivor), [v['path'] for v in p['entries'] if v['classification'] == 'DELETABLE'])
 
+    def test_context_accepts_unselected_canonical_protected_identity(self):
+        """A canonical lifecycle hold need not own a local full-copy slot."""
+        from scripts import candidate_protection_gate as gate
+
+        package, survivor = self._ready()
+        receipt = archive.verify_archive(survivor)
+        selected_id = receipt['candidate_id']
+        held_id = 'candidate-v1-' + 'f' * 64
+        input_path = survivor / 'COMPLETE.json'
+        registry = {
+            'selected_survivors': {selected_id: 'Build Archive/current', held_id: None},
+        }
+        audit = {
+            'authority_state': 'COMPLETE',
+            'registry_sha256': 'fixture-registry',
+            'canonical_lifecycles': {held_id: {'fixture': 'hold'}},
+            'standing_policy': {'fixture': 'policy'},
+        }
+        context = {
+            'protected': {selected_id: ['CURRENT'], held_id: ['OPEN_PROPOSAL']},
+            'inputs': {str(input_path): r._sha(input_path)},
+            'selected_archives': {selected_id: str(survivor)},
+            'verified_survivors': {selected_id: receipt},
+            'registry_sha256': 'fixture-registry',
+            'canonical_lifecycles': audit['canonical_lifecycles'],
+            'standing_policy': audit['standing_policy'],
+        }
+        with patch.object(gate, '_snapshot', return_value=(registry, audit)):
+            self.assertTrue(r._context_valid(context))
+
     def test_shape_drift_and_hardlinks_are_unknown(self):
         package, _ = self._ready(); extra = package / 'foreign'; extra.write_text('preserve')
         self.assertEqual(self._plan()['DELETABLE_BYTES'], 0); extra.unlink()

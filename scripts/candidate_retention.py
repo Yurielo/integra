@@ -241,8 +241,16 @@ def _context_valid(context):
         canonical = audit.get('canonical') or {}
         expected_events = audit.get('canonical_lifecycles', canonical.get('canonical_lifecycles'))
         expected_policy = audit.get('standing_policy', canonical.get('standing_policy'))
+        # ``protected`` mirrors every canonical lifecycle identity.  Only a
+        # subset has a local, selected full-copy archive (and therefore an
+        # entry in ``selected_archives``).  Comparing the two domains would
+        # make a complete canonical snapshot permanently stale whenever the
+        # registry correctly represents a protected historical identity with
+        # no selected local copy.  Keep both checks: the complete lifecycle
+        # domain must match the registry, while the archive/receipt domains
+        # must match the selected-copy subset.
         return bool(context and context.get('protected') and context.get('inputs')
-                    and set(context['protected']) == set(selected)
+                    and set(context['protected']) == set(registry['selected_survivors'])
                     and set(context.get('selected_archives', {})) == set(expected)
                     and set(context.get('verified_survivors', {})) == set(expected)
                     and all(_sha(p) == digest for p, digest in context['inputs'].items())
