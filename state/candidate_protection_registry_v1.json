@@ -236,12 +236,12 @@
   },
   "withdrawn_candidate_lifecycles": [
     {
-      "authority_body_sha256": "490bcb6a43d8a9d220c00bdd720690bc623e95c3859efa402605218bbd9112c8",
+      "authority_body_sha256": "09d9bc36dcad2ec2957d42710e48a9aec7c55234e25df1b48084641250729101",
       "authority_ref": "https://github.com/Yurielo/integra/issues/227#issuecomment-6209433723",
       "bundle_digest": "4e97db25f3263ae458a5d4ca7d5fec6a9ea98391c3b04b2acc2ba81802c91cda",
       "candidate_id": "candidate-v1-6a4d585d2746bc861e82a0ecee66b8f167e98f1027acbd54ac8889399f84c9f1",
       "history_path": "state/history/knowledge_k2_candidate_6a4d_withdrawal_v1.json",
-      "history_sha256": "6f6e484fc8ac4383ba14b09c7012a919b8990da47948719d2f13c553cadc2649",
+      "history_sha256": "3eb208ac5218b5bd5f1fb9948e1791d2c14f969894ca3be59138b48cd483e906",
       "manifest_digest": "10e6a847246a4c6a9dd12ae1821d6b208e94277f8bca85218d939270f8960b36",
       "previous_status": "AWAITING_OWNER_ACCEPTANCE",
       "reason": "REJECTED_BY_OWNER_TEST_SOURCE_PLAYBACK_AND_APPKIT_CONSTRAINT_CRASH",
