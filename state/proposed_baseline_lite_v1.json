@@ -1,0 +1,146 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.proposed_product_baseline",
+  "proposal_id": "proposal-knowledge-k2-stage1-pr271-final-v1",
+  "status": "PROPOSED_BASELINE_VALID",
+  "base_current_id": "current-v2-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f",
+  "base_main": {
+    "commit_sha": "312946d42c9712e4ee3b7974fe657762e8092c1d",
+    "tree_sha": "60f160c4c15b12f804da9adcb16437828f127c85"
+  },
+  "proposed_source": {
+    "commit_sha": "b864b6459c902f3f3d605ef8036d5a7f303612e5",
+    "tree_sha": "ab20e1c7d9e7db8ed4e4bd738c0b39f4f123a7ed"
+  },
+  "proposed_head": {
+    "commit_sha": "adf76a8b4a34264992825539eb39e7ed0dc7e1f3",
+    "tree_sha": "d6f6e5e27b579de9914e4ca7cbce521766bf72d3"
+  },
+  "intended_scope": {
+    "wp": "Knowledge K2",
+    "journey": "Stage 1: machine-derived provisional knowledge, Owner decisions only for genuine semantic exceptions, exact video source navigation, persistence/reopen. Owner Test only; no CURRENT promotion, Process Board change or Stage 2."
+  },
+  "candidate": {
+    "candidate_id": "candidate-v1-2d770b6b3ff323a9b60c45cecdb7b5c36652b11cb102f16de63145530997dd11",
+    "identity_sha256": "2d770b6b3ff323a9b60c45cecdb7b5c36652b11cb102f16de63145530997dd11",
+    "bundle_digest": "e3c5bce9cefd8facb8ca228b56b66a560443629d94e97dd3e0d630ed06fb9164",
+    "manifest_digest": "6d5bb4b9f4abc8863ecfc05222df3651141cb23a37e135e3d19aeb5c4ef57ccc"
+  },
+  "delta": [
+    {
+      "path": "integra_core/candidate_identity.py",
+      "before_sha256": "d76076250ee4135bfd546450009416e7bad900c135db708854cf815c482a0eea",
+      "after_sha256": "4cd5db42ca7462c404f9b4e694e2ca3f1688d3b8fcb8964de32010d39ffb095f"
+    },
+    {
+      "path": "integra_core/knowledge.py",
+      "before_sha256": "c4a94f533b44ca13fcc365aadbd7bd6a47bb656329c4b6b0144a7ff98850e9ea",
+      "after_sha256": "1f762b3f83e9568cda96dbfbfd7364c4365204788203a16c217c2ac1007e6601"
+    },
+    {
+      "path": "integra_core/knowledge_admission_runtime.py",
+      "before_sha256": null,
+      "after_sha256": "3f6cf3d901e2e7b7d0c92e3ee361717fa820ffc571251e26421bfe969c9c4d62"
+    },
+    {
+      "path": "integra_core/knowledge_k2.py",
+      "before_sha256": null,
+      "after_sha256": "9e3db2bee4c537ccf3c94ca3e44577ef317ada64b1d4e77633922b9ebc3d7c5b"
+    },
+    {
+      "path": "integra_core/knowledge_notebook.py",
+      "before_sha256": "d731a78da0d78e777971385aefa24c880cb7c5744656d7e9808be06cf57fd0f5",
+      "after_sha256": "2724c054cdaf750a28dedc2215dd4c192aa997a0a5eaad2fa2626821b8a7e11f"
+    },
+    {
+      "path": "integra_core/reviewed_result_package.py",
+      "before_sha256": "d64a896b8350f3ccd527babc80c8c91a4f9959dd4f557cd3db6efb694232dba4",
+      "after_sha256": "6947559594415c3ff36b6ab4d21456a518de5ce6d2729bf04799b8bfe2a4136c"
+    },
+    {
+      "path": "macos/IntegraApp.swift",
+      "before_sha256": "7c0976c3cf1d6b615150a3c0df5c66175c55faaaabdcea93dff750814b6dc0de",
+      "after_sha256": "4c43bd045cc04e4d4152c3e811527f354fc178934450a99796cdb65cd3a69601"
+    },
+    {
+      "path": "macos/Resources/bridge.py",
+      "before_sha256": "0ecc20d4f38db43ec6519abd26c7983a7ce97932c4484250b36827e10efa8528",
+      "after_sha256": "be746ac1ac7b12c5c2ff5e76431b926e686774767f8e39b2d5a79b6621985732"
+    },
+    {
+      "path": "schemas/knowledge_view_v1.schema.json",
+      "before_sha256": "393fd94482c4832217a6591d3c7497433be53d3674b43b7f373f92859751f488",
+      "after_sha256": "9c670923e80ddd4874474e1602e71dd62dc4ee58268debb970502691e9e052a3"
+    },
+    {
+      "path": "scripts/build_macos_app.sh",
+      "before_sha256": "c2fc0ad755c84a4067b65df39267b86d72e547a5683988db8f674b3d402d2a78",
+      "after_sha256": "f74f282344fc8c8da9ce13c56a73d908501d6eaa2d0751af85a94b30895565eb"
+    },
+    {
+      "path": "scripts/candidate_manifest.py",
+      "before_sha256": "ccaeb550aa1653aed47eac450310ae2e4bb9ec60f519d4ae359fb10e652f2d85",
+      "after_sha256": "dc336b7ad3c4864af8d46545a124b6d8a74edfb44cccdc4bf15c80a5ddbb7298"
+    },
+    {
+      "path": "scripts/package_knowledge_admission_runtime.py",
+      "before_sha256": null,
+      "after_sha256": "772d662afa5d1a9ae1675f616c0711ac484cee6f0e3f1c805092e0a2259acb6c"
+    },
+    {
+      "path": "state/knowledge_admission_component_v1.json",
+      "before_sha256": null,
+      "after_sha256": "7c2f7653f8fc6f45a73962e65737544a87184a4043fe3b66364944c7852e5486"
+    },
+    {
+      "path": "tests/test_macos_app.py",
+      "before_sha256": "4519d9ff2e9d7d1f10165e45de288f921c4596f093b047a66e7473879d2372b9",
+      "after_sha256": "294f0b930b3fdc74a1b229bfcc8ce21209e3615d7e738e22270eb0a24036a24a"
+    }
+  ],
+  "historical_test_successors": [],
+  "gates": [
+    {
+      "name": "Engineering focused and full runtime regression",
+      "result": "PASS",
+      "evidence_ref": "docs/evidence/ISSUE_227_PR271_CANDIDATE_REPORT.md"
+    },
+    {
+      "name": "Native production GUI semantic journey and final source viewer",
+      "result": "PASS",
+      "evidence_ref": "docs/evidence/ISSUE_227_PR271_CANDIDATE_EVIDENCE.json"
+    },
+    {
+      "name": "Independent source and incremental coverage review",
+      "result": "PASS",
+      "evidence_ref": "docs/evidence/ISSUE_227_PR271_CANDIDATE_REPORT.md"
+    },
+    {
+      "name": "Immutable Candidate archive integrity",
+      "result": "PASS",
+      "evidence_ref": "docs/evidence/ISSUE_227_PR271_CANDIDATE_EVIDENCE.json"
+    }
+  ],
+  "evidence": {
+    "candidate_manifest": {
+      "path": "docs/evidence/ISSUE_227_PR271_CANDIDATE_MANIFEST.json",
+      "sha256": "6d5bb4b9f4abc8863ecfc05222df3651141cb23a37e135e3d19aeb5c4ef57ccc"
+    },
+    "candidate_evidence": {
+      "path": "docs/evidence/ISSUE_227_PR271_CANDIDATE_EVIDENCE.json",
+      "sha256": "6d1d9906acfe04be81c88a7af3d5d0fa62329dcb2ffe1c47fb0bfdfdef3cc31b"
+    },
+    "report": {
+      "path": "docs/evidence/ISSUE_227_PR271_CANDIDATE_REPORT.md",
+      "sha256": "f61fa21cac35cc4161eb68ed7b5695557f8af10e3f021c0f47f64f10e165fe72"
+    }
+  },
+  "owner_acceptance": null,
+  "allowed_overlay_paths": [
+    "docs/evidence/ISSUE_227_PR271_CANDIDATE_MANIFEST.json",
+    "docs/evidence/ISSUE_227_PR271_CANDIDATE_EVIDENCE.json",
+    "docs/evidence/ISSUE_227_PR271_CANDIDATE_REPORT.md",
+    "scripts/launch_k2_owner_test.py",
+    "tests/test_issue227_owner_test_launcher.py"
+  ]
+}
