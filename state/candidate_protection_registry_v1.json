@@ -232,6 +232,16 @@
       "path": "Build Archive/candidate-v1-4c60663b9c5b7c991dc67f66b3a8e531ead4cf0f90435ef02c25055ad36018cc/b523d1cb5f0cf68526bf69a63131a462da1cdf088a369b06d612cfe6907bd851",
       "reason": "SUPERSEDED_CANDIDATE_ARCHIVE_SLOT_FOR_FINAL_KNOWLEDGE_K1",
       "scope": "EXACT_4C606_ONLY"
+    },
+    "Build Archive/candidate-v1-ee1bd582b9384375c305082f461ede09475de3498ce86f9871f73637655482c4/5f7a80586f57a8377c740219e201cabb9fae6a7f99a5b7338ec7fadbb8d99406": {
+      "candidate_id": "candidate-v1-ee1bd582b9384375c305082f461ede09475de3498ce86f9871f73637655482c4",
+      "bundle_digest": "5f7a80586f57a8377c740219e201cabb9fae6a7f99a5b7338ec7fadbb8d99406",
+      "manifest_digest": "122389062fc5b8904a6c7e017a48883d69588dfe0faf1a028e2fe4fb5867b197",
+      "path": "Build Archive/candidate-v1-ee1bd582b9384375c305082f461ede09475de3498ce86f9871f73637655482c4/5f7a80586f57a8377c740219e201cabb9fae6a7f99a5b7338ec7fadbb8d99406",
+      "authority_ref": "https://github.com/Yurielo/integra/issues/227#issuecomment-6219685291",
+      "lifecycle": "WITHDRAWN_SUPERSEDED",
+      "reason": "TECHNICALLY_UNUSABLE_AFTER_REBASE_SOURCE_BINDING_BREAK",
+      "scope": "EXACT_EE1BD_REBASE_BINDING_SUPERSESSION"
     }
   },
   "withdrawn_candidate_lifecycles": [
@@ -330,6 +340,20 @@
       "previous_status": "AWAITING_OWNER_ACCEPTANCE",
       "reason": "SUPERSEDED_CANDIDATE_ARCHIVE_SLOT_FOR_FINAL_KNOWLEDGE_K1",
       "resulting_status": "WITHDRAWN_SUPERSEDED"
+    },
+    {
+      "artifact_type": "integra.candidate_lifecycle_disposition",
+      "schema_version": "1.0",
+      "candidate_id": "candidate-v1-ee1bd582b9384375c305082f461ede09475de3498ce86f9871f73637655482c4",
+      "bundle_digest": "5f7a80586f57a8377c740219e201cabb9fae6a7f99a5b7338ec7fadbb8d99406",
+      "manifest_digest": "122389062fc5b8904a6c7e017a48883d69588dfe0faf1a028e2fe4fb5867b197",
+      "previous_status": "AWAITING_OWNER_ACCEPTANCE",
+      "resulting_status": "WITHDRAWN_SUPERSEDED",
+      "reason": "TECHNICALLY_UNUSABLE_AFTER_REBASE_SOURCE_BINDING_BREAK",
+      "authority_ref": "https://github.com/Yurielo/integra/issues/227#issuecomment-6219685291",
+      "authority_body_sha256": "83ab2641e8fbc391009d8488f2e61c7bff630fb7e0ee598ff29fc8d76c0ac3e9",
+      "history_path": "state/history/knowledge_k2_candidate_ee1bd_withdrawal_v1.json",
+      "history_sha256": "2c63605dd3370bf36fe7ea2dc5719b2113e2db03a06d82dd3e532cd7e68b8535"
     }
   ]
 }
