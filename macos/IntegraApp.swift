@@ -2330,7 +2330,7 @@ struct SidebarItem {
           self.renderKnowledgeFragment(path: path, start: start, end: end, quote: result["quote"] as? String ?? "")
         }
       } catch {
-        NSLog("Knowledge source navigation failed: %@", error.localizedDescription)
+        NSLog("KNOWLEDGE_SOURCE_NAVIGATION_FAILED")
         DispatchQueue.main.async {
           self.status.textColor = .systemRed
           self.status.stringValue = knowledgeSourceNavigationFailureText

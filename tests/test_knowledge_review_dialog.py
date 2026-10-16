@@ -29,7 +29,8 @@ class KnowledgeReviewDialogTests(unittest.TestCase):
     def test_source_navigation_errors_keep_actionable_message_and_diagnostic(self):
         source = (ROOT / "macos/IntegraApp.swift").read_text()
         navigation = source[source.index("private func presentKnowledgeNavigation("):source.index("private func renderKnowledgeFragment(")]
-        self.assertIn('NSLog("Knowledge source navigation failed: %@", error.localizedDescription)', navigation)
+        self.assertIn('NSLog("KNOWLEDGE_SOURCE_NAVIGATION_FAILED")', navigation)
+        self.assertNotIn('NSLog("Knowledge source navigation failed: %@", error.localizedDescription)', navigation)
         self.assertIn('self.status.stringValue = knowledgeSourceNavigationFailureText', navigation)
         self.assertNotIn('self.status.stringValue = error.localizedDescription', navigation)
 
