@@ -342,8 +342,6 @@
       "resulting_status": "WITHDRAWN_SUPERSEDED"
     },
     {
-      "artifact_type": "integra.candidate_lifecycle_disposition",
-      "schema_version": "1.0",
       "candidate_id": "candidate-v1-ee1bd582b9384375c305082f461ede09475de3498ce86f9871f73637655482c4",
       "bundle_digest": "5f7a80586f57a8377c740219e201cabb9fae6a7f99a5b7338ec7fadbb8d99406",
       "manifest_digest": "122389062fc5b8904a6c7e017a48883d69588dfe0faf1a028e2fe4fb5867b197",
