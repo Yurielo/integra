@@ -102,6 +102,23 @@ class CandidateLifecycleTests(unittest.TestCase):
                 malformed['withdrawal_lifecycle_evidence'].pop(key)
                 self.assertFalse(self.eligibility(malformed)['eligible'])
 
+    def test_exact_withdrawal_reconciles_only_the_stale_publisher_marker(self):
+        withdrawal = {**self.identity,
+                      'previous_status': 'AWAITING_OWNER_ACCEPTANCE',
+                      'resulting_status': 'WITHDRAWN_SUPERSEDED',
+                      'reason': 'EXACT_TEST_SUPERSESSION',
+                      'authority_ref': 'https://github.com/Yurielo/integra/issues/1#issuecomment-2',
+                      'authority_body_sha256': '3' * 64,
+                      'history_path': 'state/history/exact-withdrawal.json',
+                      'history_sha256': '4' * 64}
+        stale = {**self.record, 'status': 'CANDIDATE_BOUND_VALIDATION'}
+        result = lifecycle.replay_withdrawal(stale, [withdrawal])
+        self.assertEqual(result['status'], 'WITHDRAWN_SUPERSEDED')
+        self.assertEqual(result['local_lifecycle_before_withdrawal'],
+                         'CANDIDATE_BOUND_VALIDATION')
+        self.assertEqual(lifecycle.replay_withdrawal(
+            {**self.record, 'status': 'CURRENT'}, [withdrawal])['status'], 'CURRENT')
+
     def test_identity_bundle_and_manifest_substitution_cannot_replay(self):
         for key in lifecycle.IDENTITY:
             with self.subTest(key=key):

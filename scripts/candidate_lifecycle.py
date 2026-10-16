@@ -180,8 +180,18 @@ def replay_withdrawal(record, withdrawals):
         if result.get('withdrawal_lifecycle_evidence') == withdrawal:
             return result
         return result
-    if result.get('status') != withdrawal['previous_status']:
+    # A completed publisher can leave a local catalog at the historical
+    # in-flight marker ``CANDIDATE_BOUND_VALIDATION`` while the canonical
+    # Proposal already records it as awaiting Owner acceptance.  That local
+    # marker carries no competing lifecycle authority.  A fully validated,
+    # exact withdrawal may therefore reconcile this one stale marker, but no
+    # other non-pending state is eligible for this transition.
+    local_status = result.get('status')
+    if local_status not in {
+            withdrawal['previous_status'], 'CANDIDATE_BOUND_VALIDATION'}:
         return result
+    if local_status != withdrawal['previous_status']:
+        result['local_lifecycle_before_withdrawal'] = local_status
     result['status'] = withdrawal['resulting_status']
     result['disposition_ref'] = withdrawal['authority_ref']
     result['withdrawal_lifecycle_evidence'] = deepcopy(withdrawal)
