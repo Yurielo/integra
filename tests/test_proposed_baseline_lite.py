@@ -15,6 +15,8 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from proposed_baseline_lite import (  # noqa: E402
+    CI_MEDIA_STEP,
+    CI_WORKFLOW_PATH,
     next_current,
     proposal_state,
     validate_current,
@@ -393,6 +395,53 @@ class ProposedOverlayLineageTests(unittest.TestCase):
                   "merge", "--no-ff", "canonical-sync", "-m", "sync canonical protection")
         self.assertEqual(validate_proposal(proposal, self._current(root), root), [])
         self.assertEqual(verify_promotion_material(proposal, root, path), [])
+
+    def test_canonical_media_dependency_sync_cannot_change_existing_gates(self):
+        old = (b"name: Quality Gate\npermissions:\n  contents: read\njobs:\n  governance:\n"
+               b"    steps:\n      - name: Validate governance state\n"
+               b"        run: python3 scripts/validate_governance.py\n"
+               b"      - name: Run tests\n        run: ./scripts/run_review_tests.sh\n")
+        anchor = b"      - name: Validate governance state\n"
+        expected = old.replace(anchor, CI_MEDIA_STEP + anchor)
+        variants = {
+            "exact_addition": expected,
+            "permission_change": expected.replace(b"contents: read", b"contents: write"),
+            "test_bypass": expected.replace(b"./scripts/run_review_tests.sh", b"true"),
+            "governance_bypass": expected.replace(b"python3 scripts/validate_governance.py", b"true"),
+            "extra_command": expected + b"      - run: echo arbitrary\n",
+            "duplicate_step": expected.replace(CI_MEDIA_STEP, CI_MEDIA_STEP * 2),
+            "removed_step": old,
+            "symlink": None,
+        }
+        for name, content in variants.items():
+            with self.subTest(name=name):
+                def base_setup(root):
+                    target = root / CI_WORKFLOW_PATH
+                    target.parent.mkdir(parents=True)
+                    target.write_bytes(old)
+                root, proposal, path = self._lineage(base_setup=base_setup)
+                feature = self._git(root, "branch", "--show-current")
+                self._git(root, "branch", "canonical-sync", proposal["base_main"]["commit_sha"])
+                self._git(root, "checkout", "-q", "canonical-sync")
+                target = root / CI_WORKFLOW_PATH
+                if content is None:
+                    target.unlink()
+                    target.symlink_to("../../untrusted-workflow")
+                else:
+                    target.write_bytes(content)
+                # Keep even the removed-step variant a nonempty canonical sync.
+                (root / "state/candidate_protection_registry_v1.json").write_text("canonical registration\n")
+                canonical = self._commit(root, "canonical dependency and registration")
+                self._git(root, "update-ref", "refs/remotes/origin/main", canonical)
+                self._git(root, "checkout", "-q", feature)
+                self._git(root, "-c", "user.name=Test", "-c", "user.email=test@example.invalid",
+                          "merge", "--no-ff", "canonical-sync", "-m", "canonical sync")
+                errors = verify_promotion_material(proposal, root, path)
+                if name in {"exact_addition", "removed_step"}:
+                    # An unchanged workflow is not a workflow modification.
+                    self.assertEqual(errors, [])
+                else:
+                    self.assertIn("promotion post-declaration change is not an exact canonical protection sync", errors)
 
     def test_arbitrary_product_change_after_proposal_declaration_fails(self):
         root, proposal, path = self._lineage()

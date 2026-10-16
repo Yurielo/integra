@@ -44,6 +44,35 @@ CANONICAL_PROTECTION_SYNC_PATHS = {
     "tests/test_candidate_protection_audit.py",
     "tests/test_proposed_baseline_lite.py",
 }
+CI_WORKFLOW_PATH = ".github/workflows/quality-gate.yml"
+CI_MEDIA_STEP = (
+    b"      - name: Install real media fixture dependency\n"
+    b"        run: |\n"
+    b"          sudo apt-get update\n"
+    b"          sudo apt-get install --no-install-recommends -y ffmpeg\n"
+)
+
+
+def _canonical_media_dependency_sync(root: Path, before: str, after: str, path: str) -> bool:
+    """Recognize one additive CI dependency, never arbitrary workflow changes.
+
+    Product bytes, existing tests, permissions and workflow commands remain
+    unchanged. The caller still requires exact canonical-main merge ancestry
+    and unchanged Proposal bytes. Workflow files are NOT generally allowlisted.
+    """
+    if path != CI_WORKFLOW_PATH:
+        return False
+    try:
+        if (_regular_blob_hash(root, before, path) is None
+                or _regular_blob_hash(root, after, path) is None):
+            return False
+        old = subprocess.check_output(["git", "-C", str(root), "show", f"{before}:{path}"])
+        new = subprocess.check_output(["git", "-C", str(root), "show", f"{after}:{path}"])
+    except (OSError, ValueError, subprocess.CalledProcessError):
+        return False
+    anchor = b"      - name: Validate governance state\n"
+    return (old.count(anchor) == 1 and CI_MEDIA_STEP not in old
+            and new == old.replace(anchor, CI_MEDIA_STEP + anchor, 1))
 
 
 def sha256_file(path: Path) -> str:
@@ -157,7 +186,9 @@ def _proposal_declaration_commit(root: Path, overlay_sha: str, proposal: dict,
             errors.append("promotion canonical-main synchronization identity is unavailable")
         else:
             if (parents[2] != main or not paths
-                    or any(path not in CANONICAL_PROTECTION_SYNC_PATHS for path in paths)
+                    or any(path not in CANONICAL_PROTECTION_SYNC_PATHS
+                           and not _canonical_media_dependency_sync(root, parents[1], merge, path)
+                           for path in paths)
                     or proposal_blob != head_blob):
                 errors.append("promotion post-declaration change is not an exact canonical protection sync")
     return declaration, errors
