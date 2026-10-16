@@ -25,6 +25,10 @@ jobs:
           # Matches the hashlocked Linux wheels and avoids the pre-3.13
           # conditional typing-extensions dependency of referencing.
           python-version: "3.13"
+      - name: Install real media fixture dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ffmpeg
       - name: Validate governance state
         run: python3 scripts/validate_governance.py
       - name: Run tests
