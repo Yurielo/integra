@@ -116,15 +116,6 @@
       "manifest_digest": "ea6003528896581fdc4c5e8b14953de7de58b980707e9e12a9fc3fb43b60ebde",
       "path": "state/proposed_baseline_lite_v1.json",
       "pr": 206
-    },
-    {
-      "bundle_digest": "4e97db25f3263ae458a5d4ca7d5fec6a9ea98391c3b04b2acc2ba81802c91cda",
-      "candidate_id": "candidate-v1-6a4d585d2746bc861e82a0ecee66b8f167e98f1027acbd54ac8889399f84c9f1",
-      "manifest_digest": "10e6a847246a4c6a9dd12ae1821d6b208e94277f8bca85218d939270f8960b36",
-      "path": "state/proposed_baseline_lite_v1.json",
-      "pr": 262,
-      "proposal_id": "proposal-knowledge-k2-stage1-owner-interaction-by-exception-v1",
-      "proposal_sha256": "139d76883644aa7f0f43bc00d277a73601d8b7bcc64c011be468e838a2c7a09c"
     }
   ],
   "recovery": null,
@@ -145,7 +136,6 @@
     "candidate-v1-14b3c10e4d779ff8b5a520bf15e2b7087673aec2cd0abd25aac4e1d0ded77892": null,
     "candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81": "Build Archive/candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81/c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
     "candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f": "Build Archive/candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f/e3215a28c9ce0a1a54c35dc535bad42a9334cae7ddc5eb3b0533a480e0296d95",
-    "candidate-v1-6a4d585d2746bc861e82a0ecee66b8f167e98f1027acbd54ac8889399f84c9f1": "Build Archive/candidate-v1-6a4d585d2746bc861e82a0ecee66b8f167e98f1027acbd54ac8889399f84c9f1/4e97db25f3263ae458a5d4ca7d5fec6a9ea98391c3b04b2acc2ba81802c91cda",
     "candidate-v1-7a254e707443a278606ffa956cc76e8374f5c20115077351e093230547f8bd62": null,
     "candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29": "Validation/integra-212-native-35e6f9101278/candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29/fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
     "candidate-v1-9c969dab6d8aab30458bd202dd792d709e1faea8db207306e3ccb46c886c1e98": null,
@@ -163,6 +153,16 @@
   ],
   "unknown_historical": "RETAIN_FAIL_CLOSED",
   "withdrawal_deletion_authorizations": {
+    "Build Archive/candidate-v1-6a4d585d2746bc861e82a0ecee66b8f167e98f1027acbd54ac8889399f84c9f1/4e97db25f3263ae458a5d4ca7d5fec6a9ea98391c3b04b2acc2ba81802c91cda": {
+      "authority_ref": "https://github.com/Yurielo/integra/issues/227#issuecomment-6209433723",
+      "bundle_digest": "4e97db25f3263ae458a5d4ca7d5fec6a9ea98391c3b04b2acc2ba81802c91cda",
+      "candidate_id": "candidate-v1-6a4d585d2746bc861e82a0ecee66b8f167e98f1027acbd54ac8889399f84c9f1",
+      "lifecycle": "WITHDRAWN_SUPERSEDED",
+      "manifest_digest": "10e6a847246a4c6a9dd12ae1821d6b208e94277f8bca85218d939270f8960b36",
+      "path": "Build Archive/candidate-v1-6a4d585d2746bc861e82a0ecee66b8f167e98f1027acbd54ac8889399f84c9f1/4e97db25f3263ae458a5d4ca7d5fec6a9ea98391c3b04b2acc2ba81802c91cda",
+      "reason": "REJECTED_BY_OWNER_TEST_SOURCE_PLAYBACK_AND_APPKIT_CONSTRAINT_CRASH",
+      "scope": "EXACT_6A4D_REJECTED_STAGE1_SOURCE_FRAGMENT_OWNER_TEST"
+    },
     "Build Archive/candidate-v1-0f69e617c0841f27afe2238a28d6c25ae5a80ce0fedf01cf0c114638de575032/3d4d33a983455572157b06460c3faaef5afd0b977a0e3d2717101588a25718e5": {
       "authority_ref": "https://github.com/Yurielo/integra/issues/227#issuecomment-6170021917",
       "bundle_digest": "3d4d33a983455572157b06460c3faaef5afd0b977a0e3d2717101588a25718e5",
@@ -235,6 +235,18 @@
     }
   },
   "withdrawn_candidate_lifecycles": [
+    {
+      "authority_body_sha256": "490bcb6a43d8a9d220c00bdd720690bc623e95c3859efa402605218bbd9112c8",
+      "authority_ref": "https://github.com/Yurielo/integra/issues/227#issuecomment-6209433723",
+      "bundle_digest": "4e97db25f3263ae458a5d4ca7d5fec6a9ea98391c3b04b2acc2ba81802c91cda",
+      "candidate_id": "candidate-v1-6a4d585d2746bc861e82a0ecee66b8f167e98f1027acbd54ac8889399f84c9f1",
+      "history_path": "state/history/knowledge_k2_candidate_6a4d_withdrawal_v1.json",
+      "history_sha256": "6f6e484fc8ac4383ba14b09c7012a919b8990da47948719d2f13c553cadc2649",
+      "manifest_digest": "10e6a847246a4c6a9dd12ae1821d6b208e94277f8bca85218d939270f8960b36",
+      "previous_status": "AWAITING_OWNER_ACCEPTANCE",
+      "reason": "REJECTED_BY_OWNER_TEST_SOURCE_PLAYBACK_AND_APPKIT_CONSTRAINT_CRASH",
+      "resulting_status": "WITHDRAWN_SUPERSEDED"
+    },
     {
       "authority_body_sha256": "a11713084922cf454555f8d612114d13fff7729153877e346b79f811b94ef556",
       "authority_ref": "https://github.com/Yurielo/integra/issues/227#issuecomment-6170021917",
