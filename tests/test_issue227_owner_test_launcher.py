@@ -18,14 +18,16 @@ import launch_k2_owner_test as launcher  # noqa: E402
 class Issue227OwnerTestLauncherTests(unittest.TestCase):
     def test_exact_candidate_is_pinned_and_launcher_has_no_read_prompt(self):
         self.assertEqual(launcher.IDENTITY, {
-            "candidate_id": "candidate-v1-0f69e617c0841f27afe2238a28d6c25ae5a80ce0fedf01cf0c114638de575032",
-            "bundle_digest": "3d4d33a983455572157b06460c3faaef5afd0b977a0e3d2717101588a25718e5",
-            "manifest_digest": "3aed49cda900a6af0d0e8abcae4f3db114d988ad9bf16c62c53ba6671d06cbfe",
+            "candidate_id": "candidate-v1-2d770b6b3ff323a9b60c45cecdb7b5c36652b11cb102f16de63145530997dd11",
+            "bundle_digest": "e3c5bce9cefd8facb8ca228b56b66a560443629d94e97dd3e0d630ed06fb9164",
+            "manifest_digest": "6d5bb4b9f4abc8863ecfc05222df3651141cb23a37e135e3d19aeb5c4ef57ccc",
         })
         source = (SCRIPTS / "launch_k2_owner_test.py").read_text(encoding="utf-8")
         self.assertNotIn("read -r", source)
         self.assertIn('"--wait-for-child-exit"', source)
         self.assertIn("stdin=subprocess.DEVNULL", source)
+        self.assertIn('"--self-test"', source)
+        self.assertIn('OWNER_TEST_PACKAGED_SELF_TEST: PASS', source)
 
     def test_old_bash_lc_read_failure_reproduces_eof_then_cleanup(self):
         """Reproduce lifecycle -> bash -lc -> launched command -> read EOF."""

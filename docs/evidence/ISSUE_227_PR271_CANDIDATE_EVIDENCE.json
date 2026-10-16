@@ -1,0 +1,98 @@
+{
+  "artifact_type": "integra.issue227.candidate_verification",
+  "candidate_id": "candidate-v1-2d770b6b3ff323a9b60c45cecdb7b5c36652b11cb102f16de63145530997dd11",
+  "manifest_identity_sha256": "2d770b6b3ff323a9b60c45cecdb7b5c36652b11cb102f16de63145530997dd11",
+  "bundle_digest": "e3c5bce9cefd8facb8ca228b56b66a560443629d94e97dd3e0d630ed06fb9164",
+  "manifest_digest": "6d5bb4b9f4abc8863ecfc05222df3651141cb23a37e135e3d19aeb5c4ef57ccc",
+  "product_source": {
+    "commit_sha": "b864b6459c902f3f3d605ef8036d5a7f303612e5",
+    "tree_sha": "ab20e1c7d9e7db8ed4e4bd738c0b39f4f123a7ed"
+  },
+  "archive": {
+    "app_size_bytes": 2202224208,
+    "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-2d770b6b3ff323a9b60c45cecdb7b5c36652b11cb102f16de63145530997dd11/e3c5bce9cefd8facb8ca228b56b66a560443629d94e97dd3e0d630ed06fb9164",
+    "artifact_type": "integra.candidate_archive",
+    "bundle_digest": "e3c5bce9cefd8facb8ca228b56b66a560443629d94e97dd3e0d630ed06fb9164",
+    "candidate_id": "candidate-v1-2d770b6b3ff323a9b60c45cecdb7b5c36652b11cb102f16de63145530997dd11",
+    "file_count": 29626,
+    "inventory_sha256": "259ecf34302bad9ad45fd1fa6fc96c67e321898dcf52ea68a976f2d651af4cf3",
+    "manifest_digest": "6d5bb4b9f4abc8863ecfc05222df3651141cb23a37e135e3d19aeb5c4ef57ccc",
+    "retained_size_bytes": 2202231213,
+    "runtime_validation": "NOT_PERFORMED",
+    "schema_version": "1.0",
+    "status": "COMPLETE",
+    "verification": "ARCHIVAL_BYTE_INTEGRITY"
+  },
+  "engineering_gui": {
+    "artifact_type": "integra.issue227.engineering_gui_verification",
+    "qa_only": true,
+    "semantic_product_acceptance": false,
+    "final_product_source": {
+      "commit_sha": "b864b6459c902f3f3d605ef8036d5a7f303612e5",
+      "tree_sha": "ab20e1c7d9e7db8ed4e4bd738c0b39f4f123a7ed"
+    },
+    "full_semantic_gui_source": "e757d96c014d80d015233a48a34fd6a00e1e1e8b",
+    "full_semantic_gui": {
+      "normal_machine_notebook_zero_owner_decisions": "PASS",
+      "normal_provisional_knowledge_zero_owner_decisions": "PASS",
+      "explicit_relation_exception": "PASS",
+      "defer_without_required_reason": "PASS",
+      "edit_relation_to_depends_on": "PASS",
+      "missing_confirmation_keeps_modal_and_input": "PASS",
+      "confirm_and_save_two_concepts_one_relation": "PASS",
+      "close_reopen_preserves_revision": "PASS",
+      "revision": "1e32afe40f0704660afe1f2bccff603a4cf2eb46538df0e5da56100bf649e22b",
+      "reviewer_id_field_absent": true,
+      "technical_ids_not_required": true,
+      "owner_provenance_automatic": true
+    },
+    "incremental_final_gui": {
+      "normal_path_message": "Готово — решений от вас не требуется",
+      "machine_assurance_preserved": true,
+      "decoded_video_frame": "blue synthetic MP4, observed native screenshot",
+      "first_range_seconds": [
+        0,
+        2.2
+      ],
+      "manual_seek_seconds": 0.5,
+      "observed_playing_time_seconds": 0.9037199124726477,
+      "second_range_seconds": [
+        2.2,
+        4.4
+      ],
+      "observed_second_range_playing_time_seconds": 2.466083150984683,
+      "missing_source_message": "Не удалось открыть точный фрагмент источника. Проверьте доступность исходного файла и соответствие его версии сохранённому материалу.",
+      "diagnostic_code": "KNOWLEDGE_SOURCE_NAVIGATION_FAILED",
+      "raw_error_or_source_path_logged": false,
+      "fixture_media_restored": true,
+      "archive_published": false
+    },
+    "independent_incremental_coverage_review": "PASS: final diff changes only source-navigation failure presentation/logging; semantic, confirmation, apply, persistence and playback implementations unchanged",
+    "observations_source": "Codex native CUA tool observations in this execution turn; no bridge-only substitution",
+    "historical_knowledge_open_exit_2_root_cause": "UNVERIFIED"
+  },
+  "full_suite": {
+    "discovered": 1247,
+    "passed": 1183,
+    "skipped": 64,
+    "failures": 0,
+    "errors": 0
+  },
+  "focused": {
+    "tests": 111,
+    "result": "PASS"
+  },
+  "native_routing": {
+    "tests": 3,
+    "result": "PASS"
+  },
+  "source_guard": {
+    "tests": 2,
+    "result": "PASS",
+    "frozen_branch": "codex/issue227-k2-final-stable",
+    "rebase_guard_result": "CANDIDATE_SOURCE_FROZEN"
+  },
+  "owner_acceptance": false,
+  "current_changed": false,
+  "process_board_changed": false
+}

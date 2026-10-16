@@ -29,9 +29,9 @@ import prepare_candidate_execution_copy as execution_copy  # noqa: E402
 import temp_workspace_lifecycle as lifecycle  # noqa: E402
 
 
-CANDIDATE_ID = "candidate-v1-0f69e617c0841f27afe2238a28d6c25ae5a80ce0fedf01cf0c114638de575032"
-BUNDLE_DIGEST = "3d4d33a983455572157b06460c3faaef5afd0b977a0e3d2717101588a25718e5"
-MANIFEST_DIGEST = "3aed49cda900a6af0d0e8abcae4f3db114d988ad9bf16c62c53ba6671d06cbfe"
+CANDIDATE_ID = "candidate-v1-2d770b6b3ff323a9b60c45cecdb7b5c36652b11cb102f16de63145530997dd11"
+BUNDLE_DIGEST = "e3c5bce9cefd8facb8ca228b56b66a560443629d94e97dd3e0d630ed06fb9164"
+MANIFEST_DIGEST = "6d5bb4b9f4abc8863ecfc05222df3651141cb23a37e135e3d19aeb5c4ef57ccc"
 IDENTITY = {"candidate_id": CANDIDATE_ID, "bundle_digest": BUNDLE_DIGEST,
             "manifest_digest": MANIFEST_DIGEST}
 PURPOSE = "issue227-k2-gui-e2e"
@@ -195,6 +195,13 @@ def _worker() -> int:
 def _verify_launch() -> int:
     workspace, archive_receipt, app, fixture_result, app_environment = _prepare_session()
     executable = app / "Contents/MacOS/Integra"
+    self_test = subprocess.run([str(executable), "--self-test"], cwd=workspace,
+                              env=app_environment, stdin=subprocess.DEVNULL,
+                              capture_output=True, text=True, timeout=60, check=False)
+    if self_test.returncode != 0:
+        raise RuntimeError(f"packaged self-test failed: exit={self_test.returncode}; "
+                           f"stdout={self_test.stdout[-2000:]!r}; stderr={self_test.stderr[-2000:]!r}")
+    print("OWNER_TEST_PACKAGED_SELF_TEST: PASS", flush=True)
     probe = workspace / "launch-observation.txt"
     app_environment["INTEGRA_LAUNCH_PROBE"] = str(probe)
     result = subprocess.run([str(executable)], cwd=workspace, env=app_environment,
