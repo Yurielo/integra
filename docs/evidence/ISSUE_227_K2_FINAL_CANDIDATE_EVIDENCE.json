@@ -1,0 +1,15 @@
+{
+  "artifact_type": "integra.issue_227.k2_final_candidate_evidence",
+  "schema_version": "1.0",
+  "status": "PASS",
+  "candidate_id": "candidate-v1-ee1bd582b9384375c305082f461ede09475de3498ce86f9871f73637655482c4",
+  "manifest_identity_sha256": "ee1bd582b9384375c305082f461ede09475de3498ce86f9871f73637655482c4",
+  "manifest_digest": "122389062fc5b8904a6c7e017a48883d69588dfe0faf1a028e2fe4fb5867b197",
+  "bundle_digest": "5f7a80586f57a8377c740219e201cabb9fae6a7f99a5b7338ec7fadbb8d99406",
+  "product_source": {"commit_sha": "0c97a84978a036029600b790a098415763549259", "tree_sha": "d059b33a6799df12acdb3d908fe3b7c5eb309461"},
+  "pre_owner_evidence": {"focused_suite": "123 passed, 20 skipped", "full_suite": "1243 passed, 132 skipped", "production_gui_normal_path": "PASS", "production_gui_relation_exception_path": "PASS", "source_video_playback_and_seek": "PASS", "apply_creates_two_concepts_and_one_relation": "PASS", "close_reopen_persistence": "PASS"},
+  "archive": {"verification": "ARCHIVAL_BYTE_INTEGRITY", "inventory_sha256": "a560d9b51a63c26b3af4c9f13adacb5dc1c06591435e2e62edfb2dc572576346", "file_count": 29626, "retained_size_bytes": 2202230621, "lifecycle": "CANDIDATE_BOUND_VALIDATION"},
+  "current_changed": false,
+  "process_board_changed": false,
+  "owner_acceptance": false
+}
