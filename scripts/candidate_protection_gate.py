@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 import shutil
 import hashlib
+import re
 
 try:
     from scripts import candidate_protection_audit as protection
@@ -83,6 +84,88 @@ def require_promotion(proposal: dict, current: dict, candidate_archive: Path,
         raise ValueError('promotion CURRENT bytes differ from exact canonical main binding')
     _selected_verified(registry, audit, proposal['candidate'], candidate_archive)
     _selected_verified(registry, audit, registry['canonical_current'], outgoing_archive)
+
+
+# This is a single historical transition, not a substitute for the ordinary
+# outgoing-CURRENT archive requirement in require_promotion().  The accepted
+# #214 decision records missing bytes; it never asserts recovery.
+HISTORICAL_CURRENT = 'candidate-v1-d8bd6fc2649e061d50bfabae37c636d8caeb764965c941cf4fef88ae5fe301a8'
+HISTORICAL_ROLLBACK = 'candidate-v1-af81b2867f893e8e529a2d4f64d6c1370dd1249b46eb999d427fb408229680fa'
+HISTORICAL_SUCCESSOR = 'candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29'
+HISTORICAL_PROPOSAL_HEAD = 'ff0760f1a206de3f047b8d163c2c573689a4a530'
+
+
+def require_historical_gap_transition(proposal: dict, current: dict,
+                                      candidate_archive: Path, authorization_ref: str) -> dict:
+    """Admit only the exact #214 gap -> #213 Candidate after a fresh owner gate.
+
+    This returns evidence for a prepare-only helper. It never changes CURRENT
+    or grants archive deletion. A later CURRENT cannot reuse the exception.
+    """
+    registry, audit = _snapshot()
+    canonical = audit['canonical']
+    main = canonical['main_sha']
+    remote_bytes, _ = protection._remote_file('state/candidate_protection_registry_v1.json', main)
+    if remote_bytes != protection.REGISTRY.read_bytes():
+        raise ValueError('canonical registry is not published unchanged on main')
+    expected_gaps = {('CURRENT', HISTORICAL_CURRENT), ('ROLLBACK', HISTORICAL_ROLLBACK)}
+    gaps = registry.get('historical_gaps')
+    if (not isinstance(gaps, list) or len(gaps) != 2
+            or {(g.get('role'), g.get('candidate_id')) for g in gaps if isinstance(g, dict)} != expected_gaps
+            or any(g.get('observed_state') != 'MISSING_WITH_AVAILABLE_EVIDENCE' for g in gaps)
+            or registry.get('canonical_current', {}).get('candidate_id') != HISTORICAL_CURRENT
+            or registry.get('rollback', {}).get('candidate_id') != HISTORICAL_ROLLBACK
+            or registry.get('recovery_selection') != {
+                'state': 'NO_VERIFIED_ARCHIVE_ACCEPTED_HISTORICAL_GAP',
+                'candidate_id': HISTORICAL_CURRENT,
+                'decision_ref': registry.get('decision_authority_ref'), 'archive_path': None}
+            or registry.get('selected_survivors', {}).get(HISTORICAL_CURRENT, 'absent') is not None
+            or registry.get('selected_survivors', {}).get(HISTORICAL_ROLLBACK, 'absent') is not None):
+        raise ValueError('exact accepted historical recovery gap is unavailable')
+    if (current.get('current_id') != registry['canonical_current']['current_id']
+            or proposal.get('candidate', {}).get('candidate_id') != HISTORICAL_SUCCESSOR
+            or not any(p.get('pr') == 213 and p.get('head_sha') == HISTORICAL_PROPOSAL_HEAD
+                       and p.get('candidate_id') == HISTORICAL_SUCCESSOR
+                       for p in registry.get('proposed', []))
+            or canonical.get('proposal_heads', {}).get('213') != HISTORICAL_PROPOSAL_HEAD):
+        raise ValueError('transition CURRENT or proposed Candidate differs from exact scope')
+    local_current = protection.ROOT / registry['canonical_current']['path']
+    data = local_current.read_bytes()
+    if (protection.sha(data) != registry['canonical_current']['sha256']
+            or json.loads(data) != current):
+        raise ValueError('transition CURRENT differs from exact canonical main binding')
+    if (registry.get('unknown_historical') != 'RETAIN_FAIL_CLOSED'
+            or registry.get('deletion_enabled') is not False
+            or registry.get('deletion_authorizations') != {}
+            or any(row['classification'] == 'ELIGIBLE' for row in audit['entries'])
+            or set(audit['promotion_blockers']) != {
+                'OUTGOING_CURRENT_EXACT_ARCHIVE_MISSING',
+                'PROMOTION_OWNER_AUTHORIZATION_MISSING:213'}):
+        raise ValueError('transition protection or promotion blockers differ')
+    _selected_verified(registry, audit, proposal['candidate'], candidate_archive)
+    match = re.fullmatch(r'https://github\.com/Yurielo/integra/issues/216#issuecomment-([0-9]+)',
+                         authorization_ref)
+    if not match:
+        raise ValueError('exact Issue #216 Product Owner transition reference required')
+    authority = protection._api(f'repos/{protection.REPOSITORY}/issues/comments/{match.group(1)}')
+    token = ('PRODUCT_OWNER_AUTHORIZATION: ISSUE_216_HISTORICAL_GAP_TRANSITION '
+             f'FROM={HISTORICAL_CURRENT} TO={HISTORICAL_SUCCESSOR} '
+             f'PROPOSAL_PR_213_HEAD={HISTORICAL_PROPOSAL_HEAD} '
+             f'REGISTRY_SHA256={audit["registry_sha256"]} '
+             'CURRENT_RECOVERY=MISSING_WITH_AVAILABLE_EVIDENCE '
+             'ROLLBACK_RECOVERY=MISSING_WITH_AVAILABLE_EVIDENCE '
+             'UNKNOWN=RETAIN_FAIL_CLOSED DELETION=FORBIDDEN')
+    if (authority.get('html_url') != authorization_ref
+            or authority.get('user', {}).get('login', '').lower() != 'yurielo'
+            or authority.get('body', '').strip() != token):
+        raise ValueError('exact Product Owner transition authorization is absent or differs')
+    if protection.sha(protection.REGISTRY.read_bytes()) != audit['registry_sha256']:
+        raise ValueError('canonical registry changed after transition authorization check')
+    return {'authorization_ref': authorization_ref, 'authorization_token_sha256': protection.sha(token.encode()),
+            'registry_sha256': audit['registry_sha256'], 'canonical_main_sha': main,
+            'outgoing_recovery': 'MISSING_WITH_AVAILABLE_EVIDENCE',
+            'rollback_recovery': 'MISSING_WITH_AVAILABLE_EVIDENCE',
+            'proposed_archive': str(candidate_archive.resolve())}
 
 
 def require_archive_publication(archive_root: Path, estimated_bytes: int) -> None:

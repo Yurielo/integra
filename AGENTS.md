@@ -63,3 +63,10 @@ commit alone is not a backup. Temporary cleanup must preserve these Candidates
 until that archive is verified. The promotion helper requires exact archives
 of both the proposed and outgoing CURRENT applications in addition to the
 existing owner-acceptance and proposal checks.
+
+The sole historical exception is the exact Issue #216 transition from the
+Issue #214 accepted missing CURRENT/rollback archives to PR #213's accepted
+Candidate. It requires a complete canonical protection registry, a verified
+proposed archive, and separate exact Product Owner transition authorization.
+It does not recover missing bytes, allow deletion, authorize promotion on its
+own, or change the outgoing-archive requirement for any later promotion.
