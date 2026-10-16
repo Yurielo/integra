@@ -21,12 +21,13 @@ def marker(repo):
     return path if path.is_absolute() else Path(repo) / path
 
 
-def check_rebase(repo):
+def check_rebase(repo, target_branch=None):
     path = marker(repo)
     if not path.exists():
         return
     frozen = json.loads(path.read_text())
-    branch = git(repo, 'symbolic-ref', '--quiet', 'HEAD')
+    branch = (git(repo, 'rev-parse', '--symbolic-full-name', target_branch)
+              if target_branch else git(repo, 'symbolic-ref', '--quiet', 'HEAD'))
     if not isinstance(frozen.get('branch'), str):
         raise ValueError('Candidate source freeze metadata is invalid')
     if branch == frozen['branch']:
@@ -48,7 +49,7 @@ def freeze(repo, manifest):
         hook = repo / hook
     command = ('#!/bin/sh\nexec ' + shlex.quote(sys.executable) + ' -B '
                + shlex.quote(str(Path(__file__).resolve()))
-               + ' check-rebase --repo "$PWD"\n')
+               + ' check-rebase --repo "$PWD" --target-branch "${2-}"\n')
     if hook.exists() and hook.read_text() != command:
         raise ValueError('Existing pre-rebase hook must be preserved; automatic installation refused')
     hooks_config = subprocess.run(
@@ -69,12 +70,13 @@ def main():
     parser.add_argument('operation', choices=['freeze', 'check-rebase'])
     parser.add_argument('--repo', type=Path, default=Path.cwd())
     parser.add_argument('--manifest', type=Path)
+    parser.add_argument('--target-branch')
     args = parser.parse_args()
     try:
         if args.operation == 'freeze':
             freeze(args.repo, json.loads(args.manifest.read_text()))
         else:
-            check_rebase(args.repo)
+            check_rebase(args.repo, args.target_branch)
     except (OSError, ValueError, KeyError, subprocess.CalledProcessError) as error:
         print(str(error), file=sys.stderr)
         return 1

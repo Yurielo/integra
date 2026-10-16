@@ -37,6 +37,12 @@ class CandidateSourceGuardTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn('CANDIDATE_SOURCE_FROZEN', result.stderr)
             self.assertEqual(git('rev-parse', 'HEAD'), head)
+            git('checkout', '-q', 'upstream')
+            explicit = subprocess.run(['git', '-C', str(repo), 'rebase', 'upstream', 'candidate'],
+                                      capture_output=True, text=True)
+            self.assertNotEqual(explicit.returncode, 0)
+            self.assertIn('CANDIDATE_SOURCE_FROZEN', explicit.stderr)
+            self.assertEqual(git('rev-parse', 'candidate'), head)
             self.assertEqual(json.loads(guard.marker(repo).read_text())['source'],
                              manifest['identity']['source'])
 
