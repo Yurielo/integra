@@ -1,6 +1,7 @@
 // White-box native-control regression; no synthetic events or bridge calls.
 // The production action is tested without ending an actual modal session.
 let application = NSApplication.shared
+precondition(knowledgeSourceNavigationFailureText.contains("Проверьте доступность исходного файла"))
 let relationProposals: [[String: Any]] = [["id": "relation-proposal", "entity_kind": "relations",
   "after": ["source_concept_id": "source", "target_concept_id": "target"]]]
 for action in ["ACCEPT", "EDIT"] {

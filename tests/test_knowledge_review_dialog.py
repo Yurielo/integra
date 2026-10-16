@@ -26,6 +26,13 @@ def build_probe(root):
 
 @unittest.skipUnless(sys.platform == "darwin", "requires macOS AppKit controls")
 class KnowledgeReviewDialogTests(unittest.TestCase):
+    def test_source_navigation_errors_keep_actionable_message_and_diagnostic(self):
+        source = (ROOT / "macos/IntegraApp.swift").read_text()
+        navigation = source[source.index("private func presentKnowledgeNavigation("):source.index("private func renderKnowledgeFragment(")]
+        self.assertIn('NSLog("Knowledge source navigation failed: %@", error.localizedDescription)', navigation)
+        self.assertIn('self.status.stringValue = knowledgeSourceNavigationFailureText', navigation)
+        self.assertNotIn('self.status.stringValue = error.localizedDescription', navigation)
+
     def test_production_native_validation_keeps_inputs_and_confirmation(self):
         # Compile the exact production helper. No replacement implementation.
         with tempfile.TemporaryDirectory(prefix="integra-k2-dialog-unit-") as temporary:

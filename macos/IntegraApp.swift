@@ -106,6 +106,8 @@ func knowledgeConfirmedRelationEndpoints(_ decisions: [[String: Any]], _ proposa
   }.flatMap { $0 })
 }
 
+let knowledgeSourceNavigationFailureText = "Не удалось открыть точный фрагмент источника. Проверьте доступность исходного файла и соответствие его версии сохранённому материалу."
+
 final class Bridge: @unchecked Sendable {
   private let resources: URL
   // A packaged QA run must remain bound to its owned workspace even when
@@ -2327,7 +2329,13 @@ struct SidebarItem {
           guard self.navigationGeneration == generation else { return }
           self.renderKnowledgeFragment(path: path, start: start, end: end, quote: result["quote"] as? String ?? "")
         }
-      } catch { DispatchQueue.main.async { self.status.textColor = .systemRed; self.status.stringValue = error.localizedDescription } }
+      } catch {
+        NSLog("Knowledge source navigation failed: %@", error.localizedDescription)
+        DispatchQueue.main.async {
+          self.status.textColor = .systemRed
+          self.status.stringValue = knowledgeSourceNavigationFailureText
+        }
+      }
     }
   }
 
