@@ -1,6 +1,14 @@
 // White-box native-control regression; no synthetic events or bridge calls.
 // The production action is tested without ending an actual modal session.
 let application = NSApplication.shared
+let relationProposals: [[String: Any]] = [["id": "relation-proposal", "entity_kind": "relations",
+  "after": ["source_concept_id": "source", "target_concept_id": "target"]]]
+for action in ["ACCEPT", "EDIT"] {
+  precondition(knowledgeConfirmedRelationEndpoints([["proposal_id": "relation-proposal", "action": action]], relationProposals) == Set(["source", "target"]))
+}
+for action in ["DEFER", "REJECT"] {
+  precondition(knowledgeConfirmedRelationEndpoints([["proposal_id": "relation-proposal", "action": action]], relationProposals).isEmpty)
+}
 let interactive = CommandLine.arguments.contains("--interactive") || Bundle.main.bundleIdentifier == "app.integra.qa.k2-dialog"
 if interactive {
   application.setActivationPolicy(.regular)

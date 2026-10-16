@@ -94,6 +94,18 @@ final class KnowledgeReviewDialog: NSObject {
   func run() -> NSApplication.ModalResponse { alert.runModal() }
 }
 
+func knowledgeConfirmedRelationEndpoints(_ decisions: [[String: Any]], _ proposals: [[String: Any]]) -> Set<String> {
+  Set(decisions.compactMap { decision -> [String]? in
+    guard ["ACCEPT", "EDIT"].contains(decision["action"] as? String ?? ""),
+          let proposal = proposals.first(where: { $0["id"] as? String == decision["proposal_id"] as? String }),
+          proposal["entity_kind"] as? String == "relations",
+          let after = proposal["after"] as? [String: Any],
+          let source = after["source_concept_id"] as? String,
+          let target = after["target_concept_id"] as? String else { return nil }
+    return [source, target]
+  }.flatMap { $0 })
+}
+
 final class Bridge: @unchecked Sendable {
   private let resources: URL
   // A packaged QA run must remain bound to its owned workspace even when
@@ -2725,7 +2737,10 @@ struct SidebarItem {
       guard let id = proposal["id"] as? String else { return }
       guard exceptionIDs.contains(id) else { continue }
       let after = proposal["after"] as? [String: Any] ?? [:]
-      addKnowledgeReviewLabel("Предложение \(index + 1) из \(proposals.count): \(knowledgeText(after["preferred_label"] ?? after["title"] ?? after["relation_type"]))", to: stack)
+      let proposalTitle = proposal["entity_kind"] as? String == "relations"
+        ? knowledgeRelationTitle(after["relation_type"] as? String ?? "")
+        : knowledgeText(after["preferred_label"] ?? after["title"])
+      addKnowledgeReviewLabel("Вопрос \(index + 1): \(proposalTitle)", to: stack)
       let action = NSPopUpButton(); action.addItems(withTitles: ["Выберите решение", "Принять", "Изменить и принять", "Отклонить", "Отложить"])
       stack.addArrangedSubview(action)
       var fields: [(String, NSTextField)] = []
@@ -2780,15 +2795,7 @@ struct SidebarItem {
       }
       decisions.append(decision)
     }
-    let acceptedRelationEndpoints = Set(decisions.compactMap { decision -> [String]? in
-      guard decision["action"] as? String == "ACCEPT",
-            let proposal = proposals.first(where: { $0["id"] as? String == decision["proposal_id"] as? String }),
-            proposal["entity_kind"] as? String == "relations",
-            let after = proposal["after"] as? [String: Any],
-            let source = after["source_concept_id"] as? String,
-            let target = after["target_concept_id"] as? String else { return nil }
-      return [source, target]
-    }.flatMap { $0 })
+    let acceptedRelationEndpoints = knowledgeConfirmedRelationEndpoints(decisions, proposals)
     for proposal in proposals {
       guard let proposalID = proposal["id"] as? String, !exceptionIDs.contains(proposalID) else { continue }
       let after = proposal["after"] as? [String: Any] ?? [:]
