@@ -1,6 +1,8 @@
 # Unified translation architecture
 
-Status: **PROPOSAL**, 2026-10-20. Existing accepted translation paths remain authoritative. [Audit evidence](FOUR_PRODUCT_ARCHITECTURE_AUDIT.md) distinguishes repository implementation, tests, real material, installed runtime and owner acceptance.
+Status: **accepted profile/reuse planning direction; implementation remains a PROPOSAL**, 2026-10-20. Existing accepted translation paths remain authoritative. [Audit evidence](FOUR_PRODUCT_ARCHITECTURE_AUDIT.md) distinguishes repository implementation, tests, real material, installed runtime and owner acceptance.
+
+The accepted direction fixes four distinct profiles—**document, transcript, cue-safe subtitle and speech-adapted translation**—rather than a universal translation result. A future reuse hit must bind the complete effective source, ordered context, glossary, model, prompt and profile identities. This does not automatically accept a target-language result semantically, authorize a provider/model change or begin implementation.
 
 ## FACT — current translation is shared at the model level, not at the execution contract
 
@@ -33,11 +35,11 @@ Only after two adapters prove equivalent behavior under a common profile should 
 
 ### Proposed TranslationUnit
 
-Each unit has native parent artifact/type/revision/hash, stable local unit ID, exact owned source text, language pair, source locators, ordered context references/hash, glossary content/version, output profile/version and constraints. Context is available for interpretation but not owned translated output. Unit order and selection are explicit. A result binds the complete effective model/prompt/options/validator identity, attempts, output text/hash, coverage, findings and review status.
+Each unit has native parent artifact/type/revision/hash, stable local unit ID, exact owned source text, language pair, source locators, ordered context references/hash, glossary content/version, output profile/version and constraints. Context is available for interpretation but not owned translated output. Unit order and selection are explicit. A result binds the complete effective model/prompt/options/validator identity, attempts, output text/hash, coverage, findings and review status. The compatibility identity is the exact ordered tuple of source revision and owned units, context, glossary, model/runtime, prompt/template, language pair, profile/version and effective options/QA policy; equality on model digest or target string alone is insufficient.
 
 A TranslationRevision assembles ordered units and their source bindings. Preserve original wording, prior translations and reviewer edits. Correcting a unit makes a new revision; do not overwrite accepted output or silently regenerate its neighbors. If context changes, invalidate only the units whose declared context changed. Fine-grained reuse must never omit a context dependency merely to improve hit rate.
 
-## PROPOSAL — seven use cases and distinct output profiles
+## PROPOSAL — four profiles applied to seven use cases
 
 | Use case | Source units | Constraints / review | Reusable without inference |
 | --- | --- | --- | --- |
@@ -49,11 +51,11 @@ A TranslationRevision assembles ordered units and their source bindings. Preserv
 | 6. Multilingual video | Transcript + subtitle + media recipe | Separate subtitle and speech branches; speaker segmentation, duration fit, sync and mixing | Common semantic units, compatible subtitles/audio segments; render separately |
 | 7. Knowledge/Learning | Exact evidence quotes and reviewed Knowledge references | Original-language evidence retained; translated quote/lesson is a derivative; semantic/pedagogical acceptance remains explicit | Accepted compatible translation plus source links, not acceptance transferred between domains |
 
-Document, transcript, subtitle and dubbing outputs therefore need different constraints. A subtitle can be too compressed for a book, a literary paragraph too long for a cue, and a valid cue unsuitable for speech. One target string may satisfy several profiles, but that must be validated and recorded, not assumed.
+Document, transcript, subtitle and speech-adapted outputs therefore need different constraints. A subtitle can be too compressed for a book, a literary paragraph too long for a cue, and a valid cue unsuitable for speech. One target string may satisfy several profiles, but that must be validated and recorded, not assumed. A speech-adapted result is a new profile revision, not a semantic-acceptance transfer from a document or subtitle result.
 
 ## PROPOSAL — cache and review rules
 
-Compatible reuse requires exact source/owned-unit/context/glossary/profile/model/prompt/options identities plus supported validators. Hash source and glossary content independently from file locations. Keep the producer's existing native cache until sidecar parity is proved; do not weaken it in place. Reading-order changes affect composition/context, not original ASR. Target language or speech-purpose changes do not trigger transcription.
+Compatible reuse requires the exact compatibility identity—source/owned-unit/context/glossary/model/runtime/prompt/profile/options/QA identities—plus supported validators. Hash source and glossary content independently from file locations. Keep the producer's existing native cache until sidecar parity is proved; do not weaken it in place. Reading-order changes affect composition/context, not original ASR. Target language or speech-purpose changes do not trigger transcription.
 
 On a cache hit, run required structural/profile validation, preserve warnings and the attributable human review record, and record zero provider calls. Reusing a target text under a new subtitle or speech profile requires new profile QA; prior semantic review can remain linked but does not certify timing or pronunciation. Reopening an unchanged accepted revision does not ask for the same review again. Technical pass, artifact exportability, release acceptance and semantic acceptance are four distinct claims.
 
@@ -61,13 +63,13 @@ On a cache hit, run required structural/profile validation, preserve warnings an
 
 One layer owns each retry budget. Product adapters pass declared finite request and quality-repair budgets; the orchestrator must not multiply a three-attempt provider retry by an unbounded stage retry. Persist attempt cause, selected output, truncation/timeout status and checkpoint completeness. Do not retry unknown irreversible publication outcomes. Cancellation stops only owned requests/processes and leaves complete translation units reusable.
 
-BookText has a per-user BookText-specific translation lock and bounded keep-alive, but this does not serialize VideoText or Integra. VideoText's family-based unload behavior can affect other apps. Extend the existing Integra resource reservation precedent to a small cooperative per-user contract before enabling concurrent cross-app jobs. Never unload another application's resident model based on name alone. Read-only capability discovery must not load a model.
+BookText has a per-user BookText-specific translation lock and bounded keep-alive, but this does not serialize VideoText or Integra. VideoText's family-based unload behavior can affect other apps. Extend the existing Integra resource reservation precedent only as an opt-in lightweight per-user contract before enabling concurrent cross-app jobs. It must work while Integra is closed and has no daemon/server requirement. Never unload another application's resident model based on name alone; use attributable reservation/process ownership. Read-only capability discovery must not load a model.
 
 ## PROPOSAL — acceptance and migration
 
 Retain #131 BookText semantic acceptance and VideoText EN↔RU subtitle acceptance as regression baselines. Test paragraph context/glossary/numbers, a plain transcript, an ordered combined transcript, cue ownership/reflow, and a speech-adaptation fixture separately. Prove byte-preserving old-project reopen, zero inference on compatible hits, precise invalidation, resumable partial units, concurrent request exclusion, and preserved reviewer edits. Real-language review must use approved samples and report actual coverage; unit tests cannot supply it.
 
-Start as an opt-in exchange adapter. Rollback uses the native product path and previous immutable revision; no destructive migration or deletion of Qwen-era historical exports. Replacing the legacy SeminarText command or changing an accepted provider/contract requires bounded owner-approved scope. The roadmap does not authorize either change now.
+Start as an opt-in versioned-sidecar exchange adapter with explicit read-only handoff/import. Rollback uses the native product path and previous immutable revision; no destructive migration or deletion of Qwen-era historical exports. Replacing the legacy SeminarText command or changing an accepted provider/contract requires bounded owner-approved scope. The roadmap does not authorize either change now.
 
 ## INFERENCE and UNVERIFIED
 

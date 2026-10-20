@@ -1,6 +1,6 @@
 # Shared artifact contract proposal
 
-Status: **PROPOSAL**, not an accepted replacement schema. Evidence basis: [audit](FOUR_PRODUCT_ARCHITECTURE_AUDIT.md). All FACT, INFERENCE, PROPOSAL and UNVERIFIED classifications below refer to the pinned audit snapshot.
+Status: **accepted adapter-first planning direction; implementation PROPOSAL, not an accepted replacement schema**. Evidence basis: [audit](FOUR_PRODUCT_ARCHITECTURE_AUDIT.md). All FACT, INFERENCE, PROPOSAL and UNVERIFIED classifications below refer to the pinned audit snapshot.
 
 ## FACT — preserve existing contracts
 
@@ -8,7 +8,7 @@ Integra R2/R3 already define stable URNs, single field writers, leases, componen
 
 ## PROPOSAL — additive exchange envelope
 
-Use an **exchange manifest around native payloads**, initially alongside Integra's accepted `artifact_reference_v1.schema.json`. Do not add unsupported fields directly to strict v1 payloads. Define a separately versioned extension only after owner acceptance and fixtures. Every reference contains:
+Use a **versioned sidecar exchange manifest around native payloads**, initially alongside Integra's accepted `artifact_reference_v1.schema.json`, with explicit read-only handoff/import. Do not add unsupported fields directly to strict v1 payloads. Define a separately versioned extension only after owner acceptance and fixtures. The initial manifest points to producer-owned bytes; it does not establish shared physical storage or a mandatory copy. Every reference contains:
 
 | Group | Required meaning |
 | --- | --- |
@@ -42,7 +42,7 @@ Canonicalize manifest JSON with one specified algorithm and exclude the manifest
 
 ## PROPOSAL — authority and lifecycle
 
-Original files are user/source-system owned. Native producer artifacts are owned by their producing component. Integra owns its registry, jobs, orchestration records, local decisions and publication receipts. Imported decisions and canonical source payloads remain immutable. Derived translations, media and Knowledge views cannot rewrite source wording or acquire semantic authority through a copy.
+Original files are user/source-system owned. Native producer artifacts are owned by their producing component. Integra owns its registry, jobs, orchestration records, local decisions and publication receipts. Imported decisions and canonical source payloads remain immutable. Derived translations, media and Knowledge views cannot rewrite source wording or acquire semantic authority through a copy. An optional rebuildable index contains only references and validation metadata; it is not physical artifact storage, does not make artifacts globally discoverable by default, and cannot authorize automatic copy, reuse, retention or deletion.
 
 Do not force existing status enums into one enum. The envelope records separate axes:
 
@@ -79,7 +79,7 @@ A ReviewDecision records reviewer authority, time, exact revision hash, selected
 
 ## PROPOSAL — compatibility, migration and rollback
 
-Begin with exported sidecar manifests and read-only consumers. Readers declare exact supported native/envelope versions and capabilities; unknown mandatory fields/versions fail closed. Optional extensions must have explicit semantics and cannot relax a required hash or authority check. Do not downgrade by dropping page regions, raw timing, human edits, decision history or model provenance.
+Begin with exported versioned sidecar manifests and explicit read-only consumers/importers. Readers declare exact supported native/envelope versions and capabilities; unknown mandatory fields/versions fail closed. Optional extensions must have explicit semantics and cannot relax a required hash or authority check. A later opt-in index can be rebuilt from sidecars but must never become a prerequisite for handoff or a physical-store replacement. Do not downgrade by dropping page regions, raw timing, human edits, decision history or model provenance.
 
 Adopt migrations as pure native-revision → new-envelope transformations with an inventory/diff, converter digest, original hashes and rollback pointer. Verify imported copies before activation. No in-place project upgrade, cross-app writer takeover, or background data consolidation. Retain original schemas and native application reopen tests. Rollback removes the new activation pointer/index entry while retaining immutable data and the prior application path.
 
@@ -89,4 +89,4 @@ Publish the same small synthetic fixtures to each adapter: exact reuse; changed 
 
 ## INFERENCE and UNVERIFIED
 
-An additive envelope is lower-risk than replacing four persistence models because it leaves accepted native contracts and rollback paths intact. The cross-product envelope, universal index and conformance pack are proposals; compatibility is not established until all relevant native adapters pass the same fixtures and bounded real-source handoffs.
+An additive envelope is lower-risk than replacing four persistence models because it leaves accepted native contracts and rollback paths intact. The cross-product envelope, optional rebuildable discovery index and conformance pack are proposals; compatibility is not established until all relevant native adapters pass the same fixtures and bounded real-source handoffs.

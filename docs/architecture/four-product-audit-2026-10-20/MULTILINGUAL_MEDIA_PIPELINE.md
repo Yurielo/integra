@@ -1,6 +1,10 @@
 # Multilingual media pipeline
 
-Status: **PROPOSAL for future work**, not implemented or accepted by this audit. Evidence: [audit](FOUR_PRODUCT_ARCHITECTURE_AUDIT.md), [translation architecture](UNIFIED_TRANSLATION_ARCHITECTURE.md), [contracts](SHARED_ARTIFACT_CONTRACT_PROPOSAL.md).
+Status: **accepted adapter-first planning direction; future media implementation remains a PROPOSAL**, not implemented or accepted as a product capability by this audit. Evidence: [audit](FOUR_PRODUCT_ARCHITECTURE_AUDIT.md), [translation architecture](UNIFIED_TRANSLATION_ARCHITECTURE.md), [contracts](SHARED_ARTIFACT_CONTRACT_PROPOSAL.md).
+
+The accepted direction preserves separate document, transcript, cue-safe subtitle and speech-adapted translation profiles. A speech-adapted result needs its own exact source/context/glossary/model/prompt/profile identity and applicable QA; it never inherits semantic acceptance merely because source text, a document translation or a subtitle was accepted.
+
+Any future source or translation handoff uses the accepted versioned sidecar, explicit read-only import boundary. A discovery index remains optional metadata, not media storage or authority to copy/reuse artifacts automatically.
 
 ## FACT — current boundary
 
@@ -74,7 +78,7 @@ Start with one short authorized video, one language pair, one neutral voice and 
 
 VideoText owns media-facing speech/subtitle/synchronization adapters and recipes; BookText contributes source document/translation units where relevant; SeminarText retains transcript/timing contracts; Integra orchestrates accepted capabilities and publication without becoming a mandatory host. Share validated translation artifacts and transport contracts; do not create a fourth translation engine or an independent ASR engine for dubbing.
 
-On the 16 GB target, serialize heavyweight model phases and heavy rendering under the existing resource policy extended to cooperating standalone apps. Cache each complete synthetic segment and resume only verified segments; no full-video restart after a local rendering failure. Keep model residency and FFmpeg process ownership explicit. A cancellation never destroys the already accepted transcript or translation.
+On the 16 GB target, serialize heavyweight model phases and heavy rendering under an opt-in lightweight reservation protocol extended to cooperating standalone apps. It must work while Integra is closed, requires no daemon and records attributable owner/process identity before any residency release; an Ollama model name alone cannot unload another app's model. Cache each complete synthetic segment and resume only verified segments; no full-video restart after a local rendering failure. Keep model residency and FFmpeg process ownership explicit. A cancellation never destroys the already accepted transcript or translation.
 
 Rollback disables the new media capability and restores the prior recipe/activation pointer. Original video/audio, subtitles, translation revisions and generated segments remain intact. Voice or text revocation prevents future reuse under that policy; deletion is separately governed.
 

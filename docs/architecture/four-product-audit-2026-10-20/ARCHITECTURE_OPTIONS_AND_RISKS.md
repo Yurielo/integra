@@ -1,6 +1,8 @@
 # Architecture options and risks
 
-Status: **PROPOSAL / advisory comparison**. FACT basis: [four-product audit](FOUR_PRODUCT_ARCHITECTURE_AUDIT.md). Costs below are relative engineering estimates, not delivery commitments or measured financial forecasts.
+Status: **adapter-first direction accepted for planning; implementation remains a PROPOSAL / advisory comparison**. FACT basis: [four-product audit](FOUR_PRODUCT_ARCHITECTURE_AUDIT.md). Costs below are relative engineering estimates, not delivery commitments or measured financial forecasts.
+
+The accepted planning boundary is versioned sidecar manifests with explicit read-only handoff/import. Any discovery index is opt-in and rebuildable metadata, not physical storage or an automatic cross-project discovery/copy/reuse/retention mechanism. The acceptance does not authorize M1–M7 execution, a shared core, migration, release or semantic promotion.
 
 ## FACT — constraints shaping the choice
 
@@ -27,7 +29,7 @@ Choose **artifact interoperability through existing adapters first**, with **opt
 
 Evaluate a small shared provider/checkpoint library only after equivalent profiles have two verified consumers. Do not extract BookText CDM as a universal text model, select VideoText-only ASR merely to satisfy a product label, or create another translation daemon. #187 remains a proof/owner boundary: a VideoText wrapper that invokes SeminarText cannot prove “no SeminarText dependency.”
 
-This recommendation has a reversible sequence: sidecar export → read-only import → compatible reuse → optional orchestration → measured extraction. A step is successful only when invocation counts, handoff fidelity, review preservation and user outcomes improve. Elegance alone is not a gate.
+This recommendation has a reversible sequence: versioned sidecar export → explicit read-only import → future scope-approved compatible reuse → optional orchestration → measured extraction. A step is successful only when invocation counts, handoff fidelity, review preservation and user outcomes improve. An index may assist an opted-in route but cannot replace physical native ownership or make the preceding actions automatic. Elegance alone is not a gate.
 
 ## FACT / INFERENCE — resource implications on the 16 GB target
 
@@ -46,7 +48,7 @@ Integra's existing `ResourceScheduler`/`ResourceReservationStore` already enforc
 
 ## PROPOSAL — minimal shared resource coordination
 
-Adapt that existing file-lock/reservation design into a small versioned per-user host protocol usable without the Integra UI. Admission includes job/capability/model class, estimated memory/disk, exact PID/start token, operation, lease generation and cancellation owner. Atomic reservation precedes model load. Unknown pressure or an unresolved owner blocks a new heavy job; light UI/metadata work remains available. Ownership-based residency release replaces family-name unloading. Expiry alone is never proof of dead ownership.
+Adapt that existing file-lock/reservation design into a small opt-in versioned per-user host protocol usable while Integra is closed, without the Integra UI, a daemon or a server. Admission includes job/capability/model class, estimated memory/disk, exact PID/start token, operation, lease generation and cancellation owner. Atomic reservation precedes model load. Unknown pressure or an unresolved owner blocks a new heavy job; light UI/metadata work remains available. Ownership-based residency release replaces family-name unloading; a model name alone never permits another application's Ollama residency to be unloaded. Expiry alone is never proof of dead ownership.
 
 Start conservatively with serialized heavy phases; allow more overlap only after bounded measurements on the actual Mac. Record cold/warm latency, peak process-tree RSS, system pressure/swap, temp disk, model/request counts and cancellation recovery. Keep per-product retry/process/temp cleanup and accepted archive retention. No cache-cleanup rule may delete retained candidates or user sources. Cross-app protocol participation is new work, not a claim about current enforcement. OCR/TTS workload identities need an explicitly versioned scheduler extension where the current closed enums do not support them; alternate names must not bypass existing exclusions.
 
@@ -66,9 +68,9 @@ Start conservatively with serialized heavy phases; allow more overlap only after
 | Resource exhaustion / disk growth | Multiple model stacks and retained app copies | Existing admission/retention policy, measured bounds, no extra daemon; M1/M7 |
 | Unbounded retries | Provider retry × quality retry × orchestrator retry | One declared budget owner and finite stage limits; M4 |
 | Overstated multilingual readiness | EN↔RU evidence does not prove all languages or dubbing | Per-profile/language/voice acceptance, M4/M5 |
-| Duplicate roadmap/semantic stores | #257 and four source plans diverge | One coordination proposal, stable issue mappings and source-native authority; M0/M6 |
+| Duplicate roadmap/semantic stores | #257 and four source plans diverge | Preserve #257 and CURRENT/K1/K2 gates; one non-blocking coordination proposal and source-native authority; M0/M6 |
 | Privacy/consent/external publication | Source content, model prompts, cloned voices or destination actions | Local data by default, explicit consent/scope and separate publication receipts; M5/M6 |
 
 ## UNVERIFIED and decision boundary
 
-No benchmark in this audit proves a numeric performance gain, memory budget or total implementation duration. Savings are expected from avoided work and must be measured through call-count and resource evidence. Architecture adoption, shared storage participation and prioritization against existing stage gates require owner review; routine adapter details do not. See [decisions](PRODUCT_OWNER_DECISIONS.md) and [roadmap](INTEGRATED_DEVELOPMENT_ROADMAP.md).
+No benchmark in this audit proves a numeric performance gain, memory budget or total implementation duration. Savings are expected from avoided work and must be measured through call-count and resource evidence. The owner has accepted the adapter-first planning direction and its clarification boundaries; actual shared-storage participation, automatic reuse, implementation prioritization, releases and semantic decisions retain their applicable future gates. See [decisions](PRODUCT_OWNER_DECISIONS.md) and [roadmap](INTEGRATED_DEVELOPMENT_ROADMAP.md).

@@ -1,6 +1,6 @@
 # Four-product architecture audit
 
-Audit date: **2026-10-20, Europe/Istanbul**. Status: **review complete; recommendations PROPOSED, architecture NOT accepted**. Planning home: Integra, Issue [#277](https://github.com/Yurielo/integra/issues/277). This package changes documentation only and does not amend accepted governance, CURRENT, source pins or executable roadmaps.
+Audit date: **2026-10-20, Europe/Istanbul**. Status: **the Product Owner accepted the adapter-first planning direction and the seven boundary clarifications; implementation remains PROPOSED**. Planning home: Integra, Issue [#277](https://github.com/Yurielo/integra/issues/277). This package changes documentation only and does not amend accepted governance, CURRENT, source pins or executable roadmaps.
 
 ## Evidence method and vocabulary
 
@@ -9,6 +9,12 @@ Audit date: **2026-10-20, Europe/Istanbul**. Status: **review complete; recommen
 Capability labels are separate, combinable dimensions: **IMPLEMENTED** code exists in the audited canonical revision; **TESTED** named automated coverage or recorded execution exists (the row states which); **ACCEPTED** an exact contract/release/sample has attributable acceptance; **PARTIAL** a bounded implementation or missing outcome; **PLANNED** declared future work; **DEPRECATED** superseded execution path; **UNKNOWN** insufficient evidence. A test file alone is coverage evidence, not a fresh PASS. An issue being closed or a PR merged does not establish semantic acceptance or installed-runtime parity.
 
 The audit used immutable exported snapshots and read-only GitHub metadata/comments. Production/dirty source trees and existing worktrees were left intact. No user media, protected datasets or Gold were opened; no new inference benchmark, dependency/model installation, production app launch/build/promotion, migration, source change or merge occurred. Only planning documentation, an isolated planning worktree and the authorized planning Issue/PR are delivered. Deterministic tests use isolated fixtures; validation results are recorded below.
+
+## FACT — accepted planning direction and retained gates
+
+The Product Owner accepted this package's adapter-first direction and seven review clarifications: initial versioned sidecar manifests with explicit read-only handoff/import; an opt-in rebuildable discovery index distinct from physical storage; four distinct translation profiles with exact compatibility identity and no transferred semantic acceptance; opt-in lightweight host reservations that work while Integra is closed and never evict a foreign Ollama model by name alone; non-blocking M0–M7 planning that preserves #257 and CURRENT/K1/K2 authority; increment-specific M7 readiness; and no forced shared core, migration, schema replacement, engine/model change or product-code work.
+
+This is acceptance of a documentation-level planning direction. It does **not** authorize M1–M7 implementation, a product release, a semantic decision, a CURRENT promotion, a change to Product Rules, or a replacement of existing native authority. Each future vertical slice still needs its own bounded scope, validation and applicable owner acceptance.
 
 ## FACT — verified repositories and canonical mains
 
@@ -23,7 +29,7 @@ All remotes were verified as the corresponding `https://github.com/Yurielo/<repo
 
 ## FACT — governance and planning authority
 
-Integra `AGENTS.md`, `DEVELOPMENT_WORKFLOW.md`, product definition, architecture, state, autonomous policy and agent-team contract were read at canonical main. They permit bounded repository planning/docs under an exact owner instruction and require issue-first isolation, governance/full tests/diff verification. The user explicitly authorizes this audit and a planning Issue/PR, forbids implementation and merge, and asks for one planning home. Thus Integra is an appropriate **proposal home**, without acquiring authority to rewrite other products' contracts. The proposed files deliberately do not edit `docs/ROADMAP.md`, `state/*` or Product Rules. Existing #257 is linked rather than replaced or duplicated as implementation scope.
+Integra `AGENTS.md`, `DEVELOPMENT_WORKFLOW.md`, product definition, architecture, state, autonomous policy and agent-team contract were read at canonical main. They permit bounded repository planning/docs under an exact owner instruction and require issue-first isolation, governance/full tests/diff verification. The original audit instruction authorized a planning Issue/PR while forbidding implementation and merge. The later Product Owner acceptance authorizes completing this documentation-only PR lifecycle, including a governed merge after the actual policy gates pass; it still forbids M1–M7 implementation. Thus Integra is an appropriate **proposal home**, without acquiring authority to rewrite other products' contracts. The proposed files deliberately do not edit `docs/ROADMAP.md`, `state/*` or Product Rules. Existing #257 is linked rather than replaced or duplicated as implementation scope.
 
 SeminarText's full Product Rules Registry has ACTIVE PR-001 through PR-014; all apply to this architecture review's semantic, provenance, governance, autonomy and completion boundaries. BookText and VideoText do not have equivalent Product Rules registry files in the audited snapshots; their accepted instructions/contracts apply locally. Do not import SeminarText policy wholesale into them. BookText's accepted handwriting-exclusion rule is recorded in `DEVELOPMENT_PLAN.md` and must be preserved.
 
@@ -300,7 +306,7 @@ Validation completion is recorded here after the documentation review. No applic
 
 The full rerun uses the existing supported `scripts/run_review_tests.sh` with `INTEGRA_TEST_REVIEW_PYTHONPATH` pointing to the already installed review libraries in `/Users/yurielokhin/AI/runtimes/integra/current-build/Integra.app/Contents/Resources/runtime/review-python/site-packages`. Its archive-execution guard remains enabled. Environment skips are retained and are not product PASS evidence. No source-product E2E/inference or installed-app acceptance was rerun.
 
-**Delivery scope:** branch `codex/issue-277-four-product-architecture`; exactly the ten files in this directory. No application source, schemas, accepted governance/state, models, user projects or installed apps change. Hosted checks and the final commit are reported on the associated PR. Architecture adoption and merge remain separate owner actions.
+**Delivery scope:** branch `codex/issue-277-four-product-architecture`; exactly the ten files in this directory. No application source, schemas, accepted governance/state, models, user projects or installed apps change. Hosted checks and the final commit are reported on the associated PR. The Product Owner accepted the planning direction; this documentation-only PR may merge under the repository's governed lifecycle once its actual checks and independent review pass. M1–M7 implementation, release, semantic acceptance and all native authority boundaries remain separate.
 
 ## Companion documents
 

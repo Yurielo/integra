@@ -1,6 +1,8 @@
 # Product responsibility matrix
 
-Status: **PROPOSAL preserving accepted ownership**, with FACT columns describing current evidence. See [audit](FOUR_PRODUCT_ARCHITECTURE_AUDIT.md) and [artifact contract](SHARED_ARTIFACT_CONTRACT_PROPOSAL.md).
+Status: **accepted adapter-first planning direction preserving accepted ownership; implementation remains a PROPOSAL**, with FACT columns describing current evidence. See [audit](FOUR_PRODUCT_ARCHITECTURE_AUDIT.md) and [artifact contract](SHARED_ARTIFACT_CONTRACT_PROPOSAL.md).
+
+The accepted direction adds no shared core, global artifact store, schema replacement, forced migration, engine/model change or product-code authority. Initial interchange is versioned sidecar manifests with explicit read-only handoff/import; any discovery index or resource client is opt-in and future-scoped.
 
 ## FACT — the preliminary split needs qualification
 
@@ -13,7 +15,7 @@ VideoText's current Simple transcription already wraps a pinned SeminarText ASR 
 | Capability/entity | Primary product experience | Authoritative producer/writer | Other products' role / boundary |
 | --- | --- | --- | --- |
 | User original files | Product that opens them | User/source system | Read or approved copy-on-write; never overwrite original |
-| Cross-source registry and job orchestration | Integra | Integra for its registry/jobs; native products for theirs | Map IDs and revisions; optional artifact index, no shared mutable project directory |
+| Cross-source registry and job orchestration | Integra | Integra for its registry/jobs; native products for theirs | Map IDs and revisions; optional rebuildable discovery metadata, never a physical store or shared mutable project directory |
 | ASR/transcript workflows A/B/C | SeminarText; VideoText Simple media entry; Integra Process | Current selected SeminarText core plus product adapters | Reuse exact recognized result; do not create another recognizer or falsely label wrapper independent |
 | Transcript editing/revisions | SeminarText and consuming review UI | Declared revision writer; inherited origin retained | Human edit creates successor and scoped assurance |
 | Combined clear transcript | SeminarText | Composition owner over immutable per-source revisions | Integra references composition; VideoText retains source clocks |
@@ -32,7 +34,7 @@ VideoText's current Simple transcription already wraps a pinned SeminarText ASR 
 | Media recipes/rendered derivatives | VideoText; Integra Media UI | VideoText processing; Integra-owned recipe/receipt where selected | Cannot write canonical wording or Knowledge |
 | Local exports | Respective standalone products | Native export artifact owner | Exchange references/manifests; retain product-specific formats |
 | Managed publication / external adapters | Integra | Integra publication service/receipt | Generation and live publication remain separate; native export still standalone |
-| Host resource admission | Small cooperative contract, based on Integra existing implementation | One reservation authority per configured host store | All participating apps honor it without requiring Integra UI; no name-based model killing |
+| Host resource admission | Opt-in lightweight cooperative contract, based on Integra existing implementation | One reservation authority per configured host store | Participating apps honor it without requiring Integra UI, daemon or server; no name-based model killing |
 
 ## FACT — overlaps that should remain vs duplication to reduce
 
@@ -48,7 +50,7 @@ Candidate future extractions, in order of evidence: identity/provenance manifest
 
 ## PROPOSAL — standalone invariant and UX
 
-Each product can perform its basic accepted workflow without Integra installed/running. Exchange uses exported sidecars or optional local discovery, not an Integra-owned mandatory server. A handoff opens an exact result/revision in the destination app, validates capability support and preserves source links. Apps show “existing result reused” or the specific unavailable capability; they do not silently repeat inference to conceal a failed import.
+Each product can perform its basic accepted workflow without Integra installed/running. Initial exchange uses exported versioned sidecars and explicit read-only handoff/import; a later optional local discovery index is not physical storage, mandatory discovery or a prerequisite for that route. A handoff opens an exact result/revision in the destination app, validates capability support and preserves source links. Apps show “existing result reused” or the specific unavailable capability; they do not silently repeat inference to conceal a failed import. Cross-project automatic discovery, copy, reuse and retention remain separately scoped choices.
 
 ## INFERENCE / UNVERIFIED / owner boundary
 

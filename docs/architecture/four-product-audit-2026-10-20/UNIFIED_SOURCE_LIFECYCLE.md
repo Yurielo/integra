@@ -1,6 +1,8 @@
 # Unified source lifecycle
 
-Status: **PROPOSAL for Product Owner review**, 2026-10-20. Planning Issue [#277](https://github.com/Yurielo/integra/issues/277). No existing schema, owner, runtime or accepted roadmap is changed. Repository facts and pinned evidence are in [the audit](FOUR_PRODUCT_ARCHITECTURE_AUDIT.md).
+Status: **accepted adapter-first planning direction; implementation remains a PROPOSAL**, 2026-10-20. Planning Issue [#277](https://github.com/Yurielo/integra/issues/277). No existing schema, owner, runtime or accepted roadmap is changed. Repository facts and pinned evidence are in [the audit](FOUR_PRODUCT_ARCHITECTURE_AUDIT.md).
+
+The accepted initial exchange boundary is a **versioned sidecar manifest plus explicit read-only handoff/import**. Native products retain physical artifact storage and project ownership. A discovery index, if a later bounded slice opts in, is a rebuildable metadata aid rather than a store, authority or automatic-discovery service. This planning decision does not authorize automatic cross-project discovery, copying, retention/deletion or reuse.
 
 ## FACT — existing foundations
 
@@ -52,17 +54,17 @@ YouTube video ID identifies the remote logical item; observed metadata, download
 
 ## PROPOSAL — reuse decision
 
-On opening a source, calculate or validate its exact byte identity, resolve native aliases, and query an optional local artifact index. Then:
+For an explicitly opted-in future slice, calculate or validate exact byte identity, resolve native aliases, and optionally query a local rebuildable index. The initial route is an explicit handoff/import chosen by the user or calling workflow; a missing index must not prevent that route. Then:
 
 1. Find complete artifacts for the requested capability and exact source revision.
 2. Verify bytes, schema support, provenance, producer/runtime/model/configuration identity and the required assurance scope. Verify dependencies recursively and check revocation/staleness.
-3. If the existing artifact satisfies the requested contract, reference it through a lease-protected local pointer or import a verified immutable copy. Record a reuse receipt; make no inference call.
+3. If the existing artifact satisfies the requested contract and the selected future scope permits reuse, reference it through a read-only handoff or import a verified immutable copy. Record a reuse receipt; make no inference call. Do not discover, copy or reuse it automatically across projects merely because an index can see it.
 4. If only a projection is missing, derive it: readable TXT from transcript, cue serialization from selected timing, document export from reviewed CDM. Do not retranscribe or retranslate.
 5. If requirements differ, retain the old revision and schedule only the invalidated operation. Show a meaningful reason such as “source changed” or “translation uses a different glossary.”
 
 A producer upgrade does not automatically invalidate existing accepted artifacts for every consumer. It prevents claiming equivalence to a newly requested execution profile. Reuse can still select the old verified profile when policy permits it. A security/quality revocation is different and explicitly blocks reuse. A merely newer model is not a reason to rerun an unchanged accepted job.
 
-For simultaneous opens in two apps, use an atomic reservation keyed by the operation identity, in addition to the product's project lease. The second app observes the first result or waits; it does not launch a duplicate heavy job. Failed or abandoned reservations require verified process death and artifact inspection, not timeout alone. The index is rebuildable from manifests; it never becomes the sole copy of user artifacts.
+For an opted-in future concurrent slice, use an atomic lightweight reservation keyed by operation identity, in addition to the product's project lease. The second participating app observes the first result or waits; it does not launch a duplicate heavy job. Failed or abandoned reservations require verified process death and artifact inspection, not timeout alone. The protocol has no daemon requirement and works while Integra is closed; it cannot release another application's Ollama residency from a model name alone. The index is rebuildable from manifests; it never becomes the sole copy of user artifacts.
 
 ## PROPOSAL — required source routes
 
@@ -94,13 +96,13 @@ B and C therefore share recognition but not necessarily display, editorial revie
 
 Each application presents outcomes (“Transcribe”, “Combine recordings”, “Translate book”, “Generate subtitles”, “Analyze knowledge”), performs capability discovery, and offers an existing verified result when available. A handoff contains an artifact ID/revision/hash and a capability request, not a mutable project directory. A signed-in service or Integra process is not required.
 
-Start with a local handoff manifest/open-file action; add registered deep links after their exact handlers and version negotiation exist. Deep links must resolve allowed references, not execute arbitrary paths. Missing applications offer export/import of the same manifest. Capability discovery is read-only and must not load models. Users see review scope and source availability; internal engine identifiers belong in diagnostics.
+Start with a local sidecar handoff manifest/open-file action and explicit read-only import; add registered deep links after their exact handlers and version negotiation exist. Deep links must resolve allowed references, not execute arbitrary paths. Missing applications offer export/import of the same manifest. Capability discovery is opt-in, read-only and must not load models. Users see review scope and source availability; internal engine identifiers belong in diagnostics.
 
 ## PROPOSAL — validation and rollback
 
 Acceptance must prove same bytes opened in two applications cause one ASR invocation, moved files preserve identity, changed bytes produce a new revision, interrupted publication is not reused, unknown schema/hash fails closed, and old projects reopen without modification. Include B/C reorder and partial-failure tests, imported subtitle-without-word-timing cases, and document-region navigation. Use small authorized real sources after deterministic fixtures pass.
 
-All imports initially use copy-on-write. Rollback disables the exchange adapter/index and retains native projects, immutable artifacts and existing applications. Rebuild the index from manifests. Do not delete shared bytes while any manifest references them; retention policy is an owner decision, not an inferred cache cleanup permission.
+Initial handoff/import is read-only against the native artifact. A future implementation may make an explicit, verified copy only where its bounded scope requires it; this is not a move to mandatory global storage. Rollback disables the exchange adapter/index and retains native projects, immutable artifacts and existing applications. Rebuild the index from manifests. Do not delete shared bytes while any manifest references them; retention policy is an owner decision, not an inferred cache cleanup permission.
 
 ## INFERENCE
 
