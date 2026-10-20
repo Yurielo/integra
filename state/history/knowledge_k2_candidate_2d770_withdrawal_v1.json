@@ -1,0 +1,12 @@
+{
+  "artifact_type": "integra.candidate_lifecycle_disposition",
+  "schema_version": "1.0",
+  "candidate_id": "candidate-v1-2d770b6b3ff323a9b60c45cecdb7b5c36652b11cb102f16de63145530997dd11",
+  "bundle_digest": "e3c5bce9cefd8facb8ca228b56b66a560443629d94e97dd3e0d630ed06fb9164",
+  "manifest_digest": "6d5bb4b9f4abc8863ecfc05222df3651141cb23a37e135e3d19aeb5c4ef57ccc",
+  "previous_status": "AWAITING_OWNER_ACCEPTANCE",
+  "resulting_status": "WITHDRAWN_SUPERSEDED",
+  "reason": "STALE_CANONICAL_GOVERNANCE_BINDING_AFTER_MAIN_cf1f3f6",
+  "authority_ref": "https://github.com/Yurielo/integra/issues/227#issuecomment-6298827934",
+  "authority_body_sha256": "780a2e23a4a8f719ab74299eda2ea9264a3224037184d37b8d9e9f4e1ee7735d"
+}
