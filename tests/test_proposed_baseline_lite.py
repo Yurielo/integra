@@ -22,11 +22,14 @@ from proposed_baseline_lite import (  # noqa: E402
     validate_current,
     validate_proposal,
     verify_promotion_material,
+    _governed_product_path,
+    proposal_supersedes_r9a_hash,
 )
 from validate_governance import (  # noqa: E402
     _promoted_current_v2_supersedes_historical_hash,
     validate_native_macos_app_evidence,
     validate_ready_app_evidence,
+    validate_knowledge_integration_evidence,
 )
 
 
@@ -330,7 +333,7 @@ class ProposedOverlayLineageTests(unittest.TestCase):
             second_historical_test.write_text("new-other\n")
         source = self._commit(root, "product A")
         source_id = {"commit_sha": source, "tree_sha": self._git(root, "rev-parse", "HEAD^{tree}")}
-        (root / "docs").mkdir(); (root / "docs/evidence").mkdir()
+        (root / "docs").mkdir(exist_ok=True); (root / "docs/evidence").mkdir()
         manifest = {
             "candidate_id": "candidate-v1-" + "a" * 64,
             "identity_sha256": "a" * 64,
@@ -377,6 +380,118 @@ class ProposedOverlayLineageTests(unittest.TestCase):
     def test_valid_product_source_and_evidence_overlay_pass(self):
         root, proposal, path = self._lineage()
         self.assertEqual(verify_promotion_material(proposal, root, path), [])
+
+    def _r9a_lineage(self):
+        stored = json.loads((ROOT / "state/current_product_baseline_v2.json").read_bytes())
+        base_commit = next(item for item in stored["records"] if item["baseline_id"] == stored["current_id"])["main"]["commit_sha"]
+        original = json.loads((ROOT / "state/knowledge_integration_v1.json").read_bytes())
+        delta = []
+
+        def base_setup(root):
+            for path in ["state/knowledge_integration_v1.json"] + [item["path"] for item in original["implementation"]]:
+                target = root / path; target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(subprocess.run(["git", "-C", str(ROOT), "show", f"{base_commit}:{path}"],
+                    check=True, capture_output=True).stdout)
+
+        def source_setup(root):
+            for path, suffix in (("integra_core/knowledge.py", b"\n# Synthetic K2 successor\n"),
+                                 ("schemas/knowledge_view_v1.schema.json", b"\n")):
+                target = root / path; before = target.read_bytes(); after = before + suffix
+                target.write_bytes(after)
+                delta.append({"path": path, "before_sha256": hashlib.sha256(before).hexdigest(), "after_sha256": hashlib.sha256(after).hexdigest()})
+
+        root, proposal, path = self._lineage(base_setup=base_setup, source_setup=source_setup, extra_delta=delta)
+        current = json.loads((root / "state/current_product_baseline_v2.json").read_bytes())
+        baselines = json.loads((ROOT / "state/component_baselines_v1.json").read_bytes())
+        return root, proposal, path, current, original, baselines
+
+    def _r9a_next(self, root, proposal, current):
+        result = next_current(current, proposal, "Synthetic owner reference for tests only",
+            previous_current_path="state/history-r9a.json", root=root)
+        (root / "state/history-r9a.json").write_text(json.dumps(current, ensure_ascii=False, sort_keys=True, indent=2) + "\n")
+        return result
+
+    def test_r9a_exact_proposed_and_promoted_successor_preserve_historical_authority(self):
+        root, proposal, path, current, evidence, baselines = self._r9a_lineage()
+        original_bytes = (root / "state/knowledge_integration_v1.json").read_bytes()
+        original_current = (root / "state/current_product_baseline_v2.json").read_bytes()
+        self.assertEqual(verify_promotion_material(proposal, root, path), [])
+        self.assertEqual(validate_knowledge_integration_evidence(evidence, baselines, root,
+            proposal=proposal, current_product_baseline=current), [])
+        result = self._r9a_next(root, proposal, current)
+        predecessors = result["records"][-1]["historical_predecessors"]
+        self.assertEqual(predecessors[0]["path"], "state/history-r9a.json")
+        self.assertIn({"path": "state/knowledge_integration_v1.json", "sha256": hashlib.sha256(original_bytes).hexdigest()}, predecessors)
+        self.assertEqual(validate_current(result, root), [])
+        self.assertEqual(validate_knowledge_integration_evidence(evidence, baselines, root, current_product_baseline=result), [])
+        self.assertEqual((root / "state/knowledge_integration_v1.json").read_bytes(), original_bytes)
+        self.assertEqual((root / "state/current_product_baseline_v2.json").read_bytes(), original_current)
+
+    def test_r9a_undeclared_delta_wrong_before_after_and_current_forgery_fail_closed(self):
+        root, proposal, _, current, evidence, baselines = self._r9a_lineage()
+        for changed in (None, {**proposal, "delta": []}):
+            self.assertTrue(validate_knowledge_integration_evidence(evidence, baselines, root,
+                proposal=changed, current_product_baseline=current))
+        for field in ("before_sha256", "after_sha256"):
+            altered = copy.deepcopy(proposal); altered["delta"][1][field] = "0" * 64
+            errors = validate_knowledge_integration_evidence(evidence, baselines, root,
+                proposal=altered, current_product_baseline=current)
+            self.assertIn("R9A implementation hash differs: integra_core/knowledge.py", errors)
+        forged = copy.deepcopy(current); forged["records"][0]["main"]["tree_sha"] = "0" * 40
+        self.assertTrue(validate_knowledge_integration_evidence(evidence, baselines, root,
+            proposal=proposal, current_product_baseline=forged))
+        result = self._r9a_next(root, proposal, current)
+        wrong_main = copy.deepcopy(result); wrong_main["records"][-1]["main"] = proposal["base_main"]
+        self.assertTrue(validate_knowledge_integration_evidence(evidence, baselines, root, current_product_baseline=wrong_main))
+        result["records"][-1]["acceptance"]["decision"] = "TECHNICAL_GREEN"
+        self.assertTrue(validate_knowledge_integration_evidence(evidence, baselines, root, current_product_baseline=result))
+
+    def test_r9a_mutable_historical_forgery_and_missing_chain_are_rejected(self):
+        root, proposal, _, current, evidence, baselines = self._r9a_lineage()
+        result = self._r9a_next(root, proposal, current)
+        result["records"][-1]["historical_predecessors"] = result["records"][-1]["historical_predecessors"][:1]
+        self.assertTrue(validate_knowledge_integration_evidence(evidence, baselines, root, current_product_baseline=result))
+        forged = copy.deepcopy(evidence); forged["limitations"] = ["Forged historical authority"]
+        (root / "state/knowledge_integration_v1.json").write_text(json.dumps(forged))
+        self.assertTrue(validate_knowledge_integration_evidence(forged, baselines, root,
+            proposal=proposal, current_product_baseline=current))
+        with self.assertRaisesRegex(ValueError, "immutable base commit"):
+            self._r9a_next(root, proposal, current)
+
+    def test_r9a_next_current_wrong_historical_before_hash_is_rejected(self):
+        root, proposal, _, current, _, _ = self._r9a_lineage()
+        original = copy.deepcopy(proposal)
+        proposal["delta"][1]["before_sha256"] = "0" * 64
+        with self.assertRaisesRegex(ValueError, "immutable base"):
+            self._r9a_next(root, proposal, current)
+        original["delta"][1]["after_sha256"] = "0" * 64
+        with self.assertRaisesRegex(ValueError, "declared source"):
+            self._r9a_next(root, original, current)
+
+    def test_r9a_future_successor_retains_prior_current_chain(self):
+        root, proposal, _, current, evidence, baselines = self._r9a_lineage()
+        first = self._r9a_next(root, proposal, current)
+        product = root / "integra_core/knowledge.py"; before = hashlib.sha256(product.read_bytes()).hexdigest()
+        product.write_bytes(product.read_bytes() + b"\n# Synthetic next revision\n")
+        head = self._commit(root, "synthetic future source")
+        future = copy.deepcopy(proposal)
+        future.update(base_current_id=first["current_id"], base_main=first["records"][-1]["main"],
+                      proposed_source={"commit_sha": head, "tree_sha": self._git(root, "rev-parse", "HEAD^{tree}")},
+                      proposed_head={"commit_sha": head, "tree_sha": self._git(root, "rev-parse", "HEAD^{tree}")})
+        future["candidate"]["identity_sha256"] = "c" * 64; future["candidate"]["candidate_id"] = "candidate-v1-" + "c" * 64
+        future["delta"] = [{"path": "integra_core/knowledge.py", "before_sha256": before,
+                            "after_sha256": hashlib.sha256(product.read_bytes()).hexdigest()}]
+        second = next_current(first, future, "Synthetic future owner", previous_current_path="state/history-r9a-next.json", root=root)
+        (root / "state/history-r9a-next.json").write_text(json.dumps(first, ensure_ascii=False, sort_keys=True, indent=2) + "\n")
+        self.assertEqual(len(second["records"][-1]["historical_predecessors"]), 1)
+        self.assertEqual(validate_current(second, root), [])
+        self.assertEqual(validate_knowledge_integration_evidence(evidence, baselines, root, current_product_baseline=second), [])
+
+    def test_k2_governed_scope_additions_are_exact_not_broad_schema_or_state_exemptions(self):
+        for path in ("schemas/knowledge_view_v1.schema.json", "state/knowledge_admission_component_v1.json", "scripts/package_knowledge_admission_runtime.py"):
+            self.assertTrue(_governed_product_path(path), path)
+        for path in ("schemas/arbitrary.schema.json", "state/knowledge_integration_v1.json", "scripts/arbitrary.py"):
+            self.assertFalse(_governed_product_path(path), path)
 
     def test_proposal_declaration_survives_exact_canonical_protection_sync(self):
         root, proposal, path = self._lineage()

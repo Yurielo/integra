@@ -230,3 +230,16 @@ class TempWorkspaceLifecycleTests(unittest.TestCase):
         self.assertIn("run_owned(args)", wrapper)
         self.assertIn("candidate_retention.reserved_build", wrapper)
         self.assertIn("--owned-workspace", script)
+
+    def test_candidate_publication_is_pre_owner_and_engineering_builds_are_disposable(self):
+        """A repair build cannot accidentally consume an Owner-review slot."""
+        wrapper = (ROOT / "scripts" / "build_macos_candidate.py").read_text()
+        self.assertIn('"lifecycle": "ENGINEERING_QA_BUILD"', wrapper)
+        self.assertIn('candidate_retention.PRE_OWNER', wrapper)
+        self.assertIn('archive publication requires --publish-owner-candidate', wrapper)
+        self.assertIn('"--publish-owner-candidate"', wrapper)
+        rejected = subprocess.run([sys.executable, str(ROOT / "scripts" / "build_macos_candidate.py"),
+                                   "--archive-root", str(self.base)],
+                                  capture_output=True, text=True, check=False)
+        self.assertNotEqual(rejected.returncode, 0)
+        self.assertIn('--publish-owner-candidate', rejected.stderr)

@@ -98,6 +98,56 @@ class OwnedRetentionTests(unittest.TestCase):
         copy = dict(catalog['artifacts'][str(package)]); copy['inode'] += 1
         self.assertFalse(r._ownership(package, copy, receipt))
 
+    def test_pre_owner_rejection_is_limited_to_unhanded_candidate_and_exact_evidence(self):
+        package = self._package()
+        with r.locked(self._catalog()) as catalog:
+            record = catalog['artifacts'][str(package)]
+            record['status'] = r.PRE_OWNER
+            evidence = {
+                'artifact_type': 'integra.pre_owner_candidate_rejection',
+                'candidate_id': record['candidate_id'],
+                'bundle_digest': record['bundle_digest'],
+                'manifest_digest': record['manifest_digest'],
+                'failed_gate': 'PACKAGED_GUI_E2E',
+                'evidence_ref': 'local://issue-227/failed-packaged-e2e.json',
+            }
+            r.reject_pre_owner(catalog, package, evidence)
+            self.assertEqual(record['status'], r.PRE_OWNER_REJECTED)
+            self.assertEqual(record['pre_owner_failure_evidence'], evidence)
+            self.assertEqual(record['disposition_ref'], evidence['evidence_ref'])
+            with self.assertRaisesRegex(ValueError, 'only a pre-owner'):
+                r.reject_pre_owner(catalog, package, evidence)
+
+    def test_exact_pre_owner_rejection_is_governed_cleanup_eligible_without_owner_withdrawal(self):
+        package, _ = self._ready()
+        with r.locked(self._catalog()) as catalog:
+            record = catalog['artifacts'][str(package)]
+            record['status'] = r.PRE_OWNER
+            r.reject_pre_owner(catalog, package, {
+                'artifact_type': 'integra.pre_owner_candidate_rejection',
+                'candidate_id': record['candidate_id'],
+                'bundle_digest': record['bundle_digest'],
+                'manifest_digest': record['manifest_digest'],
+                'failed_gate': 'CANDIDATE_BOUND_GOVERNANCE',
+                'evidence_ref': 'local://issue-227/governance-failure.json',
+            })
+        row = next(row for row in self._plan()['entries'] if row['path'] == str(package))
+        self.assertEqual(row['classification'], 'DELETABLE')
+        self.assertEqual(row['lifecycle'], r.PRE_OWNER_REJECTED)
+
+    def test_owner_handoff_requires_a_valid_exact_candidate_bound_proposal(self):
+        package = self._package()
+        with r.locked(self._catalog()) as catalog:
+            record = catalog['artifacts'][str(package)]
+            record['status'] = r.PRE_OWNER
+            proposal = {'proposal_id': 'proposal-test',
+                        'candidate': {key: record[key] for key in
+                                      ('candidate_id', 'bundle_digest', 'manifest_digest')}}
+            with patch('scripts.proposed_baseline_lite.validate_proposal', return_value=[]):
+                r.handoff_to_owner(catalog, package, proposal)
+            self.assertEqual(record['status'], 'AWAITING_OWNER_ACCEPTANCE')
+            self.assertEqual(record['owner_handoff_proposal_id'], 'proposal-test')
+
     def test_unowned_legacy_counts_toward_cap_and_is_never_deletable(self):
         package, survivor = self._ready()
         with r.locked(self._catalog()) as catalog:
@@ -161,6 +211,36 @@ class OwnedRetentionTests(unittest.TestCase):
             self.assertEqual(self._plan()['DELETABLE_BYTES'], 0)
         p = self._plan(); self.assertGreater(p['PROTECTED_BYTES'], 0)
         self.assertNotIn(str(survivor), [v['path'] for v in p['entries'] if v['classification'] == 'DELETABLE'])
+
+    def test_context_accepts_unselected_canonical_protected_identity(self):
+        """A canonical lifecycle hold need not own a local full-copy slot."""
+        from scripts import candidate_protection_gate as gate
+
+        package, survivor = self._ready()
+        receipt = archive.verify_archive(survivor)
+        selected_id = receipt['candidate_id']
+        held_id = 'candidate-v1-' + 'f' * 64
+        input_path = survivor / 'COMPLETE.json'
+        registry = {
+            'selected_survivors': {selected_id: 'Build Archive/current', held_id: None},
+        }
+        audit = {
+            'authority_state': 'COMPLETE',
+            'registry_sha256': 'fixture-registry',
+            'canonical_lifecycles': {held_id: {'fixture': 'hold'}},
+            'standing_policy': {'fixture': 'policy'},
+        }
+        context = {
+            'protected': {selected_id: ['CURRENT'], held_id: ['OPEN_PROPOSAL']},
+            'inputs': {str(input_path): r._sha(input_path)},
+            'selected_archives': {selected_id: str(survivor)},
+            'verified_survivors': {selected_id: receipt},
+            'registry_sha256': 'fixture-registry',
+            'canonical_lifecycles': audit['canonical_lifecycles'],
+            'standing_policy': audit['standing_policy'],
+        }
+        with patch.object(gate, '_snapshot', return_value=(registry, audit)):
+            self.assertTrue(r._context_valid(context))
 
     def test_shape_drift_and_hardlinks_are_unknown(self):
         package, _ = self._ready(); extra = package / 'foreign'; extra.write_text('preserve')

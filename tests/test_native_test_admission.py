@@ -15,6 +15,70 @@ from scripts import build_macos_candidate as builder, candidate_archive as archi
 
 
 class NativeTestAdmissionTests(unittest.TestCase):
+    def test_owned_candidate_build_resolves_ignored_pinned_runtime_from_registered_worktree(self):
+        """Disposable workspaces must not lose checked runtime build inputs."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source, primary = root / "source", root / "primary"
+            source.mkdir(); primary.mkdir()
+            for relative in (
+                ".runtime-components/seminartext-pinned",
+                ".runtime-components/videotext-pinned",
+                ".runtime-components/booktext-pinned",
+                ".runtime-components/review-wheels",
+                ".runtime-word-alignment/lib/python3.13/site-packages",
+            ):
+                (primary / relative).mkdir(parents=True)
+            listing = SimpleNamespace(stdout=f"worktree {source}\nworktree {primary}\n")
+            def git(command, **_kwargs):
+                if "worktree" in command:
+                    return listing
+                if "status" in command:
+                    return SimpleNamespace(stdout="")
+                return SimpleNamespace(stdout=builder.PINNED_COMPONENT_COMMITS[
+                    "INTEGRA_SEMINARTEXT_BUILD_CHECKOUT"
+                    if "seminartext" in command[2]
+                    else "INTEGRA_VIDEOTEXT_BUILD_CHECKOUT"
+                    if "videotext" in command[2]
+                    else "INTEGRA_BOOKTEXT_BUILD_CHECKOUT"
+                ])
+            environment = {key: value for key, value in os.environ.items()
+                           if not key.startswith("INTEGRA_")}
+            with patch.object(builder, "ROOT", source), \
+                    patch.object(builder.subprocess, "run", side_effect=git), \
+                    patch.object(builder, "_knowledge_admission_checkout",
+                                 return_value=primary / "knowledge-admission"), \
+                    patch.dict(os.environ, environment, clear=True):
+                builder._bind_pinned_runtime_environment()
+                self.assertEqual(os.environ["INTEGRA_SEMINARTEXT_BUILD_CHECKOUT"],
+                                 str((primary / ".runtime-components/seminartext-pinned").resolve()))
+                self.assertEqual(os.environ["INTEGRA_REVIEW_WHEELS"],
+                                 str((primary / ".runtime-components/review-wheels").resolve()))
+                self.assertEqual(os.environ[builder.KNOWLEDGE_ADMISSION_ENV],
+                                 str(primary / "knowledge-admission"))
+
+    def test_pinned_source_input_rejects_dirty_sources_at_exact_commit(self):
+        """A dirty source tree cannot supply candidate packaging bytes."""
+        expected = builder.PINNED_COMPONENT_COMMITS["INTEGRA_VIDEOTEXT_BUILD_CHECKOUT"]
+        def git(command, **_kwargs):
+            if "rev-parse" in command:
+                return SimpleNamespace(stdout=expected)
+            return SimpleNamespace(stdout=" M Sources/changed.swift\n")
+        with patch.object(builder.subprocess, "run", side_effect=git):
+            self.assertFalse(builder._is_clean_pinned_source(Path("/runtime"), expected))
+
+    def test_knowledge_admission_checkout_requires_clean_exact_source_worktree(self):
+        expected = builder.KNOWLEDGE_ADMISSION_COMMIT
+        clean = Path("/accepted/seminartext")
+        def git(command, **_kwargs):
+            if "worktree" in command:
+                return SimpleNamespace(stdout=f"worktree {clean}\n", returncode=0)
+            if "rev-parse" in command:
+                return SimpleNamespace(stdout=expected)
+            return SimpleNamespace(stdout="")
+        with patch.object(builder.subprocess, "run", side_effect=git):
+            self.assertEqual(builder._knowledge_admission_checkout(), clean)
+
     def test_packaging_child_requires_shared_admission_and_fresh_output(self):
         active = []
         @contextmanager
@@ -59,6 +123,35 @@ class NativeTestAdmissionTests(unittest.TestCase):
                 patch.object(builder.subprocess, 'run', side_effect=launch):
             self.assertEqual(builder._build_inside_workspace(None, native_tests=True), 0)
         self.assertFalse(active)
+
+    def test_engineering_gui_is_disposable_and_requires_issue227_workspace(self):
+        """Interactive K2 QA never creates or claims an Owner Candidate."""
+        active = []
+        @contextmanager
+        def reservation(root, expected, *, archive_copy):
+            self.assertFalse(archive_copy); active.append(True)
+            try:
+                yield
+            finally:
+                active.pop()
+        with tempfile.TemporaryDirectory(prefix='integra-owned-issue227-k2-gui-e2e-') as directory:
+            workspace = Path(directory)
+            app = workspace / 'candidate/Integra.app'
+            app.mkdir(parents=True)
+            calls = []
+            def launch(command, **kwargs):
+                calls.append((command, kwargs))
+                if command[0].endswith('package_ready_app.sh'):
+                    return SimpleNamespace(stdout=str(app) + "\n", returncode=0)
+                return SimpleNamespace(returncode=0)
+            with patch.object(builder.candidate_retention, 'reserved_build', reservation), \
+                    patch.dict(os.environ, INTEGRA_OWNED_WORKSPACE=str(workspace)), \
+                    patch.object(builder.subprocess, 'run', side_effect=launch):
+                self.assertEqual(builder._build_inside_workspace(None, engineering_gui=True), 0)
+            self.assertTrue(active == [])
+            self.assertEqual(calls[-1][0], [str((app / 'Contents/MacOS/Integra').resolve()),
+                                             '--integra-data-root', str(workspace.resolve())])
+            self.assertEqual(calls[-1][1]['env']['INTEGRA_APP_DATA_ROOT'], str(workspace.resolve()))
 
     def test_failed_admission_never_launches_native_tests(self):
         with patch.object(builder.candidate_retention, 'reserved_build', side_effect=ValueError('cap exceeded')), \

@@ -36,6 +36,9 @@ class K2QAFixtureTests(unittest.TestCase):
         self.assertEqual(len(topics), 2)
         self.assertEqual(tuple(item["title"] for item in topics), fixture.TITLES)
         self.assertLess(topics[0]["end_seconds"], topics[1]["start_seconds"])
+        self.assertGreater(len(first["source.mp4"]), 1000)
+        self.assertEqual(first["source.mp4"][4:8], b"ftyp")
+        self.assertLess(topics[-1]["end_seconds"], 7)
         self.assertTrue(all(item["semantic_status"] == "REVIEW_REQUIRED" for item in topics))
         self.assertFalse(json.loads(first["QA_ONLY.json"])["production_acceptance"])
 
@@ -97,6 +100,16 @@ class K2QAFixtureTests(unittest.TestCase):
     def test_rejects_nonworkspace_root(self):
         with self.assertRaises(ValueError):
             fixture.prepare(ROOT)
+
+    def test_fixture_can_use_exact_k2_gui_workspace_purpose(self):
+        gui_temp = tempfile.TemporaryDirectory(prefix="integra-owned-issue227-k2-gui-e2e-", dir=fixture.BASE)
+        self.addCleanup(gui_temp.cleanup)
+        self.workspace = Path(gui_temp.name).resolve()
+        self.marker["purpose"] = "issue227-k2-gui-e2e"
+        self.marker["root"] = str(self.workspace)
+        self.write_marker()
+        project = fixture.prepare(self.workspace, purpose="issue227-k2-gui-e2e")
+        self.assertTrue((project / "QA_ONLY.json").is_file())
 
     def test_two_unit_guard_rejects_insufficient_review_before_k2(self):
         operations = []

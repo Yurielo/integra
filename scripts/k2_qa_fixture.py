@@ -5,6 +5,8 @@ code is used only from a separate execution copy. No source demo is read, no
 Candidate is built, and no K2 semantic decision is applied.
 """
 import argparse
+import base64
+from functools import lru_cache
 import hashlib
 import json
 import os
@@ -12,6 +14,7 @@ from pathlib import Path
 import stat
 import subprocess
 import sys
+import tempfile
 import uuid
 
 from archive_execution_guard import require_execution_path
@@ -26,7 +29,37 @@ IDENTITY = {kind + "_id": "urn:integra:" + kind + ":" + str(uuid.uuid5(NAMESPACE
 PROJECT_UUID = IDENTITY["project_id"].split(":")[-1]
 RUN_UUID = IDENTITY["run_id"].split(":")[-1]
 TITLES = ("Солнечная панель: преобразование света", "Аккумулятор: хранение энергии")
-MEDIA = b"INTEGRA SYNTHETIC QA ONLY; not playable media or production evidence\n"
+# A tiny deterministic H.264 MP4 (96x54, seven seconds) used only inside the
+# owned QA workspace.  Unlike the old marker bytes, it allows the packaged
+# AppKit/AVFoundation path to exercise source-fragment seek and playback
+# without reading any production or canonical-demo media.
+MEDIA = base64.b64decode(
+    "AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAOwbW9vdgAAAGxtdmhkAAAAAAAAAAAAAAAAAAAD6AAAG1gAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAtp0cmFrAAAAXHRraGQAAAADAAAAAAAAAAAAAAABAAAAAAAAG1gAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAGAAAAA2AAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAABtYAAAAAAABAAAAAAJSbWRpYQAAACBtZGhkAAAAAAAAAAAAAAAAAAAoAAABGABVxAAAAAAALWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAAB/W1pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAb1zdGJsAAAAuXN0c2QAAAAAAAAAAQAAAKlhdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAGAANgBIAAAASAAAAAAAAAABFUxhdmM2Mi4yOC4xMDIgbGlieDI2NAAAAAAAAAAAAAAAGP//AAAAL2F2Y0MBQsAK/+EAF2dCwAraGJ+bARAAAAMAEAAAAwCg8SJqAQAFaM4DnIAAAAAQcGFzcAAAAAEAAAABAAAAFGJ0cnQAAAAAAAAEiAAAAAAAAAAYc3R0cwAAAAAAAAABAAAAIwAACAAAAAAUc3RzcwAAAAAAAAABAAAAAQAAABxzdHNjAAAAAAAAAAEAAAABAAAAIwAAAAEAAACgc3RzegAAAAAAAAAAAAAAIwAAAn4AAAAvAAAACgAAAAoAAAAKAAAACgAAAAoAAAAKAAAACgAAAAoAAAAKAAAACgAAAAoAAAAKAAAACgAAAAoAAAAKAAAACgAAAAoAAAAKAAAACgAAAAoAAAAKAAAACgAAAAoAAAAKAAAACgAAAAoAAAAKAAAACgAAAAoAAAAKAAAACgAAAAoAAAAKAAAAFHN0Y28AAAAAAAAAAQAAA+AAAABidWR0YQAAAFptZXRhAAAAAAAAACFoZGxyAAAAAAAAAABtZGlyYXBwbAAAAAAAAAAAAAAAAC1pbHN0AAAAJal0b28AAAAdZGF0YQAAAAEAAAAATGF2ZjYyLjEyLjEwMgAAAAhmcmVlAAAD/21kYXQAAAJTBgX//0/cRem95tlIt5Ys2CDZI+7veDI2NCAtIGNvcmUgMTY1IHIzMjIyIGIzNTYwNWEgLSBILjI2NC9NUEVHLTQgQVZDIGNvZGVjIC0gQ29weWxlZnQgMjAwMy0yMDI1IC0gaHR0cDovL3d3dy52aWRlb2xhbi5vcmcveDI2NC5odG1sIC0gb3B0aW9uczogY2FiYWM9MCByZWY9MSBkZWJsb2NrPTA6MDowIGFuYWx5c2U9MDowIG1lPWRpYSBzdWJtZT0wIHBzeT0xIHBzeV9yZD0xLjAwOjAuMDAgbWl4ZWRfcmVmPTAgbWVfcmFuZ2U9MTYgY2hyb21hX21lPTEgdHJlbGxpcz0wIDh4OGRjdD0wIGNxbT0wIGRlYWR6b25lPTIxLDExIGZhc3RfcHNraXA9MSBjaHJvbWFfcXBfb2Zmc2V0PTAgdGhyZWFkcz0yIGxvb2thaGVhZF90aHJlYWRzPTEgc2xpY2VkX3RocmVhZHM9MCBucj0wIGRlY2ltYXRlPTEgaW50ZXJsYWNlZD0wIGJsdXJheV9jb21wYXQ9MCBjb25zdHJhaW5lZF9pbnRyYT0wIGJmcmFtZXM9MCB3ZWlnaHRwPTAga2V5aW50PTI1MCBrZXlpbnRfbWluPTUgc2NlbmVjdXQ9MCBpbnRyYV9yZWZyZXNoPTAgY3JmPTQwLjAgcWNvbXA9MC42MCBxcG1pbj0wIHFwbWF4PTY5IHFwc3RlcD00IGlwX3JhdGlvPTEuNDAgYXE9MAAgAAAAI2WIhDoRigACA7HA AEBaODJuTk5OTrdeF4AAACtBmiATrwpd3d3d3d3d3dHcT4nxPifE+fz+fz+fz+fz+fz+fz+fz+fz+fz+AAAABkGaQBOgzAAAAAZBmmAToMwAAAAGQZqAFKDMAAAABkGaoBSgzAAAAAZBmsAUoMwAAAAGQZrgFKDMAAAABkGbABSgzAAAAAZBmyAUoMwAAAAGQZtAFKDMAAAABkGbYBSgzAAAAAZBm4AUoMwAAAAGQZugFKDMAAAABkGbwBSgzAAAAAZBm+AUoMwAAAAGQZoAFKDMAAAABkGaIBSgzAAAAAZBmkAUoMwAAAAGQZpgFKDMAAAABkGagBSgzAAAAAZBmqAUoMwAAAAGQZrAFKDMAAAABkGa4BSgzAAAAAZBmwAUoMwAAAAGQZsgFKDMAAAABkGbQBSgzAAAAAZBm2AUoMwAAAAGQZuAFKDMAAAABkGboBSgzAAAAAZBm8AUoMwAAAAGQZvgFKDMAAAABkGaABSgzAAAAAZBmiAUoMwAAAAGQZpAFKDM"
+    .replace(" ", "")
+)
+WORD_SECONDS = 0.04
+
+
+@lru_cache(maxsize=1)
+def playable_media() -> bytes:
+    """Create a tiny owned H.264 fixture without reading product media."""
+    with tempfile.TemporaryDirectory(prefix="integra-k2-playable-fixture-") as directory:
+        output = Path(directory) / "source.mp4"
+        command = [
+            "ffmpeg", "-hide_banner", "-loglevel", "error",
+            "-f", "lavfi", "-i", "color=c=blue:s=96x54:r=5:d=7",
+            "-an", "-c:v", "libx264", "-pix_fmt", "yuv420p",
+            "-preset", "ultrafast", "-crf", "40", "-movflags", "+faststart",
+            "-f", "mp4", "-y", str(output),
+        ]
+        try:
+            subprocess.run(command, check=True, capture_output=True, timeout=60)
+        except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
+            raise RuntimeError("K2 GUI fixture needs a local H.264 fixture from ffmpeg") from error
+        media = output.read_bytes()
+    if len(media) < 1024 or media[4:8] != b"ftyp":
+        raise ValueError("K2 GUI fixture media is not a playable MP4")
+    return media
 
 
 def encoded(value):
@@ -35,25 +68,27 @@ def encoded(value):
 
 def payloads(project):
     """Stable identities/content; absolute locators bind only the isolated root."""
+    media = playable_media()
     tokens = (("Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов ".split() * 5)
               + ("Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света ".split() * 5))
     midpoint = len(tokens) // 2
-    topics = [{"title": title, "summary": title, "start_seconds": start + .1,
-               "end_seconds": end + .8, "semantic_status": "REVIEW_REQUIRED"}
+    topics = [{"title": title, "summary": title, "start_seconds": start * WORD_SECONDS + .01,
+               "end_seconds": (end + 1) * WORD_SECONDS, "semantic_status": "REVIEW_REQUIRED"}
               for title, start, end in ((TITLES[0], 0, midpoint - 1),
                                         (TITLES[1], midpoint, len(tokens) - 1))]
     job = "urn:integra:job:" + str(uuid.uuid5(NAMESPACE, "job"))
     return {
-        "source.mp4": MEDIA,
+        "source.mp4": media,
         "transcript.txt": (" ".join(tokens) + "\n").encode(),
         "timeline.json": encoded({"model": {"id": "synthetic-qa", "revision": "issue236-v1", "weights_sha256": "0" * 64},
             "aligner": {"name": "synthetic-qa", "version": "1"},
-            "words": [{"text": word, "start_seconds": index + .1, "end_seconds": index + .8,
+            "words": [{"text": word, "start_seconds": index * WORD_SECONDS,
+                       "end_seconds": (index + 1) * WORD_SECONDS,
                        "alignment_status": "ALIGNED"} for index, word in enumerate(tokens)]}),
         "topics.json": encoded({"component": "seminartext", "topics": topics}),
         "project.json": encoded({"project_id": IDENTITY["project_id"], "name": "SYNTHETIC QA ONLY — Issue 236"}),
         "jobs.json": encoded({"jobs": [{"job_id": job, "source_id": IDENTITY["source_id"],
-            "owned_path": str(project / "source.mp4"), "source_sha256": hashlib.sha256(MEDIA).hexdigest()}]}),
+            "owned_path": str(project / "source.mp4"), "source_sha256": hashlib.sha256(media).hexdigest()}]}),
         "runs/" + RUN_UUID + ".json": encoded({"run_id": IDENTITY["run_id"], "state": "COMPLETED",
             "source_results": [{"source_id": IDENTITY["source_id"], "job_id": job, "state": "COMPLETED",
                 "outputs": {key: str(project / file) for key, file in
@@ -63,10 +98,10 @@ def payloads(project):
     }
 
 
-def workspace_fd(workspace):
+def workspace_fd(workspace, *, purpose=PURPOSE):
     """No-follow, live-owner validation before any fixture output is created."""
-    if workspace.parent != BASE or not workspace.name.startswith("integra-owned-" + PURPOSE + "-"):
-        raise ValueError("fixture requires the exact disposable issue236 lifecycle workspace")
+    if workspace.parent != BASE or not workspace.name.startswith("integra-owned-" + purpose + "-"):
+        raise ValueError("fixture requires the exact disposable lifecycle workspace")
     fd = _directory(workspace)
     try:
         metadata = os.fstat(fd)
@@ -80,7 +115,7 @@ def workspace_fd(workspace):
                     "expected_bytes", "reserve_bytes", "owner", "child", "state", "events"}
         if (set(marker) != required or marker["schema_version"] != SCHEMA
                 or marker["artifact_type"] != "integra.disposable_workspace"
-                or marker["root"] != str(workspace) or marker["purpose"] != PURPOSE
+                or marker["root"] != str(workspace) or marker["purpose"] != purpose
                 or not _process_is_live(marker["owner"])):
             raise ValueError("fixture workspace ownership/purpose must be live and exact")
         return fd
@@ -89,8 +124,8 @@ def workspace_fd(workspace):
         raise
 
 
-def prepare(workspace):
-    fd = workspace_fd(workspace)
+def prepare(workspace, *, purpose=PURPOSE):
+    fd = workspace_fd(workspace, purpose=purpose)
     try:
         # Exclusive mkdir refuses an existing project, file, link or foreign data.
         os.mkdir("projects", 0o700, dir_fd=fd)

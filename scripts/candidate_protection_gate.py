@@ -130,11 +130,16 @@ def require_deletion(path: Path) -> None:
                  'lifecycle_evidence': audit['canonical']['canonical_lifecycles'][rows[0]['candidate_id']]}
     elif registry.get('deletion_enabled') is not True:
         raise ValueError('canonical protection disables deletion')
+    pre_owner_rejection = (len(rows) == 1
+                           and rows[0].get('classification') == 'ELIGIBLE'
+                           and rows[0].get('reasons') == ['PRE_OWNER_TECHNICAL_REJECTION']
+                           and protection.pre_owner_rejection_matches(rows[0]))
     if (len(rows) != 1 or rows[0]['classification'] != 'ELIGIBLE'
-            or not isinstance(grant, dict)
-            or not grant.get('authority_ref')
-            or any(grant.get(key) != rows[0].get(key)
-                   for key in ('path', *protection.IDENTITY))):
+            or (not pre_owner_rejection and
+                (not isinstance(grant, dict)
+                 or not grant.get('authority_ref')
+                 or any(grant.get(key) != rows[0].get(key)
+                        for key in ('path', *protection.IDENTITY))))):
         raise ValueError('canonical protection forbids deletion')
     survivors = {}
     for cid, selected in registry['selected_survivors'].items():
@@ -147,7 +152,10 @@ def require_deletion(path: Path) -> None:
     return {'registry_sha256': audit['registry_sha256'],
             'canonical_sha256': protection.digest(audit['canonical']),
             'path': relative, 'identity': {key: rows[0][key] for key in protection.IDENTITY},
-            'grant': grant, 'survivors': survivors}
+            'grant': ({'kind': 'PRE_OWNER_TECHNICAL_REJECTION',
+                       'evidence': rows[0]['catalog_record']['pre_owner_failure_evidence']}
+                      if pre_owner_rejection else grant),
+            'survivors': survivors}
 
 
 def require_deletion_continuation(lease: dict) -> None:
@@ -164,11 +172,13 @@ def require_deletion_continuation(lease: dict) -> None:
     if hashlib.sha256(data).hexdigest() != lease.get('registry_sha256'):
         raise ValueError('canonical deletion registry changed')
     registry = json.loads(data)
-    standing = (lease.get('grant') or {}).get('kind') == 'STANDING_TERMINAL_RETIREMENT'
+    grant_kind = (lease.get('grant') or {}).get('kind')
+    standing = grant_kind == 'STANDING_TERMINAL_RETIREMENT'
+    pre_owner_rejection = grant_kind == 'PRE_OWNER_TECHNICAL_REJECTION'
     if (registry.get('status') != 'PRODUCT_OWNER_AUTHORIZED_ACTIVE'
             or not registry.get('activation_authority_ref')
             or not registry.get('promotion_contract_integration_ref')
-            or (not standing and (registry.get('deletion_enabled') is not True
+            or (not (standing or pre_owner_rejection) and (registry.get('deletion_enabled') is not True
                 or {**registry.get('deletion_authorizations', {}),
                     **registry.get('withdrawal_deletion_authorizations', {})}.get(lease.get('path')) != lease.get('grant')))):
         raise ValueError('canonical deletion authority is unavailable')
@@ -191,6 +201,15 @@ def require_deletion_continuation(lease: dict) -> None:
     identity = lease.get('identity') or {}
     if blockers or identity.get('candidate_id') in protected:
         raise ValueError('canonical protection blocks resumed deletion')
+    if pre_owner_rejection:
+        evidence = (lease.get('grant') or {}).get('evidence')
+        if (not isinstance(evidence, dict)
+                or evidence.get('artifact_type') != 'integra.pre_owner_candidate_rejection'
+                or not isinstance(evidence.get('failed_gate'), str) or not evidence['failed_gate']
+                or not isinstance(evidence.get('evidence_ref'), str) or not evidence['evidence_ref']
+                or any(evidence.get(key) != identity.get(key)
+                       for key in protection.IDENTITY)):
+            raise ValueError('pre-owner technical rejection no longer authorizes deletion')
     base = Path.home() / 'Library/Application Support/Integra'
     selected = registry['selected_survivors']
     if set(selected) != set(protected):

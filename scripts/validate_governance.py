@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -69,6 +70,13 @@ from integra_core.identity import derive_imported_id  # noqa: E402
 from integra_core.protocol import content_sha256  # noqa: E402
 from scripts.check_agents import load_registry, validate_agent_team  # noqa: E402
 from proposed_baseline_lite import (  # noqa: E402
+    R9A_RECORD_PATH,
+    R9A_SUCCESSOR_PATHS,
+    _commit_identity,
+    _regular_blob_hash,
+    current_record,
+    proposal_supersedes_r9a_hash,
+    r9a_historical_record,
     proposal_declares_historical_test_successor,
     proposal_state,
     validate_current,
@@ -2407,7 +2415,8 @@ def validate_multi_source_alignment_evidence(
 
 
 def validate_knowledge_integration_evidence(
-    evidence: dict, baselines: dict, root: Path = ROOT
+    evidence: dict, baselines: dict, root: Path = ROOT, *, proposal: dict | None = None,
+    current_product_baseline: dict | None = None,
 ) -> list[str]:
     errors: list[str] = []
     expected_fields = {
@@ -2434,7 +2443,20 @@ def validate_knowledge_integration_evidence(
             continue
         paths.append(item["path"])
         path = root / item["path"]
-        if not path.is_file() or sha256_file(path) != item["sha256"]:
+        actual = sha256_file(path) if path.is_file() else None
+        superseded = False
+        if actual != item["sha256"] and item["path"] in R9A_SUCCESSOR_PATHS:
+            superseded = proposal_supersedes_r9a_hash(proposal, current_product_baseline, evidence,
+                root, item["path"], item["sha256"], actual)
+            if not superseded and isinstance(current_product_baseline, dict):
+                try:
+                    original, _ = r9a_historical_record(root, current_record(current_product_baseline)["main"])
+                    superseded = original == evidence and _promoted_current_v2_supersedes_historical_hash(
+                        current_product_baseline, root, item["path"], item["sha256"], actual,
+                        historical_record_path=R9A_RECORD_PATH)
+                except (OSError, ValueError, KeyError, TypeError, subprocess.CalledProcessError):
+                    superseded = False
+        if actual != item["sha256"] and not superseded:
             errors.append(f"R9A implementation hash differs: {item['path']}")
     if set(paths) != EXPECTED_KNOWLEDGE_IMPLEMENTATION or len(paths) != len(set(paths)):
         errors.append("R9A implementation inventory must be exact")
@@ -2742,6 +2764,7 @@ def _proposal_declares_current_delta(
 
 def _promoted_current_v2_supersedes_historical_hash(
     current: dict | None, root: Path, path: str, historical_sha256: str, current_sha256: str | None,
+    *, historical_record_path: str | None = None,
 ) -> bool:
     """Accept only a hash-closed CURRENT v2 successor of historical bytes.
 
@@ -2760,12 +2783,20 @@ def _promoted_current_v2_supersedes_historical_hash(
     if len(active) != 1:
         return False
     active_record = active[0]
+    if historical_record_path is not None:
+        try:
+            if validate_current(current, root) or _commit_identity(root, active_record["main"]["commit_sha"]) != active_record["main"]:
+                return False
+            if _regular_blob_hash(root, active_record["main"]["commit_sha"], path) != current_sha256:
+                return False
+        except (OSError, KeyError, TypeError, ValueError, subprocess.CalledProcessError):
+            return False
     if not any(isinstance(item, dict) and item.get("path") == path and item.get("sha256") == current_sha256
                for item in active_record.get("governed_files", [])):
         return False
     seen: set[str] = set()
 
-    def historical_payload_contains(payload: dict) -> bool:
+    def historical_payload_contains(payload: dict, context_commit: str | None = None) -> bool:
         """Follow only hash-verified predecessor links to the R12/R13 bytes."""
         if payload.get("artifact_type") == "integra.current_product_baseline":
             records = payload.get("records"); selected = payload.get("current_id")
@@ -2774,6 +2805,7 @@ def _promoted_current_v2_supersedes_historical_hash(
             matches = [item for item in records if isinstance(item, dict) and item.get("baseline_id") == selected]
             if len(matches) != 1:
                 return False
+            context_commit = matches[0].get("main", {}).get("commit_sha")
             predecessors = matches[0].get("historical_predecessors")
             if not isinstance(predecessors, list) or not predecessors:
                 return False
@@ -2787,11 +2819,16 @@ def _promoted_current_v2_supersedes_historical_hash(
                 try:
                     if sha256_file(history_path) != predecessor.get("sha256"):
                         continue
+                    if historical_record_path is not None and relative == historical_record_path:
+                        if _regular_blob_hash(root, context_commit, relative) != predecessor.get("sha256"):
+                            continue
                     seen.add(relative)
                     prior = json.loads(history_path.read_bytes())
-                except (OSError, json.JSONDecodeError):
+                except (OSError, ValueError, TypeError, subprocess.CalledProcessError):
                     continue
-                if isinstance(prior, dict) and historical_payload_contains(prior):
+                if historical_record_path is not None and relative != historical_record_path and (not isinstance(prior, dict) or prior.get("artifact_type") != "integra.current_product_baseline"):
+                    continue
+                if isinstance(prior, dict) and historical_payload_contains(prior, context_commit):
                     return True
             return False
         return any(isinstance(item, dict) and item.get("path") == path and item.get("sha256") == historical_sha256
@@ -3106,7 +3143,8 @@ def main() -> int:
         + validate_projects_sources_evidence(projects_sources)
         + validate_transcript_topic_studio_evidence(transcript_topic_studio, baselines)
         + validate_multi_source_alignment_evidence(multi_source_alignment, baselines)
-        + validate_knowledge_integration_evidence(knowledge_integration, baselines)
+        + validate_knowledge_integration_evidence(knowledge_integration, baselines, proposal=proposed_baseline,
+            current_product_baseline=current_product_baseline_v2)
         + validate_media_integration_evidence(media_integration, baselines)
         + validate_cross_navigation_evidence(cross_navigation)
         + validate_obsidian_export_evidence(obsidian_export)

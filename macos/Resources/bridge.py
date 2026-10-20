@@ -30,6 +30,7 @@ OPERATIONS.add("build-reviewed-package")
 OPERATIONS.add("transcript-text")
 OPERATIONS.add("shutdown-active-runs")
 OPERATIONS.update({"knowledge-sources", "knowledge-open", "knowledge-save", "knowledge-navigation", "knowledge-package"})
+OPERATIONS.update({"knowledge-k2-open", "knowledge-k2-prepare", "knowledge-k2-apply", "knowledge-k2-navigation", "knowledge-k2-package"})
 
 def _safe_error(error):
     message = str(error).replace(str(Path.home()), "<HOME>")
@@ -46,6 +47,12 @@ def _root():
     return root.resolve(strict=True)
 
 def _request():
+    # A direct, no-payload bridge invocation from an interactive terminal must
+    # be a dry empty request, not wait forever for an EOF that a terminal does
+    # not provide. AppKit supplies a pipe (and therefore still uses the exact
+    # JSON request protocol); this only closes the interactive diagnostic path.
+    if sys.stdin.isatty():
+        return {}
     raw = sys.stdin.buffer.read()
     if not raw: return {}
     value = json.loads(raw)
@@ -668,7 +675,7 @@ def _store_reviewed_package(project, manifest, files):
     finally:
         os.close(descriptor)
     return {"status": "PACKAGE_CREATED", "package_dir": str(target), "package_id": manifest["package_id"],
-            "result_kind": manifest["result_kind"], "published": False}
+            "result_kind": manifest.get("result_kind", "CANONICAL_KNOWLEDGE"), "published": False}
 
 
 def _saved_knowledge_notebooks(directory, identity):
@@ -750,8 +757,16 @@ def _knowledge(root, request, action):
     project = _project_dir(root, _project(root, request.get("project_id"))["project_id"])
     identity = {key: request.get(key) for key in ("project_id", "run_id", "source_id")}
     if action == "navigation":
-        result = notebook_navigation(project, **identity, fragment_id=request.get("fragment_id"), notebook_id=request.get("notebook_id"))
+        # A caller-provided source revision is an immutable navigation
+        # binding.  Verify it before resolving a fragment so a stale link is
+        # reported as such even when a provisional machine-derived notebook
+        # has not produced reviewed-fragment lineage yet.
         expected = request.get("source_revision_sha256")
+        if expected is not None:
+            opened = open_notebook(project, **identity)
+            if opened["source_revision_sha256"] != expected:
+                raise ValueError("exported source link belongs to a different source revision")
+        result = notebook_navigation(project, **identity, fragment_id=request.get("fragment_id"), notebook_id=request.get("notebook_id"))
         if expected is not None and result["source_revision_sha256"] != expected:
             raise ValueError("exported source link belongs to a different source revision")
         return result
@@ -774,6 +789,50 @@ def _knowledge(root, request, action):
             manifest, files = notebook_package(project, **identity)
             return _store_reviewed_package(project, manifest, files)
         raise ValueError("unknown Knowledge action")
+    finally:
+        store.release(lease["project_id"], lease["mutable_entity"]["entity_id"], lease["lease_id"],
+                      lease["writer"], lease["generation"], _instant(_now()))
+
+
+def _knowledge_k2(root, request, action):
+    """Native orchestration; canonical admission belongs to the pinned owner."""
+    from integra_core.knowledge_k2 import (open_knowledge, prepare_knowledge, apply_knowledge,
+                                         knowledge_navigation, knowledge_package)
+    project = _project_dir(root, _project(root, request.get("project_id"))["project_id"])
+    identity = {key: request.get(key) for key in ("project_id", "run_id", "source_id")}
+    if action == "open":
+        return open_knowledge(project, **identity)
+    if action == "navigation":
+        return knowledge_navigation(project, **identity, revision_sha256=request.get("revision_sha256"),
+                                    evidence_id=request.get("evidence_id"))
+    # One shared K2 lease covers proposal persistence, owner admission and
+    # package materialization. No lease is acquired for a read-only reopen.
+    from integra_core.identity import derive_imported_id
+    version = content_sha256(identity)
+    entity = derive_imported_id("artifact", "integra.knowledge_k2_write", identity["project_id"], version)
+    lease, store = _lease(root, {"project_id": identity["project_id"], "package_id": entity,
+                               "version_sha256": version}, "integra.knowledge_review")
+    try:
+        if action == "prepare":
+            values = dict(notebook_id=request.get("notebook_id"),
+                expected_state_sha256=request.get("expected_state_sha256"),
+                selected_fragment_ids=request.get("selected_fragment_ids"),
+                relation_inputs=request.get("relation_inputs"), entity_edits=request.get("entity_edits"))
+            if request.get("automatic") is True:
+                values["automatic"] = True
+            return prepare_knowledge(project, **identity, **values)
+        if action == "apply":
+            values = dict(package_sha256=request.get("package_sha256"),
+                decisions=request.get("decisions"), reviewer_id=request.get("reviewer_id"),
+                explicit_confirmation=request.get("explicit_confirmation"),
+                confirmed_proposal_ids=request.get("confirmed_proposal_ids"))
+            if request.get("automatic") is True:
+                values["automatic"] = True
+            return apply_knowledge(project, **identity, **values)
+        if action == "package":
+            manifest, files = knowledge_package(project, **identity, revision_sha256=request.get("revision_sha256"))
+            return _store_reviewed_package(project, manifest, files)
+        raise ValueError("unknown K2 Knowledge action")
     finally:
         store.release(lease["project_id"], lease["mutable_entity"]["entity_id"], lease["lease_id"],
                       lease["writer"], lease["generation"], _instant(_now()))
@@ -867,6 +926,7 @@ def main():
         elif operation == "shutdown-active-runs": result = _shutdown_active_runs(root)
         elif operation == "available-packages": result = _available_packages(root)
         elif operation == "knowledge-sources": result = _knowledge_sources(root)
+        elif operation.startswith("knowledge-k2-"): result = _knowledge_k2(root, request, operation.removeprefix("knowledge-k2-"))
         elif operation.startswith("knowledge-"): result = _knowledge(root, request, operation.removeprefix("knowledge-"))
         elif operation == "media-navigation": result = _media_navigation(root, request)
         elif operation == "create-media-clip": result = _create_media_clip(root, request)

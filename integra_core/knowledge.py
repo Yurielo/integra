@@ -60,7 +60,7 @@ def build_knowledge_view(
     source_evidence_file_sha256 = hashlib.sha256(source_evidence_payload).hexdigest()
     _validate_sources(
         evidence, evidence_file_sha256, source_evidence,
-        source_evidence_file_sha256, knowledge, knowledge_file_sha256,
+        source_evidence_file_sha256, knowledge, knowledge_file_sha256, evidence_payload,
     )
     evidence_hash = content_sha256(evidence)
     knowledge_hash = content_sha256(knowledge)
@@ -80,6 +80,7 @@ def build_knowledge_view(
         "canonical_knowledge_sha256": knowledge_file_sha256,
         "canonical_knowledge_content_sha256": knowledge_hash,
     }
+    binding.update(_admission_identity(source_evidence))
     records = {
         name: sorted(copy.deepcopy(knowledge[name]), key=lambda item: item["id"])
         for name in ("seminars", "topics", "concepts", "relations", "review_decisions")
@@ -117,17 +118,17 @@ def validate_knowledge_view(
     view: dict[str, Any], evidence_payload: bytes, source_evidence_payload: bytes,
     knowledge_payload: bytes,
 ) -> None:
-    _validate_view_shape(view)
     evidence = _load_source(evidence_payload, "Canonical Evidence")
     source_evidence = _load_source(source_evidence_payload, "source Evidence")
     knowledge = _load_source(knowledge_payload, "Canonical Knowledge")
+    _validate_view_shape(view)
     evidence_file_sha256 = hashlib.sha256(evidence_payload).hexdigest()
     knowledge_file_sha256 = hashlib.sha256(knowledge_payload).hexdigest()
     source_evidence_file_sha256 = hashlib.sha256(source_evidence_payload).hexdigest()
     _validate_pinned_contracts()
     _validate_sources(
         evidence, evidence_file_sha256, source_evidence,
-        source_evidence_file_sha256, knowledge, knowledge_file_sha256,
+        source_evidence_file_sha256, knowledge, knowledge_file_sha256, evidence_payload,
     )
     expected_binding = {
         "component_id": PINNED_SEMINARTEXT["component_id"],
@@ -145,6 +146,7 @@ def validate_knowledge_view(
         "canonical_knowledge_sha256": knowledge_file_sha256,
         "canonical_knowledge_content_sha256": content_sha256(knowledge),
     }
+    expected_binding.update(_admission_identity(source_evidence))
     if view["source_binding"] != expected_binding:
         raise KnowledgeError("knowledge source binding differs")
     expected_records = {
@@ -220,30 +222,31 @@ def navigate_knowledge(
 
 
 def knowledge_diff(
-    before: dict[str, Any], before_evidence_payload: bytes,
+    before: dict[str, Any] | None, before_evidence_payload: bytes,
     before_source_evidence_payload: bytes, before_knowledge_payload: bytes,
     after: dict[str, Any], after_evidence_payload: bytes,
     after_source_evidence_payload: bytes, after_knowledge_payload: bytes,
 ) -> dict[str, Any]:
     """Return a content-addressed mechanical diff; never infer semantic meaning."""
-    validate_knowledge_view(
-        before, before_evidence_payload, before_source_evidence_payload,
-        before_knowledge_payload,
-    )
+    if before is not None:
+        validate_knowledge_view(
+            before, before_evidence_payload, before_source_evidence_payload,
+            before_knowledge_payload,
+        )
     validate_knowledge_view(
         after, after_evidence_payload, after_source_evidence_payload,
         after_knowledge_payload,
     )
-    if before["source_binding"]["canonical_knowledge_id"] != after["source_binding"]["canonical_knowledge_id"]:
+    if before is not None and before["source_binding"]["canonical_knowledge_id"] != after["source_binding"]["canonical_knowledge_id"]:
         raise KnowledgeError("knowledge diff requires one stable source artifact identity")
-    left, right = _diff_index(before), _diff_index(after)
+    left, right = _diff_index(before) if before is not None else {}, _diff_index(after)
     added = [_diff_identity(item) for item in sorted(set(right) - set(left))]
     removed = [_diff_identity(item) for item in sorted(set(left) - set(right))]
     changed = [_diff_identity(item) for item in sorted(
         item for item in set(left) & set(right) if left[item] != right[item]
     )]
     value = {
-        "schema_version": "1.0", "before_view_id": before["view_id"],
+        "schema_version": "1.0", "before_view_id": before["view_id"] if before is not None else None,
         "after_view_id": after["view_id"], "added_ids": added,
         "removed_ids": removed, "changed_ids": changed,
         "semantic_interpretation": "NOT_PERFORMED", "diff_sha256": "",
@@ -292,8 +295,11 @@ def _evidence_view(
         "claim": item["claim"],
         "source_id": item["canonical_source_id"],
         "transcript_revision_id": revision["id"],
-        "word_start_id": item["canonical_word_start_id"],
-        "word_end_id": item["canonical_word_end_id"],
+        **({"word_start_id": item["canonical_word_start_id"],
+            "word_end_id": item["canonical_word_end_id"]} if "canonical_word_start_id" in item else
+           {"cue_start_id": item["canonical_cue_start_id"], "cue_end_id": item["canonical_cue_end_id"]}),
+        **({key: item[key] for key in ("precision", "reviewed_fragment_id", "reviewed_fragment_sha256")}
+           if "reviewed_fragment_id" in item else {}),
         "quote": item["quote"],
         "locator": copy.deepcopy(item["locator"]),
         "timing_status": item["timing_status"],
@@ -395,8 +401,24 @@ def _validate_pinned_contracts() -> None:
 def _validate_sources(
     evidence: dict[str, Any], evidence_file_sha256: str,
     source_evidence: dict[str, Any], source_evidence_file_sha256: str,
-    knowledge: dict[str, Any], knowledge_file_sha256: str,
+    knowledge: dict[str, Any], knowledge_file_sha256: str, evidence_payload: bytes | None = None,
 ) -> None:
+    if source_evidence.get("artifact_type") == "seminartext.reviewed_fragment_knowledge_evidence":
+        from .knowledge_admission_runtime import owner
+        admission = owner()
+        request = source_evidence.get("admission", {})
+        try:
+            if evidence_payload is None:
+                raise ValueError("exact Evidence bytes required")
+            result = admission.compile_revision(evidence_payload, request["reviewed_payload_utf8"].encode("utf-8"),
+                request["package"], request["decisions"], parent=request["parent"])
+            if (result["source_evidence"] != source_evidence or result["canonical_knowledge"] != knowledge
+                    or result["canonical_knowledge_sha256"] != knowledge_file_sha256
+                    or result["source_evidence_sha256"] != source_evidence_file_sha256):
+                raise ValueError("source-owned canonical admission differs from supplied artifacts")
+        except (ValueError, KeyError, TypeError) as error:
+            raise KnowledgeError("canonical admission validation failed: " + str(error)) from error
+        return
     root = Path(__file__).with_name("_vendor") / "seminartext_a94936c"
     evidence_schema = json.loads((root / "canonical_evidence_v1.schema.json").read_bytes())
     evidence_schema_errors: list[str] = []
@@ -733,6 +755,16 @@ def _timestamp(value: Any) -> None:
         raise KnowledgeError("timestamp must be RFC3339 UTC") from error
     if parsed.tzinfo != timezone.utc:
         raise KnowledgeError("timestamp must be UTC")
+
+
+def _admission_identity(source_evidence):
+    if source_evidence.get("artifact_type") != "seminartext.reviewed_fragment_knowledge_evidence":
+        return {}
+    from .knowledge_admission_runtime import preflight
+    runtime = preflight()
+    identity = {"component_id": "seminartext", "commit_sha": runtime["commit_sha"], "tree_sha": runtime["tree_sha"],
+                "contract_sha256": {runtime["contract"]["id"]: runtime["contract"]["sha256"]}}
+    return {**identity, "component_identity_sha256": content_sha256(identity)}
 
 
 def _record_hash(value: dict[str, Any], field: str = "record_sha256") -> str:

@@ -1,4 +1,6 @@
 import json
+import os
+import pty
 import hashlib
 import os
 from pathlib import Path
@@ -121,6 +123,22 @@ class MacOSApplicationTests(unittest.TestCase):
             self.assertFalse(payload["writes_performed"]); self.assertFalse(payload["external_actions_performed"])
             self.assertFalse(payload["cloud_verified"])
             self.assertEqual(len(payload["domain_contract_sha256"]), 64)
+
+    def test_closed_bridge_empty_tty_request_does_not_wait_for_terminal_eof(self):
+        bridge = ROOT / "macos/Resources/bridge.py"
+        master, slave = pty.openpty()
+        try:
+            process = subprocess.Popen(["python3", str(bridge), "obsidian-preview"],
+                                       stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                       text=True)
+        finally:
+            os.close(slave)
+        try:
+            stdout, stderr = process.communicate(timeout=5)
+        finally:
+            os.close(master)
+        self.assertEqual(process.returncode, 0, stderr)
+        self.assertEqual(json.loads(stdout)["state"], "DRY_RUN_REQUIRES_PACKAGE")
 
     @unittest.skipUnless(
         platform.system() == "Darwin" and macos_build_runtime_available(),
@@ -298,6 +316,23 @@ class MacOSApplicationTests(unittest.TestCase):
         self.assertIn("seekTranscriptCue", source)
         self.assertIn('object["error"] as? String', source)
         self.assertNotIn("Integra Reference Project", source)
+
+    def test_knowledge_fragment_viewer_uses_retained_window_and_reports_playback_failure(self):
+        source = (ROOT / "macos/IntegraApp.swift").read_text()
+        start = source.index("private func presentKnowledgeNavigation")
+        end = source.index("@objc private func reviewKnowledge", start)
+        viewer = source[start:end]
+        self.assertIn("renderKnowledgeFragment", viewer)
+        self.assertNotIn("NSAlert", viewer)
+        self.assertIn("knowledgeMediaWindow", viewer)
+        self.assertIn("knowledgePlayerStatusObserver", viewer)
+        self.assertIn("AVPlayerItem(asset: asset)", viewer)
+        self.assertIn("fileExists(atPath: source.path)", viewer)
+        self.assertIn("Исходный файл для точного фрагмента недоступен", viewer)
+        self.assertIn("Не удалось открыть исходное видео", viewer)
+        self.assertIn("forwardPlaybackEndTime", viewer)
+        self.assertLess(viewer.index("stack.addArrangedSubview(playerView)"),
+                        viewer.index("playerView.widthAnchor.constraint"))
 
     def test_youtube_source_type_stays_internal_to_normal_source_lists(self):
         source = (ROOT / "macos/IntegraApp.swift").read_text()

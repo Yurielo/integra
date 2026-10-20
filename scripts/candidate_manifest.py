@@ -84,12 +84,13 @@ def generate(app: Path, source_root: Path, build_command: str, word_python: Path
     })
     from integra_core.translategemma_runtime import preflight as translation_preflight
     translation = translation_preflight()
+    admission = json.loads((resources / "runtime/knowledge-admission/runtime.json").read_bytes())
     identity = {
         "source": source_identity(source_root),
         "build_command": {"path": "scripts/build_macos_app.sh", "identity": build_command,
                           "script_sha256": sha256_file(ROOT / "scripts" / "build_macos_app.sh")},
         "components": {"seminartext": seminar, "videotext": video, "booktext": book,
-                       "integra.translation": translation},
+                       "integra.translation": translation, "seminartext.knowledge_admission": admission},
         "execution": {
             "gui_python": executable_identity(Path("/usr/bin/python3")),
             "word_alignment_python": executable_identity(word_python),

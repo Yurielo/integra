@@ -29,6 +29,7 @@ except ModuleNotFoundError:
 
 MARKER = ".integra-owned-workspace.json"
 SCHEMA = "1.0"
+DEFAULT_ROOT = Path("/private/tmp" if sys.platform == "darwin" else "/tmp")
 DEFAULT_EXPECTED_BYTES = 2_400 * 1024 * 1024
 DEFAULT_RESERVE_BYTES = 15 * 1024 * 1024 * 1024
 LOCK = ".integra-workspace-reservations.lock"
@@ -77,7 +78,7 @@ def _group_is_live(process_group: int | None) -> bool:
 
 
 def _base(value: str | Path | None) -> Path:
-    path = Path(value or os.environ.get("INTEGRA_WORKSPACE_ROOT") or "/private/tmp").expanduser().resolve(strict=True)
+    path = Path(value or os.environ.get("INTEGRA_WORKSPACE_ROOT") or str(DEFAULT_ROOT)).expanduser().resolve(strict=True)
     if path.is_symlink() or not path.is_dir():
         raise ValueError("owned workspace base must be an existing non-symlink directory")
     return path
@@ -327,21 +328,21 @@ def _run_owned_worker(args: argparse.Namespace, parent: dict) -> int:
         marker = _record(root, marker, "CHILD_STARTED", state="RUNNING", child={"pid": child.pid,
                          "start_token": _process_start_token(child.pid), "process_group": child.pid})
         disk_admission.bind(root.parent, marker["run_id"], process_group=child.pid)
-        deadline = time.monotonic() + args.timeout_seconds
+        deadline = None if args.wait_for_child_exit else time.monotonic() + args.timeout_seconds
         while True:
             if not _process_is_live(parent):
                 _terminate_group(child.pid, grace_seconds=1)
                 marker = _record(root, marker, "PARENT_LOST", state="CANCELLED")
                 outcome = 130
                 break
-            remaining = deadline - time.monotonic()
-            if remaining <= 0:
+            remaining = None if deadline is None else deadline - time.monotonic()
+            if remaining is not None and remaining <= 0:
                 _terminate_group(child.pid)
                 marker = _record(root, marker, "TIMEOUT", state="TIMED_OUT", timeout_seconds=args.timeout_seconds)
                 outcome = 124
                 break
             try:
-                result = child.wait(timeout=min(.25, remaining))
+                result = child.wait(timeout=.25 if remaining is None else min(.25, remaining))
             except subprocess.TimeoutExpired:
                 continue
             marker = _record(root, marker, "CHILD_EXITED", state="FINISHED", exit_code=result)
@@ -437,13 +438,15 @@ def main() -> int:
     run.add_argument("--expected-bytes", type=int, default=DEFAULT_EXPECTED_BYTES)
     run.add_argument("--reserve-bytes", type=int, default=DEFAULT_RESERVE_BYTES)
     run.add_argument("--timeout-seconds", type=float, default=3600)
+    run.add_argument("--wait-for-child-exit", action="store_true",
+                     help="do not expire a supervised interactive session; still clean after exit or cancellation")
     run.add_argument("argv", nargs=argparse.REMAINDER)
     run.set_defaults(handler=run_owned)
     args = parser.parse_args()
     if args.operation == "run":
         if not args.argv or args.argv == ["--"]:
             parser.error("run requires a command after --")
-        if args.timeout_seconds <= 0:
+        if args.timeout_seconds <= 0 and not args.wait_for_child_exit:
             parser.error("timeout must be positive")
     try:
         return args.handler(args)

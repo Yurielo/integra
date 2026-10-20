@@ -33,6 +33,8 @@ HISTORICAL_TEST_AUTHORITIES = {
     "R12": "state/native_macos_app_v1.json",
     "R13": "state/ready_app_v1.json",
 }
+R9A_RECORD_PATH = "state/knowledge_integration_v1.json"
+R9A_SUCCESSOR_PATHS = {"integra_core/knowledge.py", "schemas/knowledge_view_v1.schema.json"}
 PILOT_ACCEPTANCE_FIELDS = {
     "decision", "authority_ref", "scope", "promotion_authorized",
 }
@@ -88,13 +90,16 @@ def _is_git_sha(value: object) -> bool:
 
 
 def _governed_product_path(path: str) -> bool:
-    """The v2 scope is executable primary-journey code, not docs/governance."""
+    """Primary-journey code and exact runtime contracts/pins, excluding prose."""
     return (
         path.startswith(("integra_core/", "macos/", "workers/"))
         or path in {
             "scripts/build_macos_app.sh", "scripts/candidate_manifest.py",
             "schemas/candidate_manifest_v1.schema.json", "scripts/test_macos_app.sh",
             "tests/test_macos_app.py",
+            "schemas/knowledge_view_v1.schema.json",
+            "state/knowledge_admission_component_v1.json",
+            "scripts/package_knowledge_admission_runtime.py",
         }
     )
 
@@ -250,6 +255,46 @@ def _delta_errors(delta: object) -> list[str]:
             errors.append("PROPOSED baseline delta paths must be unique")
         paths.add(item["path"])
     return errors
+
+
+def r9a_historical_record(root: Path, main: dict) -> tuple[dict, str]:
+    """Read the immutable R9A authority and anchor its exact bytes to Git."""
+    if _commit_identity(root, main["commit_sha"]) != main:
+        raise ValueError("R9A historical base identity differs")
+    path = root / R9A_RECORD_PATH
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("R9A historical record is unavailable")
+    payload = path.read_bytes()
+    digest = hashlib.sha256(payload).hexdigest()
+    if _regular_blob_hash(root, main["commit_sha"], R9A_RECORD_PATH) != digest:
+        raise ValueError("R9A historical record differs from immutable base commit")
+    record = json.loads(payload)
+    if not isinstance(record, dict) or (record.get("schema_version"), record.get("status"), record.get("issue")) != ("1.0", "ACCEPTED", 13):
+        raise ValueError("R9A historical record identity differs")
+    return record, digest
+
+
+def proposal_supersedes_r9a_hash(proposal: dict | None, current: dict | None, evidence: dict,
+                                root: Path, path: str, before: str, after: str | None) -> bool:
+    """Only exact, Git-bound R9A implementation deltas are review successors."""
+    if path not in R9A_SUCCESSOR_PATHS or not _is_sha(after) or before == after or not isinstance(proposal, dict):
+        return False
+    active = current_record(current)
+    if active is None or proposal.get("base_current_id") != active.get("baseline_id") or proposal.get("base_main") != active.get("main"):
+        return False
+    rows = [item for item in proposal.get("delta", []) if isinstance(item, dict) and item.get("path") == path]
+    if rows != [{"path": path, "before_sha256": before, "after_sha256": after}]:
+        return False
+    try:
+        original, _ = r9a_historical_record(root, proposal["base_main"])
+        source = proposal["proposed_source"]
+        return (original == evidence
+            and [{"path": path, "sha256": before}] == [item for item in original["implementation"] if item.get("path") == path]
+            and _regular_blob_hash(root, proposal["base_main"]["commit_sha"], path) == before
+            and _commit_identity(root, source["commit_sha"]) == source
+            and _regular_blob_hash(root, source["commit_sha"], path) == after)
+    except (OSError, subprocess.CalledProcessError, ValueError, KeyError, TypeError):
+        return False
 
 
 def _pilot_acceptance_errors(value: object) -> list[str]:
@@ -822,6 +867,33 @@ def next_current(current: dict[str, Any], proposal: dict[str, Any], owner_accept
         if path in governed and item["before_sha256"] != governed[path]:
             raise ValueError("PROPOSED historical test successor does not start from active CURRENT hash")
         governed[path] = item["after_sha256"]
+    historical_predecessors = [{"path": previous_current_path, "sha256": hashlib.sha256(
+        (json.dumps(current, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode()).hexdigest()}]
+    r9a_delta = [item for item in proposal["delta"] if item["path"] in R9A_SUCCESSOR_PATHS
+                and item["before_sha256"] != item["after_sha256"]]
+    if r9a_delta:
+        source_root = root if root is not None else Path(__file__).resolve().parents[1]
+        if (proposal.get("base_current_id") != record["baseline_id"] or proposal.get("base_main") != record["main"]
+                or validate_current(current, source_root, proposal)):
+            raise ValueError("R9A successor does not bind valid active CURRENT")
+        original, historical_hash = r9a_historical_record(source_root, proposal["base_main"])
+        source = proposal["proposed_source"]
+        if _commit_identity(source_root, source["commit_sha"]) != source:
+            raise ValueError("R9A successor source identity differs")
+        old = {item["path"]: item["sha256"] for item in original["implementation"]}
+        add_predecessor = False
+        active_hashes = {item["path"]: item["sha256"] for item in record["governed_files"]}
+        for item in r9a_delta:
+            if _regular_blob_hash(source_root, proposal["base_main"]["commit_sha"], item["path"]) != item["before_sha256"]:
+                raise ValueError("R9A successor before hash differs from immutable base")
+            if _regular_blob_hash(source_root, source["commit_sha"], item["path"]) != item["after_sha256"]:
+                raise ValueError("R9A successor after hash differs from declared source")
+            if item["before_sha256"] == old.get(item["path"]):
+                add_predecessor = True
+            elif active_hashes.get(item["path"]) != item["before_sha256"]:
+                raise ValueError("R9A successor before hash differs from immutable authority/CURRENT")
+        if add_predecessor:
+            historical_predecessors.append({"path": R9A_RECORD_PATH, "sha256": historical_hash})
     new_id = "current-v2-" + proposal["candidate"]["identity_sha256"]
     new_record = {
         "baseline_id": new_id,
@@ -835,7 +907,7 @@ def next_current(current: dict[str, Any], proposal: dict[str, Any], owner_accept
         # Match the exact pretty-printed bytes the promotion helper writes to
         # the immutable history file; hashing a different serialization would
         # make a legitimate next CURRENT fail closed after preparation.
-        "historical_predecessors": [{"path": previous_current_path, "sha256": hashlib.sha256((json.dumps(current, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode()).hexdigest()}],
+        "historical_predecessors": historical_predecessors,
         "governed_files": [{"path": path, "sha256": governed[path]} for path in sorted(governed)],
     }
     result = json.loads(json.dumps(current))

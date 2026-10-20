@@ -31,7 +31,9 @@ FREE_FLOOR = 15 * 1024**3
 # A validated exact withdrawal is a terminal lifecycle transition.  It is
 # deliberately distinct from ordinary supersession and requires its own
 # canonical evidence and exact deletion grant in the cleanup path.
-TERMINAL = {'COMPLETED', 'REJECTED', 'SUPERSEDED', 'UNUSED',
+PRE_OWNER = 'CANDIDATE_BOUND_VALIDATION'
+PRE_OWNER_REJECTED = 'REJECTED_PRE_OWNER_VALIDATION'
+TERMINAL = {'COMPLETED', 'REJECTED', 'SUPERSEDED', 'UNUSED', PRE_OWNER_REJECTED,
             'WITHDRAWN_SUPERSEDED'}
 PROTECTED = {'CURRENT', 'LATEST_ACCEPTED_BASELINE', 'CONFIRMED_ROLLBACK',
              'CONFIRMED_RECOVERY', 'AWAITING_OWNER_ACCEPTANCE', 'EXPLICIT_GOVERNANCE_PROVENANCE'}
@@ -239,8 +241,16 @@ def _context_valid(context):
         canonical = audit.get('canonical') or {}
         expected_events = audit.get('canonical_lifecycles', canonical.get('canonical_lifecycles'))
         expected_policy = audit.get('standing_policy', canonical.get('standing_policy'))
+        # ``protected`` mirrors every canonical lifecycle identity.  Only a
+        # subset has a local, selected full-copy archive (and therefore an
+        # entry in ``selected_archives``).  Comparing the two domains would
+        # make a complete canonical snapshot permanently stale whenever the
+        # registry correctly represents a protected historical identity with
+        # no selected local copy.  Keep both checks: the complete lifecycle
+        # domain must match the registry, while the archive/receipt domains
+        # must match the selected-copy subset.
         return bool(context and context.get('protected') and context.get('inputs')
-                    and set(context['protected']) == set(selected)
+                    and set(context['protected']) == set(registry['selected_survivors'])
                     and set(context.get('selected_archives', {})) == set(expected)
                     and set(context.get('verified_survivors', {})) == set(expected)
                     and all(_sha(p) == digest for p, digest in context['inputs'].items())
@@ -297,6 +307,13 @@ def plan(catalog, *, free_bytes=None):
             classification = 'PROTECTED'
         elif not valid or not complete_roots or error or not owned or (status not in TERMINAL and not standing['eligible']) or _publisher_live(record) or not _inactive(package) or cid and cid.startswith(lifecycle.HOLDS):
             classification = 'UNKNOWN'
+        elif (_pre_owner_rejection_matches(identity, record)
+              and cid not in protected_ids):
+            classification = 'DELETABLE'
+            try:
+                require_deletion(package)
+            except (OSError, ValueError, KeyError, TypeError):
+                classification = 'UNKNOWN'
         else:
             classification = 'DELETABLE'
             # The publisher catalog proves ownership, but only the canonical
@@ -426,7 +443,7 @@ def _record_publication(catalog, token, lease, receipt):
         'device': s.st_dev, 'inode': s.st_ino, 'publisher_run_id': token,
         'publisher_pid': lease['pid'], 'publisher_start_token': lease['start_token'],
         'publisher_completed': True,
-        'status': 'AWAITING_OWNER_ACCEPTANCE', 'historical': False}
+        'status': lease['lifecycle_status'], 'historical': False}
     del catalog['leases'][token]
 
 
@@ -436,12 +453,15 @@ def _lease_caller(lease):
             and (lease['pid'] == os.getpid() or lease.get('process_group') == os.getpgrp()))
 
 
-def reserve_archive(root, allocated_bytes, *, destination=None, identity=None):
+def reserve_archive(root, allocated_bytes, *, destination=None, identity=None,
+                    lifecycle_status='AWAITING_OWNER_ACCEPTANCE'):
     """Reserve a publication slot before staging; never silently prune."""
     try:
         from scripts.candidate_protection_gate import require_archive_publication
     except ModuleNotFoundError:
         from candidate_protection_gate import require_archive_publication
+    if lifecycle_status not in {PRE_OWNER, 'AWAITING_OWNER_ACCEPTANCE'}:
+        raise ValueError('archive lifecycle status is unsupported')
     if not os.environ.get('INTEGRA_RETENTION_BUILD_LEASE'):
         maintenance(root, reason='BEFORE_ARCHIVE_COPY')
     require_archive_publication(_safe(root), allocated_bytes)
@@ -455,6 +475,7 @@ def reserve_archive(root, allocated_bytes, *, destination=None, identity=None):
             if not lease or not _lease_caller(lease) or lease.get('archive_root') != str(_safe(root)) or allocated_bytes > lease['expected_bytes']:
                 raise ValueError('inherited build publication lease is unproven/insufficient')
             lease.update(destination=str(destination), identity=identity,
+                         lifecycle_status=lifecycle_status,
                          stage_owner={'pid': os.getpid(), 'start_token': admission._start(os.getpid())})
             return path, inherited
         # Charge existing unmanaged legacy bytes too. Unknown deletion ownership
@@ -468,7 +489,8 @@ def reserve_archive(root, allocated_bytes, *, destination=None, identity=None):
         token = uuid.uuid4().hex
         catalog['leases'][token] = {'pid': os.getpid(), 'start_token': admission._start(os.getpid()),
                                     'expected_bytes': allocated_bytes, 'owner_uid': os.getuid(),
-                                    'destination': str(destination) if destination else None, 'identity': identity}
+                                    'destination': str(destination) if destination else None, 'identity': identity,
+                                    'lifecycle_status': lifecycle_status}
     return path, token
 
 
@@ -500,9 +522,11 @@ def finish_publication(path, token, receipt):
         actual, bound, error = _metadata(package)
         if error or bound != {k: v for k, v in receipt.items() if k != 'archive_path'} or actual != lease.get('identity'):
             raise ValueError('publication receipt differs from journaled fresh artifact')
+        lifecycle_status = lease['lifecycle_status']
         _record_publication(catalog, token, lease, receipt)
     emit('CANDIDATE_CREATED', path=str(package), candidate_id=receipt['candidate_id'],
-         protected_reason='AWAITING_OWNER_ACCEPTANCE')
+         protected_reason=('PRE_OWNER_VALIDATION' if lifecycle_status == PRE_OWNER
+                           else 'AWAITING_OWNER_ACCEPTANCE'))
 
 
 def cancel_publication(path, token):
@@ -706,6 +730,65 @@ def disposition(catalog, package, status, authority_ref):
     record['status'] = status; record['disposition_ref'] = authority_ref
 
 
+def _pre_owner_rejection_matches(identity, record):
+    evidence = (record or {}).get('pre_owner_failure_evidence')
+    return bool((record or {}).get('status') == PRE_OWNER_REJECTED
+                and isinstance(evidence, dict)
+                and evidence.get('artifact_type') == 'integra.pre_owner_candidate_rejection'
+                and isinstance(evidence.get('failed_gate'), str) and evidence['failed_gate']
+                and isinstance(evidence.get('evidence_ref'), str) and evidence['evidence_ref']
+                and all(evidence.get(key) == identity.get(key)
+                        for key in ('candidate_id', 'bundle_digest', 'manifest_digest')))
+
+
+def reject_pre_owner(catalog, package, evidence):
+    """Terminally reject an unpublished validation Candidate, never an Owner hold.
+
+    The evidence is retained in the existing ownership catalog and bound to the
+    exact immutable identity.  This path is intentionally unavailable after
+    owner handoff: ``AWAITING_OWNER_ACCEPTANCE`` still needs the established
+    owner-authorized withdrawal lifecycle.
+    """
+    package = _safe(package)
+    record = catalog['artifacts'][str(package)]
+    if record.get('status') != PRE_OWNER:
+        raise ValueError('only a pre-owner validation Candidate may be technically rejected')
+    if not isinstance(evidence, dict) or set(evidence) != {
+            'artifact_type', 'candidate_id', 'bundle_digest', 'manifest_digest',
+            'failed_gate', 'evidence_ref'}:
+        raise ValueError('pre-owner rejection evidence shape is invalid')
+    if (evidence.get('artifact_type') != 'integra.pre_owner_candidate_rejection'
+            or not isinstance(evidence.get('failed_gate'), str) or not evidence['failed_gate']
+            or not isinstance(evidence.get('evidence_ref'), str) or not evidence['evidence_ref']
+            or any(evidence.get(key) != record.get(key)
+                   for key in ('candidate_id', 'bundle_digest', 'manifest_digest'))):
+        raise ValueError('pre-owner rejection evidence differs from immutable Candidate')
+    record['status'] = PRE_OWNER_REJECTED
+    record['disposition_ref'] = evidence['evidence_ref']
+    record['pre_owner_failure_evidence'] = evidence
+
+
+def handoff_to_owner(catalog, package, proposal):
+    """Make the existing exact Candidate an Owner hold only after Proposal PASS."""
+    package = _safe(package)
+    record = catalog['artifacts'][str(package)]
+    if record.get('status') != PRE_OWNER:
+        raise ValueError('only a pre-owner validation Candidate may enter Owner handoff')
+    try:
+        from scripts import proposed_baseline_lite as proposed
+    except ModuleNotFoundError:
+        import proposed_baseline_lite as proposed
+    current = json.loads((ROOT / 'state/current_product_baseline_v2.json').read_text())
+    if proposed.validate_proposal(proposal, current, ROOT):
+        raise ValueError('Owner handoff requires a fully valid Candidate-bound Proposal Lite')
+    candidate = proposal.get('candidate', {})
+    if any(candidate.get(key) != record.get(key)
+           for key in ('candidate_id', 'bundle_digest', 'manifest_digest')):
+        raise ValueError('Owner handoff Proposal does not bind this exact Candidate')
+    record['status'] = 'AWAITING_OWNER_ACCEPTANCE'
+    record['owner_handoff_proposal_id'] = proposal['proposal_id']
+
+
 def _inactive(package):
     executable = '/usr/sbin/lsof' if sys.platform == 'darwin' else shutil.which('lsof')
     if not executable:
@@ -818,6 +901,10 @@ def main():
     commands.add_parser('recover')
     mark = commands.add_parser('disposition'); mark.add_argument('--archive', type=Path, required=True)
     mark.add_argument('--status', choices=sorted(TERMINAL), required=True); mark.add_argument('--authority-ref', required=True)
+    reject = commands.add_parser('reject-pre-owner'); reject.add_argument('--archive', type=Path, required=True)
+    reject.add_argument('--evidence', type=Path, required=True)
+    handoff = commands.add_parser('owner-handoff'); handoff.add_argument('--archive', type=Path, required=True)
+    handoff.add_argument('--proposal', type=Path, required=True)
     sync = commands.add_parser('post-promotion'); sync.add_argument('--current', type=Path, required=True)
     sync.add_argument('--proposal', type=Path, action='append', default=[])
     sync.add_argument('--recovery-authority', type=Path, required=True, help='JSON authority descriptor (path, sha256, optional accepted repository_path)')
@@ -844,6 +931,10 @@ def main():
                     register_root(catalog, root)
             elif args.command == 'disposition':
                 disposition(catalog, args.archive, args.status, args.authority_ref)
+            elif args.command == 'reject-pre-owner':
+                reject_pre_owner(catalog, args.archive, json.loads(args.evidence.read_text()))
+            elif args.command == 'owner-handoff':
+                handoff_to_owner(catalog, args.archive, json.loads(args.proposal.read_text()))
             else:
                 sync_protection(catalog, args.current, args.proposal, args.rollback_archive, args.recovery_archive,
                                 recovery_authority=json.loads(args.recovery_authority.read_text()),

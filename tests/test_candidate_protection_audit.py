@@ -4,8 +4,10 @@ from __future__ import annotations
 import copy
 import json
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from scripts import candidate_protection_audit as audit
 from scripts import candidate_archive
@@ -13,6 +15,28 @@ from integra_core.candidate_identity import candidate_id, canonical_bytes, tree_
 
 
 class ProtectionAuditTests(unittest.TestCase):
+    def test_canonical_api_retries_only_transport_timeout_then_returns_exact_reply(self):
+        reply = subprocess.CompletedProcess(['gh', 'api'], 0, '[]', '')
+        with patch.object(audit.subprocess, 'run', side_effect=[
+                subprocess.TimeoutExpired(['gh', 'api'], 30), reply]), \
+             patch.object(audit.time, 'sleep') as sleep:
+            self.assertEqual(audit._api('repos/Yurielo/integra/pulls'), [])
+        self.assertEqual(sleep.call_args_list[0].args, (1,))
+
+    def test_canonical_api_stays_fail_closed_after_bounded_timeouts(self):
+        with patch.object(audit.subprocess, 'run', side_effect=subprocess.TimeoutExpired(['gh', 'api'], 30)), \
+             patch.object(audit.time, 'sleep'):
+            with self.assertRaisesRegex(ValueError, 'canonical GitHub read timed out'):
+                audit._api('repos/Yurielo/integra/pulls')
+
+    def test_canonical_api_retries_transient_nonzero_response(self):
+        temporary = subprocess.CompletedProcess(['gh', 'api'], 1, '', 'HTTP 502: upstream')
+        reply = subprocess.CompletedProcess(['gh', 'api'], 0, '[]', '')
+        with patch.object(audit.subprocess, 'run', side_effect=[temporary, reply]), \
+             patch.object(audit.time, 'sleep') as sleep:
+            self.assertEqual(audit._api('repos/Yurielo/integra/pulls'), [])
+        self.assertEqual(sleep.call_args_list[0].args, (1,))
+
     def test_proposed_candidate_can_be_protected_by_exact_proposal_bytes(self):
         identity = {'candidate_id': 'candidate-v1-' + 'a'*64,
                     'bundle_digest': 'b'*64, 'manifest_digest': 'c'*64}
