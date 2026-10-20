@@ -252,6 +252,16 @@
       "lifecycle": "WITHDRAWN_SUPERSEDED",
       "reason": "TECHNICALLY_UNUSABLE_AFTER_REBASE_SOURCE_BINDING_BREAK",
       "scope": "EXACT_EE1BD_REBASE_BINDING_SUPERSESSION"
+    },
+    "Build Archive/candidate-v1-2d770b6b3ff323a9b60c45cecdb7b5c36652b11cb102f16de63145530997dd11/e3c5bce9cefd8facb8ca228b56b66a560443629d94e97dd3e0d630ed06fb9164": {
+      "candidate_id": "candidate-v1-2d770b6b3ff323a9b60c45cecdb7b5c36652b11cb102f16de63145530997dd11",
+      "bundle_digest": "e3c5bce9cefd8facb8ca228b56b66a560443629d94e97dd3e0d630ed06fb9164",
+      "manifest_digest": "6d5bb4b9f4abc8863ecfc05222df3651141cb23a37e135e3d19aeb5c4ef57ccc",
+      "path": "Build Archive/candidate-v1-2d770b6b3ff323a9b60c45cecdb7b5c36652b11cb102f16de63145530997dd3e0d630ed06fb9164",
+      "authority_ref": "https://github.com/Yurielo/integra/issues/227#issuecomment-6298827934",
+      "lifecycle": "WITHDRAWN_SUPERSEDED",
+      "reason": "STALE_CANONICAL_GOVERNANCE_BINDING_AFTER_MAIN_cf1f3f6",
+      "scope": "EXACT_2D770_STALE_CANONICAL_GOVERNANCE_BINDING"
     }
   },
   "withdrawn_candidate_lifecycles": [
@@ -362,6 +372,18 @@
       "authority_body_sha256": "83ab2641e8fbc391009d8488f2e61c7bff630fb7e0ee598ff29fc8d76c0ac3e9",
       "history_path": "state/history/knowledge_k2_candidate_ee1bd_withdrawal_v1.json",
       "history_sha256": "2c63605dd3370bf36fe7ea2dc5719b2113e2db03a06d82dd3e532cd7e68b8535"
+    },
+    {
+      "candidate_id": "candidate-v1-2d770b6b3ff323a9b60c45cecdb7b5c36652b11cb102f16de63145530997dd11",
+      "bundle_digest": "e3c5bce9cefd8facb8ca228b56b66a560443629d94e97dd3e0d630ed06fb9164",
+      "manifest_digest": "6d5bb4b9f4abc8863ecfc05222df3651141cb23a37e135e3d19aeb5c4ef57ccc",
+      "previous_status": "AWAITING_OWNER_ACCEPTANCE",
+      "resulting_status": "WITHDRAWN_SUPERSEDED",
+      "reason": "STALE_CANONICAL_GOVERNANCE_BINDING_AFTER_MAIN_cf1f3f6",
+      "authority_ref": "https://github.com/Yurielo/integra/issues/227#issuecomment-6298827934",
+      "authority_body_sha256": "780a2e23a4a8f719ab74299eda2ea9264a3224037184d37b8d9e9f4e1ee7735d",
+      "history_path": "state/history/knowledge_k2_candidate_2d770_withdrawal_v1.json",
+      "history_sha256": "b6bed98b5823d01b02f1e4d4f8216a6a448cd80f2eb2d95d09193abf2c81cb41"
     }
   ]
 }
