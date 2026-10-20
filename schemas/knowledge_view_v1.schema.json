@@ -24,93 +24,170 @@
       "$ref": "#/$defs/urn"
     },
     "source_binding": {
-      "type": "object",
-      "required": [
-        "component_id",
-        "commit_sha",
-        "tree_sha",
-        "component_identity_sha256",
-        "contract_sha256",
-        "canonical_evidence_id",
-        "canonical_evidence_sha256",
-        "canonical_evidence_content_sha256",
-        "source_evidence_id",
-        "source_evidence_sha256",
-        "source_evidence_content_sha256",
-        "canonical_knowledge_id",
-        "canonical_knowledge_sha256",
-        "canonical_knowledge_content_sha256"
-      ],
-      "properties": {
-        "component_id": {
-          "const": "seminartext"
-        },
-        "commit_sha": {
-          "const": "a94936cd77cde13561c97c804ece1ac1134e01a6"
-        },
-        "tree_sha": {
-          "const": "5f5951da1d5dcf957ef982510fde3537f601ea15"
-        },
-        "component_identity_sha256": {
-          "$ref": "#/$defs/sha256"
-        },
-        "contract_sha256": {
+      "oneOf": [
+        {
           "type": "object",
           "required": [
-            "canonical_evidence_v1",
-            "canonical_knowledge_v1",
-            "canonical_knowledge_lifecycle",
-            "canonical_evidence_validator",
-            "canonical_knowledge_validator"
+            "component_id",
+            "commit_sha",
+            "tree_sha",
+            "component_identity_sha256",
+            "contract_sha256",
+            "canonical_evidence_id",
+            "canonical_evidence_sha256",
+            "canonical_evidence_content_sha256",
+            "source_evidence_id",
+            "source_evidence_sha256",
+            "source_evidence_content_sha256",
+            "canonical_knowledge_id",
+            "canonical_knowledge_sha256",
+            "canonical_knowledge_content_sha256"
           ],
           "properties": {
-            "canonical_evidence_v1": {
-              "const": "08bab4381ba435a059a1b58ea5dbedadd57112a18421ea7ef84a10ddb52d44b8"
+            "component_id": {
+              "const": "seminartext"
             },
-            "canonical_knowledge_v1": {
-              "const": "33691770411b4e5fc4e923920619396f7281bcd655202f8f56ddba99b844111b"
+            "commit_sha": {
+              "const": "a94936cd77cde13561c97c804ece1ac1134e01a6"
             },
-            "canonical_knowledge_lifecycle": {
-              "const": "c9133fe6ff630dd44475f40d37d731f407ce2f79d1d15613454a1d5c179099bc"
+            "tree_sha": {
+              "const": "5f5951da1d5dcf957ef982510fde3537f601ea15"
             },
-            "canonical_evidence_validator": {
-              "const": "889e6cdf3dc2dd7504f76923c04e2d8d1eceabdb828d0c110ddc1059b107860e"
+            "component_identity_sha256": {
+              "$ref": "#/$defs/sha256"
             },
-            "canonical_knowledge_validator": {
-              "const": "14869b0d77bed839758afb0455cffcfcba4173495554eddd9159a02309f1c095"
+            "contract_sha256": {
+              "type": "object",
+              "required": [
+                "canonical_evidence_v1",
+                "canonical_knowledge_v1",
+                "canonical_knowledge_lifecycle",
+                "canonical_evidence_validator",
+                "canonical_knowledge_validator"
+              ],
+              "properties": {
+                "canonical_evidence_v1": {
+                  "const": "08bab4381ba435a059a1b58ea5dbedadd57112a18421ea7ef84a10ddb52d44b8"
+                },
+                "canonical_knowledge_v1": {
+                  "const": "33691770411b4e5fc4e923920619396f7281bcd655202f8f56ddba99b844111b"
+                },
+                "canonical_knowledge_lifecycle": {
+                  "const": "c9133fe6ff630dd44475f40d37d731f407ce2f79d1d15613454a1d5c179099bc"
+                },
+                "canonical_evidence_validator": {
+                  "const": "889e6cdf3dc2dd7504f76923c04e2d8d1eceabdb828d0c110ddc1059b107860e"
+                },
+                "canonical_knowledge_validator": {
+                  "const": "14869b0d77bed839758afb0455cffcfcba4173495554eddd9159a02309f1c095"
+                }
+              },
+              "additionalProperties": false
+            },
+            "canonical_evidence_id": {
+              "$ref": "#/$defs/source_id"
+            },
+            "canonical_evidence_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "canonical_evidence_content_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "source_evidence_id": {
+              "$ref": "#/$defs/source_id"
+            },
+            "source_evidence_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "source_evidence_content_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "canonical_knowledge_id": {
+              "$ref": "#/$defs/source_id"
+            },
+            "canonical_knowledge_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "canonical_knowledge_content_sha256": {
+              "$ref": "#/$defs/sha256"
             }
           },
           "additionalProperties": false
         },
-        "canonical_evidence_id": {
-          "$ref": "#/$defs/source_id"
-        },
-        "canonical_evidence_sha256": {
-          "$ref": "#/$defs/sha256"
-        },
-        "canonical_evidence_content_sha256": {
-          "$ref": "#/$defs/sha256"
-        },
-        "source_evidence_id": {
-          "$ref": "#/$defs/source_id"
-        },
-        "source_evidence_sha256": {
-          "$ref": "#/$defs/sha256"
-        },
-        "source_evidence_content_sha256": {
-          "$ref": "#/$defs/sha256"
-        },
-        "canonical_knowledge_id": {
-          "$ref": "#/$defs/source_id"
-        },
-        "canonical_knowledge_sha256": {
-          "$ref": "#/$defs/sha256"
-        },
-        "canonical_knowledge_content_sha256": {
-          "$ref": "#/$defs/sha256"
+        {
+          "type": "object",
+          "required": [
+            "component_id",
+            "commit_sha",
+            "tree_sha",
+            "component_identity_sha256",
+            "contract_sha256",
+            "canonical_evidence_id",
+            "canonical_evidence_sha256",
+            "canonical_evidence_content_sha256",
+            "source_evidence_id",
+            "source_evidence_sha256",
+            "source_evidence_content_sha256",
+            "canonical_knowledge_id",
+            "canonical_knowledge_sha256",
+            "canonical_knowledge_content_sha256"
+          ],
+          "properties": {
+            "component_id": {
+              "const": "seminartext"
+            },
+            "commit_sha": {
+              "$ref": "#/$defs/git_sha"
+            },
+            "tree_sha": {
+              "$ref": "#/$defs/git_sha"
+            },
+            "component_identity_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "contract_sha256": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "seminartext.reviewed_knowledge_admission_v1"
+              ],
+              "properties": {
+                "seminartext.reviewed_knowledge_admission_v1": {
+                  "$ref": "#/$defs/sha256"
+                }
+              }
+            },
+            "canonical_evidence_id": {
+              "$ref": "#/$defs/source_id"
+            },
+            "canonical_evidence_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "canonical_evidence_content_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "source_evidence_id": {
+              "$ref": "#/$defs/source_id"
+            },
+            "source_evidence_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "source_evidence_content_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "canonical_knowledge_id": {
+              "$ref": "#/$defs/source_id"
+            },
+            "canonical_knowledge_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "canonical_knowledge_content_sha256": {
+              "$ref": "#/$defs/sha256"
+            }
+          },
+          "additionalProperties": false
         }
-      },
-      "additionalProperties": false
+      ]
     },
     "created_at": {
       "type": "string",
@@ -267,8 +344,6 @@
         "claim",
         "source_id",
         "transcript_revision_id",
-        "word_start_id",
-        "word_end_id",
         "quote",
         "locator",
         "timing_status",
@@ -325,7 +400,8 @@
         "timing_status": {
           "enum": [
             "aligned_word_range",
-            "aligned_envelope_with_explicit_unaligned_words"
+            "aligned_envelope_with_explicit_unaligned_words",
+            "cue_range"
           ]
         },
         "unaligned_word_ids": {
@@ -376,9 +452,77 @@
         },
         "evidence_sha256": {
           "$ref": "#/$defs/sha256"
+        },
+        "cue_start_id": {
+          "$ref": "#/$defs/source_id"
+        },
+        "cue_end_id": {
+          "$ref": "#/$defs/source_id"
+        },
+        "reviewed_fragment_id": {
+          "$ref": "#/$defs/source_id"
+        },
+        "reviewed_fragment_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "precision": {
+          "enum": [
+            "WORD_RANGE",
+            "CUE_RANGE"
+          ]
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": [
+            "word_start_id",
+            "word_end_id"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "cue_start_id"
+                ]
+              },
+              {
+                "required": [
+                  "cue_end_id"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "required": [
+            "cue_start_id",
+            "cue_end_id",
+            "precision",
+            "reviewed_fragment_id",
+            "reviewed_fragment_sha256"
+          ],
+          "properties": {
+            "precision": {
+              "const": "CUE_RANGE"
+            }
+          },
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "word_start_id"
+                ]
+              },
+              {
+                "required": [
+                  "word_end_id"
+                ]
+              }
+            ]
+          }
+        }
+      ]
     },
     "node": {
       "oneOf": [
