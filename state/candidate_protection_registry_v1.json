@@ -247,7 +247,7 @@
       "candidate_id": "candidate-v1-2d770b6b3ff323a9b60c45cecdb7b5c36652b11cb102f16de63145530997dd11",
       "bundle_digest": "e3c5bce9cefd8facb8ca228b56b66a560443629d94e97dd3e0d630ed06fb9164",
       "manifest_digest": "6d5bb4b9f4abc8863ecfc05222df3651141cb23a37e135e3d19aeb5c4ef57ccc",
-      "path": "Build Archive/candidate-v1-2d770b6b3ff323a9b60c45cecdb7b5c36652b11cb102f16de63145530997dd3e0d630ed06fb9164",
+      "path": "Build Archive/candidate-v1-2d770b6b3ff323a9b60c45cecdb7b5c36652b11cb102f16de63145530997dd11/e3c5bce9cefd8facb8ca228b56b66a560443629d94e97dd3e0d630ed06fb9164",
       "authority_ref": "https://github.com/Yurielo/integra/issues/227#issuecomment-6298827934",
       "lifecycle": "WITHDRAWN_SUPERSEDED",
       "reason": "STALE_CANONICAL_GOVERNANCE_BINDING_AFTER_MAIN_cf1f3f6",
