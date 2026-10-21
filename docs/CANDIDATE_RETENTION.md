@@ -21,6 +21,29 @@ obligation. It does not authorize legacy ownership adoption, pending-decision
 withdrawal or retirement of the four explicit holds. The policy is execution
 authority only after canonical delivery; Phase A never deletes real archives.
 
+## Autonomous bounded rotation — Issue #281
+
+Issue #281 establishes the permanent archive-rotation rule. At the eight-copy
+or 20 GiB limit, the system may retire **one** full copy only when every
+existing terminal-retirement predicate already passes. Among those candidates,
+it selects the oldest by the monotonic publisher publication sequence recorded
+under the shared catalog lock. It never uses a filename, Candidate ID, source
+commit date, or filesystem mtime as a proxy for archive age.
+
+Each rotation re-verifies the exact Candidate/bundle/manifest tuple, archive
+integrity, inactive writer state, canonical protection snapshot and deletion
+lease immediately before its durable single-package cleanup transaction. The
+same lock serializes cleanup and new-publication admission; a racing publisher
+cannot consume a slot before completed retirement is rechecked.
+
+An archive without publisher ordering provenance, a historical/foreign archive,
+or any archive with unresolved lifecycle/protection evidence remains retained.
+When all eight copies are protected or unknown, the system deletes nothing and
+does not create a ninth copy. It reports the concrete fail-closed capacity
+limitation; a semantic lifecycle transition must be established elsewhere by
+its own authority before a future rotation can occur. Product Owners are never
+asked to assess or pick archive IDs.
+
 ## Lifecycle
 
 1. Build in a fresh, uniquely owned workspace. The low-level historical

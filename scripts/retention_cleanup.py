@@ -274,7 +274,16 @@ def apply(r, path, expected_plan):
             raise ValueError('retention plan/protection changed; no deletion')
         for receipt in catalog['protection']['verified_survivors'].values():
             verify_archive(Path(receipt['archive_path']), {k: receipt[k] for k in ('candidate_id', 'bundle_digest', 'manifest_digest')})
-        targets = [e for e in snapshot['entries'] if e['classification'] == 'DELETABLE']
+        target = expected_plan.get('rotation_target')
+        if not isinstance(target, dict):
+            raise ValueError('cleanup requires one proven oldest eligible rotation target')
+        targets = [e for e in snapshot['entries']
+                   if e['classification'] == 'DELETABLE'
+                   and all(e.get(key) == target.get(key) for key in
+                           ('path', 'candidate_id', 'bundle_digest',
+                            'manifest_digest', 'publication_sequence'))]
+        if len(targets) != 1:
+            raise ValueError('cleanup rotation target changed or is not eligible')
         verified_targets = {}
         for e in targets:
             canonical_gate.require_deletion(Path(e['path']))

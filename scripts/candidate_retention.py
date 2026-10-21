@@ -280,6 +280,11 @@ def plan(catalog, *, free_bytes=None):
         owned = _ownership(package, local_record, receipt)
         amount = _measure(package, attributed); status = record.get('status', 'LEGACY_UNCONFIRMED')
         cid = identity.get('candidate_id'); reasons = []
+        # Filesystem timestamps and source-commit dates do not prove archive
+        # age. Only the monotonic sequence written by the shared publisher
+        # catalog can order full copies for automatic retirement.
+        sequence = record.get('publication_sequence')
+        order_proven = isinstance(sequence, int) and sequence > 0
         selected = (context or {}).get('selected_archives', {}).get(cid)
         if cid in protected_ids and (not selected or selected == str(package) or (record or {}).get('pin_ref')):
             reasons += context['protected'][cid]
@@ -295,7 +300,7 @@ def plan(catalog, *, free_bytes=None):
             standing_policy=(context or {}).get('standing_policy'))
         if reasons:
             classification = 'PROTECTED'
-        elif not valid or not complete_roots or error or not owned or (status not in TERMINAL and not standing['eligible']) or _publisher_live(record) or not _inactive(package) or cid and cid.startswith(lifecycle.HOLDS):
+        elif not valid or not complete_roots or error or not owned or not order_proven or (status not in TERMINAL and not standing['eligible']) or _publisher_live(record) or not _inactive(package) or cid and cid.startswith(lifecycle.HOLDS):
             classification = 'UNKNOWN'
         else:
             classification = 'DELETABLE'
@@ -313,6 +318,8 @@ def plan(catalog, *, free_bytes=None):
                      'local_lifecycle': (local_record or {}).get('status', 'LEGACY_UNCONFIRMED'),
                      'standing_retirement_eligible': standing['eligible'],
                      'standing_retirement_reasons': standing['reasons'],
+                     'publication_sequence': sequence if order_proven else None,
+                     'retention_order': 'PUBLISHER_PUBLICATION_SEQUENCE' if order_proven else 'UNPROVEN',
                      'metadata_error': error, 'device': package.stat().st_dev,
                      'inode': package.stat().st_ino, 'historical': bool((record or {}).get('historical'))})
     survivors_valid = all(any(r.get('candidate_id') == cid and not r['metadata_error']
@@ -332,6 +339,13 @@ def plan(catalog, *, free_bytes=None):
     if free_bytes is None:
         anchor = next((Path(p) for p in catalog['roots'] if Path(p).exists()), Path.home())
         free_bytes = shutil.disk_usage(anchor).free
+    # Retire exactly one archive per transaction. This makes archive rotation
+    # deterministic and interruption-safe, and never turns a capacity check
+    # into a bulk deletion operation.
+    eligible = sorted((row for row in rows if row['classification'] == 'DELETABLE'),
+                      key=lambda row: (row['publication_sequence'], row['candidate_id'],
+                                       row['bundle_digest'], row['path']))
+    target = eligible[0] if eligible else None
     report = {'schema_version': '1.0', 'artifact_type': 'integra.retention_plan', 'dry_run': True,
               'BEFORE_BYTES': before, 'PROTECTED_BYTES': protected, 'DELETABLE_BYTES': deletable,
               'UNKNOWN_BYTES': unknown, 'EXPECTED_AFTER_BYTES': before - deletable,
@@ -339,7 +353,11 @@ def plan(catalog, *, free_bytes=None):
               'reclaim_estimate': 'ATTRIBUTED_BLOCKS; APFS_EXCLUSIVE_EXTENTS_NOT_PROVEN',
               'full_copies': len(rows), 'over_copy_cap': len(rows) > MAX_COPIES,
               'over_byte_cap': before > MAX_BYTES, 'protection_context_valid': valid,
-              'catalog_sha256': _digest(catalog), 'entries': rows}
+              'catalog_sha256': _digest(catalog), 'entries': rows,
+              'rotation_strategy': 'OLDEST_PROVEN_ELIGIBLE_FIRST',
+              'rotation_target': ({key: target[key] for key in (
+                  'path', 'candidate_id', 'bundle_digest', 'manifest_digest',
+                  'publication_sequence')} if target else None)}
     report['plan_sha256'] = _digest(report)
     return report
 
@@ -420,12 +438,19 @@ def _record_publication(catalog, token, lease, receipt):
     package = _safe(receipt['archive_path']); s = package.stat()
     if (s.st_dev, s.st_ino) != tuple(lease.get('publication_inode', [])):
         raise ValueError('publication inode differs from prepublication journal')
+    # Assigned under the shared catalog lock. It is the only ordering source
+    # used by autonomous rotation; mtime, path names and Candidate IDs never
+    # substitute for publisher provenance.
+    sequence = max((record.get('publication_sequence', 0)
+                    for record in catalog['artifacts'].values()
+                    if isinstance(record.get('publication_sequence', 0), int)),
+                   default=0) + 1
     catalog['artifacts'][str(package)] = {
         **{k: receipt[k] for k in ('candidate_id', 'bundle_digest', 'manifest_digest', 'inventory_sha256')},
         'complete_sha256': _sha(package / 'COMPLETE.json'), 'owner_uid': os.getuid(),
         'device': s.st_dev, 'inode': s.st_ino, 'publisher_run_id': token,
         'publisher_pid': lease['pid'], 'publisher_start_token': lease['start_token'],
-        'publisher_completed': True,
+        'publisher_completed': True, 'publication_sequence': sequence,
         'status': 'AWAITING_OWNER_ACCEPTANCE', 'historical': False}
     del catalog['leases'][token]
 
@@ -796,11 +821,15 @@ def maintenance(root, *, reason):
         if not snapshot['DELETABLE_BYTES']:
             emit('CLEANUP_SKIPPED', reason='NO_ELIGIBLE_TERMINAL_COPIES', trigger=reason)
             return []
+        if snapshot['rotation_target'] is None:
+            emit('CLEANUP_SKIPPED', reason='NO_PROVEN_OLDEST_ELIGIBLE_COPY', trigger=reason)
+            return []
         before_free = shutil.disk_usage(root if Path(root).exists() else Path(root).parent).free
         deleted = cleanup(path, snapshot)
         after_free = shutil.disk_usage(root if Path(root).exists() else Path(root).parent).free
         emit('CLEANUP_COMPLETED', paths=deleted, trigger=reason,
-             attributed_bytes=snapshot['DELETABLE_BYTES'],
+             attributed_bytes=next(row['allocated_bytes'] for row in snapshot['entries']
+                                   if row['path'] == snapshot['rotation_target']['path']),
              observed_free_space_delta=after_free - before_free,
              physical_reclaim='NOT_EXCLUSIVE_APFS_PROOF')
         return deleted
