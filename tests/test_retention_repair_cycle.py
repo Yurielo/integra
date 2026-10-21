@@ -55,7 +55,10 @@ class RealRetentionFixture:
             'selected_survivors': {}, 'deletion_enabled': False, 'deletion_authorizations': {},
             'withdrawn_candidate_lifecycles': [],
             'standing_retention_policy': {'status': 'PRODUCT_OWNER_AUTHORIZED_ACTIVE',
-                                         'authority_ref': 'fixture-standing-owner', 'sha256': 'f' * 64},
+                                         'authority_ref': 'fixture-standing-owner', 'sha256': 'f' * 64,
+                                         'rotation_strategy': 'OLDEST_PROVEN_ELIGIBLE_FIRST',
+                                         'rotation_scope': 'ONE_FULL_COPY_PER_TRANSACTION',
+                                         'all_protected': 'FAIL_CLOSED_NO_NINTH_ARCHIVE'},
             'lifecycle_events': []}
         self.events = {}; self.proposals = {}; self.accepted_unpromoted = {}
         self.withdrawals = []
@@ -262,6 +265,7 @@ class RealRetentionFixture:
             'owner_uid': os.getuid(), 'device': s.st_dev, 'inode': s.st_ino,
             'publisher_run_id': 'isolated-bootstrap-' + label, 'publisher_pid': os.getpid(),
             'publisher_start_token': disk._start(os.getpid()), 'publisher_completed': True,
+            'publication_sequence': len(self.owner_catalog['artifacts']) + 1,
             'status': 'AWAITING_OWNER_ACCEPTANCE', 'historical': False}
         return verified
 

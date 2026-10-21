@@ -46,7 +46,7 @@ class OwnedRetentionTests(unittest.TestCase):
     def _context(self, package, survivor):
         receipt = archive.verify_archive(survivor); cid = receipt['candidate_id']
         with r.locked(self._catalog()) as catalog:
-            for item in (package, survivor):
+            for sequence, item in enumerate((package, survivor), start=1):
                 item_receipt = archive.verify_archive(item)
                 info = item.stat()
                 catalog['artifacts'][str(item)] = {
@@ -55,7 +55,8 @@ class OwnedRetentionTests(unittest.TestCase):
                     'owner_uid': os.getuid(), 'device': info.st_dev, 'inode': info.st_ino,
                     'publisher_run_id': 'fixture', 'publisher_pid': os.getpid(),
                     'publisher_start_token': 'dead fixture publisher',
-                    'publisher_completed': True, 'status': 'AWAITING_OWNER_ACCEPTANCE',
+                    'publisher_completed': True, 'publication_sequence': sequence,
+                    'status': 'AWAITING_OWNER_ACCEPTANCE',
                     'historical': False,
                 }
             catalog['protection'] = {'protected': {cid: ['CURRENT', 'LATEST_ACCEPTED_BASELINE', 'CONFIRMED_ROLLBACK', 'CONFIRMED_RECOVERY']},
@@ -168,6 +169,48 @@ class OwnedRetentionTests(unittest.TestCase):
         exe = package / 'Integra.app/Contents/MacOS/Integra'; alias = self.root / 'foreign-link'
         os.link(exe, alias)
         self.assertEqual(self._plan()['DELETABLE_BYTES'], 0)
+
+    def test_rotation_deletes_only_the_oldest_proven_eligible_archive(self):
+        oldest, survivor = self._ready()
+        self.identity['source']['commit_sha'] = 'd' * 40; self._manifest()
+        with patch.object(r, 'maintenance', return_value=[]):
+            newer = self._package()
+        with r.locked(self._catalog()) as catalog:
+            r.disposition(catalog, newer, 'SUPERSEDED', 'fixture newer terminal authority')
+        planned = self._plan()
+        self.assertEqual(planned['rotation_strategy'], 'OLDEST_PROVEN_ELIGIBLE_FIRST')
+        self.assertEqual(planned['rotation_target']['path'], str(oldest))
+        self.assertLess(planned['rotation_target']['publication_sequence'],
+                        next(row['publication_sequence'] for row in planned['entries']
+                             if row['path'] == str(newer)))
+        self.assertEqual(r.cleanup(self._catalog(), planned), [str(oldest)])
+        self.assertFalse(oldest.exists()); self.assertTrue(newer.exists())
+        self.assertEqual(archive.verify_archive(survivor)['status'], 'COMPLETE')
+
+    def test_unproven_rotation_order_and_protected_oldest_fail_closed(self):
+        oldest, survivor = self._ready()
+        with r.locked(self._catalog()) as catalog:
+            del catalog['artifacts'][str(oldest)]['publication_sequence']
+        planned = self._plan()
+        row = next(row for row in planned['entries'] if row['path'] == str(oldest))
+        self.assertEqual(row['classification'], 'UNKNOWN')
+        self.assertEqual(row['retention_order'], 'UNPROVEN')
+        self.assertIsNone(planned['rotation_target'])
+        self.assertTrue(oldest.exists()); self.assertTrue(survivor.exists())
+
+    def test_protected_oldest_is_not_selected_for_rotation(self):
+        oldest, _ = self._ready()
+        self.identity['source']['commit_sha'] = 'd' * 40; self._manifest()
+        with patch.object(r, 'maintenance', return_value=[]):
+            newer = self._package()
+        with r.locked(self._catalog()) as catalog:
+            old_id = catalog['artifacts'][str(oldest)]['candidate_id']
+            catalog['protection']['protected'][old_id] = ['AWAITING_OWNER_ACCEPTANCE']
+            r.disposition(catalog, newer, 'SUPERSEDED', 'fixture newer terminal authority')
+        planned = self._plan()
+        old_row = next(row for row in planned['entries'] if row['path'] == str(oldest))
+        self.assertEqual(old_row['classification'], 'PROTECTED')
+        self.assertEqual(planned['rotation_target']['path'], str(newer))
 
     def test_cleanup_rehash_rejects_same_size_payload_tampering(self):
         package, _ = self._ready(); plan = self._plan()

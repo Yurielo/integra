@@ -19,6 +19,9 @@ def validate(value):
                 'policy_id': 'terminal-owned-archive-retirement-v1',
                 'max_full_copies': 8, 'max_attributed_bytes': 21474836480,
                 'minimum_free_after_reservations': 16106127360,
+                'rotation_strategy': 'OLDEST_PROVEN_ELIGIBLE_FIRST',
+                'rotation_scope': 'ONE_FULL_COPY_PER_TRANSACTION',
+                'all_protected': 'FAIL_CLOSED_NO_NINTH_ARCHIVE',
                 'absolute_hold_prefixes': ['721d', '073396', '97be', '14b3']}
     for key, expected_value in expected.items():
         if value.get(key) != expected_value or type(value.get(key)) is not type(expected_value):
