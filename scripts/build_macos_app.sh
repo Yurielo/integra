@@ -105,6 +105,8 @@ cp "$repo_root/macos/Resources/Integra.icns" "$app/Contents/Resources/Integra.ic
 cp "$repo_root/macos/Resources/bridge.py" "$app/Contents/Resources/bridge.py"
 cp "$repo_root/macos/Resources/source_first_workflow.json" "$app/Contents/Resources/source_first_workflow.json"
 cp "$repo_root/macos/Resources/deferred_features.json" "$app/Contents/Resources/deferred_features.json"
+mkdir -p "$app/Contents/Resources/schemas"
+cp "$repo_root/schemas/knowledge_view_v1.schema.json" "$app/Contents/Resources/schemas/knowledge_view_v1.schema.json"
 mkdir -p "$app/Contents/Resources/workers"
 cp "$repo_root/workers/seminartext_topics_worker.py" "$app/Contents/Resources/workers/seminartext_topics_worker.py"
 cp "$repo_root/workers/seminartext_word_alignment_worker.py" "$app/Contents/Resources/workers/seminartext_word_alignment_worker.py"
