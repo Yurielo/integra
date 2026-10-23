@@ -760,6 +760,19 @@ def cleanup(path, expected_plan, *, historical_authority=None):
     return retention_cleanup.apply(sys.modules[__name__], path, expected_plan)
 
 
+def cleanup_exact(path, identity):
+    """Execute one independently authorized withdrawal retirement.
+
+    Exact withdrawal is not rotation and never receives inferred publication
+    order. The executor rechecks the canonical deletion gate before mutation.
+    """
+    try:
+        from scripts import retention_cleanup
+    except ModuleNotFoundError:
+        import retention_cleanup
+    return retention_cleanup.apply_exact(sys.modules[__name__], path, identity)
+
+
 def recover_cleanup(path):
     try:
         from scripts import retention_cleanup
