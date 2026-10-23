@@ -226,6 +226,29 @@ def _ownership(package, record, receipt):
             and all(record.get(k) == receipt.get(k) for k in ('candidate_id', 'bundle_digest', 'manifest_digest')))
 
 
+def _context_matches(context, registry, audit, base):
+    """Compare catalog context with a complete canonical protection snapshot."""
+    selected = registry['selected_survivors']
+    expected = {cid: str(base / relative) for cid, relative in selected.items() if relative}
+    protected = audit.get('protected_identities', {})
+    canonical = audit.get('canonical') or {}
+    expected_events = audit.get('canonical_lifecycles', canonical.get('canonical_lifecycles'))
+    expected_policy = audit.get('standing_policy', canonical.get('standing_policy'))
+    return bool(context and context.get('protected') and context.get('inputs')
+                # Protection includes every canonical role.  Only the subset
+                # with a selected local archive is independently re-verified.
+                and set(context['protected']) == set(protected)
+                and set(context.get('selected_archives', {})) == set(expected)
+                and set(context.get('verified_survivors', {})) == set(expected)
+                and all(_sha(p) == digest for p, digest in context['inputs'].items())
+                and context.get('selected_archives') == expected
+                and (audit.get('registry_sha256') is None
+                     or context.get('registry_sha256') == audit['registry_sha256'])
+                and (expected_events is None or context.get('canonical_lifecycles') == expected_events)
+                and (expected_policy is None or context.get('standing_policy') == expected_policy)
+                and audit['authority_state'] == 'COMPLETE')
+
+
 def _context_valid(context):
     try:
         try:
@@ -233,23 +256,8 @@ def _context_valid(context):
         except ModuleNotFoundError:
             from candidate_protection_gate import _snapshot
         registry, audit = _snapshot(for_deletion=True)
-        selected = registry['selected_survivors']
         base = Path.home() / 'Library/Application Support/Integra'
-        expected = {cid: str(base / relative) for cid, relative in selected.items() if relative}
-        canonical = audit.get('canonical') or {}
-        expected_events = audit.get('canonical_lifecycles', canonical.get('canonical_lifecycles'))
-        expected_policy = audit.get('standing_policy', canonical.get('standing_policy'))
-        return bool(context and context.get('protected') and context.get('inputs')
-                    and set(context['protected']) == set(selected)
-                    and set(context.get('selected_archives', {})) == set(expected)
-                    and set(context.get('verified_survivors', {})) == set(expected)
-                    and all(_sha(p) == digest for p, digest in context['inputs'].items())
-                    and context.get('selected_archives') == expected
-                    and (audit.get('registry_sha256') is None
-                         or context.get('registry_sha256') == audit['registry_sha256'])
-                    and (expected_events is None or context.get('canonical_lifecycles') == expected_events)
-                    and (expected_policy is None or context.get('standing_policy') == expected_policy)
-                    and audit['authority_state'] == 'COMPLETE')
+        return _context_matches(context, registry, audit, base)
     except (OSError, ValueError, KeyError, TypeError, ImportError, subprocess.SubprocessError):
         return False
 
@@ -758,6 +766,19 @@ def cleanup(path, expected_plan, *, historical_authority=None):
         import retention_cleanup
     # Historical ownership/migration is never authorized by a free-form string.
     return retention_cleanup.apply(sys.modules[__name__], path, expected_plan)
+
+
+def cleanup_exact(path, identity):
+    """Execute one independently authorized withdrawal retirement.
+
+    Exact withdrawal is not rotation and never receives inferred publication
+    order. The executor rechecks the canonical deletion gate before mutation.
+    """
+    try:
+        from scripts import retention_cleanup
+    except ModuleNotFoundError:
+        import retention_cleanup
+    return retention_cleanup.apply_exact(sys.modules[__name__], path, identity)
 
 
 def recover_cleanup(path):

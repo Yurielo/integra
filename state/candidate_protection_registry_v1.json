@@ -252,6 +252,16 @@
       "lifecycle": "WITHDRAWN_SUPERSEDED",
       "reason": "STALE_CANONICAL_GOVERNANCE_BINDING_AFTER_MAIN_cf1f3f6",
       "scope": "EXACT_2D770_STALE_CANONICAL_GOVERNANCE_BINDING"
+    },
+    "Build Archive/candidate-v1-a674eaa577fe008c3a5b71b31f57206d5dbbc729afabf8757e1adca4b45a357a/337fe45da6349cf263779231cbf40946e6c5265566769b461e201e10a53aefa9": {
+      "path": "Build Archive/candidate-v1-a674eaa577fe008c3a5b71b31f57206d5dbbc729afabf8757e1adca4b45a357a/337fe45da6349cf263779231cbf40946e6c5265566769b461e201e10a53aefa9",
+      "candidate_id": "candidate-v1-a674eaa577fe008c3a5b71b31f57206d5dbbc729afabf8757e1adca4b45a357a",
+      "bundle_digest": "337fe45da6349cf263779231cbf40946e6c5265566769b461e201e10a53aefa9",
+      "manifest_digest": "923880d33f647fe4fecb9bfe51341b1b17ca52e1ddfe830211e944194be06818",
+      "authority_ref": "https://github.com/Yurielo/integra/issues/279#issuecomment-6363950774",
+      "lifecycle": "WITHDRAWN_SUPERSEDED",
+      "reason": "DEFECTIVE_K2_CANDIDATE_MISSING_PACKAGED_KNOWLEDGE_VIEW_SCHEMA",
+      "scope": "EXACT_A674_DEFECTIVE_K2_PACKAGED_SCHEMA_RETIREMENT"
     }
   },
   "withdrawn_candidate_lifecycles": [
@@ -374,6 +384,18 @@
       "authority_body_sha256": "780a2e23a4a8f719ab74299eda2ea9264a3224037184d37b8d9e9f4e1ee7735d",
       "history_path": "state/history/knowledge_k2_candidate_2d770_withdrawal_v1.json",
       "history_sha256": "b6bed98b5823d01b02f1e4d4f8216a6a448cd80f2eb2d95d09193abf2c81cb41"
+    },
+    {
+      "candidate_id": "candidate-v1-a674eaa577fe008c3a5b71b31f57206d5dbbc729afabf8757e1adca4b45a357a",
+      "bundle_digest": "337fe45da6349cf263779231cbf40946e6c5265566769b461e201e10a53aefa9",
+      "manifest_digest": "923880d33f647fe4fecb9bfe51341b1b17ca52e1ddfe830211e944194be06818",
+      "previous_status": "AWAITING_OWNER_ACCEPTANCE",
+      "resulting_status": "WITHDRAWN_SUPERSEDED",
+      "reason": "DEFECTIVE_K2_CANDIDATE_MISSING_PACKAGED_KNOWLEDGE_VIEW_SCHEMA",
+      "authority_ref": "https://github.com/Yurielo/integra/issues/279#issuecomment-6363950774",
+      "authority_body_sha256": "47d9f5292d5ca3d608af327b1482cd44d7ed7bc846bdb571e11818393190e7c8",
+      "history_path": "state/history/knowledge_k2_candidate_a674_withdrawal_v1.json",
+      "history_sha256": "4ffad6ec8632a8bc34fd253b6f22bd1393762d3d95e886a0336d158cb0147fc1"
     }
   ]
 }

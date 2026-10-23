@@ -317,3 +317,55 @@ def apply(r, path, expected_plan):
             r._persist(path, catalog)
             deleted.append(_execute(r, path, catalog, token))
     return deleted
+
+
+def apply_exact(r, path, identity):
+    """Retire one owner-authorized withdrawn Candidate without rotation order.
+
+    This is deliberately separate from oldest-first rotation: it accepts only
+    an exact identity already admitted by the canonical deletion gate.
+    """
+    required = {'candidate_id', 'bundle_digest', 'manifest_digest'}
+    if not isinstance(identity, dict) or set(identity) != required:
+        raise ValueError('exact cleanup requires one complete Candidate identity')
+    try:
+        from scripts.candidate_archive import verify_archive
+    except ModuleNotFoundError:
+        from candidate_archive import verify_archive
+    with r.locked(path) as catalog:
+        if not catalog['roots'] or r._safe(path) != r._safe(r.catalog_path(catalog['roots'][0])):
+            raise ValueError('cleanup requires the shared authoritative device catalog')
+        if catalog.get('deletions'):
+            raise ValueError('interrupted cleanup requires explicit recover before a new plan')
+        candidates = []
+        for package in r._packages(catalog):
+            record = catalog['artifacts'].get(str(package))
+            if record and all(record.get(key) == identity[key] for key in required):
+                candidates.append(r._safe(package))
+        if len(candidates) != 1:
+            raise ValueError('exact cleanup Candidate is missing or ambiguous')
+        package = candidates[0]
+        lease = canonical_gate.require_deletion(package)
+        verification = verify_archive(package, identity)
+        record = catalog['artifacts'].get(str(package))
+        if not r._ownership(package, record, json.loads((package / 'COMPLETE.json').read_text())):
+            raise ValueError('publisher ownership changed')
+        if record.get('status') != 'WITHDRAWN_SUPERSEDED' or not record.get('disposition_ref'):
+            raise ValueError('exact cleanup requires replayed withdrawn lifecycle evidence')
+        token = uuid.uuid4().hex
+        job = {'source': str(package), 'trash': str(package.parent / ('.retention-trash-' + token)),
+               'transaction_id': 'retirement-v1-' + token, 'phase': 'PREPARED',
+               'identity': identity, 'device': package.stat().st_dev, 'inode': package.stat().st_ino,
+               'record': record, 'entries': _entries(r, package),
+               'canonical_deletion_lease': lease}
+        manifest = json.loads((package / 'Integra.app/Contents/Resources/candidate-manifest.json').read_text())
+        job['retirement_receipt'] = _prepare_receipt(r, catalog, job, manifest, verification)
+        captured = {entry['path']: entry for entry in job['entries']}
+        if (captured['inventory.json']['sha256'] != record['inventory_sha256']
+                or captured['COMPLETE.json']['sha256'] != record['complete_sha256']):
+            raise ValueError('cleanup journal metadata differs from publisher authority')
+        _guard(r, catalog, job, package)
+        catalog['deletions'][token] = job
+        catalog.setdefault('retirements', {})[job['transaction_id']] = job['retirement_receipt']
+        r._persist(path, catalog)
+        return [_execute(r, path, catalog, token)]
