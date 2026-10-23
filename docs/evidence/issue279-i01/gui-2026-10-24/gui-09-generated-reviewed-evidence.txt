@@ -1,0 +1,113 @@
+Window: "Integra — Новая обработка", App: Integra.
+0 standard window Integra — Новая обработка, Secondary Actions: Raise
+	1 split group
+		2 scroll area Secondary Actions: Scroll Up, Scroll Down
+			3 table
+				4 row (selectable)
+					5 cell
+						6 text INTEGRA
+				7 row (selectable)
+					8 cell
+						9 text ＋ Новая обработка
+				10 row (selectable)
+					11 cell
+						12 text БИБЛИОТЕКА
+				13 row (selectable)
+					14 cell
+						15 text Исходники
+				16 row (selectable)
+					17 cell
+						18 text Проекты
+				19 row (selectable)
+					20 cell
+						21 text Обработанные материалы
+				22 row (selectable)
+					23 cell
+						24 text РАБОТА
+				25 row (selectable)
+					26 cell
+						27 text Выполняется
+				28 row (selectable)
+					29 cell
+						30 text Требует проверки — В разработке
+				31 row (selectable)
+					32 cell
+						33 text ЗНАНИЯ
+				34 row (selected)
+					35 cell (selected)
+						36 text База знаний
+				37 row (selectable)
+					38 cell
+						39 text Поиск — В разработке
+				40 row (selectable)
+					41 cell
+						42 text СОЗДАТЬ
+				43 row (selectable)
+					44 cell
+						45 text Видео и клипы — В разработке
+				46 row (selectable)
+					47 cell
+						48 text Учебные материалы — В разработке
+				49 row (selectable)
+					50 cell
+						51 text Маркетинг — В разработке
+				52 row (selectable)
+					53 cell
+						54 text ПУБЛИКАЦИЯ
+				55 row (selectable)
+					56 cell
+						57 text Готово
+				58 row (selectable)
+					59 cell
+						60 text История
+				61 row (selectable)
+					62 cell
+						63 text SYSTEM
+				64 row (selectable)
+					65 cell
+						66 text Диагностика
+				67 row (selectable)
+					68 cell
+						69 text Настройки — В разработке
+			70 scroll bar (disabled, settable, float) 0
+		71 splitter (disabled, settable, float) 370
+		72 scroll area Secondary Actions: Scroll Up, Scroll Down
+			73 text Тематический конспект Проверенные фрагменты. Это не Canonical Knowledge ACCEPTED. Конспект сохранён; источник и версии проверены Источник: generated-russian-speech.mp4
+Обработка завершена
+ID источника: urn:integra:source:f8f2239a-599c-5f4a-98de-ae7f60436efa
+Версия источника: db0cbfd61a3861442114d27633d0b8115af792f6532674298886d86fd57cf3e4
+Версия тем: 81aa628a738240bc3d7c51b84c8b8cae0859d9aaf9466fef3c7218d4f0ee7953
+Версия файла расшифровки: 2293db7c751eaf796116e44c584f9c1fc4000afdc8ab4149d9cf8f6cff6f8fd7
+Конспект: urn:integra:artifact:bcb146a1-2afa-5cb4-881c-af3269113e9d
+Точность: диапазон слов. Машинная расшифровка: не проверена человеком
+Происхождение: Машинное распознавание
+Версия текста: transcript_revision_source_655b4871962cc06480dca0fb_r1
+Проверка тематических фрагментов не изменяет статус исходной расшифровки.
+			74 button Все конспекты
+			75 button Структурировать знания / открыть принятую версию
+			76 button Экспортировать конспект в Obsidian
+			77 text Проверка распознавания речи
+Этот сегмент демонстрирует процесс распознавания речи, включая создание субтитров и определение временной шкалы слов и тем.
+Включён в конспект Цитата: Здравствуйте! Это короткая проверка полного процесса распознавания речи, субтитров,
+Контекст: Здравствуйте! Это короткая проверка полного процесса распознавания речи, субтитров,
+Слова: transcript_revision_source_655b4871962cc06480dca0fb_r1:word:000000 — transcript_revision_source_655b4871962cc06480dca0fb_r1:word:000008
+Версия текста: transcript_revision_source_655b4871962cc06480dca0fb_r1
+			78 button Открыть точный фрагмент источника, Help: fragment_be53d8140f6e7424f823de8dc420c702635a3ad6f4444a38e8f48a594c78495d
+			79 scroll bar (settable, float) 0
+				80 value indicator (settable, float) 0
+				81 increment arrow button
+				82 decrement arrow button
+				83 increment page button
+				84 decrement page button
+	85 close button
+	86 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	87 minimize button
+	88 text Integra — Новая обработка
+89 menu bar
+	90 Integra
+	91 Правка
+
+Selected:
+	34 row (selected)
+
+Note: Pay special attention to the content selected by the user. If the user asks a question or refers to the content they are looking at on-screen, they might be referring to the selected content (but they might be referring to something else that's visible, too).

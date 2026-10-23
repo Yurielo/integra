@@ -1,0 +1,19 @@
+INTEGRA_GOVERNANCE_VALIDATION: FAIL
+- R9A implementation hash differs: integra_core/knowledge.py
+- R9A implementation hash differs: schemas/knowledge_view_v1.schema.json
+- CURRENT v2 governed byte drift: integra_core/candidate_identity.py
+- CURRENT v2 governed byte drift: integra_core/reviewed_result_package.py
+- CURRENT v2 governed byte drift: macos/IntegraApp.swift
+- CURRENT v2 governed byte drift: macos/Resources/bridge.py
+- CURRENT v2 governed byte drift: scripts/build_macos_app.sh
+- CURRENT v2 governed byte drift: scripts/candidate_manifest.py
+- CURRENT v2 governed byte drift: scripts/test_macos_app.sh
+- CURRENT v2 unaccounted governed path: integra_core/knowledge.py
+- CURRENT v2 unaccounted governed path: integra_core/knowledge_admission_runtime.py
+- CURRENT v2 unaccounted governed path: integra_core/knowledge_k2.py
+- CURRENT v2 unaccounted governed path: schemas/knowledge_view_v1.schema.json
+- R12 implementation hash differs: macos/IntegraApp.swift
+- R12 implementation hash differs: macos/Resources/bridge.py
+- R12 implementation hash differs: scripts/build_macos_app.sh
+- R12 implementation hash differs: scripts/test_macos_app.sh
+- R13 implementation hash differs: macos/Resources/bridge.py

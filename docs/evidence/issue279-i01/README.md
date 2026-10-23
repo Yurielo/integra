@@ -1,5 +1,7 @@
 # I01: packaged Knowledge View schema repair
 
+**24 October update:** [resumed native GUI QA](gui-2026-10-24/README.md) completed the bounded concept/relation review, relaunch/reopen and source-navigation checks. The pending-unlock statements below describe the 23 October run. Retained publication and valid proposal remain blocked.
+
 Issue #279 / PR #280. Validation date: 23 October 2026 (Europe/Istanbul).
 
 ## Root cause and repair

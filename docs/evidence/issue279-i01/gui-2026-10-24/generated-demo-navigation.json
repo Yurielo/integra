@@ -1,0 +1,22 @@
+{
+  "domain_contract_sha256": "4e3f0c257934e8d4d82848c6c172088192ee4ab4999a400225cdbb406c53247b",
+  "ok": true,
+  "operation": "knowledge-k2-navigation",
+  "result": {
+    "end_seconds": 5.728,
+    "evidence_id": "evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e",
+    "fragment_id": "fragment_be53d8140f6e7424f823de8dc420c702635a3ad6f4444a38e8f48a594c78495d",
+    "media_path": "/Users/yurielokhin/Library/Application Support/Integra/Validation/k2-native-283335d4-488d-487d-9900-86415ec0532f/projects/c0b7a120-c257-4514-b077-7b6a6fce0c15/sources/db0cbfd61a3861442114d27633d0b8115af792f6532674298886d86fd57cf3e4/original.mp4",
+    "precision": "WORD_RANGE",
+    "quote": "Здравствуйте! Это короткая проверка полного процесса распознавания речи, субтитров,",
+    "revision_sha256": "834d1c61449adbfc7e9a453a1646ed8c7f798ae27fcaa8e40344729e8a780465",
+    "source_id": "urn:integra:source:f8f2239a-599c-5f4a-98de-ae7f60436efa",
+    "source_revision_sha256": "db0cbfd61a3861442114d27633d0b8115af792f6532674298886d86fd57cf3e4",
+    "start_seconds": 0.08,
+    "transcript_revision_id": "transcript_revision_source_655b4871962cc06480dca0fb_r1",
+    "word_end_id": "transcript_revision_source_655b4871962cc06480dca0fb_r1:word:000008",
+    "word_start_id": "transcript_revision_source_655b4871962cc06480dca0fb_r1:word:000000"
+  },
+  "result_sha256": "4e3f0c257934e8d4d82848c6c172088192ee4ab4999a400225cdbb406c53247b",
+  "schema_version": "1.0"
+}

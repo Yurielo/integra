@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "input_sha256": {
+    "source.mp4": "66ee018d71e6728d194d0774d927cac69c8d7f6dc7b42c2d4d904911e05c34a3",
+    "transcript.txt": "0d4e20dcde4fa6c3cd9182fbfb47bc8763a6eb81fbd5d15b7ecc28c1323fd573",
+    "timeline.json": "233a777a526b1c33d7f11cdbe58510274e582771ab7181a685e40c98c4f62796",
+    "topics.json": "a488eb6b6c6b58bc58542a7afb3afca29ea8f09af065202918964cfb2d05d3de",
+    "project.json": "6a5c950295a7525527f4f4e223c4726e44b47d5d34044429c3b49d5ca01d90e2",
+    "jobs.json": "ccfe150028d47b309d225f032be56c9079f0e48773a95b690845ecf13cc82550",
+    "runs/6aa1efcf-0e03-58d3-a5e2-105ce6965258.json": "b27f778d591d7c65699d630577f8e919358acd37b75ea8b44de79831e9cf24bd",
+    "QA_ONLY.json": "43dbea7baaa3d65110164118c76b7fe60e047d8c17dd60a3174f4b873ae3aafe"
+  },
+  "source_inputs_unchanged": true
+}

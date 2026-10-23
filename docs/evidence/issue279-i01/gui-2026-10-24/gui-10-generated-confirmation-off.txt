@@ -1,0 +1,79 @@
+Window: "", App: Integra.
+0 dialog Description: alert, Secondary Actions: Raise
+	1 image Integra alert
+	2 text Подтвердить точный пакет смысловых решений? Пакет SHA-256: 11057a844eba910b7a88ed311be3552f85cc758daae74241597f2b04d21065ed
+Проверяющий: synthetic-gui-demo
+Включены только перечисленные ниже решения. Принятые записи создадут новую неизменяемую каноническую версию. Отложенные и отклонённые предложения не принимаются.
+	3 scroll area Secondary Actions: Scroll Up, Scroll Down
+		4 text proposal_7db5bce6193e7d3a5f06ffa90e6f1df8e9bd9c353614be229e32c68d69d64dd5
+Решение: ACCEPT
+Обоснование: GENERATED DEMO GUI QA ONLY; not Product Owner acceptance
+Изменения: —
+Понятие · Требует смысловой проверки
+Предложение: proposal_7db5bce6193e7d3a5f06ffa90e6f1df8e9bd9c353614be229e32c68d69d64dd5
+Действие: Создать новую запись
+Сейчас: Записи нет
+Предлагается:
+ID: concept_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1
+Варианты названия:
+Описание понятия: Этот сегмент демонстрирует процесс распознавания речи, включая создание субтитров и определение временной шкалы слов и тем.
+Название понятия: Проверка распознавания речи
+Происхождение предложения: {
+  "method" : "deterministic-reviewed-unit-proposal-v1",
+  "producer_sha256" : "acfcc3a8c81f3c4e6b7de43e071c490c49a0f7bd94214e0097fb8afa9b6afa1c"
+}
+
+Цитата: Здравствуйте! Это короткая проверка полного процесса распознавания речи, субтитров,
+Контекст: Здравствуйте! Это короткая проверка полного процесса распознавания речи, субтитров,
+временной шкалы слов и тем.
+
+Источник: source_source_655b4871962cc06480dca0fb
+Версия источника: db0cbfd61a3861442114d27633d0b8115af792f6532674298886d86fd57cf3e4
+Версия текста: transcript_revision_source_655b4871962cc06480dca0fb_r1
+Машинная расшифровка, не проверена человеком
+Фрагмент: fragment_be53d8140f6e7424f823de8dc420c702635a3ad6f4444a38e8f48a594c78495d
+Основание: evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e
+Точность: диапазон слов · 0.08–5.728 с
+Границы: transcript_revision_source_655b4871962cc06480dca0fb_r1:word:000000 — transcript_revision_source_655b4871962cc06480dca0fb_r1:word:000008 proposal_c498e88b58d7f4a6019cc3e58ab1eacdce84dd0ee9010194c8397dfc4e942aae
+Решение: ACCEPT
+Обоснование: GENERATED DEMO GUI QA ONLY; explicit topic decision
+Изменения: —
+Тема · Требует смысловой проверки
+Предложение: proposal_c498e88b58d7f4a6019cc3e58ab1eacdce84dd0ee9010194c8397dfc4e942aae
+Действие: Создать новую запись
+Сейчас: Записи нет
+Предлагается:
+ID: topic_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1
+Описание: Этот сегмент демонстрирует процесс распознавания речи, включая создание субтитров и определение временной шкалы слов и тем.
+Название темы: Проверка распознавания речи
+Происхождение предложения: {
+  "method" : "deterministic-reviewed-unit-proposal-v1",
+  "producer_sha256" : "acfcc3a8c81f3c4e6b7de43e071c490c49a0f7bd94214e0097fb8afa9b6afa1c"
+}
+
+Цитата: Здравствуйте! Это короткая проверка полного процесса распознавания речи, субтитров,
+Контекст: Здравствуйте! Это короткая проверка полного процесса распознавания речи, субтитров,
+временной шкалы слов и тем.
+
+Источник: source_source_655b4871962cc06480dca0fb
+Версия источника: db0cbfd61a3861442114d27633d0b8115af792f6532674298886d86fd57cf3e4
+Версия текста: transcript_revision_source_655b4871962cc06480dca0fb_r1
+Машинная расшифровка, не проверена человеком
+Фрагмент: fragment_be53d8140f6e7424f823de8dc420c702635a3ad6f4444a38e8f48a594c78495d
+Основание: evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e
+Точность: диапазон слов · 0.08–5.728 с
+Границы: transcript_revision_source_655b4871962cc06480dca0fb_r1:word:000000 — transcript_revision_source_655b4871962cc06480dca0fb_r1:word:000008
+		5 checkbox Я подтверждаю именно этот пакет и перечисленные решения, Value: 0
+		6 scroll bar (settable, float) 0
+			7 value indicator (settable, float) 0
+			8 increment arrow button
+			9 decrement arrow button
+			10 increment page button
+			11 decrement page button
+	12 button Применить подтверждённые решения, ID: action-button-1
+	13 button Отмена, ID: action-button-2
+14 menu bar
+	15 Integra
+	16 Правка
+
+The focused UI element is 13 button Отмена, ID: action-button-2
