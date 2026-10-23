@@ -78,6 +78,28 @@ class OwnedRetentionTests(unittest.TestCase):
                          (policy['max_full_copies'], policy['max_allocated_bytes'], policy['minimum_free_after_reservations']))
         self.assertEqual(set(policy['protected_classes']), r.PROTECTED)
 
+    def test_context_accepts_all_protected_roles_and_selected_archive_subset(self):
+        selected = self.root / 'selected'; selected.mkdir()
+        complete = selected / 'COMPLETE.json'; complete.write_text('{"status":"COMPLETE"}\n')
+        selected_id = 'candidate-selected'; missing_id = 'candidate-historical-gap'
+        registry = {'selected_survivors': {selected_id: 'selected', missing_id: None}}
+        audit = {'authority_state': 'COMPLETE', 'registry_sha256': 'fixture-registry',
+                 'protected_identities': {selected_id: {}, missing_id: {}},
+                 'canonical': {'canonical_lifecycles': {'fixture': 'event'},
+                               'standing_policy': {'fixture': 'policy'}}}
+        context = {
+            'protected': {selected_id: ['CURRENT'], missing_id: ['EXPLICIT_GOVERNANCE_PROVENANCE']},
+            'inputs': {str(complete): r._sha(complete)},
+            'selected_archives': {selected_id: str(selected)},
+            'verified_survivors': {selected_id: {'fixture': 'receipt'}},
+            'registry_sha256': 'fixture-registry',
+            'canonical_lifecycles': {'fixture': 'event'},
+            'standing_policy': {'fixture': 'policy'},
+        }
+        self.assertTrue(r._context_matches(context, registry, audit, self.root))
+        context['protected'].pop(missing_id)
+        self.assertFalse(r._context_matches(context, registry, audit, self.root))
+
     def test_nested_legacy_root_is_collapsed_without_losing_catalog_records(self):
         validation = self.root / 'Validation'
         prior_run = validation / 'integra-212-native-example'
