@@ -2407,7 +2407,8 @@ def validate_multi_source_alignment_evidence(
 
 
 def validate_knowledge_integration_evidence(
-    evidence: dict, baselines: dict, root: Path = ROOT
+    evidence: dict, baselines: dict, root: Path = ROOT,
+    proposal: dict | None = None,
 ) -> list[str]:
     errors: list[str] = []
     expected_fields = {
@@ -2434,7 +2435,16 @@ def validate_knowledge_integration_evidence(
             continue
         paths.append(item["path"])
         path = root / item["path"]
-        if not path.is_file() or sha256_file(path) != item["sha256"]:
+        current_sha = sha256_file(path) if path.is_file() else None
+        proposed_successor = (
+            _proposal_declares_current_delta(proposal, item["path"], current_sha)
+            and any(delta.get("path") == item["path"]
+                    and delta.get("before_sha256") == item["sha256"]
+                    for delta in proposal["delta"] if isinstance(delta, dict))
+        )
+        # Keep the R9A certificate immutable. Global proposal validation proves
+        # the exact CURRENT->source->evidence lineage before this can be GREEN.
+        if current_sha != item["sha256"] and not proposed_successor:
             errors.append(f"R9A implementation hash differs: {item['path']}")
     if set(paths) != EXPECTED_KNOWLEDGE_IMPLEMENTATION or len(paths) != len(set(paths)):
         errors.append("R9A implementation inventory must be exact")
@@ -3106,7 +3116,7 @@ def main() -> int:
         + validate_projects_sources_evidence(projects_sources)
         + validate_transcript_topic_studio_evidence(transcript_topic_studio, baselines)
         + validate_multi_source_alignment_evidence(multi_source_alignment, baselines)
-        + validate_knowledge_integration_evidence(knowledge_integration, baselines)
+        + validate_knowledge_integration_evidence(knowledge_integration, baselines, proposal=proposed_baseline)
         + validate_media_integration_evidence(media_integration, baselines)
         + validate_cross_navigation_evidence(cross_navigation)
         + validate_obsidian_export_evidence(obsidian_export)

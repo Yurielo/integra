@@ -94,6 +94,7 @@ def _governed_product_path(path: str) -> bool:
         or path in {
             "scripts/build_macos_app.sh", "scripts/candidate_manifest.py",
             "schemas/candidate_manifest_v1.schema.json", "scripts/test_macos_app.sh",
+            "schemas/knowledge_view_v1.schema.json",
             "tests/test_macos_app.py",
         }
     )
