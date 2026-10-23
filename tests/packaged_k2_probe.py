@@ -102,8 +102,10 @@ def exercise(app, data_root):
         revision_sha256=accepted["revision_sha256"], evidence_id=evidence["evidence_id"]))
     assert navigation["quote"] == evidence["quote"]
     assert navigation["fragment_id"] == evidence["id"]
-    for key in ("word_start_id", "word_end_id", "start_seconds", "end_seconds"):
+    for key in ("word_start_id", "word_end_id"):
         assert navigation[key] == evidence[key]
+    for key in ("start_seconds", "end_seconds"):
+        assert navigation[key] == evidence["locator"][key]
     package = bridge("knowledge-k2-package", dict(IDENTITY, revision_sha256=accepted["revision_sha256"]))
     assert package["published"] is False
     assert before == {name: hashlib.sha256((project / name).read_bytes()).hexdigest() for name in inputs}
