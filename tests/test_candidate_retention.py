@@ -198,6 +198,19 @@ class OwnedRetentionTests(unittest.TestCase):
         self.assertIsNone(planned['rotation_target'])
         self.assertTrue(oldest.exists()); self.assertTrue(survivor.exists())
 
+    def test_exact_withdrawal_can_retire_without_publication_order(self):
+        package, survivor = self._ready()
+        with r.locked(self._catalog()) as catalog:
+            record = catalog['artifacts'][str(package)]
+            del record['publication_sequence']
+            record['status'] = 'WITHDRAWN_SUPERSEDED'
+            record['disposition_ref'] = 'fixture exact withdrawal authority'
+        identity = {key: json.loads((package / 'COMPLETE.json').read_text())[key]
+                    for key in ('candidate_id', 'bundle_digest', 'manifest_digest')}
+        self.assertEqual(r.cleanup_exact(self._catalog(), identity), [str(package)])
+        self.assertFalse(package.exists())
+        self.assertEqual(archive.verify_archive(survivor)['status'], 'COMPLETE')
+
     def test_protected_oldest_is_not_selected_for_rotation(self):
         oldest, _ = self._ready()
         self.identity['source']['commit_sha'] = 'd' * 40; self._manifest()
