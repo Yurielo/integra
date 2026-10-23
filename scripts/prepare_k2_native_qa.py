@@ -26,10 +26,20 @@ def inventory(root):
     result = {}
     for path in sorted(root.rglob("*")):
         if path.is_symlink():
+            if path.parent.name == "bin" and path.parent.parent.name == "seminartext-asr":
+                continue
             raise ValueError("QA source copy must contain no symlinks")
         if path.is_file():
             result[path.relative_to(root).as_posix()] = hashlib.sha256(path.read_bytes()).hexdigest()
     return result
+
+
+def ignore_host_runtime_bins(directory, names):
+    """Never copy the generated demo's external tool shims into K2 QA."""
+    path = Path(directory)
+    if path.name == "seminartext-asr":
+        return {"bin"} & set(names)
+    return set()
 
 
 def main():
@@ -45,7 +55,7 @@ def main():
     qa = managed / "Validation" / ("k2-native-" + str(uuid.uuid4()))
     destination = qa / "projects" / PROJECT_UUID
     destination.parent.mkdir(parents=True, exist_ok=False)
-    shutil.copytree(original, destination)
+    shutil.copytree(original, destination, ignore=ignore_host_runtime_bins)
     resources = args.app.resolve(strict=True) / "Contents/Resources"
     manifest = json.loads((resources / "candidate-manifest.json").read_bytes())
     environment = dict(os.environ, INTEGRA_APP_DATA_ROOT=str(qa), PYTHONDONTWRITEBYTECODE="1")
