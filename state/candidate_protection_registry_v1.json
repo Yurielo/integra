@@ -393,9 +393,9 @@
       "resulting_status": "WITHDRAWN_SUPERSEDED",
       "reason": "DEFECTIVE_K2_CANDIDATE_MISSING_PACKAGED_KNOWLEDGE_VIEW_SCHEMA",
       "authority_ref": "https://github.com/Yurielo/integra/issues/279#issuecomment-6363950774",
-      "authority_body_sha256": "0476cb7e5318b18d7fa749d07836a37dd7172499ed786acbb182cb24e8f071e5",
+      "authority_body_sha256": "47d9f5292d5ca3d608af327b1482cd44d7ed7bc846bdb571e11818393190e7c8",
       "history_path": "state/history/knowledge_k2_candidate_a674_withdrawal_v1.json",
-      "history_sha256": "0216269a1cf917217f18f841c252574c5d1ee31557833554976155e6b54a5e22"
+      "history_sha256": "4ffad6ec8632a8bc34fd253b6f22bd1393762d3d95e886a0336d158cb0147fc1"
     }
   ]
 }
