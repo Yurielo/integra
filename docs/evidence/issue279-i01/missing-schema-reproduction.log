@@ -1,0 +1,17 @@
+ISOLATED_PACKAGED_LAYOUT_WITH_SCHEMA_OMITTED
+exit_status: 1
+Traceback (most recent call last):
+  File "<string>", line 11, in <module>
+  File "/private/var/folders/q9/rprrsl95265b7h21d3_mp2fr0000gn/T/tmphl50ewz8/Integra.app/Contents/Resources/integra_core/knowledge.py", line 111, in build_knowledge_view
+    validate_knowledge_view(
+  File "/private/var/folders/q9/rprrsl95265b7h21d3_mp2fr0000gn/T/tmphl50ewz8/Integra.app/Contents/Resources/integra_core/knowledge.py", line 124, in validate_knowledge_view
+    _validate_view_shape(view)
+  File "/private/var/folders/q9/rprrsl95265b7h21d3_mp2fr0000gn/T/tmphl50ewz8/Integra.app/Contents/Resources/integra_core/knowledge.py", line 716, in _validate_view_shape
+    schema = json.loads(schema_path.read_bytes())
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pathlib.py", line 1249, in read_bytes
+    with self.open(mode='rb') as f:
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pathlib.py", line 1242, in open
+    return io.open(self, mode, buffering, encoding, errors, newline,
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pathlib.py", line 1110, in _opener
+    return self._accessor.open(self, flags, mode)
+FileNotFoundError: [Errno 2] No such file or directory: '/private/var/folders/q9/rprrsl95265b7h21d3_mp2fr0000gn/T/tmphl50ewz8/Integra.app/Contents/Resources/schemas/knowledge_view_v1.schema.json'

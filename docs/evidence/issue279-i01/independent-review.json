@@ -1,0 +1,30 @@
+{
+  "schema_regression": {
+    "reviewer": "i01_review",
+    "status": "APPROVED",
+    "tests_passed": 3,
+    "findings": []
+  },
+  "governance_overlay": {
+    "reviewer": "i01_governance_review",
+    "source_commit": "952bee4",
+    "status": "APPROVED",
+    "focused_tests_passed": 46,
+    "findings": []
+  },
+  "packaged_probe": {
+    "reviewer": "i01_governance_review",
+    "source_commit": "6e6978a5f88930158058df8e90dbe4275f11c29a",
+    "status": "APPROVED_STATIC_CONTRACT_REVIEW",
+    "findings": [],
+    "verified": [
+      "nested locator timing vs flattened navigation",
+      "fragment/word IDs",
+      "two concepts and one relation",
+      "all four decisions and absent rejected/deferred topics",
+      "deterministic persistence/reopen",
+      "unpublished managed package"
+    ]
+  },
+  "semantic_product_acceptance": false
+}
