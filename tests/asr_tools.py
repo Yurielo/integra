@@ -77,13 +77,14 @@ def require_asr_runtime():
 def require_subtitle_runtime():
     candidate = os.environ.get("INTEGRA_CANDIDATE_APP")
     if candidate:
-        worker = (
-            Path(candidate).resolve(strict=True)
-            / "Contents/Resources/runtime/videotext/translation-worker"
-        )
-        expected = "22ba7bbfd827a1f2937f3757070b74b2e5d4d1200ebea954c48c1eaac1162d28"
+        runtime = Path(candidate).resolve(strict=True) / "Contents/Resources/runtime/videotext"
+        worker = runtime / "translation-worker"
         try:
-            if not worker.is_file() or hashlib.sha256(worker.read_bytes()).hexdigest() != expected:
+            receipt = json.loads((runtime / "runtime.json").read_text(encoding="utf-8"))
+            if (receipt.get("component") != "videotext"
+                    or receipt.get("commit_sha") != "2e098d1705b6815628bee1e023f4742718eabf02"
+                    or not worker.is_file()
+                    or hashlib.sha256(worker.read_bytes()).hexdigest() != receipt.get("worker_sha256")):
                 raise ValueError("Candidate bundled VideoText runtime differs from pinned bytes")
         except (OSError, ValueError) as error:
             raise unittest.SkipTest(str(error)) from error
