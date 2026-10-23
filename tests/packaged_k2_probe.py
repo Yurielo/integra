@@ -84,11 +84,26 @@ def exercise(app, data_root):
     assert len(accepted["knowledge_view"]["records"]["concepts"]) == 2
     assert len(accepted["knowledge_view"]["records"]["relations"]) == 1
     assert accepted["knowledge_view"]["records"]["topics"] == []
+    persisted = {d["proposal_id"]: d for d in accepted["semantic_decisions"]}
+    assert set(persisted) == {d["proposal_id"] for d in decisions}
+    for decision in decisions:
+        assert all(persisted[decision["proposal_id"]][key] == value for key, value in decision.items())
+    assert {d["action"] for d in persisted.values()} == {"ACCEPT", "EDIT", "REJECT", "DEFER"}
+    edited = next(d for d in decisions if d["action"] == "EDIT")
+    edited_id = next(p["after"]["id"] for p in prepared["proposals"] if p["id"] == edited["proposal_id"])
+    assert next(c for c in accepted["knowledge_view"]["records"]["concepts"]
+                if c["id"] == edited_id)["preferred_label"] == edited["edited_fields"]["preferred_label"]
+    admitted_relation = accepted["knowledge_view"]["records"]["relations"][0]
+    for key in ("source_concept_id", "target_concept_id", "relation_type"):
+        assert admitted_relation[key] == relation[key]
     assert bridge("knowledge-k2-open", IDENTITY) == accepted
     evidence = prepared["proposals"][0]["evidence"][0]
     navigation = bridge("knowledge-k2-navigation", dict(IDENTITY,
         revision_sha256=accepted["revision_sha256"], evidence_id=evidence["evidence_id"]))
     assert navigation["quote"] == evidence["quote"]
+    assert navigation["fragment_id"] == evidence["id"]
+    for key in ("word_start_id", "word_end_id", "start_seconds", "end_seconds"):
+        assert navigation[key] == evidence[key]
     package = bridge("knowledge-k2-package", dict(IDENTITY, revision_sha256=accepted["revision_sha256"]))
     assert package["published"] is False
     assert before == {name: hashlib.sha256((project / name).read_bytes()).hexdigest() for name in inputs}
