@@ -47,8 +47,8 @@ echo "INTEGRA_BUNDLED_WORD_TIMELINE_PREFLIGHT: PASS"
   PYTHONPATH="$app/Contents/Resources" python3 -c 'from integra_core.booktext_runtime import preflight; value=preflight(); assert value["component"] == "booktext"; assert len(value["model_sha256"]) == 64'
 )
 echo "INTEGRA_BUNDLED_BOOKTEXT_PREFLIGHT: PASS"
-python3 "$app/Contents/Resources/bridge.py" obsidian-preview | python3 -c 'import json,sys; x=json.load(sys.stdin); assert x["state"] == "DRY_RUN_REQUIRES_PACKAGE" and x["writes_performed"] is False and x["external_actions_performed"] is False and x["cloud_verified"] is False and len(x["domain_contract_sha256"]) == 64'
-python3 "$app/Contents/Resources/bridge.py" onedrive-preview | python3 -c 'import json,sys; x=json.load(sys.stdin); assert x["writes_performed"] is False and x["cloud_verified"] is False'
+printf '{}\n' | python3 "$app/Contents/Resources/bridge.py" obsidian-preview | python3 -c 'import json,sys; x=json.load(sys.stdin); assert x["state"] == "DRY_RUN_REQUIRES_PACKAGE" and x["writes_performed"] is False and x["external_actions_performed"] is False and x["cloud_verified"] is False and len(x["domain_contract_sha256"]) == 64'
+printf '{}\n' | python3 "$app/Contents/Resources/bridge.py" onedrive-preview | python3 -c 'import json,sys; x=json.load(sys.stdin); assert x["writes_performed"] is False and x["cloud_verified"] is False'
 
 marker="$test_root/launched.txt"
 INTEGRA_APP_DATA_ROOT="$test_root/app-data" INTEGRA_LAUNCH_PROBE="$marker" "$app/Contents/MacOS/Integra"
