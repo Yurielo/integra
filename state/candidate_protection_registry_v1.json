@@ -262,6 +262,16 @@
       "lifecycle": "WITHDRAWN_SUPERSEDED",
       "reason": "DEFECTIVE_K2_CANDIDATE_MISSING_PACKAGED_KNOWLEDGE_VIEW_SCHEMA",
       "scope": "EXACT_A674_DEFECTIVE_K2_PACKAGED_SCHEMA_RETIREMENT"
+    },
+    "Build Archive/candidate-v1-19e3438fea443e1d917b6575131fd67b47b5f44f71202a6940f85adda12b3b56/1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0": {
+      "path": "Build Archive/candidate-v1-19e3438fea443e1d917b6575131fd67b47b5f44f71202a6940f85adda12b3b56/1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+      "candidate_id": "candidate-v1-19e3438fea443e1d917b6575131fd67b47b5f44f71202a6940f85adda12b3b56",
+      "bundle_digest": "1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+      "manifest_digest": "0704fd913f525d050cdf52f16eefae938cd6d2c9776c92abaf39881f7973efbb",
+      "authority_ref": "https://github.com/Yurielo/integra/issues/279#issuecomment-6380155631",
+      "lifecycle": "WITHDRAWN_SUPERSEDED",
+      "reason": "SUPERSEDED_BY_I01_REGRESSION_AND_NATIVE_GUI_VALIDATED_K2_SUBMISSION",
+      "scope": "EXACT_19E343_SUPERSEDED_UNACCEPTED_K2_SUBMISSION"
     }
   },
   "withdrawn_candidate_lifecycles": [
@@ -396,6 +406,18 @@
       "authority_body_sha256": "47d9f5292d5ca3d608af327b1482cd44d7ed7bc846bdb571e11818393190e7c8",
       "history_path": "state/history/knowledge_k2_candidate_a674_withdrawal_v1.json",
       "history_sha256": "4ffad6ec8632a8bc34fd253b6f22bd1393762d3d95e886a0336d158cb0147fc1"
+    },
+    {
+      "authority_body_sha256": "163fecd905ba317dc675d8e49b56a5063adeb28ccf566a8b5316bd1e1847abc0",
+      "authority_ref": "https://github.com/Yurielo/integra/issues/279#issuecomment-6380155631",
+      "bundle_digest": "1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+      "candidate_id": "candidate-v1-19e3438fea443e1d917b6575131fd67b47b5f44f71202a6940f85adda12b3b56",
+      "manifest_digest": "0704fd913f525d050cdf52f16eefae938cd6d2c9776c92abaf39881f7973efbb",
+      "previous_status": "AWAITING_OWNER_ACCEPTANCE",
+      "reason": "SUPERSEDED_BY_I01_REGRESSION_AND_NATIVE_GUI_VALIDATED_K2_SUBMISSION",
+      "resulting_status": "WITHDRAWN_SUPERSEDED",
+      "history_path": "state/history/knowledge_k2_candidate_19e343_withdrawal_v1.json",
+      "history_sha256": "63ac0b5fe49f5a67a1bd60682f19556278bdfd4bc59300d7f9ffe4348c5925cd"
     }
   ]
 }
