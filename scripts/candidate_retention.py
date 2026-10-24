@@ -68,7 +68,8 @@ def managed_roots():
 def _empty():
     return {'schema_version': '1.0', 'artifact_type': 'integra.owned_archive_catalog',
             'owner_uid': os.getuid(), 'roots': [], 'artifacts': {}, 'leases': {},
-            'protection': None, 'historical_adoptions': [], 'deletions': {}}
+            'protection': None, 'historical_adoptions': [], 'deletions': {},
+            'publication_sequence_high_watermark': 0}
 
 
 def _persist(path, value):
@@ -292,7 +293,7 @@ def plan(catalog, *, free_bytes=None):
         # age. Only the monotonic sequence written by the shared publisher
         # catalog can order full copies for automatic retirement.
         sequence = record.get('publication_sequence')
-        order_proven = isinstance(sequence, int) and sequence > 0
+        order_proven = type(sequence) is int and sequence > 0
         selected = (context or {}).get('selected_archives', {}).get(cid)
         if cid in protected_ids and (not selected or selected == str(package) or (record or {}).get('pin_ref')):
             reasons += context['protected'][cid]
@@ -446,13 +447,22 @@ def _record_publication(catalog, token, lease, receipt):
     package = _safe(receipt['archive_path']); s = package.stat()
     if (s.st_dev, s.st_ino) != tuple(lease.get('publication_inode', [])):
         raise ValueError('publication inode differs from prepublication journal')
-    # Assigned under the shared catalog lock. It is the only ordering source
-    # used by autonomous rotation; mtime, path names and Candidate IDs never
-    # substitute for publisher provenance.
-    sequence = max((record.get('publication_sequence', 0)
-                    for record in catalog['artifacts'].values()
-                    if isinstance(record.get('publication_sequence', 0), int)),
-                   default=0) + 1
+    # Assigned under the shared catalog lock. Preserve the ordering floor even
+    # after retirement removes the last numbered live archive. Legacy catalogs
+    # recover that floor from durable publisher attestations, without assigning
+    # an invented order to unnumbered legacy artifacts.
+    watermark = catalog.get('publication_sequence_high_watermark', 0)
+    if type(watermark) is not int or watermark < 0:
+        raise ValueError('publication sequence high watermark is invalid')
+    sequences = [watermark]
+    records = list(catalog['artifacts'].values())
+    records.extend(retired.get('publisher_attestation', {})
+                   for retired in catalog.get('retirements', {}).values())
+    for record in records:
+        sequence = record.get('publication_sequence')
+        if type(sequence) is int and sequence > 0:
+            sequences.append(sequence)
+    sequence = max(sequences) + 1
     catalog['artifacts'][str(package)] = {
         **{k: receipt[k] for k in ('candidate_id', 'bundle_digest', 'manifest_digest', 'inventory_sha256')},
         'complete_sha256': _sha(package / 'COMPLETE.json'), 'owner_uid': os.getuid(),
@@ -460,6 +470,7 @@ def _record_publication(catalog, token, lease, receipt):
         'publisher_pid': lease['pid'], 'publisher_start_token': lease['start_token'],
         'publisher_completed': True, 'publication_sequence': sequence,
         'status': 'AWAITING_OWNER_ACCEPTANCE', 'historical': False}
+    catalog['publication_sequence_high_watermark'] = sequence
     del catalog['leases'][token]
 
 

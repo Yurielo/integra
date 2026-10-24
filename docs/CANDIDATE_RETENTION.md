@@ -30,6 +30,13 @@ it selects the oldest by the monotonic publisher publication sequence recorded
 under the shared catalog lock. It never uses a filename, Candidate ID, source
 commit date, or filesystem mtime as a proxy for archive age.
 
+Publication persists a catalog high watermark together with its publisher
+record. When opening an older catalog, the next publication also considers
+the publisher sequences retained in physical-retirement receipts. Removing the
+last live numbered archive therefore cannot reuse an earlier sequence.
+An invalid persisted high watermark blocks publication; unnumbered legacy
+archives retain their unproven ordering status.
+
 Each rotation re-verifies the exact Candidate/bundle/manifest tuple, archive
 integrity, inactive writer state, canonical protection snapshot and deletion
 lease immediately before its durable single-package cleanup transaction. The
