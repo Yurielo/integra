@@ -44,6 +44,57 @@ limitation; a semantic lifecycle transition must be established elsewhere by
 its own authority before a future rotation can occur. Product Owners are never
 asked to assess or pick archive IDs.
 
+## Standing owner decision — automatic supersession of unaccepted repair submissions (proposed 2026-10-24)
+
+The Product Owner authorizes a **bounded, evidence-driven replacement** of an earlier
+unaccepted repair submission by a verified successor within the **same Issue,
+product scope and acceptance lane**. This is lifecycle authority only after
+this policy is merged into canonical main and its machine-readable governance
+and validators have been updated consistently. A feature branch, this text
+alone, or a local label is **not** executable retirement authority.
+
+An autonomous successor transition is eligible only when all conditions hold:
+
+1. The outgoing submission is precisely identified by Candidate, bundle,
+   manifest, Proposal and archive references; it has **never been accepted**
+   or promoted, and is not CURRENT, rollback, recovery, a separate active
+   acceptance submission, or an explicit provenance/governance hold.
+2. The successor addresses a demonstrated defect of that same submission,
+   remains within the same authorized Issue and acceptance scope, and has
+   independent QA, required native/GUI checks and immutable evidence tied
+   to its exact bytes. A tested build alone is not owner acceptance.
+3. No conflicting owner decision, independent pending review, active consumer,
+   unresolved lineage, or other protection obligation exists. A fresh
+   canonical snapshot and exact protection checks prove this; uncertainty
+   fails closed.
+4. The transition is recorded durably as an attributable
+   `SUPERSEDED_BY_REPAIR` lifecycle event with predecessor/successor exact
+   identities, reason, evidence, authority, time and reversible audit trail.
+   Historical acceptance, failed attempts, and review records remain intact.
+5. The predecessor's pending submission/Proposal is withdrawn **only in that
+   narrowly proven same-lane replacement**. The successor becomes a new
+   pending owner-acceptance submission; no semantic acceptance, promotion,
+   CURRENT change, or unrelated Proposal mutation is implied.
+6. Archive cleanup remains a **separate** governed terminal-retirement action:
+   all existing predicates, ownership, locks, immutable evidence, publisher
+   order, capacity and disk-reserve rules must pass again after the canonical
+   transition. No ninth full copy, arbitrary archive selection, historical
+   ownership adoption or deletion of protected bytes is permitted.
+
+The autonomous executor should complete routine same-lane supersession and
+eligible rotation without asking the Owner to select archives or repeatedly
+approve the same bounded repair. If an exact prerequisite is not provable,
+report the specific unresolved governance/semantic decision once, preserve
+all bytes, and continue other independent work. Never interpret capacity
+pressure alone as permission to withdraw a pending submission.
+
+Implementation requires a separately reviewed, narrowly scoped governance
+change covering canonical lifecycle schema, validators, deterministic
+transition tooling and negative tests (different Issue, accepted/promoted
+candidate, foreign archive, missing provenance, conflicting Proposal, active
+review, interrupted transaction, all-protected capacity). Until that change
+is merged and passes CI, the existing pending-withdrawal restriction controls.
+
 ## Lifecycle
 
 1. Build in a fresh, uniquely owned workspace. The low-level historical
