@@ -1,0 +1,332 @@
+[
+  {
+    "mode": 493,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__",
+    "type": "directory"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/__init__.cpython-314.pyc",
+    "sha256": "be84935291ea01ac0c2b00a67e1f9c635ed3c42599f9a3cbc8a47b5b0b61dcbc",
+    "size": 2210,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/adapter.cpython-314.pyc",
+    "sha256": "6a68c9e49bde3ba7c841bfdf9b2c9b02fcec15ff88bb09f0016cfe4322edfd86",
+    "size": 25852,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/application_runtime.cpython-314.pyc",
+    "sha256": "56f81646f7ef81b07029778f2a319cb2679111ea976982a6436d3d41e2d68d59",
+    "size": 47355,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/asr_reuse.cpython-314.pyc",
+    "sha256": "860a83d7046563a12177150cc3e10393691e71a164a757803d68bd2b29334679",
+    "size": 15503,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/benchmark.cpython-314.pyc",
+    "sha256": "65ef503eee6ce1419b0fe43a28c1516114976084252a118abc2c735f5459664e",
+    "size": 11359,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/booktext_runtime.cpython-314.pyc",
+    "sha256": "5dc350edeca6de473e318526ebfe461bca014a393d35d31681beb8044c0fc129",
+    "size": 11820,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/candidate_identity.cpython-314.pyc",
+    "sha256": "a7e6bcfc509878d66f8557cc0465779ecbfe08dc7e6fd35c6f54638bbe7fa52b",
+    "size": 14810,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/capabilities.cpython-314.pyc",
+    "sha256": "184c9c246f9a41feef5b34d054f93319e4b4153ca62bce792f6181cf24967991",
+    "size": 23884,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/core_alpha.cpython-314.pyc",
+    "sha256": "a95f1d962e275bb9275785004587957b1dc1bda0cb38831ae4823af096e4f19f",
+    "size": 88784,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/cross_navigation.cpython-314.pyc",
+    "sha256": "c796cd42cece88a36f72cc0be2ada900e52824d116f0c56d18a59e5166c219f8",
+    "size": 57691,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/documents.cpython-314.pyc",
+    "sha256": "9d269eb802fa993576ab98f0de001e27e3c25f7b07c90589f4112a6ba64fccf5",
+    "size": 92826,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/folder_discovery.cpython-314.pyc",
+    "sha256": "6e47be8a2bdfd244beccf87b041c63ace4cc13aad5aa5eb199e39271137499f1",
+    "size": 11713,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/identity.cpython-314.pyc",
+    "sha256": "6d5623e507e6bfab4321ea542389676e3747236e27c844376ff7793385bf5c07",
+    "size": 3453,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/knowledge.cpython-314.pyc",
+    "sha256": "88a6672e4bc3668048b7fbeaf8346e8c9ddcb37da1bc51265e856c2f44cd19ee",
+    "size": 58699,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/media.cpython-314.pyc",
+    "sha256": "1b3e6586c82e15c51046c281e21f30a064469f9b5df5623756228eb65a394033",
+    "size": 81980,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/multi_source_alignment.cpython-314.pyc",
+    "sha256": "20d70b437c240de2fe8fb018c4347d0cad691ca1908d31d7db16678c62947591",
+    "size": 71348,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/ollama_runtime.cpython-314.pyc",
+    "sha256": "e189aa0ea3762391494ebfa1625641947d3a0fc7ecc56de649854055a548da4c",
+    "size": 3676,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/onedrive.cpython-314.pyc",
+    "sha256": "1789daaab5b3b9c16844fba72efd9682e61f60cbf21ca61ec5d07bf1e6e9a960",
+    "size": 41907,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/operations.cpython-314.pyc",
+    "sha256": "b6c2b07d4bc823e95ab8e447a1356c4612a8ca4d82eb585c7f5393203ef8442a",
+    "size": 129885,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/playlist.cpython-314.pyc",
+    "sha256": "b33f96a93b6391456e0bb48a732efbe9e4fb1ce857a36ccbc1a67940d9eb4cec",
+    "size": 46616,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/project_lease.cpython-314.pyc",
+    "sha256": "eb761733a9777a15c574796d469fbb5c9cf95858abc0d85f5051f31910d3725e",
+    "size": 19913,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/projects_sources.cpython-314.pyc",
+    "sha256": "bf1aac36b0e39d1e69dbf182d7cddda5e69cf080cb88ee66d0e9412615bcdc05",
+    "size": 70483,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/protocol.cpython-314.pyc",
+    "sha256": "3dc703cb9c0a210e497dff620742a4bad25e749c8834067d628513639acd9b6f",
+    "size": 34186,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/publishing.cpython-314.pyc",
+    "sha256": "9ff27d0ecaa67940871a7321f6fe4c5913ed14c94a9b38fc12e637c236de483c",
+    "size": 47478,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/real_contracts.cpython-314.pyc",
+    "sha256": "fdd6714b7204e3e3bbf0e7671a148dfec8081bb126cb906c22b2fff3307c181a",
+    "size": 53116,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/real_media.cpython-314.pyc",
+    "sha256": "ded81b51ea2effa3332548fc4ac22b0e0fad1ece4b7775d91b640eb20e81d298",
+    "size": 51178,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/seminartext_asr_runtime.cpython-314.pyc",
+    "sha256": "60ad70807344d6d4180bbf88bd931299f3902474d7606a3fde51c62aaba21205",
+    "size": 24458,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/seminartext_evidence_runtime.cpython-314.pyc",
+    "sha256": "9cdc6ab0c409baac3c1d8cd7a2f3ce7b9aa2b2e985956a670ad51e6a5d83ea97",
+    "size": 53492,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/seminartext_runtime.cpython-314.pyc",
+    "sha256": "31fa24d5406d43843187030dcf0aaccc31733af3cc7e9a22c6c78df005466492",
+    "size": 8599,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/shutdown_runtime.cpython-314.pyc",
+    "sha256": "1b7271e8e45afddd73bf7935d6783d3787ecfacd831c2c54a809e0cb4091ccdb",
+    "size": 31832,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/topic_translation.cpython-314.pyc",
+    "sha256": "733f343fe375ec4a4afbc0d48eb19b7885dbccc77ec67e3787b8e6d487db6055",
+    "size": 21459,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/transcript_output.cpython-314.pyc",
+    "sha256": "32d633d71da01aa9d8f6b872873eb3487d00930ad56689e38ac8016ffc4dd633",
+    "size": 8121,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/transcript_topic_studio.cpython-314.pyc",
+    "sha256": "6094fc592655dad3253396d862574736694e7ac466a16117f18da7bc8cd5ebb2",
+    "size": 101479,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/translategemma_runtime.cpython-314.pyc",
+    "sha256": "f24290a35495f3bd2efd1effef6071d064575b5cad31456727bbd319777327fa",
+    "size": 17081,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/user_media.cpython-314.pyc",
+    "sha256": "70886353fb45bba76ca1c0f579efc244efad0a8e958a63114a7f5549c6c8b5b2",
+    "size": 47155,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/videotext_media_runtime.cpython-314.pyc",
+    "sha256": "d617c87cffb7f92c75aedfc206cd6cd6558362f0c0776ea5795169d7dfc8e5d4",
+    "size": 18529,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/videotext_runtime.cpython-314.pyc",
+    "sha256": "b20744c793ce95bacb4d74df4ced8a2dcec0fcdee24ed0118189bf4b28527a76",
+    "size": 690,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/videotext_subtitles.cpython-314.pyc",
+    "sha256": "8ec9a4e362820dd0625821333bcda75fa1525de36cf59ce286e2f94d86d1dcd4",
+    "size": 7840,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/word_timeline_runtime.cpython-314.pyc",
+    "sha256": "4eaefb7cbdb11a4ef1b017240729dc8dc95f850d63cc54698e53235a003fdf73",
+    "size": 15375,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/youtube_playlist_runtime.cpython-314.pyc",
+    "sha256": "0fe4f596c19e10806e3bb9f52a11387b97ad0aa5726c5b6e3c18c8e3815e5cd4",
+    "size": 17197,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/__pycache__/youtube_runtime.cpython-314.pyc",
+    "sha256": "aebc866f1933177ee41cf9951f8e5131da3b498245a23c31d6029857c8772430",
+    "size": 10728,
+    "type": "file"
+  },
+  {
+    "mode": 493,
+    "path": "Integra.app/Contents/Resources/integra_core/_vendor/__pycache__",
+    "type": "directory"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/_vendor/__pycache__/__init__.cpython-314.pyc",
+    "sha256": "e34325b36484c9c78b89783536876ba7ee57d313e63c69b0809dba31d2c230f0",
+    "size": 459,
+    "type": "file"
+  },
+  {
+    "mode": 493,
+    "path": "Integra.app/Contents/Resources/integra_core/_vendor/seminartext_a94936c/__pycache__",
+    "type": "directory"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/_vendor/seminartext_a94936c/__pycache__/__init__.cpython-314.pyc",
+    "sha256": "e6f444ab749f6c1b85faceb818668410d16bd48b9492878517820a955d70b0f0",
+    "size": 485,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/_vendor/seminartext_a94936c/__pycache__/validate_canonical_evidence_v1.cpython-314.pyc",
+    "sha256": "b116d87719fb0a9577a7e305fef61e31ae2059b9f7ce3afd288c7574484aa413",
+    "size": 41096,
+    "type": "file"
+  },
+  {
+    "mode": 420,
+    "path": "Integra.app/Contents/Resources/integra_core/_vendor/seminartext_a94936c/__pycache__/validate_canonical_knowledge_v1.cpython-314.pyc",
+    "sha256": "fd41cc9a24c06ad860ab1feac8a71dd243b8043f76f6260e77f576a18b894359",
+    "size": 24977,
+    "type": "file"
+  }
+]

@@ -1,0 +1,213 @@
+{
+  "BEFORE_BYTES": 16011431936,
+  "DELETABLE_BYTES": 0,
+  "EXPECTED_AFTER_BYTES": 16011431936,
+  "EXPECTED_FREE_SPACE": 42431922176,
+  "PROTECTED_BYTES": 13677445120,
+  "UNKNOWN_BYTES": 2333986816,
+  "artifact_type": "integra.retention_plan",
+  "catalog_sha256": "78ddad125ceeb9dda0539c7c199c9ff35b8565ee76bd5be173309731d2efb4a7",
+  "dry_run": true,
+  "entries": [
+    {
+      "allocated_bytes": 2281103360,
+      "bundle_digest": "c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
+      "candidate_id": "candidate-v1-073396d37f3f70fe2a550a481cbacdb645204a188d8b4a6c1ad18cdfac77e4a8",
+      "classification": "PROTECTED",
+      "device": 16777233,
+      "historical": false,
+      "inode": 46278285,
+      "lifecycle": "AWAITING_OWNER_ACCEPTANCE",
+      "local_lifecycle": "AWAITING_OWNER_ACCEPTANCE",
+      "metadata_error": "unrecorded/changed entry: Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__",
+      "ownership": "LEGACY_OR_UNKNOWN_UNCONFIRMED",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-073396d37f3f70fe2a550a481cbacdb645204a188d8b4a6c1ad18cdfac77e4a8/c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
+      "protected_reasons": [
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "publication_sequence": null,
+      "retention_order": "UNPROVEN",
+      "standing_retirement_eligible": false,
+      "standing_retirement_reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "EXACT_IDENTITY_UNPROVEN",
+        "EXPLICIT_TASK_HOLD",
+        "IMMUTABLE_HISTORY_INCOMPLETE",
+        "INTEGRITY_UNPROVEN_OR_INCIDENT",
+        "LIFECYCLE_NOT_TERMINAL",
+        "OWNERSHIP_UNKNOWN_OR_UNCONFIRMED"
+      ]
+    },
+    {
+      "allocated_bytes": 2280759296,
+      "bundle_digest": "c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
+      "candidate_id": "candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81",
+      "classification": "PROTECTED",
+      "device": 16777233,
+      "historical": false,
+      "inode": 46629144,
+      "lifecycle": "CONFIRMED_ROLLBACK",
+      "local_lifecycle": "CONFIRMED_ROLLBACK",
+      "manifest_digest": "faf503cf088cbf0d9b7ea005cf7d5523bcf36bf575759377450993262cc5bdf5",
+      "metadata_error": null,
+      "ownership": "PUBLISHER_BOUND",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81/c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
+      "protected_reasons": [
+        "CONFIRMED_ROLLBACK"
+      ],
+      "publication_sequence": null,
+      "retention_order": "UNPROVEN",
+      "standing_retirement_eligible": false,
+      "standing_retirement_reasons": [
+        "CONFIRMED_ROLLBACK",
+        "LIFECYCLE_NOT_TERMINAL"
+      ]
+    },
+    {
+      "allocated_bytes": 2280861696,
+      "bundle_digest": "e3215a28c9ce0a1a54c35dc535bad42a9334cae7ddc5eb3b0533a480e0296d95",
+      "candidate_id": "candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f",
+      "classification": "PROTECTED",
+      "device": 16777233,
+      "historical": false,
+      "inode": 48465579,
+      "lifecycle": "CURRENT",
+      "local_lifecycle": "CURRENT",
+      "manifest_digest": "aa581c025edfc09cb7e2c59bf7d1ee98c78a5c17bc3d670e33b0fa351ce6b3e6",
+      "metadata_error": null,
+      "ownership": "PUBLISHER_BOUND",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f/e3215a28c9ce0a1a54c35dc535bad42a9334cae7ddc5eb3b0533a480e0296d95",
+      "protected_reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE"
+      ],
+      "publication_sequence": null,
+      "retention_order": "UNPROVEN",
+      "standing_retirement_eligible": false,
+      "standing_retirement_reasons": [
+        "CURRENT",
+        "LATEST_ACCEPTED_BASELINE",
+        "LIFECYCLE_NOT_TERMINAL"
+      ]
+    },
+    {
+      "allocated_bytes": 2280730624,
+      "bundle_digest": "f7c053a536e1c415adcc2e32b2f5a52248edfea17afaebc6cbca6c716d65cfa9",
+      "candidate_id": "candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5",
+      "classification": "PROTECTED",
+      "device": 16777233,
+      "historical": false,
+      "inode": 45635682,
+      "lifecycle": "AWAITING_OWNER_ACCEPTANCE",
+      "local_lifecycle": "AWAITING_OWNER_ACCEPTANCE",
+      "manifest_digest": "241b9ae31d16d28d3ba7d174f0776f31fb148bb4c52df2a6545c94e2c0130282",
+      "metadata_error": null,
+      "ownership": "PUBLISHER_BOUND",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5/f7c053a536e1c415adcc2e32b2f5a52248edfea17afaebc6cbca6c716d65cfa9",
+      "protected_reasons": [
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "publication_sequence": null,
+      "retention_order": "UNPROVEN",
+      "standing_retirement_eligible": false,
+      "standing_retirement_reasons": [
+        "AWAITING_OWNER_ACCEPTANCE",
+        "EXPLICIT_TASK_HOLD",
+        "IMMUTABLE_HISTORY_INCOMPLETE",
+        "LIFECYCLE_NOT_TERMINAL"
+      ]
+    },
+    {
+      "allocated_bytes": 2280747008,
+      "bundle_digest": "74ad6e346aff04b08b1962b8643e1c9da368632e311d8566a932f608674fbed0",
+      "candidate_id": "candidate-v1-97be0af4389d8696154ab1e897425d3f660573673369f391e3287b9f9418d38a",
+      "classification": "UNKNOWN",
+      "device": 16777233,
+      "historical": false,
+      "inode": 45340801,
+      "lifecycle": "LEGACY_UNCONFIRMED",
+      "local_lifecycle": "LEGACY_UNCONFIRMED",
+      "manifest_digest": "3e2f8985dbff081d2e17950c564c120c5151951e4cb2faaa6b6d2f330109bf98",
+      "metadata_error": null,
+      "ownership": "LEGACY_OR_UNKNOWN_UNCONFIRMED",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-97be0af4389d8696154ab1e897425d3f660573673369f391e3287b9f9418d38a/74ad6e346aff04b08b1962b8643e1c9da368632e311d8566a932f608674fbed0",
+      "protected_reasons": [],
+      "publication_sequence": null,
+      "retention_order": "UNPROVEN",
+      "standing_retirement_eligible": false,
+      "standing_retirement_reasons": [
+        "EXACT_IDENTITY_UNPROVEN",
+        "EXPLICIT_TASK_HOLD",
+        "IMMUTABLE_HISTORY_INCOMPLETE",
+        "LIFECYCLE_NOT_TERMINAL",
+        "OWNERSHIP_UNKNOWN_OR_UNCONFIRMED"
+      ]
+    },
+    {
+      "allocated_bytes": 2273267712,
+      "bundle_digest": "ab53369d4d46fc8a4dece0b8e0f777f5017731b2256ff34ecb27738a849d8c94",
+      "candidate_id": "candidate-v1-14b3c10e4d779ff8b5a520bf15e2b7087673aec2cd0abd25aac4e1d0ded77892",
+      "classification": "PROTECTED",
+      "device": 16777233,
+      "historical": false,
+      "inode": 39460476,
+      "lifecycle": "LEGACY_UNCONFIRMED",
+      "local_lifecycle": "LEGACY_UNCONFIRMED",
+      "metadata_error": "[Errno 2] No such file or directory: '/Users/yurielokhin/Library/Application Support/Integra/Candidate Builds/topic-translation-47be46d/inventory.json'",
+      "ownership": "LEGACY_OR_UNKNOWN_UNCONFIRMED",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Candidate Builds/topic-translation-47be46d",
+      "protected_reasons": [
+        "OPEN_PROPOSAL"
+      ],
+      "publication_sequence": null,
+      "retention_order": "UNPROVEN",
+      "standing_retirement_eligible": false,
+      "standing_retirement_reasons": [
+        "EXACT_IDENTITY_UNPROVEN",
+        "EXPLICIT_TASK_HOLD",
+        "IMMUTABLE_HISTORY_INCOMPLETE",
+        "INTEGRITY_UNPROVEN_OR_INCIDENT",
+        "LIFECYCLE_NOT_TERMINAL",
+        "OPEN_PROPOSAL",
+        "OWNERSHIP_UNKNOWN_OR_UNCONFIRMED"
+      ]
+    },
+    {
+      "allocated_bytes": 2280722432,
+      "bundle_digest": "fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
+      "candidate_id": "candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29",
+      "classification": "PROTECTED",
+      "device": 16777233,
+      "historical": false,
+      "inode": 44318629,
+      "lifecycle": "AWAITING_OWNER_ACCEPTANCE",
+      "local_lifecycle": "AWAITING_OWNER_ACCEPTANCE",
+      "manifest_digest": "667539142be8f7909dc56acb60be1e1fa30c05c6cec44ab931f32fcc8dd36c39",
+      "metadata_error": null,
+      "ownership": "PUBLISHER_BOUND",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Validation/integra-212-native-35e6f9101278/candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29/fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
+      "protected_reasons": [
+        "ACCEPTED_UNPROMOTED",
+        "AWAITING_OWNER_ACCEPTANCE"
+      ],
+      "publication_sequence": null,
+      "retention_order": "UNPROVEN",
+      "standing_retirement_eligible": false,
+      "standing_retirement_reasons": [
+        "ACCEPTED_UNPROMOTED",
+        "AWAITING_OWNER_ACCEPTANCE",
+        "IMMUTABLE_HISTORY_INCOMPLETE",
+        "LIFECYCLE_NOT_TERMINAL"
+      ]
+    }
+  ],
+  "full_copies": 7,
+  "over_byte_cap": false,
+  "over_copy_cap": false,
+  "plan_sha256": "cfeb190ceafd96fe1a392ff7f07fa2d3685d737d6c9667384a0efd329082ffed",
+  "protection_context_valid": true,
+  "reclaim_estimate": "ATTRIBUTED_BLOCKS; APFS_EXCLUSIVE_EXTENTS_NOT_PROVEN",
+  "rotation_strategy": "OLDEST_PROVEN_ELIGIBLE_FIRST",
+  "rotation_target": null,
+  "schema_version": "1.0"
+}

@@ -1,0 +1,52 @@
+{
+  "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-19e3438fea443e1d917b6575131fd67b47b5f44f71202a6940f85adda12b3b56/1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+  "archive_verification": {
+    "app_size_bytes": 2202182266,
+    "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-19e3438fea443e1d917b6575131fd67b47b5f44f71202a6940f85adda12b3b56/1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+    "artifact_type": "integra.candidate_archive",
+    "bundle_digest": "1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+    "candidate_id": "candidate-v1-19e3438fea443e1d917b6575131fd67b47b5f44f71202a6940f85adda12b3b56",
+    "file_count": 29626,
+    "inventory_sha256": "d4e090dd54241e080ef2bc59ca247968b284113b03f16d122a2826828f711f16",
+    "manifest_digest": "0704fd913f525d050cdf52f16eefae938cd6d2c9776c92abaf39881f7973efbb",
+    "retained_size_bytes": 2202189271,
+    "runtime_validation": "NOT_PERFORMED",
+    "schema_version": "1.0",
+    "status": "COMPLETE",
+    "verification": "ARCHIVAL_BYTE_INTEGRITY"
+  },
+  "artifact_type": "integra.exact_archive_recovery",
+  "authority": {
+    "authority_body_sha256": "3ac38c3a469cac0bc77bb02ec00007be2a08307564faafdef612d01e08206093",
+    "authority_ref": "https://github.com/Yurielo/integra/issues/279#issuecomment-6380883524",
+    "canonical_withdrawal_grant": {
+      "authority_ref": "https://github.com/Yurielo/integra/issues/279#issuecomment-6380155631",
+      "bundle_digest": "1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+      "candidate_id": "candidate-v1-19e3438fea443e1d917b6575131fd67b47b5f44f71202a6940f85adda12b3b56",
+      "lifecycle": "WITHDRAWN_SUPERSEDED",
+      "manifest_digest": "0704fd913f525d050cdf52f16eefae938cd6d2c9776c92abaf39881f7973efbb",
+      "path": "Build Archive/candidate-v1-19e3438fea443e1d917b6575131fd67b47b5f44f71202a6940f85adda12b3b56/1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+      "reason": "SUPERSEDED_BY_I01_REGRESSION_AND_NATIVE_GUI_VALIDATED_K2_SUBMISSION",
+      "scope": "EXACT_19E343_SUPERSEDED_UNACCEPTED_K2_SUBMISSION"
+    },
+    "governor_commit": "a3fb04e177dc31edb435fc5073b9eacade37aa3f",
+    "plan_sha256": "d89bed43693b767fc510076ff9a8330a9222c63af960173241137d134fa89b50"
+  },
+  "moved": [
+    "Integra.app/Contents/Resources/integra_core/__pycache__",
+    "Integra.app/Contents/Resources/integra_core/_vendor/__pycache__",
+    "Integra.app/Contents/Resources/integra_core/_vendor/seminartext_a94936c/__pycache__"
+  ],
+  "preserved_inventory_sha256": "5757104c109496b703a09fa3a73ceade18d931c4f0a2825100a1ec59abec77e2",
+  "quarantine_deletion_authorized": false,
+  "quarantine_path": "/Users/yurielokhin/Library/Application Support/Integra/Integrity Quarantine/issue279-625264b464534f998a25427504d010b2",
+  "roots": [
+    "Integra.app/Contents/Resources/integra_core/__pycache__",
+    "Integra.app/Contents/Resources/integra_core/_vendor/__pycache__",
+    "Integra.app/Contents/Resources/integra_core/_vendor/seminartext_a94936c/__pycache__"
+  ],
+  "schema_version": "1.0",
+  "state": "VERIFIED",
+  "unexpected_file_bytes": 1568777,
+  "unexpected_files": 45
+}

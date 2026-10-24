@@ -1,0 +1,43 @@
+{
+  "path": "Build Archive/candidate-v1-19e3438fea443e1d917b6575131fd67b47b5f44f71202a6940f85adda12b3b56/1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+  "absolute_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-19e3438fea443e1d917b6575131fd67b47b5f44f71202a6940f85adda12b3b56/1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+  "candidate_id": "candidate-v1-19e3438fea443e1d917b6575131fd67b47b5f44f71202a6940f85adda12b3b56",
+  "bundle_digest": "1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+  "manifest_digest": "0704fd913f525d050cdf52f16eefae938cd6d2c9776c92abaf39881f7973efbb",
+  "allocated_bytes": 2281312256,
+  "metadata_error": null,
+  "publisher_owned": true,
+  "lifecycle": "WITHDRAWN_SUPERSEDED",
+  "inactive": false,
+  "catalog_record": {
+    "bundle_digest": "1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+    "candidate_id": "candidate-v1-19e3438fea443e1d917b6575131fd67b47b5f44f71202a6940f85adda12b3b56",
+    "complete_sha256": "dce7e0002ca2d6e487381172f9f4567e036da1734305cd0f839764a146979022",
+    "device": 16777233,
+    "disposition_ref": "https://github.com/Yurielo/integra/issues/279#issuecomment-6380155631",
+    "historical": false,
+    "inode": 59586334,
+    "inventory_sha256": "d4e090dd54241e080ef2bc59ca247968b284113b03f16d122a2826828f711f16",
+    "lifecycle_authority": "CANONICAL_EXACT_WITHDRAWAL_REPLAY",
+    "manifest_digest": "0704fd913f525d050cdf52f16eefae938cd6d2c9776c92abaf39881f7973efbb",
+    "owner_uid": 501,
+    "publication_sequence": 1,
+    "publisher_completed": true,
+    "publisher_pid": 98353,
+    "publisher_run_id": "7057d2553e5d4fed8980dc7ab9f57196",
+    "publisher_start_token": "Fri Oct 23 18:37:34 2026",
+    "status": "WITHDRAWN_SUPERSEDED",
+    "withdrawal_lifecycle_evidence": {
+      "authority_body_sha256": "163fecd905ba317dc675d8e49b56a5063adeb28ccf566a8b5316bd1e1847abc0",
+      "authority_ref": "https://github.com/Yurielo/integra/issues/279#issuecomment-6380155631",
+      "bundle_digest": "1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+      "candidate_id": "candidate-v1-19e3438fea443e1d917b6575131fd67b47b5f44f71202a6940f85adda12b3b56",
+      "history_path": "state/history/knowledge_k2_candidate_19e343_withdrawal_v1.json",
+      "history_sha256": "63ac0b5fe49f5a67a1bd60682f19556278bdfd4bc59300d7f9ffe4348c5925cd",
+      "manifest_digest": "0704fd913f525d050cdf52f16eefae938cd6d2c9776c92abaf39881f7973efbb",
+      "previous_status": "AWAITING_OWNER_ACCEPTANCE",
+      "reason": "SUPERSEDED_BY_I01_REGRESSION_AND_NATIVE_GUI_VALIDATED_K2_SUBMISSION",
+      "resulting_status": "WITHDRAWN_SUPERSEDED"
+    }
+  }
+}

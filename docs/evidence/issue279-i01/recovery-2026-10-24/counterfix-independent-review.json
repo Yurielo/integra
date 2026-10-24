@@ -1,0 +1,55 @@
+{
+  "canonical_governor_mutated": false,
+  "current_implementation": {
+    "elapsed_seconds": 29.54,
+    "errors": 0,
+    "failures": 0,
+    "file_sha256": "e3b14d19398862c06251090ddf503973c56c45ca63bce9f9fba0740c4bc136ea",
+    "focused_log": "/Users/yurielokhin/Documents/ChatGPT/Integra/_i01/recovery-2026-10-24/counterfix-focused.log",
+    "focused_log_sha256": "27a96b0a4fb1ef69e0f6c20e440a52ca28b5a631066bff1d72ea06eb43bdafd9",
+    "focused_result": "PASS",
+    "original_regression_passed": true,
+    "skips": 0,
+    "test_file_sha256": "89bf0d2db96dce41f3b6e5c2cae84c0c300a0ca20372fab4ef026e748213be3f",
+    "tests_run": 37
+  },
+  "current_mutated": false,
+  "findings": [],
+  "old_allocator_reproduction": {
+    "assertion": "AssertionError: 1 not greater than 1",
+    "errors": 0,
+    "expected_failures": 1,
+    "mechanism": "AST-load historical _record_publication into isolated test-process namespace; patch function in memory only",
+    "old_source_sha256": "3de3cdb27f3689ae1de259bc36e3607f6d6345de3235bc1335db8cee9c7d3dfc",
+    "raw_unittest_result": "test_publication_sequence_survives_retiring_last_numbered_archive_and_reload (test_candidate_retention.OwnedRetentionTests.test_publication_sequence_survives_retiring_last_numbered_archive_and_reload) ... FAIL\n\n======================================================================\nFAIL: test_publication_sequence_survives_retiring_last_numbered_archive_and_reload (test_candidate_retention.OwnedRetentionTests.test_publication_sequence_survives_retiring_last_numbered_archive_and_reload)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/private/tmp/integra-issue279-retention-sequence/tests/test_candidate_retention.py\", line 143, in test_publication_sequence_survives_retiring_last_numbered_archive_and_reload\n    self.assertGreater(next_sequence, first)\n    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 1 not greater than 1\n\n----------------------------------------------------------------------\nRan 1 test in 0.434s\n\nFAILED (failures=1)\n",
+    "source_commit": "a3fb04e177dc31edb435fc5073b9eacade37aa3f",
+    "source_file": "scripts/candidate_retention.py",
+    "test": "test_publication_sequence_survives_retiring_last_numbered_archive_and_reload",
+    "tests_run": 1
+  },
+  "real_archive_scans_or_mutations": false,
+  "review_status": "APPROVED_NO_FINDINGS",
+  "reviewed_guards": [
+    "strict nonnegative integer high watermark excludes bool",
+    "only positive integer publisher sequences contribute",
+    "durable retirement attestations preserve ordering floor",
+    "publication and high watermark persist under existing catalog lock",
+    "invalid watermark leaves catalog and lease unchanged",
+    "legacy unnumbered records never backfilled",
+    "boolean ordering remains unproven in rotation plan"
+  ],
+  "reviewer": "i01_governance_review",
+  "scope": "Tiny isolated owned archive fixtures only; no full application build or runtime execution",
+  "write_ownership": {
+    "independent_qa": [
+      "tests/test_candidate_retention.py",
+      "counterfix-focused.log",
+      "counterfix-independent-review.json"
+    ],
+    "production_file_edited_by_reviewer": false,
+    "root_agent": [
+      "scripts/candidate_retention.py",
+      "documentation and canonical delivery"
+    ]
+  }
+}

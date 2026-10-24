@@ -1,0 +1,21 @@
+{
+  "ci": "https://github.com/Yurielo/integra/actions/runs/40074248573",
+  "ci_result": "SUCCESS",
+  "current_unchanged": true,
+  "focused_tests": 37,
+  "full_suite": {
+    "elapsed_seconds": 1269.219,
+    "errors": 0,
+    "failures": 0,
+    "passed": 1123,
+    "skipped": 64,
+    "total": 1187
+  },
+  "governance": "CURRENT_VALID",
+  "head_sha": "35ada11c745630b0bc19757b957d68f13be02cd8",
+  "independent_review": "APPROVED_NO_FINDINGS",
+  "merge_sha": "3a05083c1e8156d0bf71b832ce3fe3f66b4f1f65",
+  "post_merge_focused_tests": 3,
+  "pr": "https://github.com/Yurielo/integra/pull/290",
+  "status": "PASS"
+}

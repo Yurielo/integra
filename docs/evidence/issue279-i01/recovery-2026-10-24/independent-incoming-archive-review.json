@@ -1,0 +1,61 @@
+{
+  "C_validity_or_CI_attested": false,
+  "allocated_archive_bytes": 18292744192,
+  "archive_mutated": false,
+  "archive_verification": {
+    "app_size_bytes": 2202182266,
+    "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-e8064cba8acad3282d86b9d7eea043f85c5eed54ac7db015ccdf089943dee943/1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+    "artifact_type": "integra.candidate_archive",
+    "bundle_digest": "1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+    "candidate_id": "candidate-v1-e8064cba8acad3282d86b9d7eea043f85c5eed54ac7db015ccdf089943dee943",
+    "file_count": 29626,
+    "inventory_sha256": "4a263744556ae2c7766dc4286a354d518b20ac354371cc3a6efe274340264e94",
+    "manifest_digest": "25255077dfd65185268ba152c50a1a5ba66d1a425ff9bcab342263f6fbb2c58e",
+    "retained_size_bytes": 2202189271,
+    "runtime_validation": "NOT_PERFORMED",
+    "schema_version": "1.0",
+    "status": "COMPLETE",
+    "verification": "ARCHIVAL_BYTE_INTEGRITY"
+  },
+  "archived_code_or_app_executed": false,
+  "build_and_archive_stage_workspaces_absent": [
+    "/private/tmp/integra-owned-issue279-i01-archive-72y2lxb2",
+    "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/integra-owned-archive-stage-fvhwyurh"
+  ],
+  "caps_and_reserve_unchanged": true,
+  "current_hashes": {
+    "current_canonical_baseline_v1.json": "0493fbad50f1a5518b01be90e3ffb0cd10d3d8b7a97ae12918fc4595c4438840",
+    "current_product_baseline_v2.json": "bdd2ea30b3102c59cd8e47bc56a0d53c6b57d3bfb0347e667663b1be951e52e2"
+  },
+  "current_promotion_authorized": false,
+  "current_unchanged": true,
+  "elapsed_seconds": 13.700994207989424,
+  "findings": [],
+  "free_bytes_at_review": 42229141504,
+  "fresh_packaged_schema_native_selftest_k2_receipts": "PASS_REVIEWED_NOT_REEXECUTED",
+  "local_status": "AWAITING_OWNER_ACCEPTANCE",
+  "managed_full_copies": 8,
+  "original_projects_accessed": false,
+  "prior_retired_publication_sequence": 1,
+  "publication_sequence": 2,
+  "publication_sequence_high_watermark": 2,
+  "publisher_ownership_verified": true,
+  "qa_source_inputs_unchanged": true,
+  "reviewer": "i01_governance_review",
+  "same_gui_candidate_bundle_manifest": true,
+  "semantic_product_acceptance": false,
+  "source": {
+    "commit_sha": "6e6978a5f88930158058df8e90dbe4275f11c29a",
+    "dirty": false,
+    "dirty_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "tree_sha": "d6a4ba71a2939e62bf7d765270b148ea67034dae"
+  },
+  "source_component_pins": {
+    "booktext": "46396649214275eb18054b670a842bace02d02e1",
+    "seminartext": "13644d262776aacdf36221b9a9fc7ebd0a7c0737",
+    "seminartext.knowledge_admission": "61ee27de67174377afa0f4955b3cb5abeecb4f03",
+    "videotext": "2e098d1705b6815628bee1e023f4742718eabf02"
+  },
+  "status": "PASS_INDEPENDENT_INCOMING_ARCHIVE_BYTE_VERIFICATION",
+  "tooling_governor_commit": "3a05083c1e8156d0bf71b832ce3fe3f66b4f1f65"
+}

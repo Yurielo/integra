@@ -1,0 +1,13 @@
+{
+  "reviewer": "i01_governance_review",
+  "status": "APPROVED_EXACT_AUTHORIZED_RECOVERY_HELPER",
+  "findings": [],
+  "tests": 18,
+  "failures": 0,
+  "errors": 0,
+  "helper_sha256": "98b5e6b13fec942c18c527b3861744f9a4c0c41883eb6bd0ed43d2f78f08b7ce",
+  "test_sha256": "2c77e106d038afe06be911938893d68bf41c34d9ac22be77c2738c5a03af907c",
+  "authority_ref": "https://github.com/Yurielo/integra/issues/279#issuecomment-6380883524",
+  "authority_body_sha256": "3ac38c3a469cac0bc77bb02ec00007be2a08307564faafdef612d01e08206093",
+  "actual_archive_mutated_by_qa": false
+}

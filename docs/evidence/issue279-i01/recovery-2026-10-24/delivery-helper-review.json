@@ -1,0 +1,33 @@
+{
+  "CI_success_attested": false,
+  "actual_C_validity_attested": false,
+  "current_promotion_authorized": false,
+  "findings": [],
+  "helper_sha256": {
+    "assemble_evidence.py": "36045f1723ea9eda08ca34abf7f36808ffcdc08116aca457a67700796abe1b3c",
+    "declare_proposal.py": "4004c55fe9639e2a07aff57b0f1000f83832dfc88d6b463639ae9fb94e0d60e6",
+    "run_unit_fixture.py": "8367a51d760ded3f2656921d0f308040d4df9ffc55e99ce6ac686995960ea1a5"
+  },
+  "incoming_candidate_or_archive_attested": false,
+  "real_archive_scanned_or_mutated": false,
+  "resolved_findings": [
+    "declaration requires clean committed B and does not extend allowed overlays with untracked files",
+    "every declaration evidence/gate reference binds the regular blob bytes frozen in B",
+    "assembly compares candidate, bundle, manifest digest and clean source identity against retained native GUI proof",
+    "regression gate explicitly names exact accounting fixture scope"
+  ],
+  "reviewed_boundaries": [
+    "non-Proposal fixture is explicitly rejected by strict governance",
+    "fixture removal precedes B commit",
+    "A remains frozen product source and canonical control/test changes are exact non-product overlays",
+    "C contains only real Proposal declaration and owner_acceptance remains null",
+    "actual C lineage/global governance and full CI remain separate required checks",
+    "archive/cap/quarantine assertions are evaluated against actual receipts before assembly claims",
+    "B retains all three helper sources, this exact helper review and the dirty-B declaration rejection log"
+  ],
+  "reviewer": "i01_governance_review",
+  "scope": "Read-only static review of helper plans only; helpers were not executed by reviewer",
+  "semantic_product_acceptance": false,
+  "status": "APPROVED_STATIC_DELIVERY_HELPER_REVIEW",
+  "syntax_parse": "PASS_NOT_EXECUTED"
+}

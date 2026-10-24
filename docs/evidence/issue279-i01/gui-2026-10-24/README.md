@@ -1,5 +1,7 @@
 # I01 resumed native GUI QA — 24 October 2026
 
+**Latest recovery/archive evidence:** [owner-authorized recovery and actual verified retained replacement](../recovery-2026-10-24/README.md). Earlier pending/blocked statements below describe those earlier runs. Final strict proposal/CI checks are recorded separately.
+
 **Later lifecycle update:** [the authorized supersession and subsequent integrity gate](../handoff-2026-10-24/README.md) supersede the decision-pending status below. The GUI evidence remains unchanged.
 
 Issue #279 / draft PR #280. This evidence supplements the 23 October schema repair and regression report. No product source changed during this continuation.

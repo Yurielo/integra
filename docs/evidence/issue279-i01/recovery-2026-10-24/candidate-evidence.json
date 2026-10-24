@@ -1,0 +1,19 @@
+{
+  "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-e8064cba8acad3282d86b9d7eea043f85c5eed54ac7db015ccdf089943dee943/1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+  "bundle_digest": "1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+  "candidate_id": "candidate-v1-e8064cba8acad3282d86b9d7eea043f85c5eed54ac7db015ccdf089943dee943",
+  "current_unchanged": true,
+  "gui_same_candidate_manifest_and_bundle": true,
+  "manifest_digest": "25255077dfd65185268ba152c50a1a5ba66d1a425ff9bcab342263f6fbb2c58e",
+  "manifest_identity_sha256": "e8064cba8acad3282d86b9d7eea043f85c5eed54ac7db015ccdf089943dee943",
+  "native_gui_evidence": "docs/evidence/issue279-i01/gui-2026-10-24/result.json",
+  "owner_acceptance": null,
+  "product_source": {
+    "commit_sha": "6e6978a5f88930158058df8e90dbe4275f11c29a",
+    "tree_sha": "d6a4ba71a2939e62bf7d765270b148ea67034dae"
+  },
+  "recovery": "VERIFIED_OWNER_AUTHORIZED_EXACT_EXCEPTION",
+  "regression_scope": "FULL_SUPPORTED_UNIT_SUITE_WITH_EXACT_ACCOUNTING_FIXTURE",
+  "rotation": "PASS",
+  "semantic_product_acceptance": false
+}

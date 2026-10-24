@@ -1,5 +1,7 @@
 # I01 K2 supersession and archive integrity gate — 24 October 2026
 
+**Latest recovery/archive evidence:** [owner-authorized recovery and actual verified retained replacement](../recovery-2026-10-24/README.md). Earlier pending/blocked statements below describe those earlier runs. Final strict proposal/CI checks are recorded separately.
+
 Issue [#279](https://github.com/Yurielo/integra/issues/279), draft product PR
 [#280](https://github.com/Yurielo/integra/pull/280).
 
