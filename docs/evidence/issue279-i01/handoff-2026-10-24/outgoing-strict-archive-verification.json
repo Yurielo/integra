@@ -1,0 +1,5 @@
+{
+  "status": "FAIL",
+  "read_only": true,
+  "error": "archive checksum/permission inventory differs from disk"
+}

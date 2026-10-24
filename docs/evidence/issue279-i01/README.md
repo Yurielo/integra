@@ -1,5 +1,7 @@
 # I01: packaged Knowledge View schema repair
 
+**Latest lifecycle update:** supersession was authorized and merged in [PR #289](https://github.com/Yurielo/integra/pull/289). [The governed archive attempt and exact recovery plan](handoff-2026-10-24/README.md) record the new outgoing-archive integrity gate. No replacement archive or valid proposal is yet claimed. Earlier blocked/decision-pending statements below describe earlier runs.
+
 **24 October update:** [resumed native GUI QA](gui-2026-10-24/README.md) completed the bounded concept/relation review, relaunch/reopen and source-navigation checks. The pending-unlock statements below describe the 23 October run. Retained publication and valid proposal remain blocked.
 
 Issue #279 / PR #280. Validation date: 23 October 2026 (Europe/Istanbul).

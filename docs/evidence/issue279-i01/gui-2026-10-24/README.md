@@ -1,5 +1,7 @@
 # I01 resumed native GUI QA — 24 October 2026
 
+**Later lifecycle update:** [the authorized supersession and subsequent integrity gate](../handoff-2026-10-24/README.md) supersede the decision-pending status below. The GUI evidence remains unchanged.
+
 Issue #279 / draft PR #280. This evidence supplements the 23 October schema repair and regression report. No product source changed during this continuation.
 
 The previous owned disposable workspace expired while the Mac was locked and was cleaned by its supervisor. A fresh governed disposable build reproduced source `6e6978a5f88930158058df8e90dbe4275f11c29a`, Candidate `candidate-v1-e8064cba8acad3282d86b9d7eea043f85c5eed54ac7db015ccdf089943dee943`, and bundle SHA-256 `1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0`. Bundle validation, actual packaged schema build/save/reopen, native self-test and packaged K2 bridge probe passed again. Post-GUI bundle validation returns the same manifest. The installed app and CURRENT were not used as test outputs.
