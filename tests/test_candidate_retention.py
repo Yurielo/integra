@@ -1,4 +1,5 @@
 """Tiny owned archive fixtures; never touch the historical managed archive."""
+import copy
 import json
 import os
 from pathlib import Path
@@ -121,6 +122,103 @@ class OwnedRetentionTests(unittest.TestCase):
         copy = dict(catalog['artifacts'][str(package)]); copy['inode'] += 1
         self.assertFalse(r._ownership(package, copy, receipt))
 
+    def test_publication_sequence_survives_retiring_last_numbered_archive_and_reload(self):
+        package = self._package()
+        first = json.loads(self._catalog().read_text())['artifacts'][str(package)]['publication_sequence']
+        with r.locked(self._catalog()) as catalog:
+            catalog['protection'] = {'protected': {}, 'inputs': {}, 'selected_archives': {},
+                                     'verified_survivors': {}}
+            r.disposition(catalog, package, 'WITHDRAWN_SUPERSEDED', 'synthetic exact withdrawal authority')
+        identity = {key: archive.verify_archive(package)[key] for key in archive.IDENTITY_KEYS}
+        with patch.object(r, '_inactive', return_value=True):
+            self.assertEqual(r.cleanup_exact(self._catalog(), identity), [str(package)])
+        retired = json.loads(self._catalog().read_text())
+        self.assertEqual(retired['artifacts'], {})
+        self.assertEqual(next(iter(retired['retirements'].values()))['publisher_attestation']['publication_sequence'], first)
+        self.identity['source']['commit_sha'] = 'c' * 40; self._manifest()
+        with patch.object(r, 'maintenance', return_value=[]):
+            replacement = self._package()
+        reloaded = json.loads(self._catalog().read_text())
+        next_sequence = reloaded['artifacts'][str(replacement)]['publication_sequence']
+        self.assertGreater(next_sequence, first)
+        self.assertEqual(next_sequence, reloaded['publication_sequence_high_watermark'])
+        self.assertFalse(package.exists())
+        self.assertEqual(archive.verify_archive(replacement)['status'], 'COMPLETE')
+
+    def test_retired_publisher_attestation_preserves_higher_legacy_sequence_floor(self):
+        package, survivor = self._ready()
+        with r.locked(self._catalog()) as catalog:
+            catalog.pop('publication_sequence_high_watermark', None)
+            catalog['retirements'] = {'synthetic-retirement': {
+                'publisher_attestation': {'publication_sequence': 41}}}
+        self.identity['source']['commit_sha'] = 'd' * 40; self._manifest()
+        with patch.object(r, 'maintenance', return_value=[]):
+            replacement = self._package()
+        reloaded = json.loads(self._catalog().read_text())
+        self.assertEqual(reloaded['artifacts'][str(replacement)]['publication_sequence'], 42)
+        self.assertEqual(reloaded['publication_sequence_high_watermark'], 42)
+        self.assertEqual(reloaded['artifacts'][str(package)]['publication_sequence'], 1)
+        self.assertEqual(reloaded['artifacts'][str(survivor)]['publication_sequence'], 2)
+
+    def test_high_watermark_survives_when_no_ordered_records_remain(self):
+        with r.locked(self._catalog()) as catalog:
+            catalog['publication_sequence_high_watermark'] = 73
+            self.assertEqual(catalog['artifacts'], {})
+        package = self._package()
+        reloaded = json.loads(self._catalog().read_text())
+        self.assertEqual(reloaded['artifacts'][str(package)]['publication_sequence'], 74)
+        self.assertEqual(reloaded['publication_sequence_high_watermark'], 74)
+
+    def _pending_sequence_publication(self):
+        package = self._package()
+        catalog = json.loads(self._catalog().read_text())
+        receipt = archive.verify_archive(package)
+        info = package.stat()
+        lease = {'publication_inode': [info.st_dev, info.st_ino],
+                 'pid': os.getpid(), 'start_token': 'synthetic pending publication'}
+        catalog['leases']['synthetic-pending'] = lease
+        return catalog, lease, receipt
+
+    def test_malformed_watermark_rejects_without_mutating_catalog_or_lease(self):
+        catalog, lease, receipt = self._pending_sequence_publication()
+        for invalid in (None, True, False, -1, 1.5, '7', [], {}):
+            with self.subTest(watermark=invalid):
+                pending = copy.deepcopy(catalog)
+                pending['publication_sequence_high_watermark'] = invalid
+                before = copy.deepcopy(pending)
+                pending_lease = pending['leases']['synthetic-pending']
+                with self.assertRaisesRegex(ValueError, 'high watermark'):
+                    r._record_publication(pending, 'synthetic-pending', pending_lease, receipt)
+                self.assertEqual(pending, before)
+                self.assertEqual(pending_lease, lease)
+
+    def test_invalid_live_and_retired_sequences_do_not_establish_order(self):
+        catalog, lease, receipt = self._pending_sequence_publication()
+        for invalid in (None, True, False, 0, -9, 2.5, '900'):
+            with self.subTest(sequence=invalid):
+                pending = copy.deepcopy(catalog)
+                pending['publication_sequence_high_watermark'] = 0
+                for record in pending['artifacts'].values():
+                    record['publication_sequence'] = invalid
+                pending['retirements'] = {'synthetic-history': {
+                    'publisher_attestation': {'publication_sequence': invalid}}}
+                r._record_publication(pending, 'synthetic-pending', pending['leases']['synthetic-pending'], receipt)
+                self.assertEqual(pending['artifacts'][receipt['archive_path']]['publication_sequence'], 1)
+                self.assertEqual(pending['publication_sequence_high_watermark'], 1)
+
+    def test_new_publication_does_not_backfill_unnumbered_legacy_artifacts(self):
+        legacy, _ = self._ready()
+        with r.locked(self._catalog()) as catalog:
+            catalog['artifacts'][str(legacy)].pop('publication_sequence')
+            unchanged = copy.deepcopy(catalog['artifacts'][str(legacy)])
+            catalog['publication_sequence_high_watermark'] = 90
+        self.identity['source']['commit_sha'] = 'd' * 40; self._manifest()
+        with patch.object(r, 'maintenance', return_value=[]):
+            replacement = self._package()
+        reloaded = json.loads(self._catalog().read_text())
+        self.assertEqual(reloaded['artifacts'][str(legacy)], unchanged)
+        self.assertEqual(reloaded['artifacts'][str(replacement)]['publication_sequence'], 91)
+
     def test_unowned_legacy_counts_toward_cap_and_is_never_deletable(self):
         package, survivor = self._ready()
         with r.locked(self._catalog()) as catalog:
@@ -219,6 +317,18 @@ class OwnedRetentionTests(unittest.TestCase):
         self.assertEqual(row['retention_order'], 'UNPROVEN')
         self.assertIsNone(planned['rotation_target'])
         self.assertTrue(oldest.exists()); self.assertTrue(survivor.exists())
+
+    def test_boolean_publication_sequence_is_not_proven_rotation_order(self):
+        package, survivor = self._ready()
+        with r.locked(self._catalog()) as catalog:
+            catalog['artifacts'][str(package)]['publication_sequence'] = True
+        planned = self._plan()
+        row = next(row for row in planned['entries'] if row['path'] == str(package))
+        self.assertEqual(row['classification'], 'UNKNOWN')
+        self.assertEqual(row['retention_order'], 'UNPROVEN')
+        self.assertIsNone(row['publication_sequence'])
+        self.assertIsNone(planned['rotation_target'])
+        self.assertTrue(package.exists()); self.assertTrue(survivor.exists())
 
     def test_exact_withdrawal_can_retire_without_publication_order(self):
         package, survivor = self._ready()
