@@ -28,7 +28,7 @@ REPOSITORY = 'Yurielo/integra'
 IDENTITY = ('candidate_id', 'bundle_digest', 'manifest_digest')
 CID = re.compile(r'^candidate-v1-[0-9a-f]{64}$')
 HASH = re.compile(r'^[0-9a-f]{64}$')
-TERMINAL = {'COMPLETED', 'REJECTED', 'SUPERSEDED', 'UNUSED'}
+TERMINAL = {'COMPLETED', 'REJECTED', 'SUPERSEDED', 'UNUSED', 'WITHDRAWN_SUPERSEDED'}
 ROOT_NAMES = {'Build Archive', 'Recovery Archive', 'Build Archive Recovery',
               'Candidate Builds', 'Validation'}
 ACCEPTED_GAP_DECISION_SHA256 = 'c0fbc7699ae3caa6ea56a59987410977515881043f2ce2fd9b4f39382cc132f8'
@@ -869,19 +869,8 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
             promotion_blockers.append('PROPOSED_CANDIDATE_EXACT_ARCHIVE_MISSING:213')
         if number == 213 and (proposal.get('owner_acceptance') or {}).get('promotion_authorized') is not True:
             promotion_blockers.append('PROMOTION_OWNER_AUTHORIZATION_MISSING:213')
-    # A future complete authority may classify exact owned terminal objects as
-    # eligible. Incomplete authority never gets that result.
-    if not blockers and registry.get('deletion_enabled') is True:
-        authorized = {**registry['deletion_authorizations'], **withdrawal_grants}
-        for row in rows:
-            grant = authorized.get(row['path'])
-            if (row['classification'] == 'UNKNOWN' and row.get('publisher_owned') is True
-                    and row.get('lifecycle') in TERMINAL and row.get('inactive') is True
-                    and row.get('metadata_error') is None and isinstance(grant, dict)
-                    and all(grant.get(k) == row.get(k) for k in ('path', *IDENTITY))
-                    and grant.get('authority_ref')):
-                row['classification'] = 'ELIGIBLE'
-                row['reasons'] = ['EXACT_OWNER_AUTHORIZED_TERMINAL']
+    authorized = ({**registry['deletion_authorizations'], **withdrawal_grants}
+                  if not blockers and registry.get('deletion_enabled') is True else {})
     try:
         from scripts import candidate_lifecycle as lifecycle
     except ModuleNotFoundError:
@@ -911,6 +900,21 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
             except (OSError, ValueError, KeyError, TypeError):
                 pass
         row['integrity_verified'] = integrity_verified
+        # A canonical withdrawal is terminal without promotion lineage. Its
+        # separately validated exact grant may retire a held identity, while
+        # the standing-policy HOLDS predicate remains unchanged. Classification
+        # follows the existing full verifier so corrupt bytes never look eligible.
+        grant = authorized.get(row['path'])
+        if (not blockers and registry.get('deletion_enabled') is True
+                and row['classification'] == 'UNKNOWN' and row.get('publisher_owned') is True
+                and row.get('lifecycle') in TERMINAL and row.get('inactive') is True
+                and integrity_verified and isinstance(grant, dict)
+                and all(grant.get(k) == row.get(k) for k in ('path', *IDENTITY))
+                and grant.get('authority_ref')
+                and (row.get('lifecycle') != 'WITHDRAWN_SUPERSEDED'
+                     or row['path'] in withdrawal_grants)):
+            row['classification'] = 'ELIGIBLE'
+            row['reasons'] = ['EXACT_OWNER_AUTHORIZED_TERMINAL']
         decision = lifecycle.terminal_eligibility(
             {k: row.get(k) for k in IDENTITY}, replayed, role.get('reasons', []),
             owned=row.get('publisher_owned') is True,

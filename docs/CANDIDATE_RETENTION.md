@@ -51,6 +51,44 @@ limitation; a semantic lifecycle transition must be established elsewhere by
 its own authority before a future rotation can occur. Product Owners are never
 asked to assess or pick archive IDs.
 
+## Exact 721d withdrawal and ownership recovery — Issue #293
+
+The [recorded direct Product Owner instruction](https://github.com/Yurielo/integra/issues/293#issuecomment-6423470249)
+approves only Candidate `721d5a…`, bundle `f7c053…`, manifest `241b9a…`.
+The unchanged approved request is retained in
+`docs/evidence/ISSUE_293_721D_OWNER_DECISION_REQUEST.txt`; its historical
+"not yet received" heading describes the request before that later approval.
+`state/history/candidate_721d_withdrawal_v1.json` records the exact
+`WITHDRAWN_SUPERSEDED` disposition. This is no semantic acceptance or promotion.
+The registry adds one exact withdrawal grant; all general holds remain intact.
+
+After this procedure and its executable are merged unchanged on canonical main,
+run `scripts/candidate_721d_ownership_recovery.py` with `--dry-run`, then
+`--apply`, then `--reconcile-target`. The fixed authorization in
+`state/candidate_721d_ownership_recovery_v1.json` binds the approved request,
+owner comment, withdrawal history and original publisher attestation. The
+recovery requires full archive verification, unchanged inode/UID, inactive
+writer and the measured current volume. It changes only the target publisher
+record's device from `16777233` to `16777232`, plus its dedicated transaction
+journal. The current VolumeUUID does not establish historical volume
+continuity: the original catalog did not record that UUID.
+
+Immutable raw catalog backup and BEFORE/AFTER receipts remain under the shared
+Retention directory, outside application payloads. Interrupted checkpoints are
+revalidated and resumed; a conflicting binding or receipt fails closed. Target
+reconciliation uses the existing canonical resolver, copies back only the
+verified protection context and exact withdrawn record, and preserves every
+other artifact record. It supplies no publication ordering provenance.
+
+Only then may the existing `candidate_retention.cleanup_exact` executor receive
+that exact full identity. It independently rechecks canonical authority,
+protected survivors, ownership, bytes and activity before its durable retirement
+transaction. The archived application stays intact during ownership recovery;
+retirement's rename/journal safeguards apply before physical unlink. Metadata
+backups and retirement receipts preserve provenance, not a restorable copy of
+deleted application bytes. No ninth full copy, general adoption, CURRENT/K1/K2
+change, installed-app change or model deletion is authorized by this procedure.
+
 ## Lifecycle
 
 1. Build in a fresh, uniquely owned workspace. The low-level historical

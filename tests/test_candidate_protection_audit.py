@@ -307,10 +307,13 @@ class ProtectionAuditTests(unittest.TestCase):
         self.registry['deletion_authorizations'][old['path']]['authority_ref'] = 'changed'
         self.assertEqual(self.resolve()['entries'][-1]['classification'], 'UNKNOWN')
 
-    def test_withdrawn_pending_candidate_is_audited_before_exact_deletion(self):
-        """A recorded withdrawal is terminal, but never silently forgotten."""
-        old = self.package({'candidate_id': 'candidate-v1-' + '9'*64,
+    def withdrawn_candidate_fixture(self):
+        """Match the owned, reconciled, explicitly held 721d retirement shape."""
+        old = self.package({'candidate_id': 'candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5',
                             'bundle_digest': '8'*64, 'manifest_digest': '7'*64})
+        old.update(path=old['path'] + '/' + old['bundle_digest'],
+                   absolute_path=old['absolute_path'] + '/' + old['bundle_digest'],
+                   lifecycle='WITHDRAWN_SUPERSEDED')
         self.packages.append(old)
         record = {
             **{key: old[key] for key in audit.IDENTITY},
@@ -340,12 +343,72 @@ class ProtectionAuditTests(unittest.TestCase):
             deletion_decision_token_sha256=audit.sha(deletion_token.encode()),
             deletion_decision_token=deletion_token,
             withdrawn_candidate_lifecycles=[record])
+        old['catalog_record'] = {**{key: old[key] for key in audit.IDENTITY},
+                                 'status': 'WITHDRAWN_SUPERSEDED',
+                                 'disposition_ref': record['authority_ref'],
+                                 'withdrawal_lifecycle_evidence': copy.deepcopy(record),
+                                 'lifecycle_authority': 'CANONICAL_EXACT_WITHDRAWAL_REPLAY'}
+        return old
+
+    def test_withdrawn_pending_candidate_is_audited_before_exact_deletion(self):
+        """A recorded withdrawal is terminal, but never silently forgotten."""
+        old = self.withdrawn_candidate_fixture()
         result = self.resolve()
         self.assertEqual(result['authority_state'], 'COMPLETE')
         self.assertEqual(result['entries'][-1]['classification'], 'ELIGIBLE')
+        self.assertEqual(result['entries'][-1]['reasons'], ['EXACT_OWNER_AUTHORIZED_TERMINAL'])
+        self.assertEqual(result['entries'][-1]['lifecycle'], 'WITHDRAWN_SUPERSEDED')
+        self.assertIn('EXPLICIT_TASK_HOLD', result['entries'][-1]['standing_retirement_reasons'])
+        self.assertNotIn(old['candidate_id'], self.canonical.get('canonical_lifecycles', {}))
         self.registry['withdrawal_deletion_authorizations'][old['path']]['reason'] = 'tampered'
         self.assertIn('WITHDRAWN_CANDIDATE_DELETION_GRANT_CONFLICT:' + old['candidate_id'],
                       self.resolve()['blockers'])
+
+    def test_exact_withdrawal_requires_canonical_authority_and_exact_grant(self):
+        old = self.withdrawn_candidate_fixture()
+        original_registry, original_canonical = copy.deepcopy(self.registry), copy.deepcopy(self.canonical)
+        for change in ('missing-withdrawal', 'missing-grant', 'wrong-reason', 'wrong-authority',
+                       'wrong-tuple', 'missing-survivor', 'deletion-disabled'):
+            with self.subTest(change=change):
+                self.registry, self.canonical = copy.deepcopy(original_registry), copy.deepcopy(original_canonical)
+                grant = self.registry['withdrawal_deletion_authorizations'][old['path']]
+                if change == 'missing-withdrawal':
+                    self.canonical['withdrawn_candidate_lifecycles'] = []
+                elif change == 'missing-grant':
+                    self.registry['withdrawal_deletion_authorizations'] = {}
+                elif change == 'wrong-reason':
+                    grant['reason'] = 'unrelated decision'
+                elif change == 'wrong-authority':
+                    grant['authority_ref'] = 'unrelated owner comment'
+                elif change == 'wrong-tuple':
+                    grant['manifest_digest'] = 'f' * 64
+                elif change == 'missing-survivor':
+                    survivor = self.packages.pop(0)
+                else:
+                    self.registry['deletion_enabled'] = False
+                result = self.resolve()
+                self.assertEqual(result['entries'][-1]['classification'], 'UNKNOWN')
+                if change == 'missing-survivor':
+                    self.packages.insert(0, survivor)
+
+    def test_exact_withdrawal_requires_owned_inactive_intact_exact_package(self):
+        old = self.withdrawn_candidate_fixture()
+        original = copy.deepcopy(old)
+        for field, value in (('publisher_owned', False), ('inactive', False),
+                             ('metadata_error', 'inventory changed'),
+                             ('manifest_digest', 'f' * 64), ('bundle_digest', 'e' * 64),
+                             ('lifecycle', 'AWAITING_OWNER_ACCEPTANCE')):
+            with self.subTest(field=field):
+                old.clear(); old.update(copy.deepcopy(original)); old[field] = value
+                self.assertEqual(self.resolve()['entries'][-1]['classification'], 'UNKNOWN')
+        old.clear(); old.update(original)
+        def corrupt_target(path, expected):
+            if expected['candidate_id'] == old['candidate_id']:
+                raise ValueError('synthetic full archive byte corruption')
+            return {**expected, 'inventory_sha256': None}
+        result = self.resolve(verifier=corrupt_target)
+        self.assertFalse(result['entries'][-1]['integrity_verified'])
+        self.assertEqual(result['entries'][-1]['classification'], 'UNKNOWN')
 
     def test_separate_deletion_decision_is_fail_closed(self):
         old = self.package({'candidate_id': 'candidate-v1-' + '9'*64,
