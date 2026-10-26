@@ -1,0 +1,50 @@
+{
+  "archive": {
+    "app_size_bytes": 2201770383,
+    "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434/0147f1a0ff7d740fd4f66847da906f6dd821833e5f1419b18e63d2bd07f74edc",
+    "artifact_type": "integra.candidate_archive",
+    "bundle_digest": "0147f1a0ff7d740fd4f66847da906f6dd821833e5f1419b18e63d2bd07f74edc",
+    "candidate_id": "candidate-v1-1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434",
+    "file_count": 29631,
+    "inventory_sha256": "03a1c34351551ec4652033c25472575251d9d86b52b4e184503c4f718b2fea68",
+    "manifest_digest": "708e8482fdf18f451cfefe242ea17e75c66f3b52792405c340568a35677a6753",
+    "retained_size_bytes": 2202517723,
+    "runtime_validation": "NOT_PERFORMED",
+    "schema_version": "1.0",
+    "status": "COMPLETE",
+    "verification": "ARCHIVAL_BYTE_INTEGRITY"
+  },
+  "artifact_type": "integra.retained_candidate_finalization",
+  "candidate": {
+    "bundle_digest": "0147f1a0ff7d740fd4f66847da906f6dd821833e5f1419b18e63d2bd07f74edc",
+    "candidate_id": "candidate-v1-1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434",
+    "identity_sha256": "1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434",
+    "manifest_digest": "708e8482fdf18f451cfefe242ea17e75c66f3b52792405c340568a35677a6753"
+  },
+  "finalization": "COMPLETE",
+  "fresh_inference_performed": false,
+  "owner_handoff_authorized": false,
+  "preservation": {
+    "after": {
+      "path": "preservation-after.json",
+      "sha256": "e36e7114ce86472b4056eac66478ab03a2aa7602be4a1c454db8407a5f263524"
+    },
+    "before": {
+      "path": "preservation-before.json",
+      "sha256": "5c8ad3da568f932f9d2ddf9964cd01721cf2b80ccecc83d7e5be79ed77be1c27"
+    }
+  },
+  "ready_for_owner_test": false,
+  "remaining_gates": [
+    "Proposal Lite",
+    "canonical protection registration/reconciliation",
+    "full governance/tests and exact-head CI",
+    "Owner acceptance"
+  ],
+  "source": {
+    "commit_sha": "c89a10432733c4540504c469d483f3544f45d048",
+    "tree_sha": "27b08b0fdd3ad2dac9389ae2b932e885159634e1"
+  },
+  "status": "RETAINED_ENGINEERING_CANDIDATE_VERIFIED",
+  "workspace_cleanup": "OWNED_SUPERVISOR_TO_DISPOSE_AFTER_RUNNER_EXIT"
+}

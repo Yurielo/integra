@@ -1,0 +1,47 @@
+{
+  "binding": {
+    "archive": {
+      "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434/0147f1a0ff7d740fd4f66847da906f6dd821833e5f1419b18e63d2bd07f74edc",
+      "bundle_digest": "0147f1a0ff7d740fd4f66847da906f6dd821833e5f1419b18e63d2bd07f74edc",
+      "candidate_id": "candidate-v1-1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434",
+      "manifest_digest": "708e8482fdf18f451cfefe242ea17e75c66f3b52792405c340568a35677a6753"
+    },
+    "candidate": {
+      "bundle_digest": "0147f1a0ff7d740fd4f66847da906f6dd821833e5f1419b18e63d2bd07f74edc",
+      "candidate_id": "candidate-v1-1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434",
+      "identity_sha256": "1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434",
+      "manifest_digest": "708e8482fdf18f451cfefe242ea17e75c66f3b52792405c340568a35677a6753"
+    },
+    "source": {
+      "commit_sha": "c89a10432733c4540504c469d483f3544f45d048",
+      "tree_sha": "27b08b0fdd3ad2dac9389ae2b932e885159634e1"
+    }
+  },
+  "snapshot": {
+    "installed_files": {
+      "Contents/MacOS/Integra": "b4614793c58cbb9bc9a04bff16de41a44ca860dd3c893d14d3987f8c9c4760f6",
+      "Contents/Resources/integra_core/videotext_runtime.py": "2d2708bcc3052d1a1f088db2e77cd5d6c6885376917242fc2de33616db60b844",
+      "Contents/Resources/runtime/videotext/translation-worker": "22ba7bbfd827a1f2937f3757070b74b2e5d4d1200ebea954c48c1eaac1162d28"
+    },
+    "models": {
+      "benchmark/gemma-4-12b-it-q4km:phase2": "9fcb83aff2407aedbd129fa1f735266ed2bec7630719308fc2f0e9a01cb311c4",
+      "benchmark/qwen2.5-coder-7b-q5km:phase2": "44822eea49b709531562d23c8af9dfc91115e883685c8cc192cf27b51a812059",
+      "benchmark/revalidation-qwen35-abliterated:q4km": "7eb4a850ac7b327e6a970a0d3ecaf18538ee4f9e4199e0fd373de2045a33e701",
+      "benchmark/revalidation-qwen35-stock-text:q4km": "ddea16afe16ac5cd402c56ed3e7dcc0d9b250ff355e8913b3957f8ae80e4ed8b",
+      "bge-m3:latest": "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab",
+      "embeddinggemma:latest": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+      "gemma3:4b": "a2af6cc3eb7fa8be8504abaf9b04e88f17a119ec3f04a3addf55f92841195f5a",
+      "hf.co/HauhauCS/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive:Q4_K_M": "e147e30d920477f2ec508e7213b3ebf3a0f42a01db018c5ee64d4029e0eeb7d2",
+      "hf.co/unsloth/Qwen3.5-9B-GGUF:Q4_K_M": "0c8756d182362a618011b3c184b853909f9a4cac31f0eaf27700dbf1b345d5ca",
+      "qwen3:8b": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+      "translategemma:4b": "c49d986b0764f5881c476eb21435bb62b7abc62347aab3d4a6071e811be510a1"
+    },
+    "source_files": {
+      "state/candidate_protection_registry_v1.json": "86dacd7dfdb8cfcdaf85d70e547eb9f62448db8921cc4c228e6c81cca440ae9b",
+      "state/component_baselines_v1.json": "b59fc07d84424723a39aaaaca0da896a85ce921f132dd8caf72163d7f2f1c8d4",
+      "state/current_product_baseline_v2.json": "bdd2ea30b3102c59cd8e47bc56a0d53c6b57d3bfb0347e667663b1be951e52e2",
+      "state/knowledge_integration_v1.json": "8df91aa09187600ea5f0376df3be6eec8e139fbe6af217aa066f9f91e885ff85"
+    }
+  },
+  "status": "PRESERVATION_BASELINE_CAPTURED"
+}

@@ -1,0 +1,29 @@
+{
+  "current_sha256": "bdd2ea30b3102c59cd8e47bc56a0d53c6b57d3bfb0347e667663b1be951e52e2",
+  "deletions": 0,
+  "inventory_method": "supported scan_local across every canonical managed_root",
+  "leases": 0,
+  "new_archive": {
+    "app_size_bytes": 2201770383,
+    "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434/0147f1a0ff7d740fd4f66847da906f6dd821833e5f1419b18e63d2bd07f74edc",
+    "artifact_type": "integra.candidate_archive",
+    "bundle_digest": "0147f1a0ff7d740fd4f66847da906f6dd821833e5f1419b18e63d2bd07f74edc",
+    "candidate_id": "candidate-v1-1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434",
+    "file_count": 29631,
+    "inventory_sha256": "03a1c34351551ec4652033c25472575251d9d86b52b4e184503c4f718b2fea68",
+    "manifest_digest": "708e8482fdf18f451cfefe242ea17e75c66f3b52792405c340568a35677a6753",
+    "retained_size_bytes": 2202517723,
+    "runtime_validation": "NOT_PERFORMED",
+    "schema_version": "1.0",
+    "status": "COMPLETE",
+    "verification": "ARCHIVAL_BYTE_INTEGRITY"
+  },
+  "other7_paths_identity_allocated_and_publisher_records_unchanged": true,
+  "physical_copies": 8,
+  "retirement_history_unchanged": true,
+  "source_A": {
+    "commit_sha": "c89a10432733c4540504c469d483f3544f45d048",
+    "tree_sha": "27b08b0fdd3ad2dac9389ae2b932e885159634e1"
+  },
+  "status": "POSTPUBLICATION_PRESERVATION_PASS"
+}

@@ -1,12 +1,21 @@
 # Installed TranslateGemma compatibility repair — Issue #293
 
-Date: 2026-10-26 (Europe/Istanbul).
+Evidence B snapshot: 2026-10-27 (Europe/Istanbul).
 
-Terminal state: **OWNER_ACTION_REQUIRED**. `READY_FOR_OWNER_TEST: NO`.
-This is an implementation and evidence package in [draft PR #294](https://github.com/Yurielo/integra/pull/294),
-not an accepted baseline, retained Candidate, installation or completed migration
-of the installed application. Tracking: [Issue #293](https://github.com/Yurielo/integra/issues/293).
-Exact machine-readable results: [evidence](evidence/ISSUE_293_TRANSLATEGEMMA_ALIAS.json).
+Status at this snapshot: **RETAINED_ENGINEERING_CANDIDATE_VERIFIED**.
+`READY_FOR_OWNER_TEST: NO` at Evidence B: declaration C, canonical protection
+registration, final full/governance/CI gates and the actual execution-copy handoff
+are subsequent steps. Owner acceptance remains null. CURRENT and installed
+Integra are preserved.
+
+Implementation: [PR #294](https://github.com/Yurielo/integra/pull/294),
+[Issue #293](https://github.com/Yurielo/integra/issues/293).
+Exact [finalization result](evidence/issue293-owner-candidate/result.json),
+[original manifest](evidence/issue293-owner-candidate/candidate-manifest.json),
+[Candidate evidence](evidence/issue293-owner-candidate/candidate-evidence.json)
+and [archive receipt](evidence/issue293-owner-candidate/candidate-archive-receipt.json)
+are retained. [Earlier implementation evidence](evidence/ISSUE_293_TRANSLATEGEMMA_ALIAS.json)
+remains historical.
 
 ## Verified problem and architecture review
 
@@ -19,8 +28,8 @@ That application has no embedded Candidate manifest; its exact Integra build
 commit cannot be established. Its bundled bridge and worker source differ from
 current canonical source. It was not generated from the current source tree.
 
-The audit's source inspection used an old dirty checkout. Canonical `main`
-`2522960f486213a4e1d89ee4735c0a9c56167f93` already contains the completed
+The audit's source inspection used an old dirty checkout. At initial inspection canonical `main`
+`2522960f486213a4e1d89ee4735c0a9c56167f93` already contained the completed
 TranslateGemma migration (#218) and subsequent accepted baseline. The active
 Integra inference adapter is `integra_core/translategemma_runtime.py`;
 VideoText remains the pinned owner of subtitle/media operations.
@@ -58,59 +67,96 @@ commit field, and the mixed-media callbacks omitted current diagnostic/detail
 arguments and detail provenance. Only those test expectations/stubs were repaired.
 Independent review confirmed the assertions remain meaningful.
 
-## Verification and limits
+## Retained Candidate and verified checks
 
-- Independent QA/review: 106 tests PASS, zero failures, errors or skips, using
-  exact pinned SeminarText and the unchanged VideoText worker. This includes
-  Process, Topic/TXT, legacy Qwen artifact compatibility, Media/Studio contracts
-  and actual VideoText subtitle/media operations.
-- Standalone VideoText translation adapter probe and retired-model guard: PASS;
-  its source working tree and installed binary hashes remain unchanged.
-- Real synthetic RU→EN and EN→RU translation: PASS, both from source and from
-  the built application's bundled adapter. Nonconsecutive cue IDs, exact clocks
-  and source bytes were preserved. This is technical evidence, not semantic
-  acceptance or a general translation-quality benchmark.
-- One disposable native build from clean `f1d7499dbbcb07fba1272d9737fb4ecc9ae7e328`:
-  native self-test and two manifest validations PASS. Its bundle digest remained
-  `0147f1a0ff7d740fd4f66847da906f6dd821833e5f1419b18e63d2bd07f74edc` before/after
-  checks. Later commits change only tests/evidence, with identical production,
-  build and schema inputs. The standard supervisor disposed the app and released
-  its leases. No full application bytes are retained for owner review.
-- The supported full suite and governance/CI gates are **not PASS**. Completed
-  counts and exact failing checks are retained in the JSON evidence and logs.
-  CURRENT drift cannot be suppressed or self-accepted to make them green.
+- Clean Source A: `c89a10432733c4540504c469d483f3544f45d048`;
+  tree `27b08b0fdd3ad2dac9389ae2b932e885159634e1`.
+- Candidate: `candidate-v1-1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434`.
+- Bundle: `0147f1a0ff7d740fd4f66847da906f6dd821833e5f1419b18e63d2bd07f74edc`.
+- Original manifest SHA256:
+  `708e8482fdf18f451cfefe242ea17e75c66f3b52792405c340568a35677a6753`.
+- Native self-test, launch marker `visible=true` with full native title,
+  close/termination, two manifest validations, synthetic media-only native
+  workflow and bundled GUI-interpreter TranslateGemma preflight: PASS.
+  The media workflow produced speed-video/audio-analysis outputs without ASR.
+  Preserved screenshots/artifacts are hash-bound in Candidate evidence.
+- Critical source/package equivalence and full bundle equality to the original
+  valid translation build: PASS. Bundle bytes remained identical before/after
+  checks; the validated runtime identity is identical.
+- [Real RU→EN/EN→RU inference evidence is explicitly reused](evidence/issue293-owner-candidate/reused-inference-evidence.json)
+  from source `f1d7499dbbcb07fba1272d9737fb4ecc9ae7e328`, Candidate
+  `candidate-v1-aa93af7487c682f4ccbb55848ee6c48aaf1cc88fde9a724d4b8e3bb5cdd5176c`.
+  No fresh inference or semantic acceptance is claimed. Nonconsecutive cue IDs,
+  exact clocks and source bytes were preserved in the original real tests.
+- Existing independent implementation QA:106/106 PASS, no skips, including
+  actual pinned VideoText subtitle/media operations, Process, Topic/TXT,
+  legacy Qwen artifacts and Media/Studio contracts. Completed translation tests
+  were not unnecessarily repeated.
+- First unpublished engineering attempt failed an external assertion expecting
+  an incomplete native title. Its marker was not preserved and no visibility
+  PASS is claimed for it. Its working app was disposed. The [reviewed repair](evidence/issue293-owner-candidate/native-marker-repair-review.json)
+  only matches the unchanged complete native title and preserves markers before
+  checking. One [explicit diagnosed retry](evidence/issue293-owner-candidate/native-marker-manual-retry-proof.json)
+  passed; product source and all protection/admission guards were unchanged.
+- Immutable archive verification/finalization:COMPLETE. Owned build/stage
+  workspaces were cleaned. [Post-publication proof](evidence/issue293-owner-candidate/postpublication-preservation-proof.json)
+  uses the supported inventory across all managed roots: physical8/8, only one
+  new archive, all seven prior paths/identities/allocated bytes and publisher
+  records unchanged, unchanged retirement history, no pending leases/deletions.
+  Source/installed/model preservation snapshots match.
 
-## Exact lifecycle boundary
+## Exact authorized lifecycle recovery
 
-Authority: [Candidate retention](CANDIDATE_RETENTION.md),
-[bounded retention](BOUNDED_CANDIDATE_RETENTION.md), and
-[Proposal Lite](PROPOSED_BASELINE_LITE_IMPLEMENTATION.md). These accepted rules
-require retained application bytes and explicit scoped owner acceptance; a
-disposable proof or technical green result cannot replace either requirement.
+The original retained admission failed at8/8. A separate explicit Product Owner
+instruction authorized only721d withdrawal, exact hold exception, supported
+ownership repair and exact retirement. Persisted [authority](https://github.com/Yurielo/integra/issues/293#issuecomment-6423470249)
+binds approved request SHA256
+`0f2b9483cd791163b6d2ea97f2f23ec897baa30ee4cbf6e949a07c54b19920ff`.
 
-The supported retained-build preflight refreshed and verified canonical
-protection, retained every package, and rejected admission: **8 full copies**,
-**18,292,744,192 allocated bytes**, zero eligible terminal copies,
-`BUILD_HEADROOM_REJECTED / 8_COPY_OR_20_GIB_CAP`. No archive was deleted or
-modified. The eight-copy limit independently blocks another retained Candidate.
-The separate supported `archive_copy=False` admission allowed the disposable
-test build; it does not supply a retained Candidate or Proposal Lite.
+Merged #297 (`334f3398e299887071dc1ce1ebfe6149bede03ed`) delivered the supported
+transaction. Real ownership repair changed only target device16777233→16777232
+and its dedicated journal, verifying inode45635682/UID501/full bytes/publisher
+and current volume UUID; no historical volume continuity was invented.
+Original BEFORE/AFTER receipt hashes remain
+`98df8c60953294c7a5da6dcd9e21f676916cbac82e54a5481ecbff729c5a25a2` /
+`7bedf61cb0f6875be19e32b1f6515b68eeeaa2902e66a1950b075e32488f4666`.
 
-CURRENT/K1 remains `candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f`.
-The canonical protection registry, K2 proposal, source products, installed
-applications and all model registrations are preserved. The installed Integra
-still requires Qwen; its replacement has not been proven or performed.
+The first exact executor refused before deletion because the resolver omitted
+WITHDRAWN_SUPERSEDED from terminal states. Merged #298
+(`1872a57b9f9cce1f28d6519ef03637df24bad3b0`) repairs eligibility with exact
+validated authority and full integrity required. Target-only main-observation
+refresh requires unchanged authorization/registry/withdrawal bindings; original
+ownership receipts remain immutable. Prerequisite PR and post-merge CI passed.
+PR298 local full:1214 run,1155 PASS,59 declared skips,0 failures/errors;
+Linux CI:1214 run,1095 PASS,119 declared skips,0 failures/errors.
 
-Continuation requires an independently authorized lifecycle resolution that
-restores normal retained-Candidate admission. Then build/archive the exact
-Candidate, prepare Proposal Lite, pass full governance/CI, obtain the applicable
-owner acceptance and complete any separately authorized promotion/installation.
-No owner is asked to pick archive IDs, no ninth archive is created, and no
-existing pending proposal is silently withdrawn. Qwen removal additionally
-requires all active dependencies and installed-build replacement to be proven
-and separately authorized; this task grants no removal authority.
+Unchanged cleanup_exact completed transaction
+`retirement-v1-0055fb6169914c8cbd85f50636d54de7` for only
+`candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5`,
+bundle `f7c053a536e1c415adcc2e32b2f5a52248edfea17afaebc6cbca6c716d65cfa9`,
+manifest `241b9ae31d16d28d3ba7d174f0776f31fb148bb4c52df2a6545c94e2c0130282`.
+Its [receipt](evidence/issue293-owner-candidate/exact-721d-retirement-receipt.json)
+is RETIRED_NOT_AVAILABLE, physical_available:false. Existing rename/journal
+safeguards applied before unlink; metadata cannot restore deleted app bytes.
+[Independent QA](evidence/issue293-owner-candidate/post-retirement-independent-qa.json)
+proved physical7/8, complete authority/no blockers, seven unchanged audit rows,
+CURRENT/K1/K2, installed critical files,11model registrations and original
+ownership receipts preserved. Preexisting unverified legacy states were not
+adopted or weakened. Only that freed slot was used for the new Candidate.
 
-Repository governance and source-integration Product Rules were read. No rule
-or architectural ownership change is adopted by this proposal. Participating
-evidence roles: coordination, backend implementation, independent architecture,
-independent QA/PR review, and CI/CD native verification.
+## Remaining pre-owner and human gates
+
+The historical two CURRENT failures were release-governance failures: expected
+unaccepted339→325 adapter byte drift lacked retained Candidate/Proposal binding.
+They are not hidden by rewriting CURRENT. The correct next layer is strict
+Proposal Lite declaration C, canonical protection registration preserving
+K2/PR280, the permitted canonical registry sync, then final supported full,
+governance and exact-head CI gates. No future gate is marked PASS here.
+
+CURRENT/K1 remains675acf; its file SHA256 is
+`bdd2ea30b3102c59cd8e47bc56a0d53c6b57d3bfb0347e667663b1be951e52e2`.
+K2, other archives, independent source applications, installed Integra and all
+models remain preserved. The installed app still requires Qwen. No model is
+removed. After all pre-owner gates, genuine handoff uses a separate admitted
+execution copy; the immutable archive itself must not be executed. Owner
+acceptance and any post-owner promotion/installation remain separately gated.
