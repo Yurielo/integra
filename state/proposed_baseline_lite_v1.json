@@ -1,0 +1,112 @@
+{
+  "allowed_overlay_paths": [
+    "docs/ISSUE_293_TRANSLATEGEMMA_ALIAS_REPAIR.md",
+    "docs/evidence/issue293-owner-candidate/bundled-translation-preflight.log",
+    "docs/evidence/issue293-owner-candidate/candidate-archive-receipt.json",
+    "docs/evidence/issue293-owner-candidate/candidate-evidence.json",
+    "docs/evidence/issue293-owner-candidate/candidate-manifest.json",
+    "docs/evidence/issue293-owner-candidate/exact-721d-retirement-proof.json",
+    "docs/evidence/issue293-owner-candidate/exact-721d-retirement-receipt.json",
+    "docs/evidence/issue293-owner-candidate/first-attempt-native-title-failure.json",
+    "docs/evidence/issue293-owner-candidate/manifest-validation-after.log",
+    "docs/evidence/issue293-owner-candidate/manifest-validation-before.log",
+    "docs/evidence/issue293-owner-candidate/native-close-marker.txt",
+    "docs/evidence/issue293-owner-candidate/native-launch-marker.txt",
+    "docs/evidence/issue293-owner-candidate/native-marker-manual-retry-proof.json",
+    "docs/evidence/issue293-owner-candidate/native-marker-repair-review.json",
+    "docs/evidence/issue293-owner-candidate/native-native-run.json",
+    "docs/evidence/issue293-owner-candidate/native-output-audio_analysis.json",
+    "docs/evidence/issue293-owner-candidate/native-output-audio_analysis_record.json",
+    "docs/evidence/issue293-owner-candidate/native-output-speed_video.mp4",
+    "docs/evidence/issue293-owner-candidate/native-output-speed_video_record.json",
+    "docs/evidence/issue293-owner-candidate/native-plan.png",
+    "docs/evidence/issue293-owner-candidate/native-results.png",
+    "docs/evidence/issue293-owner-candidate/native-self-test.log",
+    "docs/evidence/issue293-owner-candidate/native-synthetic-media-workflow.log",
+    "docs/evidence/issue293-owner-candidate/native-synthetic.mp4",
+    "docs/evidence/issue293-owner-candidate/post-retirement-independent-qa.json",
+    "docs/evidence/issue293-owner-candidate/postpublication-preservation-proof.json",
+    "docs/evidence/issue293-owner-candidate/preservation-after.json",
+    "docs/evidence/issue293-owner-candidate/preservation-before.json",
+    "docs/evidence/issue293-owner-candidate/result.json",
+    "docs/evidence/issue293-owner-candidate/reused-inference-evidence.json",
+    "docs/evidence/issue293-owner-candidate/source-and-package-equivalence.json"
+  ],
+  "artifact_type": "integra.proposed_product_baseline",
+  "base_current_id": "current-v2-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f",
+  "base_main": {
+    "commit_sha": "312946d42c9712e4ee3b7974fe657762e8092c1d",
+    "tree_sha": "60f160c4c15b12f804da9adcb16437828f127c85"
+  },
+  "candidate": {
+    "bundle_digest": "0147f1a0ff7d740fd4f66847da906f6dd821833e5f1419b18e63d2bd07f74edc",
+    "candidate_id": "candidate-v1-1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434",
+    "identity_sha256": "1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434",
+    "manifest_digest": "708e8482fdf18f451cfefe242ea17e75c66f3b52792405c340568a35677a6753"
+  },
+  "delta": [
+    {
+      "after_sha256": "325f62a7f0fc959dfcde7796cf71ed297e3e584aadb17faea2b1e569b417fb1b",
+      "before_sha256": "339cb8dabc323740d4b99f1a8646297b75863cf004f59a112712f7fb486c17c3",
+      "path": "integra_core/translategemma_runtime.py"
+    }
+  ],
+  "evidence": {
+    "candidate_evidence": {
+      "path": "docs/evidence/issue293-owner-candidate/candidate-evidence.json",
+      "sha256": "1d75a87ff77f545502e977a689af973e666697032b42c0ec0aff20df903a141d"
+    },
+    "candidate_manifest": {
+      "path": "docs/evidence/issue293-owner-candidate/candidate-manifest.json",
+      "sha256": "708e8482fdf18f451cfefe242ea17e75c66f3b52792405c340568a35677a6753"
+    },
+    "report": {
+      "path": "docs/ISSUE_293_TRANSLATEGEMMA_ALIAS_REPAIR.md",
+      "sha256": "071a1eb0d31dfd4d42bae0b1a7c289aeeed48aee942036162596aa56573c8337"
+    }
+  },
+  "gates": [
+    {
+      "evidence_ref": "docs/evidence/issue293-owner-candidate/candidate-manifest.json",
+      "name": "candidate-manifest",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/issue293-owner-candidate/candidate-evidence.json",
+      "name": "native-self-test-visible-launch-close-and-synthetic-media",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/issue293-owner-candidate/candidate-archive-receipt.json",
+      "name": "immutable-candidate-archive",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/issue293-owner-candidate/result.json",
+      "name": "completed-retained-engineering-candidate",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/issue293-owner-candidate/reused-inference-evidence.json",
+      "name": "reused-original-real-ru-en-inference-equivalence",
+      "result": "PASS"
+    }
+  ],
+  "historical_test_successors": [],
+  "intended_scope": {
+    "journey": "Use the identical installed TranslateGemma registration through the accepted Integra adapter; preserve canonical artifacts, exact execution provenance, CURRENT/K1/K2 and independent source products.",
+    "wp": "Issue 293 installed TranslateGemma alias compatibility"
+  },
+  "owner_acceptance": null,
+  "proposal_id": "proposal-issue293-installed-translategemma-alias",
+  "proposed_head": {
+    "commit_sha": "989e15dfb2b5e20e4c628e4e44ac7baee63b1cc6",
+    "tree_sha": "310dca953426494e6433dd3c9948271cc2348351"
+  },
+  "proposed_source": {
+    "commit_sha": "c89a10432733c4540504c469d483f3544f45d048",
+    "tree_sha": "27b08b0fdd3ad2dac9389ae2b932e885159634e1"
+  },
+  "schema_version": "1.0",
+  "status": "PROPOSED_BASELINE_VALID"
+}
