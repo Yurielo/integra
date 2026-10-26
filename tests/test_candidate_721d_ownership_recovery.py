@@ -471,6 +471,84 @@ class Exact721dRecoveryTests(unittest.TestCase):
                 self.assertEqual(self._catalog()['artifacts'][str(self.package)]['status'], 'WITHDRAWN_SUPERSEDED')
                 self.assertEqual(self._catalog()['artifacts'][str(self.base / 'another-package')], self.other)
 
+    def test_target_protection_refresh_accepts_only_main_advance_and_preserves_receipts(self):
+        recovery.recover(apply=True)
+        recovery.reconcile_target()
+        before = self._catalog()
+        receipts = {name: (self.evidence / name).read_bytes()
+                    for name in ('BEFORE.json', 'AFTER.json', 'catalog-before.json')}
+        self.main = 'c' * 40
+        self.audit['canonical']['main_sha'] = self.main
+        result = recovery.reconcile_target()
+        self.assertEqual(result['changed_catalog_fields'], ['protection'])
+        after = self._catalog()
+        self.assertEqual(after['artifacts'], before['artifacts'])
+        self.assertEqual(after[recovery.JOURNAL], before[recovery.JOURNAL])
+        expected = deepcopy(before)
+        expected['protection'] = after['protection']
+        self.assertEqual(after, expected)
+        self.assertEqual(after['protection']['canonical_snapshot']['main_sha'], self.main)
+        for name, raw in receipts.items():
+            self.assertEqual((self.evidence / name).read_bytes(), raw)
+
+    def test_target_protection_refresh_rejects_changed_auth_registry_or_withdrawal(self):
+        recovery.recover(apply=True)
+        self.main = 'c' * 40
+        self.audit['canonical']['main_sha'] = self.main
+        original_audit, original_auth = deepcopy(self.audit), deepcopy(self.auth)
+        for change in ('authorization', 'registry', 'withdrawal'):
+            with self.subTest(change=change):
+                if change == 'authorization':
+                    self._change_auth('publisher_attestation_sha256', 'f' * 64)
+                elif change == 'registry':
+                    self.audit['registry_sha256'] = 'e' * 64
+                else:
+                    self.audit['canonical']['withdrawn_candidate_lifecycles'][0]['reason'] = 'different withdrawal'
+                saved = self.catalog_file.read_bytes()
+                with self.assertRaisesRegex(ValueError, 'complete bound ownership transaction'):
+                    recovery.reconcile_target()
+                self.assertEqual(self.catalog_file.read_bytes(), saved)
+                self.audit = deepcopy(original_audit)
+                self.auth = deepcopy(original_auth)
+                self._change_auth('publisher_attestation_sha256', self.auth['publisher_attestation_sha256'])
+
+    def test_reconciliation_authority_shape_and_both_main_identities_are_strict(self):
+        binding = {'main_sha': 'a' * 40, 'authorization_sha256': 'b' * 64,
+                   'registry_sha256': 'c' * 64, 'withdrawal': {'exact': 'fixture'}}
+        self.assertTrue(recovery._same_reconciliation_authority(binding, {**binding, 'main_sha': 'd' * 40}))
+        for invalid in (None, {**binding, 'extra': True},
+                        {key: value for key, value in binding.items() if key != 'withdrawal'},
+                        {**binding, 'main_sha': 'branch-name'}, {**binding, 'main_sha': 1},
+                        {**binding, 'main_sha': 'a' * 39}):
+            with self.subTest(invalid=invalid):
+                self.assertFalse(recovery._same_reconciliation_authority(invalid, binding))
+                self.assertFalse(recovery._same_reconciliation_authority(binding, invalid))
+
+    def test_device_recovery_remains_strict_after_main_advance(self):
+        recovery.recover(apply=True)
+        saved = self.catalog_file.read_bytes()
+        self.main = 'c' * 40
+        self.audit['canonical']['main_sha'] = self.main
+        with self.assertRaisesRegex(ValueError, 'canonical authority changed'):
+            recovery.recover(apply=True)
+        self.assertEqual(self.catalog_file.read_bytes(), saved)
+
+    def test_target_protection_refresh_still_rejects_main_race_within_operation(self):
+        recovery.recover(apply=True)
+        self.main = 'c' * 40
+        self.audit['canonical']['main_sha'] = self.main
+        authority = recovery._authority
+        def changed_before_commit(*, with_snapshot=False):
+            value = authority(with_snapshot=with_snapshot)
+            if not with_snapshot:
+                return value[0], {**value[1], 'main_sha': 'd' * 40}
+            return value
+        saved = self.catalog_file.read_bytes()
+        with patch.object(recovery, '_authority', side_effect=changed_before_commit):
+            with self.assertRaisesRegex(ValueError, 'changed before commit'):
+                recovery.reconcile_target()
+        self.assertEqual(self.catalog_file.read_bytes(), saved)
+
 
 if __name__ == '__main__':
     unittest.main()
