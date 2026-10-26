@@ -20,6 +20,9 @@ from .ollama_runtime import resolve_ollama
 COMPONENT = "integra.translation"
 PROVIDER = "ollama"
 MODEL = "translategemma:4b-it-q4_K_M"
+# An installed tag is usable only with the exact governed manifest and layers.
+# Artifact contracts retain MODEL; the actual request tag is separately bound.
+INSTALLED_ALIAS = "translategemma:4b"
 MODEL_FAMILY = "translategemma"
 MODEL_DIGEST = "c49d986b0764f5881c476eb21435bb62b7abc62347aab3d4a6071e811be510a1"
 WEIGHTS_DIGEST = "bdbf939b402e2f88fbe3e918beb777813009335756b4c17be7fe008dfe4815d4"
@@ -62,16 +65,25 @@ def _srt_cues(path: Path) -> list[dict[str, Any]]:
     return cues
 
 
-def _model_digest() -> str:
-    """Verify the full daemon identity, never a shortened CLI ID or alias."""
+def _model_identity() -> tuple[str, str]:
+    """Resolve the governed bytes, preferring their canonical daemon tag.
+
+    A present but invalid canonical entry is an error, never a reason to try
+    the installed alias. No model registration or download occurs here.
+    """
     try:
         with urlopen("http://127.0.0.1:11434/api/tags", timeout=10) as response:
             payload = json.loads(response.read())
         models = payload.get("models") if isinstance(payload, dict) else None
-        matches = [m for m in models if isinstance(m, dict) and m.get("name") == MODEL] if isinstance(models, list) else []
-        if len(matches) != 1 or matches[0].get("digest") != MODEL_DIGEST:
-            raise ValueError("TranslateGemma is unavailable or its exact model digest differs")
-        return MODEL_DIGEST
+        if not isinstance(models, list):
+            raise ValueError("TranslateGemma model inventory is invalid")
+        for tag in (MODEL, INSTALLED_ALIAS):
+            matches = [m for m in models if isinstance(m, dict) and m.get("name") == tag]
+            if matches:
+                if len(matches) != 1 or matches[0].get("digest") != MODEL_DIGEST:
+                    raise ValueError("TranslateGemma model identity is ambiguous or differs")
+                return tag, MODEL_DIGEST
+        raise ValueError("TranslateGemma model is unavailable")
     except (OSError, URLError, ValueError) as error:
         raise ValueError("TranslateGemma is unavailable or its exact model digest differs") from error
 
@@ -86,10 +98,12 @@ def _sha_file(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _verify_model_bytes(*, hash_layers: bool = True) -> None:
+def _verify_model_bytes(*, model: str = MODEL, hash_layers: bool = True) -> None:
     try:
+        if model not in (MODEL, INSTALLED_ALIAS):
+            raise ValueError("TranslateGemma request tag is unsupported")
         root = Path(os.environ.get('OLLAMA_MODELS', Path.home() / '.ollama/models'))
-        manifest = root / 'manifests/registry.ollama.ai/library/translategemma/4b-it-q4_K_M'
+        manifest = root / 'manifests/registry.ollama.ai/library/translategemma' / model.split(':', 1)[1]
         if _sha_file(manifest) != MODEL_DIGEST:
             raise ValueError("TranslateGemma model manifest differs from the governed pin")
         record = json.loads(manifest.read_bytes())
@@ -116,8 +130,8 @@ def preflight(*, hash_model: bool = True) -> dict[str, Any]:
     actual translation and Candidate validation retain the full byte hash.
     """
     executable = resolve_ollama()
-    model_id = _model_digest()
-    _verify_model_bytes(hash_layers=hash_model)
+    request_model, model_id = _model_identity()
+    _verify_model_bytes(model=request_model, hash_layers=hash_model)
     try:
         version = subprocess.check_output([str(executable), '--version'], text=True, timeout=10).strip()
     except (OSError, subprocess.SubprocessError) as error:
@@ -129,6 +143,10 @@ def preflight(*, hash_model: bool = True) -> dict[str, Any]:
         "weights_sha256": WEIGHTS_DIGEST, "ollama_sha256": _sha_file(executable),
         "ollama_version": version,
     }
+    # Preserve the canonical-only identity and its existing cache contracts.
+    # Alias execution is explicit provenance and receives a distinct identity.
+    if request_model != MODEL:
+        identity["request_model"] = request_model
     return {
         "state": "READY", "ollama": str(executable), **identity,
         "runtime_identity_sha256": hashlib.sha256(
@@ -151,9 +169,11 @@ def _prompt(text: str, source: str, target: str) -> str:
 
 
 def _translate_text(text: str, source: str, target: str, runtime: dict[str, Any]) -> str:
-    _model_digest()
+    request_model = runtime.get("request_model", runtime["model"])
+    if runtime["model"] != MODEL or _model_identity() != (request_model, MODEL_DIGEST):
+        raise ValueError("TranslateGemma request model differs from preflight")
     body = {
-        "model": runtime["model"], "stream": False,
+        "model": request_model, "stream": False,
         "messages": [{"role": "user", "content": _prompt(text, source, target)}],
         "options": {"temperature": 0.0, "num_predict": 1024},
     }
@@ -167,10 +187,11 @@ def _translate_text(text: str, source: str, target: str, runtime: dict[str, Any]
     if not isinstance(payload, dict) or not isinstance(payload.get('message'), dict):
         raise ValueError("TranslateGemma runtime identity or response is invalid")
     content = payload['message'].get('content')
-    if (payload.get("model") != runtime["model"] or payload.get('done') is not True
+    if (payload.get("model") != request_model or payload.get('done') is not True
             or payload.get('done_reason') != 'stop' or not isinstance(content, str) or not content.strip()):
         raise ValueError("TranslateGemma runtime identity or response is invalid")
-    _model_digest()
+    if _model_identity() != (request_model, MODEL_DIGEST):
+        raise ValueError("TranslateGemma request model differs from preflight")
     return content.strip()
 
 
@@ -195,6 +216,8 @@ def translate(subtitles: Path, output: Path, *, source: str, target: str,
         "template_version": TEMPLATE_VERSION, "source_language": source, "target_language": target,
         "semantic_status": "MACHINE_TRANSLATION_REVIEW_REQUIRED", "cues": translated, "issues": [],
     }
+    if "request_model" in runtime:
+        payload["request_model"] = runtime["request_model"]
     output.parent.mkdir(parents=True, exist_ok=True)
     if output.exists() or output.is_symlink():
         raise ValueError("translation output destination already exists")
