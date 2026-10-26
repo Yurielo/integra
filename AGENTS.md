@@ -63,3 +63,12 @@ commit alone is not a backup. Temporary cleanup must preserve these Candidates
 until that archive is verified. The promotion helper requires exact archives
 of both the proposed and outgoing CURRENT applications in addition to the
 existing owner-acceptance and proposal checks.
+
+## Unified four-product rules
+
+Before drafting or executing work in this repository, explicitly resolve and read the complete canonical rules document:
+`Yurielo/integra` `main:docs/governance/UNIFIED_CODEX_RULES.md`.
+
+A URL or filename is not automatic instruction loading. Resolve `main` to a full Git commit using GitHub or Git, then read that exact blob and record the commit and SHA-256 in material task evidence. If GitHub is unavailable, use only a local Integra checkout whose commit identity has already been verified; otherwise fail closed on the missing source access.
+
+This directive adds no runtime dependency. Repository-specific instructions, Product Rules, governance, lifecycle, and terminal-state requirements remain applicable and take precedence as required by unified rule 0.
