@@ -1,0 +1,492 @@
+{
+  "architecture_review": {
+    "alias_recorded_in_execution_identity": true,
+    "canonical_request_identity_retained": true,
+    "reuse": "existing Integra inference adapter; VideoText remains unchanged subtitle/media owner",
+    "verdict": "PASS_BOUNDED_ALIAS_REPAIR"
+  },
+  "artifact_type": "integra.translation_alias_repair_execution",
+  "base_main": "2522960f486213a4e1d89ee4735c0a9c56167f93",
+  "build_inputs": [
+    {
+      "actual": "30d8c1bd6f5ca717391b168cba71228a030009feaec4eb443bb1e76dab230a6c",
+      "component": "seminartext",
+      "expected": "30d8c1bd6f5ca717391b168cba71228a030009feaec4eb443bb1e76dab230a6c",
+      "match": true,
+      "path": ".runtime-components/seminartext-pinned/seminartext"
+    },
+    {
+      "actual": "e1d49c569ae09b2ede16e2d83820a3809b35eb6c44c13ba9b5330598d6b8f43c",
+      "component": "seminartext",
+      "expected": "e1d49c569ae09b2ede16e2d83820a3809b35eb6c44c13ba9b5330598d6b8f43c",
+      "match": true,
+      "path": ".runtime-components/seminartext-pinned/SEMINARTEXT_VERSION"
+    },
+    {
+      "actual": "d8a14e83b877024c3e016a33e594af17d512741a77735ff3d8c7d1262628c8db",
+      "component": "seminartext",
+      "expected": "d8a14e83b877024c3e016a33e594af17d512741a77735ff3d8c7d1262628c8db",
+      "match": true,
+      "path": ".runtime-components/seminartext-pinned/seminartext_modules/seminartext_topics.py"
+    },
+    {
+      "actual": "6adcf15e9767c36ad2d0dfe3a6a995d90c41b5f1671b4c9434a4b48f590e3856",
+      "component": "seminartext",
+      "expected": "6adcf15e9767c36ad2d0dfe3a6a995d90c41b5f1671b4c9434a4b48f590e3856",
+      "match": true,
+      "path": ".runtime-components/seminartext-pinned/seminartext_modules/evidence_foundation.py"
+    },
+    {
+      "actual": "889e6cdf3dc2dd7504f76923c04e2d8d1eceabdb828d0c110ddc1059b107860e",
+      "component": "seminartext",
+      "expected": "889e6cdf3dc2dd7504f76923c04e2d8d1eceabdb828d0c110ddc1059b107860e",
+      "match": true,
+      "path": ".runtime-components/seminartext-pinned/schemas/validate_canonical_evidence_v1.py"
+    },
+    {
+      "actual": "417017a6a3becc395e88e2554e8d7c2dca51b09de9743e8c5c0cf81ac9ba6205",
+      "component": "videotext",
+      "expected": "417017a6a3becc395e88e2554e8d7c2dca51b09de9743e8c5c0cf81ac9ba6205",
+      "match": true,
+      "path": "/Users/yurielokhin/AI/runtimes/integra/components/videotext-pinned/Sources/videotext/Services/SRTService.swift"
+    },
+    {
+      "actual": "32ecbb3f9a46e0648f4f701a3935487d0be91799334b27128161a51a1f99f05f",
+      "component": "booktext",
+      "expected": "32ecbb3f9a46e0648f4f701a3935487d0be91799334b27128161a51a1f99f05f",
+      "match": true,
+      "path": "/Users/yurielokhin/AI/runtimes/integra/components/booktext-pinned/booktext.py"
+    },
+    {
+      "actual": "3b5a25577a58713cb4cb3a7e81d3883bdf822ce9df6ef0aa4b60d56186e92753",
+      "component": "booktext",
+      "expected": "3b5a25577a58713cb4cb3a7e81d3883bdf822ce9df6ef0aa4b60d56186e92753",
+      "match": true,
+      "path": "/Users/yurielokhin/AI/runtimes/integra/components/booktext-pinned/vision/VisionOCR.swift"
+    }
+  ],
+  "changed_source_files": [
+    "integra_core/translategemma_runtime.py",
+    "state/media_integration_v1.json",
+    "state/transcript_topic_studio_v1.json",
+    "tests/test_application_runtime.py",
+    "tests/test_process_translation.py",
+    "tests/test_translategemma_runtime.py"
+  ],
+  "date_local": "2026-10-26",
+  "dependency_audit": {
+    "canonical_main_already_migrated": "2522960f486213a4e1d89ee4735c0a9c56167f93",
+    "installed_app_dependency_reconfirmed": "qwen3:8b",
+    "installed_bridge_sha256": "2d2708bcc3052d1a1f088db2e77cd5d6c6885376917242fc2de33616db60b844",
+    "installed_build_commit": "UNVERIFIABLE: no Candidate manifest in installed READY_APP",
+    "path": "/Users/yurielokhin/AI/research/qwen3-8b-dependency-audit-2026-10-26/REPORT.md",
+    "sha256": "922dff2d45e2a2f586a0a3f83517cc0a285995b10a9f460a24d3525a06b92c8b",
+    "source_bridge_sha256": "73bd0d821f1a7da7b639f9657137b00ffbc6eda463fc72f4a2e4bd4f680f4a3e",
+    "source_checkout_in_audit": "a dirty old branch, not canonical main"
+  },
+  "disposable_cleanup": {
+    "archive_created": false,
+    "cleanup_event": "WORKSPACE_CLEANUP_COMPLETED",
+    "matching_retention_leases": [],
+    "supervisor_exit_status": 0,
+    "workspace": "/private/tmp/integra-owned-issue293-disposable-native-aqrmfzr9",
+    "workspace_exists": false
+  },
+  "disposable_native": {
+    "archive_created": false,
+    "bundle_after_checks": "0147f1a0ff7d740fd4f66847da906f6dd821833e5f1419b18e63d2bd07f74edc",
+    "bundle_before_checks": "0147f1a0ff7d740fd4f66847da906f6dd821833e5f1419b18e63d2bd07f74edc",
+    "bundle_digest": "0147f1a0ff7d740fd4f66847da906f6dd821833e5f1419b18e63d2bd07f74edc",
+    "candidate_id": "candidate-v1-aa93af7487c682f4ccbb55848ee6c48aaf1cc88fde9a724d4b8e3bb5cdd5176c",
+    "current_changed": false,
+    "installed_application_changed": false,
+    "manifest_sha256": "b901050db871bc5591cc4e5c1a363f586443032b7cbe4c5cb302b3034d48afa9",
+    "packaged_translation_exit_status": 0,
+    "protected_model_registrations_unchanged": true,
+    "selftest_exit_status": 0,
+    "selftest_output": "INTEGRA_MACOS_SELF_TEST: PASS",
+    "source_commit": "f1d7499dbbcb07fba1272d9737fb4ecc9ae7e328",
+    "status": "PASS_DISPOSABLE_NATIVE_PROOF_ONLY",
+    "test_only": true,
+    "workspace": "/private/tmp/integra-owned-issue293-disposable-native-aqrmfzr9"
+  },
+  "disposable_packaged_translation": {
+    "bundled_module": "/private/tmp/integra-owned-issue293-disposable-native-aqrmfzr9/candidate/Integra.app/Contents/Resources/integra_core/translategemma_runtime.py",
+    "cases": [
+      {
+        "elapsed_seconds": 4.427,
+        "ids_times_preserved": true,
+        "output_sha256": "9330271b6f967e245818b518394425f9a4b487cacbf81d8285434c525f52fced",
+        "result": {
+          "capability": "translation",
+          "component": "integra.translation",
+          "cues": [
+            {
+              "end_seconds": 4.0,
+              "id": 3,
+              "start_seconds": 1.25,
+              "text": "Welcome to the seminar."
+            },
+            {
+              "end_seconds": 8.0,
+              "id": 8,
+              "start_seconds": 4.1,
+              "text": "Today, we have 12 participants."
+            }
+          ],
+          "issues": [],
+          "model": "translategemma:4b-it-q4_K_M",
+          "model_id": "c49d986b0764f5881c476eb21435bb62b7abc62347aab3d4a6071e811be510a1",
+          "provider": "ollama",
+          "request_model": "translategemma:4b",
+          "runtime_identity_sha256": "987f883e29beb176606c5d0d0ef9e749080a5dedb26104a60d570b03295585a0",
+          "schema_version": "1.0",
+          "semantic_status": "MACHINE_TRANSLATION_REVIEW_REQUIRED",
+          "source_language": "ru",
+          "target_language": "en",
+          "template_version": "translategemma-ollama-v1"
+        },
+        "source_language": "ru",
+        "source_sha256": "aaa61f05e11339b071afe4715bfe2c1192e41e02dbaffa234ceb5301ff651319",
+        "source_unchanged": true,
+        "target_language": "en"
+      },
+      {
+        "elapsed_seconds": 3.641,
+        "ids_times_preserved": true,
+        "output_sha256": "36cc574aae7e2216281726e8f493bbe198ca6b423ebef8aae156abea863095be",
+        "result": {
+          "capability": "translation",
+          "component": "integra.translation",
+          "cues": [
+            {
+              "end_seconds": 4.0,
+              "id": 3,
+              "start_seconds": 1.25,
+              "text": "Добро пожаловать на семинар."
+            },
+            {
+              "end_seconds": 8.0,
+              "id": 8,
+              "start_seconds": 4.1,
+              "text": "Сегодня в нашем мероприятии участвуют 12 человек."
+            }
+          ],
+          "issues": [],
+          "model": "translategemma:4b-it-q4_K_M",
+          "model_id": "c49d986b0764f5881c476eb21435bb62b7abc62347aab3d4a6071e811be510a1",
+          "provider": "ollama",
+          "request_model": "translategemma:4b",
+          "runtime_identity_sha256": "987f883e29beb176606c5d0d0ef9e749080a5dedb26104a60d570b03295585a0",
+          "schema_version": "1.0",
+          "semantic_status": "MACHINE_TRANSLATION_REVIEW_REQUIRED",
+          "source_language": "en",
+          "target_language": "ru",
+          "template_version": "translategemma-ollama-v1"
+        },
+        "source_language": "en",
+        "source_sha256": "5818b37b75ae13484debf0b1afac360b36a94fa5f1ed674b4bc7d101457df1d3",
+        "source_unchanged": true,
+        "target_language": "ru"
+      }
+    ],
+    "runtime": {
+      "component": "integra.translation",
+      "endpoint": "http://127.0.0.1:11434/api/chat",
+      "model": "translategemma:4b-it-q4_K_M",
+      "model_family": "translategemma",
+      "model_id": "c49d986b0764f5881c476eb21435bb62b7abc62347aab3d4a6071e811be510a1",
+      "ollama": "/Applications/Ollama.app/Contents/Resources/ollama",
+      "ollama_sha256": "653dac8da3e2bc1a8e981ee9bd95d21456ae41a16f27f8c8140baec23045bc27",
+      "ollama_version": "ollama version is 0.40.11",
+      "provider": "ollama",
+      "request_model": "translategemma:4b",
+      "runtime_identity_sha256": "987f883e29beb176606c5d0d0ef9e749080a5dedb26104a60d570b03295585a0",
+      "state": "READY",
+      "template_version": "translategemma-ollama-v1",
+      "weights_sha256": "bdbf939b402e2f88fbe3e918beb777813009335756b4c17be7fe008dfe4815d4"
+    },
+    "semantic_acceptance": false,
+    "status": "PASS"
+  },
+  "draft_pr": "https://github.com/Yurielo/integra/pull/294",
+  "full_suite": {
+    "command": "INTEGRA_REVIEW_TEST_PYTHON=/opt/homebrew/opt/python@3.14/bin/python3.14 INTEGRA_TEST_REVIEW_PYTHONPATH=$PWD/.runtime-components/review-python INTEGRA_VIDEOTEXT_SUBTITLE_WORKER=<verified-worker> INTEGRA_VIDEOTEXT_MEDIA_WORKER=<verified-worker> ./scripts/run_review_tests.sh",
+    "errors": 0,
+    "failing_tests": [
+      "test_current_baseline_exact_contract_passes (test_governance.GovernanceValidationTests.test_current_baseline_exact_contract_passes)",
+      "test_historical_certification_records_are_not_rewritten (test_governance.GovernanceValidationTests.test_historical_certification_records_are_not_rewritten)"
+    ],
+    "failures": 2,
+    "overall": "FAIL_GOVERNANCE_GATE",
+    "passed": 1182,
+    "reason": "CURRENT v2 governed byte drift: integra_core/translategemma_runtime.py",
+    "seconds": 446.274,
+    "skipped": 9,
+    "skips": [
+      "test_pinned_component_resolves_page_ranges_without_renumbering (test_booktext_selection.BookTextSelectionTests.test_pinned_component_resolves_page_ranges_without_renumbering) ... skipped 'pinned BookText checkout not available'",
+      "test_reproducible_build_and_launch_probe (test_macos_app.MacOSApplicationTests.test_reproducible_build_and_launch_probe) ... skipped 'native macOS rebuild requires the pinned external runtime sources'",
+      "test_real_provider_expected_bytes_and_existing_adapter_equivalence (test_process_pilot_reference.RealProviderReferenceTests.test_real_provider_expected_bytes_and_existing_adapter_equivalence) ... skipped 'requires explicit reference Candidate'",
+      "test_real_process_bridge_binds_run_and_persists_no_knowledge_output (test_process_topic_review_bridge.ProcessTopicReviewBridgeTests.test_real_process_bridge_binds_run_and_persists_no_knowledge_output) ... skipped 'requires exact pinned SeminarText checkout'",
+      "The real owner failure had aligned words 0–8 inside segment 0–13. ... skipped 'requires exact pinned SeminarText checkout'",
+      "test_real_pinned_contract_persists_process_review_not_knowledge (test_process_topic_review_runtime.ProcessTopicReviewRuntimeTests.test_real_pinned_contract_persists_process_review_not_knowledge) ... skipped 'requires exact pinned SeminarText checkout'",
+      "test_unmappable_topic_fails_closed_before_review_package_exists (test_process_topic_review_runtime.ProcessTopicReviewRuntimeTests.test_unmappable_topic_fails_closed_before_review_package_exists) ... skipped 'requires exact pinned SeminarText checkout'",
+      "test_unsupported_split_is_not_faked_by_process_v1_surface (test_process_topic_review_runtime.ProcessTopicReviewRuntimeTests.test_unsupported_split_is_not_faked_by_process_v1_surface) ... skipped 'requires exact pinned SeminarText checkout'",
+      "test_local_candidate_is_reproducible_signed_and_launchable (test_ready_app.ReadyAppTests.test_local_candidate_is_reproducible_signed_and_launchable) ... skipped 'READY_APP packaging requires the pinned external runtime sources'"
+    ],
+    "source": "ea4693883ce14d4a55466b4769c31b88f825a9b2",
+    "tests_run": 1193
+  },
+  "hosted_ci_at_implementation_head": {
+    "check": "governance",
+    "conclusion": "failure",
+    "diagnostic": "CURRENT v2 governed byte drift: integra_core/translategemma_runtime.py",
+    "head": "ea4693883ce14d4a55466b4769c31b88f825a9b2",
+    "job_id": 121712186449,
+    "tests_step": "NOT_EXECUTED_AFTER_GOVERNANCE_FAILURE",
+    "url": "https://github.com/Yurielo/integra/actions/runs/40362729804/job/121712186449"
+  },
+  "implementation_head": "ea4693883ce14d4a55466b4769c31b88f825a9b2",
+  "independent_qa_review": {
+    "applied_roles": [
+      "qa-test-engineer",
+      "github-pr-reviewer"
+    ],
+    "errors": 0,
+    "failures": 0,
+    "passed": 106,
+    "seconds": 10.295,
+    "skipped": 0,
+    "source": "ea4693883ce14d4a55466b4769c31b88f825a9b2",
+    "tests_run": 106,
+    "verdict": "PASS"
+  },
+  "issue": "https://github.com/Yurielo/integra/issues/293",
+  "logs": [
+    {
+      "path": "/Users/yurielokhin/Documents/ChatGPT/Integra/translation-full-definitive.log",
+      "sha256": "304522e7912f77463ab3f88f3145344ca88d31a82429f540c8519d088fa07778"
+    },
+    {
+      "path": "/Users/yurielokhin/Documents/ChatGPT/Integra/translation-independent-qa-definitive.log",
+      "sha256": "abce54c669f46cce2619eb037605271bd6d61fbe8e5d495af6c3db2dec72a9e7"
+    },
+    {
+      "path": "/Users/yurielokhin/Documents/ChatGPT/Integra/translation-independent-application-baseline.log",
+      "sha256": "6b0af6de9426e2d99e6bc481f94ae80fb667a2fbfe6122997490937094e3b049"
+    },
+    {
+      "path": "/Users/yurielokhin/Documents/ChatGPT/Integra/translation-governance-before.log",
+      "sha256": "f4a73045d67926caf9f174cfe8c25fc8abb3fac985474370cc4a767387de3ebc"
+    },
+    {
+      "path": "/Users/yurielokhin/Documents/ChatGPT/Integra/translation-governance-after.log",
+      "sha256": "0a9005dde5bcbdb0ed40e6f96f0b7af909f0a2c4d597a2a8b596e8767ab7e555"
+    },
+    {
+      "path": "/Users/yurielokhin/Documents/ChatGPT/Integra/translation-governance-tests.log",
+      "sha256": "aee117abc002b54d05f722f3f9deee71e2a54256f6f421b2f7049386e8676a41"
+    },
+    {
+      "path": "/Users/yurielokhin/Documents/ChatGPT/Integra/translation-validation/disposable-native-build.log",
+      "sha256": "0364bf8d16b6b51d79e3ff6eab941b13f68f519bda5a7958f68901702cac0687"
+    },
+    {
+      "path": "/Users/yurielokhin/Documents/ChatGPT/Integra/translation-validation/disposable-native-selftest.log",
+      "sha256": "43e73b0dca266fa5fe901fe451ab06e7d12138109a9b035212b483c498980054"
+    },
+    {
+      "path": "/Users/yurielokhin/Documents/ChatGPT/Integra/translation-validation/disposable-packaged-translation.log",
+      "sha256": "abc8754c05a6137a2a98bef36dd35e8f006ef64480e1792232303f043c305800"
+    },
+    {
+      "path": "/Users/yurielokhin/Documents/ChatGPT/Integra/translation-validation/videotext-translation-probe.log",
+      "sha256": "c84eb77c2e8b7701a7a79a26fcea6e4737893152d3566a7202340892e7943d49"
+    },
+    {
+      "path": "/Users/yurielokhin/Documents/ChatGPT/Integra/translation-validation/videotext-retired-model-check.log",
+      "sha256": "06b1a21d4f80cc71ee8f5cad2c3d17effbfe0c83c12a448a5a36afa5851468a3"
+    }
+  ],
+  "models_preserved": {
+    "bge-m3:latest": "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab",
+    "embeddinggemma:latest": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+    "gemma3:4b": "a2af6cc3eb7fa8be8504abaf9b04e88f17a119ec3f04a3addf55f92841195f5a",
+    "qwen3:8b": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+    "translategemma:4b": "c49d986b0764f5881c476eb21435bb62b7abc62347aab3d4a6071e811be510a1"
+  },
+  "native_manifest": {
+    "local_saved_original_serialization": "/Users/yurielokhin/Documents/ChatGPT/Integra/translation-validation/disposable-native-manifest-original-bytes.json",
+    "not_an_archive": true,
+    "original_serialization_sha256": "b901050db871bc5591cc4e5c1a363f586443032b7cbe4c5cb302b3034d48afa9",
+    "sha256": "b901050db871bc5591cc4e5c1a363f586443032b7cbe4c5cb302b3034d48afa9"
+  },
+  "native_production_inputs_identical_at_final_implementation_head": true,
+  "next_gate": "separate authorized lifecycle resolution restoring ordinary retained-Candidate admission; then exact archive, Proposal Lite, full governance/CI and owner acceptance before promotion/installation",
+  "preservation": {
+    "installed_integra_bridge_sha256": "2d2708bcc3052d1a1f088db2e77cd5d6c6885376917242fc2de33616db60b844",
+    "installed_integra_matches_current_source": false,
+    "installed_integra_no_candidate_manifest": true,
+    "model_registrations_unchanged": true,
+    "protected_states_unchanged": true,
+    "videotext_adapter_sha256": "b2fc13f6844b8c55b02a0a0b26094e9f2da59ce73f8167f4d1bfab92c64b36b7",
+    "videotext_binary_sha256": "79173d27f38f81a2c0431ab88dffa445587c53750e5ab046fd13a9998656b991",
+    "videotext_source_status": "",
+    "videotext_test_commit": "f3345ae560b540071a56559c109e3366bd81dc54"
+  },
+  "product_rule_conflicts": "NONE_WITHIN_BOUNDED_PROPOSAL",
+  "product_rules_read": true,
+  "prohibited_actions_performed": {
+    "current_promotion": false,
+    "installed_app_modification": false,
+    "k1_k2_proposal_change": false,
+    "merge": false,
+    "model_download_registration_removal": false,
+    "release": false,
+    "retained_archive_creation_or_deletion": false,
+    "semantic_acceptance": false,
+    "source_product_change": false
+  },
+  "protected_state": {
+    "base": "2522960f486213a4e1d89ee4735c0a9c56167f93",
+    "current": {
+      "bundle_digest": "e3215a28c9ce0a1a54c35dc535bad42a9334cae7ddc5eb3b0533a480e0296d95",
+      "candidate_id": "candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f",
+      "identity_sha256": "675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f"
+    },
+    "files": {
+      "state/candidate_protection_registry_v1.json": "918dd3d006043f907febb59f06d2453584c2cce7864bfd60f1d9035e8f5a0f39",
+      "state/component_baselines_v1.json": "b59fc07d84424723a39aaaaca0da896a85ce921f132dd8caf72163d7f2f1c8d4",
+      "state/current_product_baseline_v2.json": "bdd2ea30b3102c59cd8e47bc56a0d53c6b57d3bfb0347e667663b1be951e52e2",
+      "state/knowledge_integration_v1.json": "8df91aa09187600ea5f0376df3be6eec8e139fbe6af217aa066f9f91e885ff85"
+    }
+  },
+  "ready_for_owner_test": false,
+  "real_source_translation": {
+    "cases": [
+      {
+        "elapsed_seconds": 3.832,
+        "ids_times_preserved": true,
+        "output_sha256": "5ef307b31b450b7fcfd7e78687f7e98169d5095bcb0696501d3104b6c25db4f5",
+        "payload": {
+          "capability": "translation",
+          "component": "integra.translation",
+          "cues": [
+            {
+              "end_seconds": 4.0,
+              "id": 3,
+              "start_seconds": 1.25,
+              "text": "Welcome to the seminar."
+            },
+            {
+              "end_seconds": 8.0,
+              "id": 8,
+              "start_seconds": 4.1,
+              "text": "We have 12 participants, and the meeting will start at 10:00."
+            }
+          ],
+          "issues": [],
+          "model": "translategemma:4b-it-q4_K_M",
+          "model_id": "c49d986b0764f5881c476eb21435bb62b7abc62347aab3d4a6071e811be510a1",
+          "provider": "ollama",
+          "request_model": "translategemma:4b",
+          "runtime_identity_sha256": "987f883e29beb176606c5d0d0ef9e749080a5dedb26104a60d570b03295585a0",
+          "schema_version": "1.0",
+          "semantic_status": "MACHINE_TRANSLATION_REVIEW_REQUIRED",
+          "source_language": "ru",
+          "target_language": "en",
+          "template_version": "translategemma-ollama-v1"
+        },
+        "source_language": "ru",
+        "source_sha256": "c18d6cacaa8668dc53fbe9dc19eed14da743d6a03cd557e2498d75ad1520d2c0",
+        "source_unchanged": true,
+        "target_language": "en"
+      },
+      {
+        "elapsed_seconds": 2.508,
+        "ids_times_preserved": true,
+        "output_sha256": "a912e8db8417099c54cc60958319024297af23c5b87bcb6d8bb7f1b6488f8df2",
+        "payload": {
+          "capability": "translation",
+          "component": "integra.translation",
+          "cues": [
+            {
+              "end_seconds": 4.0,
+              "id": 3,
+              "start_seconds": 1.25,
+              "text": "Добро пожаловать на семинар."
+            },
+            {
+              "end_seconds": 8.0,
+              "id": 8,
+              "start_seconds": 4.1,
+              "text": "У нас 12 участников, и встреча начинается в 10 утра."
+            }
+          ],
+          "issues": [],
+          "model": "translategemma:4b-it-q4_K_M",
+          "model_id": "c49d986b0764f5881c476eb21435bb62b7abc62347aab3d4a6071e811be510a1",
+          "provider": "ollama",
+          "request_model": "translategemma:4b",
+          "runtime_identity_sha256": "987f883e29beb176606c5d0d0ef9e749080a5dedb26104a60d570b03295585a0",
+          "schema_version": "1.0",
+          "semantic_status": "MACHINE_TRANSLATION_REVIEW_REQUIRED",
+          "source_language": "en",
+          "target_language": "ru",
+          "template_version": "translategemma-ollama-v1"
+        },
+        "source_language": "en",
+        "source_sha256": "e94a3068cc1b2ec0a857d5c783edc2377648fec8accc94ab19e532bfb708a851",
+        "source_unchanged": true,
+        "target_language": "ru"
+      }
+    ],
+    "model_registrations_unchanged": true,
+    "qwen_used": false,
+    "runtime": {
+      "component": "integra.translation",
+      "endpoint": "http://127.0.0.1:11434/api/chat",
+      "model": "translategemma:4b-it-q4_K_M",
+      "model_family": "translategemma",
+      "model_id": "c49d986b0764f5881c476eb21435bb62b7abc62347aab3d4a6071e811be510a1",
+      "ollama": "/Applications/Ollama.app/Contents/Resources/ollama",
+      "ollama_sha256": "653dac8da3e2bc1a8e981ee9bd95d21456ae41a16f27f8c8140baec23045bc27",
+      "ollama_version": "ollama version is 0.40.11",
+      "provider": "ollama",
+      "request_model": "translategemma:4b",
+      "runtime_identity_sha256": "987f883e29beb176606c5d0d0ef9e749080a5dedb26104a60d570b03295585a0",
+      "state": "READY",
+      "template_version": "translategemma-ollama-v1",
+      "weights_sha256": "bdbf939b402e2f88fbe3e918beb777813009335756b4c17be7fe008dfe4815d4"
+    },
+    "semantic_acceptance": false
+  },
+  "retained_build_admission": {
+    "allocated_bytes": 18292744192,
+    "cleanup_performed": false,
+    "command": "candidate_retention.build_preflight(default_archive_root, 4294967296, archive_copy=True)",
+    "eligible_terminal_copies": 0,
+    "event": "BUILD_HEADROOM_REJECTED",
+    "evidence_origin": "Exact observed supported build_preflight stdout and final exception; no separate complete preflight transcript was captured.",
+    "existing_protected_bytes_modified": false,
+    "full_copies": 8,
+    "maximum_allocated_bytes": 21474836480,
+    "maximum_full_copies": 8,
+    "observation_time_utc": "2026-10-26T16:38:09.551988+00:00",
+    "reason": "8_COPY_OR_20_GIB_CAP",
+    "requested_bytes": 4294967296,
+    "result": "ValueError: build blocked by 8-copy / 20-GiB archive cap"
+  },
+  "runtime_sha256": "325f62a7f0fc959dfcde7796cf71ed297e3e584aadb17faea2b1e569b417fb1b",
+  "schema_version": "1.0",
+  "task_complete": false,
+  "terminal_status": "OWNER_ACTION_REQUIRED",
+  "timezone": "Europe/Istanbul",
+  "videotext_standalone_tests": {
+    "installed_binary_changed": false,
+    "retired_model_guard": "PASS",
+    "source_commit": "f3345ae560b540071a56559c109e3366bd81dc54",
+    "source_tree_changed": false,
+    "translation_adapter_probe": "PASS"
+  }
+}
