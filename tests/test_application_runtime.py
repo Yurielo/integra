@@ -299,10 +299,10 @@ class ApplicationRuntimeTests(unittest.TestCase):
     def test_mixed_topics_and_real_burn_both_execute(self):
         source=self.root/"mixed.mp4"; real_media_fixture(source)
         overrides=self.media_environment()
-        def timeline(_audio,_subtitles,output):
+        def timeline(_audio,_subtitles,output,*,diagnostic_context=None):
             output.write_text(json.dumps({"capability":"word_timeline","words":[{"alignment_status":"ALIGNED"}]}))
             return json.loads(output.read_text())
-        def topics(_subtitles,output):
+        def topics(_subtitles,output,*,detail="normal"):
             output.write_text(json.dumps({"component":"seminartext","topics":[{"semantic_status":"REVIEW_REQUIRED"}]}))
             return json.loads(output.read_text())
         # ASR/topic fixtures isolate semantic model costs; VideoText really renders.
