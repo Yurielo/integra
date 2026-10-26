@@ -282,6 +282,16 @@
       "lifecycle": "WITHDRAWN_SUPERSEDED",
       "reason": "SUPERSEDED_BY_I01_REGRESSION_AND_NATIVE_GUI_VALIDATED_K2_SUBMISSION",
       "scope": "EXACT_19E343_SUPERSEDED_UNACCEPTED_K2_SUBMISSION"
+    },
+    "Build Archive/candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5/f7c053a536e1c415adcc2e32b2f5a52248edfea17afaebc6cbca6c716d65cfa9": {
+      "authority_ref": "https://github.com/Yurielo/integra/issues/293#issuecomment-6423470249",
+      "bundle_digest": "f7c053a536e1c415adcc2e32b2f5a52248edfea17afaebc6cbca6c716d65cfa9",
+      "candidate_id": "candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5",
+      "lifecycle": "WITHDRAWN_SUPERSEDED",
+      "manifest_digest": "241b9ae31d16d28d3ba7d174f0776f31fb148bb4c52df2a6545c94e2c0130282",
+      "path": "Build Archive/candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5/f7c053a536e1c415adcc2e32b2f5a52248edfea17afaebc6cbca6c716d65cfa9",
+      "reason": "SUPERSEDED_UNACCEPTED_PRE_MIGRATION_SNAPSHOT_EXACT_OWNER_AUTHORIZED_PR294_RELEASE_SLOT",
+      "scope": "EXACT_721D_OWNER_AUTHORIZED_PR294_RELEASE_SLOT"
     }
   },
   "withdrawn_candidate_lifecycles": [
@@ -428,6 +438,18 @@
       "resulting_status": "WITHDRAWN_SUPERSEDED",
       "history_path": "state/history/knowledge_k2_candidate_19e343_withdrawal_v1.json",
       "history_sha256": "63ac0b5fe49f5a67a1bd60682f19556278bdfd4bc59300d7f9ffe4348c5925cd"
+    },
+    {
+      "authority_body_sha256": "5e8e233e8eaf3254dcd96dde6cdfc5b6fd65a9d9e5cc9a309254609a85f46873",
+      "authority_ref": "https://github.com/Yurielo/integra/issues/293#issuecomment-6423470249",
+      "bundle_digest": "f7c053a536e1c415adcc2e32b2f5a52248edfea17afaebc6cbca6c716d65cfa9",
+      "candidate_id": "candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5",
+      "history_path": "state/history/candidate_721d_withdrawal_v1.json",
+      "history_sha256": "eb24fa12cf0df0c63d6e11434d29b06333365a824760e656b29933cb02e91ea3",
+      "manifest_digest": "241b9ae31d16d28d3ba7d174f0776f31fb148bb4c52df2a6545c94e2c0130282",
+      "previous_status": "AWAITING_OWNER_ACCEPTANCE",
+      "reason": "SUPERSEDED_UNACCEPTED_PRE_MIGRATION_SNAPSHOT_EXACT_OWNER_AUTHORIZED_PR294_RELEASE_SLOT",
+      "resulting_status": "WITHDRAWN_SUPERSEDED"
     }
   ]
 }

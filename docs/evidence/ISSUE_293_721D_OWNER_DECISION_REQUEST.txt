@@ -1,0 +1,34 @@
+ПРОЕКТ ОДНОГО РЕШЕНИЯ ВЛАДЕЛЬЦА — РАЗРЕШЕНИЕ ЕЩЁ НЕ ПОЛУЧЕНО
+
+Цель: освободить один архивный слот для уже реализованного PR #294.
+
+Candidate: candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5
+Bundle: f7c053a536e1c415adcc2e32b2f5a52248edfea17afaebc6cbca6c716d65cfa9
+Manifest: 241b9ae31d16d28d3ba7d174f0776f31fb148bb4c52df2a6545c94e2c0130282
+Путь: /Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5/f7c053a536e1c415adcc2e32b2f5a52248edfea17afaebc6cbca6c716d65cfa9
+
+Предлагаемое решение:
+Снять с рассмотрения только этот старый непринятый snapshot от 3 октября 2026
+(ещё до миграции TranslateGemma), зафиксировать WITHDRAWN_SUPERSEDED и снять
+его точечный hold для governed retirement. Разрешить только для этой точной
+копии восстановление ownership-привязки: сохранённый device16777233 отличается
+от текущего16777232. Восстановление должно проверить все байты и metadata,
+исходную publisher attestation, неизменные inode/UID, текущую volume identity и
+отсутствие writer; сохранить исходную привязку и before/after receipt.
+
+Разрешить реализацию и независимую проверку узкого транзакционного recovery
+через существующий catalog lock. Не разрешать ручное редактирование каталога,
+общую adoption/rebinding, ослабление ownership-проверок или изменения других
+архивов. После canonical delivery и свежих integrity/protection/ownership/
+inactivity checks разрешить существующий cleanup_exact только для указанной
+идентичности, с сохранением immutable history и retirement receipt.
+
+CURRENT/K1, rollback15d9, K2/e8064, остальные holds/архивы, лимиты, установленные
+приложения, проекты и модели остаются неизменными. Это не acceptance,
+не CURRENT promotion и не установка Integra. После освобождения слота —
+продолжение существующих Candidate/Proposal/CI gates PR #294.
+
+Почему не достаточно общего «разрешаю ротацию»: этот Candidate не terminal,
+защищён explicit hold, не имеет publication_sequence и сейчас не проходит
+ownership из-за device mismatch. Общая ротация уже разрешена #281, но её
+предикаты здесь не выполнены. Готового supported rebind в репозитории нет.
