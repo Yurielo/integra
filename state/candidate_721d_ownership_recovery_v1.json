@@ -1,0 +1,32 @@
+{
+  "artifact_type": "integra.exact_721d_ownership_recovery_authorization",
+  "authority_body_sha256": "5e8e233e8eaf3254dcd96dde6cdfc5b6fd65a9d9e5cc9a309254609a85f46873",
+  "authority_ref": "https://github.com/Yurielo/integra/issues/293#issuecomment-6423470249",
+  "expected_device": 16777232,
+  "expected_inode": 45635682,
+  "expected_volume": {
+    "device": 16777232,
+    "mount_point": "/System/Volumes/Data",
+    "uuid": "881D2E44-040B-4063-A54E-FB254B06E0F9"
+  },
+  "identity": {
+    "bundle_digest": "f7c053a536e1c415adcc2e32b2f5a52248edfea17afaebc6cbca6c716d65cfa9",
+    "candidate_id": "candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5",
+    "manifest_digest": "241b9ae31d16d28d3ba7d174f0776f31fb148bb4c52df2a6545c94e2c0130282"
+  },
+  "owner_decision_request": {
+    "path": "docs/evidence/ISSUE_293_721D_OWNER_DECISION_REQUEST.txt",
+    "sha256": "0f2b9483cd791163b6d2ea97f2f23ec897baa30ee4cbf6e949a07c54b19920ff"
+  },
+  "owner_uid": 501,
+  "path": "Build Archive/candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5/f7c053a536e1c415adcc2e32b2f5a52248edfea17afaebc6cbca6c716d65cfa9",
+  "previous_device": 16777233,
+  "publisher_attestation_sha256": "76cbc431dadb4909f5ab1ed934de1800df868d15629309f1d41f2d7ce6120e3d",
+  "schema_version": "1.0",
+  "scope": "EXACT_721D_DEVICE_BINDING_RECOVERY_ONLY",
+  "status": "PRODUCT_OWNER_AUTHORIZED_ACTIVE",
+  "withdrawal_history": {
+    "path": "state/history/candidate_721d_withdrawal_v1.json",
+    "sha256": "eb24fa12cf0df0c63d6e11434d29b06333365a824760e656b29933cb02e91ea3"
+  }
+}
