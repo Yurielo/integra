@@ -346,6 +346,17 @@ def recover(*, apply=False):
         return outcome.result
 
 
+def _same_reconciliation_authority(previous, current):
+    """Permit only a fresh canonical revision of the identical exact authority."""
+    fields = {'main_sha', 'authorization_sha256', 'registry_sha256', 'withdrawal'}
+    return (isinstance(previous, dict) and isinstance(current, dict)
+            and set(previous) == fields == set(current)
+            and all(isinstance(value['main_sha'], str)
+                    and re.fullmatch(r'[0-9a-f]{40}', value['main_sha'])
+                    for value in (previous, current))
+            and all(previous[key] == current[key] for key in fields - {'main_sha'}))
+
+
 def reconcile_target():
     """Mirror only 721d's canonical withdrawal after its complete device repair.
 
@@ -373,7 +384,7 @@ def reconcile_target():
                     or journal.get('before_receipt_sha256') != _sha(before_bytes)
                     or journal.get('after_receipt_sha256') != _sha(after_bytes)
                     or before.get('catalog_before_sha256') != _sha(before_raw)
-                    or before.get('authority') != authority
+                    or not _same_reconciliation_authority(before.get('authority'), authority)
                     or before.get('record_before') != original
                     or not isinstance(original, dict)
                     or original.get('device') != auth['previous_device']
