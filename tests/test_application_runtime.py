@@ -302,8 +302,8 @@ class ApplicationRuntimeTests(unittest.TestCase):
         def timeline(_audio,_subtitles,output,*,diagnostic_context=None):
             output.write_text(json.dumps({"capability":"word_timeline","words":[{"alignment_status":"ALIGNED"}]}))
             return json.loads(output.read_text())
-        def topics(_subtitles,output,*,detail="normal"):
-            output.write_text(json.dumps({"component":"seminartext","topics":[{"semantic_status":"REVIEW_REQUIRED"}]}))
+        def topics(_subtitles,output,*,detail="auto"):
+            output.write_text(json.dumps({"component":"seminartext","topic_detail":{"requested":detail,"executed":detail},"topics":[{"semantic_status":"REVIEW_REQUIRED"}]}))
             return json.loads(output.read_text())
         # ASR/topic fixtures isolate semantic model costs; VideoText really renders.
         with patch.dict(os.environ,overrides), \
