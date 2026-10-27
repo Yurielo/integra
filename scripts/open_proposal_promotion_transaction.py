@@ -71,9 +71,19 @@ def _virtual_pre_registry(registry: dict, proposal: dict, pr: int, head: str) ->
     result = copy.deepcopy(registry)
     candidate = _identity(proposal["candidate"])
     reference = {"pr": pr, "head_sha": head, **candidate}
-    if any(row.get("pr") == pr for row in result["proposed"]):
-        raise ValueError("promotion PR is already registered; generic transition is not applicable")
-    result["proposed"].append(reference)
+    registered = [row for row in result["proposed"] if row.get("pr") == pr]
+    if registered:
+        # A current protection registry binds newer Proposals by their immutable
+        # Proposal bytes rather than a mutable branch head.  Treat that exact
+        # binding as the required pre-state protection; reject every partial or
+        # conflicting registration instead of replacing it with a synthetic row.
+        expected = {"path": PROPOSAL, "pr": pr, "proposal_id": proposal["proposal_id"],
+                    "proposal_sha256": digest(proposal), **candidate}
+        if len(registered) != 1 or any(registered[0].get(key) != value
+                                       for key, value in expected.items()):
+            raise ValueError("registered promotion Proposal binding differs from exact target")
+    else:
+        result["proposed"].append(reference)
     base = Path.home() / "Library/Application Support/Integra"
     result["selected_survivors"][candidate["candidate_id"]] = (
         f"Build Archive/{candidate['candidate_id']}/{candidate['bundle_digest']}")
