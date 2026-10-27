@@ -1,0 +1,36 @@
+{
+  "artifact_type": "integra.open_proposal_promotion_transaction",
+  "inputs": {
+    "archive_inventory_sha256": "03a1c34351551ec4652033c25472575251d9d86b52b4e184503c4f718b2fea68",
+    "authorization": "PROMOTE_CURRENT proposal-issue293-installed-translategemma-alias candidate-v1-1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434; Product Owner approval in Codex conversation 2026-10-27 authorizes governed CURRENT promotion and reversible installed Integra activation; qwen3:8b deletion explicitly excluded.",
+    "base": "6956c887ed858c203def2b3cf3891df0e835d326",
+    "candidate": {
+      "bundle_digest": "0147f1a0ff7d740fd4f66847da906f6dd821833e5f1419b18e63d2bd07f74edc",
+      "candidate_id": "candidate-v1-1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434",
+      "manifest_digest": "708e8482fdf18f451cfefe242ea17e75c66f3b52792405c340568a35677a6753"
+    },
+    "head": "8364ae00ffbaa2dd88f3b4a73348c7fa857f9fbf",
+    "outgoing_current_id": "current-v2-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f",
+    "pr": 294,
+    "proposal_id": "proposal-issue293-installed-translategemma-alias",
+    "proposal_sha256": "88b2686e4ef67cc59a2e19c2c3f1a564906cc3fe651afd4537a2c8dcaab2c89d"
+  },
+  "result": {
+    "current_id": "current-v2-1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434",
+    "files": {
+      "state/candidate_protection_registry_v1.json": "eeb2fb6098a118f306362e4cf8c41fd5dbb7b8f778c59732c6f4ac34f9db8747",
+      "state/current_product_baseline_v2.json": "d4529c393fbeaa9e340cebb8c24b685e674422b68880d326244e2c2068af49a4",
+      "state/history/open_proposal_1b29ea21cb9dbab3_accepted_proposal_lite_v1.json": "88b2686e4ef67cc59a2e19c2c3f1a564906cc3fe651afd4537a2c8dcaab2c89d",
+      "state/history/open_proposal_1b29ea21cb9dbab3_outgoing_current_v2.json": "bdd2ea30b3102c59cd8e47bc56a0d53c6b57d3bfb0347e667663b1be951e52e2",
+      "state/history/open_proposal_1b29ea21cb9dbab3_outgoing_protection_registry_v1.json": "034b30bef6eab4988a1e8afcf9f703bb416b246cf78fe38e388b4fa5e31912cc",
+      "state/proposed_baseline_lite_v1.json": null
+    }
+  },
+  "schema_version": "1.0",
+  "semantics": {
+    "post": "CURRENT_PROTECTED_PROPOSAL_CONSUMED",
+    "pre": "OPEN_PROPOSAL_PROTECTED",
+    "retry": "EXACT_ALREADY_APPLIED_ONLY"
+  },
+  "transaction_id": "open-proposal-v1-8d2a65f6200574821352d0750514723b3dcc334f958336801e60b09d284b370c"
+}

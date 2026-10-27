@@ -1,0 +1,31 @@
+{
+  "at": "2026-10-26T21:36:10.131260+00:00",
+  "deletions": 0,
+  "failed_candidate_not_published": true,
+  "own_dead_lease_recovery_deferred_to_standard_admission": {
+    "catalog_manually_modified": false,
+    "owner_live": false,
+    "record": {
+      "archive_root": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive",
+      "copies": 1,
+      "expected_bytes": 2516582400,
+      "owner_uid": 501,
+      "pid": 64438,
+      "process_group": 64438,
+      "start_token": "Tue Oct 27 00:25:47 2026",
+      "volume_reservation_id": "af6d28e437514d2282b6ef1dbe9b66bc",
+      "workspace": "/private/tmp/integra-owned-issue293-retained-candidate-ngbhryzi"
+    },
+    "token": "5fa52ba676964f8dbf566d404e0b61d4",
+    "workspace_exists": false
+  },
+  "owner_session_delta": "only reviewed helper pin; precompile equality check unchanged",
+  "owner_session_new_sha256": "67ae3e5ecac143939ce7803b67e5eede2299fee7feef827a9f2b2c57e5239f06",
+  "owner_session_old_sha256": "19d64b92c97f68505468fe21d09a5259e8a831466f538d3d694792d85ed55433",
+  "preserved_failed_attempt": "/Users/yurielokhin/Documents/ChatGPT/Integra/translation-owner-candidate-attempt01-failed-native-title",
+  "reason": "external assertion expected incomplete title; app source unchanged; actual first marker not preserved and never claimed PASS",
+  "review": "independent-native-marker-repair-review.json",
+  "reviewed_runner_sha256": "a73228bdf5690a79f0af7dfb8711befa9d88aefbcd96766441a7c676d4760010",
+  "scope": "one diagnosed manual engineering retry; no automatic loop",
+  "source_A": "c89a10432733c4540504c469d483f3544f45d048"
+}

@@ -1,0 +1,85 @@
+{
+  "completed_at" : "2026-10-26T21:39:39Z",
+  "completed_sources" : 1,
+  "created_at" : "2026-10-26T21:39:37Z",
+  "current_stage" : null,
+  "plan" : {
+    "plan_id" : "urn:integra:plan:dfbec298951df101f8de693b46302e62d99184fcd5fc9e397f81975cd3441458",
+    "schema_version" : "1.0",
+    "selected_outputs" : [
+      "audio_analysis",
+      "speed_video"
+    ],
+    "source_plans" : [
+      {
+        "display_name" : "synthetic.mp4",
+        "outputs" : [
+          "audio_analysis",
+          "speed_video"
+        ],
+        "source_id" : "urn:integra:source:ee865a4d-06e2-5527-8541-e2779ca6c9b2",
+        "source_type" : "LOCAL_VIDEO"
+      }
+    ],
+    "sources" : [
+      {
+        "display_name" : "synthetic.mp4",
+        "input" : "\/private\/tmp\/integra-owned-issue293-retained-candidate-uk4thyfa\/native-workflow\/synthetic.mp4",
+        "kind" : "MEDIA",
+        "properties" : {
+          "content_sha256" : "98ad9e2e170fdc0ee839c2cf5b7546e817e102acd9c4fb93f93a689e1fd2b07a",
+          "media_kind" : "VIDEO"
+        },
+        "source_id" : "urn:integra:source:ee865a4d-06e2-5527-8541-e2779ca6c9b2",
+        "source_type" : "LOCAL_VIDEO"
+      }
+    ],
+    "stages" : [
+      {
+        "id" : "media_preparation",
+        "technical" : true,
+        "title" : "Подготовка медиа"
+      },
+      {
+        "id" : "audio_analysis",
+        "technical" : false,
+        "title" : "Анализ громкости, шума и пауз"
+      },
+      {
+        "id" : "speed_video",
+        "technical" : false,
+        "title" : "Видео со скоростью 1,25×"
+      }
+    ],
+    "state" : "READY_TO_EXECUTE"
+  },
+  "recognition" : {
+    "requested_mode" : "normal"
+  },
+  "run_id" : "urn:integra:run:17657a6f-299a-4b48-b21e-2edf801e5c13",
+  "schema_version" : "1.0",
+  "source_results" : [
+    {
+      "display_name" : "synthetic.mp4",
+      "job_id" : "urn:integra:job:3fc8268c-fdb3-4cc1-ac33-d70f9730bb06",
+      "outputs" : {
+        "audio_analysis" : "\/private\/tmp\/integra-owned-issue293-retained-candidate-uk4thyfa\/native-workflow\/app-data\/projects\/ff927e0c-e1b4-4fc9-8f05-b41cc58f1763\/artifacts\/3fc8268c-fdb3-4cc1-ac33-d70f9730bb06\/8e67dbc39e8c451884103dea7996d6ff_audio_analysis.json",
+        "audio_analysis_record" : "\/private\/tmp\/integra-owned-issue293-retained-candidate-uk4thyfa\/native-workflow\/app-data\/projects\/ff927e0c-e1b4-4fc9-8f05-b41cc58f1763\/artifacts\/3fc8268c-fdb3-4cc1-ac33-d70f9730bb06\/audio_analysis_provenance.json",
+        "speed_video" : "\/private\/tmp\/integra-owned-issue293-retained-candidate-uk4thyfa\/native-workflow\/app-data\/projects\/ff927e0c-e1b4-4fc9-8f05-b41cc58f1763\/artifacts\/3fc8268c-fdb3-4cc1-ac33-d70f9730bb06\/bec64255a8c34ee3b395f5d53f946b71_speed_1_25.mp4",
+        "speed_video_record" : "\/private\/tmp\/integra-owned-issue293-retained-candidate-uk4thyfa\/native-workflow\/app-data\/projects\/ff927e0c-e1b4-4fc9-8f05-b41cc58f1763\/artifacts\/3fc8268c-fdb3-4cc1-ac33-d70f9730bb06\/speed_video_provenance.json"
+      },
+      "source_id" : "urn:integra:source:ee865a4d-06e2-5527-8541-e2779ca6c9b2",
+      "source_speech_language" : "ru",
+      "state" : "COMPLETED",
+      "topic_detail" : "auto"
+    }
+  ],
+  "source_speech_language" : "ru",
+  "started_at" : "2026-10-26T21:39:37Z",
+  "state" : "COMPLETED",
+  "topic_detail" : {
+    "requested" : "auto"
+  },
+  "total_sources" : 1,
+  "worker_pid" : 68504
+}

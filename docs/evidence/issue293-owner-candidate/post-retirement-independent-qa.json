@@ -1,0 +1,205 @@
+{
+  "all_seven_survivor_audit_rows_exactly_unchanged": true,
+  "archive_allocated_bytes_after": 15958773760,
+  "archive_allocated_bytes_before": 18239504384,
+  "artifact_type": "integra.independent_post_exact_retirement_qa",
+  "audit_command": "PYTHONDONTWRITEBYTECODE=1 /opt/homebrew/opt/python@3.14/bin/python3.14 scripts/candidate_protection_audit.py",
+  "audit_exit_status": 0,
+  "audit_script_sha256": "e77dc656884f610ad9e5157133a70cb094ffedfd45a4b651e11d6c354a80d41a",
+  "audit_sha256": "18b01be3a549a1480d24c4e56307f3b92423ba199e83fff64f42b2eeea782cf1",
+  "authority_state": "COMPLETE",
+  "blockers": [],
+  "canonical_main": "1872a57b9f9cce1f28d6519ef03637df24bad3b0",
+  "catalog_after_actual_raw_sha256": "5dfb9919ff877caae7a42315212a9e1d3d84b3c8391d9acbd5c8a95e3b97d9ea",
+  "catalog_artifact_records_after": 5,
+  "catalog_artifact_records_before": 6,
+  "catalog_before_raw_sha256_reconstructed": "d3e093da9b7388ef9eba85e2af3d22afd4077c8d896c93bf0f94944950579802",
+  "catalog_live_equals_saved_after": true,
+  "catalog_other_artifacts_unchanged_vs_original_and_immediate_before": true,
+  "catalog_other_root_fields_unchanged": true,
+  "catalog_prior_retirement_history_unchanged": true,
+  "current_sha256": "bdd2ea30b3102c59cd8e47bc56a0d53c6b57d3bfb0347e667663b1be951e52e2",
+  "governance_rules_sha256": "8b8e31c7620d45e1e14429e07e7b97b2adc118745ce781a55b932213c55b646b",
+  "historical_limitations": "Unchanged preexisting UNKNOWN ownership and integrity-unverified073396/topic-translation states remain; this review does not assert seven fully verified archives. Protected verified survivor count remains4; total integrity_verified remains5 after removal of721d.",
+  "input_evidence": [
+    {
+      "path": "/Users/yurielokhin/Documents/ChatGPT/Integra/translation-721d-execution/protection-before.json",
+      "sha256": "102804de9f0c1c16d4c421604bb896b6358dbfa291bc2e35ddafc6cc65f42e8b"
+    },
+    {
+      "path": "/Users/yurielokhin/Documents/ChatGPT/Integra/translation-721d-execution/preservation-before.json",
+      "sha256": "3caa243be3b1a915165979ef54e961ebb328c6279034215aa95dc557e45d99ce"
+    },
+    {
+      "path": "/Users/yurielokhin/Documents/ChatGPT/Integra/translation-721d-execution/installed-before.json",
+      "sha256": "f34bc9ba0f793e116f97c71dc184cd5a07207c7ff05b12c0322ae55662b477e5"
+    },
+    {
+      "path": "/Users/yurielokhin/Documents/ChatGPT/Integra/translation-721d-execution/final-preservation-proof.json",
+      "sha256": "2d70cf86e6a949711b521536b9a1120e2af552636e0c2d8e6e8490a041bd4158"
+    },
+    {
+      "path": "/Users/yurielokhin/Documents/ChatGPT/Integra/translation-721d-execution/retirement-attempt-02/exact-retirement-proof.json",
+      "sha256": "8396351de31e6c03ec4735767c01d0bedf7d0dcc29380be69a1a4098b0015e3e"
+    },
+    {
+      "path": "/Users/yurielokhin/Documents/ChatGPT/Integra/translation-721d-execution/retirement-attempt-02/exact-retirement-receipt.json",
+      "sha256": "ae685e7ec1cec2be465994028eb622c9e9e6ca74a8c172ff83cbda89bca5841a"
+    },
+    {
+      "path": "/Users/yurielokhin/Documents/ChatGPT/Integra/translation-721d-execution/retirement-attempt-02/catalog-immediately-before-retirement.json",
+      "sha256": "0d362c4fd3d70accff8a60f7ea6d487062b275724eefcfca07690b0d9a60d1bc"
+    },
+    {
+      "path": "/Users/yurielokhin/Documents/ChatGPT/Integra/translation-721d-execution/retirement-attempt-02/catalog-after-retirement.json",
+      "sha256": "ddb6e10452f83379739d144e2b09d727468109e5151f7f0792d8217a284d91ba"
+    }
+  ],
+  "installed_critical_files": [
+    {
+      "inode": 28488174,
+      "mtime_ns": 1789335170458121604,
+      "path": "/Users/yurielokhin/Applications/Integra-READY_APP_V1/Integra.app/Contents/Resources/bridge.py",
+      "sha256": "f83a5e9c82a4be43e170a054c51427b794eb0d2f3e76fbfc7c72bc6db011a806",
+      "size": 38755,
+      "unchanged": true
+    },
+    {
+      "inode": 28520990,
+      "mtime_ns": 1789313198000000000,
+      "path": "/Users/yurielokhin/Applications/Integra-READY_APP_V1/Integra.app/Contents/Resources/integra_core/videotext_runtime.py",
+      "sha256": "2d2708bcc3052d1a1f088db2e77cd5d6c6885376917242fc2de33616db60b844",
+      "size": 1921,
+      "unchanged": true
+    }
+  ],
+  "k1_k2_state_and_protections_unchanged": true,
+  "live_build_leases": 0,
+  "material_findings": [],
+  "model_inventory_unchanged": true,
+  "model_registration_count": 11,
+  "models": {
+    "benchmark/gemma-4-12b-it-q4km:phase2": "9fcb83aff2407aedbd129fa1f735266ed2bec7630719308fc2f0e9a01cb311c4",
+    "benchmark/qwen2.5-coder-7b-q5km:phase2": "44822eea49b709531562d23c8af9dfc91115e883685c8cc192cf27b51a812059",
+    "benchmark/revalidation-qwen35-abliterated:q4km": "7eb4a850ac7b327e6a970a0d3ecaf18538ee4f9e4199e0fd373de2045a33e701",
+    "benchmark/revalidation-qwen35-stock-text:q4km": "ddea16afe16ac5cd402c56ed3e7dcc0d9b250ff355e8913b3957f8ae80e4ed8b",
+    "bge-m3:latest": "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab",
+    "embeddinggemma:latest": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+    "gemma3:4b": "a2af6cc3eb7fa8be8504abaf9b04e88f17a119ec3f04a3addf55f92841195f5a",
+    "hf.co/HauhauCS/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive:Q4_K_M": "e147e30d920477f2ec508e7213b3ebf3a0f42a01db018c5ee64d4029e0eeb7d2",
+    "hf.co/unsloth/Qwen3.5-9B-GGUF:Q4_K_M": "0c8756d182362a618011b3c184b853909f9a4cac31f0eaf27700dbf1b345d5ca",
+    "qwen3:8b": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+    "translategemma:4b": "c49d986b0764f5881c476eb21435bb62b7abc62347aab3d4a6071e811be510a1"
+  },
+  "new_receipt_physical_available": false,
+  "new_receipt_state": "RETIRED_NOT_AVAILABLE",
+  "next_gate": "Parent may continue authorized fresh build admission; this PASS does not grant publication/promotion, model retirement or Owner acceptance.",
+  "observed_at": "2026-10-26T21:25:23.613612+00:00",
+  "only_original_state_hash_change": {
+    "path": "state/candidate_protection_registry_v1.json",
+    "reason": "previously authorized exact721d protection/withdrawal registration; not changed by retirement"
+  },
+  "original_state_files_total": 84,
+  "original_state_files_unchanged": 83,
+  "ownership_after_receipt_sha256": "7bedf61cb0f6875be19e32b1f6515b68eeeaa2902e66a1950b075e32488f4666",
+  "ownership_before_receipt_sha256": "98df8c60953294c7a5da6dcd9e21f676916cbac82e54a5481ecbff729c5a25a2",
+  "ownership_recovery_journal_unchanged": true,
+  "pending_deletion_journals": 0,
+  "physical_full_copies_after": 7,
+  "physical_full_copies_before": 8,
+  "promotion_blockers": [],
+  "protected_identities_unchanged": true,
+  "qa_mutations": "External QA output files only; no source/catalog/archive/model/app mutations and no inference.",
+  "remaining_copy_slots": 1,
+  "removed_allocated_bytes": 2280730624,
+  "retention_max_full_copies": 8,
+  "schema_version": "1.0",
+  "serialization_note": "Saved catalog snapshots are pretty JSON. Raw proof hashes bind supported json.dumps(sort_keys=True) serialization; reconstruction matches both. Actual after raw file hash matches proof.",
+  "sole_new_retirement_transaction": "retirement-v1-0055fb6169914c8cbd85f50636d54de7",
+  "survivors": [
+    {
+      "allocated_bytes": 2281103360,
+      "bundle_digest": "c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
+      "candidate_id": "candidate-v1-073396d37f3f70fe2a550a481cbacdb645204a188d8b4a6c1ad18cdfac77e4a8",
+      "classification": "UNKNOWN",
+      "integrity_verified": false,
+      "manifest_digest": "aa08d2ea861c218c893c287e189bf96beb3096f555913b9d3c7b391e6e5061f4",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-073396d37f3f70fe2a550a481cbacdb645204a188d8b4a6c1ad18cdfac77e4a8/c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
+      "publisher_owned": false,
+      "verified_protected_archive": false
+    },
+    {
+      "allocated_bytes": 2280759296,
+      "bundle_digest": "c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
+      "candidate_id": "candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81",
+      "classification": "PROTECTED",
+      "integrity_verified": true,
+      "manifest_digest": "faf503cf088cbf0d9b7ea005cf7d5523bcf36bf575759377450993262cc5bdf5",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81/c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
+      "publisher_owned": false,
+      "verified_protected_archive": true
+    },
+    {
+      "allocated_bytes": 2280861696,
+      "bundle_digest": "e3215a28c9ce0a1a54c35dc535bad42a9334cae7ddc5eb3b0533a480e0296d95",
+      "candidate_id": "candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f",
+      "classification": "PROTECTED",
+      "integrity_verified": true,
+      "manifest_digest": "aa581c025edfc09cb7e2c59bf7d1ee98c78a5c17bc3d670e33b0fa351ce6b3e6",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f/e3215a28c9ce0a1a54c35dc535bad42a9334cae7ddc5eb3b0533a480e0296d95",
+      "publisher_owned": false,
+      "verified_protected_archive": true
+    },
+    {
+      "allocated_bytes": 2280747008,
+      "bundle_digest": "74ad6e346aff04b08b1962b8643e1c9da368632e311d8566a932f608674fbed0",
+      "candidate_id": "candidate-v1-97be0af4389d8696154ab1e897425d3f660573673369f391e3287b9f9418d38a",
+      "classification": "UNKNOWN",
+      "integrity_verified": true,
+      "manifest_digest": "3e2f8985dbff081d2e17950c564c120c5151951e4cb2faaa6b6d2f330109bf98",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-97be0af4389d8696154ab1e897425d3f660573673369f391e3287b9f9418d38a/74ad6e346aff04b08b1962b8643e1c9da368632e311d8566a932f608674fbed0",
+      "publisher_owned": false,
+      "verified_protected_archive": false
+    },
+    {
+      "allocated_bytes": 2281312256,
+      "bundle_digest": "1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+      "candidate_id": "candidate-v1-e8064cba8acad3282d86b9d7eea043f85c5eed54ac7db015ccdf089943dee943",
+      "classification": "PROTECTED",
+      "integrity_verified": true,
+      "manifest_digest": "25255077dfd65185268ba152c50a1a5ba66d1a425ff9bcab342263f6fbb2c58e",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-e8064cba8acad3282d86b9d7eea043f85c5eed54ac7db015ccdf089943dee943/1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+      "publisher_owned": false,
+      "verified_protected_archive": true
+    },
+    {
+      "allocated_bytes": 2273267712,
+      "bundle_digest": "ab53369d4d46fc8a4dece0b8e0f777f5017731b2256ff34ecb27738a849d8c94",
+      "candidate_id": "candidate-v1-14b3c10e4d779ff8b5a520bf15e2b7087673aec2cd0abd25aac4e1d0ded77892",
+      "classification": "PROTECTED",
+      "integrity_verified": false,
+      "manifest_digest": "55eb3562826006ca90be7f698877bfd709882eabe6605e1b12431b3f3cc791fb",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Candidate Builds/topic-translation-47be46d",
+      "publisher_owned": false,
+      "verified_protected_archive": false
+    },
+    {
+      "allocated_bytes": 2280722432,
+      "bundle_digest": "fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
+      "candidate_id": "candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29",
+      "classification": "PROTECTED",
+      "integrity_verified": true,
+      "manifest_digest": "667539142be8f7909dc56acb60be1e1fa30c05c6cec44ab931f32fcc8dd36c39",
+      "path": "/Users/yurielokhin/Library/Application Support/Integra/Validation/integra-212-native-35e6f9101278/candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29/fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
+      "publisher_owned": false,
+      "verified_protected_archive": true
+    }
+  ],
+  "target_identity": {
+    "bundle_digest": "f7c053a536e1c415adcc2e32b2f5a52248edfea17afaebc6cbca6c716d65cfa9",
+    "candidate_id": "candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5",
+    "manifest_digest": "241b9ae31d16d28d3ba7d174f0776f31fb148bb4c52df2a6545c94e2c0130282"
+  },
+  "target_physically_absent": true,
+  "verdict": "PASS"
+}

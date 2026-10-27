@@ -74,7 +74,7 @@ class ProcessTranslationTests(unittest.TestCase):
         self.assertEqual(record["requested_target_language"], "en")
         self.assertEqual(record["executed_target_language"], "en")
         self.assertEqual(record["target_language"], "en")
-        self.assertEqual(record["runtime"]["commit_sha"], "pinned")
+        self.assertEqual(record["runtime"], self._runtime())
         self.assertEqual(record["output_sha256"], hashlib.sha256(Path(outputs["translation"]).read_bytes()).hexdigest())
         reopened = json.loads((self.project / "jobs.json").read_bytes())["jobs"][0]
         self.assertEqual(reopened["outputs"]["translation_txt"], outputs["translation_txt"])

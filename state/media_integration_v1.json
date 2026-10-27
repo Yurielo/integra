@@ -38,7 +38,7 @@
     },
     {
       "path": "integra_core/translategemma_runtime.py",
-      "sha256": "339cb8dabc323740d4b99f1a8646297b75863cf004f59a112712f7fb486c17c3"
+      "sha256": "325f62a7f0fc959dfcde7796cf71ed297e3e584aadb17faea2b1e569b417fb1b"
     },
     {
       "path": "schemas/media_capability_report_v1.schema.json",

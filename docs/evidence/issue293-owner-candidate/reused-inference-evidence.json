@@ -1,0 +1,116 @@
+{
+  "critical_source_and_packaged_bytes_identical": true,
+  "fresh_inference_performed": false,
+  "mode": "REUSED_ORIGINAL_REAL_INFERENCE_EVIDENCE_NO_NEW_INFERENCE",
+  "new_bundle_bytes_identical": true,
+  "original_bundle_digest": "0147f1a0ff7d740fd4f66847da906f6dd821833e5f1419b18e63d2bd07f74edc",
+  "original_candidate_id": "candidate-v1-aa93af7487c682f4ccbb55848ee6c48aaf1cc88fde9a724d4b8e3bb5cdd5176c",
+  "original_evidence_hashes": {
+    "disposable-native-evidence.json": "20bd673176459e2c6004e2097edc5849a37fa74ebd6d6cf7af161d96b8f2969f",
+    "disposable-native-manifest-original-bytes.json": "b901050db871bc5591cc4e5c1a363f586443032b7cbe4c5cb302b3034d48afa9",
+    "disposable-packaged-translation.json": "1ce8d0a1b711d29a13ef00516d64b271ddaf787a07625a2e1d0e759f50e8bdea"
+  },
+  "original_manifest_digest": "b901050db871bc5591cc4e5c1a363f586443032b7cbe4c5cb302b3034d48afa9",
+  "original_source": "f1d7499dbbcb07fba1272d9737fb4ecc9ae7e328",
+  "original_translation_result": {
+    "bundled_module": "/private/tmp/integra-owned-issue293-disposable-native-aqrmfzr9/candidate/Integra.app/Contents/Resources/integra_core/translategemma_runtime.py",
+    "cases": [
+      {
+        "elapsed_seconds": 4.427,
+        "ids_times_preserved": true,
+        "output_sha256": "9330271b6f967e245818b518394425f9a4b487cacbf81d8285434c525f52fced",
+        "result": {
+          "capability": "translation",
+          "component": "integra.translation",
+          "cues": [
+            {
+              "end_seconds": 4.0,
+              "id": 3,
+              "start_seconds": 1.25,
+              "text": "Welcome to the seminar."
+            },
+            {
+              "end_seconds": 8.0,
+              "id": 8,
+              "start_seconds": 4.1,
+              "text": "Today, we have 12 participants."
+            }
+          ],
+          "issues": [],
+          "model": "translategemma:4b-it-q4_K_M",
+          "model_id": "c49d986b0764f5881c476eb21435bb62b7abc62347aab3d4a6071e811be510a1",
+          "provider": "ollama",
+          "request_model": "translategemma:4b",
+          "runtime_identity_sha256": "987f883e29beb176606c5d0d0ef9e749080a5dedb26104a60d570b03295585a0",
+          "schema_version": "1.0",
+          "semantic_status": "MACHINE_TRANSLATION_REVIEW_REQUIRED",
+          "source_language": "ru",
+          "target_language": "en",
+          "template_version": "translategemma-ollama-v1"
+        },
+        "source_language": "ru",
+        "source_sha256": "aaa61f05e11339b071afe4715bfe2c1192e41e02dbaffa234ceb5301ff651319",
+        "source_unchanged": true,
+        "target_language": "en"
+      },
+      {
+        "elapsed_seconds": 3.641,
+        "ids_times_preserved": true,
+        "output_sha256": "36cc574aae7e2216281726e8f493bbe198ca6b423ebef8aae156abea863095be",
+        "result": {
+          "capability": "translation",
+          "component": "integra.translation",
+          "cues": [
+            {
+              "end_seconds": 4.0,
+              "id": 3,
+              "start_seconds": 1.25,
+              "text": "Добро пожаловать на семинар."
+            },
+            {
+              "end_seconds": 8.0,
+              "id": 8,
+              "start_seconds": 4.1,
+              "text": "Сегодня в нашем мероприятии участвуют 12 человек."
+            }
+          ],
+          "issues": [],
+          "model": "translategemma:4b-it-q4_K_M",
+          "model_id": "c49d986b0764f5881c476eb21435bb62b7abc62347aab3d4a6071e811be510a1",
+          "provider": "ollama",
+          "request_model": "translategemma:4b",
+          "runtime_identity_sha256": "987f883e29beb176606c5d0d0ef9e749080a5dedb26104a60d570b03295585a0",
+          "schema_version": "1.0",
+          "semantic_status": "MACHINE_TRANSLATION_REVIEW_REQUIRED",
+          "source_language": "en",
+          "target_language": "ru",
+          "template_version": "translategemma-ollama-v1"
+        },
+        "source_language": "en",
+        "source_sha256": "5818b37b75ae13484debf0b1afac360b36a94fa5f1ed674b4bc7d101457df1d3",
+        "source_unchanged": true,
+        "target_language": "ru"
+      }
+    ],
+    "runtime": {
+      "component": "integra.translation",
+      "endpoint": "http://127.0.0.1:11434/api/chat",
+      "model": "translategemma:4b-it-q4_K_M",
+      "model_family": "translategemma",
+      "model_id": "c49d986b0764f5881c476eb21435bb62b7abc62347aab3d4a6071e811be510a1",
+      "ollama": "/Applications/Ollama.app/Contents/Resources/ollama",
+      "ollama_sha256": "653dac8da3e2bc1a8e981ee9bd95d21456ae41a16f27f8c8140baec23045bc27",
+      "ollama_version": "ollama version is 0.40.11",
+      "provider": "ollama",
+      "request_model": "translategemma:4b",
+      "runtime_identity_sha256": "987f883e29beb176606c5d0d0ef9e749080a5dedb26104a60d570b03295585a0",
+      "state": "READY",
+      "template_version": "translategemma-ollama-v1",
+      "weights_sha256": "bdbf939b402e2f88fbe3e918beb777813009335756b4c17be7fe008dfe4815d4"
+    },
+    "semantic_acceptance": false,
+    "status": "PASS"
+  },
+  "runtime_identity_identical": true,
+  "semantic_acceptance": false
+}

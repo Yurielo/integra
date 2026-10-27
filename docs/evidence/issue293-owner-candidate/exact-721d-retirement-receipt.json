@@ -1,0 +1,216 @@
+{
+  "acceptance_refs": [],
+  "artifact_type": "integra.candidate_physical_retirement",
+  "bundle_digest": "f7c053a536e1c415adcc2e32b2f5a52248edfea17afaebc6cbca6c716d65cfa9",
+  "candidate_id": "candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5",
+  "canonical_snapshot": {
+    "canonical_sha256": "7c9c3456eb16883aadb723750b9ec9f2136479978f5ec8a35f73c2b957b3898b",
+    "grant": {
+      "authority_ref": "https://github.com/Yurielo/integra/issues/293#issuecomment-6423470249",
+      "bundle_digest": "f7c053a536e1c415adcc2e32b2f5a52248edfea17afaebc6cbca6c716d65cfa9",
+      "candidate_id": "candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5",
+      "lifecycle": "WITHDRAWN_SUPERSEDED",
+      "manifest_digest": "241b9ae31d16d28d3ba7d174f0776f31fb148bb4c52df2a6545c94e2c0130282",
+      "path": "Build Archive/candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5/f7c053a536e1c415adcc2e32b2f5a52248edfea17afaebc6cbca6c716d65cfa9",
+      "reason": "SUPERSEDED_UNACCEPTED_PRE_MIGRATION_SNAPSHOT_EXACT_OWNER_AUTHORIZED_PR294_RELEASE_SLOT",
+      "scope": "EXACT_721D_OWNER_AUTHORIZED_PR294_RELEASE_SLOT"
+    },
+    "identity": {
+      "bundle_digest": "f7c053a536e1c415adcc2e32b2f5a52248edfea17afaebc6cbca6c716d65cfa9",
+      "candidate_id": "candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5",
+      "manifest_digest": "241b9ae31d16d28d3ba7d174f0776f31fb148bb4c52df2a6545c94e2c0130282"
+    },
+    "path": "Build Archive/candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5/f7c053a536e1c415adcc2e32b2f5a52248edfea17afaebc6cbca6c716d65cfa9",
+    "registry_sha256": "86dacd7dfdb8cfcdaf85d70e547eb9f62448db8921cc4c228e6c81cca440ae9b",
+    "survivors": {
+      "candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81": {
+        "path": "Build Archive/candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81/c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
+        "receipt_sha256": "b142923164ef21efa627dc149cf69a03679597392b6c17ef577451d874a4522b"
+      },
+      "candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f": {
+        "path": "Build Archive/candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f/e3215a28c9ce0a1a54c35dc535bad42a9334cae7ddc5eb3b0533a480e0296d95",
+        "receipt_sha256": "98cf5192209ef5c98c732933e9bc919e07b40ddb11c26df3aa883b450059dd46"
+      },
+      "candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29": {
+        "path": "Validation/integra-212-native-35e6f9101278/candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29/fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
+        "receipt_sha256": "b4fc48b8e1a794f6d9a76d2960aa7ba844f8ed03079b9126b64ceca969e29f4a"
+      },
+      "candidate-v1-e8064cba8acad3282d86b9d7eea043f85c5eed54ac7db015ccdf089943dee943": {
+        "path": "Build Archive/candidate-v1-e8064cba8acad3282d86b9d7eea043f85c5eed54ac7db015ccdf089943dee943/1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+        "receipt_sha256": "2c2d9e862f679c757e7498b4522a355aa82eee790613bb986bef501c341f1481"
+      }
+    }
+  },
+  "complete_sha256": "9b6275c311cfa494a2ffd3c690fd470a346884bea3dbb64f39e8565e32b1f532",
+  "error": null,
+  "execution_result": "PASS",
+  "inventory_sha256": "9565606b8259ddb897c39512866e80903d82c9fbee184bdfb1c4b7490ebbfae5",
+  "lifecycle_before_retirement": "WITHDRAWN_SUPERSEDED",
+  "manifest_digest": "241b9ae31d16d28d3ba7d174f0776f31fb148bb4c52df2a6545c94e2c0130282",
+  "physical_available": false,
+  "policy_authority_ref": "https://github.com/Yurielo/integra/issues/293#issuecomment-6423470249",
+  "promotion_refs": [],
+  "proposal_refs": [],
+  "publisher_attestation": {
+    "bundle_digest": "f7c053a536e1c415adcc2e32b2f5a52248edfea17afaebc6cbca6c716d65cfa9",
+    "candidate_id": "candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5",
+    "complete_sha256": "9b6275c311cfa494a2ffd3c690fd470a346884bea3dbb64f39e8565e32b1f532",
+    "device": 16777232,
+    "disposition_ref": "https://github.com/Yurielo/integra/issues/293#issuecomment-6423470249",
+    "historical": false,
+    "inode": 45635682,
+    "inventory_sha256": "9565606b8259ddb897c39512866e80903d82c9fbee184bdfb1c4b7490ebbfae5",
+    "lifecycle_authority": "CANONICAL_EXACT_WITHDRAWAL_REPLAY",
+    "manifest_digest": "241b9ae31d16d28d3ba7d174f0776f31fb148bb4c52df2a6545c94e2c0130282",
+    "owner_uid": 501,
+    "publisher_completed": true,
+    "publisher_pid": 81774,
+    "publisher_run_id": "cfe2ea7820ff4c50a01a4e3c3c5fa15f",
+    "publisher_start_token": "Sat Oct  3 14:30:50 2026",
+    "status": "WITHDRAWN_SUPERSEDED",
+    "withdrawal_lifecycle_evidence": {
+      "authority_body_sha256": "5e8e233e8eaf3254dcd96dde6cdfc5b6fd65a9d9e5cc9a309254609a85f46873",
+      "authority_ref": "https://github.com/Yurielo/integra/issues/293#issuecomment-6423470249",
+      "bundle_digest": "f7c053a536e1c415adcc2e32b2f5a52248edfea17afaebc6cbca6c716d65cfa9",
+      "candidate_id": "candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5",
+      "history_path": "state/history/candidate_721d_withdrawal_v1.json",
+      "history_sha256": "eb24fa12cf0df0c63d6e11434d29b06333365a824760e656b29933cb02e91ea3",
+      "manifest_digest": "241b9ae31d16d28d3ba7d174f0776f31fb148bb4c52df2a6545c94e2c0130282",
+      "previous_status": "AWAITING_OWNER_ACCEPTANCE",
+      "reason": "SUPERSEDED_UNACCEPTED_PRE_MIGRATION_SNAPSHOT_EXACT_OWNER_AUTHORIZED_PR294_RELEASE_SLOT",
+      "resulting_status": "WITHDRAWN_SUPERSEDED"
+    }
+  },
+  "reason": "EXACT_CANDIDATE_SPECIFIC_DISPOSITION",
+  "retained_manifest": {
+    "build": {
+      "build_id": "local",
+      "timestamp": "2026-10-03T14:28:20+03:00"
+    },
+    "bundle": {
+      "digest": "f7c053a536e1c415adcc2e32b2f5a52248edfea17afaebc6cbca6c716d65cfa9",
+      "digest_algorithm": "sha256-tree-excluding-candidate-manifest"
+    },
+    "candidate_id": "candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5",
+    "identity": {
+      "build_command": {
+        "identity": "scripts/build_macos_app.sh",
+        "path": "scripts/build_macos_app.sh",
+        "script_sha256": "b905ba56beed4a8f5fdea5819d05de1bd1498634d235c6e0cbc321063e48e6b8"
+      },
+      "components": {
+        "booktext": {
+          "commit_sha": "46396649214275eb18054b670a842bace02d02e1",
+          "component": "booktext",
+          "entrypoint_sha256": "32ecbb3f9a46e0648f4f701a3935487d0be91799334b27128161a51a1f99f05f",
+          "personal_use_only": true,
+          "vision_sha256": "3b5a25577a58713cb4cb3a7e81d3883bdf822ce9df6ef0aa4b60d56186e92753"
+        },
+        "seminartext": {
+          "commit_sha": "13644d262776aacdf36221b9a9fc7ebd0a7c0737",
+          "component": "seminartext",
+          "entrypoint_sha256": "30d8c1bd6f5ca717391b168cba71228a030009feaec4eb443bb1e76dab230a6c",
+          "evidence_foundation_sha256": "6adcf15e9767c36ad2d0dfe3a6a995d90c41b5f1671b4c9434a4b48f590e3856",
+          "evidence_validator_sha256": "889e6cdf3dc2dd7504f76923c04e2d8d1eceabdb828d0c110ddc1059b107860e",
+          "personal_use_only": true
+        },
+        "videotext": {
+          "audio_adapter_sha256": "ab525fe985a0fa1af8ba9ccf6b94e78b0095b0a240f057e8e381116acbd3d9f6",
+          "commit_sha": "2e098d1705b6815628bee1e023f4742718eabf02",
+          "component": "videotext",
+          "media_adapters_sha256": "4c3d7fee2777291b297679b28b1727d8e54ed74e6d0172da58e83702570cdca5",
+          "personal_use_only": true,
+          "srt_service_sha256": "417017a6a3becc395e88e2554e8d7c2dca51b09de9743e8c5c0cf81ac9ba6205",
+          "translation_adapter_sha256": "83e55d3cb82522cb431ee20617510b0c39f79ae0fa5309daedf5c7ff9911a577",
+          "worker_sha256": "22ba7bbfd827a1f2937f3757070b74b2e5d4d1200ebea954c48c1eaac1162d28"
+        }
+      },
+      "execution": {
+        "gui_python": {
+          "architecture": "Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64e:Mach-O 64-bit executable arm64e]\n/usr/bin/python3 (for architecture x86_64):\tMach-O 64-bit executable x86_64\n/usr/bin/python3 (for architecture arm64e):\tMach-O 64-bit executable arm64e",
+          "path": "/usr/bin/python3",
+          "sha256": "179301dcb41ea78accc3fa0048a7e6f6710d891945a751a34addd622020c1818",
+          "version": "Python 3.9.6"
+        },
+        "host_architecture": "arm64",
+        "ollama": {
+          "executable": {
+            "architecture": "Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64]\n/Applications/Ollama.app/Contents/Resources/ollama (for architecture x86_64):\tMach-O 64-bit executable x86_64\n/Applications/Ollama.app/Contents/Resources/ollama (for architecture arm64):\tMach-O 64-bit executable arm64",
+            "path": "/Applications/Ollama.app/Contents/Resources/ollama",
+            "sha256": "bd835b935229256fc8c5fcd983bef69f5b6142d4fa4f5d8baa05e5e77fd13fbf",
+            "version": "ollama version is 0.33.1"
+          },
+          "resolution_order": [
+            "INTEGRA_OLLAMA",
+            "PATH:ollama",
+            "/opt/homebrew/bin/ollama",
+            "/usr/local/bin/ollama",
+            "/Applications/Ollama.app/Contents/Resources/ollama"
+          ],
+          "state": "RESOLVED",
+          "version_exit_status": 0,
+          "version_output": "ollama version is 0.33.1"
+        },
+        "word_alignment": {
+          "capability": "word_timeline",
+          "component": "seminartext",
+          "model_revision": "2329100508896c6d9b157019803ab5601e6f3406",
+          "personal_use_only": true,
+          "site_packages_tree_sha256": "26a30830995594b9d71b41c95d9c7eff27b9a8ad484022d08939b3ac8d13bc7d",
+          "weights_actual_sha256": "d1cdb1a7921de7d363f967a9b0101a713602e109dba62b6f3f9ae2e0b2df0c1c",
+          "weights_sha256": "d1cdb1a7921de7d363f967a9b0101a713602e109dba62b6f3f9ae2e0b2df0c1c"
+        },
+        "word_alignment_python": {
+          "architecture": "Mach-O 64-bit executable arm64",
+          "path": "/opt/homebrew/Cellar/python@3.13/3.13.15/Frameworks/Python.framework/Versions/3.13/bin/python3.13",
+          "sha256": "1988a0dd685f91bbaf20b5267046e13cb78859dbb3b5f030e89b448c1fbfe8d4",
+          "version": "Python 3.13.15"
+        },
+        "word_timeline_ffmpeg": {
+          "path": "/opt/homebrew/Cellar/ffmpeg-full/9.0.1/bin/ffmpeg",
+          "path_classification": {
+            "homebrew_directory": true,
+            "parent": "/opt/homebrew/Cellar/ffmpeg-full/9.0.1/bin",
+            "uses_inherited_path": false
+          },
+          "resolution_source": "standard:/opt/homebrew/opt/ffmpeg-full/bin",
+          "sha256": "58b8f5171449c6d3174173d84409a35682b1ab157e2e24b4023a8d8b329d7e3d",
+          "version": "ffmpeg version 9.0.1 Copyright (c) 2000-2026 the FFmpeg developers"
+        }
+      },
+      "source": {
+        "commit_sha": "87ed98ecc64dc64dc826bb55eabed1df5b08aea0",
+        "dirty": false,
+        "dirty_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tree_sha": "93ebbca8a3231db8893b6397b9e0eda54c5e2485"
+      }
+    },
+    "identity_sha256": "721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5",
+    "schema_version": "1.0"
+  },
+  "schema_version": "1.0",
+  "source": {
+    "commit_sha": "87ed98ecc64dc64dc826bb55eabed1df5b08aea0",
+    "dirty": false,
+    "dirty_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "tree_sha": "93ebbca8a3231db8893b6397b9e0eda54c5e2485"
+  },
+  "state": "RETIRED_NOT_AVAILABLE",
+  "timestamp": 1793048879.13755,
+  "transaction_id": "retirement-v1-0055fb6169914c8cbd85f50636d54de7",
+  "verification_evidence": {
+    "app_size_bytes": 2201635631,
+    "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5/f7c053a536e1c415adcc2e32b2f5a52248edfea17afaebc6cbca6c716d65cfa9",
+    "artifact_type": "integra.candidate_archive",
+    "bundle_digest": "f7c053a536e1c415adcc2e32b2f5a52248edfea17afaebc6cbca6c716d65cfa9",
+    "candidate_id": "candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5",
+    "file_count": 29608,
+    "inventory_sha256": "9565606b8259ddb897c39512866e80903d82c9fbee184bdfb1c4b7490ebbfae5",
+    "manifest_digest": "241b9ae31d16d28d3ba7d174f0776f31fb148bb4c52df2a6545c94e2c0130282",
+    "retained_size_bytes": 2201640146,
+    "runtime_validation": "NOT_PERFORMED",
+    "schema_version": "1.0",
+    "status": "COMPLETE",
+    "verification": "ARCHIVAL_BYTE_INTEGRITY"
+  }
+}

@@ -1,0 +1,189 @@
+{
+  "archive_publication": "PENDING_AT_EVIDENCE_CAPTURE",
+  "artifact_type": "integra.translation_alias_candidate_evidence",
+  "bundle_after_checks": "0147f1a0ff7d740fd4f66847da906f6dd821833e5f1419b18e63d2bd07f74edc",
+  "bundle_before_checks": "0147f1a0ff7d740fd4f66847da906f6dd821833e5f1419b18e63d2bd07f74edc",
+  "bundle_digest": "0147f1a0ff7d740fd4f66847da906f6dd821833e5f1419b18e63d2bd07f74edc",
+  "bundled_translation_preflight": "PASS",
+  "candidate_id": "candidate-v1-1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434",
+  "current_promotion_performed": false,
+  "expected_archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434/0147f1a0ff7d740fd4f66847da906f6dd821833e5f1419b18e63d2bd07f74edc",
+  "fresh_inference_performed": false,
+  "installed_app_files_unchanged": true,
+  "manifest_digest": "708e8482fdf18f451cfefe242ea17e75c66f3b52792405c340568a35677a6753",
+  "manifest_identity_sha256": "1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434",
+  "model_inventory_unchanged": true,
+  "native_artifacts": [
+    {
+      "path": "native-plan.png",
+      "sha256": "ed23b64a750f505244ff4f9f250346808c6ac142f6a8d2c56eb69b3d6f4fcca4",
+      "size": 286936
+    },
+    {
+      "path": "native-results.png",
+      "sha256": "c5358bb7c7da14411b8383b91ae63ff7a5297afbfb837a091f4a251bb591de43",
+      "size": 210819
+    },
+    {
+      "path": "native-native-run.json",
+      "sha256": "0dcc628fa6929f2d5d2541b7050f869d6599b5b953fe910a7f53831e4dd5454e",
+      "size": 3419
+    },
+    {
+      "path": "native-synthetic.mp4",
+      "sha256": "98ad9e2e170fdc0ee839c2cf5b7546e817e102acd9c4fb93f93a689e1fd2b07a",
+      "size": 88242
+    },
+    {
+      "path": "native-output-speed_video.mp4",
+      "sha256": "d04f237c37403edc37886801f077d40ac1864835deacf02961ad04cd2c105745",
+      "size": 110833
+    },
+    {
+      "path": "native-output-speed_video_record.json",
+      "sha256": "b7911ef436ae2a418f10ca6f31596f7f3775c70b463d440f66a0d5fa12ee9822",
+      "size": 4509
+    },
+    {
+      "path": "native-output-audio_analysis.json",
+      "sha256": "ec5606c6872e654b37b7dff3bd8165799b46a005dae56d19965eb4ab84d7be4c",
+      "size": 763
+    },
+    {
+      "path": "native-output-audio_analysis_record.json",
+      "sha256": "ede4dcf188098bb7b225926129e0bb937f6031a3fff8dc99c59c5fa6cb43832a",
+      "size": 1364
+    }
+  ],
+  "native_close": "PASS",
+  "native_self_test": "PASS",
+  "native_synthetic_media_workflow": "PASS",
+  "native_visible_launch": "PASS",
+  "owner_acceptance": null,
+  "owner_handoff_authorized": false,
+  "product_source": {
+    "commit_sha": "c89a10432733c4540504c469d483f3544f45d048",
+    "tree_sha": "27b08b0fdd3ad2dac9389ae2b932e885159634e1"
+  },
+  "protected_source_files_unchanged": true,
+  "reused_inference_evidence": {
+    "critical_source_and_packaged_bytes_identical": true,
+    "fresh_inference_performed": false,
+    "mode": "REUSED_ORIGINAL_REAL_INFERENCE_EVIDENCE_NO_NEW_INFERENCE",
+    "new_bundle_bytes_identical": true,
+    "original_bundle_digest": "0147f1a0ff7d740fd4f66847da906f6dd821833e5f1419b18e63d2bd07f74edc",
+    "original_candidate_id": "candidate-v1-aa93af7487c682f4ccbb55848ee6c48aaf1cc88fde9a724d4b8e3bb5cdd5176c",
+    "original_evidence_hashes": {
+      "disposable-native-evidence.json": "20bd673176459e2c6004e2097edc5849a37fa74ebd6d6cf7af161d96b8f2969f",
+      "disposable-native-manifest-original-bytes.json": "b901050db871bc5591cc4e5c1a363f586443032b7cbe4c5cb302b3034d48afa9",
+      "disposable-packaged-translation.json": "1ce8d0a1b711d29a13ef00516d64b271ddaf787a07625a2e1d0e759f50e8bdea"
+    },
+    "original_manifest_digest": "b901050db871bc5591cc4e5c1a363f586443032b7cbe4c5cb302b3034d48afa9",
+    "original_source": "f1d7499dbbcb07fba1272d9737fb4ecc9ae7e328",
+    "original_translation_result": {
+      "bundled_module": "/private/tmp/integra-owned-issue293-disposable-native-aqrmfzr9/candidate/Integra.app/Contents/Resources/integra_core/translategemma_runtime.py",
+      "cases": [
+        {
+          "elapsed_seconds": 4.427,
+          "ids_times_preserved": true,
+          "output_sha256": "9330271b6f967e245818b518394425f9a4b487cacbf81d8285434c525f52fced",
+          "result": {
+            "capability": "translation",
+            "component": "integra.translation",
+            "cues": [
+              {
+                "end_seconds": 4.0,
+                "id": 3,
+                "start_seconds": 1.25,
+                "text": "Welcome to the seminar."
+              },
+              {
+                "end_seconds": 8.0,
+                "id": 8,
+                "start_seconds": 4.1,
+                "text": "Today, we have 12 participants."
+              }
+            ],
+            "issues": [],
+            "model": "translategemma:4b-it-q4_K_M",
+            "model_id": "c49d986b0764f5881c476eb21435bb62b7abc62347aab3d4a6071e811be510a1",
+            "provider": "ollama",
+            "request_model": "translategemma:4b",
+            "runtime_identity_sha256": "987f883e29beb176606c5d0d0ef9e749080a5dedb26104a60d570b03295585a0",
+            "schema_version": "1.0",
+            "semantic_status": "MACHINE_TRANSLATION_REVIEW_REQUIRED",
+            "source_language": "ru",
+            "target_language": "en",
+            "template_version": "translategemma-ollama-v1"
+          },
+          "source_language": "ru",
+          "source_sha256": "aaa61f05e11339b071afe4715bfe2c1192e41e02dbaffa234ceb5301ff651319",
+          "source_unchanged": true,
+          "target_language": "en"
+        },
+        {
+          "elapsed_seconds": 3.641,
+          "ids_times_preserved": true,
+          "output_sha256": "36cc574aae7e2216281726e8f493bbe198ca6b423ebef8aae156abea863095be",
+          "result": {
+            "capability": "translation",
+            "component": "integra.translation",
+            "cues": [
+              {
+                "end_seconds": 4.0,
+                "id": 3,
+                "start_seconds": 1.25,
+                "text": "Добро пожаловать на семинар."
+              },
+              {
+                "end_seconds": 8.0,
+                "id": 8,
+                "start_seconds": 4.1,
+                "text": "Сегодня в нашем мероприятии участвуют 12 человек."
+              }
+            ],
+            "issues": [],
+            "model": "translategemma:4b-it-q4_K_M",
+            "model_id": "c49d986b0764f5881c476eb21435bb62b7abc62347aab3d4a6071e811be510a1",
+            "provider": "ollama",
+            "request_model": "translategemma:4b",
+            "runtime_identity_sha256": "987f883e29beb176606c5d0d0ef9e749080a5dedb26104a60d570b03295585a0",
+            "schema_version": "1.0",
+            "semantic_status": "MACHINE_TRANSLATION_REVIEW_REQUIRED",
+            "source_language": "en",
+            "target_language": "ru",
+            "template_version": "translategemma-ollama-v1"
+          },
+          "source_language": "en",
+          "source_sha256": "5818b37b75ae13484debf0b1afac360b36a94fa5f1ed674b4bc7d101457df1d3",
+          "source_unchanged": true,
+          "target_language": "ru"
+        }
+      ],
+      "runtime": {
+        "component": "integra.translation",
+        "endpoint": "http://127.0.0.1:11434/api/chat",
+        "model": "translategemma:4b-it-q4_K_M",
+        "model_family": "translategemma",
+        "model_id": "c49d986b0764f5881c476eb21435bb62b7abc62347aab3d4a6071e811be510a1",
+        "ollama": "/Applications/Ollama.app/Contents/Resources/ollama",
+        "ollama_sha256": "653dac8da3e2bc1a8e981ee9bd95d21456ae41a16f27f8c8140baec23045bc27",
+        "ollama_version": "ollama version is 0.40.11",
+        "provider": "ollama",
+        "request_model": "translategemma:4b",
+        "runtime_identity_sha256": "987f883e29beb176606c5d0d0ef9e749080a5dedb26104a60d570b03295585a0",
+        "state": "READY",
+        "template_version": "translategemma-ollama-v1",
+        "weights_sha256": "bdbf939b402e2f88fbe3e918beb777813009335756b4c17be7fe008dfe4815d4"
+      },
+      "semantic_acceptance": false,
+      "status": "PASS"
+    },
+    "runtime_identity_identical": true,
+    "semantic_acceptance": false
+  },
+  "schema_version": "1.0",
+  "source_equivalence_file": "source-and-package-equivalence.json",
+  "status": "VERIFIED_BEFORE_ARCHIVAL_PUBLICATION",
+  "verified_at": "2026-10-26T21:39:54.214477+00:00"
+}

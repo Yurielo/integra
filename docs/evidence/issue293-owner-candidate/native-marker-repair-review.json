@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.independent_native_marker_repair_review",
+  "role": "github-pr-reviewer",
+  "verdict": "PASS",
+  "material_findings_remaining": [],
+  "old_runner_sha256": "3e7cb4e96eea48b7e0f96d1daa9667f4d9c7fc607d91a7050db63c137de7835b",
+  "new_runner_sha256": "a73228bdf5690a79f0af7dfb8711befa9d88aefbcd96766441a7c676d4760010",
+  "complete_diff": "--- retained_candidate_runner.before-native-marker-fix.py\n+++ retained_candidate_runner.py\n@@ -346,14 +346,14 @@\n         launch_marker, close_marker = workspace / 'launch.txt', workspace / 'close.txt'\n         command([str(app / 'Contents/MacOS/Integra')], 'native-visible-launch',\n                 dict(environment, INTEGRA_LAUNCH_PROBE=str(launch_marker)), cwd=workspace, timeout=60)\n-        if safe_regular(launch_marker).decode().strip() != 'LAUNCHED visible=true workflow=source-first title=Integra':\n+        copy_small(launch_marker, 'native-launch-marker.txt')\n+        if safe_regular(launch_marker).decode().strip() != 'LAUNCHED visible=true workflow=source-first title=Integra — Новая обработка':\n             raise ValueError('native window visibility was not proved')\n-        copy_small(launch_marker, 'native-launch-marker.txt')\n         command([str(app / 'Contents/MacOS/Integra')], 'native-close',\n                 dict(environment, INTEGRA_CLOSE_PROBE=str(close_marker)), cwd=workspace, timeout=60)\n+        copy_small(close_marker, 'native-close-marker.txt')\n         if safe_regular(close_marker).decode().strip() != 'TERMINATED_AFTER_LAST_WINDOW_CLOSED':\n             raise ValueError('native close/termination was not proved')\n-        copy_small(close_marker, 'native-close-marker.txt')\n \n         bundled = dict(environment, PYTHONPATH=str(resources))\n         preflight = command(['/usr/bin/python3', '-B', '-c',\n",
+  "bounded_change": [
+    "Correct exact launch marker to immutable product window title Integra — Новая обработка.",
+    "Copy launch marker before assertion so negative diagnostics survive.",
+    "Copy close marker before assertion so negative diagnostics survive."
+  ],
+  "preserved_guards": [
+    "Exact cleanSourceA/build/bundle/source/package/runtime-equivalence checks unchanged.",
+    "False visibility, wrong title or close marker still fail exact comparisons.",
+    "Existing owned supervisor/admission/archive caps and publication/finalization gates unchanged.",
+    "Attempt collision guard and automatic_rebuild_retry=false unchanged.",
+    "No inference, Owner acceptance, CURRENT promotion, installation or source changes introduced."
+  ],
+  "evidence": {
+    "source_commit": "c89a10432733c4540504c469d483f3544f45d048",
+    "source_worktree_clean": true,
+    "source_title_location": "macos/IntegraApp.swift:381",
+    "source_marker_location": "macos/IntegraApp.swift:268",
+    "historical_marker_location": "docs/evidence/CANDIDATE_65BF72_RECOVERY_QA.json:68",
+    "first_attempt_failure": "translation-owner-candidate/failure.json; FAIL_CLOSED native window visibility was not proved",
+    "first_attempt_self_test": "PASS",
+    "source_package_equivalence": "PASS evidence inspected",
+    "supervisor_cleanup": "WORKSPACE_CLEANUP_COMPLETED; exact failed workspace absent",
+    "actual_first_launch_marker": "Not retained before old assertion; actual visibility is not retrospectively claimed PASS.",
+    "retained_archive_publication": "Parent reports none; reviewer did not rerun archive plan/hash."
+  },
+  "manual_retry_conditions": [
+    "Preserve entire failed attempt folder in a fresh no-replace evidence destination before using fixed OUTPUT again; do not remove attempt guard.",
+    "Require same cleanSourceA and fresh supported resource/admission/protection gates.",
+    "Run exactly one explicit corrected attempt under existing owned supervisor; no automatic loop.",
+    "All native and archive publication gates must pass before new retained-engineering success; Owner handoff remains false."
+  ],
+  "owner_session_pin_update": {
+    "path": "owner_test_session.py",
+    "field": "REVIEWED_HELPER_SHA256",
+    "from": "3e7cb4e96eea48b7e0f96d1daa9667f4d9c7fc607d91a7050db63c137de7835b",
+    "to": "a73228bdf5690a79f0af7dfb8711befa9d88aefbcd96766441a7c676d4760010",
+    "allowed_change": "Only this exact literal after review; retain equality-before-compile guard and all owner-session authority/finalization checks."
+  },
+  "reviewer_actions": {
+    "source_catalog_archive_models_mutated": false,
+    "build_app_or_inference_executed": false,
+    "tests_repeated": false,
+    "evidence_file_written": true
+  }
+}

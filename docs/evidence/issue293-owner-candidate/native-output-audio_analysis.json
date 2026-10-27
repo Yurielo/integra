@@ -1,0 +1,16 @@
+{
+  "analyzedAt" : 814743578.366131,
+  "duration" : 2,
+  "echoAssessment" : "not-assessed-without-benchmark",
+  "integratedLoudnessLUFS" : -21.79,
+  "maxVolumeDB" : -16.1,
+  "meanVolumeDB" : -21.1,
+  "schemaVersion" : 1,
+  "silenceDuration" : 0,
+  "sourceMediaPath" : "\/tmp\/integra-owned-issue293-retained-candidate-uk4thyfa\/native-workflow\/app-data\/projects\/ff927e0c-e1b4-4fc9-8f05-b41cc58f1763\/sources\/98ad9e2e170fdc0ee839c2cf5b7546e817e102acd9c4fb93f93a689e1fd2b07a\/original.mp4",
+  "stationaryNoiseEstimateDB" : -18.084616,
+  "truePeakDB" : -16.08,
+  "warnings" : [
+    "Эхо\/реверберация не оцениваются надёжно стандартными метриками FFmpeg; нужен контрольный benchmark."
+  ]
+}

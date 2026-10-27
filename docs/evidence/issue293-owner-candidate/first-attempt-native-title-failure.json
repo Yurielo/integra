@@ -1,0 +1,9 @@
+{
+  "at": "2026-10-26T21:29:03.299390+00:00",
+  "automatic_rebuild_retry": false,
+  "error": "native window visibility was not proved",
+  "error_type": "ValueError",
+  "owner_handoff_authorized": false,
+  "source_commit": "c89a10432733c4540504c469d483f3544f45d048",
+  "status": "FAIL_CLOSED"
+}
