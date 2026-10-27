@@ -97,7 +97,12 @@
     "journey": "Use the identical installed TranslateGemma registration through the accepted Integra adapter; preserve canonical artifacts, exact execution provenance, CURRENT/K1/K2 and independent source products.",
     "wp": "Issue 293 installed TranslateGemma alias compatibility"
   },
-  "owner_acceptance": null,
+  "owner_acceptance": {
+    "authority_ref": "Product Owner acceptance in Codex conversation 2026-10-27: candidate-v1-1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434 approved for TranslateGemma activation and installed Integra replacement; qwen3:8b deletion remains unapproved.",
+    "decision": "PILOT_ACCEPTED",
+    "promotion_authorized": false,
+    "scope": "Exact Issue 293 TranslateGemma candidate accepted for governed CURRENT promotion and reversible installed-app activation; preserve CURRENT, K1, K2, retained archives and all independent products."
+  },
   "proposal_id": "proposal-issue293-installed-translategemma-alias",
   "proposed_head": {
     "commit_sha": "989e15dfb2b5e20e4c628e4e44ac7baee63b1cc6",
