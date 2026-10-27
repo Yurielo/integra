@@ -133,7 +133,7 @@
       "path": "state/proposed_baseline_lite_v1.json",
       "pr": 294,
       "proposal_id": "proposal-issue293-installed-translategemma-alias",
-      "proposal_sha256": "dc146824b7218709ac18baf6f3251737949225b39d2a70dd8b42349ba4c49a7a"
+      "proposal_sha256": "88b2686e4ef67cc59a2e19c2c3f1a564906cc3fe651afd4537a2c8dcaab2c89d"
     }
   ],
   "recovery": null,
