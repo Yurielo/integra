@@ -38,9 +38,17 @@ class OpenProposalTransactionTests(unittest.TestCase):
         self.assertIn(CID_B, virtual["selected_survivors"])
         self.assertIn(CID_B, virtual["selected_survivors"][CID_B])
 
-    def test_04_duplicate_target_is_rejected(self):
+    def test_04_exact_registered_target_is_preserved(self):
+        self.registry["proposed"].append({"pr": 22, "path": tx.PROPOSAL,
+                                           "proposal_id": self.proposal["proposal_id"],
+                                           "proposal_sha256": tx.digest(self.proposal), **self.target})
+        virtual = tx._virtual_pre_registry(self.registry, self.proposal, 22, "6" * 40)
+        self.assertEqual(len([row for row in virtual["proposed"] if row["pr"] == 22]), 1)
+        self.assertEqual(virtual["proposed"][-1]["proposal_sha256"], tx.digest(self.proposal))
+
+    def test_04b_partial_registered_target_is_rejected(self):
         self.registry["proposed"].append({"pr": 22, "head_sha": "6" * 40, **self.target})
-        with self.assertRaisesRegex(ValueError, "already registered"):
+        with self.assertRaisesRegex(ValueError, "binding differs"):
             tx._virtual_pre_registry(self.registry, self.proposal, 22, "6" * 40)
 
     def test_05_authorization_requires_promotion_token(self):
