@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Integra Seminar Library read-only preview v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "artifact_type", "inputs", "projects", "sources", "artifacts", "diagnostics", "summary", "catalog_sha256"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "artifact_type": {"const": "integra.seminar_library_preview"},
+    "inputs": {"type": "array", "items": {"$ref": "#/$defs/input"}},
+    "projects": {"type": "array", "items": {"$ref": "#/$defs/project"}},
+    "sources": {"type": "array", "items": {"$ref": "#/$defs/source"}},
+    "artifacts": {"type": "array", "items": {"$ref": "#/$defs/artifact"}},
+    "diagnostics": {"type": "array", "items": {"type": "string"}},
+    "summary": {"type": "object", "additionalProperties": false, "required": ["project_count", "source_count", "artifact_count", "owner_products", "missing_sources", "unsupported_manifests", "unresolved_identities", "excluded_projects", "duplicate_candidate_references", "incomplete_metadata"], "properties": {"project_count": {"type": "integer"}, "source_count": {"type": "integer"}, "artifact_count": {"type": "integer"}, "owner_products": {"type": "array", "items": {"type": "string"}}, "missing_sources": {"type": "integer"}, "unsupported_manifests": {"type": "integer"}, "unresolved_identities": {"type": "integer"}, "excluded_projects": {"type": "integer"}, "duplicate_candidate_references": {"type": "integer"}, "incomplete_metadata": {"type": "integer"}}},
+    "catalog_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  },
+  "$defs": {
+    "input": {"type": "object", "additionalProperties": false, "required": ["owner", "manifest", "sha256"], "properties": {"owner": {"type": "string"}, "manifest": {"type": "string"}, "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}},
+    "project": {"type": "object", "additionalProperties": false, "required": ["key", "owner", "native_id", "seminar_id", "title", "classification", "inclusion", "input_sha256"], "properties": {"key": {"type": "string"}, "owner": {"type": "string"}, "native_id": {"type": ["string", "null"]}, "seminar_id": {"type": ["string", "null"]}, "title": {"type": ["string", "null"]}, "classification": {"enum": ["SEMINAR", "REVIEW_REQUIRED", "OTHER"]}, "inclusion": {"enum": ["INCLUDED", "EXCLUDED_BY_USER"]}, "input_sha256": {"type": "string"}}},
+    "revision": {"type": "object", "additionalProperties": false, "required": ["native_id", "content_sha256", "availability", "provenance"], "properties": {"native_id": {"type": ["string", "null"]}, "content_sha256": {"type": ["string", "null"]}, "availability": {"type": "string"}, "provenance": {"type": "object"}}},
+    "source": {"type": "object", "additionalProperties": false, "required": ["key", "project_key", "owner", "native_id", "source_type", "revision", "revisions", "locator", "location_identity_sha256", "semantic_identity", "availability", "content_sha256", "identity_kind", "provenance"], "properties": {"key": {"type": "string"}, "project_key": {"type": "string"}, "owner": {"type": "string"}, "native_id": {"type": ["string", "null"]}, "source_type": {"type": "string"}, "revision": {"type": ["string", "null"]}, "revisions": {"type": "array", "items": {"$ref": "#/$defs/revision"}}, "locator": {"type": ["string", "null"]}, "location_identity_sha256": {"type": ["string", "null"]}, "semantic_identity": {"type": "null"}, "availability": {"enum": ["AVAILABLE", "MISSING", "SYMLINK", "UNVERIFIED_REMOTE", "REMOTE_UNAVAILABLE", "UNSAFE_LOCATION", "UNKNOWN"]}, "content_sha256": {"type": ["string", "null"]}, "identity_kind": {"enum": ["CONTENT_IDENTITY", "REMOTE_IDENTITY", "NATIVE_IDENTITY", "UNRESOLVED"]}, "provenance": {"type": "object"}}},
+    "artifact": {"type": "object", "additionalProperties": false, "required": ["key", "project_key", "owner", "native_id", "artifact_type", "revision", "revisions", "source_ids", "locator", "availability", "content_sha256", "producer_version", "configuration_identity", "provenance"], "properties": {"key": {"type": "string"}, "project_key": {"type": "string"}, "owner": {"type": "string"}, "native_id": {"type": ["string", "null"]}, "artifact_type": {"type": "string"}, "revision": {"type": ["string", "null"]}, "revisions": {"type": "array", "items": {"$ref": "#/$defs/revision"}}, "source_ids": {"type": "array", "items": {"type": "string"}}, "locator": {"type": ["string", "null"]}, "availability": {"type": "string"}, "content_sha256": {"type": ["string", "null"]}, "producer_version": {"type": ["string", "null"]}, "configuration_identity": {"type": ["string", "null"]}, "provenance": {"type": "object"}}}
+  }
+}
