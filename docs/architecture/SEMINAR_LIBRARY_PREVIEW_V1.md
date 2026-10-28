@@ -7,7 +7,7 @@ subtitles; BookText owns document extraction and OCR. Native manifests and
 review decisions remain authoritative. The Four Products Architecture release
 registry is not an input or output of this feature.
 
-Run `python3 -m integra_core.seminar_library --seminartext PROJECT/sources.json
+Run `python3 -m scripts.seminar_library_preview --seminartext PROJECT/sources.json
 --videotext 'PROJECT/Support files/manifest.json' --booktext PACKAGE/manifest.json
 --integra REGISTRY.json`. Every argument is explicit. `--exclude MANIFEST` marks
 the corresponding project `EXCLUDED_BY_USER` in this preview only.

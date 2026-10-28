@@ -6,7 +6,7 @@ import unittest
 import subprocess
 import sys
 
-from integra_core.seminar_library import build, canonical, validate
+from scripts.seminar_library_preview import build, canonical, validate
 from integra_core.projects_sources import new_registry, register_project, register_youtube_video
 
 
@@ -123,7 +123,7 @@ class SeminarLibraryTests(unittest.TestCase):
         registry,second=register_project(registry,project_key="seminar-two",kind="SEMINAR",title="Second",occurred_at="2026-10-28T00:02:00Z")
         registry,_=register_youtube_video(registry,second,video_id="abcdefghijk",title="Remote",availability="AVAILABLE",captured_at="2026-10-28T00:03:00Z")
         registry_path.write_bytes(canonical(registry))
-        cmd=[sys.executable,"-m","integra_core.seminar_library"]
+        cmd=[sys.executable,"-m","scripts.seminar_library_preview"]
         for owner,path in specs:cmd.extend(["--"+owner,str(path)])
         first=subprocess.check_output(cmd,cwd=Path(__file__).resolve().parents[1])
         self.assertEqual(first,subprocess.check_output(cmd,cwd=Path(__file__).resolve().parents[1]))
@@ -190,7 +190,7 @@ class SeminarLibraryTests(unittest.TestCase):
         specs=self.fixtures()
         preview=build([specs[1]])
         preview["artifacts"][0]["source_ids"]=["nonexistent"]
-        from integra_core.seminar_library import digest
+        from scripts.seminar_library_preview import digest
         preview["catalog_sha256"]=digest(canonical({k:v for k,v in preview.items() if k!="catalog_sha256"}))
         with self.assertRaisesRegex(ValueError,"orphan artifact"):
             validate(preview)

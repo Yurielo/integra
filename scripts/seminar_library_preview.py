@@ -11,7 +11,7 @@ import json
 import re
 import stat
 from pathlib import Path
-from .projects_sources import RegistryError, validate_registry
+from integra_core.projects_sources import RegistryError, validate_registry
 
 
 SCHEMA = Path(__file__).resolve().parents[1] / "schemas/seminar_library_preview_v1.schema.json"
