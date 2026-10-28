@@ -6,7 +6,7 @@ import subprocess
 import sys
 import unittest
 
-from tests.test_seminar_library import SeminarLibraryTests
+import tests.test_seminar_library as library_fixtures
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -15,7 +15,7 @@ BRIDGE = ROOT / "macos/Resources/bridge.py"
 
 class SeminarLibraryBridgeTests(unittest.TestCase):
     def setUp(self):
-        self.fixture = SeminarLibraryTests("test_multi_product_read_only_deterministic_preview")
+        self.fixture = library_fixtures.SeminarLibraryTests("test_multi_product_read_only_deterministic_preview")
         self.fixture.setUp()
         self.specs = self.fixture.fixtures()
         self.data_root = self.fixture.root / "never-created-app-data"
