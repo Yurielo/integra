@@ -32,6 +32,7 @@ final class Bridge: @unchecked Sendable {
       "prepare-knowledge-review", "apply-knowledge-review", "create-machine-evidence",
       "knowledge-sources", "knowledge-open", "knowledge-save", "knowledge-navigation", "knowledge-package",
       "shutdown-active-runs",
+      "seminar-library-preview",
     ]
     guard allowed.contains(operation) else { throw BridgeError.failed("Unsupported operation") }
     let script = resources.appendingPathComponent("bridge.py")
@@ -214,10 +215,24 @@ struct SidebarItem {
   private var completedOperationsPolls = 0
   private let operationsQueue = DispatchQueue(label: "Integra.operations-read", qos: .userInitiated)
   private let serviceQueue = DispatchQueue(label: "Integra.native-services", qos: .userInitiated)
+  private let libraryQueue = DispatchQueue(label: "Integra.seminar-library-read", qos: .userInitiated)
+  private var libraryManifests = [[String: String]]()
+  private var libraryCatalog: [String: Any]?
+  private var libraryProjects = [[String: Any]]()
+  private var libraryTable: NSTableView?
+  private var libraryError: String?
+  private var libraryLoading = false
+  private var libraryRequestID: UUID?
+  private var libraryProbeMode: String? {
+    if CommandLine.arguments.contains("--ui-probe-library-detail") { return "detail" }
+    if CommandLine.arguments.contains("--ui-probe-library-list") { return "list" }
+    return nil
+  }
   private let items: [SidebarItem] = [
     .init(title: "INTEGRA", id: "", header: true, enabled: false),
     .init(title: "＋ Новая обработка", id: "new", header: false, enabled: true),
     .init(title: "БИБЛИОТЕКА", id: "", header: true, enabled: false),
+    .init(title: "Семинары", id: "seminars", header: false, enabled: true),
     .init(title: "Исходники", id: "sources", header: false, enabled: true),
     .init(title: "Проекты", id: "projects", header: false, enabled: true),
     .init(title: "Обработанные материалы", id: "materials", header: false, enabled: true),
@@ -248,7 +263,8 @@ struct SidebarItem {
       return
     }
     bridge = Bridge(resources: resources)
-    if let recent = try? bridge.json("recent-runs")["result"] as? [[String: Any]],
+    if libraryProbeMode == nil,
+      let recent = try? bridge.json("recent-runs")["result"] as? [[String: Any]],
       let latest = recent.first, let project = latest["project"] as? [String: Any],
       let run = latest["run"] as? [String: Any]
     {
@@ -257,7 +273,16 @@ struct SidebarItem {
     }
     buildMenu()
     buildWindow()
-    renderNew()
+    if libraryProbeMode != nil {
+      if let encoded = ProcessInfo.processInfo.environment["INTEGRA_LIBRARY_PROBE_MANIFESTS"],
+        let data = encoded.data(using: .utf8),
+        let manifests = try? JSONSerialization.jsonObject(with: data) as? [[String: String]] {
+        libraryManifests = manifests
+      }
+      showSeminarLibrary()
+    } else {
+      renderNew()
+    }
     window.makeKeyAndOrderFront(nil)
     if let index = CommandLine.arguments.firstIndex(of: "--ui-probe-source"),
       CommandLine.arguments.indices.contains(index + 1)
@@ -417,13 +442,24 @@ struct SidebarItem {
     split.addArrangedSubview(contentScroll)
     sideScroll.widthAnchor.constraint(equalToConstant: 370).isActive = true
     window.contentView = split
-    sidebar.selectRowIndexes(IndexSet(integer: 1), byExtendingSelection: false)
+    sidebar.selectRowIndexes(IndexSet(integer: libraryProbeMode == nil ? 1 : 3), byExtendingSelection: false)
   }
 
-  func numberOfRows(in tableView: NSTableView) -> Int { items.count }
-  func tableView(_ tableView: NSTableView, shouldSelectRow row: Int) -> Bool { items[row].enabled }
+  func numberOfRows(in tableView: NSTableView) -> Int {
+    tableView === libraryTable ? libraryProjects.count : items.count
+  }
+  func tableView(_ tableView: NSTableView, shouldSelectRow row: Int) -> Bool {
+    tableView === libraryTable ? libraryProjects.indices.contains(row) : items[row].enabled
+  }
   func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView?
   {
+    if tableView === libraryTable {
+      guard libraryProjects.indices.contains(row) else { return nil }
+      let project = libraryProjects[row]
+      let title = libraryText(project["title"], unknown: "Без названия")
+      let owner = libraryOwner(project["owner"] as? String ?? "")
+      return NSTextField(labelWithString: "\(title) · \(owner) · \(project["classification"] ?? "неизвестно")")
+    }
     let item = items[row]
     let label = NSTextField(labelWithString: item.title)
     label.font =
@@ -434,10 +470,16 @@ struct SidebarItem {
     return label
   }
   func tableViewSelectionDidChange(_ notification: Notification) {
+    if let table = notification.object as? NSTableView, table === libraryTable {
+      guard libraryCatalog != nil, libraryProjects.indices.contains(table.selectedRow) else { return }
+      renderSeminarLibraryProject(libraryProjects[table.selectedRow])
+      return
+    }
     let row = sidebar.selectedRow
     if row < 0 { return }
     switch items[row].id {
     case "new": renderNew()
+    case "seminars": showSeminarLibrary()
     case "projects": renderProjects()
     case "sources": renderSources()
     case "history": renderHistory()
@@ -2012,6 +2054,223 @@ struct SidebarItem {
       }
       if count == 0 { add(NSTextField(labelWithString: "Сохранённых исходников пока нет")) }
     } catch { status.stringValue = error.localizedDescription }
+  }
+  private func libraryOwner(_ owner: String) -> String {
+    switch owner {
+    case "seminartext": return "SeminarText"
+    case "videotext": return "VideoText"
+    case "booktext": return "BookText"
+    case "integra": return "Integra"
+    default: return "Неизвестный продукт"
+    }
+  }
+  private func libraryText(_ value: Any?, unknown: String = "неизвестен") -> String {
+    guard let text = value as? String, !text.isEmpty else { return unknown }
+    return text
+  }
+  private func libraryProvenance(_ value: Any?) -> String {
+    guard let object = value as? [String: Any],
+      let data = try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys]),
+      let text = String(data: data, encoding: .utf8) else { return "нет данных" }
+    return text
+  }
+  private func showSeminarLibrary() {
+    libraryRequestID = nil
+    libraryCatalog = nil
+    libraryProjects = []
+    libraryError = nil
+    libraryLoading = !libraryManifests.isEmpty
+    renderSeminarLibrary()
+    if libraryLoading { loadSeminarLibrary() }
+  }
+  private func renderSeminarLibrary() {
+    reset("Семинары", "Просмотр выбранных манифестов. Данные остаются у своих продуктов; это снимок каталога, а не объединение семинаров.")
+    let pickers = NSStackView()
+    pickers.orientation = .horizontal
+    pickers.spacing = 8
+    for (owner, title) in [("seminartext", "SeminarText"), ("videotext", "VideoText"),
+                           ("booktext", "BookText"), ("integra", "Integra")] {
+      let control = button("+ \(title)", #selector(chooseSeminarLibraryManifest(_:)))
+      control.identifier = NSUserInterfaceItemIdentifier(owner)
+      pickers.addArrangedSubview(control)
+    }
+    add(pickers)
+    if libraryManifests.isEmpty {
+      add(NSTextField(wrappingLabelWithString: "Манифесты не выбраны. Укажите продукт и выберите его JSON-манифест."))
+      saveSnapshotIfRequested()
+      return
+    }
+    let actions = NSStackView(views: [button("Обновить каталог", #selector(refreshSeminarLibrary)),
+                                      button("Очистить выбор", #selector(clearSeminarLibrary))])
+    actions.orientation = .horizontal
+    actions.spacing = 8
+    add(actions)
+    if libraryLoading {
+      add(NSTextField(labelWithString: "Читаю манифесты и строю каталог…"))
+      renderSelectedSeminarManifests()
+      return
+    }
+    if let error = libraryError {
+      status.textColor = .systemRed
+      status.stringValue = "Не удалось построить каталог: \(error)"
+      let reason = error.contains("malformed manifest") || error.contains("manifest path")
+        ? "Некорректный манифест" : "Ошибка построения каталога"
+      add(NSTextField(wrappingLabelWithString: "\(reason). Предыдущий результат скрыт. Проверьте выбранные файлы и обновите каталог."))
+      renderSelectedSeminarManifests()
+      return
+    }
+    guard let catalog = libraryCatalog else { return }
+    let summary = catalog["summary"] as? [String: Any] ?? [:]
+    add(row("Проектов: \(summary["project_count"] ?? 0)", detail: "Источников: \(summary["source_count"] ?? 0) · Артефактов: \(summary["artifact_count"] ?? 0)"))
+    let unavailableSources = (catalog["sources"] as? [[String: Any]] ?? []).filter {
+      !["AVAILABLE", "UNVERIFIED_REMOTE", "UNKNOWN"].contains($0["availability"] as? String ?? "UNKNOWN")
+    }.count
+    let unavailableArtifacts = (catalog["artifacts"] as? [[String: Any]] ?? []).filter {
+      !["AVAILABLE", "UNVERIFIED_REMOTE", "UNKNOWN"].contains($0["availability"] as? String ?? "UNKNOWN")
+    }.count
+    if unavailableSources + unavailableArtifacts > 0 {
+      add(NSTextField(wrappingLabelWithString: "Недоступные файлы: источников \(unavailableSources), артефактов \(unavailableArtifacts). Подробности показаны в проекте."))
+    }
+    for diagnostic in catalog["diagnostics"] as? [String] ?? [] where diagnostic.hasPrefix("UNSUPPORTED_OR_INVALID:") {
+      let parts = diagnostic.split(separator: ":", maxSplits: 2)
+      let owner = parts.count > 1 ? libraryOwner(String(parts[1])) : "выбранного продукта"
+      add(NSTextField(wrappingLabelWithString: "Манифест \(owner) не поддерживается или повреждён. Проверьте версию и структуру файла."))
+    }
+    libraryProjects = catalog["projects"] as? [[String: Any]] ?? []
+    guard !libraryProjects.isEmpty else {
+      add(NSTextField(labelWithString: "В выбранных манифестах нет доступных для просмотра проектов."))
+      renderSelectedSeminarManifests()
+      return
+    }
+    let table = NSTableView()
+    let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("seminar-library-project"))
+    column.width = 600
+    table.addTableColumn(column)
+    table.headerView = nil
+    table.rowHeight = 32
+    table.delegate = self
+    table.dataSource = self
+    libraryTable = table
+    let scroll = NSScrollView()
+    scroll.hasVerticalScroller = true
+    scroll.documentView = table
+    scroll.heightAnchor.constraint(equalToConstant: 380).isActive = true
+    scroll.widthAnchor.constraint(equalToConstant: 620).isActive = true
+    add(scroll)
+    renderSelectedSeminarManifests()
+  }
+  private func renderSelectedSeminarManifests() {
+    add(NSTextField(labelWithString: "Выбранные манифесты"))
+    for manifest in libraryManifests {
+      add(row(libraryOwner(manifest["owner"] ?? ""), detail: manifest["path"] ?? ""))
+    }
+  }
+  @objc private func chooseSeminarLibraryManifest(_ sender: NSButton) {
+    guard let owner = sender.identifier?.rawValue,
+      ["seminartext", "videotext", "booktext", "integra"].contains(owner) else { return }
+    let panel = NSOpenPanel()
+    panel.title = "Выберите JSON-манифест · \(libraryOwner(owner))"
+    panel.canChooseFiles = true
+    panel.canChooseDirectories = false
+    panel.allowsMultipleSelection = true
+    guard panel.runModal() == .OK else { return }
+    for url in panel.urls where url.isFileURL {
+      let item = ["owner": owner, "path": url.path]
+      if !libraryManifests.contains(item) { libraryManifests.append(item) }
+    }
+    showSeminarLibrary()
+  }
+  @objc private func refreshSeminarLibrary() { showSeminarLibrary() }
+  @objc private func clearSeminarLibrary() {
+    libraryManifests = []
+    showSeminarLibrary()
+  }
+  private func loadSeminarLibrary() {
+    let generation = navigationGeneration
+    let requestID = UUID()
+    libraryRequestID = requestID
+    let manifests = libraryManifests
+    let service = bridge!
+    libraryQueue.async {
+      do {
+        let catalog = try service.json("seminar-library-preview", request: ["manifests": manifests])["result"] as? [String: Any]
+        guard let catalog else { throw BridgeError.invalidResponse }
+        DispatchQueue.main.async {
+          guard self.navigationGeneration == generation, self.libraryRequestID == requestID,
+            !self.terminationPending else { return }
+          self.libraryCatalog = catalog
+          self.libraryError = nil
+          self.libraryLoading = false
+          self.renderSeminarLibrary()
+          if self.libraryProbeMode == "detail", let first = self.libraryProjects.first {
+            self.renderSeminarLibraryProject(first)
+          }
+          self.writeSeminarLibraryProbeResult()
+          self.saveSnapshotIfRequested()
+        }
+      } catch {
+        DispatchQueue.main.async {
+          guard self.navigationGeneration == generation, self.libraryRequestID == requestID,
+            !self.terminationPending else { return }
+          self.libraryCatalog = nil
+          self.libraryProjects = []
+          self.libraryError = error.localizedDescription
+          self.libraryLoading = false
+          self.renderSeminarLibrary()
+          self.writeSeminarLibraryProbeResult()
+          self.saveSnapshotIfRequested()
+        }
+      }
+    }
+  }
+  private func renderSeminarLibraryProject(_ project: [String: Any]) {
+    guard let catalog = libraryCatalog, let key = project["key"] as? String else { return }
+    reset(libraryText(project["title"], unknown: "Проект без названия"), "Снимок выбранного проекта. Обновите каталог, чтобы повторно проверить доступность файлов.")
+    add(button("← К списку семинаров", #selector(refreshSeminarLibrary)))
+    add(row("Продукт: \(libraryOwner(project["owner"] as? String ?? ""))", detail: "Классификация: \(libraryText(project["classification"])) · Включение: \(libraryText(project["inclusion"]))"))
+    add(row("ID проекта: \(libraryText(project["native_id"]))", detail: "ID семинара: \(libraryText(project["seminar_id"]))"))
+    let sources = (catalog["sources"] as? [[String: Any]] ?? []).filter { ($0["project_key"] as? String) == key }
+    let artifacts = (catalog["artifacts"] as? [[String: Any]] ?? []).filter { ($0["project_key"] as? String) == key }
+    add(NSTextField(labelWithString: "Источники (\(sources.count))"))
+    if sources.isEmpty { add(NSTextField(labelWithString: "Источников нет или проект исключён из просмотра.")) }
+    for source in sources {
+      add(row("\(libraryText(source["source_type"])) · ID: \(libraryText(source["native_id"]))",
+              detail: "Доступность: \(libraryText(source["availability"])) · Проверка содержимого: \(libraryText(source["content_verification"]))"))
+      add(NSTextField(wrappingLabelWithString: "Расположение: \(libraryText(source["locator"]))"))
+      let revisions = source["revisions"] as? [[String: Any]] ?? []
+      add(NSTextField(labelWithString: "Ревизии: \(revisions.isEmpty ? "нет данных" : "\(revisions.count)")"))
+      for revision in revisions {
+        add(NSTextField(wrappingLabelWithString: "ID: \(libraryText(revision["native_id"])) · Доступность: \(libraryText(revision["availability"])) · Происхождение: \(libraryProvenance(revision["provenance"]))"))
+      }
+      add(NSTextField(wrappingLabelWithString: "Происхождение: \(libraryProvenance(source["provenance"]))"))
+    }
+    add(NSTextField(labelWithString: "Артефакты (\(artifacts.count))"))
+    if artifacts.isEmpty { add(NSTextField(labelWithString: "Артефактов нет.")) }
+    for artifact in artifacts {
+      add(row("\(libraryText(artifact["artifact_type"])) · ID: \(libraryText(artifact["native_id"]))",
+              detail: "Продукт: \(libraryOwner(artifact["owner"] as? String ?? "")) · Доступность: \(libraryText(artifact["availability"]))"))
+      let revisions = artifact["revisions"] as? [[String: Any]] ?? []
+      add(NSTextField(wrappingLabelWithString: "Расположение: \(libraryText(artifact["locator"])) · Проверка содержимого: \(libraryText(artifact["content_verification"]))"))
+      add(NSTextField(labelWithString: "Ревизии: \(revisions.isEmpty ? "нет данных" : "\(revisions.count)")"))
+      for revision in revisions {
+        add(NSTextField(wrappingLabelWithString: "ID: \(libraryText(revision["native_id"])) · Доступность: \(libraryText(revision["availability"])) · Происхождение: \(libraryProvenance(revision["provenance"]))"))
+      }
+      add(NSTextField(wrappingLabelWithString: "Происхождение: \(libraryProvenance(artifact["provenance"]))"))
+    }
+  }
+  private func writeSeminarLibraryProbeResult() {
+    guard libraryProbeMode != nil,
+      let marker = ProcessInfo.processInfo.environment["INTEGRA_LIBRARY_PROBE_RESULT"] else { return }
+    let summary = libraryCatalog?["summary"] as? [String: Any] ?? [:]
+    let value: [String: Any] = [
+      "mode": libraryProbeMode ?? "", "project_count": summary["project_count"] ?? 0,
+      "source_count": summary["source_count"] ?? 0,
+      "artifact_count": summary["artifact_count"] ?? 0,
+      "screen": libraryProbeMode == "detail" && !libraryProjects.isEmpty ? "detail" : "list",
+      "error": libraryError ?? "",
+    ]
+    guard let data = try? JSONSerialization.data(withJSONObject: value, options: [.sortedKeys]) else { return }
+    try? data.write(to: URL(fileURLWithPath: marker), options: .atomic)
   }
   private func renderHistory() {
     reset("История", "Сохранённые реальные обработки. Выберите запись, чтобы открыть её состояние и результаты.")

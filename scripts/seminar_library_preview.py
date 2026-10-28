@@ -33,8 +33,21 @@ def _hash(value):
 
 
 def _load(path):
-    path = Path(path).expanduser().absolute()
-    if path.is_symlink() or not path.is_file():
+    supplied = Path(path).expanduser()
+    if ".." in supplied.parts:
+        raise ValueError(f"manifest path is unsafe: {supplied}")
+    path = supplied.absolute()
+    current = Path(path.anchor)
+    mode = current.lstat().st_mode
+    for part in path.parts[1:]:
+        current = current / part
+        try:
+            mode = current.lstat().st_mode
+        except (FileNotFoundError, PermissionError) as exc:
+            raise ValueError(f"manifest is unavailable: {path}") from exc
+        if stat.S_ISLNK(mode):
+            raise ValueError(f"manifest path is unsafe: {path}")
+    if not stat.S_ISREG(mode):
         raise ValueError(f"manifest must be a regular file: {path}")
     first = path.read_bytes()
     try:
@@ -309,7 +322,7 @@ def build(specs, *, excluded=(), excluded_projects=(), classified=()):
         snapshots.append((path, raw))
         companions = [path.parent / "seminar.yaml",path.parent / "evidence/manifest.json"] if owner == "seminartext" else [path.parent / "document.json"] if owner == "booktext" else []
         for companion in companions:
-            if companion.is_file() and not companion.is_symlink():
+            if _availability(path.parent, str(companion)) == "AVAILABLE":
                 companion_raw = companion.read_bytes()
                 inputs.append({"owner": owner, "manifest": str(companion), "sha256": digest(companion_raw)})
                 snapshots.append((companion, companion_raw))

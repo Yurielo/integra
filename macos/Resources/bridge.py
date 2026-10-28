@@ -30,6 +30,7 @@ OPERATIONS.add("build-reviewed-package")
 OPERATIONS.add("transcript-text")
 OPERATIONS.add("shutdown-active-runs")
 OPERATIONS.update({"knowledge-sources", "knowledge-open", "knowledge-save", "knowledge-navigation", "knowledge-package"})
+OPERATIONS.add("seminar-library-preview")
 
 def _safe_error(error):
     message = str(error).replace(str(Path.home()), "<HOME>")
@@ -51,6 +52,29 @@ def _request():
     value = json.loads(raw)
     if not isinstance(value, dict): raise ValueError("request must be an object")
     return value
+
+def _seminar_library_preview(request):
+    """Read explicitly selected product manifests without creating app state."""
+    rows = request.get("manifests")
+    if not isinstance(rows, list) or not rows or len(rows) > 128:
+        raise ValueError("select 1-128 product manifests")
+    specs = []
+    seen = set()
+    for row in rows:
+        if not isinstance(row, dict) or set(row) != {"owner", "path"}:
+            raise ValueError("each manifest needs an owner and path")
+        owner, path = row["owner"], row["path"]
+        if owner not in {"seminartext", "videotext", "booktext", "integra"}:
+            raise ValueError("unsupported manifest owner")
+        if not isinstance(path, str) or not path or not Path(path).is_absolute():
+            raise ValueError("manifest path must be absolute")
+        identity = (owner, path)
+        if identity in seen:
+            raise ValueError("duplicate selected manifest")
+        seen.add(identity)
+        specs.append(identity)
+    from scripts.seminar_library_preview import build
+    return build(specs)
 
 def _atomic_json(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -830,8 +854,10 @@ def main():
         owned_worker = (len(sys.argv) == 4 and sys.argv[1:3] == ["process-plan", "--integra-run-owner"]
                         and re.fullmatch(r"[a-f0-9]{32}", sys.argv[3]))
         if (len(sys.argv) != 2 and not owned_worker) or sys.argv[1] not in OPERATIONS: raise ValueError("unsupported bridge operation")
-        operation = sys.argv[1]; request = _request(); root = _root()
-        if operation == "workflow": result = json.loads((RESOURCES/"source_first_workflow.json").read_text())
+        operation = sys.argv[1]; request = _request()
+        root = None if operation == "seminar-library-preview" else _root()
+        if operation == "seminar-library-preview": result = _seminar_library_preview(request)
+        elif operation == "workflow": result = json.loads((RESOURCES/"source_first_workflow.json").read_text())
         elif operation == "deferred": result = json.loads((RESOURCES/"deferred_features.json").read_text())
         elif operation in {"obsidian-preview", "onedrive-preview"}:
             result = {"state":"DRY_RUN_REQUIRES_PACKAGE", "target":"Obsidian managed Vault subtree" if operation == "obsidian-preview" else "filesystem-backed OneDrive target", "writes_performed":False, "external_actions_performed":False, "cloud_verified":False}
