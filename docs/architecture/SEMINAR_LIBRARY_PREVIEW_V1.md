@@ -30,6 +30,11 @@ duplicate-content candidate diagnostic never merges or deletes records.
 `location_identity_sha256` binds the locator string only; `content_sha256`
 comes from a producer record when present. `semantic_identity` is always null:
 this preview cannot assert semantic equivalence.
+`availability` says whether a locator exists, not whether its bytes match a
+recorded hash. `content_verification` is `NOT_CHECKED` for local source media;
+the paired BookText document and available SeminarText Evidence bundle are
+verified against their package/manifests. Large media are never rehashed during
+this preview.
 Rebuild bytes are identical when manifest bytes **and observed locator
 availability** are unchanged. Reconnecting a drive changes an availability
 observation and therefore correctly changes the preview seal.

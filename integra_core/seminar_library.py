@@ -82,6 +82,7 @@ def _source(project, owner, native, kind, revision, locator, sha, root, provenan
             "locator": locator, "location_identity_sha256": digest(canonical(locator)) if isinstance(locator,str) else None,
             "semantic_identity": None, "availability": availability,
             "content_sha256": _hash(sha),
+            "content_verification": "NOT_APPLICABLE" if remote else "NOT_CHECKED",
             "identity_kind": "CONTENT_IDENTITY" if _hash(sha) else "REMOTE_IDENTITY" if remote and native else "NATIVE_IDENTITY" if native else "UNRESOLVED",
             "provenance": provenance}
 
@@ -93,6 +94,7 @@ def _artifact(project, owner, native, kind, revision, source_ids, locator, sha, 
             "artifact_type": kind, "revision": revision, "revisions": [{"native_id":revision,"content_sha256":_hash(sha),"availability":availability,"provenance":provenance}] if revision else [],
             "source_ids": sorted(set(source_ids)), "locator": locator, "availability": availability,
             "content_sha256": _hash(sha), "producer_version": version,
+            "content_verification": "NOT_CHECKED",
             "configuration_identity": config, "provenance": provenance}
 
 
@@ -180,9 +182,11 @@ def _seminartext(path, data, sha, excluded):
             except json.JSONDecodeError:raise ValueError("malformed SeminarText evidence bundle")
             if not isinstance(bundle_data,dict) or bundle_data.get("schema_version")!="1.0.0" or bundle_data.get("artifact_type")!="seminartext.canonical_evidence":
                 raise ValueError("unsupported SeminarText evidence bundle")
-        artifacts.append(_artifact(project,"seminartext",None,"seminartext.canonical_evidence",None,refs,
-                                   bundle_locator,evidence["bundle_sha256"],path.parent,None,None,
-                                   {"manifest_sha256":evidence_sha,"registered_source_count":evidence.get("registered_source_count")},0))
+        artifact = _artifact(project,"seminartext",None,"seminartext.canonical_evidence",None,refs,
+                             bundle_locator,evidence["bundle_sha256"],path.parent,None,None,
+                             {"manifest_sha256":evidence_sha,"registered_source_count":evidence.get("registered_source_count")},0)
+        if artifact["availability"] == "AVAILABLE":artifact["content_verification"]="VERIFIED"
+        artifacts.append(artifact)
     return [project], sources, artifacts
 
 
@@ -247,6 +251,7 @@ def _booktext(path, data, sha, excluded, classified):
     artifact = _artifact(project, "booktext", doc["document_id"], "booktext.document", doc["revision_id"],
                          [s["key"] for s in sources], "document.json", doc_sha, path.parent, None, None,
                          {"manifest_sha256": sha, "package_status": data.get("package_status")}, 0)
+    artifact["content_verification"]="VERIFIED"
     return [project], sources, [artifact]
 
 
