@@ -81,7 +81,9 @@ def require_subtitle_runtime():
             Path(candidate).resolve(strict=True)
             / "Contents/Resources/runtime/videotext/translation-worker"
         )
-        expected = "22ba7bbfd827a1f2937f3757070b74b2e5d4d1200ebea954c48c1eaac1162d28"
+        # Integra's accepted TranslateGemma migration (9c42b7b) changed the
+        # worker route; CURRENT and later verified archives contain these bytes.
+        expected = "b3139a15cd2ef2387eb96f72bab7b3dc0a38e455f370de7cf15bcb5789ac0ccd"
         try:
             if not worker.is_file() or hashlib.sha256(worker.read_bytes()).hexdigest() != expected:
                 raise ValueError("Candidate bundled VideoText runtime differs from pinned bytes")
