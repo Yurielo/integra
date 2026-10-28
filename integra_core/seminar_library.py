@@ -155,13 +155,31 @@ def _seminartext(path, data, sha, excluded):
         bundle_locator = evidence.get("bundle_path")
         if not isinstance(bundle_locator,str) or Path(bundle_locator).is_absolute() or ".." in Path(bundle_locator).parts:
             raise ValueError("unsafe SeminarText evidence bundle locator")
+        coverage_rows = evidence["registry_coverage"]
+        if evidence.get("registered_source_count") != len(sources) or len(coverage_rows) != len(sources):
+            raise ValueError("SeminarText evidence coverage count mismatch")
         source_keys = {source["native_id"]:source["key"] for source in sources}
         refs = []
-        for coverage in evidence["registry_coverage"]:
+        covered = set()
+        for coverage in coverage_rows:
             if not isinstance(coverage,dict) or coverage.get("source_registry_id") not in source_keys:
                 raise ValueError("SeminarText evidence references unknown source")
+            if coverage["source_registry_id"] in covered or coverage.get("evidence_status") not in {"COMPOSED","EVIDENCE_UNAVAILABLE"}:
+                raise ValueError("SeminarText evidence coverage duplicate or invalid")
+            covered.add(coverage["source_registry_id"])
             if coverage.get("evidence_status") == "COMPOSED":
                 refs.append(source_keys[coverage["source_registry_id"]])
+        if evidence.get("source_count") != len(refs) or evidence.get("all_registered_sources_composed") != (len(refs)==len(sources)):
+            raise ValueError("SeminarText evidence composition count mismatch")
+        bundle = path.parent / bundle_locator
+        if _availability(path.parent,bundle_locator) == "AVAILABLE":
+            payload = bundle.read_bytes()
+            if digest(payload) != evidence["bundle_sha256"]:
+                raise ValueError("SeminarText evidence bundle hash mismatch")
+            try:bundle_data=json.loads(payload)
+            except json.JSONDecodeError:raise ValueError("malformed SeminarText evidence bundle")
+            if not isinstance(bundle_data,dict) or bundle_data.get("schema_version")!="1.0.0" or bundle_data.get("artifact_type")!="seminartext.canonical_evidence":
+                raise ValueError("unsupported SeminarText evidence bundle")
         artifacts.append(_artifact(project,"seminartext",None,"seminartext.canonical_evidence",None,refs,
                                    bundle_locator,evidence["bundle_sha256"],path.parent,None,None,
                                    {"manifest_sha256":evidence_sha,"registered_source_count":evidence.get("registered_source_count")},0))
@@ -171,7 +189,8 @@ def _seminartext(path, data, sha, excluded):
 def _videotext(path, data, sha, excluded, classified):
     if data.get("schemaVersion") != 8 or not isinstance(data.get("sourceMediaPath"), str):
         raise ValueError("unsupported VideoText manifest version or shape (expected v8)")
-    native_artifacts = data.get("artifacts") or []
+    native_artifacts = data.get("artifacts")
+    if native_artifacts is None:native_artifacts=[]
     if not isinstance(native_artifacts,list):
         raise ValueError("malformed VideoText artifacts")
     root = path.parent.parent
@@ -182,7 +201,8 @@ def _videotext(path, data, sha, excluded, classified):
     src = _source(project, "videotext", None, "LOCAL_VIDEO", None, data["sourceMediaPath"], None, root,
                   {"manifest_sha256": sha, "source_fingerprint": data.get("sourceFingerprint"), "content_verification": "UNKNOWN"}, 0)
     artifacts = []
-    transcript_revisions = data.get("transcriptRevisions") or []
+    transcript_revisions = data.get("transcriptRevisions")
+    if transcript_revisions is None:transcript_revisions=[]
     if not isinstance(transcript_revisions,list) or any(not isinstance(r,dict) for r in transcript_revisions):
         raise ValueError("malformed VideoText transcript revisions")
     for i, item in enumerate(native_artifacts):
@@ -207,7 +227,10 @@ def _booktext(path, data, sha, excluded, classified):
         raw = doc_path.read_bytes();doc_sha = digest(raw)
         try:doc = json.loads(raw)
         except json.JSONDecodeError:raise ValueError("malformed BookText document")
-    expected = next((f.get("sha256") for f in data.get("files", []) if f.get("filename") == "document.json"), None)
+    files = data.get("files")
+    if not isinstance(files,list) or any(not isinstance(f,dict) for f in files):
+        raise ValueError("malformed BookText package files")
+    expected = next((f.get("sha256") for f in files if f.get("filename") == "document.json"), None)
     if doc is None or doc_sha != expected or doc.get("document_id") != data.get("document_id") or doc.get("revision_id") != data.get("revision_id"):
         raise ValueError("stale BookText package/document identity")
     if doc.get("schema_version") != "0.1" or doc.get("artifact_type") != "booktext.document" or not isinstance(doc.get("sources"), list):
@@ -289,6 +312,15 @@ def build(specs, *, excluded=(), excluded_projects=(), classified=()):
             args = (path, data, sha, str(path) in excluded)
             result = ADAPTERS[owner](*args, str(path) in classified) if owner in {"videotext", "booktext"} else ADAPTERS[owner](*args)
             p, s, a = result;projects.extend(p);sources.extend(s);artifacts.extend(a)
+            if owner == "seminartext":
+                for artifact in a:
+                    bundle = path.parent / artifact["locator"]
+                    if artifact["availability"] == "AVAILABLE":
+                        bundle_raw = bundle.read_bytes()
+                        if digest(bundle_raw) != artifact["content_sha256"]:
+                            raise ValueError("SeminarText evidence bundle changed during preview")
+                        inputs.append({"owner":owner,"manifest":str(bundle),"sha256":digest(bundle_raw)})
+                        snapshots.append((bundle,bundle_raw))
         except (ValueError, TypeError, KeyError, UnicodeError, RegistryError) as exc:
             diagnostics.append(f"UNSUPPORTED_OR_INVALID:{owner}:{path}:{exc}")
     for path, raw in snapshots:
@@ -372,7 +404,7 @@ def validate(value):
     for name in ("projects","sources","artifacts"):
         keys=[record["key"] for record in value[name]]
         if len(keys)!=len(set(keys)):raise ValueError(f"duplicate {name} key")
-    project_keys={p["key"] for p in value["projects"]}
+    project_keys={p["key"] for p in value["projects"] if p["inclusion"]=="INCLUDED"}
     source_keys={s["key"] for s in value["sources"]}
     if any(s["project_key"] not in project_keys for s in value["sources"]):raise ValueError("orphan source project")
     if any(a["project_key"] not in project_keys or not set(a["source_ids"]).issubset(source_keys) for a in value["artifacts"]):

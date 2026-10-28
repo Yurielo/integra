@@ -36,12 +36,16 @@ class SeminarLibraryTests(unittest.TestCase):
                        {"source_id":"video_002","type":"local","file":"source/video/disconnected.mp4"},
                        {"source_id":"video_003","type":"youtube","url":"https://www.youtube.com/watch?v=abcdefghijk"}],
             "documents": [{"source_id":"doc_001","type":"other","file":"source/documents/missing.pdf"}]})
-        evidence_bytes=b"synthetic canonical evidence fixture"
+        evidence_bytes=canonical({"schema_version":"1.0.0","artifact_type":"seminartext.canonical_evidence","artifact_id":"synthetic_evidence"})
         (st_root/"evidence").mkdir()
         (st_root/"evidence/canonical_bundle.json").write_bytes(evidence_bytes)
         self.write("seminartext/evidence/manifest.json", {"schema_version":2,"artifact_type":"seminartext.project_evidence_manifest",
             "bundle_path":"evidence/canonical_bundle.json","bundle_sha256":hashlib.sha256(evidence_bytes).hexdigest(),
-            "registered_source_count":4,"registry_coverage":[{"source_registry_id":"video_001","evidence_status":"COMPOSED"}]})
+            "source_count":1,"registered_source_count":4,"all_registered_sources_composed":False,
+            "registry_coverage":[{"source_registry_id":"video_001","evidence_status":"COMPOSED"},
+                                 {"source_registry_id":"video_002","evidence_status":"EVIDENCE_UNAVAILABLE"},
+                                 {"source_registry_id":"video_003","evidence_status":"EVIDENCE_UNAVAILABLE"},
+                                 {"source_registry_id":"doc_001","evidence_status":"EVIDENCE_UNAVAILABLE"}]})
         vt_root = self.root / "videotext"
         (vt_root / "output.txt").parent.mkdir(parents=True, exist_ok=True)
         (vt_root / "output.txt").write_text("one")
@@ -161,9 +165,26 @@ class SeminarLibraryTests(unittest.TestCase):
         self.assertEqual(build([("videotext",vt)])["summary"]["unsupported_manifests"],1)
         v.pop("transcriptRevisions");v.pop("artifacts");vt.write_bytes(canonical(v))
         self.assertEqual(build([("videotext",vt)])["summary"]["artifact_count"],0)
+        v["artifacts"]=False;vt.write_bytes(canonical(v))
+        self.assertEqual(build([("videotext",vt)])["summary"]["unsupported_manifests"],1)
         bt=specs[2][1];d=json.loads((bt.parent/"document.json").read_text());d["sources"]=[42]
         doc=self.write("booktext/document.json",d);m=json.loads(bt.read_text());m["files"][0]["sha256"]=hashlib.sha256(doc.read_bytes()).hexdigest();bt.write_bytes(canonical(m))
         self.assertEqual(build([("booktext",bt)])["summary"]["unsupported_manifests"],1)
+        m["files"]=[42];bt.write_bytes(canonical(m))
+        self.assertEqual(build([("booktext",bt)])["summary"]["unsupported_manifests"],1)
+
+    def test_stale_evidence_bundle_and_coverage_fail_closed(self):
+        specs=self.fixtures();st=specs[0][1]
+        bundle=st.parent/"evidence/canonical_bundle.json"
+        original=bundle.read_bytes()
+        bundle.write_text("{}")
+        self.assertEqual(build([("seminartext",st)])["summary"]["unsupported_manifests"],1)
+        bundle.write_bytes(original)
+        evidence=st.parent/"evidence/manifest.json"
+        e=json.loads(evidence.read_text());e["registry_coverage"].pop();evidence.write_bytes(canonical(e))
+        result=build([("seminartext",st)])
+        self.assertEqual(result["summary"]["unsupported_manifests"],1)
+        self.assertTrue(any("coverage count mismatch" in d for d in result["diagnostics"]))
 
     def test_resealed_orphan_reference_is_rejected(self):
         specs=self.fixtures()
