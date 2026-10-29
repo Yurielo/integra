@@ -426,7 +426,7 @@ def _ordered_rotation_rows(rows, baseline, policy_sha256, retired_paths, expecte
         (1, row['capacity_rotation_order']['timestamp'], row['candidate_id'])))
 
 
-def plan(catalog, *, free_bytes=None):
+def plan(catalog, *, free_bytes=None, _validated_context=False):
     try:
         from scripts.candidate_protection_gate import require_deletion
     except ModuleNotFoundError:
@@ -436,7 +436,12 @@ def plan(catalog, *, free_bytes=None):
     except ModuleNotFoundError:
         import candidate_lifecycle as lifecycle
     seen = set(); before = sum(_measure(_safe(p), seen) for p in catalog['roots'])
-    rows = []; context = catalog.get('protection'); valid = _context_valid(context); attributed = set()
+    rows = []; context = catalog.get('protection')
+    # This private fast path is used only under the shared lock after a fresh
+    # canonical audit, or immediately before the mandatory full rotation gate.
+    # A plan never grants deletion on its own.
+    valid = True if _validated_context else _context_valid(context)
+    attributed = set()
     rotation_policy = (context or {}).get('rotation_policy') or {}
     rotation_active = rotation_policy.get('rotation_strategy') == 'OLDEST_FULL_COPY_FIRST'
     # Root/container metadata is attributed to UNKNOWN, once, not a package.
@@ -886,7 +891,8 @@ def sync_protection(catalog, current_path, proposals, rollback_archive, recovery
     reconcile_catalog(catalog, registry, audit, base, current_path=current_path)
 
 
-def reconcile_catalog(catalog, registry, audit, base, *, current_path=None):
+def reconcile_catalog(catalog, registry, audit, base, *, current_path=None,
+                      _verified_snapshot=False):
     """Mirror a verified complete canonical snapshot, under the caller's lock.
 
     This is deterministic bookkeeping only. It does not select roles, create
@@ -927,7 +933,17 @@ def reconcile_catalog(catalog, registry, audit, base, *, current_path=None):
         rows = [row for row in audit['entries'] if row['path'] == str(package.relative_to(base))]
         if len(rows) != 1 or rows[0]['classification'] != 'PROTECTED' or not rows[0]['verified_protected_archive']:
             raise ValueError('canonical protected survivor is not verified')
-        receipt = verify_archive(package, {key: rows[0][key] for key in lifecycle.IDENTITY})
+        if _verified_snapshot:
+            # Only refresh_protection passes the fresh audit obtained under
+            # this lock. Other reconciliation callers keep full verification.
+            receipt = json.loads((package / 'COMPLETE.json').read_bytes())
+            if (receipt.get('status') != 'COMPLETE'
+                    or any(receipt.get(key) != rows[0][key] for key in lifecycle.IDENTITY)):
+                raise ValueError('canonical survivor receipt changed after audit')
+            receipt = {**receipt, 'archive_path': str(package)}
+        else:
+            receipt = verify_archive(package, {key: rows[0][key]
+                                               for key in lifecycle.IDENTITY})
         verified[cid] = receipt
         context['inputs'][str(package / 'COMPLETE.json')] = _sha(package / 'COMPLETE.json')
         context['inputs'][str(package / 'inventory.json')] = _sha(package / 'inventory.json')
@@ -1016,7 +1032,7 @@ def recover_cleanup(path):
         return retention_cleanup.recover(sys.modules[__name__], path, catalog)
 
 
-def refresh_protection(catalog):
+def refresh_protection(catalog, *, _reuse_verified_audit=False):
     """Refresh the catalog mirror from the registry; no heuristic selection."""
     try:
         from scripts.candidate_protection_gate import _snapshot
@@ -1026,15 +1042,22 @@ def refresh_protection(catalog):
         import candidate_protection_audit as protection
     registry, audit = _snapshot(for_deletion=True)
     base = Path.home() / 'Library/Application Support/Integra'
-    selected = {cid: str(base / relative) for cid, relative in registry['selected_survivors'].items() if relative}
-    selected = {cid: name for cid, name in selected.items()
-                if cid not in audit.get('rotated_unavailable', {})}
-    sync_protection(catalog, protection.ROOT / registry['canonical_current']['path'], [],
-                    selected.get(registry['rollback']['candidate_id']),
-                    selected.get(registry['recovery']['candidate_id']) if registry['recovery'] else None,
-                    pins=registry['explicit_governance_pins'], selected_archives=selected)
+    selected = {cid: str(base / relative) for cid, relative in registry['selected_survivors'].items()
+                if relative and cid not in audit.get('rotated_unavailable', {})}
+    if (_reuse_verified_audit and
+            (audit.get('canonical') or {}).get('rotation_policy', {}).get('rotation_strategy')
+            == 'OLDEST_FULL_COPY_FIRST'):
+        reconcile_catalog(catalog, registry, audit, base,
+                          current_path=protection.ROOT / registry['canonical_current']['path'],
+                          _verified_snapshot=True)
+    else:
+        sync_protection(catalog, protection.ROOT / registry['canonical_current']['path'], [],
+                        selected.get(registry['rollback']['candidate_id']),
+                        selected.get(registry['recovery']['candidate_id']) if registry['recovery'] else None,
+                        pins=registry['explicit_governance_pins'], selected_archives=selected)
     emit('PROTECTION_RECONCILED', current_id=registry['canonical_current']['current_id'],
          selected_survivors=selected)
+    return audit
 
 
 def maintenance(root, *, reason, need_slot=False):
@@ -1055,8 +1078,8 @@ def maintenance(root, *, reason, need_slot=False):
         if has_journal:
             recover_cleanup(path)
         with locked(path) as catalog:
-            refresh_protection(catalog)
-            snapshot = plan(catalog)
+            refresh_protection(catalog, _reuse_verified_audit=need_slot)
+            snapshot = plan(catalog, _validated_context=True)
         for row in snapshot['entries']:
             if row['classification'] != 'DELETABLE':
                 emit('CANDIDATE_RETAINED', path=row['path'],
@@ -1072,7 +1095,7 @@ def maintenance(root, *, reason, need_slot=False):
                 return []
             deleted = cleanup_capacity_rotation(path, snapshot)
             with locked(path) as catalog:
-                refresh_protection(catalog)
+                refresh_protection(catalog, _reuse_verified_audit=True)
             emit('CAPACITY_ROTATION_COMPLETED', paths=deleted, trigger=reason,
                  order_provenance=snapshot['capacity_rotation_target']['capacity_rotation_order'])
             return deleted

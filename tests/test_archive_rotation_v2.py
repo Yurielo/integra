@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import time
 import unittest
 from unittest.mock import patch
 
@@ -117,9 +118,14 @@ class LegacyRotationTests(unittest.TestCase):
         with patch.object(retention, '_context_valid', return_value=True), \
                 patch.object(retention, '_inactive', return_value=True), \
                 patch.object(retention, 'MAX_COPIES', 1):
-            with patch.object(gate, 'require_capacity_rotation', return_value=lease), \
-                    patch.object(gate, 'require_capacity_rotation_continuation', return_value=None):
+            with patch.object(gate, 'require_capacity_rotation', return_value=lease) as grant, \
+                    patch.object(gate, 'require_capacity_rotation_continuation', return_value=None) as continuation:
                 result = retention_cleanup.apply_capacity_rotation(retention, catalog_path, plan)
+            self.assertEqual(grant.call_count, 2)  # capture and immediately before rename
+            self.assertEqual(sum(call.kwargs.get('full') is True
+                                 for call in continuation.call_args_list), 1)
+            self.assertGreater(sum(call.kwargs.get('full') is False
+                                   for call in continuation.call_args_list), 0)
         self.assertEqual(result, [str(legacy)])
         self.assertFalse(legacy.exists())
         self.assertEqual(archive._identity(self.app), identity)
@@ -357,6 +363,187 @@ class LegacyRotationTests(unittest.TestCase):
         receipt = next(iter(completed['retirements'].values()))
         self.assertEqual(receipt['state'], 'RETIRED_NOT_AVAILABLE')
         self.assertIs(receipt['physical_available'], False)
+
+    def test_external_disappearance_after_partial_unlink_never_becomes_complete(self):
+        legacy, catalog_path, plan, lease, _ = self.legacy_case()
+        original_parent_fd = retention_cleanup._parent_fd
+        calls = 0
+
+        def interrupt(*args, **kwargs):
+            nonlocal calls
+            calls += 1
+            if calls == 3:
+                raise RuntimeError('injected partial unlink')
+            return original_parent_fd(*args, **kwargs)
+
+        with patch.object(retention, '_context_valid', return_value=True), \
+                patch.object(retention, '_inactive', return_value=True), \
+                patch.object(retention, 'MAX_COPIES', 1), \
+                patch.object(gate, 'require_capacity_rotation', return_value=lease), \
+                patch.object(gate, 'require_capacity_rotation_continuation', return_value=None):
+            with patch.object(retention_cleanup, '_parent_fd', side_effect=interrupt):
+                with self.assertRaisesRegex(RuntimeError, 'partial unlink'):
+                    retention_cleanup.apply_capacity_rotation(retention, catalog_path, plan)
+            journal = next(iter(json.loads(catalog_path.read_bytes())['deletions'].values()))
+            self.assertEqual(journal['phase'], 'DELETING')
+            shutil.rmtree(journal['trash'])  # Synthetic external loss only.
+            with self.assertRaisesRegex(ValueError, 'without final-unlink proof'):
+                retention.recover_cleanup(catalog_path)
+        state = json.loads(catalog_path.read_bytes())
+        self.assertEqual(next(iter(state['retirements'].values()))['state'], 'PARTIAL')
+        self.assertTrue(state['deletions'])
+
+    def test_crash_after_durable_final_empty_checkpoint_recovers(self):
+        legacy, catalog_path, plan, lease, _ = self.legacy_case()
+        original_rmdir = os.rmdir
+        failed = False
+
+        def interrupt_final_rmdir(path, *args, **kwargs):
+            nonlocal failed
+            if Path(path).name.startswith('.retention-trash-') and not failed:
+                failed = True
+                raise RuntimeError('injected after final checkpoint')
+            return original_rmdir(path, *args, **kwargs)
+
+        with patch.object(retention, '_context_valid', return_value=True), \
+                patch.object(retention, '_inactive', return_value=True), \
+                patch.object(retention, 'MAX_COPIES', 1), \
+                patch.object(gate, 'require_capacity_rotation', return_value=lease), \
+                patch.object(gate, 'require_capacity_rotation_continuation', return_value=None):
+            with patch.object(retention_cleanup.os, 'rmdir', side_effect=interrupt_final_rmdir):
+                with self.assertRaisesRegex(RuntimeError, 'after final checkpoint'):
+                    retention_cleanup.apply_capacity_rotation(retention, catalog_path, plan)
+            journal = next(iter(json.loads(catalog_path.read_bytes())['deletions'].values()))
+            self.assertEqual(journal['phase'], 'FINAL_UNLINK_READY')
+            self.assertEqual(retention.recover_cleanup(catalog_path), [str(legacy)])
+        state = json.loads(catalog_path.read_bytes())
+        self.assertEqual(next(iter(state['retirements'].values()))['state'], 'RETIRED_NOT_AVAILABLE')
+
+    def test_slow_final_full_proof_does_not_consume_unlink_deadline(self):
+        legacy, catalog_path, plan, lease, _ = self.legacy_case()
+        full_calls = 0
+
+        def slow_final(_lease, *, full=True):
+            nonlocal full_calls
+            if full:
+                full_calls += 1
+                time.sleep(0.35)
+
+        with patch.object(retention, '_context_valid', return_value=True), \
+                patch.object(retention, '_inactive', return_value=True), \
+                patch.object(retention, 'MAX_COPIES', 1), \
+                patch.object(retention_cleanup, 'UNLINK_DEADLINE_SECONDS', 0.2), \
+                patch.object(gate, 'require_capacity_rotation', return_value=lease), \
+                patch.object(gate, 'require_capacity_rotation_continuation', side_effect=slow_final):
+            self.assertEqual(retention.cleanup_capacity_rotation(catalog_path, plan), [str(legacy)])
+        self.assertEqual(full_calls, 1)
+        self.assertEqual(next(iter(json.loads(catalog_path.read_bytes())['retirements'].values()))['state'],
+                         'RETIRED_NOT_AVAILABLE')
+
+    def test_canonical_change_at_rename_gate_keeps_original_bytes(self):
+        legacy, catalog_path, plan, lease, identity = self.legacy_case()
+        with patch.object(retention, '_context_valid', return_value=True), \
+                patch.object(retention, '_inactive', return_value=True), \
+                patch.object(retention, 'MAX_COPIES', 1), \
+                patch.object(gate, 'require_capacity_rotation',
+                             side_effect=[lease, ValueError('canonical changed before rename')]) as grant, \
+                patch.object(gate, 'require_capacity_rotation_continuation', return_value=None):
+            with self.assertRaisesRegex(ValueError, 'canonical changed before rename'):
+                retention.cleanup_capacity_rotation(catalog_path, plan)
+        self.assertEqual(grant.call_count, 2)
+        self.assertTrue(legacy.exists())
+        self.assertEqual(archive._identity(legacy / 'Integra.app'), identity)
+        state = json.loads(catalog_path.read_bytes())
+        self.assertEqual(next(iter(state['deletions'].values()))['phase'], 'PREPARED')
+        self.assertEqual(next(iter(state['retirements'].values()))['state'], 'PARTIAL')
+
+    def test_pre_repair_journal_gains_fast_anchors_after_one_full_recovery_proof(self):
+        legacy, catalog_path, _, _, identity = self.legacy_case()
+        old_lease = {'kind': 'OWNER_POLICY_CAPACITY_ROTATION',
+                     'physical_survivors': {'Candidate Builds/other': {'identity': identity}}}
+        upgraded = {'kind': old_lease['kind'],
+                    'physical_survivors': {'Candidate Builds/other': {
+                        'identity': identity, 'metadata_anchors': {'manifest': {},
+                            'complete': None, 'inventory': None},
+                        'manifest_sha256': identity['manifest_digest'],
+                        'complete_sha256': None}}}
+        receipt = {'transaction_id': 'rotation-v2-old', 'canonical_snapshot': old_lease}
+        job = {'kind': 'CAPACITY_ROTATION', 'source': str(legacy),
+               'canonical_deletion_lease': old_lease, 'retirement_receipt': receipt}
+        catalog = {'deletions': {'old': job}, 'retirements': {'rotation-v2-old': receipt},
+                   'protection': {'verified_survivors': {}}}
+
+        def inspect_upgraded(_r, _path, current, token):
+            self.assertEqual(token, 'old')
+            self.assertEqual(current['deletions'][token]['canonical_deletion_lease'], upgraded)
+            self.assertEqual(current['retirements']['rotation-v2-old']['canonical_snapshot'], upgraded)
+            return str(legacy)
+
+        with patch.object(gate, 'require_capacity_rotation_continuation', return_value=upgraded) as full, \
+                patch.object(retention_cleanup, '_execute', side_effect=inspect_upgraded):
+            self.assertEqual(retention_cleanup.recover(retention, catalog_path, catalog), [str(legacy)])
+        self.assertEqual(full.call_count, 1)
+        self.assertEqual(json.loads(catalog_path.read_bytes())['deletions']['old']
+                         ['canonical_deletion_lease'], upgraded)
+
+    def test_maintenance_to_rotation_uses_bounded_full_gates(self):
+        legacy, catalog_path, _, lease, _ = self.legacy_case()
+        registry = {'canonical_current': {'current_id': 'fixture-current', 'path': 'CURRENT.json'},
+                    'selected_survivors': {}, 'rollback': {'candidate_id': 'fixture-rollback'},
+                    'recovery': None, 'explicit_governance_pins': []}
+        audit = {'canonical': {'rotation_policy': {'rotation_strategy': 'OLDEST_FULL_COPY_FIRST'}},
+                 'rotated_unavailable': {}}
+        with patch.object(gate, '_snapshot', return_value=(registry, audit)) as snapshot, \
+                patch.object(retention, 'reconcile_catalog', return_value=None) as reconcile, \
+                patch.object(retention, '_context_valid', side_effect=AssertionError(
+                    'verified local plan must not refetch canonical authority')) as refetch, \
+                patch.object(retention, '_inactive', return_value=True), \
+                patch.object(retention, 'MAX_COPIES', 1), \
+                patch.object(gate, 'require_capacity_rotation', return_value=lease) as grant, \
+                patch.object(gate, 'require_capacity_rotation_continuation', return_value=None) as continuation:
+            self.assertEqual(retention.maintenance(self.destination, reason='SYNTHETIC_ADMISSION',
+                                                   need_slot=True), [str(legacy)])
+        self.assertEqual(snapshot.call_count, 2)  # once before, once after retirement
+        self.assertEqual(reconcile.call_count, 2)
+        refetch.assert_not_called()
+        self.assertEqual(grant.call_count, 2)  # lease capture and fresh rename gate
+        self.assertEqual(sum(call.kwargs.get('full') is True
+                             for call in continuation.call_args_list), 1)
+        self.assertGreater(sum(call.kwargs.get('full') is False
+                               for call in continuation.call_args_list), 0)
+        self.assertFalse(legacy.exists())
+        self.assertEqual(json.loads(catalog_path.read_bytes())['deletions'], {})
+
+    def test_fast_anchor_skips_payload_hash_and_final_full_detects_change(self):
+        legacy, _, _, _, identity = self.legacy_case()
+        expected = gate._rotation_package_attestation(legacy, identity)
+        with patch.object(gate, '_rotation_package_attestation',
+                          side_effect=AssertionError('fast check must not rehash payload')):
+            self.assertTrue(gate._fast_rotation_package_anchor(legacy, expected))
+        (legacy / 'build.log').write_text('changed while transaction is open\n')
+        self.assertTrue(gate._fast_rotation_package_anchor(legacy, expected))
+        self.assertNotEqual(gate._rotation_package_attestation(legacy, identity), expected)
+
+    def test_non_rotation_reconciliation_still_fully_verifies_archive(self):
+        with patch.object(gate, 'require_archive_publication', return_value=None), \
+                patch.object(retention, 'refresh_protection', return_value=None), \
+                patch.object(retention, '_context_valid', return_value=True), \
+                patch.object(archive, 'MANAGED_BASE', self.root):
+            published = archive.create_archive(self.app, self.destination)
+        package = Path(published['archive_path'])
+        identity = {key: published[key] for key in archive.IDENTITY_KEYS}
+        relative = package.relative_to(self.root).as_posix()
+        (package / 'Integra.app/Contents/MacOS/Integra').write_bytes(b'corrupt payload')
+        registry = {'selected_survivors': {identity['candidate_id']: relative},
+                    'canonical_current': {'current_id': 'fixture-current'}}
+        audit = {'authority_state': 'COMPLETE',
+                 'protected_identities': {identity['candidate_id']: {
+                     'identity': identity, 'reasons': ['CURRENT']}},
+                 'entries': [{'path': relative, **identity, 'classification': 'PROTECTED',
+                              'verified_protected_archive': True}], 'canonical': {}}
+        catalog = {'roots': [str(self.destination)], 'artifacts': {}}
+        with self.assertRaisesRegex(ValueError, 'bundle bytes differ'):
+            retention.reconcile_catalog(catalog, registry, audit, self.root)
 
     def test_eight_to_seven_to_eight_admits_new_archived_candidate(self):
         identities = []

@@ -319,26 +319,21 @@ def require_capacity_rotation(path: Path) -> dict:
             'protected_identities': {cid: value['identity'] for cid, value in audit['protected_identities'].items()}}
 
 
-def require_capacity_rotation_continuation(lease: dict) -> None:
-    """Recheck immutable canonical authority during rename/unlink/recovery."""
+def require_capacity_rotation_continuation(lease: dict, *, full: bool = True) -> dict | None:
+    """Check the lease cheaply during unlink; rehash before completion.
+
+    The full check remains mandatory before an interrupted operation resumes
+    and before a completed retirement is recorded. Fast checks never grant a
+    new rotation: only require_capacity_rotation can create the lease.
+    """
     if not isinstance(lease, dict) or lease.get('kind') != 'OWNER_POLICY_CAPACITY_ROTATION':
         raise ValueError('capacity-rotation lease is missing')
     raw = protection.REGISTRY.read_bytes()
     if protection.sha(raw) != lease.get('registry_sha256'):
         raise ValueError('rotation registry changed')
     registry = json.loads(raw)
-    current, proposals, canonical = protection.fetch_canonical(registry)
-    policy = canonical.get('rotation_policy') or {}
-    if (policy.get('sha256') != lease.get('policy_sha256')
-            or policy.get('authority_ref') != lease.get('policy_authority_ref')
-            or protection.digest(canonical) != lease.get('canonical_sha256')):
-        raise ValueError('rotation canonical authority changed')
-    blockers = []
-    gaps = protection._accepted_historical_gaps(registry, canonical, blockers)
-    protected = protection._validate_registry(registry, current, proposals, blockers, gaps, canonical)
-    if (blockers or registry['selected_survivors'] != lease.get('selected_survivors')
-            or {cid: role['identity'] for cid, role in protected.items()} != lease.get('protected_identities')):
-        raise ValueError('rotation protection graph changed')
+    if registry.get('selected_survivors') != lease.get('selected_survivors'):
+        raise ValueError('rotation survivor selection changed')
     base = Path.home() / 'Library/Application Support/Integra'
     try:
         from scripts import candidate_retention as retention
@@ -348,8 +343,6 @@ def require_capacity_rotation_continuation(lease: dict) -> None:
     local_catalog = json.loads(catalog_path.read_bytes())
     if local_catalog.get('rotation_order_v2') != lease.get('initial_order'):
         raise ValueError('persisted initial rotation order changed')
-    if protection.load_rotation_receipts(base, policy) != lease.get('prior_rotated'):
-        raise ValueError('prior physical-retirement receipts changed')
     for cid, expected in lease.get('survivors', {}).items():
         selected = registry['selected_survivors'].get(cid)
         if selected != expected['path']:
@@ -357,7 +350,6 @@ def require_capacity_rotation_continuation(lease: dict) -> None:
         receipt = base / selected / 'COMPLETE.json'
         if protection.sha(receipt.read_bytes()) != expected['receipt_sha256']:
             raise ValueError('rotation survivor receipt changed')
-        protection.verify_archive(base / selected, protected[cid]['identity'])
     physical_survivors = lease.get('physical_survivors')
     if not isinstance(physical_survivors, dict):
         raise ValueError('rotation physical-survivor attestations are missing')
@@ -367,8 +359,71 @@ def require_capacity_rotation_continuation(lease: dict) -> None:
                 or not any(relative == root or relative.startswith(root + '/')
                            for root in registry['managed_roots'])):
             raise ValueError('rotation physical-survivor path is outside managed authority')
-        if (_rotation_package_attestation(base / relative, expected['identity']) != expected):
+        if not _fast_rotation_package_anchor(base / relative, expected):
             raise ValueError('rotation physical survivor changed: ' + relative)
+    if not full:
+        return
+    current, proposals, canonical = protection.fetch_canonical(registry)
+    policy = canonical.get('rotation_policy') or {}
+    if (policy.get('sha256') != lease.get('policy_sha256')
+            or policy.get('authority_ref') != lease.get('policy_authority_ref')
+            or protection.digest(canonical) != lease.get('canonical_sha256')):
+        raise ValueError('rotation canonical authority changed')
+    blockers = []
+    gaps = protection._accepted_historical_gaps(registry, canonical, blockers)
+    protected = protection._validate_registry(registry, current, proposals, blockers, gaps, canonical)
+    if (blockers or {cid: role['identity'] for cid, role in protected.items()}
+            != lease.get('protected_identities')):
+        raise ValueError('rotation protection graph changed')
+    if protection.load_rotation_receipts(base, policy) != lease.get('prior_rotated'):
+        raise ValueError('prior physical-retirement receipts changed')
+    for cid, expected in lease.get('survivors', {}).items():
+        protection.verify_archive(base / expected['path'], protected[cid]['identity'])
+    upgraded = {}
+    for relative, expected in physical_survivors.items():
+        fresh = _rotation_package_attestation(base / relative, expected['identity'])
+        if any(fresh.get(key) != value for key, value in expected.items()):
+            raise ValueError('rotation physical survivor bytes changed: ' + relative)
+        upgraded[relative] = fresh
+    return {**lease, 'physical_survivors': upgraded}
+
+
+def _fast_rotation_package_anchor(package: Path, expected: dict) -> bool:
+    """Compare owner/inode and small immutable metadata between full proofs."""
+    if not {'metadata_anchors', 'manifest_sha256', 'complete_sha256'} <= set(expected):
+        # Journals from the earlier executor remain recoverable under its full
+        # verifier; never weaken a legacy lease by omitting an anchor.
+        return _rotation_package_attestation(package, expected['identity']) == expected
+    if package.is_symlink():
+        return False
+    root = package.lstat()
+    if (not stat.S_ISDIR(root.st_mode) or root.st_uid != os.getuid()
+            or (root.st_dev, root.st_ino, getattr(root, 'st_birthtime', None)) !=
+               (expected['device'], expected['inode'], expected['birthtime'])):
+        return False
+    manifest = package / 'Integra.app/Contents/Resources/candidate-manifest.json'
+    if (_file_anchor(manifest) != expected['metadata_anchors'].get('manifest')
+            or protection.sha(manifest.read_bytes()) != expected['manifest_sha256']):
+        return False
+    for name, key in (('COMPLETE.json', 'complete'),
+                      ('inventory.json', 'inventory')):
+        path = package / name
+        anchor = _file_anchor(path) if path.exists() else None
+        if anchor != expected['metadata_anchors'].get(key):
+            return False
+    complete = package / 'COMPLETE.json'
+    if (protection.sha(complete.read_bytes()) if complete.exists() else None) != expected['complete_sha256']:
+        return False
+    return True
+
+
+def _file_anchor(path: Path) -> dict:
+    s = path.lstat()
+    if not stat.S_ISREG(s.st_mode) or s.st_uid != os.getuid() or s.st_nlink != 1:
+        raise ValueError('rotation metadata file owner or type changed')
+    return {'device': s.st_dev, 'inode': s.st_ino, 'owner_uid': s.st_uid,
+            'mode': stat.S_IMODE(s.st_mode), 'size': s.st_size,
+            'mtime_ns': s.st_mtime_ns, 'ctime_ns': s.st_ctime_ns}
 
 
 def _rotation_package_attestation(package: Path, identity: dict) -> dict:
@@ -398,4 +453,13 @@ def _rotation_package_attestation(package: Path, identity: dict) -> dict:
     return {'identity': identity, 'device': root.st_dev, 'inode': root.st_ino,
             'birthtime': getattr(root, 'st_birthtime', None),
             'inventory_sha256': protection.digest(inventory),
-            'archive_kind': 'COMPLETE' if has_complete else 'UNARCHIVED'}
+            'archive_kind': 'COMPLETE' if has_complete else 'UNARCHIVED',
+            'manifest_sha256': protection.sha(
+                (package / 'Integra.app/Contents/Resources/candidate-manifest.json').read_bytes()),
+            'complete_sha256': protection.sha((package / 'COMPLETE.json').read_bytes())
+            if has_complete else None,
+            'metadata_anchors': {
+                'manifest': _file_anchor(
+                    package / 'Integra.app/Contents/Resources/candidate-manifest.json'),
+                'complete': _file_anchor(package / 'COMPLETE.json') if has_complete else None,
+                'inventory': _file_anchor(package / 'inventory.json') if has_inventory else None}}
