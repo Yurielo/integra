@@ -1,0 +1,18 @@
+test_duplicate_content_candidate_is_never_merged (test_seminar_library.SeminarLibraryTests.test_duplicate_content_candidate_is_never_merged) ... ok
+test_manifest_parent_symlink_is_rejected (test_seminar_library.SeminarLibraryTests.test_manifest_parent_symlink_is_rejected) ... ok
+test_multi_product_read_only_deterministic_preview (test_seminar_library.SeminarLibraryTests.test_multi_product_read_only_deterministic_preview) ... ok
+test_nested_malformed_records_and_unsafe_absolute_locator (test_seminar_library.SeminarLibraryTests.test_nested_malformed_records_and_unsafe_absolute_locator) ... ok
+test_resealed_orphan_reference_is_rejected (test_seminar_library.SeminarLibraryTests.test_resealed_orphan_reference_is_rejected) ... ok
+test_stale_evidence_bundle_and_coverage_fail_closed (test_seminar_library.SeminarLibraryTests.test_stale_evidence_bundle_and_coverage_fail_closed) ... ok
+test_supported_cli_preview_and_shared_native_source_reference (test_seminar_library.SeminarLibraryTests.test_supported_cli_preview_and_shared_native_source_reference) ... ok
+test_unknown_exclusion_and_tampered_registry_fail_closed (test_seminar_library.SeminarLibraryTests.test_unknown_exclusion_and_tampered_registry_fail_closed) ... ok
+test_unsupported_malformed_and_stale_package (test_seminar_library.SeminarLibraryTests.test_unsupported_malformed_and_stale_package) ... ok
+test_bad_manifest_fails_without_returning_old_catalog (test_seminar_library_bridge.SeminarLibraryBridgeTests.test_bad_manifest_fails_without_returning_old_catalog) ... ok
+test_explicit_owner_and_unique_path_are_required (test_seminar_library_bridge.SeminarLibraryBridgeTests.test_explicit_owner_and_unique_path_are_required) ... ok
+test_four_product_projection_is_deterministic_and_does_not_change_inputs (test_seminar_library_bridge.SeminarLibraryBridgeTests.test_four_product_projection_is_deterministic_and_does_not_change_inputs) ... ok
+test_unsupported_version_stays_a_diagnostic (test_seminar_library_bridge.SeminarLibraryBridgeTests.test_unsupported_version_stays_a_diagnostic) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.736s
+
+OK

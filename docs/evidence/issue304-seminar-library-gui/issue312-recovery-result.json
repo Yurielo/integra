@@ -1,0 +1,27 @@
+{
+  "archive_verification": {
+    "app_size_bytes": 2201668491,
+    "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-073396d37f3f70fe2a550a481cbacdb645204a188d8b4a6c1ad18cdfac77e4a8/c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
+    "artifact_type": "integra.candidate_archive",
+    "bundle_digest": "c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
+    "candidate_id": "candidate-v1-073396d37f3f70fe2a550a481cbacdb645204a188d8b4a6c1ad18cdfac77e4a8",
+    "file_count": 29609,
+    "inventory_sha256": "7f21559a79e644ddcd23417344a5b000fd1f9c79fd5c33827bb6ff06a318607d",
+    "manifest_digest": "aa08d2ea861c218c893c287e189bf96beb3096f555913b9d3c7b391e6e5061f4",
+    "retained_size_bytes": 2201673653,
+    "runtime_validation": "NOT_PERFORMED",
+    "schema_version": "1.0",
+    "status": "COMPLETE",
+    "verification": "ARCHIVAL_BYTE_INTEGRITY"
+  },
+  "artifact_type": "integra.issue312_archive_recovery_result",
+  "original_complete_sha256": "70dd0501b3d24bcb4deeee3490296e62f5c47c2d4c612c54d41f8330de2f6daa",
+  "original_inventory_sha256": "7f21559a79e644ddcd23417344a5b000fd1f9c79fd5c33827bb6ff06a318607d",
+  "owner_authorization_ref": "Direct Product Owner authorization for Integra Issue #312, 2026-10-29",
+  "preservation": "/Users/yurielokhin/Documents/integra-issue-312-preserved-bytecode-073396d",
+  "preserved_manifest_sha256": "a5895341ea6c4d406dd58fc6d0aca3389160be057c545b6e740fa0813f320871",
+  "removed_empty_cache_directories": 5,
+  "removed_extra_files": 25,
+  "source_archive": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-073396d37f3f70fe2a550a481cbacdb645204a188d8b4a6c1ad18cdfac77e4a8/c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
+  "verified_at_utc": "2026-10-29T10:54:31.102895+00:00"
+}
