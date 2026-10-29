@@ -1,0 +1,107 @@
+{
+  "allowed_overlay_paths": [
+    "docs/ISSUE_304_SEMINAR_LIBRARY_GUI.md",
+    "docs/evidence/issue304-seminar-library-gui/candidate-archive-receipt.json",
+    "docs/evidence/issue304-seminar-library-gui/candidate-evidence.json",
+    "docs/evidence/issue304-seminar-library-gui/candidate-manifest.json",
+    "docs/evidence/issue304-seminar-library-gui/issue312-preservation-manifest.json",
+    "docs/evidence/issue304-seminar-library-gui/issue312-recovery-result.json",
+    "docs/evidence/issue304-seminar-library-gui/migration-focused-tests.log",
+    "docs/evidence/issue304-seminar-library-gui/native-test.log",
+    "docs/evidence/issue304-seminar-library-gui/rotation-order-v2.json",
+    "docs/evidence/issue304-seminar-library-gui/rotation-receipt.json",
+    "docs/evidence/issue304-seminar-library-gui/seminar-library-focused-tests.log"
+  ],
+  "artifact_type": "integra.proposed_product_baseline",
+  "base_current_id": "current-v2-1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434",
+  "base_main": {
+    "commit_sha": "989e15dfb2b5e20e4c628e4e44ac7baee63b1cc6",
+    "tree_sha": "310dca953426494e6433dd3c9948271cc2348351"
+  },
+  "candidate": {
+    "bundle_digest": "3b20a60744a8a20ff856778df0e1ea250da735a49ae6ec35f3b02cdf6ad9f5fe",
+    "candidate_id": "candidate-v1-9a009cecd86aeb72550e7ecdbf820a3d7683a7ccf830c20143a3f04c0c976144",
+    "identity_sha256": "9a009cecd86aeb72550e7ecdbf820a3d7683a7ccf830c20143a3f04c0c976144",
+    "manifest_digest": "249bffca02a71e08ee3e23bf3ba0d4524416180a7a12546c732ca90678d1668c"
+  },
+  "delta": [
+    {
+      "after_sha256": "06e273f15f7ff8b80abc53e271bbe96b08e41b237bdcf4a348ef62c090aa714f",
+      "before_sha256": "7c0976c3cf1d6b615150a3c0df5c66175c55faaaabdcea93dff750814b6dc0de",
+      "path": "macos/IntegraApp.swift"
+    },
+    {
+      "after_sha256": "9d9dd0a6f1dc83aebeca7a732226abdfcb161dd0a915d627da5cc910fbfe6164",
+      "before_sha256": "0ecc20d4f38db43ec6519abd26c7983a7ce97932c4484250b36827e10efa8528",
+      "path": "macos/Resources/bridge.py"
+    },
+    {
+      "after_sha256": "8dfeeb04c943b7e90cff42fd555eaf934a0cce5784167703354a0c5483f28eb7",
+      "before_sha256": "c2fc0ad755c84a4067b65df39267b86d72e547a5683988db8f674b3d402d2a78",
+      "path": "scripts/build_macos_app.sh"
+    },
+    {
+      "after_sha256": "916e8bc19b82d983f87084732aa6b4b02fec0b2f6c560d929e75f0cab4150dd4",
+      "before_sha256": "bded70e8c256344412c1ae2818e1f8fd4a1d12fd4bbcaba219b5cd0a416c552c",
+      "path": "scripts/test_macos_app.sh"
+    }
+  ],
+  "evidence": {
+    "candidate_evidence": {
+      "path": "docs/evidence/issue304-seminar-library-gui/candidate-evidence.json",
+      "sha256": "7cba58fcdf7549f056072e39b0abc1a439192620284a8d46ff38fcbf31e040de"
+    },
+    "candidate_manifest": {
+      "path": "docs/evidence/issue304-seminar-library-gui/candidate-manifest.json",
+      "sha256": "249bffca02a71e08ee3e23bf3ba0d4524416180a7a12546c732ca90678d1668c"
+    },
+    "report": {
+      "path": "docs/ISSUE_304_SEMINAR_LIBRARY_GUI.md",
+      "sha256": "54a4b7d6748a4a46343bcb34c66645d01ea05c52e3f99ddc39a1f6514768c136"
+    }
+  },
+  "gates": [
+    {
+      "evidence_ref": "docs/evidence/issue304-seminar-library-gui/candidate-archive-receipt.json",
+      "name": "archive-byte-integrity",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/issue304-seminar-library-gui/native-test.log",
+      "name": "native-AppKit-project-detail-and-resource-packaging",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/issue304-seminar-library-gui/seminar-library-focused-tests.log",
+      "name": "focused-Seminar-Library-tests",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/issue304-seminar-library-gui/issue312-recovery-result.json",
+      "name": "Issue-312-exact-recovery",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/issue304-seminar-library-gui/rotation-receipt.json",
+      "name": "eight-build-rotation-receipt",
+      "result": "PASS"
+    }
+  ],
+  "historical_test_successors": [],
+  "intended_scope": {
+    "journey": "Explicitly select product-tagged manifests and inspect project-first source and artifact details without changing source files or installed application.",
+    "wp": "Issue #304 Seminar Library native AppKit read-only GUI; Issue #312 exact archive recovery for PR #305 Candidate"
+  },
+  "owner_acceptance": null,
+  "proposal_id": "proposal-issue304-seminar-library-gui-pr305",
+  "proposed_head": {
+    "commit_sha": "c6d1bff1d9578e990430c9be5e729dc19867a5e6",
+    "tree_sha": "63c9949ba66f340d9a003f767473c7f26ec50686"
+  },
+  "proposed_source": {
+    "commit_sha": "827f1531374ab38c73612ccafe84515a716fac88",
+    "tree_sha": "869d979b7f0ff0b2ea4d8412b5271b8d335adfda"
+  },
+  "schema_version": "1.0",
+  "status": "PROPOSED_BASELINE_VALID"
+}
