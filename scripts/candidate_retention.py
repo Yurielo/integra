@@ -650,7 +650,8 @@ def _record_publication(catalog, token, lease, receipt):
         raise ValueError('publication sequence high watermark is invalid')
     sequences = [watermark]
     records = list(catalog['artifacts'].values())
-    records.extend(retired.get('publisher_attestation') or {}
+    records.extend(retired.get('publisher_attestation') or
+                   retired.get('conflicting_catalog_record') or {}
                    for retired in catalog.get('retirements', {}).values())
     for record in records:
         sequence = record.get('publication_sequence')

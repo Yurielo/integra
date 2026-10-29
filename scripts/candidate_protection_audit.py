@@ -1108,7 +1108,8 @@ def load_rotation_receipts(base: Path, policy: dict | None) -> dict[str, dict]:
         inventory_bytes = receipt.get('retained_inventory_json_base64')
         complete_bytes = receipt.get('retained_complete_base64')
         if archive_kind in ('PUBLISHER_BOUND_COMPLETE_ARCHIVE',
-                            'LEGACY_COMPLETED_ARCHIVE_OBSERVED_NOW'):
+                            'LEGACY_COMPLETED_ARCHIVE_OBSERVED_NOW',
+                            'COMPLETED_ARCHIVE_WITH_CONFLICTING_PUBLISHER_RECORD'):
             try:
                 inventory_bytes = base64.b64decode(inventory_bytes, validate=True)
                 complete_bytes = base64.b64decode(complete_bytes, validate=True)
@@ -1116,8 +1117,10 @@ def load_rotation_receipts(base: Path, policy: dict | None) -> dict[str, dict]:
                 original_inventory = json.loads(inventory_bytes)
             except (ValueError, TypeError, KeyError) as error:
                 raise ValueError('retired archive receipt bytes are invalid') from error
-            inventory_by_path = {item['path']: item for item in inventory}
-            if (len(inventory_by_path) != len(inventory)
+            inventory_by_path = ({item['path']: item for item in inventory}
+                                 if isinstance(inventory, list) else {})
+            if (not isinstance(inventory, list)
+                    or len(inventory_by_path) != len(inventory)
                     or complete.get('status') != 'COMPLETE'
                     or any(complete.get(key) != identity[key] for key in IDENTITY)
                     or complete.get('inventory_sha256') != sha(inventory_bytes)
@@ -1128,9 +1131,57 @@ def load_rotation_receipts(base: Path, policy: dict | None) -> dict[str, dict]:
                     or (archive_kind == 'PUBLISHER_BOUND_COMPLETE_ARCHIVE')
                     != isinstance(receipt.get('publisher_attestation'), dict)):
                 raise ValueError('retired archive receipt metadata differs')
+            if archive_kind == 'COMPLETED_ARCHIVE_WITH_CONFLICTING_PUBLISHER_RECORD':
+                record = receipt.get('conflicting_catalog_record')
+                evidence = receipt.get('observed_catalog_order_evidence')
+                if (not isinstance(record, dict) or not isinstance(evidence, dict)
+                        or evidence.get('kind') != 'OBSERVED_CATALOG_SEQUENCE_RECEIPT_MATCH_DEVICE_DRIFT'
+                        or evidence.get('physical_publisher_owned') is not False
+                        or receipt.get('physical_publisher_owned') is not False
+                        or record.get('historical') is not False
+                        or record.get('publisher_completed') is not True
+                        or record.get('publication_recorded_at') is not None
+                        or type(record.get('publication_sequence')) is not int
+                        or record['publication_sequence'] <= 0
+                        or not isinstance(record.get('publisher_run_id'), str)
+                        or not record['publisher_run_id']
+                        or type(record.get('publisher_pid')) is not int
+                        or record['publisher_pid'] <= 0
+                        or not isinstance(record.get('publisher_start_token'), str)
+                        or not record['publisher_start_token']
+                        or type(record.get('device')) is not int
+                        or evidence.get('publication_sequence') != record['publication_sequence']
+                        or evidence.get('observed_catalog_record_sha256') != digest(record)
+                        or any(record.get(key) != identity[key] for key in IDENTITY)
+                        or record.get('complete_sha256') != sha(complete_bytes)
+                        or record.get('inventory_sha256') != sha(inventory_bytes)
+                        or evidence.get('complete_sha256') != sha(complete_bytes)
+                        or evidence.get('inventory_sha256') != sha(inventory_bytes)
+                        or record.get('owner_uid') != receipt.get('observed_owner_uid')
+                        or record.get('inode') != receipt.get('observed_inode')
+                        or evidence.get('recorded_inode') != record.get('inode')
+                        or evidence.get('observed_inode') != receipt.get('observed_inode')
+                        or evidence.get('recorded_device') != record.get('device')
+                        or evidence.get('observed_device') != receipt.get('observed_device')
+                        or record.get('device') == receipt.get('observed_device')
+                        or receipt.get('canonical_snapshot', {}).get('publisher_order_evidence', {}).get(source)
+                        != evidence
+                        or receipt.get('order_provenance') != receipt.get('canonical_snapshot', {}).get('order')
+                        or receipt.get('order_provenance', {}).get('source')
+                        != 'PUBLISHER_SEQUENCE_WITH_OBSERVED_NOW_COHORT_PLACEMENT'
+                        or receipt.get('order_provenance', {}).get('publisher_sequence')
+                        != record['publication_sequence']
+                        or receipt.get('order_provenance', {}).get('timestamp')
+                        != receipt.get('canonical_snapshot', {}).get('birthtime')
+                        or receipt.get('order_provenance', {}).get('recorded_value')
+                        != receipt.get('canonical_snapshot', {}).get('birthtime')):
+                    raise ValueError('conflicting-record retirement evidence differs')
+            elif receipt.get('conflicting_catalog_record') is not None:
+                raise ValueError('non-conflicting retirement has a conflicting catalog record')
         elif archive_kind == 'UNARCHIVED_CANDIDATE_BUILD':
             if (inventory_bytes is not None or complete_bytes is not None
-                    or receipt.get('publisher_attestation') is not None):
+                    or receipt.get('publisher_attestation') is not None
+                    or receipt.get('conflicting_catalog_record') is not None):
                 raise ValueError('unarchived Candidate has false publisher metadata')
         else:
             raise ValueError('retired archive kind is unknown')

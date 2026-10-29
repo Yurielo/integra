@@ -1,5 +1,6 @@
 """Isolated capacity-rotation proofs; never touch the user's managed archive."""
 import base64
+import copy
 import json
 import os
 from pathlib import Path
@@ -112,6 +113,142 @@ class LegacyRotationTests(unittest.TestCase):
                      plan['entries'], 'a' * 64, '2026-10-29T00:00:00+00:00', 1),
                  'proposal_refs': ['PR #204']}
         return legacy, catalog_path, plan, lease, identity
+
+    def completed_device_drift_case(self, destination=None):
+        destination = destination or self.root / 'Build Archive'
+        with patch.object(gate, 'require_archive_publication', return_value=None), \
+                patch.object(retention, 'refresh_protection', return_value=None), \
+                patch.object(retention, '_context_valid', return_value=True), \
+                patch.object(archive, 'MANAGED_BASE', self.root):
+            published = archive.create_archive(self.app, destination)
+        package = Path(published['archive_path'])
+        identity = {key: published[key] for key in archive.IDENTITY_KEYS}
+        catalog_path = retention.catalog_path(destination)
+        with retention.locked(catalog_path) as catalog:
+            record = catalog['artifacts'][str(package)]
+            record['device'] = package.stat().st_dev + 1
+            record.pop('publication_recorded_at')
+            record['publication_sequence'] = 2
+            catalog['protection'] = {
+                'protected': {identity['candidate_id']: ['OPEN_PROPOSAL']},
+                'inputs': {}, 'selected_archives': {}, 'verified_survivors': {},
+                'rotation_policy': {'rotation_strategy': 'OLDEST_FULL_COPY_FIRST',
+                                    'sha256': 'a' * 64}}
+            saved = copy.deepcopy(record)
+        return package, catalog_path, identity, saved
+
+    def test_rotation_gate_accepts_only_verified_device_drift_order(self):
+        base = self.root / 'Library/Application Support/Integra'
+        package, _, identity, record = self.completed_device_drift_case(base / 'Build Archive')
+        relative = package.relative_to(base).as_posix()
+        policy = {'rotation_strategy': 'OLDEST_FULL_COPY_FIRST',
+                  'status': 'PRODUCT_OWNER_AUTHORIZED_ACTIVE', 'max_full_copies': 1,
+                  'sha256': 'a' * 64, 'authority_ref': 'direct Owner fixture'}
+        registry = {'selected_survivors': {}, 'managed_roots': ['Build Archive']}
+        row = {'path': relative, 'absolute_path': str(package), **identity,
+               'catalog_record': record, 'publisher_owned': False,
+               'integrity_verified': True, 'metadata_error': None}
+        audit = {'canonical': {'rotation_policy': policy}, 'full_copies': 1,
+                 'entries': [row], 'registry_sha256': 'b' * 64,
+                 'protected_identities': {}, 'rotated_unavailable': {}}
+        with patch.object(gate.Path, 'home', return_value=self.root), \
+                patch.object(gate, '_snapshot', return_value=(registry, audit)), \
+                patch.object(protection, 'fetch_canonical', return_value=({}, {}, audit['canonical'])):
+            lease = gate.require_capacity_rotation(package)
+            self.assertFalse(row['publisher_owned'])
+            self.assertEqual(lease['publisher_order_evidence'][relative]['recorded_device'],
+                             record['device'])
+            row['integrity_verified'] = False
+            with self.assertRaisesRegex(ValueError, 'not bound to verified archive bytes'):
+                gate.require_capacity_rotation(package)
+            row['integrity_verified'] = True
+            row['catalog_record'] = {**record, 'complete_sha256': '0' * 64}
+            with self.assertRaisesRegex(ValueError, 'not bound to verified archive bytes'):
+                gate.require_capacity_rotation(package)
+            row['catalog_record'] = {**record, 'publication_sequence': '2'}
+            with self.assertRaisesRegex(ValueError, 'publisher sequence record is invalid'):
+                gate.require_capacity_rotation(package)
+
+    def test_pre_amendment_order_matches_bytes_without_adopting_device(self):
+        package, catalog_path, identity, record = self.completed_device_drift_case()
+        self.assertFalse(retention._ownership(package, record,
+                         json.loads((package / 'COMPLETE.json').read_bytes())))
+        archive.verify_archive(package, identity)
+        evidence = gate._pre_amendment_order_evidence(package, record, identity)
+        self.assertEqual(evidence['kind'], 'OBSERVED_CATALOG_SEQUENCE_RECEIPT_MATCH_DEVICE_DRIFT')
+        self.assertIs(evidence['physical_publisher_owned'], False)
+        self.assertEqual(evidence['publication_sequence'], 2)
+        self.assertNotEqual(evidence['recorded_device'], evidence['observed_device'])
+        self.assertEqual(json.loads(catalog_path.read_bytes())['artifacts'][str(package)], record)
+
+    def test_pre_amendment_order_rejects_forged_or_mismatched_record(self):
+        package, _, identity, record = self.completed_device_drift_case()
+        for change in ({'publisher_run_id': ''}, {'publisher_completed': False},
+                       {'publication_sequence': 0}, {'inode': record['inode'] + 1},
+                       {'candidate_id': 'wrong-candidate'},
+                       {'complete_sha256': '0' * 64}, {'inventory_sha256': '0' * 64},
+                       {'device': package.stat().st_dev}):
+            with self.subTest(change=change):
+                self.assertIsNone(gate._pre_amendment_order_evidence(
+                    package, {**record, **change}, identity))
+        with (package / 'COMPLETE.json').open('ab') as handle:
+            handle.write(b' ')
+        self.assertIsNone(gate._pre_amendment_order_evidence(package, record, identity))
+
+    def test_future_oldest_conflicting_record_retires_with_honest_receipt(self):
+        package, catalog_path, identity, record = self.completed_device_drift_case()
+        with patch.object(retention, '_context_valid', return_value=True), \
+                patch.object(retention, '_inactive', return_value=True), \
+                patch.object(retention, 'MAX_COPIES', 1):
+            plan = retention.plan(json.loads(catalog_path.read_bytes()), free_bytes=64 * 1024**3)
+            target = plan['capacity_rotation_target']
+            self.assertEqual(target['path'], str(package))
+            self.assertEqual(target['capacity_rotation_order']['publisher_sequence'], 2)
+            relative = package.relative_to(self.root).as_posix()
+            evidence = gate._pre_amendment_order_evidence(package, record, identity)
+            lease = {'kind': 'OWNER_POLICY_CAPACITY_ROTATION', 'path': relative,
+                     'identity': identity, 'order': target['capacity_rotation_order'],
+                     'device': target['device'], 'inode': target['inode'],
+                     'birthtime': package.stat().st_birthtime,
+                     'policy_authority_ref': 'direct Owner fixture', 'policy_sha256': 'a' * 64,
+                     'initial_order': retention._initial_rotation_order(
+                         plan['entries'], 'a' * 64, '2026-10-29T00:00:00+00:00', 1),
+                     'publisher_order_evidence': {relative: evidence}, 'proposal_refs': []}
+            with patch.object(gate, 'require_capacity_rotation', return_value=lease), \
+                    patch.object(gate, 'require_capacity_rotation_continuation', return_value=None):
+                self.assertEqual(retention.cleanup_capacity_rotation(catalog_path, plan), [str(package)])
+        self.assertFalse(package.exists())
+        updated = json.loads(catalog_path.read_bytes())
+        self.assertNotIn(str(package), updated['artifacts'])
+        receipt = next(iter(updated['retirements'].values()))
+        self.assertEqual(receipt['archive_kind'],
+                         'COMPLETED_ARCHIVE_WITH_CONFLICTING_PUBLISHER_RECORD')
+        self.assertIs(receipt['physical_publisher_owned'], False)
+        self.assertIsNone(receipt['publisher_attestation'])
+        self.assertEqual(receipt['conflicting_catalog_record'], record)
+        self.assertEqual(receipt['observed_catalog_order_evidence'], evidence)
+        retired_catalog = self.root / 'Retention' / f'catalog-{os.getuid()}.json'
+        retired_catalog.parent.mkdir(exist_ok=True)
+        retired_catalog.write_bytes(catalog_path.read_bytes())
+        policy = {'rotation_strategy': 'OLDEST_FULL_COPY_FIRST', 'sha256': 'a' * 64}
+        self.assertEqual(protection.load_rotation_receipts(self.root, policy)[identity['candidate_id']]['path'],
+                         relative)
+        original = json.loads(retired_catalog.read_bytes())
+        for field, value in (('recorded_device', record['device'] + 1),
+                             ('publisher_run_id', ''), ('order_timestamp', 0)):
+            forged = copy.deepcopy(original)
+            changed = next(iter(forged['retirements'].values()))
+            if field == 'recorded_device':
+                changed['conflicting_catalog_record']['device'] = value
+            elif field == 'publisher_run_id':
+                changed['conflicting_catalog_record']['publisher_run_id'] = value
+            else:
+                changed['order_provenance']['timestamp'] = value
+            retired_catalog.write_text(json.dumps(forged))
+            with self.subTest(field=field):
+                with self.assertRaisesRegex(ValueError,
+                                            'conflicting-record retirement evidence differs'):
+                    protection.load_rotation_receipts(self.root, policy)
 
     def test_unarchived_oldest_is_attested_then_retired_with_history_preserved(self):
         legacy, catalog_path, plan, lease, identity = self.legacy_case()

@@ -47,6 +47,22 @@ paths or birthtimes. The observed APFS values are never called historical
 publisher timestamps. If any copy lacks an exact
 identity or an available approved ordering value, rotation fails closed. No
 source-commit time, filename, or mtime is substituted.
+
+Issue #310 clarifies the pre-amendment sequence evidence when a completed
+archive's current APFS device differs from its catalog record. The sequence
+is a **currently recorded, unsigned catalog value**; matching `COMPLETE`,
+inventory, Candidate identity, manifest and full application bytes ties the
+current archive to that record's identity, but does not authenticate when the
+sequence was originally assigned or prove physical continuity. The physical
+placement still uses observed-now APFS birthtime. Such a row retains
+`publisher_owned = false`; the manager records the device discrepancy and
+the exact observed catalog record without rewriting its historical fields.
+Only this receipt-matched, same-UID, same-inode, device-drift case may use the
+recorded pre-amendment sequence. A mismatched receipt, inventory, identity,
+inactive-writer check or full archive proof blocks rotation. If that exact
+copy later becomes oldest, the capacity transaction may retire it under the
+Owner's v2 physical-copy policy with a distinct conflicting-record receipt;
+the terminal-retirement ownership gate remains unchanged.
 An exact rebuilt publisher archive at a retired identity-bound path is a new
 physical incarnation only after its original retirement receipt, new physical
 identity, publisher ownership and full `COMPLETE` archive verification pass.
