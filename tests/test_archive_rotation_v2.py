@@ -137,7 +137,7 @@ class LegacyRotationTests(unittest.TestCase):
             saved = copy.deepcopy(record)
         return package, catalog_path, identity, saved
 
-    def test_rotation_gate_accepts_only_verified_device_drift_order(self):
+    def test_rotation_gate_accepts_only_metadata_bound_device_drift_order(self):
         base = self.root / 'Library/Application Support/Integra'
         package, _, identity, record = self.completed_device_drift_case(base / 'Build Archive')
         relative = package.relative_to(base).as_posix()
@@ -147,7 +147,8 @@ class LegacyRotationTests(unittest.TestCase):
         registry = {'selected_survivors': {}, 'managed_roots': ['Build Archive']}
         row = {'path': relative, 'absolute_path': str(package), **identity,
                'catalog_record': record, 'publisher_owned': False,
-               'integrity_verified': True, 'metadata_error': None}
+               'integrity_verified': False, 'identity_metadata_verified': True,
+               'metadata_error': None}
         audit = {'canonical': {'rotation_policy': policy}, 'full_copies': 1,
                  'entries': [row], 'registry_sha256': 'b' * 64,
                  'protected_identities': {}, 'rotated_unavailable': {}}
@@ -158,10 +159,10 @@ class LegacyRotationTests(unittest.TestCase):
             self.assertFalse(row['publisher_owned'])
             self.assertEqual(lease['publisher_order_evidence'][relative]['recorded_device'],
                              record['device'])
-            row['integrity_verified'] = False
+            row['identity_metadata_verified'] = False
             with self.assertRaisesRegex(ValueError, 'not bound to verified archive bytes'):
                 gate.require_capacity_rotation(package)
-            row['integrity_verified'] = True
+            row['identity_metadata_verified'] = True
             row['catalog_record'] = {**record, 'complete_sha256': '0' * 64}
             with self.assertRaisesRegex(ValueError, 'not bound to verified archive bytes'):
                 gate.require_capacity_rotation(package)
@@ -358,7 +359,7 @@ class LegacyRotationTests(unittest.TestCase):
             registry_path.write_text(json.dumps(registry))
             proposal = {204: {'candidate': {'candidate_id': identity['candidate_id']}}}
 
-            def synthetic_scan(*_args):
+            def synthetic_scan(*_args, **_kwargs):
                 return [{'path': relative, 'absolute_path': str(legacy), **identity,
                          'catalog_record': None, 'publisher_owned': False}]
 
@@ -384,7 +385,7 @@ class LegacyRotationTests(unittest.TestCase):
                     patch.object(protection, '_accepted_historical_gaps', return_value=set()), \
                     patch.object(protection, '_validate_registry', return_value={
                         identity['candidate_id']: {'identity': identity}}), \
-                    patch.object(retention, '_context_valid', side_effect=lambda _: legacy.exists()), \
+                    patch.object(retention, '_context_valid', side_effect=lambda *args, **kwargs: legacy.exists()), \
                     patch.object(retention, '_inactive', return_value=True), \
                     patch.object(retention, 'MAX_COPIES', 1):
                 # Neither capacity gate is mocked: the second pre-rename call

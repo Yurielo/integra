@@ -51,7 +51,7 @@ source-commit time, filename, or mtime is substituted.
 Issue #310 clarifies the pre-amendment sequence evidence when a completed
 archive's current APFS device differs from its catalog record. The sequence
 is a **currently recorded, unsigned catalog value**; matching `COMPLETE`,
-inventory, Candidate identity, manifest and full application bytes ties the
+inventory metadata, Candidate identity and manifest ties the
 current archive to that record's identity, but does not authenticate when the
 sequence was originally assigned or prove physical continuity. The physical
 placement still uses observed-now APFS birthtime. Such a row retains
@@ -59,19 +59,22 @@ placement still uses observed-now APFS birthtime. Such a row retains
 the exact observed catalog record without rewriting its historical fields.
 Only this receipt-matched, same-UID, same-inode, device-drift case may use the
 recorded pre-amendment sequence. A mismatched receipt, inventory, identity,
-inactive-writer check or full archive proof blocks rotation. If that exact
+or inactive-writer check blocks rotation. Issue #313 removes historical payload
+equality as a capacity prerequisite; metadata binding remains mandatory. If that exact
 copy later becomes oldest, the capacity transaction may retire it under the
 Owner's v2 physical-copy policy with a distinct conflicting-record receipt;
 the terminal-retirement ownership gate remains unchanged.
 An exact rebuilt publisher archive at a retired identity-bound path is a new
 physical incarnation only after its original retirement receipt, new physical
-identity, publisher ownership and full `COMPLETE` archive verification pass.
+identity and publisher custody match the new `COMPLETE` metadata. Publication
+itself must have passed full archive verification; capacity checks never claim
+that its payload remains restoration-ready.
 The original ordinal remains historical. New publication timestamps must
 advance with publisher sequence; a backwards clock records a conflict and
 blocks later rotation rather than reordering existing copies.
 
 Before physical retirement the manager verifies the exact Candidate manifest,
-full current application tree, package inventory, UID/device/inode, inactive
+metadata/custody bindings, UID/device/inode, inactive
 writer and canonical Owner policy. An unarchived legacy build receives a
 distinct observed-now attestation with no invented `COMPLETE` or publisher
 record. A completed but unregistered legacy archive keeps its original
@@ -83,6 +86,33 @@ lifecycle/Proposal references and a
 physical-availability receipt outside the payload. Interrupted retirement
 recovers under the shared lock. A completed receipt says
 `RETIRED_NOT_AVAILABLE` and cannot be used as a restorable application.
+
+### Deletion safety versus restoration integrity — Issue #313
+
+The Owner-authorized capacity path uses the existing audit, catalog, locks and
+journal with an explicit operation purpose. Historical payload drift (including
+additional `.pyc`) does not prevent disposal of a positively identified safe
+package or admission of an unrelated Candidate. It does not certify that the
+historical archive is healthy: metadata-only evidence is labelled separately,
+and a capacity snapshot cannot authorize promotion. Other survivors need exact
+identity/order metadata, not repeated full-payload hashes. Ordinary terminal
+cleanup outside capacity rotation retains its strict contract.
+
+The selected target's actual current inventory is captured in the existing
+journal, including additional safe regular files already present. Original
+manifest, inventory, COMPLETE and ancillary provenance remain separately bound
+in the receipt. `DELETION_SNAPSHOT` with `archival_integrity=NOT_ASSERTED` means
+the observed deletion set, not an archival-integrity PASS. Existing receipts and
+journals retain their original meaning; the v2 policy bytes and initial order
+are unchanged. Files added/replaced after preparation, unsafe paths/types/links,
+foreign ownership, active consumers and lost authority remain blockers.
+
+Incoming Candidate publication, exact archive reuse, restoration and activation
+continue to require strict byte verification. Owner acceptance remains required
+for activation. The installed application and user data are outside the target
+roots. An active promotion holds the same catalog lock; historical role labels
+alone do not reinstate the superseded capacity hold. Missing required restoration
+or outgoing CURRENT bytes still block the operation that needs those bytes.
 
 Earlier active Proposal or accepted status is not silently rewritten by
 rotation. A rotated Candidate cannot be accepted or promoted from missing

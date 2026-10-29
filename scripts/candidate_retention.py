@@ -241,12 +241,25 @@ def _context_matches(context, registry, audit, base):
     expected_events = audit.get('canonical_lifecycles', canonical.get('canonical_lifecycles'))
     expected_policy = audit.get('standing_policy', canonical.get('standing_policy'))
     expected_rotation = audit.get('rotation_policy', canonical.get('rotation_policy'))
+    purpose = audit.get('verification_purpose', 'INTEGRITY')
+    stored_purpose = (context or {}).get('verification_purpose', 'INTEGRITY')
+    survivors_key = 'metadata_survivors' if stored_purpose == 'CAPACITY' else 'verified_survivors'
+    # A fresh strict audit can validate a metadata-only mirror without a
+    # manual sync operation. This is new byte evidence from the strict audit,
+    # never an upgrade of the stored metadata claim itself.
+    strict_recheck = (purpose == 'INTEGRITY' and stored_purpose == 'CAPACITY'
+                      and all(any(row['path'] == selected[cid]
+                                  and row.get('verified_protected_archive') is True
+                                  and all(row.get(key) == context.get('metadata_survivors', {}).get(cid, {}).get(key)
+                                          for key in ('candidate_id', 'bundle_digest', 'manifest_digest'))
+                                  for row in audit['entries']) for cid in expected))
     return bool(context and context.get('protected') and isinstance(context.get('inputs'), dict)
                 # Protection includes every canonical role.  Only the subset
                 # with a selected local archive is independently re-verified.
                 and set(context['protected']) == set(protected)
                 and set(context.get('selected_archives', {})) == set(expected)
-                and set(context.get('verified_survivors', {})) == set(expected)
+                and (stored_purpose == purpose or strict_recheck)
+                and set(context.get(survivors_key, {})) == set(expected)
                 and all(_sha(p) == digest for p, digest in context['inputs'].items())
                 and context.get('selected_archives') == expected
                 and context.get('rotated_unavailable', {}) == rotated
@@ -258,13 +271,14 @@ def _context_matches(context, registry, audit, base):
                 and audit['authority_state'] == 'COMPLETE')
 
 
-def _context_valid(context):
+def _context_valid(context, *, purpose='INTEGRITY'):
     try:
         try:
             from scripts.candidate_protection_gate import _snapshot
         except ModuleNotFoundError:
             from candidate_protection_gate import _snapshot
-        registry, audit = _snapshot(for_deletion=True)
+        registry, audit = (_snapshot(for_deletion=True, purpose=purpose) if purpose == 'CAPACITY'
+                           else _snapshot(for_deletion=True))
         base = Path.home() / 'Library/Application Support/Integra'
         return _context_matches(context, registry, audit, base)
     except (OSError, ValueError, KeyError, TypeError, ImportError, subprocess.SubprocessError):
@@ -353,7 +367,8 @@ def _retired_rotation_sources(catalog, policy_sha256):
     return result
 
 
-def _ordered_rotation_rows(rows, baseline, policy_sha256, retired_paths, expected_copies=8):
+def _ordered_rotation_rows(rows, baseline, policy_sha256, retired_paths, expected_copies=8,
+                           *, purpose='INTEGRITY'):
     """Use immutable initial order, then actual timestamps for later copies."""
     if not baseline:
         return sorted(rows, key=lambda row: (
@@ -400,8 +415,9 @@ def _ordered_rotation_rows(rows, baseline, policy_sha256, retired_paths, expecte
                     from scripts.candidate_archive import verify_archive
                 except ModuleNotFoundError:
                     from candidate_archive import verify_archive
-                verify_archive(Path(path), {key: current[key] for key in
-                                            ('candidate_id', 'bundle_digest', 'manifest_digest')})
+                if purpose == 'INTEGRITY':
+                    verify_archive(Path(path), {key: current[key] for key in
+                                                ('candidate_id', 'bundle_digest', 'manifest_digest')})
                 new_incarnations.add(path)
             elif current != {key: value for key, value in saved.items() if key != 'ordinal'}:
                 raise ValueError('persisted initial rotation identity or birthtime changed')
@@ -426,7 +442,7 @@ def _ordered_rotation_rows(rows, baseline, policy_sha256, retired_paths, expecte
         (1, row['capacity_rotation_order']['timestamp'], row['candidate_id'])))
 
 
-def plan(catalog, *, free_bytes=None, _validated_context=False):
+def plan(catalog, *, free_bytes=None, _validated_context=False, purpose='INTEGRITY'):
     try:
         from scripts.candidate_protection_gate import require_deletion
     except ModuleNotFoundError:
@@ -440,7 +456,14 @@ def plan(catalog, *, free_bytes=None, _validated_context=False):
     # This private fast path is used only under the shared lock after a fresh
     # canonical audit, or immediately before the mandatory full rotation gate.
     # A plan never grants deletion on its own.
-    valid = True if _validated_context else _context_valid(context)
+    if purpose not in ('INTEGRITY', 'CAPACITY'):
+        raise ValueError('unknown archive operation purpose')
+    # Pre-v2 catalogs and explicit terminal maintenance keep their strict
+    # contract. Only canonical v2 capacity context uses metadata evidence.
+    if purpose == 'CAPACITY' and (context or {}).get('rotation_policy', {}).get('rotation_strategy') != 'OLDEST_FULL_COPY_FIRST':
+        purpose = 'INTEGRITY'
+    capacity = purpose == 'CAPACITY'
+    valid = True if _validated_context else (_context_valid(context, purpose=purpose) if capacity else _context_valid(context))
     attributed = set()
     rotation_policy = (context or {}).get('rotation_policy') or {}
     rotation_active = rotation_policy.get('rotation_strategy') == 'OLDEST_FULL_COPY_FIRST'
@@ -451,7 +474,21 @@ def plan(catalog, *, free_bytes=None, _validated_context=False):
     protected_ids = set((context or {}).get('protected', {}))
     complete_roots = all(str(_safe(p)) in catalog['roots'] for p in managed_roots())
     for package in _packages(catalog):
-        identity, receipt, error = _metadata(package)
+        if capacity:
+            try:
+                from scripts.candidate_protection_gate import _rotation_package_metadata
+            except ModuleNotFoundError:
+                from candidate_protection_gate import _rotation_package_metadata
+            try:
+                metadata = _rotation_package_metadata(package)
+                identity = metadata['identity']
+                receipt = (json.loads((package / 'COMPLETE.json').read_bytes())
+                           if metadata['complete_sha256'] is not None else None)
+                error = None
+            except (OSError, ValueError, KeyError, TypeError) as problem:
+                identity, receipt, error = {}, None, str(problem)
+        else:
+            identity, receipt, error = _metadata(package)
         local_record = catalog['artifacts'].get(str(package))
         record = lifecycle.replay(local_record or {},
                                   (context or {}).get('canonical_lifecycles', {}),
@@ -473,13 +510,13 @@ def plan(catalog, *, free_bytes=None, _validated_context=False):
             reasons.append('EXPLICIT_GOVERNANCE_PROVENANCE')
         standing = lifecycle.terminal_eligibility(
             identity, record, (context or {}).get('protected', {}).get(cid, []),
-            owned=owned, integrity_verified=not error,
+            owned=owned, integrity_verified=not capacity and not error,
             context_valid=valid and complete_roots,
             inactive=not _publisher_live(record) and _inactive(package),
             standing_policy=(context or {}).get('standing_policy'))
         if reasons:
             classification = 'PROTECTED'
-        elif not valid or not complete_roots or error or not owned or not order_proven or (status not in TERMINAL and not standing['eligible']) or _publisher_live(record) or not _inactive(package) or cid and cid.startswith(lifecycle.HOLDS):
+        elif capacity or not valid or not complete_roots or error or not owned or not order_proven or (status not in TERMINAL and not standing['eligible']) or _publisher_live(record) or not _inactive(package) or cid and cid.startswith(lifecycle.HOLDS):
             classification = 'UNKNOWN'
         else:
             classification = 'DELETABLE'
@@ -503,8 +540,10 @@ def plan(catalog, *, free_bytes=None, _validated_context=False):
                      'inode': package.stat().st_ino, 'historical': bool((record or {}).get('historical'))})
         if rotation_active:
             rows[-1]['capacity_rotation_order'] = _rotation_order(package, local_record)
+    survivors_key = ('metadata_survivors' if (context or {}).get('verification_purpose') == 'CAPACITY'
+                     else 'verified_survivors')
     survivors_valid = all(any(r.get('candidate_id') == cid and not r['metadata_error']
-                                  and all(r.get(k) == context.get('verified_survivors', {}).get(cid, {}).get(k)
+                                  and all(r.get(k) == context.get(survivors_key, {}).get(cid, {}).get(k)
                                           for k in ('candidate_id', 'bundle_digest', 'manifest_digest'))
                                   and (not (context or {}).get('selected_archives', {}).get(cid)
                                        or r['path'] == context['selected_archives'][cid]) for r in rows)
@@ -537,7 +576,7 @@ def plan(catalog, *, free_bytes=None, _validated_context=False):
                 [{**row, 'catalog_record': catalog.get('artifacts', {}).get(row['path'])}
                  for row in rows],
                 catalog.get('rotation_order_v2'), rotation_policy.get('sha256'),
-                retired_paths, MAX_COPIES)
+                retired_paths, MAX_COPIES, purpose=purpose)
         except (ValueError, KeyError, TypeError, OSError):
             rotation_rows = []
     ambiguous_oldest = (len(rotation_rows) > 1 and
@@ -557,6 +596,8 @@ def plan(catalog, *, free_bytes=None, _validated_context=False):
               'rotation_target': ({key: target[key] for key in (
                   'path', 'candidate_id', 'bundle_digest', 'manifest_digest',
                   'publication_sequence')} if target else None)}
+    if capacity:
+        report['verification_purpose'] = 'CAPACITY'
     report['capacity_rotation_strategy'] = 'OLDEST_FULL_COPY_FIRST' if rotation_active else None
     report['capacity_rotation_target'] = ({key: capacity_target[key] for key in (
         'path', 'candidate_id', 'bundle_digest', 'manifest_digest',
@@ -707,7 +748,7 @@ def reserve_archive(root, allocated_bytes, *, destination=None, identity=None):
             return path, inherited
         # Charge existing unmanaged legacy bytes too. Unknown deletion ownership
         # must not make real archive occupancy disappear from caps.
-        snapshot = plan(catalog)
+        snapshot = plan(catalog, purpose='CAPACITY')
         reserved = sum(r['expected_bytes'] for r in catalog['leases'].values())
         if snapshot['full_copies'] + sum(r.get('copies', 1) for r in catalog['leases'].values()) + 1 > MAX_COPIES or snapshot['BEFORE_BYTES'] + reserved + allocated_bytes > MAX_BYTES:
             emit('ARCHIVE_HEADROOM_REJECTED', copies=snapshot['full_copies'],
@@ -768,7 +809,7 @@ def build_preflight(root, expected_bytes, *, archive_copy=True):
     maintenance(root, reason='BEFORE_BUILD', need_slot=archive_copy)
     path = catalog_path(root)
     with locked(path) as catalog:
-        register_root(catalog, root); _recover_leases(catalog); snapshot = plan(catalog)
+        register_root(catalog, root); _recover_leases(catalog); snapshot = plan(catalog, purpose='CAPACITY')
         if not snapshot['protection_context_valid']:
             raise ValueError('build admission blocked: fresh canonical protection unavailable')
         reserved = sum(r['expected_bytes'] for r in catalog['leases'].values())
@@ -814,7 +855,7 @@ def reserved_build(root, expected_bytes, *, archive_copy):
     path = catalog_path(root); token = None; volume = None; completed = False; workspace = None
     try:
         with locked(path) as catalog:
-            register_root(catalog, root); _recover_leases(catalog); snapshot = plan(catalog)
+            register_root(catalog, root); _recover_leases(catalog); snapshot = plan(catalog, purpose='CAPACITY')
             if not snapshot['protection_context_valid']:
                 raise ValueError('atomic build admission blocked: fresh canonical protection unavailable')
             copies = int(archive_copy)
@@ -918,12 +959,15 @@ def reconcile_catalog(catalog, registry, audit, base, *, current_path=None,
     events = audit.get('canonical_lifecycles', canonical.get('canonical_lifecycles', {}))
     policy = audit.get('standing_policy', canonical.get('standing_policy', {}))
     rotation_policy = audit.get('rotation_policy', canonical.get('rotation_policy'))
+    capacity = audit.get('verification_purpose') == 'CAPACITY'
     context = {'protected': {cid: role['reasons'] for cid, role in protected.items()},
                'inputs': {}, 'selected_archives': selected,
                'verified_survivors': {}, 'registry_sha256': audit.get('registry_sha256'),
                'canonical_snapshot': canonical,
                'canonical_lifecycles': events, 'standing_policy': policy,
                'rotated_unavailable': audit.get('rotated_unavailable', {})}
+    if capacity:
+        context.update(verification_purpose='CAPACITY', metadata_survivors={})
     if rotation_policy is not None:
         context['rotation_policy'] = rotation_policy
     verified = {}
@@ -932,9 +976,14 @@ def reconcile_catalog(catalog, registry, audit, base, *, current_path=None,
         if not any(package == root or root in package.parents for root in map(_safe, catalog['roots'])):
             raise ValueError('protected survivor is outside the managed roots')
         rows = [row for row in audit['entries'] if row['path'] == str(package.relative_to(base))]
-        if len(rows) != 1 or rows[0]['classification'] != 'PROTECTED' or not rows[0]['verified_protected_archive']:
+        if (len(rows) != 1 or rows[0]['classification'] != 'PROTECTED'
+                or not rows[0].get('identity_metadata_verified' if capacity else 'verified_protected_archive')):
             raise ValueError('canonical protected survivor is not verified')
-        if _verified_snapshot:
+        if capacity:
+            context['metadata_survivors'][cid] = {
+                **{key: rows[0][key] for key in lifecycle.IDENTITY},
+                'archive_path': str(package), 'verification': 'IDENTITY_METADATA_ONLY'}
+        elif _verified_snapshot:
             # Only refresh_protection passes the fresh audit obtained under
             # this lock. Other reconciliation callers keep full verification.
             receipt = json.loads((package / 'COMPLETE.json').read_bytes())
@@ -945,7 +994,8 @@ def reconcile_catalog(catalog, registry, audit, base, *, current_path=None,
         else:
             receipt = verify_archive(package, {key: rows[0][key]
                                                for key in lifecycle.IDENTITY})
-        verified[cid] = receipt
+        if not capacity:
+            verified[cid] = receipt
         context['inputs'][str(package / 'COMPLETE.json')] = _sha(package / 'COMPLETE.json')
         context['inputs'][str(package / 'inventory.json')] = _sha(package / 'inventory.json')
     context['verified_survivors'] = verified
@@ -1033,7 +1083,7 @@ def recover_cleanup(path):
         return retention_cleanup.recover(sys.modules[__name__], path, catalog)
 
 
-def refresh_protection(catalog, *, _reuse_verified_audit=False):
+def refresh_protection(catalog, *, _reuse_verified_audit=False, purpose='INTEGRITY'):
     """Refresh the catalog mirror from the registry; no heuristic selection."""
     try:
         from scripts.candidate_protection_gate import _snapshot
@@ -1041,11 +1091,12 @@ def refresh_protection(catalog, *, _reuse_verified_audit=False):
     except ModuleNotFoundError:
         from candidate_protection_gate import _snapshot
         import candidate_protection_audit as protection
-    registry, audit = _snapshot(for_deletion=True)
+    registry, audit = (_snapshot(for_deletion=True, purpose=purpose) if purpose == 'CAPACITY'
+                       else _snapshot(for_deletion=True))
     base = Path.home() / 'Library/Application Support/Integra'
     selected = {cid: str(base / relative) for cid, relative in registry['selected_survivors'].items()
                 if relative and cid not in audit.get('rotated_unavailable', {})}
-    if (_reuse_verified_audit and
+    if (purpose == 'CAPACITY' or _reuse_verified_audit and
             (audit.get('canonical') or {}).get('rotation_policy', {}).get('rotation_strategy')
             == 'OLDEST_FULL_COPY_FIRST'):
         reconcile_catalog(catalog, registry, audit, base,
@@ -1079,8 +1130,8 @@ def maintenance(root, *, reason, need_slot=False):
         if has_journal:
             recover_cleanup(path)
         with locked(path) as catalog:
-            refresh_protection(catalog, _reuse_verified_audit=need_slot)
-            snapshot = plan(catalog, _validated_context=True)
+            refresh_protection(catalog, _reuse_verified_audit=need_slot, purpose='CAPACITY')
+            snapshot = plan(catalog, _validated_context=True, purpose='CAPACITY')
         for row in snapshot['entries']:
             if row['classification'] != 'DELETABLE':
                 emit('CANDIDATE_RETAINED', path=row['path'],
@@ -1096,7 +1147,7 @@ def maintenance(root, *, reason, need_slot=False):
                 return []
             deleted = cleanup_capacity_rotation(path, snapshot)
             with locked(path) as catalog:
-                refresh_protection(catalog, _reuse_verified_audit=True)
+                refresh_protection(catalog, _reuse_verified_audit=True, purpose='CAPACITY')
             emit('CAPACITY_ROTATION_COMPLETED', paths=deleted, trigger=reason,
                  order_provenance=snapshot['capacity_rotation_target']['capacity_rotation_order'])
             return deleted
