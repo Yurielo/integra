@@ -42,6 +42,15 @@ Foreign, active, unknown, worktree, symlink, hardlinked and mismatched artifacts
 fail closed. Deletion freshly verifies bytes and rechecks catalog/protection
 and filesystem identities under the common catalog lock.
 
+The later v2 capacity-rotation path has one narrow exception to the ordinary
+publisher-ownership predicate: a completed pre-timestamp archive whose
+current device differs from its catalog record may use the currently recorded
+sequence as observed-now order evidence only when its exact receipt, inventory,
+identity, UID, inode and full bytes verify. It remains `publisher_owned=false`;
+the original device and record are retained separately in a conflicting-record
+retirement receipt. See `CANDIDATE_RETENTION.md` (Issue #310). Ordinary terminal
+cleanup and historical ownership adoption still fail closed on device drift.
+
 After successful authorized promotion, the post-promotion retention command
 reconciles protected identities and reevaluates terminal copies. Owned
 temporary output uses the existing common supervised lifecycle on normal
@@ -68,6 +77,8 @@ CLI `plan` is read-only. `cleanup` applies only newly owned eligible artifacts;
 it never implicitly imports historical ownership. Historical authorization and
 ownership adoption are distinct from policy acceptance. `post-promotion` is
 invoked only after actual promotion, not when a helper merely prepares output.
+The v2 physical-copy capacity rotation does not import historical publisher
+ownership; it uses its own exact Owner policy and observed-now receipt.
 
 The policy does not accept PR #206's Candidate, promote CURRENT, permit a
 substitute build, change source products or bypass Quality Gate. If fresh

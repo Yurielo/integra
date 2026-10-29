@@ -500,14 +500,22 @@ def apply_capacity_rotation(r, path, expected_plan):
         original_inventory_bytes = (package / 'inventory.json').read_bytes() if has_inventory else None
         original_complete_bytes = (package / 'COMPLETE.json').read_bytes() if has_complete else None
         record = catalog['artifacts'].get(str(package))
+        order_evidence = None
         if has_complete:
             complete = json.loads(original_complete_bytes)
             publisher_bound = r._ownership(package, record, complete)
-            if record is not None and not publisher_bound:
-                raise ValueError('completed archive conflicts with publisher catalog ownership')
             verification = verify_archive(package, identity)
-            archive_kind = ('PUBLISHER_BOUND_COMPLETE_ARCHIVE' if publisher_bound else
-                            'LEGACY_COMPLETED_ARCHIVE_OBSERVED_NOW')
+            if record is not None and not publisher_bound:
+                order_evidence = canonical_gate._pre_amendment_order_evidence(
+                    package, record, identity)
+                if (order_evidence is None or
+                        order_evidence != lease.get('publisher_order_evidence', {}).get(
+                            lease.get('path'))):
+                    raise ValueError('completed archive conflicts with publisher catalog ownership')
+                archive_kind = 'COMPLETED_ARCHIVE_WITH_CONFLICTING_PUBLISHER_RECORD'
+            else:
+                archive_kind = ('PUBLISHER_BOUND_COMPLETE_ARCHIVE' if publisher_bound else
+                                'LEGACY_COMPLETED_ARCHIVE_OBSERVED_NOW')
             entries = _entries(r, package)
             if record is None:
                 record = {**identity, 'status': 'LEGACY_UNCONFIRMED', 'owner_uid': os.getuid()}
@@ -535,7 +543,11 @@ def apply_capacity_rotation(r, path, expected_plan):
                                                       if original_inventory_bytes is not None else None),
                    'retained_complete_base64': (base64.b64encode(original_complete_bytes).decode('ascii')
                                                 if original_complete_bytes is not None else None),
-                   'publisher_attestation': catalog['artifacts'].get(str(package)),
+                   'publisher_attestation': (catalog['artifacts'].get(str(package))
+                                             if has_complete and publisher_bound else None),
+                   'conflicting_catalog_record': (record if order_evidence else None),
+                   'physical_publisher_owned': bool(has_complete and publisher_bound),
+                   'observed_catalog_order_evidence': order_evidence,
                    'archive_kind': archive_kind,
                    'lifecycle_before_retirement': record['status'],
                    'proposal_refs': lease['proposal_refs'], 'verification_evidence': verification,

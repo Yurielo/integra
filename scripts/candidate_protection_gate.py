@@ -221,6 +221,59 @@ def require_deletion_continuation(lease: dict) -> None:
             protection.verify_archive(base / relative, protected[cid]['identity'])
 
 
+def _pre_amendment_order_evidence(package: Path, record: dict | None,
+                                  identity: dict) -> dict | None:
+    """Match a currently recorded sequence row to current verified bytes.
+
+    The catalog sequence is unsigned and is not authenticated as a historical
+    publication event. This exception covers only observed device drift of a
+    completed pre-timestamp record. It never sets publisher_owned or rewrites
+    the recorded device. The caller separately proves all application bytes.
+    """
+    if (not isinstance(record, dict) or record.get('historical') is not False
+            or record.get('publisher_completed') is not True
+            or record.get('publication_recorded_at') is not None
+            or type(record.get('publication_sequence')) is not int
+            or record['publication_sequence'] <= 0
+            or not isinstance(record.get('publisher_run_id'), str)
+            or not record['publisher_run_id']
+            or type(record.get('publisher_pid')) is not int
+            or record['publisher_pid'] <= 0
+            or not isinstance(record.get('publisher_start_token'), str)
+            or not record['publisher_start_token']
+            or any(record.get(key) != identity.get(key) for key in protection.IDENTITY)):
+        return None
+    if package.is_symlink():
+        return None
+    try:
+        s = package.lstat()
+        if (not stat.S_ISDIR(s.st_mode)
+                or record.get('owner_uid') != s.st_uid or s.st_uid != os.getuid()
+                or record.get('inode') != s.st_ino
+                or type(record.get('device')) is not int
+                or record['device'] == s.st_dev):
+            return None
+        receipt_bytes = (package / 'COMPLETE.json').read_bytes()
+        inventory_bytes = (package / 'inventory.json').read_bytes()
+        receipt = json.loads(receipt_bytes)
+        if (receipt.get('status') != 'COMPLETE'
+                or any(receipt.get(key) != identity.get(key) for key in protection.IDENTITY)
+                or receipt.get('inventory_sha256') != protection.sha(inventory_bytes)
+                or record.get('complete_sha256') != protection.sha(receipt_bytes)
+                or record.get('inventory_sha256') != protection.sha(inventory_bytes)):
+            return None
+    except (OSError, ValueError, TypeError, KeyError):
+        return None
+    return {'kind': 'OBSERVED_CATALOG_SEQUENCE_RECEIPT_MATCH_DEVICE_DRIFT',
+            'physical_publisher_owned': False,
+            'publication_sequence': record['publication_sequence'],
+            'observed_catalog_record_sha256': protection.digest(record),
+            'recorded_device': record['device'], 'observed_device': s.st_dev,
+            'recorded_inode': record['inode'], 'observed_inode': s.st_ino,
+            'complete_sha256': record['complete_sha256'],
+            'inventory_sha256': record['inventory_sha256']}
+
+
 def require_capacity_rotation(path: Path) -> dict:
     """Authorize exactly the oldest physical copy under canonical Owner policy.
 
@@ -250,12 +303,23 @@ def require_capacity_rotation(path: Path) -> dict:
     if any(not all(row.get(key) for key in protection.IDENTITY) for row in entries):
         raise ValueError('rotation order contains an unidentified physical copy')
     ordered = []
+    publisher_order_evidence = {}
     for row in entries:
         record = row.get('catalog_record') or {}
-        if (record.get('publication_recorded_at') is not None
-                or type(record.get('publication_sequence')) is int and record['publication_sequence'] > 0) \
-                and not row.get('publisher_owned'):
-            raise ValueError('publisher order is not bound to owned archive bytes')
+        sequence = record.get('publication_sequence')
+        if sequence is not None and (type(sequence) is not int or sequence <= 0):
+            raise ValueError('publisher sequence record is invalid')
+        if record.get('publication_recorded_at') is not None and not row.get('publisher_owned'):
+            raise ValueError('timestamped publisher order is not bound to owned archive bytes')
+        if sequence is not None and not row.get('publisher_owned'):
+            evidence = (_pre_amendment_order_evidence(
+                Path(row['absolute_path']), record,
+                {key: row[key] for key in protection.IDENTITY})
+                if row.get('integrity_verified') is True and row.get('metadata_error') is None
+                else None)
+            if evidence is None:
+                raise ValueError('pre-amendment publisher order is not bound to verified archive bytes')
+            publisher_order_evidence[row['path']] = evidence
         order = retention._rotation_order(Path(row['absolute_path']), row.get('catalog_record'))
         if order is None:
             raise ValueError('rotation order is unproven for a physical copy')
@@ -315,6 +379,7 @@ def require_capacity_rotation(path: Path) -> dict:
             'physical_survivors': physical_survivors,
             'initial_order': initial_order,
             'prior_rotated': prior_rotated,
+            'publisher_order_evidence': publisher_order_evidence,
             'proposal_refs': proposal_refs,
             'protected_identities': {cid: value['identity'] for cid, value in audit['protected_identities'].items()}}
 
@@ -343,6 +408,11 @@ def require_capacity_rotation_continuation(lease: dict, *, full: bool = True) ->
     local_catalog = json.loads(catalog_path.read_bytes())
     if local_catalog.get('rotation_order_v2') != lease.get('initial_order'):
         raise ValueError('persisted initial rotation order changed')
+    for relative, evidence in lease.get('publisher_order_evidence', {}).items():
+        record = local_catalog.get('artifacts', {}).get(str(base / relative))
+        if not isinstance(record, dict) or protection.digest(record) != evidence.get(
+                'observed_catalog_record_sha256'):
+            raise ValueError('pre-amendment publisher order record changed')
     for cid, expected in lease.get('survivors', {}).items():
         selected = registry['selected_survivors'].get(cid)
         if selected != expected['path']:
