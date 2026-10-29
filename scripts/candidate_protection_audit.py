@@ -724,9 +724,16 @@ def reconcile_survivors(registry: dict, current: dict, proposals: dict,
 
 def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages: list[dict],
             *, free_bytes: int, verifier=verify_archive, canonical: dict | None = None,
-            for_deletion: bool = False, rotation_receipts: dict | None = None) -> dict:
+            for_deletion: bool = False, rotation_receipts: dict | None = None,
+            purpose: str = 'INTEGRITY') -> dict:
     """Classify only from exact authority and evidence; never mutate a package."""
     blockers: list[str] = []
+    if purpose not in ('INTEGRITY', 'CAPACITY'):
+        raise ValueError('unknown archive operation purpose')
+    capacity = purpose == 'CAPACITY'
+    if capacity and ((canonical or {}).get('rotation_policy', {}).get('status') != 'PRODUCT_OWNER_AUTHORIZED_ACTIVE'
+                     or (canonical or {}).get('rotation_policy', {}).get('rotation_strategy') != 'OLDEST_FULL_COPY_FIRST'):
+        blockers.append('CANONICAL_CAPACITY_POLICY_UNAVAILABLE')
     if canonical is None or canonical.get('current_sha256') != registry['canonical_current']['sha256']:
         blockers.append('CANONICAL_CURRENT_BYTES_UNVERIFIED')
     decision_verified = bool(canonical and canonical.get('decision_authority_ref') == registry.get('decision_authority_ref')
@@ -841,6 +848,10 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
             blockers.append('PROTECTED_ARCHIVE_IDENTITY_CONFLICT:' + cid)
             blockers.append('CONFLICTING_SURVIVOR:' + cid)
             continue
+        if capacity:
+            if not package.get('identity_metadata_verified') or package.get('metadata_error'):
+                blockers.append('PROTECTED_ARCHIVE_METADATA_FAIL:' + cid)
+            continue
         try:
             receipt = verifier(Path(package['absolute_path']), role['identity'])
             if any(receipt.get(k) != v for k, v in role['identity'].items()):
@@ -853,6 +864,8 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
         verified.add(cid)
         verified_paths.add(path)
     for item in packages:
+        if capacity and (not item.get('identity_metadata_verified') or item.get('metadata_error')):
+            blockers.append('CAPACITY_PACKAGE_IDENTITY_OR_SAFETY_UNPROVEN:' + item['path'])
         cid = item.get('candidate_id')
         role = protected.get(cid)
         if role and all(item.get(k) == v for k, v in role['identity'].items()):
@@ -882,6 +895,8 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
             blockers.append('HISTORICAL_GAP_STATUS_CONFLICT:' + gap['candidate_id'])
     blockers = sorted(set(blockers))
     promotion_blockers = list(blockers)
+    if capacity:
+        promotion_blockers.append('CAPACITY_SNAPSHOT_IS_NOT_PROMOTION_EVIDENCE')
     promotion_blockers.extend('ROTATED_SELECTED_ARCHIVE_UNAVAILABLE:' + cid
                               for cid in sorted(rotated_unavailable))
     if registry['canonical_current']['candidate_id'] in accepted_gaps:
@@ -915,7 +930,7 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
         # Protected survivors were fully rehashed above in this same immutable
         # snapshot. Avoid reopening their tens of thousands of files twice.
         integrity_verified = row['path'] in verified_paths
-        if not role:
+        if not role and not capacity:
             try:
                 verifier(Path(row['absolute_path']), {k: row[k] for k in IDENTITY})
                 integrity_verified = row.get('metadata_error') is None
@@ -949,6 +964,7 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
             row['classification'] = 'ELIGIBLE'
             row['reasons'] = ['STANDING_TERMINAL_RETIREMENT']
     result = {'artifact_type': 'integra.candidate_protection_audit',
+            'verification_purpose': purpose,
             'registry_status': registry.get('status'),
             'decision_authority_verified': decision_verified,
             'authority_state': 'COMPLETE' if not blockers else 'BLOCKED_FAIL_CLOSED',
@@ -973,13 +989,15 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
     return result
 
 
-def scan_local(registry: dict, base: Path) -> list[dict]:
+def scan_local(registry: dict, base: Path, *, purpose: str = 'INTEGRITY') -> list[dict]:
     """Read-only inventory; publisher ownership requires an exact catalog bond."""
     base = Path(base).expanduser().resolve()
     if base.is_symlink() or not base.is_dir():
         raise ValueError('managed archive base is missing or linked')
     seen: set[tuple[int, int]] = set()
     rows = []
+    if purpose not in ('INTEGRITY', 'CAPACITY'):
+        raise ValueError('unknown archive operation purpose')
     catalog = {}
     try:
         from scripts import candidate_retention as retention
@@ -1011,6 +1029,7 @@ def scan_local(registry: dict, base: Path) -> list[dict]:
             manifest = app / 'Contents/Resources/candidate-manifest.json'
             identity = {}
             error = None
+            metadata_verified = False
             try:
                 value = json.loads(manifest.read_text())
                 identity = {'candidate_id': value['candidate_id'],
@@ -1024,15 +1043,33 @@ def scan_local(registry: dict, base: Path) -> list[dict]:
                     s = item.lstat(); key = (s.st_dev, s.st_ino)
                     if key not in seen:
                         amount += s.st_blocks * 512; seen.add(key)
-                    if stat.S_ISLNK(s.st_mode):
-                        error = 'package contains a symlink'
+                    if (stat.S_ISLNK(s.st_mode) or s.st_uid != os.getuid()
+                            or not (stat.S_ISREG(s.st_mode) or stat.S_ISDIR(s.st_mode))
+                            or s.st_dev != package.stat().st_dev
+                            or stat.S_ISREG(s.st_mode) and s.st_nlink != 1):
+                        error = 'package contains unsafe, foreign or linked objects'
+            if purpose == 'CAPACITY':
+                try:
+                    try:
+                        from scripts.candidate_protection_gate import _rotation_package_metadata
+                    except ModuleNotFoundError:
+                        from candidate_protection_gate import _rotation_package_metadata
+                    _rotation_package_metadata(package, identity)
+                    metadata_verified = error is None
+                except (OSError, ValueError, KeyError, TypeError) as problem:
+                    error = str(problem)
             owned = False
             lifecycle = 'LEGACY_UNCONFIRMED'
             inactive = False
             record = catalog.get('artifacts', {}).get(str(package))
             if isinstance(record, dict) and not record.get('historical'):
                 try:
-                    verified_identity, receipt, metadata_error = retention._metadata(package)
+                    if purpose == 'CAPACITY':
+                        verified_identity = identity
+                        receipt = json.loads((package / 'COMPLETE.json').read_bytes())
+                        metadata_error = error if metadata_verified else 'unverified package metadata'
+                    else:
+                        verified_identity, receipt, metadata_error = retention._metadata(package)
                     owned = (metadata_error is None and verified_identity == identity
                              and retention._ownership(package, record, receipt)
                              and not retention._publisher_live(record))
@@ -1045,11 +1082,11 @@ def scan_local(registry: dict, base: Path) -> list[dict]:
                          **identity, 'allocated_bytes': amount,
                          'metadata_error': error, 'publisher_owned': owned,
                          'lifecycle': lifecycle, 'inactive': inactive,
-                         'catalog_record': record})
+                         'catalog_record': record, 'identity_metadata_verified': metadata_verified})
     return rows
 
 
-def load_rotation_receipts(base: Path, policy: dict | None) -> dict[str, dict]:
+def load_rotation_receipts(base: Path, policy: dict | None, *, purpose: str = 'INTEGRITY') -> dict[str, dict]:
     """Read completed local physical-retirement truth, never a pending journal."""
     if not policy or policy.get('rotation_strategy') != 'OLDEST_FULL_COPY_FIRST':
         return {}
@@ -1126,8 +1163,9 @@ def load_rotation_receipts(base: Path, policy: dict | None) -> dict[str, dict]:
                     or complete.get('inventory_sha256') != sha(inventory_bytes)
                     or inventory_by_path.get('COMPLETE.json', {}).get('sha256') != sha(complete_bytes)
                     or inventory_by_path.get('inventory.json', {}).get('sha256') != sha(inventory_bytes)
-                    or [item for item in inventory if item['path'] not in ('COMPLETE.json', 'inventory.json')]
-                    != original_inventory
+                    or (verification.get('method') != 'DELETION_SNAPSHOT' and
+                        [item for item in inventory if item['path'] not in ('COMPLETE.json', 'inventory.json')]
+                        != original_inventory)
                     or (archive_kind == 'PUBLISHER_BOUND_COMPLETE_ARCHIVE')
                     != isinstance(receipt.get('publisher_attestation'), dict)):
                 raise ValueError('retired archive receipt metadata differs')
@@ -1187,6 +1225,14 @@ def load_rotation_receipts(base: Path, policy: dict | None) -> dict[str, dict]:
             raise ValueError('retired archive kind is unknown')
         if not isinstance(inventory, list):
             raise ValueError('retired package inventory is missing')
+        if verification.get('method') == 'DELETION_SNAPSHOT':
+            if (receipt.get('canonical_snapshot', {}).get('verification_purpose') != 'CAPACITY'
+                    or verification.get('archival_integrity') != 'NOT_ASSERTED'
+                    or len({item['path'] for item in inventory}) != len(inventory)
+                    or any(not isinstance(item.get('path'), str) or not item['path']
+                           or Path(item['path']).is_absolute() or '..' in Path(item['path']).parts
+                           or item.get('type') not in ('file', 'directory') for item in inventory)):
+                raise ValueError('retired deletion snapshot is inconsistent')
         ancillary = {item['path']: item for item in inventory
                      if item.get('type') == 'file' and
                      not item.get('path', '').startswith('Integra.app/') and
@@ -1233,7 +1279,14 @@ def load_rotation_receipts(base: Path, policy: dict | None) -> dict[str, dict]:
             if not retention._ownership(base / source, publisher,
                                         json.loads((base / source / 'COMPLETE.json').read_bytes())):
                 raise ValueError('rebuilt physical copy lacks publisher ownership')
-            verify_archive(base / source, identity)
+            if purpose == 'CAPACITY':
+                try:
+                    from scripts.candidate_protection_gate import _rotation_package_metadata
+                except ModuleNotFoundError:
+                    from candidate_protection_gate import _rotation_package_metadata
+                _rotation_package_metadata(base / source, identity)
+            else:
+                verify_archive(base / source, identity)
             continue
         cid = identity['candidate_id']
         if cid in result:

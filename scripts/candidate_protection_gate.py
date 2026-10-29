@@ -19,7 +19,7 @@ except ModuleNotFoundError:
     import candidate_protection_audit as protection
 
 
-def _snapshot(*, for_deletion: bool = False) -> tuple[dict, dict]:
+def _snapshot(*, for_deletion: bool = False, purpose: str = 'INTEGRITY') -> tuple[dict, dict]:
     registry_bytes = protection.REGISTRY.read_bytes()
     registry_sha256 = protection.sha(registry_bytes)
     registry = json.loads(registry_bytes)
@@ -29,13 +29,17 @@ def _snapshot(*, for_deletion: bool = False) -> tuple[dict, dict]:
             or type(registry.get('deletion_enabled')) is not bool):
         raise ValueError('canonical protection authority is not activated and integrated')
     current, proposals, canonical = protection.fetch_canonical(registry)
+    if purpose == 'CAPACITY' and not canonical.get('rotation_policy'):
+        # Before canonical v2, admission continues under its original strict
+        # policy. An invalid/present v2 policy never receives this fallback.
+        purpose = 'INTEGRITY'
     base = Path.home() / 'Library/Application Support/Integra'
-    packages = protection.scan_local(registry, base)
-    rotation_receipts = protection.load_rotation_receipts(base, canonical.get('rotation_policy'))
+    packages = protection.scan_local(registry, base, purpose=purpose)
+    rotation_receipts = protection.load_rotation_receipts(base, canonical.get('rotation_policy'), purpose=purpose)
     audit = protection.resolve(registry, current, proposals, packages,
                                free_bytes=shutil.disk_usage(base).free,
                                canonical=canonical, for_deletion=for_deletion,
-                               rotation_receipts=rotation_receipts)
+                               rotation_receipts=rotation_receipts, purpose=purpose)
     if audit['authority_state'] != 'COMPLETE':
         raise ValueError('canonical protection authority is incomplete: ' + ','.join(audit['blockers']))
     if protection.sha(protection.REGISTRY.read_bytes()) != registry_sha256:
@@ -92,7 +96,7 @@ def require_promotion(proposal: dict, current: dict, candidate_archive: Path,
 
 def require_archive_publication(archive_root: Path, estimated_bytes: int) -> None:
     """Admit a new managed full copy only against fresh canonical protection."""
-    registry, audit = _snapshot()
+    registry, audit = _snapshot(purpose='CAPACITY')
     if type(estimated_bytes) is not int or estimated_bytes < 0:
         raise ValueError('archive estimate is invalid')
     base = Path.home() / 'Library/Application Support/Integra'
@@ -274,7 +278,7 @@ def _pre_amendment_order_evidence(package: Path, record: dict | None,
             'inventory_sha256': record['inventory_sha256']}
 
 
-def require_capacity_rotation(path: Path) -> dict:
+def require_capacity_rotation(path: Path, *, purpose: str = 'CAPACITY') -> dict:
     """Authorize exactly the oldest physical copy under canonical Owner policy.
 
     Legacy birthtime is an observed ordering input, never a publisher claim.
@@ -286,7 +290,11 @@ def require_capacity_rotation(path: Path) -> dict:
     except ModuleNotFoundError:
         import candidate_retention as retention
         from candidate_archive import _identity
-    registry, audit = _snapshot(for_deletion=True)
+    if purpose not in ('INTEGRITY', 'CAPACITY'):
+        raise ValueError('unknown archive operation purpose')
+    capacity = purpose == 'CAPACITY'
+    registry, audit = (_snapshot(for_deletion=True, purpose=purpose) if capacity
+                       else _snapshot(for_deletion=True))
     policy = audit['canonical'].get('rotation_policy') or {}
     if (policy.get('rotation_strategy') != 'OLDEST_FULL_COPY_FIRST'
             or policy.get('status') != 'PRODUCT_OWNER_AUTHORIZED_ACTIVE'):
@@ -315,7 +323,7 @@ def require_capacity_rotation(path: Path) -> dict:
             evidence = (_pre_amendment_order_evidence(
                 Path(row['absolute_path']), record,
                 {key: row[key] for key in protection.IDENTITY})
-                if row.get('integrity_verified') is True and row.get('metadata_error') is None
+                if row.get('identity_metadata_verified' if capacity else 'integrity_verified') is True and row.get('metadata_error') is None
                 else None)
             if evidence is None:
                 raise ValueError('pre-amendment publisher order is not bound to verified archive bytes')
@@ -333,11 +341,11 @@ def require_capacity_rotation(path: Path) -> dict:
     if local_catalog.get('publication_timestamp_order_conflict'):
         raise ValueError('new publication clock order conflicts with publisher sequence')
     persisted_order = local_catalog.get('rotation_order_v2')
-    prior_rotated = protection.load_rotation_receipts(base, policy)
+    prior_rotated = protection.load_rotation_receipts(base, policy, purpose=purpose)
     retired_paths = retention._retired_rotation_sources(local_catalog, policy['sha256'])
     if persisted_order:
         ordered = retention._ordered_rotation_rows(
-            ordered, persisted_order, policy['sha256'], retired_paths, policy['max_full_copies'])
+            ordered, persisted_order, policy['sha256'], retired_paths, policy['max_full_copies'], purpose=purpose)
         initial_order = persisted_order
     else:
         initial_order = retention._initial_rotation_order(
@@ -349,7 +357,7 @@ def require_capacity_rotation(path: Path) -> dict:
     if first['path'] != relative:
         raise ValueError('rotation target is not the oldest physical copy')
     row = first
-    identity = _identity(target / 'Integra.app')
+    identity = _rotation_package_metadata(target)['identity'] if capacity else _identity(target / 'Integra.app')
     if any(identity[key] != row[key] for key in protection.IDENTITY):
         raise ValueError('oldest copy app bytes differ from manifest identity')
     expected_selected = registry['selected_survivors']
@@ -366,9 +374,10 @@ def require_capacity_rotation(path: Path) -> dict:
     for other in entries:
         if other['path'] == relative:
             continue
-        physical_survivors[other['path']] = _rotation_package_attestation(
+        verifier = _rotation_package_metadata if capacity else _rotation_package_attestation
+        physical_survivors[other['path']] = verifier(
             Path(other['absolute_path']), {key: other[key] for key in protection.IDENTITY})
-    return {'kind': 'OWNER_POLICY_CAPACITY_ROTATION',
+    lease = {'kind': 'OWNER_POLICY_CAPACITY_ROTATION',
             'registry_sha256': audit['registry_sha256'],
             'canonical_sha256': protection.digest(audit['canonical']),
             'policy_sha256': policy['sha256'], 'policy_authority_ref': policy['authority_ref'],
@@ -382,6 +391,9 @@ def require_capacity_rotation(path: Path) -> dict:
             'publisher_order_evidence': publisher_order_evidence,
             'proposal_refs': proposal_refs,
             'protected_identities': {cid: value['identity'] for cid, value in audit['protected_identities'].items()}}
+    if capacity:
+        lease['verification_purpose'] = 'CAPACITY'
+    return lease
 
 
 def require_capacity_rotation_continuation(lease: dict, *, full: bool = True) -> dict | None:
@@ -445,13 +457,16 @@ def require_capacity_rotation_continuation(lease: dict, *, full: bool = True) ->
     if (blockers or {cid: role['identity'] for cid, role in protected.items()}
             != lease.get('protected_identities')):
         raise ValueError('rotation protection graph changed')
-    if protection.load_rotation_receipts(base, policy) != lease.get('prior_rotated'):
+    capacity = lease.get('verification_purpose') == 'CAPACITY'
+    if protection.load_rotation_receipts(base, policy, purpose='CAPACITY' if capacity else 'INTEGRITY') != lease.get('prior_rotated'):
         raise ValueError('prior physical-retirement receipts changed')
-    for cid, expected in lease.get('survivors', {}).items():
-        protection.verify_archive(base / expected['path'], protected[cid]['identity'])
+    if not capacity:
+        for cid, expected in lease.get('survivors', {}).items():
+            protection.verify_archive(base / expected['path'], protected[cid]['identity'])
     upgraded = {}
     for relative, expected in physical_survivors.items():
-        fresh = _rotation_package_attestation(base / relative, expected['identity'])
+        verifier = _rotation_package_metadata if capacity else _rotation_package_attestation
+        fresh = verifier(base / relative, expected['identity'])
         if any(fresh.get(key) != value for key, value in expected.items()):
             raise ValueError('rotation physical survivor bytes changed: ' + relative)
         upgraded[relative] = fresh
@@ -494,6 +509,64 @@ def _file_anchor(path: Path) -> dict:
     return {'device': s.st_dev, 'inode': s.st_ino, 'owner_uid': s.st_uid,
             'mode': stat.S_IMODE(s.st_mode), 'size': s.st_size,
             'mtime_ns': s.st_mtime_ns, 'ctime_ns': s.st_ctime_ns}
+
+
+def _rotation_package_metadata(package: Path, identity: dict | None = None) -> dict:
+    """Bind disposable package identity, not restoration eligibility.
+
+    Original inventory/COMPLETE remain immutable provenance. Payload contents
+    are deliberately not certified here; the executor snapshots the selected
+    target separately before its guarded deletion transaction.
+    """
+    try:
+        from scripts import candidate_archive as archive
+    except ModuleNotFoundError:
+        import candidate_archive as archive
+    package = archive._path(package, durable=True)
+    root = package.lstat()
+    if not stat.S_ISDIR(root.st_mode) or root.st_uid != os.getuid():
+        raise ValueError('rotation package root ownership differs')
+    if (package / '.git').exists():
+        raise ValueError('rotation package is a worktree')
+    manifest = archive._path(package / 'Integra.app' / archive.EMBEDDED)
+    manifest_anchor = _file_anchor(manifest)
+    raw = manifest.read_bytes()
+    value = json.loads(raw)
+    archive.validate_manifest(value)
+    actual = {'candidate_id': value['candidate_id'], 'bundle_digest': value['bundle']['digest'],
+              'manifest_digest': protection.sha(raw)}
+    if identity is not None and actual != identity:
+        raise ValueError('rotation manifest identity differs')
+    complete = package / 'COMPLETE.json'
+    inventory = package / 'inventory.json'
+    if complete.exists() != inventory.exists():
+        raise ValueError('rotation package has partial archive metadata')
+    complete_hash = inventory_hash = None
+    anchors = {'manifest': manifest_anchor, 'complete': None, 'inventory': None}
+    if complete.exists():
+        for key, path in (('complete', complete), ('inventory', inventory)):
+            archive._path(path)
+            anchors[key] = _file_anchor(path)
+        complete_raw, inventory_raw = complete.read_bytes(), inventory.read_bytes()
+        receipt, entries = json.loads(complete_raw), json.loads(inventory_raw)
+        complete_hash, inventory_hash = protection.sha(complete_raw), protection.sha(inventory_raw)
+        if (receipt.get('status') != 'COMPLETE'
+                or any(receipt.get(key) != actual[key] for key in protection.IDENTITY)
+                or receipt.get('inventory_sha256') != inventory_hash
+                or not isinstance(entries, list)
+                or package.name != actual['bundle_digest']
+                or package.parent.name != actual['candidate_id']):
+            raise ValueError('rotation original receipt identity/inventory differs')
+        retained = archive._path(package / archive.MANIFEST_NAME)
+        _file_anchor(retained)
+        if retained.read_bytes() != raw:
+            raise ValueError('rotation retained manifest differs')
+    return {'identity': actual, 'device': root.st_dev, 'inode': root.st_ino,
+            'birthtime': getattr(root, 'st_birthtime', None),
+            'inventory_sha256': inventory_hash,
+            'archive_kind': 'COMPLETE' if complete.exists() else 'UNARCHIVED',
+            'manifest_sha256': actual['manifest_digest'], 'complete_sha256': complete_hash,
+            'metadata_anchors': anchors}
 
 
 def _rotation_package_attestation(package: Path, identity: dict) -> dict:

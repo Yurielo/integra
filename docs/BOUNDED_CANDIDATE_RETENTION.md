@@ -7,6 +7,15 @@ terminal-only eviction predicate for capacity admission. This Issue #212 text
 remains historical; all byte-integrity, journaling, installed-application and
 honest physical-availability requirements remain in force.
 
+Issue #313 further clarifies that historical byte-integrity requirements below
+apply to restoration/reuse/activation and ordinary terminal cleanup, not v2
+capacity rotation/admission. That path requires deletion safety, bound identity
+and provenance, and an actual deletion-time snapshot; it preserves original
+archive metadata without claiming the payload still matches it. Incoming
+publication remains strictly verified. This narrow clarification supersedes the
+full-target/full-survivor capacity prerequisites below without changing caps,
+ordering, the policy digest, installed-app/user-data protection or Owner gates.
+
 Status: PRODUCT_OWNER_AUTHORIZED, Issue #212 carries the reusable PR #206 implementation plus automatic maintenance.
 Authority: [Product Owner decision](https://github.com/Yurielo/integra/issues/205#issuecomment-5917563905).
 Machine policy: `state/candidate_retention_policy_v1.json`.

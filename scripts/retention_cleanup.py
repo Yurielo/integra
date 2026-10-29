@@ -142,7 +142,11 @@ def _guard(r, catalog, job, package, *, transaction=False, full_rotation=False):
     rotation = job.get('kind') == 'CAPACITY_ROTATION'
     if rotation:
         if full_rotation and package == Path(job['source']):
-            if canonical_gate.require_capacity_rotation(package) != job.get('canonical_deletion_lease'):
+            lease = job.get('canonical_deletion_lease') or {}
+            fresh = (canonical_gate.require_capacity_rotation(package)
+                     if lease.get('verification_purpose') == 'CAPACITY'
+                     else canonical_gate.require_capacity_rotation(package, purpose='INTEGRITY'))
+            if fresh != lease:
                 raise ValueError('canonical rotation decision changed before withdrawal')
         else:
             canonical_gate.require_capacity_rotation_continuation(
@@ -307,7 +311,12 @@ def recover(r, path, catalog):
                 canonical_gate.require_deletion_continuation(job.get('canonical_deletion_lease'))
         if not all(job.get('kind') == 'CAPACITY_ROTATION' for job in catalog['deletions'].values()) and not r._context_valid(catalog.get('protection')):
             raise ValueError('cleanup recovery protection context is unavailable')
-        for receipt in catalog['protection']['verified_survivors'].values():
+        # New capacity leases prove deletion safety, not survivor restorability.
+        # Old journals keep their original strict verification contract.
+        capacity_only = all(job.get('kind') == 'CAPACITY_ROTATION'
+                            and job.get('canonical_deletion_lease', {}).get('verification_purpose') == 'CAPACITY'
+                            for job in catalog['deletions'].values())
+        for receipt in (() if capacity_only else catalog['protection']['verified_survivors'].values()):
             if any(job.get('kind') == 'CAPACITY_ROTATION' and receipt['archive_path'] == job['source']
                    for job in catalog['deletions'].values()):
                 continue
@@ -444,7 +453,7 @@ def apply_capacity_rotation(r, path, expected_plan):
         if catalog.get('deletions'):
             raise ValueError('interrupted rotation must recover before a new plan')
         snapshot = r.plan(catalog, free_bytes=expected_plan['EXPECTED_FREE_SPACE'] - expected_plan['DELETABLE_BYTES'],
-                          _validated_context=True)
+                          _validated_context=True, purpose=expected_plan.get('verification_purpose', 'INTEGRITY'))
         target = snapshot.get('capacity_rotation_target')
         if (snapshot['plan_sha256'] != expected_plan.get('plan_sha256')
                 or not snapshot['protection_context_valid'] or not isinstance(target, dict)
@@ -467,7 +476,9 @@ def apply_capacity_rotation(r, path, expected_plan):
                 or getattr(root_stat, 'st_birthtime', None) != lease['birthtime']
                 or (package / '.git').exists() or not r._inactive(package)):
             raise ValueError('rotation target ownership, birthtime, or inactivity changed')
-        identity = _identity(package / 'Integra.app')
+        capacity = lease.get('verification_purpose') == 'CAPACITY'
+        identity = (canonical_gate._rotation_package_metadata(package)['identity'] if capacity
+                    else _identity(package / 'Integra.app'))
         if identity != lease['identity']:
             raise ValueError('rotation app bytes differ from exact manifest')
         inventory = _inventory(package)
@@ -475,7 +486,9 @@ def apply_capacity_rotation(r, path, expected_plan):
             raise ValueError('rotation target inventory is empty')
         for item in inventory:
             stat_result = (package / item['path']).lstat()
-            if stat_result.st_uid != os.getuid() or (item['type'] == 'file' and stat_result.st_nlink != 1):
+            if (stat_result.st_uid != os.getuid() or stat_result.st_dev != root_stat.st_dev
+                    or '.git' in Path(item['path']).parts
+                    or item['type'] == 'file' and stat_result.st_nlink != 1):
                 raise ValueError('rotation inventory contains foreign or linked bytes')
         provenance_files = {}
         provenance_total = 0
@@ -504,7 +517,8 @@ def apply_capacity_rotation(r, path, expected_plan):
         if has_complete:
             complete = json.loads(original_complete_bytes)
             publisher_bound = r._ownership(package, record, complete)
-            verification = verify_archive(package, identity)
+            verification = ({'method': 'DELETION_SNAPSHOT', 'archival_integrity': 'NOT_ASSERTED'}
+                            if capacity else verify_archive(package, identity))
             if record is not None and not publisher_bound:
                 order_evidence = canonical_gate._pre_amendment_order_evidence(
                     package, record, identity)
@@ -516,7 +530,7 @@ def apply_capacity_rotation(r, path, expected_plan):
             else:
                 archive_kind = ('PUBLISHER_BOUND_COMPLETE_ARCHIVE' if publisher_bound else
                                 'LEGACY_COMPLETED_ARCHIVE_OBSERVED_NOW')
-            entries = _entries(r, package)
+            entries = _entries(r, package, observed_inventory=inventory) if capacity else _entries(r, package)
             if record is None:
                 record = {**identity, 'status': 'LEGACY_UNCONFIRMED', 'owner_uid': os.getuid()}
         else:
@@ -527,6 +541,9 @@ def apply_capacity_rotation(r, path, expected_plan):
                             'manifest_digest': identity['manifest_digest'],
                             'inventory_sha256': r._digest(inventory),
                             'inventory_entries': len(inventory)}
+            if capacity:
+                verification = {'method': 'DELETION_SNAPSHOT', 'archival_integrity': 'NOT_ASSERTED',
+                                'inventory_sha256': r._digest(inventory), 'inventory_entries': len(inventory)}
             archive_kind = 'UNARCHIVED_CANDIDATE_BUILD'
             entries = _entries(r, package, observed_inventory=inventory)
             record = {**identity, 'status': 'LEGACY_UNCONFIRMED', 'owner_uid': os.getuid()}

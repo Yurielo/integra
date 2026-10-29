@@ -67,13 +67,21 @@ existing owner-acceptance and proposal checks.
 The later Product Owner capacity-rotation amendment is recorded in
 `state/candidate_archive_rotation_policy_v2.json` and `docs/CANDIDATE_RETENTION.md`.
 Once that policy is canonical on main, the existing manager may retire the
-oldest full managed copy at the eight-copy limit after exact verification and
+oldest full managed copy at the eight-copy limit after exact deletion-safety verification and
 durable unavailable-byte evidence, even if its historical lifecycle decision
 remains pending or accepted. The incoming Owner-test Candidate still needs its
 own completed verified archive. A rotated older Candidate is not restorable or
 promotable from metadata alone. An absent outgoing CURRENT archive remains a
 promotion gate until a verified physical replacement exists. Never describe a
 legacy observed-now attestation as an original publisher receipt.
+
+Issue #313 separates capacity permission from restoration eligibility. Capacity
+rotation/admission verifies authority, bound identity/custody, approved order,
+safe containment, activity, resource limits and durable deletion snapshots.
+Historical payload discrepancies alone do not block it. Preserve original
+inventory/COMPLETE evidence separately from the actual deletion-time snapshot;
+never call unverified bytes verified. Incoming publication, exact reuse,
+restoration and activation retain strict content verification and Owner gates.
 
 ## Unified four-product rules
 
