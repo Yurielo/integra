@@ -64,6 +64,17 @@ until that archive is verified. The promotion helper requires exact archives
 of both the proposed and outgoing CURRENT applications in addition to the
 existing owner-acceptance and proposal checks.
 
+The later Product Owner capacity-rotation amendment is recorded in
+`state/candidate_archive_rotation_policy_v2.json` and `docs/CANDIDATE_RETENTION.md`.
+Once that policy is canonical on main, the existing manager may retire the
+oldest full managed copy at the eight-copy limit after exact verification and
+durable unavailable-byte evidence, even if its historical lifecycle decision
+remains pending or accepted. The incoming Owner-test Candidate still needs its
+own completed verified archive. A rotated older Candidate is not restorable or
+promotable from metadata alone. An absent outgoing CURRENT archive remains a
+promotion gate until a verified physical replacement exists. Never describe a
+legacy observed-now attestation as an original publisher receipt.
+
 ## Unified four-product rules
 
 Before drafting or executing work in this repository, explicitly resolve and read the complete canonical rules document:

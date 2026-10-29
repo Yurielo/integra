@@ -421,6 +421,18 @@ def fetch_canonical(registry: dict) -> tuple[dict, dict[int, dict], dict]:
                 or (ROOT / policy_path).read_bytes() != raw):
             raise ValueError('canonical standing retention policy unavailable or differs')
         canonical['standing_policy'] = {**value, 'sha256': sha(raw), 'path': policy_path}
+    rotation_path = 'state/candidate_archive_rotation_policy_v2.json'
+    rotation = _optional_remote_file(rotation_path, main)
+    if rotation is not None:
+        raw, value = rotation
+        try:
+            from scripts.validate_retention_policy import validate_rotation
+        except ModuleNotFoundError:
+            from validate_retention_policy import validate_rotation
+        if (validate_rotation(value) or not (ROOT / rotation_path).is_file()
+                or (ROOT / rotation_path).read_bytes() != raw):
+            raise ValueError('canonical archive rotation policy unavailable or differs')
+        canonical['rotation_policy'] = {**value, 'sha256': sha(raw), 'path': rotation_path}
     try:
         from scripts import candidate_lifecycle
     except ModuleNotFoundError:
@@ -712,7 +724,7 @@ def reconcile_survivors(registry: dict, current: dict, proposals: dict,
 
 def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages: list[dict],
             *, free_bytes: int, verifier=verify_archive, canonical: dict | None = None,
-            for_deletion: bool = False) -> dict:
+            for_deletion: bool = False, rotation_receipts: dict | None = None) -> dict:
     """Classify only from exact authority and evidence; never mutate a package."""
     blockers: list[str] = []
     if canonical is None or canonical.get('current_sha256') != registry['canonical_current']['sha256']:
@@ -794,6 +806,8 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
     known_paths = {item['path'] for item in packages}
     verified = set()
     verified_paths = set()
+    rotated_unavailable = {}
+    rotation_receipts = rotation_receipts or {}
     for cid, role in protected.items():
         path = selected.get(cid)
         if path is None:
@@ -813,8 +827,14 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
             blockers.append('HISTORICAL_GAP_FALSE_RECOVERY_CLAIM:' + cid)
             continue
         if path not in known_paths:
-            blockers.append('MISSING_PROTECTED_ARCHIVE:' + cid)
-            blockers.append('UNAVAILABLE_SURVIVOR:' + cid)
+            receipt = rotation_receipts.get(cid)
+            if (isinstance(receipt, dict) and receipt.get('path') == path
+                    and receipt.get('identity') == role['identity']
+                    and receipt.get('policy_sha256') == (canonical or {}).get('rotation_policy', {}).get('sha256')):
+                rotated_unavailable[cid] = receipt
+            else:
+                blockers.append('MISSING_PROTECTED_ARCHIVE:' + cid)
+                blockers.append('UNAVAILABLE_SURVIVOR:' + cid)
             continue
         package = next(item for item in packages if item['path'] == path)
         if any(package.get(k) != v for k, v in role['identity'].items()):
@@ -862,6 +882,8 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
             blockers.append('HISTORICAL_GAP_STATUS_CONFLICT:' + gap['candidate_id'])
     blockers = sorted(set(blockers))
     promotion_blockers = list(blockers)
+    promotion_blockers.extend('ROTATED_SELECTED_ARCHIVE_UNAVAILABLE:' + cid
+                              for cid in sorted(rotated_unavailable))
     if registry['canonical_current']['candidate_id'] in accepted_gaps:
         promotion_blockers.append('OUTGOING_CURRENT_EXACT_ARCHIVE_MISSING')
     for number, proposal in proposals.items():
@@ -934,6 +956,7 @@ def resolve(registry: dict, current: dict, proposals: dict[int, dict], packages:
             'promotion_blockers': sorted(set(promotion_blockers)),
             'blockers': blockers, 'canonical': canonical,
             'protected_identities': protected,
+            'rotated_unavailable': rotated_unavailable,
             'historical_availability': {cid: {
                 'identity': protected.get(cid, {}).get('identity'),
                 'historical_identity': 'VERIFIED_FROM_ACCEPTED_EVIDENCE',
@@ -1026,16 +1049,171 @@ def scan_local(registry: dict, base: Path) -> list[dict]:
     return rows
 
 
+def load_rotation_receipts(base: Path, policy: dict | None) -> dict[str, dict]:
+    """Read completed local physical-retirement truth, never a pending journal."""
+    if not policy or policy.get('rotation_strategy') != 'OLDEST_FULL_COPY_FIRST':
+        return {}
+    import base64
+    import os
+    path = base / 'Retention' / f'catalog-{os.getuid()}.json'
+    if not path.exists():
+        return {}
+    if path.is_symlink() or path.stat().st_uid != os.getuid():
+        raise ValueError('rotation receipt catalog ownership is unproven')
+    catalog = json.loads(path.read_bytes())
+    if (catalog.get('artifact_type') != 'integra.owned_archive_catalog'
+            or catalog.get('owner_uid') != os.getuid()):
+        raise ValueError('rotation receipt catalog identity differs')
+    active = {job.get('transaction_id'): job for job in catalog.get('deletions', {}).values()}
+    result = {}
+    newest = {}
+    for receipt in catalog.get('retirements', {}).values():
+        if receipt.get('reason') != 'OWNER_POLICY_CAPACITY_ROTATION':
+            continue
+        transaction = receipt.get('transaction_id')
+        if transaction in active:
+            # An in-progress exact journal is controlled by its immutable
+            # canonical lease. It is neither completed history nor an
+            # available replacement, and must not self-block the pre-rename
+            # recheck or interrupted recovery.
+            job = active[transaction]
+            active_source = receipt.get('canonical_snapshot', {}).get('path')
+            if (job.get('kind') != 'CAPACITY_ROTATION'
+                    or job.get('retirement_receipt') != receipt
+                    or job.get('transaction_id') != transaction
+                    or not isinstance(active_source, str) or not active_source
+                    or Path(active_source).is_absolute() or '..' in Path(active_source).parts
+                    or job.get('source') != str(base / active_source)
+                    or receipt.get('state') not in ('PREPARED', 'PARTIAL')
+                    or (receipt.get('state') == 'PREPARED' and
+                        receipt.get('physical_available') is not True)
+                    or (receipt.get('state') == 'PARTIAL' and
+                        receipt.get('physical_available') is not Path(job['source']).exists())
+                    or job.get('identity') != {key: receipt.get(key) for key in IDENTITY}
+                    or job.get('canonical_deletion_lease') != receipt.get('canonical_snapshot')):
+                raise ValueError('active capacity-rotation journal differs from receipt')
+            continue
+        identity = {key: receipt.get(key) for key in IDENTITY}
+        source = receipt.get('canonical_snapshot', {}).get('path')
+        manifest = receipt.get('retained_manifest') or {}
+        inventory = receipt.get('retained_inventory')
+        provenance_files = receipt.get('retained_provenance_files_base64')
+        verification = receipt.get('verification_evidence') or {}
+        try:
+            retained_manifest_bytes = base64.b64decode(receipt.get('retained_manifest_base64', ''),
+                                                       validate=True)
+        except (ValueError, TypeError) as error:
+            raise ValueError('retired manifest bytes are invalid') from error
+        archive_kind = receipt.get('archive_kind')
+        inventory_bytes = receipt.get('retained_inventory_json_base64')
+        complete_bytes = receipt.get('retained_complete_base64')
+        if archive_kind in ('PUBLISHER_BOUND_COMPLETE_ARCHIVE',
+                            'LEGACY_COMPLETED_ARCHIVE_OBSERVED_NOW'):
+            try:
+                inventory_bytes = base64.b64decode(inventory_bytes, validate=True)
+                complete_bytes = base64.b64decode(complete_bytes, validate=True)
+                complete = json.loads(complete_bytes)
+                original_inventory = json.loads(inventory_bytes)
+            except (ValueError, TypeError, KeyError) as error:
+                raise ValueError('retired archive receipt bytes are invalid') from error
+            inventory_by_path = {item['path']: item for item in inventory}
+            if (len(inventory_by_path) != len(inventory)
+                    or complete.get('status') != 'COMPLETE'
+                    or any(complete.get(key) != identity[key] for key in IDENTITY)
+                    or complete.get('inventory_sha256') != sha(inventory_bytes)
+                    or inventory_by_path.get('COMPLETE.json', {}).get('sha256') != sha(complete_bytes)
+                    or inventory_by_path.get('inventory.json', {}).get('sha256') != sha(inventory_bytes)
+                    or [item for item in inventory if item['path'] not in ('COMPLETE.json', 'inventory.json')]
+                    != original_inventory
+                    or (archive_kind == 'PUBLISHER_BOUND_COMPLETE_ARCHIVE')
+                    != isinstance(receipt.get('publisher_attestation'), dict)):
+                raise ValueError('retired archive receipt metadata differs')
+        elif archive_kind == 'UNARCHIVED_CANDIDATE_BUILD':
+            if (inventory_bytes is not None or complete_bytes is not None
+                    or receipt.get('publisher_attestation') is not None):
+                raise ValueError('unarchived Candidate has false publisher metadata')
+        else:
+            raise ValueError('retired archive kind is unknown')
+        if not isinstance(inventory, list):
+            raise ValueError('retired package inventory is missing')
+        ancillary = {item['path']: item for item in inventory
+                     if item.get('type') == 'file' and
+                     not item.get('path', '').startswith('Integra.app/') and
+                     item.get('path') not in ('inventory.json', 'COMPLETE.json')}
+        if not isinstance(provenance_files, dict) or set(provenance_files) != set(ancillary):
+            raise ValueError('retired provenance file set differs from inventory')
+        for name, encoded in provenance_files.items():
+            try:
+                data = base64.b64decode(encoded, validate=True)
+            except (ValueError, TypeError) as error:
+                raise ValueError('retired provenance bytes are invalid') from error
+            if len(data) != ancillary[name]['size'] or sha(data) != ancillary[name]['sha256']:
+                raise ValueError('retired provenance bytes differ from inventory')
+        if (receipt.get('state') != 'RETIRED_NOT_AVAILABLE'
+                or receipt.get('physical_available') is not False
+                or receipt.get('execution_result') != 'PASS'
+                or receipt.get('policy_sha256') != policy.get('sha256')
+                or not isinstance(source, str) or not source
+                or '..' in Path(source).parts or Path(source).is_absolute()
+                or receipt.get('physical_source_path') != str(base / source)
+                or not any(source == root or source.startswith(root + '/')
+                           for root in ['Build Archive', 'Recovery Archive', 'Build Archive Recovery',
+                                        'Candidate Builds', 'Validation'])
+                or manifest.get('candidate_id') != identity['candidate_id']
+                or manifest.get('bundle', {}).get('digest') != identity['bundle_digest']
+                or verification.get('manifest_digest') != identity['manifest_digest']
+                or sha(retained_manifest_bytes) != identity['manifest_digest']
+                or json.loads(retained_manifest_bytes) != manifest
+                or not isinstance(inventory, list)
+                or verification.get('rotation_inventory_sha256') != digest(inventory)):
+            raise ValueError('completed rotation receipt is inconsistent')
+        if (base / source).exists():
+            # A later exact rebuild may restore the same physical path. It
+            # needs a new completed publisher record and full byte proof;
+            # the old retirement receipt remains immutable history.
+            publisher = catalog.get('artifacts', {}).get(str(base / source)) or {}
+            if (publisher.get('publisher_completed') is not True
+                    or any(publisher.get(key) != identity[key] for key in IDENTITY)):
+                raise ValueError('completed rotation receipt conflicts with live bytes')
+            try:
+                from scripts import candidate_retention as retention
+            except ModuleNotFoundError:
+                import candidate_retention as retention
+            if not retention._ownership(base / source, publisher,
+                                        json.loads((base / source / 'COMPLETE.json').read_bytes())):
+                raise ValueError('rebuilt physical copy lacks publisher ownership')
+            verify_archive(base / source, identity)
+            continue
+        cid = identity['candidate_id']
+        if cid in result:
+            if result[cid]['path'] != source or result[cid]['identity'] != identity:
+                raise ValueError('conflicting physical-retirement receipts for Candidate')
+            # Rebuilding the exact Candidate at its identity-bound path and
+            # retiring it again preserves both immutable receipts. The most
+            # recent observation describes the current absent physical slot.
+            ordering = (receipt.get('observed_at') or '', receipt['transaction_id'])
+            if ordering <= newest[cid]:
+                continue
+        ordering = (receipt.get('observed_at') or '', receipt['transaction_id'])
+        newest[cid] = ordering
+        result[cid] = {'path': source, 'identity': identity,
+                       'policy_sha256': receipt['policy_sha256'],
+                       'transaction_id': receipt['transaction_id']}
+    return result
+
+
 def main() -> int:
     registry = json.loads(REGISTRY.read_text())
     try:
         current, proposals, canonical = fetch_canonical(registry)
         base = Path.home() / 'Library/Application Support/Integra'
         packages = scan_local(registry, base)
+        rotation_receipts = load_rotation_receipts(base, canonical.get('rotation_policy'))
         import shutil
         free = shutil.disk_usage(base).free
         result = resolve(registry, current, proposals, packages,
-                         free_bytes=free, canonical=canonical)
+                         free_bytes=free, canonical=canonical,
+                         rotation_receipts=rotation_receipts)
     except (OSError, ValueError, KeyError, TypeError, subprocess.TimeoutExpired) as error:
         result = {'artifact_type': 'integra.candidate_protection_audit',
                   'authority_state': 'BLOCKED_FAIL_CLOSED', 'promotion_ready': False,

@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 import unittest
 
-from scripts.validate_retention_policy import validate
+from scripts.validate_retention_policy import validate, validate_rotation
 
 
 class StandingPolicyContractTests(unittest.TestCase):
@@ -13,6 +13,17 @@ class StandingPolicyContractTests(unittest.TestCase):
 
     def test_complete_authorized_policy_validates(self):
         self.assertEqual(validate(self.policy), [])
+
+    def test_owner_capacity_rotation_amendment_validates(self):
+        root = Path(__file__).resolve().parents[1]
+        policy = json.loads((root / 'state/candidate_archive_rotation_policy_v2.json').read_bytes())
+        self.assertEqual(validate_rotation(policy), [])
+        for key, wrong in [('max_full_copies', 9), ('legacy_order_source', 'SOURCE_COMMIT_TIME'),
+                           ('installed_app', 'ALLOW_REPLACEMENT')]:
+            altered = copy.deepcopy(policy)
+            altered[key] = wrong
+            with self.subTest(key=key):
+                self.assertTrue(validate_rotation(altered))
 
     def test_predicate_removal_or_additional_authority_fails(self):
         for key in ('requires', 'does_not_authorize'):

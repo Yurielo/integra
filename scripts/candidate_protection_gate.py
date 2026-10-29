@@ -9,6 +9,9 @@ import json
 from pathlib import Path
 import shutil
 import hashlib
+import os
+import stat
+from datetime import datetime, timezone
 
 try:
     from scripts import candidate_protection_audit as protection
@@ -28,9 +31,11 @@ def _snapshot(*, for_deletion: bool = False) -> tuple[dict, dict]:
     current, proposals, canonical = protection.fetch_canonical(registry)
     base = Path.home() / 'Library/Application Support/Integra'
     packages = protection.scan_local(registry, base)
+    rotation_receipts = protection.load_rotation_receipts(base, canonical.get('rotation_policy'))
     audit = protection.resolve(registry, current, proposals, packages,
                                free_bytes=shutil.disk_usage(base).free,
-                               canonical=canonical, for_deletion=for_deletion)
+                               canonical=canonical, for_deletion=for_deletion,
+                               rotation_receipts=rotation_receipts)
     if audit['authority_state'] != 'COMPLETE':
         raise ValueError('canonical protection authority is incomplete: ' + ','.join(audit['blockers']))
     if protection.sha(protection.REGISTRY.read_bytes()) != registry_sha256:
@@ -214,3 +219,183 @@ def require_deletion_continuation(lease: dict) -> None:
             raise ValueError('protected survivor disappeared or changed: ' + cid)
         if standing:
             protection.verify_archive(base / relative, protected[cid]['identity'])
+
+
+def require_capacity_rotation(path: Path) -> dict:
+    """Authorize exactly the oldest physical copy under canonical Owner policy.
+
+    Legacy birthtime is an observed ordering input, never a publisher claim.
+    This grants no semantic withdrawal or Proposal status change.
+    """
+    try:
+        from scripts import candidate_retention as retention
+        from scripts.candidate_archive import _identity
+    except ModuleNotFoundError:
+        import candidate_retention as retention
+        from candidate_archive import _identity
+    registry, audit = _snapshot(for_deletion=True)
+    policy = audit['canonical'].get('rotation_policy') or {}
+    if (policy.get('rotation_strategy') != 'OLDEST_FULL_COPY_FIRST'
+            or policy.get('status') != 'PRODUCT_OWNER_AUTHORIZED_ACTIVE'):
+        raise ValueError('canonical Owner capacity-rotation policy is unavailable')
+    if audit['full_copies'] != policy['max_full_copies']:
+        raise ValueError('capacity rotation requires exactly eight physical copies')
+    base = Path.home() / 'Library/Application Support/Integra'
+    target = path.resolve(strict=True)
+    try:
+        relative = target.relative_to(base).as_posix()
+    except ValueError as error:
+        raise ValueError('rotation target is outside managed authority') from error
+    entries = audit['entries']
+    if any(not all(row.get(key) for key in protection.IDENTITY) for row in entries):
+        raise ValueError('rotation order contains an unidentified physical copy')
+    ordered = []
+    for row in entries:
+        record = row.get('catalog_record') or {}
+        if (record.get('publication_recorded_at') is not None
+                or type(record.get('publication_sequence')) is int and record['publication_sequence'] > 0) \
+                and not row.get('publisher_owned'):
+            raise ValueError('publisher order is not bound to owned archive bytes')
+        order = retention._rotation_order(Path(row['absolute_path']), row.get('catalog_record'))
+        if order is None:
+            raise ValueError('rotation order is unproven for a physical copy')
+        row['capacity_rotation_order'] = order
+        ordered.append(row)
+    catalog_path = retention.catalog_path(base / 'Build Archive')
+    local_catalog = json.loads(catalog_path.read_bytes()) if catalog_path.exists() else {}
+    if local_catalog and (local_catalog.get('artifact_type') != 'integra.owned_archive_catalog'
+                          or local_catalog.get('owner_uid') != os.getuid()):
+        raise ValueError('rotation order catalog ownership differs')
+    if local_catalog.get('publication_timestamp_order_conflict'):
+        raise ValueError('new publication clock order conflicts with publisher sequence')
+    persisted_order = local_catalog.get('rotation_order_v2')
+    prior_rotated = protection.load_rotation_receipts(base, policy)
+    retired_paths = retention._retired_rotation_sources(local_catalog, policy['sha256'])
+    if persisted_order:
+        ordered = retention._ordered_rotation_rows(
+            ordered, persisted_order, policy['sha256'], retired_paths, policy['max_full_copies'])
+        initial_order = persisted_order
+    else:
+        initial_order = retention._initial_rotation_order(
+            ordered, policy['sha256'], datetime.now(timezone.utc).isoformat(),
+            policy['max_full_copies'])
+        ordered = retention._ordered_rotation_rows(
+            ordered, initial_order, policy['sha256'], {}, policy['max_full_copies'])
+    first = ordered[0]
+    if first['path'] != relative:
+        raise ValueError('rotation target is not the oldest physical copy')
+    row = first
+    identity = _identity(target / 'Integra.app')
+    if any(identity[key] != row[key] for key in protection.IDENTITY):
+        raise ValueError('oldest copy app bytes differ from manifest identity')
+    expected_selected = registry['selected_survivors']
+    # Retain the open Proposal reference without changing its review state.
+    proposal_refs = sorted(f'PR #{number}' for number, proposal in protection.fetch_canonical(registry)[1].items()
+                           if proposal.get('candidate', {}).get('candidate_id') == identity['candidate_id'])
+    survivors = {}
+    for cid, selected in expected_selected.items():
+        if selected is None or selected == relative or cid in audit.get('rotated_unavailable', {}):
+            continue
+        receipt = base / selected / 'COMPLETE.json'
+        survivors[cid] = {'path': selected, 'receipt_sha256': protection.sha(receipt.read_bytes())}
+    physical_survivors = {}
+    for other in entries:
+        if other['path'] == relative:
+            continue
+        physical_survivors[other['path']] = _rotation_package_attestation(
+            Path(other['absolute_path']), {key: other[key] for key in protection.IDENTITY})
+    return {'kind': 'OWNER_POLICY_CAPACITY_ROTATION',
+            'registry_sha256': audit['registry_sha256'],
+            'canonical_sha256': protection.digest(audit['canonical']),
+            'policy_sha256': policy['sha256'], 'policy_authority_ref': policy['authority_ref'],
+            'path': relative, 'identity': identity, 'order': first['capacity_rotation_order'],
+            'owner_uid': target.stat().st_uid, 'device': target.stat().st_dev,
+            'inode': target.stat().st_ino, 'birthtime': getattr(target.stat(), 'st_birthtime', None),
+            'selected_survivors': expected_selected, 'survivors': survivors,
+            'physical_survivors': physical_survivors,
+            'initial_order': initial_order,
+            'prior_rotated': prior_rotated,
+            'proposal_refs': proposal_refs,
+            'protected_identities': {cid: value['identity'] for cid, value in audit['protected_identities'].items()}}
+
+
+def require_capacity_rotation_continuation(lease: dict) -> None:
+    """Recheck immutable canonical authority during rename/unlink/recovery."""
+    if not isinstance(lease, dict) or lease.get('kind') != 'OWNER_POLICY_CAPACITY_ROTATION':
+        raise ValueError('capacity-rotation lease is missing')
+    raw = protection.REGISTRY.read_bytes()
+    if protection.sha(raw) != lease.get('registry_sha256'):
+        raise ValueError('rotation registry changed')
+    registry = json.loads(raw)
+    current, proposals, canonical = protection.fetch_canonical(registry)
+    policy = canonical.get('rotation_policy') or {}
+    if (policy.get('sha256') != lease.get('policy_sha256')
+            or policy.get('authority_ref') != lease.get('policy_authority_ref')
+            or protection.digest(canonical) != lease.get('canonical_sha256')):
+        raise ValueError('rotation canonical authority changed')
+    blockers = []
+    gaps = protection._accepted_historical_gaps(registry, canonical, blockers)
+    protected = protection._validate_registry(registry, current, proposals, blockers, gaps, canonical)
+    if (blockers or registry['selected_survivors'] != lease.get('selected_survivors')
+            or {cid: role['identity'] for cid, role in protected.items()} != lease.get('protected_identities')):
+        raise ValueError('rotation protection graph changed')
+    base = Path.home() / 'Library/Application Support/Integra'
+    try:
+        from scripts import candidate_retention as retention
+    except ModuleNotFoundError:
+        import candidate_retention as retention
+    catalog_path = retention.catalog_path(base / 'Build Archive')
+    local_catalog = json.loads(catalog_path.read_bytes())
+    if local_catalog.get('rotation_order_v2') != lease.get('initial_order'):
+        raise ValueError('persisted initial rotation order changed')
+    if protection.load_rotation_receipts(base, policy) != lease.get('prior_rotated'):
+        raise ValueError('prior physical-retirement receipts changed')
+    for cid, expected in lease.get('survivors', {}).items():
+        selected = registry['selected_survivors'].get(cid)
+        if selected != expected['path']:
+            raise ValueError('rotation survivor selection changed')
+        receipt = base / selected / 'COMPLETE.json'
+        if protection.sha(receipt.read_bytes()) != expected['receipt_sha256']:
+            raise ValueError('rotation survivor receipt changed')
+        protection.verify_archive(base / selected, protected[cid]['identity'])
+    physical_survivors = lease.get('physical_survivors')
+    if not isinstance(physical_survivors, dict):
+        raise ValueError('rotation physical-survivor attestations are missing')
+    for relative, expected in physical_survivors.items():
+        if (not isinstance(relative, str) or Path(relative).is_absolute()
+                or '..' in Path(relative).parts
+                or not any(relative == root or relative.startswith(root + '/')
+                           for root in registry['managed_roots'])):
+            raise ValueError('rotation physical-survivor path is outside managed authority')
+        if (_rotation_package_attestation(base / relative, expected['identity']) != expected):
+            raise ValueError('rotation physical survivor changed: ' + relative)
+
+
+def _rotation_package_attestation(package: Path, identity: dict) -> dict:
+    """Rehash every surviving physical copy, including legacy unarchived builds."""
+    try:
+        from scripts.candidate_archive import _identity, _inventory, verify_archive
+    except ModuleNotFoundError:
+        from candidate_archive import _identity, _inventory, verify_archive
+    if package.is_symlink():
+        raise ValueError('rotation survivor path is a symlink')
+    root = package.lstat()
+    if not stat.S_ISDIR(root.st_mode) or root.st_uid != os.getuid():
+        raise ValueError('rotation survivor root ownership differs')
+    if _identity(package / 'Integra.app') != identity:
+        raise ValueError('rotation survivor app identity differs')
+    inventory = _inventory(package)
+    for item in inventory:
+        entry = (package / item['path']).lstat()
+        if entry.st_uid != os.getuid() or (item['type'] == 'file' and entry.st_nlink != 1):
+            raise ValueError('rotation survivor contains foreign or linked bytes')
+    has_inventory = (package / 'inventory.json').exists()
+    has_complete = (package / 'COMPLETE.json').exists()
+    if has_inventory != has_complete:
+        raise ValueError('rotation survivor has partial archive metadata')
+    if has_complete:
+        verify_archive(package, identity)
+    return {'identity': identity, 'device': root.st_dev, 'inode': root.st_ino,
+            'birthtime': getattr(root, 'st_birthtime', None),
+            'inventory_sha256': protection.digest(inventory),
+            'archive_kind': 'COMPLETE' if has_complete else 'UNARCHIVED'}

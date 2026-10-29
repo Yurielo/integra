@@ -14,6 +14,7 @@ import subprocess
 import sys
 import time
 import uuid
+from datetime import datetime, timezone
 try:
     from scripts.lifecycle_diagnostics import emit
 except ModuleNotFoundError:
@@ -208,8 +209,10 @@ def _metadata(package):
     except (OSError, ValueError, KeyError, TypeError) as error:
         # A manifest may still identify a protected object, even with no receipt.
         try:
-            m = json.loads((package / 'Integra.app/Contents/Resources/candidate-manifest.json').read_text())
-            return {'candidate_id': m['candidate_id'], 'bundle_digest': m['bundle']['digest']}, None, str(error)
+            manifest = package / 'Integra.app/Contents/Resources/candidate-manifest.json'
+            m = json.loads(manifest.read_text())
+            return {'candidate_id': m['candidate_id'], 'bundle_digest': m['bundle']['digest'],
+                    'manifest_digest': _sha(manifest)}, None, str(error)
         except (OSError, ValueError, KeyError, TypeError):
             return {}, None, str(error)
 
@@ -230,12 +233,15 @@ def _ownership(package, record, receipt):
 def _context_matches(context, registry, audit, base):
     """Compare catalog context with a complete canonical protection snapshot."""
     selected = registry['selected_survivors']
-    expected = {cid: str(base / relative) for cid, relative in selected.items() if relative}
+    rotated = audit.get('rotated_unavailable', {})
+    expected = {cid: str(base / relative) for cid, relative in selected.items()
+                if relative and cid not in rotated}
     protected = audit.get('protected_identities', {})
     canonical = audit.get('canonical') or {}
     expected_events = audit.get('canonical_lifecycles', canonical.get('canonical_lifecycles'))
     expected_policy = audit.get('standing_policy', canonical.get('standing_policy'))
-    return bool(context and context.get('protected') and context.get('inputs')
+    expected_rotation = audit.get('rotation_policy', canonical.get('rotation_policy'))
+    return bool(context and context.get('protected') and isinstance(context.get('inputs'), dict)
                 # Protection includes every canonical role.  Only the subset
                 # with a selected local archive is independently re-verified.
                 and set(context['protected']) == set(protected)
@@ -243,10 +249,12 @@ def _context_matches(context, registry, audit, base):
                 and set(context.get('verified_survivors', {})) == set(expected)
                 and all(_sha(p) == digest for p, digest in context['inputs'].items())
                 and context.get('selected_archives') == expected
+                and context.get('rotated_unavailable', {}) == rotated
                 and (audit.get('registry_sha256') is None
                      or context.get('registry_sha256') == audit['registry_sha256'])
                 and (expected_events is None or context.get('canonical_lifecycles') == expected_events)
                 and (expected_policy is None or context.get('standing_policy') == expected_policy)
+                and (expected_rotation is None or context.get('rotation_policy') == expected_rotation)
                 and audit['authority_state'] == 'COMPLETE')
 
 
@@ -263,6 +271,161 @@ def _context_valid(context):
         return False
 
 
+def _rotation_order(package, record):
+    """Return observed order and its provenance; never infer legacy publication."""
+    published = (record or {}).get('publication_recorded_at')
+    if published is not None:
+        try:
+            parsed = datetime.fromisoformat(published.replace('Z', '+00:00'))
+            if parsed.tzinfo is None or parsed.utcoffset() is None:
+                raise ValueError('publication time has no timezone')
+            moment = parsed.timestamp()
+        except (ValueError, TypeError, AttributeError):
+            return None
+        if moment <= 0:
+            return None
+        return {'timestamp': moment, 'source': 'PUBLISHER_PUBLICATION_TIMESTAMP',
+                'recorded_value': published}
+    sequence = (record or {}).get('publication_sequence')
+    if type(sequence) is int and sequence > 0:
+        observed = getattr(Path(package).stat(), 'st_birthtime', None)
+        if not isinstance(observed, (float, int)) or observed <= 0:
+            return None
+        return {'timestamp': observed,
+                'source': 'PUBLISHER_SEQUENCE_WITH_OBSERVED_NOW_COHORT_PLACEMENT',
+                'recorded_value': observed, 'publisher_sequence': sequence}
+    # Historical packages predate publication timestamps. The Owner explicitly
+    # authorized APFS birthtime as an observed-now ordering input. It is not
+    # represented as a historical publisher fact.
+    stat_result = Path(package).stat()
+    birthtime = getattr(stat_result, 'st_birthtime', None)
+    if not isinstance(birthtime, (float, int)) or birthtime <= 0:
+        return None
+    return {'timestamp': birthtime, 'source': 'APFS_DIRECTORY_BIRTHTIME_OBSERVED_NOW',
+            'recorded_value': birthtime}
+
+
+def _rotation_binding(row):
+    package = Path(row.get('absolute_path', row['path']))
+    s = package.lstat()
+    order = row.get('capacity_rotation_order') or _rotation_order(package, row.get('catalog_record'))
+    if (not order or not all(row.get(key) for key in
+                             ('candidate_id', 'bundle_digest', 'manifest_digest'))
+            or not stat.S_ISDIR(s.st_mode) or s.st_uid != os.getuid()):
+        raise ValueError('rotation physical identity or order is unproven')
+    return {'path': str(package),
+            **{key: row[key] for key in ('candidate_id', 'bundle_digest', 'manifest_digest')},
+            'owner_uid': s.st_uid, 'device': s.st_dev, 'inode': s.st_ino,
+            'birthtime': getattr(s, 'st_birthtime', None), 'order_provenance': order}
+
+
+def _initial_rotation_order(rows, policy_sha256, observed_at, expected_copies=8):
+    """Capture the exact first eight-copy ordinal, without inventing dates."""
+    bindings = sorted((_rotation_binding(row) for row in rows), key=lambda item: (
+        item['order_provenance']['timestamp'], item['candidate_id']))
+    if len(bindings) != expected_copies or any(
+            a['order_provenance']['timestamp'] == b['order_provenance']['timestamp']
+            and a['candidate_id'] == b['candidate_id']
+            for a, b in zip(bindings, bindings[1:])):
+        raise ValueError('initial eight-copy order is missing or tied')
+    sequences = [item['order_provenance']['publisher_sequence'] for item in bindings
+                 if item['order_provenance']['source'] ==
+                 'PUBLISHER_SEQUENCE_WITH_OBSERVED_NOW_COHORT_PLACEMENT']
+    if sequences != sorted(set(sequences)):
+        raise ValueError('publisher sequence conflicts with observed cohort placement')
+    return {'schema_version': '2.0', 'policy_sha256': policy_sha256,
+            'observed_at': observed_at,
+            'entries': [{**item, 'ordinal': index} for index, item in enumerate(bindings)]}
+
+
+def _retired_rotation_sources(catalog, policy_sha256):
+    result = {}
+    for receipt in catalog.get('retirements', {}).values():
+        if receipt.get('reason') != 'OWNER_POLICY_CAPACITY_ROTATION':
+            continue
+        if (receipt.get('state') != 'RETIRED_NOT_AVAILABLE'
+                or receipt.get('physical_available') is not False
+                or receipt.get('policy_sha256') != policy_sha256):
+            continue
+        path = receipt.get('physical_source_path')
+        if isinstance(path, str) and path:
+            result.setdefault(path, []).append(receipt)
+    return result
+
+
+def _ordered_rotation_rows(rows, baseline, policy_sha256, retired_paths, expected_copies=8):
+    """Use immutable initial order, then actual timestamps for later copies."""
+    if not baseline:
+        return sorted(rows, key=lambda row: (
+            row['capacity_rotation_order']['timestamp'], row['candidate_id']))
+    if (baseline.get('schema_version') != '2.0'
+            or baseline.get('policy_sha256') != policy_sha256
+            or not isinstance(baseline.get('entries'), list)
+            or len(baseline['entries']) != expected_copies
+            or [e.get('ordinal') for e in baseline['entries']] != list(range(expected_copies))):
+        raise ValueError('persisted initial rotation order is invalid')
+    known = {entry['path']: entry for entry in baseline['entries']}
+    if len(known) != expected_copies:
+        raise ValueError('persisted initial rotation paths are duplicated')
+    live = {_rotation_binding(row)['path']: row for row in rows}
+    if len(live) != len(rows):
+        raise ValueError('rotation physical paths are duplicated')
+    new_incarnations = set()
+    for path, saved in known.items():
+        if path in retired_paths and not any(
+                all(receipt.get(key) == saved[key] for key in
+                    ('candidate_id', 'bundle_digest', 'manifest_digest'))
+                and (receipt.get('observed_device'), receipt.get('observed_inode'),
+                     receipt.get('canonical_snapshot', {}).get('birthtime'),
+                     receipt.get('order_provenance')) ==
+                    (saved['device'], saved['inode'], saved['birthtime'],
+                     saved['order_provenance'])
+                for receipt in retired_paths[path]):
+            raise ValueError('retirement receipt does not bind original initial incarnation')
+        if path in live:
+            current = _rotation_binding(live[path])
+            if path in retired_paths:
+                # The old physical incarnation was retired. A fresh publisher
+                # may reuse the exact identity-bound path, but only with a
+                # new inode and a verified completed archive.
+                record = live[path].get('catalog_record') or {}
+                if ((current['device'], current['inode'], current['birthtime']) ==
+                        (saved['device'], saved['inode'], saved['birthtime'])
+                        or current['order_provenance']['source'] != 'PUBLISHER_PUBLICATION_TIMESTAMP'
+                        or record.get('publisher_completed') is not True
+                        or not _ownership(Path(path), record,
+                                          json.loads((Path(path) / 'COMPLETE.json').read_bytes()))):
+                    raise ValueError('retired initial path lacks a verified new publisher incarnation')
+                try:
+                    from scripts.candidate_archive import verify_archive
+                except ModuleNotFoundError:
+                    from candidate_archive import verify_archive
+                verify_archive(Path(path), {key: current[key] for key in
+                                            ('candidate_id', 'bundle_digest', 'manifest_digest')})
+                new_incarnations.add(path)
+            elif current != {key: value for key, value in saved.items() if key != 'ordinal'}:
+                raise ValueError('persisted initial rotation identity or birthtime changed')
+        elif path not in retired_paths:
+            raise ValueError('initial rotation copy disappeared without completed receipt')
+    for path, row in live.items():
+        if (path not in known or path in new_incarnations) and \
+                row['capacity_rotation_order']['source'] != 'PUBLISHER_PUBLICATION_TIMESTAMP':
+            raise ValueError('new physical copy has no publication timestamp')
+    new_rows = [row for row in rows if str(Path(row.get('absolute_path', row['path']))) not in known
+                or str(Path(row.get('absolute_path', row['path']))) in new_incarnations]
+    by_sequence = sorted(new_rows, key=lambda row: (row.get('catalog_record') or {}).get('publication_sequence', -1))
+    if (any(type((row.get('catalog_record') or {}).get('publication_sequence')) is not int
+            for row in by_sequence)
+            or any(a['capacity_rotation_order']['timestamp'] >= b['capacity_rotation_order']['timestamp']
+                   for a, b in zip(by_sequence, by_sequence[1:]))):
+        raise ValueError('new publication timestamp conflicts with monotonic sequence')
+    return sorted(rows, key=lambda row: (
+        (0, known[str(Path(row.get('absolute_path', row['path'])))]['ordinal'])
+        if str(Path(row.get('absolute_path', row['path']))) in known
+        and str(Path(row.get('absolute_path', row['path']))) not in new_incarnations else
+        (1, row['capacity_rotation_order']['timestamp'], row['candidate_id'])))
+
+
 def plan(catalog, *, free_bytes=None):
     try:
         from scripts.candidate_protection_gate import require_deletion
@@ -274,6 +437,8 @@ def plan(catalog, *, free_bytes=None):
         import candidate_lifecycle as lifecycle
     seen = set(); before = sum(_measure(_safe(p), seen) for p in catalog['roots'])
     rows = []; context = catalog.get('protection'); valid = _context_valid(context); attributed = set()
+    rotation_policy = (context or {}).get('rotation_policy') or {}
+    rotation_active = rotation_policy.get('rotation_strategy') == 'OLDEST_FULL_COPY_FIRST'
     # Root/container metadata is attributed to UNKNOWN, once, not a package.
     for root in catalog['roots']:
         if Path(root).exists():
@@ -331,6 +496,8 @@ def plan(catalog, *, free_bytes=None):
                      'retention_order': 'PUBLISHER_PUBLICATION_SEQUENCE' if order_proven else 'UNPROVEN',
                      'metadata_error': error, 'device': package.stat().st_dev,
                      'inode': package.stat().st_ino, 'historical': bool((record or {}).get('historical'))})
+        if rotation_active:
+            rows[-1]['capacity_rotation_order'] = _rotation_order(package, local_record)
     survivors_valid = all(any(r.get('candidate_id') == cid and not r['metadata_error']
                                   and all(r.get(k) == context.get('verified_survivors', {}).get(cid, {}).get(k)
                                           for k in ('candidate_id', 'bundle_digest', 'manifest_digest'))
@@ -355,6 +522,24 @@ def plan(catalog, *, free_bytes=None):
                       key=lambda row: (row['publication_sequence'], row['candidate_id'],
                                        row['bundle_digest'], row['path']))
     target = eligible[0] if eligible else None
+    # An incomplete order must not silently choose among legacy full copies.
+    rotation_rows = []
+    if (rotation_active and not catalog.get('publication_timestamp_order_conflict')
+            and all(row.get('capacity_rotation_order') for row in rows)):
+        retired_paths = _retired_rotation_sources(catalog, rotation_policy.get('sha256'))
+        try:
+            rotation_rows = _ordered_rotation_rows(
+                [{**row, 'catalog_record': catalog.get('artifacts', {}).get(row['path'])}
+                 for row in rows],
+                catalog.get('rotation_order_v2'), rotation_policy.get('sha256'),
+                retired_paths, MAX_COPIES)
+        except (ValueError, KeyError, TypeError, OSError):
+            rotation_rows = []
+    ambiguous_oldest = (len(rotation_rows) > 1 and
+                        (rotation_rows[0]['capacity_rotation_order']['timestamp'], rotation_rows[0]['candidate_id']) ==
+                        (rotation_rows[1]['capacity_rotation_order']['timestamp'], rotation_rows[1]['candidate_id']))
+    capacity_target = (rotation_rows[0] if valid and rotation_rows and
+                       len(rows) >= MAX_COPIES and not ambiguous_oldest else None)
     report = {'schema_version': '1.0', 'artifact_type': 'integra.retention_plan', 'dry_run': True,
               'BEFORE_BYTES': before, 'PROTECTED_BYTES': protected, 'DELETABLE_BYTES': deletable,
               'UNKNOWN_BYTES': unknown, 'EXPECTED_AFTER_BYTES': before - deletable,
@@ -367,6 +552,10 @@ def plan(catalog, *, free_bytes=None):
               'rotation_target': ({key: target[key] for key in (
                   'path', 'candidate_id', 'bundle_digest', 'manifest_digest',
                   'publication_sequence')} if target else None)}
+    report['capacity_rotation_strategy'] = 'OLDEST_FULL_COPY_FIRST' if rotation_active else None
+    report['capacity_rotation_target'] = ({key: capacity_target[key] for key in (
+        'path', 'candidate_id', 'bundle_digest', 'manifest_digest',
+        'capacity_rotation_order', 'device', 'inode')} if capacity_target else None)
     report['plan_sha256'] = _digest(report)
     return report
 
@@ -456,19 +645,28 @@ def _record_publication(catalog, token, lease, receipt):
         raise ValueError('publication sequence high watermark is invalid')
     sequences = [watermark]
     records = list(catalog['artifacts'].values())
-    records.extend(retired.get('publisher_attestation', {})
+    records.extend(retired.get('publisher_attestation') or {}
                    for retired in catalog.get('retirements', {}).values())
     for record in records:
         sequence = record.get('publication_sequence')
         if type(sequence) is int and sequence > 0:
             sequences.append(sequence)
     sequence = max(sequences) + 1
+    published_at = datetime.now(timezone.utc).isoformat()
+    prior_timestamp = catalog.get('publication_timestamp_high_watermark')
+    baseline_timestamp = (catalog.get('rotation_order_v2') or {}).get('observed_at')
+    if ((prior_timestamp is not None and published_at <= prior_timestamp)
+            or (baseline_timestamp is not None and published_at <= baseline_timestamp)):
+        catalog['publication_timestamp_order_conflict'] = True
+    else:
+        catalog['publication_timestamp_high_watermark'] = published_at
     catalog['artifacts'][str(package)] = {
         **{k: receipt[k] for k in ('candidate_id', 'bundle_digest', 'manifest_digest', 'inventory_sha256')},
         'complete_sha256': _sha(package / 'COMPLETE.json'), 'owner_uid': os.getuid(),
         'device': s.st_dev, 'inode': s.st_ino, 'publisher_run_id': token,
         'publisher_pid': lease['pid'], 'publisher_start_token': lease['start_token'],
         'publisher_completed': True, 'publication_sequence': sequence,
+        'publication_recorded_at': published_at,
         'status': 'AWAITING_OWNER_ACCEPTANCE', 'historical': False}
     catalog['publication_sequence_high_watermark'] = sequence
     del catalog['leases'][token]
@@ -487,7 +685,7 @@ def reserve_archive(root, allocated_bytes, *, destination=None, identity=None):
     except ModuleNotFoundError:
         from candidate_protection_gate import require_archive_publication
     if not os.environ.get('INTEGRA_RETENTION_BUILD_LEASE'):
-        maintenance(root, reason='BEFORE_ARCHIVE_COPY')
+        maintenance(root, reason='BEFORE_ARCHIVE_COPY', need_slot=True)
     require_archive_publication(_safe(root), allocated_bytes)
     path = catalog_path(root)
     with locked(path) as catalog:
@@ -561,7 +759,7 @@ def cancel_publication(path, token):
 
 
 def build_preflight(root, expected_bytes, *, archive_copy=True):
-    maintenance(root, reason='BEFORE_BUILD')
+    maintenance(root, reason='BEFORE_BUILD', need_slot=archive_copy)
     path = catalog_path(root)
     with locked(path) as catalog:
         register_root(catalog, root); _recover_leases(catalog); snapshot = plan(catalog)
@@ -676,7 +874,8 @@ def sync_protection(catalog, current_path, proposals, rollback_archive, recovery
     if pins is not None and pins != registry['explicit_governance_pins']:
         raise ValueError('catalog pins differ from canonical registry')
     selected = {cid: str(base / relative)
-                for cid, relative in registry['selected_survivors'].items() if relative}
+                for cid, relative in registry['selected_survivors'].items()
+                if relative and cid not in audit.get('rotated_unavailable', {})}
     if (selected_archives is not None and selected_archives != selected
             or rollback_archive is not None and
                str(_safe(rollback_archive)) != selected.get(registry['rollback']['candidate_id'])
@@ -706,15 +905,20 @@ def reconcile_catalog(catalog, registry, audit, base, *, current_path=None):
     if set(registry['selected_survivors']) != set(protected):
         raise ValueError('catalog reconciliation survivor domain differs')
     selected = {cid: str(base / relative)
-                for cid, relative in registry['selected_survivors'].items() if relative}
+                for cid, relative in registry['selected_survivors'].items()
+                if relative and cid not in audit.get('rotated_unavailable', {})}
     canonical = audit.get('canonical', {})
     events = audit.get('canonical_lifecycles', canonical.get('canonical_lifecycles', {}))
     policy = audit.get('standing_policy', canonical.get('standing_policy', {}))
+    rotation_policy = audit.get('rotation_policy', canonical.get('rotation_policy'))
     context = {'protected': {cid: role['reasons'] for cid, role in protected.items()},
                'inputs': {}, 'selected_archives': selected,
                'verified_survivors': {}, 'registry_sha256': audit.get('registry_sha256'),
                'canonical_snapshot': canonical,
-               'canonical_lifecycles': events, 'standing_policy': policy}
+               'canonical_lifecycles': events, 'standing_policy': policy,
+               'rotated_unavailable': audit.get('rotated_unavailable', {})}
+    if rotation_policy is not None:
+        context['rotation_policy'] = rotation_policy
     verified = {}
     for cid, name in selected.items():
         package = _safe(name)
@@ -792,6 +996,15 @@ def cleanup_exact(path, identity):
     return retention_cleanup.apply_exact(sys.modules[__name__], path, identity)
 
 
+def cleanup_capacity_rotation(path, expected_plan):
+    """Use the existing durable cleanup executor for one canonical oldest copy."""
+    try:
+        from scripts import retention_cleanup
+    except ModuleNotFoundError:
+        import retention_cleanup
+    return retention_cleanup.apply_capacity_rotation(sys.modules[__name__], path, expected_plan)
+
+
 def recover_cleanup(path):
     try:
         from scripts import retention_cleanup
@@ -811,9 +1024,11 @@ def refresh_protection(catalog):
     except ModuleNotFoundError:
         from candidate_protection_gate import _snapshot
         import candidate_protection_audit as protection
-    registry, _ = _snapshot(for_deletion=True)
+    registry, audit = _snapshot(for_deletion=True)
     base = Path.home() / 'Library/Application Support/Integra'
     selected = {cid: str(base / relative) for cid, relative in registry['selected_survivors'].items() if relative}
+    selected = {cid: name for cid, name in selected.items()
+                if cid not in audit.get('rotated_unavailable', {})}
     sync_protection(catalog, protection.ROOT / registry['canonical_current']['path'], [],
                     selected.get(registry['rollback']['candidate_id']),
                     selected.get(registry['recovery']['candidate_id']) if registry['recovery'] else None,
@@ -822,7 +1037,7 @@ def refresh_protection(catalog):
          selected_survivors=selected)
 
 
-def maintenance(root, *, reason):
+def maintenance(root, *, reason, need_slot=False):
     """Reevaluate owned terminal objects before admission; never adopt legacy.
 
     Failure preserves the journal/artifacts and is observable. Admission still
@@ -836,11 +1051,11 @@ def maintenance(root, *, reason):
     try:
         with locked(path) as catalog:
             register_root(catalog, root)
-            refresh_protection(catalog)
             has_journal = bool(catalog.get('deletions'))
         if has_journal:
             recover_cleanup(path)
         with locked(path) as catalog:
+            refresh_protection(catalog)
             snapshot = plan(catalog)
         for row in snapshot['entries']:
             if row['classification'] != 'DELETABLE':
@@ -849,6 +1064,20 @@ def maintenance(root, *, reason):
                      trigger=reason)
         if not snapshot['protection_context_valid']:
             emit('CLEANUP_SKIPPED', reason='PROTECTION_AUTHORITY_UNAVAILABLE', trigger=reason)
+            return []
+        if (need_slot and snapshot.get('capacity_rotation_strategy') == 'OLDEST_FULL_COPY_FIRST'
+                and snapshot['full_copies'] >= MAX_COPIES):
+            if snapshot.get('capacity_rotation_target') is None:
+                emit('CLEANUP_SKIPPED', reason='CAPACITY_ROTATION_ORDER_UNPROVEN', trigger=reason)
+                return []
+            deleted = cleanup_capacity_rotation(path, snapshot)
+            with locked(path) as catalog:
+                refresh_protection(catalog)
+            emit('CAPACITY_ROTATION_COMPLETED', paths=deleted, trigger=reason,
+                 order_provenance=snapshot['capacity_rotation_target']['capacity_rotation_order'])
+            return deleted
+        if snapshot.get('capacity_rotation_strategy') == 'OLDEST_FULL_COPY_FIRST':
+            emit('CLEANUP_SKIPPED', reason='CAPACITY_SLOT_NOT_NEEDED', trigger=reason)
             return []
         if not snapshot['DELETABLE_BYTES']:
             emit('CLEANUP_SKIPPED', reason='NO_ELIGIBLE_TERMINAL_COPIES', trigger=reason)
