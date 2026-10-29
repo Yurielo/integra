@@ -1,5 +1,12 @@
 # Bounded Candidate retention — Issue #212
 
+The later direct Product Owner capacity-rotation amendment is documented in
+`CANDIDATE_RETENTION.md` and `state/candidate_archive_rotation_policy_v2.json`.
+At a full eight-copy archive, its oldest-first rule supersedes this document's
+terminal-only eviction predicate for capacity admission. This Issue #212 text
+remains historical; all byte-integrity, journaling, installed-application and
+honest physical-availability requirements remain in force.
+
 Status: PRODUCT_OWNER_AUTHORIZED, Issue #212 carries the reusable PR #206 implementation plus automatic maintenance.
 Authority: [Product Owner decision](https://github.com/Yurielo/integra/issues/205#issuecomment-5917563905).
 Machine policy: `state/candidate_retention_policy_v1.json`.

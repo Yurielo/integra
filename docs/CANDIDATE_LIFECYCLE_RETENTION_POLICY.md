@@ -5,6 +5,18 @@ Issue #228 implements the Product Owner's bounded standing decision of
 `state/candidate_lifecycle_retention_policy_v1.json`. Canonical main, not a
 feature branch or a local pending label, supplies execution authority.
 
+Issue #306 adds the later direct Product Owner capacity-rotation decision in
+`state/candidate_archive_rotation_policy_v2.json`. It supersedes the v1
+terminal-only eligibility predicate **only when a new archived Candidate needs
+the eighth occupied slot**. The v1 rule remains the historical and explicit
+terminal-retirement contract. No branch-local v2 file may authorize deletion;
+the exact v2 bytes must first be canonical on main. A physical rotation does
+not change an open Proposal or Candidate's semantic/lifecycle decision. Its
+durable receipt records the loss of bytes separately from that decision.
+For capacity rotation, the direct Owner decision is the separately applicable
+decision for the four legacy hold prefixes named below; their v1 hold history
+remains intact.
+
 ## Eligibility
 
 A governed, owned physical archive may be retired without a Candidate-specific
