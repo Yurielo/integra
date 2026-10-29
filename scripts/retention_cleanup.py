@@ -18,6 +18,8 @@ try:
 except ModuleNotFoundError:
     import candidate_lifecycle as lifecycle
 
+UNLINK_DEADLINE_SECONDS = 900
+
 
 def _retirement_checkpoint(r, path, catalog, job, *, completed=False, error=None):
     receipt = job.get('retirement_receipt')
@@ -136,14 +138,15 @@ def _parent_fd(package, relative, expected, job):
         os.close(fd); raise
 
 
-def _guard(r, catalog, job, package, *, transaction=False):
+def _guard(r, catalog, job, package, *, transaction=False, full_rotation=False):
     rotation = job.get('kind') == 'CAPACITY_ROTATION'
     if rotation:
-        if package == Path(job['source']):
+        if full_rotation and package == Path(job['source']):
             if canonical_gate.require_capacity_rotation(package) != job.get('canonical_deletion_lease'):
                 raise ValueError('canonical rotation decision changed before withdrawal')
         else:
-            canonical_gate.require_capacity_rotation_continuation(job.get('canonical_deletion_lease'))
+            canonical_gate.require_capacity_rotation_continuation(
+                job.get('canonical_deletion_lease'), full=full_rotation)
     elif package == Path(job['source']):
         if canonical_gate.require_deletion(package) != job.get('canonical_deletion_lease'):
             raise ValueError('canonical deletion decision changed before withdrawal')
@@ -156,7 +159,7 @@ def _guard(r, catalog, job, package, *, transaction=False):
     # boundary and refreshed before every resumed transaction. Individual
     # entries belong to that same committed immutable package operation.
     context_valid = (r._digest(context) == job.get('transaction_context_sha256')
-                     if transaction or (rotation and package != Path(job['source']))
+                     if transaction or rotation
                      else r._context_valid(context))
     if not context_valid or (not rotation and
             ((cid in context.get('protected', {}) and (not selected or selected in (job['source'], job['trash'])))
@@ -183,6 +186,14 @@ def _finish_container(catalog, job):
         pass  # Other bundles/evidence remain; never recurse on the parent.
 
 
+def _complete_job(r, path, catalog, job, token):
+    _finish_container(catalog, job)
+    _retirement_checkpoint(r, path, catalog, job, completed=True)
+    catalog['artifacts'].pop(job['source'], None)
+    del catalog['deletions'][token]; r._persist(path, catalog)
+    return job['source']
+
+
 def _execute_payload(r, path, catalog, token):
     job = catalog['deletions'][token]
     source, trash = Path(job['source']), Path(job['trash'])
@@ -190,27 +201,31 @@ def _execute_payload(r, path, catalog, token):
         raise ValueError('cleanup source/trash collision; recovery requires review')
     package = source if source.exists() else trash
     if not package.exists():
-        if job['phase'] != 'DELETING':
-            raise ValueError('prepared cleanup package disappeared')
+        if job['phase'] != 'FINAL_UNLINK_READY':
+            raise ValueError('cleanup package disappeared without final-unlink proof')
         if job.get('kind') == 'CAPACITY_ROTATION':
             canonical_gate.require_capacity_rotation_continuation(job.get('canonical_deletion_lease'))
         elif not r._context_valid(catalog.get('protection')):
             raise ValueError('cleanup recovery protection context is unavailable')
         if job.get('kind') != 'CAPACITY_ROTATION':
             canonical_gate.require_deletion_continuation(job.get('canonical_deletion_lease'))
-        _finish_container(catalog, job)
-        _retirement_checkpoint(r, path, catalog, job, completed=True)
-        catalog['artifacts'].pop(job['source'], None)
-        del catalog['deletions'][token]; r._persist(path, catalog)
-        return job['source']
+        return _complete_job(r, path, catalog, job, token)
     _guard(r, catalog, job, package)
     entries = _remaining(r, package, job, hash_bytes=True)
+    if job['phase'] == 'FINAL_UNLINK_READY':
+        if package != trash or entries:
+            raise ValueError('final-unlink checkpoint has remaining or moved bytes')
+        _guard(r, catalog, job, trash, transaction=True,
+               full_rotation=job.get('kind') == 'CAPACITY_ROTATION')
+        os.rmdir(trash)
+        return _complete_job(r, path, catalog, job, token)
     if package == source:
         try:
             from scripts.candidate_archive import _publish
         except ModuleNotFoundError:
             from candidate_archive import _publish
-        _guard(r, catalog, job, source)
+        _guard(r, catalog, job, source,
+               full_rotation=job.get('kind') == 'CAPACITY_ROTATION')
         job['transaction_context_sha256'] = r._digest(catalog['protection'])
         r._persist(path, catalog)
         _publish(source, trash)
@@ -223,7 +238,7 @@ def _execute_payload(r, path, catalog, token):
     job['phase'] = 'DELETING'; r._persist(path, catalog)
     _retirement_checkpoint(r, path, catalog, job)
     expected = {e['path']: e for e in job['entries']}
-    deadline = time.monotonic() + 900
+    deadline = time.monotonic() + UNLINK_DEADLINE_SECONDS
     refresh = time.monotonic()
     for e in sorted(entries, key=lambda e: (e['type'] == 'directory', -len(Path(e['path']).parts))):
         if time.monotonic() > deadline:
@@ -246,15 +261,18 @@ def _execute_payload(r, path, catalog, token):
                 os.unlink(name, dir_fd=fd)
         finally:
             os.close(fd)
-    _guard(r, catalog, job, trash, transaction=True)
+    # The expensive canonical and all-survivor byte proof runs once at the
+    # completion boundary, outside the 900-second unlink-work deadline. A
+    # failed proof leaves the durable journal PARTIAL and blocks admission.
+    _guard(r, catalog, job, trash, transaction=True,
+           full_rotation=job.get('kind') == 'CAPACITY_ROTATION')
+    if _remaining(r, trash, job, hash_bytes=False):
+        raise ValueError('cleanup final-unlink proof found remaining entries')
+    job['phase'] = 'FINAL_UNLINK_READY'; r._persist(path, catalog)
     os.rmdir(trash)
     # Remove only the now-empty owned Candidate container. Otherwise repeated
     # promotion would still accumulate top-level candidate-v1-* directories.
-    _finish_container(catalog, job)
-    _retirement_checkpoint(r, path, catalog, job, completed=True)
-    catalog['artifacts'].pop(job['source'], None)
-    del catalog['deletions'][token]; r._persist(path, catalog)
-    return job['source']
+    return _complete_job(r, path, catalog, job, token)
 
 
 def _execute(r, path, catalog, token):
@@ -274,9 +292,19 @@ def recover(r, path, catalog):
         from candidate_archive import verify_archive
     if catalog.get('deletions'):
         for job in catalog['deletions'].values():
-            (canonical_gate.require_capacity_rotation_continuation(job.get('canonical_deletion_lease'))
-             if job.get('kind') == 'CAPACITY_ROTATION' else
-             canonical_gate.require_deletion_continuation(job.get('canonical_deletion_lease')))
+            if job.get('kind') == 'CAPACITY_ROTATION':
+                lease = job.get('canonical_deletion_lease')
+                upgraded = canonical_gate.require_capacity_rotation_continuation(lease)
+                if upgraded is not None and upgraded != lease:
+                    # A pre-repair journal is fully reverified once, then
+                    # gains cheap metadata anchors before resumable unlink.
+                    job['canonical_deletion_lease'] = upgraded
+                    receipt = job['retirement_receipt']
+                    receipt['canonical_snapshot'] = upgraded
+                    catalog.setdefault('retirements', {})[receipt['transaction_id']] = receipt
+                    r._persist(path, catalog)
+            else:
+                canonical_gate.require_deletion_continuation(job.get('canonical_deletion_lease'))
         if not all(job.get('kind') == 'CAPACITY_ROTATION' for job in catalog['deletions'].values()) and not r._context_valid(catalog.get('protection')):
             raise ValueError('cleanup recovery protection context is unavailable')
         for receipt in catalog['protection']['verified_survivors'].values():
@@ -415,7 +443,8 @@ def apply_capacity_rotation(r, path, expected_plan):
             raise ValueError('rotation requires the shared authoritative device catalog')
         if catalog.get('deletions'):
             raise ValueError('interrupted rotation must recover before a new plan')
-        snapshot = r.plan(catalog, free_bytes=expected_plan['EXPECTED_FREE_SPACE'] - expected_plan['DELETABLE_BYTES'])
+        snapshot = r.plan(catalog, free_bytes=expected_plan['EXPECTED_FREE_SPACE'] - expected_plan['DELETABLE_BYTES'],
+                          _validated_context=True)
         target = snapshot.get('capacity_rotation_target')
         if (snapshot['plan_sha256'] != expected_plan.get('plan_sha256')
                 or not snapshot['protection_context_valid'] or not isinstance(target, dict)
@@ -529,6 +558,7 @@ def apply_capacity_rotation(r, path, expected_plan):
                'birthtime': lease['birthtime'], 'record': record,
                'entries': entries, 'canonical_deletion_lease': lease,
                'retirement_receipt': receipt}
+        job['transaction_context_sha256'] = r._digest(catalog['protection'])
         _guard(r, catalog, job, package)
         catalog['deletions'][token] = job
         catalog.setdefault('retirements', {})[receipt['transaction_id']] = receipt
