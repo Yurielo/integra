@@ -115,6 +115,30 @@ class ProtectionAuditTests(unittest.TestCase):
         return audit.resolve(self.registry, self.current, self.proposals, self.packages,
                              free_bytes=free, verifier=verifier, canonical=self.canonical)
 
+    def test_owner_rotation_keeps_missing_selected_bytes_honest_and_blocks_promotion(self):
+        current = self.registry['canonical_current']
+        cid = current['candidate_id']
+        selected = self.registry['selected_survivors'][cid]
+        self.packages = [row for row in self.packages if row['candidate_id'] != cid]
+        self.canonical['rotation_policy'] = {'sha256': 'a' * 64}
+        receipt = {cid: {'path': selected,
+                         'identity': {key: current[key] for key in audit.IDENTITY},
+                         'policy_sha256': 'a' * 64,
+                         'transaction_id': 'rotation-v2-fixture'}}
+        result = audit.resolve(self.registry, self.current, self.proposals, self.packages,
+                               free_bytes=40 * 1024**3,
+                               verifier=lambda path, expected: {**expected},
+                               canonical=self.canonical, rotation_receipts=receipt)
+        self.assertEqual(result['authority_state'], 'COMPLETE')
+        self.assertEqual(result['rotated_unavailable'], receipt)
+        self.assertFalse(result['promotion_ready'])
+        self.assertIn('ROTATED_SELECTED_ARCHIVE_UNAVAILABLE:' + cid, result['promotion_blockers'])
+        without_receipt = audit.resolve(self.registry, self.current, self.proposals, self.packages,
+                                        free_bytes=40 * 1024**3,
+                                        verifier=lambda path, expected: {**expected},
+                                        canonical=self.canonical)
+        self.assertIn('MISSING_PROTECTED_ARCHIVE:' + cid, without_receipt['blockers'])
+
     def accepted_gap_fixture(self):
         registry = self.prior_registry()
         accepted = registry['accepted_unpromoted'][0]

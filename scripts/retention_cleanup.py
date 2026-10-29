@@ -1,10 +1,12 @@
-"""Durable, resumable cleanup of publisher-bound terminal packages only."""
+"""Durable, resumable physical retirement of exact managed full copies."""
+import base64
 import json
 import os
 from pathlib import Path
 import stat
 import time
 import uuid
+from datetime import datetime, timezone
 
 try:
     from scripts import candidate_protection_gate as canonical_gate
@@ -24,6 +26,10 @@ def _retirement_checkpoint(r, path, catalog, job, *, completed=False, error=None
     receipt = lifecycle.update_retirement(receipt, source=job['source'],
                                          trash=job['trash'], completed=completed,
                                          error=error)
+    if job.get('kind') == 'CAPACITY_ROTATION' and not Path(job['source']).exists():
+        # A renamed or partly unlinked payload is not available at its
+        # identity-bound archive path, even while recovery can still resume.
+        receipt['physical_available'] = False
     job['retirement_receipt'] = receipt
     catalog.setdefault('retirements', {})[receipt['transaction_id']] = receipt
     r._persist(path, catalog)
@@ -75,12 +81,15 @@ def _prepare_receipt(r, catalog, job, manifest, verification):
             'execution_result': 'NOT_EXECUTED', 'physical_available': True}
 
 
-def _entries(r, package):
-    expected = json.loads((package / 'inventory.json').read_text())
-    for name in ('inventory.json', 'COMPLETE.json'):
-        p = package / name; s = p.stat()
-        expected.append({'path': name, 'type': 'file', 'mode': stat.S_IMODE(s.st_mode),
-                         'size': s.st_size, 'sha256': r._sha(p)})
+def _entries(r, package, *, observed_inventory=None):
+    expected = (observed_inventory if observed_inventory is not None else
+                json.loads((package / 'inventory.json').read_text()))
+    expected = [dict(item) for item in expected]
+    if observed_inventory is None:
+        for name in ('inventory.json', 'COMPLETE.json'):
+            p = package / name; s = p.stat()
+            expected.append({'path': name, 'type': 'file', 'mode': stat.S_IMODE(s.st_mode),
+                             'size': s.st_size, 'sha256': r._sha(p)})
     for entry in expected:
         s = (package / entry['path']).lstat()
         entry['device'], entry['inode'] = s.st_dev, s.st_ino
@@ -128,7 +137,14 @@ def _parent_fd(package, relative, expected, job):
 
 
 def _guard(r, catalog, job, package, *, transaction=False):
-    if package == Path(job['source']):
+    rotation = job.get('kind') == 'CAPACITY_ROTATION'
+    if rotation:
+        if package == Path(job['source']):
+            if canonical_gate.require_capacity_rotation(package) != job.get('canonical_deletion_lease'):
+                raise ValueError('canonical rotation decision changed before withdrawal')
+        else:
+            canonical_gate.require_capacity_rotation_continuation(job.get('canonical_deletion_lease'))
+    elif package == Path(job['source']):
         if canonical_gate.require_deletion(package) != job.get('canonical_deletion_lease'):
             raise ValueError('canonical deletion decision changed before withdrawal')
     else:
@@ -140,12 +156,17 @@ def _guard(r, catalog, job, package, *, transaction=False):
     # boundary and refreshed before every resumed transaction. Individual
     # entries belong to that same committed immutable package operation.
     context_valid = (r._digest(context) == job.get('transaction_context_sha256')
-                     if transaction else r._context_valid(context))
-    if not context_valid or (cid in context.get('protected', {}) and (not selected or selected in (job['source'], job['trash']))) or job['record'].get('pin_ref'):
+                     if transaction or (rotation and package != Path(job['source']))
+                     else r._context_valid(context))
+    if not context_valid or (not rotation and
+            ((cid in context.get('protected', {}) and (not selected or selected in (job['source'], job['trash'])))
+             or job['record'].get('pin_ref'))):
         raise ValueError('cleanup protection authority changed or is unavailable')
     s = r._safe(package).lstat()
     if (s.st_dev, s.st_ino) != (job['device'], job['inode']) or s.st_uid != os.getuid() or not stat.S_ISDIR(s.st_mode) or r._publisher_live(job['record']) or not r._inactive(package):
         raise ValueError('cleanup owner/identity/activity changed')
+    if rotation and getattr(s, 'st_birthtime', None) != job.get('birthtime'):
+        raise ValueError('rotation target birthtime changed')
 
 
 def _finish_container(catalog, job):
@@ -171,9 +192,12 @@ def _execute_payload(r, path, catalog, token):
     if not package.exists():
         if job['phase'] != 'DELETING':
             raise ValueError('prepared cleanup package disappeared')
-        if not r._context_valid(catalog.get('protection')):
+        if job.get('kind') == 'CAPACITY_ROTATION':
+            canonical_gate.require_capacity_rotation_continuation(job.get('canonical_deletion_lease'))
+        elif not r._context_valid(catalog.get('protection')):
             raise ValueError('cleanup recovery protection context is unavailable')
-        canonical_gate.require_deletion_continuation(job.get('canonical_deletion_lease'))
+        if job.get('kind') != 'CAPACITY_ROTATION':
+            canonical_gate.require_deletion_continuation(job.get('canonical_deletion_lease'))
         _finish_container(catalog, job)
         _retirement_checkpoint(r, path, catalog, job, completed=True)
         catalog['artifacts'].pop(job['source'], None)
@@ -250,10 +274,15 @@ def recover(r, path, catalog):
         from candidate_archive import verify_archive
     if catalog.get('deletions'):
         for job in catalog['deletions'].values():
-            canonical_gate.require_deletion_continuation(job.get('canonical_deletion_lease'))
-        if not r._context_valid(catalog.get('protection')):
+            (canonical_gate.require_capacity_rotation_continuation(job.get('canonical_deletion_lease'))
+             if job.get('kind') == 'CAPACITY_ROTATION' else
+             canonical_gate.require_deletion_continuation(job.get('canonical_deletion_lease')))
+        if not all(job.get('kind') == 'CAPACITY_ROTATION' for job in catalog['deletions'].values()) and not r._context_valid(catalog.get('protection')):
             raise ValueError('cleanup recovery protection context is unavailable')
         for receipt in catalog['protection']['verified_survivors'].values():
+            if any(job.get('kind') == 'CAPACITY_ROTATION' and receipt['archive_path'] == job['source']
+                   for job in catalog['deletions'].values()):
+                continue
             verify_archive(Path(receipt['archive_path']), {k: receipt[k] for k in ('candidate_id', 'bundle_digest', 'manifest_digest')})
     return [_execute(r, path, catalog, token) for token in list(catalog.get('deletions', {}))]
 
@@ -367,5 +396,141 @@ def apply_exact(r, path, identity):
         _guard(r, catalog, job, package)
         catalog['deletions'][token] = job
         catalog.setdefault('retirements', {})[job['transaction_id']] = job['retirement_receipt']
+        r._persist(path, catalog)
+        return [_execute(r, path, catalog, token)]
+
+
+def apply_capacity_rotation(r, path, expected_plan):
+    """Retire one exact oldest copy using the existing durable cleanup journal.
+
+    An unarchived legacy Candidate receives a fresh observed-now attestation;
+    it is never represented as a historically completed publisher archive.
+    """
+    try:
+        from scripts.candidate_archive import _identity, _inventory, verify_archive
+    except ModuleNotFoundError:
+        from candidate_archive import _identity, _inventory, verify_archive
+    with r.locked(path) as catalog:
+        if not catalog['roots'] or r._safe(path) != r._safe(r.catalog_path(catalog['roots'][0])):
+            raise ValueError('rotation requires the shared authoritative device catalog')
+        if catalog.get('deletions'):
+            raise ValueError('interrupted rotation must recover before a new plan')
+        snapshot = r.plan(catalog, free_bytes=expected_plan['EXPECTED_FREE_SPACE'] - expected_plan['DELETABLE_BYTES'])
+        target = snapshot.get('capacity_rotation_target')
+        if (snapshot['plan_sha256'] != expected_plan.get('plan_sha256')
+                or not snapshot['protection_context_valid'] or not isinstance(target, dict)
+                or target != expected_plan.get('capacity_rotation_target')):
+            raise ValueError('oldest-copy rotation plan or protection changed')
+        package = r._safe(target['path'])
+        lease = canonical_gate.require_capacity_rotation(package)
+        if (lease['identity'] != {key: target[key] for key in ('candidate_id', 'bundle_digest', 'manifest_digest')}
+                or lease['order'] != target['capacity_rotation_order']
+                or (lease['device'], lease['inode']) != (target['device'], target['inode'])):
+            raise ValueError('canonical oldest-copy lease differs from local plan')
+        if catalog.get('rotation_order_v2') is None:
+            catalog['rotation_order_v2'] = lease['initial_order']
+            r._persist(path, catalog)
+        elif catalog['rotation_order_v2'] != lease['initial_order']:
+            raise ValueError('persisted initial order differs from canonical rotation lease')
+        root_stat = package.lstat()
+        if (root_stat.st_uid != os.getuid()
+                or (root_stat.st_dev, root_stat.st_ino) != (target['device'], target['inode'])
+                or getattr(root_stat, 'st_birthtime', None) != lease['birthtime']
+                or (package / '.git').exists() or not r._inactive(package)):
+            raise ValueError('rotation target ownership, birthtime, or inactivity changed')
+        identity = _identity(package / 'Integra.app')
+        if identity != lease['identity']:
+            raise ValueError('rotation app bytes differ from exact manifest')
+        inventory = _inventory(package)
+        if not inventory:
+            raise ValueError('rotation target inventory is empty')
+        for item in inventory:
+            stat_result = (package / item['path']).lstat()
+            if stat_result.st_uid != os.getuid() or (item['type'] == 'file' and stat_result.st_nlink != 1):
+                raise ValueError('rotation inventory contains foreign or linked bytes')
+        provenance_files = {}
+        provenance_total = 0
+        for item in inventory:
+            name = item['path']
+            if (item['type'] != 'file' or name.startswith('Integra.app/')
+                    or name in ('inventory.json', 'COMPLETE.json')):
+                continue
+            provenance_total += item['size']
+            if provenance_total > 16 * 1024 * 1024:
+                raise ValueError('rotation provenance exceeds bounded receipt capacity')
+            data = (package / name).read_bytes()
+            if len(data) != item['size'] or r._sha(package / name) != item['sha256']:
+                raise ValueError('rotation provenance changed during capture')
+            provenance_files[name] = base64.b64encode(data).decode('ascii')
+        manifest_bytes = (package / 'Integra.app/Contents/Resources/candidate-manifest.json').read_bytes()
+        manifest = json.loads(manifest_bytes)
+        has_inventory = (package / 'inventory.json').exists()
+        has_complete = (package / 'COMPLETE.json').exists()
+        if has_inventory != has_complete:
+            raise ValueError('rotation target has an incomplete archive receipt')
+        original_inventory_bytes = (package / 'inventory.json').read_bytes() if has_inventory else None
+        original_complete_bytes = (package / 'COMPLETE.json').read_bytes() if has_complete else None
+        record = catalog['artifacts'].get(str(package))
+        if has_complete:
+            complete = json.loads(original_complete_bytes)
+            publisher_bound = r._ownership(package, record, complete)
+            if record is not None and not publisher_bound:
+                raise ValueError('completed archive conflicts with publisher catalog ownership')
+            verification = verify_archive(package, identity)
+            archive_kind = ('PUBLISHER_BOUND_COMPLETE_ARCHIVE' if publisher_bound else
+                            'LEGACY_COMPLETED_ARCHIVE_OBSERVED_NOW')
+            entries = _entries(r, package)
+            if record is None:
+                record = {**identity, 'status': 'LEGACY_UNCONFIRMED', 'owner_uid': os.getuid()}
+        else:
+            if record is not None:
+                raise ValueError('legacy unarchived Candidate conflicts with publisher catalog')
+            verification = {'method': 'OBSERVED_NOW_FULL_APP_AND_PACKAGE_INVENTORY',
+                            'app_bundle_digest': identity['bundle_digest'],
+                            'manifest_digest': identity['manifest_digest'],
+                            'inventory_sha256': r._digest(inventory),
+                            'inventory_entries': len(inventory)}
+            archive_kind = 'UNARCHIVED_CANDIDATE_BUILD'
+            entries = _entries(r, package, observed_inventory=inventory)
+            record = {**identity, 'status': 'LEGACY_UNCONFIRMED', 'owner_uid': os.getuid()}
+        verification = {**verification, 'manifest_digest': identity['manifest_digest'],
+                        'rotation_inventory_sha256': r._digest(inventory)}
+        token = uuid.uuid4().hex
+        receipt = {'schema_version': '2.0', 'artifact_type': 'integra.candidate_physical_retirement',
+                   **identity, 'source': manifest['identity']['source'],
+                   'retained_manifest': manifest,
+                   'retained_manifest_base64': base64.b64encode(manifest_bytes).decode('ascii'),
+                   'retained_inventory': inventory,
+                   'retained_provenance_files_base64': provenance_files,
+                   'retained_inventory_json_base64': (base64.b64encode(original_inventory_bytes).decode('ascii')
+                                                      if original_inventory_bytes is not None else None),
+                   'retained_complete_base64': (base64.b64encode(original_complete_bytes).decode('ascii')
+                                                if original_complete_bytes is not None else None),
+                   'publisher_attestation': catalog['artifacts'].get(str(package)),
+                   'archive_kind': archive_kind,
+                   'lifecycle_before_retirement': record['status'],
+                   'proposal_refs': lease['proposal_refs'], 'verification_evidence': verification,
+                   'reason': 'OWNER_POLICY_CAPACITY_ROTATION',
+                   'policy_authority_ref': lease['policy_authority_ref'],
+                   'policy_sha256': lease['policy_sha256'],
+                   'physical_source_path': str(package),
+                   'order_provenance': lease['order'],
+                   'observed_at': datetime.now(timezone.utc).isoformat(),
+                   'observed_owner_uid': root_stat.st_uid, 'observed_device': root_stat.st_dev,
+                   'observed_inode': root_stat.st_ino,
+                   'transaction_id': 'rotation-v2-' + token,
+                   'canonical_snapshot': lease,
+                   'state': 'PREPARED', 'execution_result': 'NOT_EXECUTED',
+                   'physical_available': True}
+        job = {'kind': 'CAPACITY_ROTATION', 'source': str(package),
+               'trash': str(package.parent / ('.retention-trash-' + token)),
+               'transaction_id': receipt['transaction_id'], 'phase': 'PREPARED',
+               'identity': identity, 'device': root_stat.st_dev, 'inode': root_stat.st_ino,
+               'birthtime': lease['birthtime'], 'record': record,
+               'entries': entries, 'canonical_deletion_lease': lease,
+               'retirement_receipt': receipt}
+        _guard(r, catalog, job, package)
+        catalog['deletions'][token] = job
+        catalog.setdefault('retirements', {})[receipt['transaction_id']] = receipt
         r._persist(path, catalog)
         return [_execute(r, path, catalog, token)]

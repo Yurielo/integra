@@ -23,6 +23,66 @@ authority only after canonical delivery; Phase A never deletes real archives.
 
 ## Autonomous bounded rotation — Issue #281
 
+### Owner amendment — Issue #306, 2026-10-29
+
+The Product Owner's direct instruction supersedes the Issue #281
+terminal-only selection rule **for capacity rotation**. The maximum remains
+eight full managed copies. Before admission of a new archived Candidate at
+eight copies, the existing manager retires exactly the oldest physical full
+copy, then admits the new one. No routine Owner selection is required. The
+currently installed application is outside the managed target roots and is
+never a rotation target. The prior terminal-retirement rule remains historical
+and continues to govern explicit terminal cleanup outside capacity rotation.
+
+New publishers persist an actual UTC publication timestamp under the catalog
+lock. For legacy copies without that timestamp, the approved fallback is the
+APFS directory birthtime observed at rotation, with Candidate ID as a tie
+breaker. The two pre-amendment publisher records have monotonic sequences
+but no publication timestamps; their initial placement is recorded as an
+observed-now cohort position, with sequence 2 before sequence 3. The manager
+persists the complete eight-copy initial ordinal under the existing catalog
+lock, binding each path, Candidate identity, UID, inode, birthtime and order
+source. Later runs compare live copies against that record and reject changed
+paths or birthtimes. The observed APFS values are never called historical
+publisher timestamps. If any copy lacks an exact
+identity or an available approved ordering value, rotation fails closed. No
+source-commit time, filename, or mtime is substituted.
+An exact rebuilt publisher archive at a retired identity-bound path is a new
+physical incarnation only after its original retirement receipt, new physical
+identity, publisher ownership and full `COMPLETE` archive verification pass.
+The original ordinal remains historical. New publication timestamps must
+advance with publisher sequence; a backwards clock records a conflict and
+blocks later rotation rather than reordering existing copies.
+
+Before physical retirement the manager verifies the exact Candidate manifest,
+full current application tree, package inventory, UID/device/inode, inactive
+writer and canonical Owner policy. An unarchived legacy build receives a
+distinct observed-now attestation with no invented `COMPLETE` or publisher
+record. A completed but unregistered legacy archive keeps its original
+`COMPLETE` and inventory bytes in the receipt; it is still not called a
+publisher-owned archive. The existing durable cleanup journal preserves
+the exact manifest bytes, inventory, non-application provenance file bytes
+(including legacy `build.log`, with a bounded fail-closed capture),
+lifecycle/Proposal references and a
+physical-availability receipt outside the payload. Interrupted retirement
+recovers under the shared lock. A completed receipt says
+`RETIRED_NOT_AVAILABLE` and cannot be used as a restorable application.
+
+Earlier active Proposal or accepted status is not silently rewritten by
+rotation. A rotated Candidate cannot be accepted or promoted from missing
+bytes. A rotated outgoing CURRENT archive likewise keeps promotion fail-closed
+until an exact verified physical replacement is archived and rebound under the
+separate promotion contract. Capacity rotation itself grants no acceptance,
+promotion, installation, release or semantic authority. The direct Owner task
+payload is bound by SHA-256
+`b511eb039f306552b249c8c13ab421e95bfa6fa86fe0f55040e747d927711848`;
+the APFS birthtime clarification was a subsequent direct Owner instruction.
+Issue #306 records implementation work and is not represented as an
+Owner-authored GitHub comment.
+
+The paragraphs below record the superseded Issue #281 capacity rule for
+historical traceability.
+
 Issue #281 establishes the permanent archive-rotation rule. At the eight-copy
 or 20 GiB limit, the system may retire **one** full copy only when every
 existing terminal-retirement predicate already passes. Among those candidates,
