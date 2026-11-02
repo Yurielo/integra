@@ -9,6 +9,34 @@ and BookText remote `main` at `46396649214275eb18054b670a842bace02d02e1`.
 application runtime path, and test/smoke evidence. A component implementation
 without an Integra runtime path is not called working.
 
+## Issue 315: current semantic review boundary
+
+The original table below is the Issue #76/#117 snapshot, not a complete current
+inventory. The following reconciliation was source-inspected at Integra
+`55141b8688996a4ba19f1cffb0930bb61a9561f6` for #315; it makes no new installed-app
+or Owner-acceptance claim. The approved target is Integra-local processing and
+review, without Codex/GitHub as operational steps. The
+[proposed first integration](architecture/LOCAL_SEMANTIC_REVIEW_GUI_V1.md) is not
+implemented or authorized to code by #315.
+
+| Capability | Existing evidence / precise limitation | #315 status |
+| --- | --- | --- |
+| Process Topic review | `prepare-process-topic-review` / `apply-process-topic-review` in `macos/Resources/bridge.py`, `seminartext_topic_review_runtime.py`, native `presentTopicReview`; explicit ACCEPT/RENAME/REJECT/DEFER, hash-bound receipts and persisted reopen | Existing narrow Topic path; not general Concept/relation review |
+| K1 fragment notebook | `knowledge-open/save/navigation/package`, `integra_core/knowledge_notebook.py`, native Knowledge surface; reviewed fragments with source/Word binding, not Canonical Knowledge | Existing source-level reuse; no replacement of its lifecycle |
+| Canonical Knowledge projection | `integra_core/knowledge.py` and pinned validators; accepted R9A projection is bounded to its pinned artifact allowlist | Existing projection; arbitrary dynamic admission is not proved by it |
+| K2 schema/admission work | #279 / open PR #280 at `e32deb6b388d354709a87977abc007fd08aa57c4` | In progress, independent lifecycle; no unmerged-code dependency adopted |
+| Library discovery | #302/#303 main has read-only preview/schema; #304/#305 at `6fa1e1f218293a563b13ece0d7a61b851e87b315` adds an AppKit browser | Read-only reuse; #305 is Draft/Owner-gated, not a semantic editor |
+| General Topic/Concept/relation review | SeminarText #158/#159 provides source-checkout `project-semantic-workflow` v1; no Integra consumer/GUI/packaged closure for it is established here | Missing integration; show unavailable rather than a runnable placeholder |
+| Document semantic ingress | Existing BookText OCR adapter and internal document packages are not a proved BookText→SeminarText Knowledge admission path | Future explicit contract mapping; excluded from first slice |
+
+Existing transcript review, ASR, Topic generation, source navigation and export
+code remain reuse, not a new completeness or semantic acceptance assertion.
+The newer SeminarText ASR adapter (#125) supersedes the old table's historical
+local-Whisper routing; current product ownership is defined by #315 and the
+architecture, without rewriting old component receipts.
+
+## Historical Issue #76/#117 table
+
 | Source type | Capability | Responsible component | Real production implementation | Callable runtime path before #76 | Test/smoke evidence | Final UI state |
 |---|---|---|---|---|---|---|
 | Local video | Copy-on-write import and hash verification | Integra | `integra_core.user_media.import_source` | `bridge.py import-media` (currently starts ASR immediately) | `test_user_media.py`; real synthetic-media smoke | Работает |

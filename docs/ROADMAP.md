@@ -12,6 +12,34 @@ ten-role agent team defined in
 `product-owner` is the lead agent; specialist activation is risk-based and does
 not add routine human gates or change stage dependencies.
 
+## Approved post-baseline target: local semantic review
+
+Owner decision [Issue #315](https://github.com/Yurielo/integra/issues/315)
+confirms Option A: Integra is the local macOS operational interface for source
+processing, explicit semantic review and knowledge navigation. Codex/GitHub
+must not be ordinary end-user processing steps. The accepted R0–R14 inventory
+below is historical delivery evidence, not proof of this complete new target.
+
+#315 is **planning/contract reconciliation only**. The concrete
+[first GUI slice](architecture/LOCAL_SEMANTIC_REVIEW_GUI_V1.md) is
+**PROPOSED_NOT_IMPLEMENTED / implementation not authorized**: open one prepared,
+source-bound SeminarText review package; display Topics/Concepts/relations and
+exact evidence; submit explicit supported decisions to SeminarText; reopen and
+preserve history, pending and DEFER states. It creates no new semantic engine.
+Do not create its implementation Issue or begin coding from this planning entry.
+
+SeminarText #158 / merged #159 is reusable source-checkout functionality, not a
+new installed Integra capability. Existing Process Topic review and K1 fragment
+review are partial reuse, while #279/#280 K2 and #302/#304/#305 read-only Library
+retain separate lifecycle/Owner gates. Neither PR is advanced by #315.
+
+Future synthetic technical GUI/contract verification can be scoped separately
+from Stress Code #68 DOMAIN_REVIEW. Real S1 acceptance remains SeminarText-owned;
+the accepted Four Products order **S1 → Release/Integration Readiness → S2 → S3**
+is unchanged. This entry neither starts S2/S3 nor delays all technical GUI work
+until a real-seminar semantic acceptance. Next boundary: authorize the bounded
+first implementation scope and its exact provider delivery dependencies.
+
 | Stage | Issue | Milestone | Depends on | Current state |
 | --- | ---: | --- | --- | --- |
 | R0 Product definition and governance | #2 | M0 | — | ACCEPTED |

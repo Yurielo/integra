@@ -26,6 +26,18 @@
   "onedrive_publication_evidence": "state/onedrive_publication_v1.json",
   "native_macos_app_evidence": "state/native_macos_app_v1.json",
   "ready_app_evidence": "state/ready_app_v1.json",
+  "semantic_review_gui_planning": {
+    "authority_issue": 315,
+    "owner_option": "A",
+    "primary_user_interface": "INTEGRA_LOCAL_MACOS",
+    "ordinary_processing_requires_codex_or_github": false,
+    "contract": "docs/architecture/LOCAL_SEMANTIC_REVIEW_GUI_V1.md",
+    "status": "PROPOSED_NOT_IMPLEMENTED",
+    "implementation_authorized": false,
+    "first_scope": "PREPARED_SINGLE_SOURCE_CREATE_REVIEW",
+    "semantic_acceptance": "SEPARATE_EXPLICIT_HUMAN_DECISION",
+    "next_action": "AUTHORIZE_BOUNDED_IMPLEMENTATION_SCOPE"
+  },
   "execution_policy": {
     "safe_roadmap_implementation": "STANDING_AUTHORITY_AFTER_DEPENDENCIES",
     "merge": "AUTO_AFTER_FAIL_CLOSED_GATES",
