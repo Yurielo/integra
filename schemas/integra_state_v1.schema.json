@@ -109,6 +109,24 @@
       "const": "state/native_macos_app_v1.json"
     },
     "ready_app_evidence": {"const": "state/ready_app_v1.json"},
+    "semantic_review_gui_planning": {
+      "description": "Optional Issue315 planning projection. This is not executable capability, release or semantic acceptance authority.",
+      "type": "object",
+      "required": ["authority_issue", "owner_option", "primary_user_interface", "ordinary_processing_requires_codex_or_github", "contract", "status", "implementation_authorized", "first_scope", "semantic_acceptance", "next_action"],
+      "properties": {
+        "authority_issue": { "const": 315 },
+        "owner_option": { "const": "A" },
+        "primary_user_interface": { "const": "INTEGRA_LOCAL_MACOS" },
+        "ordinary_processing_requires_codex_or_github": { "const": false },
+        "contract": { "const": "docs/architecture/LOCAL_SEMANTIC_REVIEW_GUI_V1.md" },
+        "status": { "const": "PROPOSED_NOT_IMPLEMENTED" },
+        "implementation_authorized": { "const": false },
+        "first_scope": { "const": "PREPARED_SINGLE_SOURCE_CREATE_REVIEW" },
+        "semantic_acceptance": { "const": "SEPARATE_EXPLICIT_HUMAN_DECISION" },
+        "next_action": { "const": "AUTHORIZE_BOUNDED_IMPLEMENTATION_SCOPE" }
+      },
+      "additionalProperties": false
+    },
     "execution_policy": {
       "type": "object",
       "required": [
@@ -142,7 +160,7 @@
         "id": { "const": "READY_APP_V1" },
         "authorization_issue": { "const": 62 },
         "priority_order": {
-          "const": ["R9C", "R10", "ONEDRIVE_PUBLICATION_V1", "R12", "R13", "R14"]
+          "const": ["R9C", "R10", "ONEDRIVE_PUBLICATION_V1", "R12", "R13", "USER_MEDIA_WORKFLOW_V1", "SOURCE_FIRST_UI_V1", "R14"]
         },
         "deferred_status": { "const": "DEFERRED_TO_LATER_WORK" },
         "acceptance_gate": { "const": "R14" }

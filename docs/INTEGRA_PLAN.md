@@ -9,6 +9,15 @@ Ready-app rebaseline recorded: 2026-09-11 in GitHub Issue #62
 
 ## 1. Purpose
 
+**Owner addendum, Issue #315 (2026-11-02): Option A is confirmed.** Integra is
+the primary local macOS interface for ordinary source processing, semantic
+review, explicit human decisions and knowledge navigation. Codex/GitHub are
+development tools, not required operational UI. This addendum reconciles the
+target and the [proposed first GUI slice](architecture/LOCAL_SEMANTIC_REVIEW_GUI_V1.md);
+it authorizes no GUI implementation, provider repin, Candidate or activation.
+SeminarText remains the semantic provider/admission owner, BookText the document
+provider, VideoText the media provider, and Integra their local orchestrator.
+
 Integra is a planned native macOS application that unifies the existing
 SeminarText knowledge/evidence workflows and VideoText media-production
 workflows while preserving both source applications as independently working
@@ -852,16 +861,23 @@ Stop and request the appropriate authority when there is:
 
 ## 18. Current implementation boundary
 
-The accepted implementation boundary is R9C
-([Issue #15](https://github.com/Yurielo/integra/issues/15)), including all
-accepted prerequisites and the bidirectional cross-navigation presentation
-index. The next active implementation stage is R10
-([Issue #16](https://github.com/Yurielo/integra/issues/16)), bounded to
-deterministic one-way Obsidian export. It is followed by Issue #63, R12, R13,
-and the R14 human acceptance gate.
+The old R9C-next-R10 description is superseded by the recorded R0–R14 acceptance
+in `state/integra_state_v1.json` and `docs/ROADMAP.md`. That acceptance is bound
+to its historical candidate and capability set; it does not prove the complete
+Option A workflow. Current main contains Process Topic decisions and K1
+source-bound fragment review, while general prepared Topic/Concept/relation
+workflow integration is still missing. The
+[UI implementation matrix](UI_IMPLEMENTATION_MATRIX.md#issue-315-current-semantic-review-boundary)
+separates code-level reuse from unavailable integration and installed readiness.
 
-The Product Owner instructions of 2026-09-10 and Issue #62 authorize safe
-implementation along the active `READY_APP_V1` chain after dependency checks.
-They do not authorize deferred features or bypass the protected authorization
-boundaries listed in the Purpose, Development Workflow, or machine-readable
-state.
+Issue #315 records the approved target in these existing planning locations and
+the exact proposed adapter/acceptance contract. #280 K2 and #305 Library remain
+independent active work; no unmerged dependency becomes an accepted provider.
+The next implementation scope is proposed, not a dependency-ready authorization
+under standing roadmap policy. A new exact Owner scope is required before
+creating its implementation Issue or writing GUI code. No new product-direction
+decision about Option A is needed.
+
+Technical integration readiness, actual macOS/Owner acceptance, real-seminar
+DOMAIN_REVIEW, S1 completion and S2/S3 acceptance are distinct. Existing release,
+CURRENT/K1/K2, source-product, data and semantic gates remain in force.

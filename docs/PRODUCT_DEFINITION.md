@@ -21,6 +21,30 @@ The `READY_APP_V1` outcome is:
 Every substantive result retains an exact route back to its source interval,
 word, page, slide, region, or artifact revision.
 
+### Approved local user journey — Issue #315, 2026-11-02
+
+The Product Owner confirmed **Option A**: Integra is the primary local macOS
+interface for source processing, Topic/Concept/relation review, explicit human
+decisions and knowledge navigation. Ordinary seminar/document processing must
+not require Codex, GitHub, a source checkout, terminal commands or hand-edited
+review JSON. Those remain development/integration tools; provider CLI calls may
+run behind a governed local adapter.
+
+This is the approved user-facing target, not a claim that the complete journey
+is implemented or accepted. The historical READY_APP_V1/R14 acceptance retains
+its exact baseline and limitations. Issue #315 authorizes planning and contract
+reconciliation only. The first proposed implementation slice and its gaps are
+in [Local Semantic Review GUI v1](architecture/LOCAL_SEMANTIC_REVIEW_GUI_V1.md).
+It requires a separately authorized implementation scope; technical UI tests do
+not accept real seminar semantics or complete S1/S2/S3.
+
+Four independent products remain: SeminarText owns ASR, timing/Word Timeline,
+Canonical Evidence, semantic proposal/review contracts and Knowledge admission;
+BookText owns document extraction/OCR/structure; VideoText owns video/media and
+subtitles; Integra orchestrates and presents versioned provider artifacts. A
+local Integra review control sends explicit choices to the SeminarText-owned
+mechanism; it is not a second semantic engine or authority register.
+
 ## 2. Required READY_APP_V1 scope
 
 The active delivery chain is `R9C -> R10 -> ONEDRIVE_PUBLICATION_V1 -> R12 ->

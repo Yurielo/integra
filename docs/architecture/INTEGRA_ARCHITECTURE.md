@@ -2,6 +2,23 @@
 
 Status: `READY_APP_V1_REBASELINED`
 
+## Current user-facing target — Issue #315
+
+Option A is Owner-approved (2026-11-02): Integra is the primary local macOS UI
+for source processing, semantic review/explicit human decisions and knowledge
+navigation. Ordinary use must not depend on Codex/GitHub or manual CLI/JSON
+steps. Historical stage acceptance below does not claim complete implementation
+of that target. [Local Semantic Review GUI v1](LOCAL_SEMANTIC_REVIEW_GUI_V1.md)
+is a proposed adapter contract, not implementation or release authority.
+
+Current domain ownership is four independent products: SeminarText owns ASR,
+Word Timeline, Evidence, semantic review contracts and Knowledge admission;
+BookText owns document extraction/OCR/structure; VideoText owns media/subtitles;
+Integra owns orchestration and presentation. Legacy R5/R6 routing and their
+frozen evidence are retained as historical technical selections, not a competing
+current ownership rule. No provider pin/runtime or historical receipt changes
+under this planning reconciliation.
+
 ## 1. Logical architecture
 
 Integra uses a local control-plane architecture rather than copying source
@@ -31,8 +48,8 @@ artifact, compatibility, job, cancellation, retry, timeout, and resume rules.
 R4 proves the boundary against both pinned components with read-only inputs and
 separate hashed output, as recorded in `state/adapter_spike_v1.json`.
 
-R5 fixes technical integration defaults per capability rather than choosing one
-source application as a universal winner. VideoText is primary for media
+R5 historically fixed technical integration defaults rather than choosing one
+source application as a universal winner. In that record VideoText was primary for media
 preparation, ASR, translation, cache, and recovery; SeminarText is primary for
 word alignment and Topics; review and quality validation are composed along the
 accepted ownership boundary. The exact replay evidence, retained fallbacks, and
