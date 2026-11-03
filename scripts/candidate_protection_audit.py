@@ -14,6 +14,7 @@ from pathlib import Path
 import re
 import stat
 import subprocess
+import time
 import sys
 
 try:
@@ -102,8 +103,26 @@ def bootstrap_plan(registry: dict, audit: dict) -> dict:
             'bootstrap_authorization_ref': registry.get('bootstrap_authorization_ref')}
 
 
+def _github_api(endpoint: str) -> subprocess.CompletedProcess[str]:
+    """Read canonical GitHub state with bounded retries for transport blips.
+
+    Each response is still parsed and validated by its caller.  Retries never
+    substitute cached/local state for a failed canonical read.
+    """
+    last = None
+    for attempt in range(3):
+        run = subprocess.run(['gh', 'api', endpoint], capture_output=True, text=True, timeout=30)
+        if not run.returncode:
+            return run
+        last = run
+        if attempt < 2:
+            time.sleep(0.5 * (attempt + 1))
+    assert last is not None
+    return last
+
+
 def _api(endpoint: str) -> object:
-    run = subprocess.run(['gh', 'api', endpoint], capture_output=True, text=True, timeout=30)
+    run = _github_api(endpoint)
     if run.returncode:
         raise ValueError('canonical GitHub read failed: ' + endpoint)
     return json.loads(run.stdout)
@@ -111,7 +130,7 @@ def _api(endpoint: str) -> object:
 
 def _optional_remote_file(path: str, ref: str) -> tuple[bytes, dict] | None:
     endpoint = f'repos/{REPOSITORY}/contents/{path}?ref={ref}'
-    run = subprocess.run(['gh', 'api', endpoint], capture_output=True, text=True, timeout=30)
+    run = _github_api(endpoint)
     if run.returncode:
         if 'HTTP 404' in run.stderr:
             return None
