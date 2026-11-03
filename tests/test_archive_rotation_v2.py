@@ -134,7 +134,7 @@ class LegacyRotationTests(unittest.TestCase):
                  'proposal_refs': ['PR #204']}
         return legacy, catalog_path, plan, lease, identity
 
-    def completed_device_drift_case(self, destination=None):
+    def completed_device_drift_case(self, destination=None, *, timestamped=False):
         destination = destination or self.root / 'Build Archive'
         with patch.object(gate, 'require_archive_publication', return_value=None), \
                 patch.object(retention, 'refresh_protection', return_value=None), \
@@ -147,7 +147,8 @@ class LegacyRotationTests(unittest.TestCase):
         with retention.locked(catalog_path) as catalog:
             record = catalog['artifacts'][str(package)]
             record['device'] = package.stat().st_dev + 1
-            record.pop('publication_recorded_at')
+            if not timestamped:
+                record.pop('publication_recorded_at')
             record['publication_sequence'] = 2
             catalog['protection'] = {
                 'protected': {identity['candidate_id']: ['OPEN_PROPOSAL']},
@@ -195,8 +196,8 @@ class LegacyRotationTests(unittest.TestCase):
         self.assertFalse(retention._ownership(package, record,
                          json.loads((package / 'COMPLETE.json').read_bytes())))
         archive.verify_archive(package, identity)
-        evidence = gate._pre_amendment_order_evidence(package, record, identity)
-        self.assertEqual(evidence['kind'], 'OBSERVED_CATALOG_SEQUENCE_RECEIPT_MATCH_DEVICE_DRIFT')
+        evidence = gate._observed_publisher_order_evidence(package, record, identity)
+        self.assertEqual(evidence['kind'], 'OBSERVED_CATALOG_PUBLISHER_RECORD_RECEIPT_MATCH_DEVICE_DRIFT')
         self.assertIs(evidence['physical_publisher_owned'], False)
         self.assertEqual(evidence['publication_sequence'], 2)
         self.assertNotEqual(evidence['recorded_device'], evidence['observed_device'])
@@ -210,11 +211,46 @@ class LegacyRotationTests(unittest.TestCase):
                        {'complete_sha256': '0' * 64}, {'inventory_sha256': '0' * 64},
                        {'device': package.stat().st_dev}):
             with self.subTest(change=change):
-                self.assertIsNone(gate._pre_amendment_order_evidence(
+                self.assertIsNone(gate._observed_publisher_order_evidence(
                     package, {**record, **change}, identity))
         with (package / 'COMPLETE.json').open('ab') as handle:
             handle.write(b' ')
-        self.assertIsNone(gate._pre_amendment_order_evidence(package, record, identity))
+        self.assertIsNone(gate._observed_publisher_order_evidence(package, record, identity))
+
+    def test_timestamped_order_matches_bytes_without_adopting_device(self):
+        package, _, identity, record = self.completed_device_drift_case(timestamped=True)
+        evidence = gate._observed_publisher_order_evidence(package, record, identity)
+        self.assertEqual(evidence['order_provenance']['source'],
+                         'PUBLISHER_PUBLICATION_TIMESTAMP')
+        self.assertEqual(evidence['publication_recorded_at'],
+                         record['publication_recorded_at'])
+
+    def test_timestamped_device_drift_retirement_keeps_exact_order_evidence(self):
+        package, catalog_path, identity, record = self.completed_device_drift_case(timestamped=True)
+        with patch.object(retention, '_context_valid', return_value=True), \
+                patch.object(retention, '_inactive', return_value=True), \
+                patch.object(retention, 'MAX_COPIES', 1):
+            plan = retention.plan(json.loads(catalog_path.read_bytes()), free_bytes=64 * 1024**3)
+            target = plan['capacity_rotation_target']
+            relative = package.relative_to(self.root).as_posix()
+            evidence = gate._observed_publisher_order_evidence(package, record, identity)
+            lease = {'kind': 'OWNER_POLICY_CAPACITY_ROTATION', 'path': relative,
+                     'identity': identity, 'order': target['capacity_rotation_order'],
+                     'device': target['device'], 'inode': target['inode'],
+                     'birthtime': package.stat().st_birthtime,
+                     'policy_authority_ref': 'direct Owner fixture', 'policy_sha256': 'a' * 64,
+                     'initial_order': retention._initial_rotation_order(
+                         plan['entries'], 'a' * 64, '2026-10-29T00:00:00+00:00', 1),
+                     'publisher_order_evidence': {relative: evidence}, 'proposal_refs': []}
+            with patch.object(gate, 'require_capacity_rotation', return_value=lease), \
+                    patch.object(gate, 'require_capacity_rotation_continuation', return_value=None):
+                self.assertEqual(retention.cleanup_capacity_rotation(catalog_path, plan), [str(package)])
+        retired_catalog = self.root / 'Retention' / f'catalog-{os.getuid()}.json'
+        retired_catalog.parent.mkdir(exist_ok=True)
+        retired_catalog.write_bytes(catalog_path.read_bytes())
+        policy = {'rotation_strategy': 'OLDEST_FULL_COPY_FIRST', 'sha256': 'a' * 64}
+        self.assertEqual(protection.load_rotation_receipts(self.root, policy)[identity['candidate_id']]['path'],
+                         relative)
 
     def test_future_oldest_conflicting_record_retires_with_honest_receipt(self):
         package, catalog_path, identity, record = self.completed_device_drift_case()
@@ -226,7 +262,7 @@ class LegacyRotationTests(unittest.TestCase):
             self.assertEqual(target['path'], str(package))
             self.assertEqual(target['capacity_rotation_order']['publisher_sequence'], 2)
             relative = package.relative_to(self.root).as_posix()
-            evidence = gate._pre_amendment_order_evidence(package, record, identity)
+            evidence = gate._observed_publisher_order_evidence(package, record, identity)
             lease = {'kind': 'OWNER_POLICY_CAPACITY_ROTATION', 'path': relative,
                      'identity': identity, 'order': target['capacity_rotation_order'],
                      'device': target['device'], 'inode': target['inode'],

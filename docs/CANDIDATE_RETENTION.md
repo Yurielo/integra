@@ -58,8 +58,11 @@ placement still uses observed-now APFS birthtime. Such a row retains
 `publisher_owned = false`; the manager records the device discrepancy and
 the exact observed catalog record without rewriting its historical fields.
 Only this receipt-matched, same-UID, same-inode, device-drift case may use the
-recorded pre-amendment sequence. A mismatched receipt, inventory, identity,
-or inactive-writer check blocks rotation. Issue #313 removes historical payload
+recorded publisher order.  A pre-amendment record retains its observed-now
+sequence placement; a later timestamped record retains its exact recorded UTC
+publication timestamp.  Neither case rewrites the original record or asserts
+publisher ownership of the presently observed directory. A mismatched receipt,
+inventory, identity, order value, or inactive-writer check blocks rotation. Issue #313 removes historical payload
 equality as a capacity prerequisite; metadata binding remains mandatory. If that exact
 copy later becomes oldest, the capacity transaction may retire it under the
 Owner's v2 physical-copy policy with a distinct conflicting-record receipt;

@@ -1173,12 +1173,11 @@ def load_rotation_receipts(base: Path, policy: dict | None, *, purpose: str = 'I
                 record = receipt.get('conflicting_catalog_record')
                 evidence = receipt.get('observed_catalog_order_evidence')
                 if (not isinstance(record, dict) or not isinstance(evidence, dict)
-                        or evidence.get('kind') != 'OBSERVED_CATALOG_SEQUENCE_RECEIPT_MATCH_DEVICE_DRIFT'
+                        or evidence.get('kind') != 'OBSERVED_CATALOG_PUBLISHER_RECORD_RECEIPT_MATCH_DEVICE_DRIFT'
                         or evidence.get('physical_publisher_owned') is not False
                         or receipt.get('physical_publisher_owned') is not False
                         or record.get('historical') is not False
                         or record.get('publisher_completed') is not True
-                        or record.get('publication_recorded_at') is not None
                         or type(record.get('publication_sequence')) is not int
                         or record['publication_sequence'] <= 0
                         or not isinstance(record.get('publisher_run_id'), str)
@@ -1189,6 +1188,7 @@ def load_rotation_receipts(base: Path, policy: dict | None, *, purpose: str = 'I
                         or not record['publisher_start_token']
                         or type(record.get('device')) is not int
                         or evidence.get('publication_sequence') != record['publication_sequence']
+                        or evidence.get('publication_recorded_at') != record.get('publication_recorded_at')
                         or evidence.get('observed_catalog_record_sha256') != digest(record)
                         or any(record.get(key) != identity[key] for key in IDENTITY)
                         or record.get('complete_sha256') != sha(complete_bytes)
@@ -1206,13 +1206,26 @@ def load_rotation_receipts(base: Path, policy: dict | None, *, purpose: str = 'I
                         != evidence
                         or receipt.get('order_provenance') != receipt.get('canonical_snapshot', {}).get('order')
                         or receipt.get('order_provenance', {}).get('source')
-                        != 'PUBLISHER_SEQUENCE_WITH_OBSERVED_NOW_COHORT_PLACEMENT'
-                        or receipt.get('order_provenance', {}).get('publisher_sequence')
-                        != record['publication_sequence']
+                        != evidence.get('order_provenance', {}).get('source')
+                        or (record.get('publication_recorded_at') is None and
+                            receipt.get('order_provenance', {}).get('publisher_sequence')
+                            != record['publication_sequence'])
+                        or (record.get('publication_recorded_at') is not None and
+                            receipt.get('order_provenance', {}).get('publisher_sequence') is not None)
                         or receipt.get('order_provenance', {}).get('timestamp')
-                        != receipt.get('canonical_snapshot', {}).get('birthtime')
+                        != evidence.get('order_provenance', {}).get('timestamp')
                         or receipt.get('order_provenance', {}).get('recorded_value')
-                        != receipt.get('canonical_snapshot', {}).get('birthtime')):
+                        != evidence.get('order_provenance', {}).get('recorded_value')
+                        or (record.get('publication_recorded_at') is None and
+                            (receipt.get('order_provenance', {}).get('source')
+                             != 'PUBLISHER_SEQUENCE_WITH_OBSERVED_NOW_COHORT_PLACEMENT'
+                             or receipt.get('order_provenance', {}).get('timestamp')
+                             != receipt.get('canonical_snapshot', {}).get('birthtime')))
+                        or (record.get('publication_recorded_at') is not None and
+                            (receipt.get('order_provenance', {}).get('source')
+                             != 'PUBLISHER_PUBLICATION_TIMESTAMP'
+                             or receipt.get('order_provenance', {}).get('recorded_value')
+                             != record.get('publication_recorded_at')))):
                     raise ValueError('conflicting-record retirement evidence differs')
             elif receipt.get('conflicting_catalog_record') is not None:
                 raise ValueError('non-conflicting retirement has a conflicting catalog record')
