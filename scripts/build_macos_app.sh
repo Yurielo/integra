@@ -62,6 +62,12 @@ seminartext_evidence_module="$seminartext_checkout/seminartext_modules/evidence_
 seminartext_evidence_sha256="6adcf15e9767c36ad2d0dfe3a6a995d90c41b5f1671b4c9434a4b48f590e3856"
 seminartext_evidence_validator="$seminartext_checkout/schemas/validate_canonical_evidence_v1.py"
 seminartext_evidence_validator_sha256="889e6cdf3dc2dd7504f76923c04e2d8d1eceabdb828d0c110ddc1059b107860e"
+# Semantic review is a separately pinned provider closure.  Keeping this
+# outside runtime/seminartext preserves the active ASR runtime identity.
+semantic_review_checkout="${INTEGRA_SEMANTIC_REVIEW_BUILD_CHECKOUT:-$repo_root/.runtime-components/seminartext-semantic}"
+semantic_review_commit="ba4dc987b8fe48303ea4343a93e7b24c7eaf43ce"
+semantic_review_workflow="$semantic_review_checkout/seminartext_modules/semantic_workflow.py"
+semantic_review_workflow_sha256="f4280f30a2290a11a95e496a69a24b62a67d44799bf960536fdfe48da56e12c4"
 alignment_packages="${INTEGRA_WORD_ALIGNMENT_SITE_PACKAGES:-$repo_root/.runtime-word-alignment/lib/python3.13/site-packages}"
 alignment_model="${INTEGRA_WORD_ALIGNMENT_MODEL_DIR:-/Users/yurielokhin/.cache/huggingface/hub/models--jonatasgrosman--wav2vec2-large-xlsr-53-russian/snapshots/2329100508896c6d9b157019803ab5601e6f3406}"
 alignment_python="${INTEGRA_WORD_ALIGNMENT_PYTHON:-/opt/homebrew/opt/python@3.13/bin/python3.13}"
@@ -84,6 +90,9 @@ test -f "$seminartext_evidence_module"
 test "$(shasum -a 256 "$seminartext_evidence_module" | awk '{print $1}')" = "$seminartext_evidence_sha256"
 test -f "$seminartext_evidence_validator"
 test "$(shasum -a 256 "$seminartext_evidence_validator" | awk '{print $1}')" = "$seminartext_evidence_validator_sha256"
+test "$(git -C "$semantic_review_checkout" rev-parse HEAD)" = "$semantic_review_commit"
+test -f "$semantic_review_workflow"
+test "$(shasum -a 256 "$semantic_review_workflow" | awk '{print $1}')" = "$semantic_review_workflow_sha256"
 test -d "$alignment_packages/whisperx"
 test -f "$alignment_model/pytorch_model.bin"
 test "$(shasum -a 256 "$alignment_model/pytorch_model.bin" | awk '{print $1}')" = "$alignment_sha256"
@@ -126,7 +135,7 @@ mkdir -p "$app/Contents/Resources/runtime/seminartext/schemas"
 cp "$seminartext_evidence_validator" "$app/Contents/Resources/runtime/seminartext/schemas/validate_canonical_evidence_v1.py"
 # This script's stdout is the sole machine-readable app path. Keep packaging
 # diagnostics on stderr so callers can safely capture that path.
-python3 "$repo_root/scripts/package_review_runtime.py" "$seminartext_checkout" "$app/Contents/Resources" >&2
+python3 "$repo_root/scripts/package_review_runtime.py" "$seminartext_checkout" "$semantic_review_checkout" "$app/Contents/Resources" >&2
 printf '{"component":"seminartext","commit_sha":"%s","entrypoint_sha256":"%s","evidence_foundation_sha256":"%s","evidence_validator_sha256":"%s","personal_use_only":true}\n' "$seminartext_commit" "$seminartext_cli_sha256" "$seminartext_evidence_sha256" "$seminartext_evidence_validator_sha256" > "$app/Contents/Resources/runtime/seminartext/runtime.json"
 mkdir -p "$app/Contents/Resources/runtime/word-alignment/site-packages" "$app/Contents/Resources/runtime/word-alignment/model"
 rsync -aL --exclude '__pycache__' --exclude '*.pyc' "$alignment_packages/" "$app/Contents/Resources/runtime/word-alignment/site-packages/"

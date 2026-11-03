@@ -1,9 +1,11 @@
 # Local Semantic Review GUI v1 — proposed integration scope
 
-Status: **PROPOSED_NOT_IMPLEMENTED**. Authority: [Integra Issue #315](https://github.com/Yurielo/integra/issues/315),
-Owner Option A decision, 2026-11-02. #315 authorizes this planning diff only.
-This is a technical integration proposal under the existing Product Definition,
-Plan, Roadmap and State, not another authority register or implementation Issue.
+Status: **IMPLEMENTED_IN_ISSUE_317_BRANCH_PENDING_PACKAGED_CANDIDATE_AND_OWNER_TEST**.
+Authority: [Integra Issue #315](https://github.com/Yurielo/integra/issues/315),
+Owner Option A decision, 2026-11-02, and explicit implementation authorization
+for [Issue #317](https://github.com/Yurielo/integra/issues/317). This remains a
+bounded first slice under the existing Product Definition, Plan, Roadmap and
+State; it is not a semantic acceptance result or an installed release.
 
 ## 1. Approved outcome and first boundary
 
@@ -114,9 +116,11 @@ as derived recovery evidence, not another canonical ReviewDecision ledger.
 Reopen must verify stored envelopes against the provider (including exact retry
 where needed), not trust a local display cache. If those receipts are missing or
 cannot be reconciled, show an unavailable/read-only state, not invented edits.
-Full typed history/inspection is not an existing public endpoint: if stronger
-GUI reconstruction requires it, name a separately scoped ST-owned contract
-dependency before implementation instead of reading private snapshot fields.
+The implementation delivers an ST-owned typed `projection` command alongside
+the existing workflow operations. It returns validated visible records, exact
+Evidence, transcript assurance, saved choices and compact round history without
+exposing provider snapshot filenames or local paths. Integra uses this public
+projection; it does not read provider-private snapshots.
 
 Use existing Project Lease and Operations ownership around the Integra-owned
 mutable workflow location, plus the provider's nonblocking lock. A busy/stale
@@ -213,5 +217,39 @@ PRODUCT_RULES_READ: YES
 APPLICABLE_PRODUCT_RULES: PR-001, PR-002, PR-003, PR-004, PR-005, PR-006,
 PR-007, PR-008, PR-010, PR-011, PR-012, PR-013, PR-014.
 
-PRODUCT_RULE_CONFLICTS: NONE. No source-product, semantic, installed/CURRENT or
-Candidate records are changed by this planning reconciliation.
+PRODUCT_RULE_CONFLICTS: NONE. The implementation uses a separate bundled
+`runtime/seminartext-semantic` provider closure; it does not replace the active
+SeminarText ASR runtime, alter an installed app/CURRENT, or use Stress Code data.
+
+## 8. Implemented human review flow (Issue #317)
+
+The native **База знаний** screen now offers “Проверить подготовленный пакет
+знаний…”. The user selects one compatible prepared-package folder; Integra
+resolves all six bound input roles and validates them through the packaged
+SeminarText provider. The user never edits JSON or invokes a terminal.
+
+For every Topic, Concept or Relation proposal, the screen places the original
+wording and exact quote/locator next to four plain-language choices:
+
+- Принять как есть;
+- Исправить формулировку;
+- Отклонить — не добавлять;
+- Отложить на следующий раунд.
+
+Choosing **Исправить** reveals only fields that this v1 contract actually lets
+the user change, with human labels. Source bindings, identifiers, exact Evidence
+and provenance remain visibly non-editable. A choice is merely local screen
+state until the user presses “Сохранить выбранные решения” and confirms the
+summary. After saving, the UI labels it as immutable review history rather than
+pretending it can be edited. An applied round can open a new round only for
+explicitly deferred items, preserving the earlier result and receipt.
+
+Integra retains only package-location and submitted-envelope recovery records
+in its app data. SeminarText remains the authority for decisions, validation,
+revisions and canonical results. Reopening the package revalidates it against
+the provider before displaying it again.
+
+The remaining release gates are deliberate: package the exact provider closure
+into a new Candidate, perform native interaction/independent QA using the
+synthetic fixtures, then conduct the Owner test. None of those steps can claim
+acceptance of any real seminar semantics.

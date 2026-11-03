@@ -225,18 +225,22 @@ def require_deletion_continuation(lease: dict) -> None:
             protection.verify_archive(base / relative, protected[cid]['identity'])
 
 
-def _pre_amendment_order_evidence(package: Path, record: dict | None,
-                                  identity: dict) -> dict | None:
-    """Match a currently recorded sequence row to current verified bytes.
+def _observed_publisher_order_evidence(package: Path, record: dict | None,
+                                       identity: dict) -> dict | None:
+    """Match a completed publisher record to current verified bytes.
 
-    The catalog sequence is unsigned and is not authenticated as a historical
-    publication event. This exception covers only observed device drift of a
-    completed pre-timestamp record. It never sets publisher_owned or rewrites
-    the recorded device. The caller separately proves all application bytes.
+    A device number can change when APFS exposes the preserved directory from a
+    different volume view.  This narrow exception preserves the original
+    catalog record (including its publication timestamp, when present), never
+    sets ``publisher_owned``, and requires the exact completed receipt and
+    inventory to still bind the record to the physical archive.
     """
+    try:
+        from scripts import candidate_retention as retention
+    except ModuleNotFoundError:
+        import candidate_retention as retention
     if (not isinstance(record, dict) or record.get('historical') is not False
             or record.get('publisher_completed') is not True
-            or record.get('publication_recorded_at') is not None
             or type(record.get('publication_sequence')) is not int
             or record['publication_sequence'] <= 0
             or not isinstance(record.get('publisher_run_id'), str)
@@ -268,9 +272,14 @@ def _pre_amendment_order_evidence(package: Path, record: dict | None,
             return None
     except (OSError, ValueError, TypeError, KeyError):
         return None
-    return {'kind': 'OBSERVED_CATALOG_SEQUENCE_RECEIPT_MATCH_DEVICE_DRIFT',
+    order = retention._rotation_order(package, record)
+    if order is None:
+        return None
+    return {'kind': 'OBSERVED_CATALOG_PUBLISHER_RECORD_RECEIPT_MATCH_DEVICE_DRIFT',
             'physical_publisher_owned': False,
             'publication_sequence': record['publication_sequence'],
+            'publication_recorded_at': record.get('publication_recorded_at'),
+            'order_provenance': order,
             'observed_catalog_record_sha256': protection.digest(record),
             'recorded_device': record['device'], 'observed_device': s.st_dev,
             'recorded_inode': record['inode'], 'observed_inode': s.st_ino,
@@ -317,16 +326,14 @@ def require_capacity_rotation(path: Path, *, purpose: str = 'CAPACITY') -> dict:
         sequence = record.get('publication_sequence')
         if sequence is not None and (type(sequence) is not int or sequence <= 0):
             raise ValueError('publisher sequence record is invalid')
-        if record.get('publication_recorded_at') is not None and not row.get('publisher_owned'):
-            raise ValueError('timestamped publisher order is not bound to owned archive bytes')
         if sequence is not None and not row.get('publisher_owned'):
-            evidence = (_pre_amendment_order_evidence(
+            evidence = (_observed_publisher_order_evidence(
                 Path(row['absolute_path']), record,
                 {key: row[key] for key in protection.IDENTITY})
                 if row.get('identity_metadata_verified' if capacity else 'integrity_verified') is True and row.get('metadata_error') is None
                 else None)
             if evidence is None:
-                raise ValueError('pre-amendment publisher order is not bound to verified archive bytes')
+                raise ValueError('publisher order is not bound to verified archive bytes')
             publisher_order_evidence[row['path']] = evidence
         order = retention._rotation_order(Path(row['absolute_path']), row.get('catalog_record'))
         if order is None:
@@ -353,7 +360,10 @@ def require_capacity_rotation(path: Path, *, purpose: str = 'CAPACITY') -> dict:
             policy['max_full_copies'])
         ordered = retention._ordered_rotation_rows(
             ordered, initial_order, policy['sha256'], {}, policy['max_full_copies'])
-    first = ordered[0]
+    protected_paths = {path for path in registry['selected_survivors'].values() if path is not None}
+    first = next((row for row in ordered if row['path'] not in protected_paths), None)
+    if first is None:
+        raise ValueError('capacity rotation has no unprotected physical copy')
     if first['path'] != relative:
         raise ValueError('rotation target is not the oldest physical copy')
     row = first

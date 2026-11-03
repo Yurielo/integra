@@ -390,10 +390,22 @@ def _ordered_rotation_rows(rows, baseline, policy_sha256, retired_paths, expecte
         if path in retired_paths and not any(
                 all(receipt.get(key) == saved[key] for key in
                     ('candidate_id', 'bundle_digest', 'manifest_digest'))
-                and (receipt.get('observed_device'), receipt.get('observed_inode'),
+                # Device number may change when APFS exposes an unchanged
+                # directory through another volume.  Preserve the original
+                # order record and accept only an explicitly journaled
+                # observation that binds the changed device to the same
+                # inode, birthtime and ordering evidence.
+                and (receipt.get('observed_device') == saved['device']
+                     or receipt.get('canonical_snapshot', {}).get('device')
+                        == receipt.get('observed_device'))
+                and (receipt.get('observed_inode'),
                      receipt.get('canonical_snapshot', {}).get('birthtime'),
-                     receipt.get('order_provenance')) ==
-                    (saved['device'], saved['inode'], saved['birthtime'],
+                     # Earlier completed rotation receipts called this exact
+                     # immutable field ``order``.  Accept that spelling only
+                     # as the same complete identity tuple; never infer an
+                     # ordering value for a legacy receipt.
+                     receipt.get('order_provenance', receipt.get('order'))) ==
+                    (saved['inode'], saved['birthtime'],
                      saved['order_provenance'])
                 for receipt in retired_paths[path]):
             raise ValueError('retirement receipt does not bind original initial incarnation')
@@ -419,8 +431,18 @@ def _ordered_rotation_rows(rows, baseline, policy_sha256, retired_paths, expecte
                     verify_archive(Path(path), {key: current[key] for key in
                                                 ('candidate_id', 'bundle_digest', 'manifest_digest')})
                 new_incarnations.add(path)
-            elif current != {key: value for key, value in saved.items() if key != 'ordinal'}:
-                raise ValueError('persisted initial rotation identity or birthtime changed')
+            else:
+                expected = {key: value for key, value in saved.items() if key != 'ordinal'}
+                # APFS can expose the same preserved directory through a new
+                # device number after a volume transition.  The Owner-approved
+                # rotation policy treats that as observed device drift only:
+                # retain the original catalog value, but permit the current
+                # incarnation when every identity, path, UID, inode, birthtime
+                # and ordering field remains exact.  Any other change remains
+                # fail-closed.
+                observed_device_drift = {**expected, 'device': current['device']}
+                if current != expected and current != observed_device_drift:
+                    raise ValueError('persisted initial rotation identity or birthtime changed')
         elif path not in retired_paths:
             raise ValueError('initial rotation copy disappeared without completed receipt')
     for path, row in live.items():
@@ -582,8 +604,14 @@ def plan(catalog, *, free_bytes=None, _validated_context=False, purpose='INTEGRI
     ambiguous_oldest = (len(rotation_rows) > 1 and
                         (rotation_rows[0]['capacity_rotation_order']['timestamp'], rotation_rows[0]['candidate_id']) ==
                         (rotation_rows[1]['capacity_rotation_order']['timestamp'], rotation_rows[1]['candidate_id']))
-    capacity_target = (rotation_rows[0] if valid and rotation_rows and
-                       len(rows) >= MAX_COPIES and not ambiguous_oldest else None)
+    # The Owner-approved capacity policy permits automatic rotation, but never
+    # overrides a physical archive selected as a canonical survivor (CURRENT,
+    # rollback, or another required protected baseline).  Other pending
+    # lifecycle states remain eligible under the approved capacity policy.
+    selected_paths = set((context or {}).get('selected_archives', {}).values())
+    capacity_target = (next((row for row in rotation_rows if row['path'] not in selected_paths), None)
+                       if valid and rotation_rows and len(rows) >= MAX_COPIES
+                       and not ambiguous_oldest else None)
     report = {'schema_version': '1.0', 'artifact_type': 'integra.retention_plan', 'dry_run': True,
               'BEFORE_BYTES': before, 'PROTECTED_BYTES': protected, 'DELETABLE_BYTES': deletable,
               'UNKNOWN_BYTES': unknown, 'EXPECTED_AFTER_BYTES': before - deletable,

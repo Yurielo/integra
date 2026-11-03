@@ -31,6 +31,8 @@ final class Bridge: @unchecked Sendable {
       "prepare-process-topic-review", "apply-process-topic-review", "process-topics",
       "prepare-knowledge-review", "apply-knowledge-review", "create-machine-evidence",
       "knowledge-sources", "knowledge-open", "knowledge-save", "knowledge-navigation", "knowledge-package",
+      "semantic-review-recent", "semantic-review-open", "semantic-review-projection",
+      "semantic-review-submit", "semantic-review-apply", "semantic-review-next-round",
       "shutdown-active-runs",
     ]
     guard allowed.contains(operation) else { throw BridgeError.failed("Unsupported operation") }
@@ -128,6 +130,16 @@ final class TranslationButton: NSButton {
 
 final class TranslationTargetPicker: NSPopUpButton {
   weak var translationButton: TranslationButton?
+}
+
+final class SemanticDecisionPicker: NSPopUpButton {
+  var proposalID = ""
+  var proposalSHA256 = ""
+  var entityKind = ""
+  var originalFields: [String: Any] = [:]
+  var editableFields: [String: NSTextField] = [:]
+  weak var reasonField: NSTextField?
+  weak var editStack: NSStackView?
 }
 
 final class ResponsiveResultsGrid: NSStackView {
@@ -2066,10 +2078,17 @@ struct SidebarItem {
   }
   private var knowledgeNotebook: [String: Any] = [:]
   private var knowledgeIdentity: [String: Any] = [:]
+  private var semanticPackageDirectory: String?
+  private var semanticProjection: [String: Any] = [:]
+  private var semanticDecisionPickers = [SemanticDecisionPicker]()
+  private var semanticReviewerID = NSFullUserName()
+  private weak var semanticReviewerField: NSTextField?
 
   private func renderKnowledge() {
     reset("База знаний", "Тематические конспекты из завершённых обработок. Проверка фрагментов не означает принятия канонических знаний.")
     add(button("Добавить результат Process", #selector(selectKnowledgeSource)))
+    add(button("Проверить подготовленный пакет знаний…", #selector(selectSemanticReviewPackage)))
+    add(NSTextField(wrappingLabelWithString: "Проверка пакета — отдельный шаг: здесь можно принять, исправить, отклонить или отложить предложения тем, понятий и связей. Исходный текст и уже сохранённые решения не переписываются."))
     let bridge = self.bridge!
     let generation = navigationGeneration
     serviceQueue.async {
@@ -2087,6 +2106,269 @@ struct SidebarItem {
           }
         }
       } catch { DispatchQueue.main.async { self.status.stringValue = error.localizedDescription } }
+    }
+    serviceQueue.async {
+      do {
+        let recent = try bridge.json("semantic-review-recent")["result"] as? [[String: Any]] ?? []
+        DispatchQueue.main.async {
+          guard self.navigationGeneration == generation else { return }
+          for review in recent {
+            guard let directory = review["package_dir"] as? String else { continue }
+            let name = review["display_name"] as? String ?? "Подготовленный пакет"
+            let pending = review["pending_count"] as? Int ?? 0
+            let state = review["status"] as? String == "APPLIED" ? "раунд применён" : "ожидают решения: \(pending)"
+            let control = self.button("Продолжить проверку · \(name) (\(state))", #selector(self.reopenSemanticReview(_:)))
+            control.toolTip = directory
+            self.add(control)
+          }
+        }
+      } catch { /* Existing K1 remains usable even if this optional provider is absent. */ }
+    }
+  }
+
+  @objc private func selectSemanticReviewPackage() {
+    let panel = NSOpenPanel()
+    panel.canChooseFiles = false; panel.canChooseDirectories = true; panel.allowsMultipleSelection = false
+    panel.message = "Выберите папку подготовленного пакета для проверки"
+    panel.prompt = "Открыть пакет"
+    panel.title = "Integra сама проверит совместимость и связи с источником. Не нужно открывать или исправлять JSON-файлы вручную."
+    guard panel.runModal() == .OK, let location = panel.url else { return }
+    loadSemanticReview(location.path, opening: true)
+  }
+
+  @objc private func reopenSemanticReview(_ sender: NSButton) {
+    guard let directory = sender.toolTip, !directory.isEmpty else { return }
+    loadSemanticReview(directory, opening: false)
+  }
+
+  private func loadSemanticReview(_ directory: String, opening: Bool) {
+    navigationGeneration += 1
+    let generation = navigationGeneration
+    status.textColor = .secondaryLabelColor
+    status.stringValue = opening ? "Проверяю подготовленный пакет…" : "Открываю сохранённую проверку и перепроверяю источник…"
+    let bridge = self.bridge!
+    serviceQueue.async {
+      do {
+        let operation = opening ? "semantic-review-open" : "semantic-review-projection"
+        let result = try bridge.json(operation, request: ["package_dir": directory])["result"] as? [String: Any] ?? [:]
+        guard let projection = result["projection"] as? [String: Any] else { throw BridgeError.invalidResponse }
+        DispatchQueue.main.async {
+          guard self.navigationGeneration == generation else { return }
+          self.semanticPackageDirectory = directory; self.semanticProjection = projection; self.renderSemanticReview()
+        }
+      } catch {
+        DispatchQueue.main.async { self.status.textColor = .systemRed; self.status.stringValue = error.localizedDescription }
+      }
+    }
+  }
+
+  private func semanticAssurance(_ value: [String: Any]) -> String {
+    switch value["verification_state"] as? String {
+    case "fully_human_verified": return "Расшифровка полностью проверена человеком"
+    case "selectively_verified": return "Расшифровка проверена человеком только на отдельных участках"
+    case "machine_unverified": return "Машинная расшифровка ещё не проверена человеком"
+    default: return "Состояние проверки расшифровки не указано"
+    }
+  }
+
+  private func semanticActionTitle(_ action: String) -> String {
+    switch action {
+    case "ACCEPT": return "Принять как есть"
+    case "EDIT": return "Исправить формулировку"
+    case "REJECT": return "Отклонить — не добавлять"
+    case "DEFER": return "Отложить на следующий раунд"
+    default: return action
+    }
+  }
+
+  private func semanticEntityTitle(_ kind: String) -> String {
+    switch kind {
+    case "topics": return "Тема"
+    case "concepts": return "Понятие"
+    case "relations": return "Связь"
+    default: return "Предложение"
+    }
+  }
+
+  private func semanticFieldTitle(_ field: String) -> String {
+    switch field {
+    case "title": return "Название темы"
+    case "summary": return "Краткое описание"
+    case "preferred_label": return "Название понятия"
+    case "description": return "Описание понятия"
+    case "aliases": return "Другие названия"
+    case "relation_type": return "Тип связи"
+    default: return field
+    }
+  }
+
+  private func semanticLocator(_ value: Any?) -> String {
+    guard let locator = value as? [String: Any] else { return "Точное место в источнике не указано" }
+    let number: (Any?) -> String = { item in
+      if let value = item as? Double { return String(format: "%.3f", value) }
+      if let value = item as? Int { return "\(value)" }
+      return "?"
+    }
+    switch locator["type"] as? String {
+    case "time_interval": return "Время: \(number(locator["start_seconds"]))–\(number(locator["end_seconds"])) с"
+    case "pdf_page_range": return "Страницы: \(number(locator["page_start"]))–\(number(locator["page_end"]))"
+    case "pptx_slide_range": return "Слайды: \(number(locator["slide_start"]))–\(number(locator["slide_end"]))"
+    case "text_char_range": return "Символы: \(number(locator["char_start"]))–\(number(locator["char_end"]))"
+    default: return "Точное место: \(locator["type"] ?? "не указано")"
+    }
+  }
+
+  private func renderSemanticReview() {
+    let projection = semanticProjection
+    let workflow = projection["workflow"] as? [String: Any] ?? [:]
+    let package = projection["package"] as? [String: Any] ?? [:]
+    let proposals = projection["proposals"] as? [[String: Any]] ?? []
+    let pending = workflow["pending"] as? [String] ?? []
+    let applied = workflow["status"] as? String == "APPLIED"
+    reset("Проверка предложений знаний", applied ? "Раунд уже применён. История решений сохранена; прежние решения нельзя тихо переписать." : "Выберите решение для каждого предложения. До сохранения можно свободно менять выбор и формулировки.")
+    semanticDecisionPickers.removeAll()
+    add(NSTextField(wrappingLabelWithString: "Пакет проверен: \(package["id"] ?? "")\nПредложений: \(proposals.count) · ещё без решения: \(pending.count)\n\(semanticAssurance(package["transcript_assurance"] as? [String: Any] ?? [:]))"))
+    let history = projection["round_history"] as? [[String: Any]] ?? []
+    if let previous = history.reversed().first(where: { ($0["status"] as? String) == "APPLIED" }) {
+      let actions = (previous["saved_decisions"] as? [[String: Any]] ?? []).compactMap { item -> String? in
+        guard let action = item["action"] as? String else { return nil }
+        return semanticActionTitle(action)
+      }
+      let revision = previous["revision_sha256"] as? String ?? ""
+      add(NSTextField(wrappingLabelWithString: "Предыдущий применённый раунд сохранён: \(actions.count) решений (\(actions.joined(separator: ", "))).\nПроверяемая версия: \(revision)."))
+    }
+    let reviewer = NSTextField(string: semanticReviewerID)
+    reviewer.placeholderString = "Ваше имя или понятный идентификатор"
+    reviewer.widthAnchor.constraint(equalToConstant: 500).isActive = true
+    semanticReviewerField = reviewer
+    if !applied { add(NSTextField(labelWithString: "Кто принимает решения:")); add(reviewer) }
+    for proposal in proposals {
+      let card = FlippedStackView(); card.orientation = .vertical; card.alignment = .leading; card.spacing = 7
+      let kind = proposal["entity_kind"] as? String ?? ""
+      let record = proposal["record"] as? [String: Any] ?? [:]
+      let identity = (record["title"] ?? record["preferred_label"] ?? record["relation_type"] ?? proposal["proposal_id"] ?? "Предложение")
+      let heading = NSTextField(labelWithString: "\(semanticEntityTitle(kind)): \(identity)")
+      heading.font = .systemFont(ofSize: 16, weight: .semibold); card.addArrangedSubview(heading)
+      if let title = record["title"] as? String, let summary = record["summary"] as? String { card.addArrangedSubview(NSTextField(wrappingLabelWithString: summary.isEmpty ? title : summary)) }
+      if let description = record["description"] as? String { card.addArrangedSubview(NSTextField(wrappingLabelWithString: description)) }
+      if kind == "relations" { card.addArrangedSubview(NSTextField(wrappingLabelWithString: "Связь: \(record["source_concept_id"] ?? "") → \(record["relation_type"] ?? "") → \(record["target_concept_id"] ?? "")")) }
+      for evidence in proposal["evidence"] as? [[String: Any]] ?? [] {
+        let label = NSTextField(wrappingLabelWithString: "Основание: «\(evidence["quote"] ?? "")»\n\(semanticLocator(evidence["locator"])) · точность: \(evidence["precision"] ?? "не указана")")
+        label.textColor = .secondaryLabelColor; label.widthAnchor.constraint(equalToConstant: 720).isActive = true; card.addArrangedSubview(label)
+      }
+      if let saved = proposal["saved_decision"] as? [String: Any] {
+        let action = semanticActionTitle(saved["action"] as? String ?? "")
+        card.addArrangedSubview(NSTextField(wrappingLabelWithString: "Сохранено: \(action). \(saved["reason"] ?? "")\nЭто запись журнала проверки: её нельзя изменить задним числом."))
+      } else if !applied {
+        let picker = SemanticDecisionPicker()
+        picker.addItems(withTitles: ["Решение пока не выбрано", "Принять как есть", "Исправить формулировку", "Отклонить — не добавлять", "Отложить на следующий раунд"])
+        picker.proposalID = proposal["proposal_id"] as? String ?? ""; picker.proposalSHA256 = proposal["proposal_sha256"] as? String ?? ""
+        picker.entityKind = kind; picker.originalFields = record; picker.target = self; picker.action = #selector(semanticDecisionChanged(_:))
+        card.addArrangedSubview(picker)
+        let reason = NSTextField(string: ""); reason.placeholderString = "Пояснение (необязательно — можно оставить пустым)"; reason.widthAnchor.constraint(equalToConstant: 620).isActive = true
+        picker.reasonField = reason; card.addArrangedSubview(reason)
+        let edits = FlippedStackView(); edits.orientation = .vertical; edits.alignment = .leading; edits.spacing = 4; edits.isHidden = true
+        let fields: [String]
+        switch kind { case "topics": fields = ["title", "summary"]; case "concepts": fields = ["preferred_label", "description", "aliases"]; case "relations": fields = ["relation_type"]; default: fields = [] }
+        for field in fields {
+          let value: String
+          if field == "aliases", let aliases = record[field] as? [String] { value = aliases.joined(separator: ", ") } else { value = record[field] as? String ?? "" }
+          let input = NSTextField(string: value); input.placeholderString = field == "aliases" ? "Другие названия через запятую" : semanticFieldTitle(field)
+          input.widthAnchor.constraint(equalToConstant: 620).isActive = true; edits.addArrangedSubview(NSTextField(labelWithString: semanticFieldTitle(field))); edits.addArrangedSubview(input); picker.editableFields[field] = input
+        }
+        if kind == "relations" { edits.addArrangedSubview(NSTextField(labelWithString: "Допустимые связи: supports, contradicts, refines, depends_on, associated_with")) }
+        picker.editStack = edits; card.addArrangedSubview(edits); semanticDecisionPickers.append(picker)
+      }
+      card.widthAnchor.constraint(equalToConstant: 760).isActive = true; add(card)
+    }
+    if !applied {
+      add(button("Сохранить выбранные решения", #selector(saveSemanticDecisions)))
+      if pending.isEmpty { add(button("Применить этот раунд", #selector(applySemanticReview))) }
+      add(NSTextField(wrappingLabelWithString: "«Сохранить» записывает только выбранные решения. «Применить этот раунд» станет доступно после решений по всем предложениям и сформирует новую проверяемую версию; исходные предложения останутся нетронутыми."))
+    } else if !(workflow["deferred"] as? [String] ?? []).isEmpty {
+      add(button("Открыть отложенные предложения в новом раунде", #selector(openDeferredSemanticRound)))
+      add(NSTextField(wrappingLabelWithString: "Новый раунд относится только к отложенным предложениям. Предыдущий раунд и его решения сохранятся в истории."))
+    }
+    add(button("К базе знаний", #selector(showKnowledgeLanding)))
+    status.textColor = .secondaryLabelColor
+    status.stringValue = applied ? "Раунд применён и проверен. Для отложенных предложений можно открыть новый раунд." : "Изменяйте текст только через «Исправить формулировку», затем явно сохраните свой выбор."
+  }
+
+  @objc private func semanticDecisionChanged(_ sender: SemanticDecisionPicker) {
+    sender.editStack?.isHidden = sender.indexOfSelectedItem != 2
+  }
+
+  private func semanticDecision(_ picker: SemanticDecisionPicker) throws -> [String: Any]? {
+    let actions = ["ACCEPT", "EDIT", "REJECT", "DEFER"]
+    guard picker.indexOfSelectedItem > 0 else { return nil }
+    let action = actions[picker.indexOfSelectedItem - 1]
+    var result: [String: Any] = ["proposal_id": picker.proposalID, "action": action]
+    let typedReason = picker.reasonField?.stringValue.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    result["reason"] = typedReason.isEmpty ? "Явное решение пользователя в Integra: \(semanticActionTitle(action))." : typedReason
+    if action == "EDIT" {
+      var changed: [String: Any] = [:]
+      for (field, input) in picker.editableFields {
+        if field == "aliases" {
+          let values = input.stringValue.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+          let prior = picker.originalFields[field] as? [String] ?? []
+          if values != prior { changed[field] = values }
+        } else if input.stringValue != (picker.originalFields[field] as? String ?? "") { changed[field] = input.stringValue }
+      }
+      guard !changed.isEmpty else { throw BridgeError.failed("Для «Исправить формулировку» измените хотя бы одно из доступных полей.") }
+      result["edited_fields"] = changed
+    }
+    return result
+  }
+
+  @objc private func saveSemanticDecisions() {
+    do {
+      let decisions = try semanticDecisionPickers.compactMap { try semanticDecision($0) }
+      guard !decisions.isEmpty else { throw BridgeError.failed("Выберите хотя бы одно решение. Остальные предложения можно оставить на потом.") }
+      guard let reviewer = semanticReviewerField?.stringValue.trimmingCharacters(in: .whitespacesAndNewlines), !reviewer.isEmpty else { throw BridgeError.failed("Укажите, кто принимает эти решения.") }
+      let alert = NSAlert(); alert.messageText = "Сохранить выбранные решения?"
+      alert.informativeText = "Будет сохранено решений: \(decisions.count). До сохранения их можно изменить. После сохранения решения становятся частью журнала проверки; исправить их можно только для отложенного предложения в новом раунде."
+      alert.addButton(withTitle: "Сохранить"); alert.addButton(withTitle: "Вернуться к правке")
+      guard alert.runModal() == .alertFirstButtonReturn, let directory = semanticPackageDirectory else { return }
+      semanticReviewerID = reviewer; let bridge = self.bridge!; status.stringValue = "Сохраняю явные решения…"
+      serviceQueue.async {
+        do {
+          let response = try bridge.json("semantic-review-submit", request: ["package_dir": directory, "reviewer_id": reviewer, "decisions": decisions])["result"] as? [String: Any] ?? [:]
+          guard let projection = response["projection"] as? [String: Any] else { throw BridgeError.invalidResponse }
+          DispatchQueue.main.async { self.semanticProjection = projection; self.renderSemanticReview() }
+        } catch { DispatchQueue.main.async { self.status.textColor = .systemRed; self.status.stringValue = error.localizedDescription } }
+      }
+    } catch { status.textColor = .systemRed; status.stringValue = error.localizedDescription }
+  }
+
+  @objc private func applySemanticReview() {
+    guard let directory = semanticPackageDirectory else { return }
+    let alert = NSAlert(); alert.messageText = "Применить этот раунд?"
+    alert.informativeText = "Integra попросит SeminarText сформировать и проверить новую ревизию из уже сохранённых решений. Это не меняет исходный текст и не переписывает ранее сохранённые решения."
+    alert.addButton(withTitle: "Применить и проверить"); alert.addButton(withTitle: "Отмена")
+    guard alert.runModal() == .alertFirstButtonReturn else { return }
+    let bridge = self.bridge!; status.stringValue = "Формирую и проверяю новую ревизию…"
+    serviceQueue.async {
+      do {
+        let response = try bridge.json("semantic-review-apply", request: ["package_dir": directory])["result"] as? [String: Any] ?? [:]
+        guard let projection = response["projection"] as? [String: Any] else { throw BridgeError.invalidResponse }
+        DispatchQueue.main.async { self.semanticProjection = projection; self.renderSemanticReview() }
+      } catch { DispatchQueue.main.async { self.status.textColor = .systemRed; self.status.stringValue = error.localizedDescription } }
+    }
+  }
+
+  @objc private func openDeferredSemanticRound() {
+    guard let directory = semanticPackageDirectory else { return }
+    let alert = NSAlert(); alert.messageText = "Открыть новый раунд для отложенных предложений?"
+    alert.informativeText = "Только отложенные предложения снова станут доступными для решения. Предыдущий раунд останется в журнале без изменений."
+    alert.addButton(withTitle: "Открыть новый раунд"); alert.addButton(withTitle: "Отмена")
+    guard alert.runModal() == .alertFirstButtonReturn else { return }
+    let bridge = self.bridge!; status.stringValue = "Открываю отложенные предложения…"
+    serviceQueue.async {
+      do {
+        let response = try bridge.json("semantic-review-next-round", request: ["package_dir": directory])["result"] as? [String: Any] ?? [:]
+        guard let projection = response["projection"] as? [String: Any] else { throw BridgeError.invalidResponse }
+        DispatchQueue.main.async { self.semanticProjection = projection; self.renderSemanticReview() }
+      } catch { DispatchQueue.main.async { self.status.textColor = .systemRed; self.status.stringValue = error.localizedDescription } }
     }
   }
 

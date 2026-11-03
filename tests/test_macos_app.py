@@ -24,6 +24,10 @@ def macos_build_runtime_available():
         "INTEGRA_SEMINARTEXT_BUILD_CHECKOUT",
         ROOT / ".runtime-components/seminartext-pinned",
     ))
+    semantic_review = Path(os.environ.get(
+        "INTEGRA_SEMANTIC_REVIEW_BUILD_CHECKOUT",
+        ROOT / ".runtime-components/seminartext-semantic",
+    ))
     videotext = Path(os.environ.get(
         "INTEGRA_VIDEOTEXT_BUILD_CHECKOUT",
         ROOT / ".runtime-components/videotext-pinned",
@@ -48,6 +52,7 @@ def macos_build_runtime_available():
     ))
     return all((
         (seminartext / ".git").exists(),
+        (semantic_review / ".git").exists(),
         (videotext / ".git").exists(),
         (booktext / ".git").exists(),
         (packages / "whisperx").is_dir(),
@@ -116,11 +121,21 @@ class MacOSApplicationTests(unittest.TestCase):
         unknown = subprocess.run(["python3", str(bridge), "publish"], capture_output=True, text=True)
         self.assertNotEqual(unknown.returncode, 0)
         for operation in ("obsidian-preview", "onedrive-preview"):
-            result = subprocess.run(["python3", str(bridge), operation], check=True, capture_output=True, text=True)
+            result = subprocess.run(["python3", str(bridge), operation], input="", check=True, capture_output=True, text=True, timeout=10)
             payload = json.loads(result.stdout)
             self.assertFalse(payload["writes_performed"]); self.assertFalse(payload["external_actions_performed"])
             self.assertFalse(payload["cloud_verified"])
             self.assertEqual(len(payload["domain_contract_sha256"]), 64)
+
+    def test_semantic_review_ui_uses_plain_explicit_decisions(self):
+        source = (ROOT / "macos/IntegraApp.swift").read_text(encoding="utf-8")
+        for label in ("Принять как есть", "Исправить формулировку", "Отклонить — не добавлять", "Отложить на следующий раунд"):
+            self.assertIn(label, source)
+        self.assertIn("До сохранения можно свободно менять выбор", source)
+        self.assertIn("запись журнала проверки", source)
+        bridge = (ROOT / "macos/Resources/bridge.py").read_text(encoding="utf-8")
+        self.assertIn('"semantic-review-submit"', bridge)
+        self.assertIn('"semantic-review-next-round"', bridge)
 
     @unittest.skipUnless(
         platform.system() == "Darwin" and macos_build_runtime_available(),

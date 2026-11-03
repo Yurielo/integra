@@ -108,6 +108,20 @@ def validate_bundle(app: Path) -> dict[str, Any]:
         raise ValueError("candidate SeminarText identity differs from runtime")
     if runtime.get("entrypoint_sha256") != sha256_file(seminar / "seminartext"):
         raise ValueError("candidate SeminarText CLI differs from runtime manifest")
+    semantic = resources / "runtime" / "seminartext-semantic"
+    semantic_runtime = json.loads((semantic / "runtime.json").read_text(encoding="utf-8"))
+    expected_semantic = components.get("seminartext.semantic_workflow", {})
+    if semantic_runtime != expected_semantic:
+        raise ValueError("candidate semantic review provider identity differs from runtime")
+    semantic_files = semantic_runtime.get("files")
+    if (semantic_runtime.get("component") != "seminartext.semantic_workflow"
+            or semantic_runtime.get("schema_version") != "1.0.0" or not isinstance(semantic_files, dict)):
+        raise ValueError("candidate semantic review provider manifest is invalid")
+    for relative, expected in semantic_files.items():
+        candidate = semantic / str(relative)
+        if (not isinstance(expected, str) or not candidate.is_file() or candidate.is_symlink()
+                or not candidate.resolve().is_relative_to(semantic.resolve()) or sha256_file(candidate) != expected):
+            raise ValueError("candidate semantic review provider differs from runtime manifest")
     video = resources / "runtime" / "videotext"
     video_runtime = json.loads((video / "runtime.json").read_text(encoding="utf-8"))
     if video_runtime.get("worker_sha256") != sha256_file(video / "translation-worker"):

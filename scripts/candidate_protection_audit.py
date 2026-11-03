@@ -14,6 +14,7 @@ from pathlib import Path
 import re
 import stat
 import subprocess
+import time
 import sys
 
 try:
@@ -102,8 +103,35 @@ def bootstrap_plan(registry: dict, audit: dict) -> dict:
             'bootstrap_authorization_ref': registry.get('bootstrap_authorization_ref')}
 
 
+def _not_found_response(run: subprocess.CompletedProcess[str]) -> bool:
+    try:
+        response_status = json.loads(run.stdout).get('status')
+    except (ValueError, AttributeError):
+        response_status = None
+    return ('HTTP 404' in run.stderr or 'Not Found' in run.stderr
+            or response_status in (404, '404'))
+
+
+def _github_api(endpoint: str) -> subprocess.CompletedProcess[str]:
+    """Read canonical GitHub state with bounded retries for transport blips.
+
+    Each response is still parsed and validated by its caller.  Retries never
+    substitute cached/local state for a failed canonical read.
+    """
+    last = None
+    for attempt in range(3):
+        run = subprocess.run(['gh', 'api', endpoint], capture_output=True, text=True, timeout=30)
+        if not run.returncode or _not_found_response(run):
+            return run
+        last = run
+        if attempt < 2:
+            time.sleep(0.5 * (attempt + 1))
+    assert last is not None
+    return last
+
+
 def _api(endpoint: str) -> object:
-    run = subprocess.run(['gh', 'api', endpoint], capture_output=True, text=True, timeout=30)
+    run = _github_api(endpoint)
     if run.returncode:
         raise ValueError('canonical GitHub read failed: ' + endpoint)
     return json.loads(run.stdout)
@@ -111,9 +139,13 @@ def _api(endpoint: str) -> object:
 
 def _optional_remote_file(path: str, ref: str) -> tuple[bytes, dict] | None:
     endpoint = f'repos/{REPOSITORY}/contents/{path}?ref={ref}'
-    run = subprocess.run(['gh', 'api', endpoint], capture_output=True, text=True, timeout=30)
+    run = _github_api(endpoint)
     if run.returncode:
-        if 'HTTP 404' in run.stderr:
+        # gh versions differ: a missing optional file may be rendered either
+        # as "HTTP 404" or as the shorter "Not Found".  Both are the same
+        # absent-Proposal result; authentication, transport and other errors
+        # remain fail-closed.
+        if _not_found_response(run):
             return None
         raise ValueError('canonical GitHub read failed: ' + endpoint)
     value = json.loads(run.stdout)
@@ -1173,12 +1205,11 @@ def load_rotation_receipts(base: Path, policy: dict | None, *, purpose: str = 'I
                 record = receipt.get('conflicting_catalog_record')
                 evidence = receipt.get('observed_catalog_order_evidence')
                 if (not isinstance(record, dict) or not isinstance(evidence, dict)
-                        or evidence.get('kind') != 'OBSERVED_CATALOG_SEQUENCE_RECEIPT_MATCH_DEVICE_DRIFT'
+                        or evidence.get('kind') != 'OBSERVED_CATALOG_PUBLISHER_RECORD_RECEIPT_MATCH_DEVICE_DRIFT'
                         or evidence.get('physical_publisher_owned') is not False
                         or receipt.get('physical_publisher_owned') is not False
                         or record.get('historical') is not False
                         or record.get('publisher_completed') is not True
-                        or record.get('publication_recorded_at') is not None
                         or type(record.get('publication_sequence')) is not int
                         or record['publication_sequence'] <= 0
                         or not isinstance(record.get('publisher_run_id'), str)
@@ -1189,6 +1220,7 @@ def load_rotation_receipts(base: Path, policy: dict | None, *, purpose: str = 'I
                         or not record['publisher_start_token']
                         or type(record.get('device')) is not int
                         or evidence.get('publication_sequence') != record['publication_sequence']
+                        or evidence.get('publication_recorded_at') != record.get('publication_recorded_at')
                         or evidence.get('observed_catalog_record_sha256') != digest(record)
                         or any(record.get(key) != identity[key] for key in IDENTITY)
                         or record.get('complete_sha256') != sha(complete_bytes)
@@ -1206,13 +1238,26 @@ def load_rotation_receipts(base: Path, policy: dict | None, *, purpose: str = 'I
                         != evidence
                         or receipt.get('order_provenance') != receipt.get('canonical_snapshot', {}).get('order')
                         or receipt.get('order_provenance', {}).get('source')
-                        != 'PUBLISHER_SEQUENCE_WITH_OBSERVED_NOW_COHORT_PLACEMENT'
-                        or receipt.get('order_provenance', {}).get('publisher_sequence')
-                        != record['publication_sequence']
+                        != evidence.get('order_provenance', {}).get('source')
+                        or (record.get('publication_recorded_at') is None and
+                            receipt.get('order_provenance', {}).get('publisher_sequence')
+                            != record['publication_sequence'])
+                        or (record.get('publication_recorded_at') is not None and
+                            receipt.get('order_provenance', {}).get('publisher_sequence') is not None)
                         or receipt.get('order_provenance', {}).get('timestamp')
-                        != receipt.get('canonical_snapshot', {}).get('birthtime')
+                        != evidence.get('order_provenance', {}).get('timestamp')
                         or receipt.get('order_provenance', {}).get('recorded_value')
-                        != receipt.get('canonical_snapshot', {}).get('birthtime')):
+                        != evidence.get('order_provenance', {}).get('recorded_value')
+                        or (record.get('publication_recorded_at') is None and
+                            (receipt.get('order_provenance', {}).get('source')
+                             != 'PUBLISHER_SEQUENCE_WITH_OBSERVED_NOW_COHORT_PLACEMENT'
+                             or receipt.get('order_provenance', {}).get('timestamp')
+                             != receipt.get('canonical_snapshot', {}).get('birthtime')))
+                        or (record.get('publication_recorded_at') is not None and
+                            (receipt.get('order_provenance', {}).get('source')
+                             != 'PUBLISHER_PUBLICATION_TIMESTAMP'
+                             or receipt.get('order_provenance', {}).get('recorded_value')
+                             != record.get('publication_recorded_at')))):
                     raise ValueError('conflicting-record retirement evidence differs')
             elif receipt.get('conflicting_catalog_record') is not None:
                 raise ValueError('non-conflicting retirement has a conflicting catalog record')

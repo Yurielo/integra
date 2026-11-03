@@ -1,0 +1,18 @@
+{
+  "candidate_id": "candidate-v1-46bacd60f3f9320aafae735575e07c20666e7eaa8fdb7ed6a68223b5a558fd6f",
+  "manifest_identity_sha256": "46bacd60f3f9320aafae735575e07c20666e7eaa8fdb7ed6a68223b5a558fd6f",
+  "bundle_digest": "1df9cfead00e90f37e4e824cc786d3227377b19b4b24765d4bdced0d312a6bc6",
+  "product_source": {
+    "commit_sha": "5c6e31465572950dcb4a6ad630627d3b5c159d32",
+    "tree_sha": "253487bba4d9edaae49951a100843590ac51302c"
+  },
+  "archive_receipt": {
+    "status": "COMPLETE",
+    "verification": "ARCHIVAL_BYTE_INTEGRITY",
+    "file_count": 29625,
+    "app_size_bytes": 2202140610,
+    "inventory_sha256": "30255e9fdc253df11f4bfaba3159e7f34cd93afbdf17e40f9512bd68ef03548d"
+  },
+  "owner_acceptance": null,
+  "product_acceptance": "NOT_PERFORMED"
+}

@@ -520,7 +520,7 @@ def apply_capacity_rotation(r, path, expected_plan):
             verification = ({'method': 'DELETION_SNAPSHOT', 'archival_integrity': 'NOT_ASSERTED'}
                             if capacity else verify_archive(package, identity))
             if record is not None and not publisher_bound:
-                order_evidence = canonical_gate._pre_amendment_order_evidence(
+                order_evidence = canonical_gate._observed_publisher_order_evidence(
                     package, record, identity)
                 if (order_evidence is None or
                         order_evidence != lease.get('publisher_order_evidence', {}).get(
