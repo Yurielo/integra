@@ -103,6 +103,15 @@ def bootstrap_plan(registry: dict, audit: dict) -> dict:
             'bootstrap_authorization_ref': registry.get('bootstrap_authorization_ref')}
 
 
+def _not_found_response(run: subprocess.CompletedProcess[str]) -> bool:
+    try:
+        response_status = json.loads(run.stdout).get('status')
+    except (ValueError, AttributeError):
+        response_status = None
+    return ('HTTP 404' in run.stderr or 'Not Found' in run.stderr
+            or response_status in (404, '404'))
+
+
 def _github_api(endpoint: str) -> subprocess.CompletedProcess[str]:
     """Read canonical GitHub state with bounded retries for transport blips.
 
@@ -112,7 +121,7 @@ def _github_api(endpoint: str) -> subprocess.CompletedProcess[str]:
     last = None
     for attempt in range(3):
         run = subprocess.run(['gh', 'api', endpoint], capture_output=True, text=True, timeout=30)
-        if not run.returncode:
+        if not run.returncode or _not_found_response(run):
             return run
         last = run
         if attempt < 2:
@@ -136,12 +145,7 @@ def _optional_remote_file(path: str, ref: str) -> tuple[bytes, dict] | None:
         # as "HTTP 404" or as the shorter "Not Found".  Both are the same
         # absent-Proposal result; authentication, transport and other errors
         # remain fail-closed.
-        try:
-            response_status = json.loads(run.stdout).get('status')
-        except (ValueError, AttributeError):
-            response_status = None
-        if ('HTTP 404' in run.stderr or 'Not Found' in run.stderr
-                or response_status in (404, '404')):
+        if _not_found_response(run):
             return None
         raise ValueError('canonical GitHub read failed: ' + endpoint)
     value = json.loads(run.stdout)
