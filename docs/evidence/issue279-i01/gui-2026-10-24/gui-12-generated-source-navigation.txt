@@ -1,0 +1,12 @@
+Window: "", App: Integra.
+0 dialog Description: alert, Secondary Actions: Raise
+	1 image Integra alert
+	2 text Точный фрагмент источника 0.080–5.728 с
+Здравствуйте! Это короткая проверка полного процесса распознавания речи, субтитров,
+Версия источника проверена по хешу.
+	3 button Закрыть, ID: action-button-1
+4 menu bar
+	5 Integra
+	6 Правка
+
+The focused UI element is 0 dialog Description: alert, Secondary Actions: Raise

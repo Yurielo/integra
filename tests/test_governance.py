@@ -834,10 +834,30 @@ class GovernanceValidationTests(unittest.TestCase):
     def test_knowledge_integration_evidence_is_valid(self):
         self.assertEqual(
             VALIDATOR.validate_knowledge_integration_evidence(
-                self.knowledge_integration, self.baselines
+                self.knowledge_integration, self.baselines, proposal=self.proposed_baseline
             ),
             [],
         )
+
+    def test_knowledge_integration_proposal_preserves_exact_historical_hashes(self):
+        evidence = copy.deepcopy(self.knowledge_integration)
+        delta = [{"path": item["path"], "before_sha256": item["sha256"],
+                  "after_sha256": VALIDATOR.sha256_file(ROOT / item["path"])}
+                 for item in evidence["implementation"]
+                 if (ROOT / item["path"]).is_file()
+                 and VALIDATOR.sha256_file(ROOT / item["path"]) != item["sha256"]]
+        self.assertTrue(delta, "K2 changes must retain explicit R9A historical accounting")
+        self.assertEqual(VALIDATOR.validate_knowledge_integration_evidence(
+            evidence, self.baselines, proposal={"delta": delta}), [])
+        self.assertEqual(evidence, self.knowledge_integration)
+        for field in ("before_sha256", "after_sha256", "path"):
+            changed = copy.deepcopy(delta)
+            changed[0][field] = "0" * 64 if field != "path" else "unrelated/schema.json"
+            errors = VALIDATOR.validate_knowledge_integration_evidence(
+                evidence, self.baselines, proposal={"delta": changed})
+            self.assertTrue(any("R9A implementation hash differs" in error for error in errors), field)
+        errors = VALIDATOR.validate_knowledge_integration_evidence(evidence, self.baselines)
+        self.assertTrue(any("R9A implementation hash differs" in error for error in errors))
 
     def test_knowledge_integration_cannot_claim_machine_acceptance(self):
         evidence = copy.deepcopy(self.knowledge_integration)

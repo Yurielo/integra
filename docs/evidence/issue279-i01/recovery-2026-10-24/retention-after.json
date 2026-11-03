@@ -1,0 +1,20 @@
+{
+  "allocated_bytes": 18292744192,
+  "caps_unchanged": {
+    "max_attributed_bytes": 21474836480,
+    "max_full_copies": 8,
+    "minimum_free_after_reservations": 16106127360
+  },
+  "free_bytes": 42228547584,
+  "full_copies": 8,
+  "packages": [
+    "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-073396d37f3f70fe2a550a481cbacdb645204a188d8b4a6c1ad18cdfac77e4a8/c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
+    "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-15d9b29fd7a57bf13765abb798fa95635e794b693f2db1947eff80b13bc6ab81/c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15",
+    "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f/e3215a28c9ce0a1a54c35dc535bad42a9334cae7ddc5eb3b0533a480e0296d95",
+    "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-721d5a88393dc361bb72d6ca1abab70d3fa2a6ba3e420737ca3b1bedc89136f5/f7c053a536e1c415adcc2e32b2f5a52248edfea17afaebc6cbca6c716d65cfa9",
+    "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-97be0af4389d8696154ab1e897425d3f660573673369f391e3287b9f9418d38a/74ad6e346aff04b08b1962b8643e1c9da368632e311d8566a932f608674fbed0",
+    "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-e8064cba8acad3282d86b9d7eea043f85c5eed54ac7db015ccdf089943dee943/1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+    "/Users/yurielokhin/Library/Application Support/Integra/Candidate Builds/topic-translation-47be46d",
+    "/Users/yurielokhin/Library/Application Support/Integra/Validation/integra-212-native-35e6f9101278/candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29/fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582"
+  ]
+}

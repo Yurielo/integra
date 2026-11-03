@@ -1,0 +1,283 @@
+{
+  "allowed_overlay_paths": [
+    "docs/CANDIDATE_RETENTION.md",
+    "docs/evidence/ISSUE279_19E343_SUPERSESSION.md",
+    "docs/evidence/issue279-i01/README.md",
+    "docs/evidence/issue279-i01/build-retained-cap-blocked.log",
+    "docs/evidence/issue279-i01/candidate-archive.json",
+    "docs/evidence/issue279-i01/candidate-manifest.json",
+    "docs/evidence/issue279-i01/candidate-validation.json",
+    "docs/evidence/issue279-i01/first-build-build.log",
+    "docs/evidence/issue279-i01/first-build-native-self-test.log",
+    "docs/evidence/issue279-i01/first-build-packaged-schema.log",
+    "docs/evidence/issue279-i01/focused.log",
+    "docs/evidence/issue279-i01/full-suite-final.log",
+    "docs/evidence/issue279-i01/governance-final.log",
+    "docs/evidence/issue279-i01/governance-focused.log",
+    "docs/evidence/issue279-i01/gui-2026-10-24/README.md",
+    "docs/evidence/issue279-i01/gui-2026-10-24/build.log",
+    "docs/evidence/issue279-i01/gui-2026-10-24/candidate-manifest.json",
+    "docs/evidence/issue279-i01/gui-2026-10-24/candidate-validation-after-gui.json",
+    "docs/evidence/issue279-i01/gui-2026-10-24/candidate-validation.json",
+    "docs/evidence/issue279-i01/gui-2026-10-24/generated-demo-media-probe.json",
+    "docs/evidence/issue279-i01/gui-2026-10-24/generated-demo-navigation.json",
+    "docs/evidence/issue279-i01/gui-2026-10-24/generated-demo-original-unchanged.json",
+    "docs/evidence/issue279-i01/gui-2026-10-24/generated-demo-revision.json",
+    "docs/evidence/issue279-i01/gui-2026-10-24/generated-demo-setup.json",
+    "docs/evidence/issue279-i01/gui-2026-10-24/governance-resume.log",
+    "docs/evidence/issue279-i01/gui-2026-10-24/gui-01-reviewed-evidence.txt",
+    "docs/evidence/issue279-i01/gui-2026-10-24/gui-02-no-default-fragments.txt",
+    "docs/evidence/issue279-i01/gui-2026-10-24/gui-03-no-default-relation.txt",
+    "docs/evidence/issue279-i01/gui-2026-10-24/gui-04-prepared-relation.txt",
+    "docs/evidence/issue279-i01/gui-2026-10-24/gui-05-no-default-decisions.txt",
+    "docs/evidence/issue279-i01/gui-2026-10-24/gui-06-explicit-confirmation-off.txt",
+    "docs/evidence/issue279-i01/gui-2026-10-24/gui-07-saved-canonical-view.png",
+    "docs/evidence/issue279-i01/gui-2026-10-24/gui-07-saved-canonical-view.txt",
+    "docs/evidence/issue279-i01/gui-2026-10-24/gui-08-reopened-canonical-view.txt",
+    "docs/evidence/issue279-i01/gui-2026-10-24/gui-09-generated-reviewed-evidence.txt",
+    "docs/evidence/issue279-i01/gui-2026-10-24/gui-10-generated-confirmation-off.txt",
+    "docs/evidence/issue279-i01/gui-2026-10-24/gui-11-generated-saved-view.txt",
+    "docs/evidence/issue279-i01/gui-2026-10-24/gui-12-generated-source-navigation.png",
+    "docs/evidence/issue279-i01/gui-2026-10-24/gui-12-generated-source-navigation.txt",
+    "docs/evidence/issue279-i01/gui-2026-10-24/gui-fixture.json",
+    "docs/evidence/issue279-i01/gui-2026-10-24/gui-two-unit-after-reopen.json",
+    "docs/evidence/issue279-i01/gui-2026-10-24/gui-two-unit-before-reopen.json",
+    "docs/evidence/issue279-i01/gui-2026-10-24/gui-two-unit-persistence-check.json",
+    "docs/evidence/issue279-i01/gui-2026-10-24/gui-two-unit-source-inputs-unchanged.json",
+    "docs/evidence/issue279-i01/gui-2026-10-24/independent-review.json",
+    "docs/evidence/issue279-i01/gui-2026-10-24/native-self-test.log",
+    "docs/evidence/issue279-i01/gui-2026-10-24/packaged-k2.json",
+    "docs/evidence/issue279-i01/gui-2026-10-24/packaged-schema.log",
+    "docs/evidence/issue279-i01/gui-2026-10-24/result.json",
+    "docs/evidence/issue279-i01/gui-observation.json",
+    "docs/evidence/issue279-i01/handoff-2026-10-24/README.md",
+    "docs/evidence/issue279-i01/handoff-2026-10-24/build-archive.log",
+    "docs/evidence/issue279-i01/handoff-2026-10-24/exact-recovery-plan.json",
+    "docs/evidence/issue279-i01/handoff-2026-10-24/governor-source.json",
+    "docs/evidence/issue279-i01/handoff-2026-10-24/inactive-diagnostic.json",
+    "docs/evidence/issue279-i01/handoff-2026-10-24/independent-review.json",
+    "docs/evidence/issue279-i01/handoff-2026-10-24/outgoing-integrity-diff.json",
+    "docs/evidence/issue279-i01/handoff-2026-10-24/outgoing-recorded-bytes-verification.json",
+    "docs/evidence/issue279-i01/handoff-2026-10-24/outgoing-strict-archive-verification.json",
+    "docs/evidence/issue279-i01/handoff-2026-10-24/product-governance-blocked.log",
+    "docs/evidence/issue279-i01/handoff-2026-10-24/result.json",
+    "docs/evidence/issue279-i01/independent-review.json",
+    "docs/evidence/issue279-i01/missing-schema-reproduction.log",
+    "docs/evidence/issue279-i01/native-self-test.log",
+    "docs/evidence/issue279-i01/packaged-k2.json",
+    "docs/evidence/issue279-i01/packaged-schema.log",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/README.md",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/assemble_evidence.py",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/authorization-body.md",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/authorization-comment.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/build-archive.log",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/build-preflight.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/build_archive.py",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/candidate-archive-verification.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/candidate-archive.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/candidate-evidence.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/candidate-manifest.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/candidate-validation.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/counterfix-ci-watch.log",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/counterfix-focused.log",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/counterfix-full-suite.log",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/counterfix-governance.log",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/counterfix-independent-review.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/counterfix-postmerge-focused.log",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/counterfix-postmerge-governance.log",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/current-unchanged.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/declaration-dirty-B-rejection.log",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/declare_proposal.py",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/delivery-helper-review.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/evidence-copy-normalization.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/exact-retirement-execution.log",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/exact-retirement-receipt.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/exact_cache_recovery.py",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/first-post-recovery-build-cap-blocked.log",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/fixture-removed.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/fixture-strict-governance-rejection.log",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/fresh-build.log",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/full-suite.log",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/governor-source.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/independent-helper-review.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/independent-incoming-archive-review.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/independent-qa.log",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/independent-recovery-review.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/independent-retirement-review.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/native-self-test.log",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/packaged-k2.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/packaged-k2.stderr",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/packaged-schema.log",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/publication-sequence-repair.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/quarantine-preserved-inventory.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/recovery-execution.log",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/recovery-helper-tests.log",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/recovery-receipt.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/regression-accounting-fixture.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/regression-result.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/retention-after.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/retire_exact.py",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/rotation-receipt.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/run_unit_fixture.py",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/scan-inactivity-trace.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/scan-local-after-recovery.json",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/test_exact_cache_recovery.py",
+    "docs/evidence/issue279-i01/recovery-2026-10-24/unit-suite-source.json",
+    "scripts/candidate_retention.py",
+    "state/candidate_protection_registry_v1.json",
+    "state/history/knowledge_k2_candidate_19e343_withdrawal_v1.json",
+    "tests/test_candidate_retention.py"
+  ],
+  "artifact_type": "integra.proposed_product_baseline",
+  "base_current_id": "current-v2-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f",
+  "base_main": {
+    "commit_sha": "312946d42c9712e4ee3b7974fe657762e8092c1d",
+    "tree_sha": "60f160c4c15b12f804da9adcb16437828f127c85"
+  },
+  "candidate": {
+    "bundle_digest": "1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+    "candidate_id": "candidate-v1-e8064cba8acad3282d86b9d7eea043f85c5eed54ac7db015ccdf089943dee943",
+    "identity_sha256": "e8064cba8acad3282d86b9d7eea043f85c5eed54ac7db015ccdf089943dee943",
+    "manifest_digest": "25255077dfd65185268ba152c50a1a5ba66d1a425ff9bcab342263f6fbb2c58e"
+  },
+  "delta": [
+    {
+      "after_sha256": "4cd5db42ca7462c404f9b4e694e2ca3f1688d3b8fcb8964de32010d39ffb095f",
+      "before_sha256": "d76076250ee4135bfd546450009416e7bad900c135db708854cf815c482a0eea",
+      "path": "integra_core/candidate_identity.py"
+    },
+    {
+      "after_sha256": "1f762b3f83e9568cda96dbfbfd7364c4365204788203a16c217c2ac1007e6601",
+      "before_sha256": "c4a94f533b44ca13fcc365aadbd7bd6a47bb656329c4b6b0144a7ff98850e9ea",
+      "path": "integra_core/knowledge.py"
+    },
+    {
+      "after_sha256": "b2f62726fc0046812a43773ce401f1f4d39c8eeb984c3198c28a562af356efbe",
+      "before_sha256": null,
+      "path": "integra_core/knowledge_admission_runtime.py"
+    },
+    {
+      "after_sha256": "acfcc3a8c81f3c4e6b7de43e071c490c49a0f7bd94214e0097fb8afa9b6afa1c",
+      "before_sha256": null,
+      "path": "integra_core/knowledge_k2.py"
+    },
+    {
+      "after_sha256": "6947559594415c3ff36b6ab4d21456a518de5ce6d2729bf04799b8bfe2a4136c",
+      "before_sha256": "d64a896b8350f3ccd527babc80c8c91a4f9959dd4f557cd3db6efb694232dba4",
+      "path": "integra_core/reviewed_result_package.py"
+    },
+    {
+      "after_sha256": "4b9e4dd3464f3b3f157b5c1694b40b3482c795a40edb593244eb6a2b9937b63a",
+      "before_sha256": "7c0976c3cf1d6b615150a3c0df5c66175c55faaaabdcea93dff750814b6dc0de",
+      "path": "macos/IntegraApp.swift"
+    },
+    {
+      "after_sha256": "4372d64d525e815f7e4c551148bf4b9f98d5eec411b7bf1a709093301511bb2f",
+      "before_sha256": "0ecc20d4f38db43ec6519abd26c7983a7ce97932c4484250b36827e10efa8528",
+      "path": "macos/Resources/bridge.py"
+    },
+    {
+      "after_sha256": "9c670923e80ddd4874474e1602e71dd62dc4ee58268debb970502691e9e052a3",
+      "before_sha256": "393fd94482c4832217a6591d3c7497433be53d3674b43b7f373f92859751f488",
+      "path": "schemas/knowledge_view_v1.schema.json"
+    },
+    {
+      "after_sha256": "58c826941afa7a2582a4afdff3a9ed7bd9cd345af94178f845fa2d096a198504",
+      "before_sha256": "c2fc0ad755c84a4067b65df39267b86d72e547a5683988db8f674b3d402d2a78",
+      "path": "scripts/build_macos_app.sh"
+    },
+    {
+      "after_sha256": "dc336b7ad3c4864af8d46545a124b6d8a74edfb44cccdc4bf15c80a5ddbb7298",
+      "before_sha256": "ccaeb550aa1653aed47eac450310ae2e4bb9ec60f519d4ae359fb10e652f2d85",
+      "path": "scripts/candidate_manifest.py"
+    },
+    {
+      "after_sha256": "179e0f26578198a483cfcde7e61eaf400976ebfa411f03fa77c3607d63fdf202",
+      "before_sha256": "bded70e8c256344412c1ae2818e1f8fd4a1d12fd4bbcaba219b5cd0a416c552c",
+      "path": "scripts/test_macos_app.sh"
+    }
+  ],
+  "evidence": {
+    "candidate_evidence": {
+      "path": "docs/evidence/issue279-i01/recovery-2026-10-24/candidate-evidence.json",
+      "sha256": "c388627ecd024bcd3050be331f28db2adf2de8e0ea6feb5a3a13c0d0eb9eb601"
+    },
+    "candidate_manifest": {
+      "path": "docs/evidence/issue279-i01/recovery-2026-10-24/candidate-manifest.json",
+      "sha256": "25255077dfd65185268ba152c50a1a5ba66d1a425ff9bcab342263f6fbb2c58e"
+    },
+    "report": {
+      "path": "docs/evidence/issue279-i01/recovery-2026-10-24/README.md",
+      "sha256": "d615821350e245e8c36fda75e76cf495574bf49f75c35ea64952d0a610e90274"
+    }
+  },
+  "gates": [
+    {
+      "evidence_ref": "docs/evidence/issue279-i01/recovery-2026-10-24/candidate-validation.json",
+      "name": "fresh-exact-candidate-validation",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/issue279-i01/recovery-2026-10-24/packaged-schema.log",
+      "name": "packaged-knowledge-view-schema",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/issue279-i01/recovery-2026-10-24/native-self-test.log",
+      "name": "native-self-test",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/issue279-i01/recovery-2026-10-24/packaged-k2.json",
+      "name": "packaged-k2-bridge",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/issue279-i01/gui-2026-10-24/result.json",
+      "name": "native-gui-review-reopen-navigation",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/issue279-i01/gui-2026-10-24/independent-review.json",
+      "name": "independent-native-gui-qa",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/issue279-i01/independent-review.json",
+      "name": "independent-code-governance-review",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/issue279-i01/recovery-2026-10-24/candidate-archive-verification.json",
+      "name": "verified-permanent-archive",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/issue279-i01/recovery-2026-10-24/rotation-receipt.json",
+      "name": "authorized-exact-withdrawal-retirement",
+      "result": "PASS"
+    },
+    {
+      "evidence_ref": "docs/evidence/issue279-i01/recovery-2026-10-24/regression-result.json",
+      "name": "supported-unit-regression-with-exact-accounting-fixture",
+      "result": "PASS"
+    }
+  ],
+  "historical_test_successors": [],
+  "intended_scope": {
+    "journey": "Source -> Transcript -> Reviewed Evidence -> explicit review -> Canonical Knowledge -> Concepts/Relations -> provenance -> persistence/reopen",
+    "wp": "Issue #279 I01: packaged Knowledge View schema repair and K2 continuation"
+  },
+  "owner_acceptance": null,
+  "proposal_id": "proposal-issue279-i01-k2-e8064cba",
+  "proposed_head": {
+    "commit_sha": "90980436794bf7667dcd389bb718c85c5b6d9eb3",
+    "tree_sha": "ca2f31bd2b25f05d3c7d6c630a6c4c877b0ed949"
+  },
+  "proposed_source": {
+    "commit_sha": "6e6978a5f88930158058df8e90dbe4275f11c29a",
+    "tree_sha": "d6a4ba71a2939e62bf7d765270b148ea67034dae"
+  },
+  "schema_version": "1.0",
+  "status": "PROPOSED_BASELINE_VALID"
+}

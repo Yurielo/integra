@@ -1,0 +1,18 @@
+{
+  "status": "RECORDED_INVENTORY_BYTES_UNCHANGED",
+  "read_only": true,
+  "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-19e3438fea443e1d917b6575131fd67b47b5f44f71202a6940f85adda12b3b56/1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+  "expected_files_hashed": 29626,
+  "expected_file_bytes": 2202189271,
+  "expected_entries_checked": 32478,
+  "failures": [],
+  "extra_files": 45,
+  "extra_directories": 3,
+  "extra_file_bytes": 1568777,
+  "elapsed_seconds": 4.267249749973416,
+  "inventory_sha256": "d4e090dd54241e080ef2bc59ca247968b284113b03f16d122a2826828f711f16",
+  "complete_sha256": "dce7e0002ca2d6e487381172f9f4567e036da1734305cd0f839764a146979022",
+  "embedded_manifest_sha256": "0704fd913f525d050cdf52f16eefae938cd6d2c9776c92abaf39881f7973efbb",
+  "retained_manifest_sha256": "0704fd913f525d050cdf52f16eefae938cd6d2c9776c92abaf39881f7973efbb",
+  "archive_verification": "FAIL_EXTRA_UNRECORDED_ENTRIES"
+}

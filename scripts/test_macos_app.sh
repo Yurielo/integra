@@ -12,6 +12,8 @@ app="$($repo_root/scripts/build_macos_app.sh "$test_root/candidate")"
 
 test "$(plutil -extract CFBundleIconFile raw "$app/Contents/Info.plist")" = "Integra.icns"
 cmp "$repo_root/macos/Resources/Integra.icns" "$app/Contents/Resources/Integra.icns"
+cmp "$repo_root/schemas/knowledge_view_v1.schema.json" "$app/Contents/Resources/schemas/knowledge_view_v1.schema.json"
+python3 -B "$repo_root/tests/test_packaged_knowledge_view.py" --app "$app"
 xcrun swiftc -framework AppKit "$repo_root/tests/macos_icon_probe.swift" -o "$test_root/macos-icon-probe"
 "$test_root/macos-icon-probe" finder "$app" "$test_root/finder-icon.png"
 INTEGRA_APP_DATA_ROOT="$test_root/app-data" /usr/bin/open -n "$app"
@@ -46,8 +48,8 @@ echo "INTEGRA_BUNDLED_WORD_TIMELINE_PREFLIGHT: PASS"
   PYTHONPATH="$app/Contents/Resources" python3 -c 'from integra_core.booktext_runtime import preflight; value=preflight(); assert value["component"] == "booktext"; assert len(value["model_sha256"]) == 64'
 )
 echo "INTEGRA_BUNDLED_BOOKTEXT_PREFLIGHT: PASS"
-python3 "$app/Contents/Resources/bridge.py" obsidian-preview | python3 -c 'import json,sys; x=json.load(sys.stdin); assert x["state"] == "DRY_RUN_REQUIRES_PACKAGE" and x["writes_performed"] is False and x["external_actions_performed"] is False and x["cloud_verified"] is False and len(x["domain_contract_sha256"]) == 64'
-python3 "$app/Contents/Resources/bridge.py" onedrive-preview | python3 -c 'import json,sys; x=json.load(sys.stdin); assert x["writes_performed"] is False and x["cloud_verified"] is False'
+printf '{}\n' | python3 "$app/Contents/Resources/bridge.py" obsidian-preview | python3 -c 'import json,sys; x=json.load(sys.stdin); assert x["state"] == "DRY_RUN_REQUIRES_PACKAGE" and x["writes_performed"] is False and x["external_actions_performed"] is False and x["cloud_verified"] is False and len(x["domain_contract_sha256"]) == 64'
+printf '{}\n' | python3 "$app/Contents/Resources/bridge.py" onedrive-preview | python3 -c 'import json,sys; x=json.load(sys.stdin); assert x["writes_performed"] is False and x["cloud_verified"] is False'
 
 marker="$test_root/launched.txt"
 INTEGRA_APP_DATA_ROOT="$test_root/app-data" INTEGRA_LAUNCH_PROBE="$marker" "$app/Contents/MacOS/Integra"

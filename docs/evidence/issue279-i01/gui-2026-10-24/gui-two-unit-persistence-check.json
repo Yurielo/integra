@@ -1,0 +1,20 @@
+{
+  "status": "PASS",
+  "exact_before_after_match": true,
+  "revision_sha256": "1d8854c426563d66be32696b5051847a5d910fcf16c59c2655c1b65ff864121f",
+  "explicit_actions": [
+    "ACCEPT",
+    "EDIT",
+    "REJECT",
+    "DEFER"
+  ],
+  "concepts": 2,
+  "relations": 1,
+  "topics": 0,
+  "edited_label": "Синтетический GUI термин",
+  "semantic_reviewer": {
+    "actor_id": "synthetic-gui-k2",
+    "actor_type": "human_domain_reviewer"
+  },
+  "semantic_product_acceptance": false
+}

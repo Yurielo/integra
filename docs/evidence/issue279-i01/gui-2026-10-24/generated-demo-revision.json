@@ -1,0 +1,702 @@
+{
+  "automatic_acceptance": false,
+  "available_concepts": [
+    {
+      "id": "concept_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1",
+      "label": "Проверка распознавания речи"
+    }
+  ],
+  "confirmed_proposal_ids": [
+    "proposal_7db5bce6193e7d3a5f06ffa90e6f1df8e9bd9c353614be229e32c68d69d64dd5",
+    "proposal_c498e88b58d7f4a6019cc3e58ab1eacdce84dd0ee9010194c8397dfc4e942aae"
+  ],
+  "diff": {
+    "added_ids": [
+      {
+        "id": "concept_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1",
+        "kind": "CONCEPT"
+      },
+      {
+        "id": "evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e",
+        "kind": "EVIDENCE"
+      },
+      {
+        "id": "decision_b67a7baafcc6a664660471c84ec0bb2cb2db747a48466bddbdc4725907502ac4",
+        "kind": "REVIEW_DECISION"
+      },
+      {
+        "id": "decision_edd659c5bbc975a9452ce8bbc8f06ed38c5b8da5fdc94fc93855b6d7317cb3bf",
+        "kind": "REVIEW_DECISION"
+      },
+      {
+        "id": "seminar_fbbac44927544a1b7dcef587ecd917bc00d34af0221b5137aa1d5b9c8ec0d73a",
+        "kind": "SEMINAR"
+      },
+      {
+        "id": "urn:integra:evidence:a5a98156-744a-5dfb-b670-ea46a0087923",
+        "kind": "TERM"
+      },
+      {
+        "id": "topic_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1",
+        "kind": "TOPIC"
+      }
+    ],
+    "after_view_id": "urn:integra:artifact:67b8aea4-fd0c-58d3-bf93-689f8c0f2fd3",
+    "before_view_id": null,
+    "changed_ids": [],
+    "diff_sha256": "fb9d39ee9de7a170a0b637c67aab8612efe9972ff95e19ebfd403cdc806c1052",
+    "removed_ids": [],
+    "schema_version": "1.0",
+    "semantic_interpretation": "NOT_PERFORMED"
+  },
+  "eligible_fragments": [
+    {
+      "canonical_evidence_provenance": {
+        "source_id": "source_source_655b4871962cc06480dca0fb",
+        "transcript_revision_id": "transcript_revision_source_655b4871962cc06480dca0fb_r1",
+        "word_end_id": "transcript_revision_source_655b4871962cc06480dca0fb_r1:word:000008",
+        "word_start_id": "transcript_revision_source_655b4871962cc06480dca0fb_r1:word:000000"
+      },
+      "context": "Здравствуйте! Это короткая проверка полного процесса распознавания речи, субтитров,\nвременной шкалы слов и тем.\n",
+      "evidence_id": "evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e",
+      "evidence_refs": [
+        "evidence_topic_4cafb7d45db9f08cc2bb_0000"
+      ],
+      "id": "fragment_be53d8140f6e7424f823de8dc420c702635a3ad6f4444a38e8f48a594c78495d",
+      "locator": {
+        "end_seconds": 5.728,
+        "start_seconds": 0.08,
+        "type": "time_interval"
+      },
+      "precision": "WORD_RANGE",
+      "quote": "Здравствуйте! Это короткая проверка полного процесса распознавания речи, субтитров,",
+      "review_decision_provenance": {
+        "actor_id": "synthetic-qa-k1-reviewer",
+        "actor_type": "human_domain_reviewer",
+        "boundary_decision_refs": [],
+        "decision_artifact_id": "review_decisions_80cf10d09a24ef5c5bde407d337017a11946012b06c65b7d29200c62cd829226",
+        "decision_artifact_sha256": "135f54b027280dbf561323ee3c372386cc389c360cc88666bd6467174f12a90f",
+        "review_decision_id": "decision_be53d8140f6e7424f823de8dc420c702635a3ad6f4444a38e8f48a594c78495d",
+        "semantic_decision_refs": []
+      },
+      "source_id": "source_source_655b4871962cc06480dca0fb",
+      "source_revision_sha256": "db0cbfd61a3861442114d27633d0b8115af792f6532674298886d86fd57cf3e4",
+      "source_topic_id": "topic_draft_4cafb7d45db9f08cc2bb_0000",
+      "source_topic_sha256": "afd5decb7deb85c9a70bf7b1bb079a677398975478530fe0b171d88a455c5513",
+      "summary": "Этот сегмент демонстрирует процесс распознавания речи, включая создание субтитров и определение временной шкалы слов и тем.",
+      "title": "Проверка распознавания речи",
+      "transcript_assurance": {
+        "method": "integra_machine_transcript_import",
+        "origin": "machine_generated",
+        "reviewer": null,
+        "verification_ranges": [],
+        "verification_state": "machine_unverified"
+      },
+      "transcript_provenance": {
+        "method": "integra_machine_transcript_import",
+        "origin": "machine_generated",
+        "reviewer": null,
+        "verification_ranges": [],
+        "verification_state": "machine_unverified"
+      },
+      "transcript_revision_id": "transcript_revision_source_655b4871962cc06480dca0fb_r1",
+      "word_end_id": "transcript_revision_source_655b4871962cc06480dca0fb_r1:word:000008",
+      "word_end_sequence": 8,
+      "word_start_id": "transcript_revision_source_655b4871962cc06480dca0fb_r1:word:000000",
+      "word_start_sequence": 0,
+      "word_timeline_provenance": {
+        "path": "evidence/word_timeline.json",
+        "sha256": "d1baeeceaab29d13a313766886318ce4fbdfeeda3a8c7228c1cc4b281c1253f7"
+      }
+    }
+  ],
+  "knowledge_view": {
+    "created_at": "2026-10-23T22:01:28.369885Z",
+    "evidence": [
+      {
+        "claim": "Exact reviewed source fragment",
+        "evidence_sha256": "90e239105241a813ea685562bd2307db24bd68acf52d6898c89c17c3f090b241",
+        "id": "evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e",
+        "locator": {
+          "end_seconds": 5.728,
+          "start_seconds": 0.08,
+          "type": "time_interval"
+        },
+        "precision": "WORD_RANGE",
+        "quote": "Здравствуйте! Это короткая проверка полного процесса распознавания речи, субтитров,",
+        "reviewed_fragment_id": "fragment_be53d8140f6e7424f823de8dc420c702635a3ad6f4444a38e8f48a594c78495d",
+        "reviewed_fragment_sha256": "be26c83f4a3848248eca0a4090e3e646d5926d343ffbe82b211e5b9c4f23af83",
+        "source_id": "source_source_655b4871962cc06480dca0fb",
+        "timing_status": "aligned_word_range",
+        "transcript_assurance": {
+          "authority": "candidate",
+          "lifecycle_status": "active",
+          "provenance": {
+            "method": "integra_machine_transcript_import",
+            "origin": "machine_generated",
+            "reviewer": null,
+            "verification_ranges": [],
+            "verification_state": "machine_unverified"
+          },
+          "revision_kind": "asr"
+        },
+        "transcript_revision_id": "transcript_revision_source_655b4871962cc06480dca0fb_r1",
+        "unaligned_word_ids": [],
+        "word_end_id": "transcript_revision_source_655b4871962cc06480dca0fb_r1:word:000008",
+        "word_start_id": "transcript_revision_source_655b4871962cc06480dca0fb_r1:word:000000"
+      }
+    ],
+    "graph": {
+      "edges": [
+        {
+          "from_id": "concept_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1",
+          "kind": "SUPPORTED_BY",
+          "to_id": "evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e"
+        },
+        {
+          "from_id": "decision_b67a7baafcc6a664660471c84ec0bb2cb2db747a48466bddbdc4725907502ac4",
+          "kind": "REVIEW_RESULT",
+          "to_id": "topic_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1"
+        },
+        {
+          "from_id": "decision_b67a7baafcc6a664660471c84ec0bb2cb2db747a48466bddbdc4725907502ac4",
+          "kind": "REVIEW_TARGET",
+          "to_id": "topic_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1"
+        },
+        {
+          "from_id": "decision_edd659c5bbc975a9452ce8bbc8f06ed38c5b8da5fdc94fc93855b6d7317cb3bf",
+          "kind": "REVIEW_RESULT",
+          "to_id": "concept_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1"
+        },
+        {
+          "from_id": "decision_edd659c5bbc975a9452ce8bbc8f06ed38c5b8da5fdc94fc93855b6d7317cb3bf",
+          "kind": "REVIEW_TARGET",
+          "to_id": "concept_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1"
+        },
+        {
+          "from_id": "seminar_fbbac44927544a1b7dcef587ecd917bc00d34af0221b5137aa1d5b9c8ec0d73a",
+          "kind": "CONTAINS",
+          "to_id": "topic_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1"
+        },
+        {
+          "from_id": "topic_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1",
+          "kind": "SUPPORTED_BY",
+          "to_id": "evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e"
+        },
+        {
+          "from_id": "urn:integra:evidence:a5a98156-744a-5dfb-b670-ea46a0087923",
+          "kind": "SUPPORTED_BY",
+          "to_id": "evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e"
+        },
+        {
+          "from_id": "urn:integra:evidence:a5a98156-744a-5dfb-b670-ea46a0087923",
+          "kind": "TERM_OF",
+          "to_id": "concept_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1"
+        }
+      ],
+      "graph_sha256": "0472531be580eabce9c8c304ff078f462786e8ba88d96d79da4e609ee114179b",
+      "nodes": [
+        {
+          "id": "concept_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1",
+          "kind": "CONCEPT",
+          "sha256": "7073e9cba149bd9560b49c9557824560536643d53c1b0cec4f084b1ca8ca058e",
+          "status": "ACCEPTED"
+        },
+        {
+          "id": "decision_b67a7baafcc6a664660471c84ec0bb2cb2db747a48466bddbdc4725907502ac4",
+          "kind": "REVIEW_DECISION",
+          "sha256": "6b282928013ea31ee9986e030d9a90f4583103eb6fa235b1eb6f7fade16b6b01",
+          "status": "DECISION"
+        },
+        {
+          "id": "decision_edd659c5bbc975a9452ce8bbc8f06ed38c5b8da5fdc94fc93855b6d7317cb3bf",
+          "kind": "REVIEW_DECISION",
+          "sha256": "b0901ab27cc762f78263f8384584cf353634187b6fc40df3e104c41e5f0d74a5",
+          "status": "DECISION"
+        },
+        {
+          "id": "evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e",
+          "kind": "EVIDENCE",
+          "sha256": "90e239105241a813ea685562bd2307db24bd68acf52d6898c89c17c3f090b241",
+          "status": "SOURCE_EVIDENCE"
+        },
+        {
+          "id": "seminar_fbbac44927544a1b7dcef587ecd917bc00d34af0221b5137aa1d5b9c8ec0d73a",
+          "kind": "SEMINAR",
+          "sha256": "8bbe05710f02735bb10679ae35cf7f8815592d3f1dd66f855d2741068a8f8f2a",
+          "status": "PROVISIONAL"
+        },
+        {
+          "id": "topic_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1",
+          "kind": "TOPIC",
+          "sha256": "7bc07b25296cb55069cab51910339e7098b3873ee76ef5e4799db344da135ccc",
+          "status": "ACCEPTED"
+        },
+        {
+          "id": "urn:integra:evidence:a5a98156-744a-5dfb-b670-ea46a0087923",
+          "kind": "TERM",
+          "sha256": "b2787d65e5230014e9c7c0e485617c34db96f06ae70421c7de6c4ed0fbdfdab5",
+          "status": "ACCEPTED"
+        }
+      ]
+    },
+    "record_sha256": "1d1c5949123462ab5358e606bc63f59ffa918932fe8c1b3261668a6c0a501c3c",
+    "records": {
+      "concepts": [
+        {
+          "aliases": [],
+          "created_from": [
+            "evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e"
+          ],
+          "description": "Этот сегмент демонстрирует процесс распознавания речи, включая создание субтитров и определение временной шкалы слов и тем.",
+          "evidence_refs": [
+            "evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e"
+          ],
+          "id": "concept_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1",
+          "preferred_label": "Проверка распознавания речи",
+          "provenance": {
+            "notes": "Semantic review of proposal_7db5bce6193e7d3a5f06ffa90e6f1df8e9bd9c353614be229e32c68d69d64dd5; K1 review is separate.",
+            "origin": "human_review",
+            "source_artifact_id": "proposals_9e6888c72e2f26f3cb4cd54795494f6d03ff275b8834e137b46a21de8bea5880"
+          },
+          "redirects": [],
+          "scope": "source-bound",
+          "status": "ACCEPTED",
+          "supersedes": [],
+          "topic_refs": [],
+          "version": 1
+        }
+      ],
+      "relations": [],
+      "review_decisions": [
+        {
+          "action": "ACCEPT",
+          "actor_id": "synthetic-gui-demo",
+          "actor_type": "human_domain_reviewer",
+          "id": "decision_b67a7baafcc6a664660471c84ec0bb2cb2db747a48466bddbdc4725907502ac4",
+          "input_version": 1,
+          "output_version": 1,
+          "provenance": {
+            "origin": "human_review",
+            "source_artifact_id": "proposals_9e6888c72e2f26f3cb4cd54795494f6d03ff275b8834e137b46a21de8bea5880"
+          },
+          "reason": "GENERATED DEMO GUI QA ONLY; explicit topic decision",
+          "result_ids": [
+            "topic_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1"
+          ],
+          "target_ids": [
+            "topic_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1"
+          ],
+          "timestamp": "2026-10-23T22:01:28.369885Z"
+        },
+        {
+          "action": "ACCEPT",
+          "actor_id": "synthetic-gui-demo",
+          "actor_type": "human_domain_reviewer",
+          "id": "decision_edd659c5bbc975a9452ce8bbc8f06ed38c5b8da5fdc94fc93855b6d7317cb3bf",
+          "input_version": 1,
+          "output_version": 1,
+          "provenance": {
+            "origin": "human_review",
+            "source_artifact_id": "proposals_9e6888c72e2f26f3cb4cd54795494f6d03ff275b8834e137b46a21de8bea5880"
+          },
+          "reason": "GENERATED DEMO GUI QA ONLY; not Product Owner acceptance",
+          "result_ids": [
+            "concept_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1"
+          ],
+          "target_ids": [
+            "concept_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1"
+          ],
+          "timestamp": "2026-10-23T22:01:28.369885Z"
+        }
+      ],
+      "seminars": [
+        {
+          "id": "seminar_fbbac44927544a1b7dcef587ecd917bc00d34af0221b5137aa1d5b9c8ec0d73a",
+          "project_id": "project_source_655b4871962cc06480dca0fb",
+          "provenance": {
+            "origin": "derived",
+            "source_artifact_id": "proposals_9e6888c72e2f26f3cb4cd54795494f6d03ff275b8834e137b46a21de8bea5880"
+          },
+          "status": "PROVISIONAL",
+          "title": "source_655b4871962cc06480dca0fb",
+          "topic_refs": [
+            "topic_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1"
+          ],
+          "version": 1
+        }
+      ],
+      "topics": [
+        {
+          "concept_refs": [],
+          "evidence_refs": [
+            "evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e"
+          ],
+          "id": "topic_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1",
+          "provenance": {
+            "notes": "Semantic review of proposal_c498e88b58d7f4a6019cc3e58ab1eacdce84dd0ee9010194c8397dfc4e942aae; K1 review is separate.",
+            "origin": "human_review",
+            "source_artifact_id": "proposals_9e6888c72e2f26f3cb4cd54795494f6d03ff275b8834e137b46a21de8bea5880"
+          },
+          "seminar_id": "seminar_fbbac44927544a1b7dcef587ecd917bc00d34af0221b5137aa1d5b9c8ec0d73a",
+          "source_scope": {
+            "source_ids": [
+              "source_source_655b4871962cc06480dca0fb"
+            ],
+            "transcript_revision_ids": [
+              "transcript_revision_source_655b4871962cc06480dca0fb_r1"
+            ]
+          },
+          "status": "ACCEPTED",
+          "summary": "Этот сегмент демонстрирует процесс распознавания речи, включая создание субтитров и определение временной шкалы слов и тем.",
+          "title": "Проверка распознавания речи",
+          "version": 1
+        }
+      ]
+    },
+    "schema_version": "1.0",
+    "semantic_authority": "READ_ONLY_SOURCE_LIFECYCLE",
+    "source_artifacts_modified": false,
+    "source_binding": {
+      "canonical_evidence_content_sha256": "65fb617f0feee53b8b5fb97ad86d5bbe9b19bd7924e090f02d5f0c905bf6ad63",
+      "canonical_evidence_id": "artifact_project_source_655b4871962cc06480dca0fb_multi_source_v1",
+      "canonical_evidence_sha256": "ad74a5012374ea35e06cf71e7773e142b360deed8d6834ad64db0c472edd15e6",
+      "canonical_knowledge_content_sha256": "f5b1707e7b061407fc3f0ad75ee38ed7a0a8ca8180ef4bd3a59fa335f3b6bb5c",
+      "canonical_knowledge_id": "knowledge_e06765e6a18c02c9d2a760fe72d5815efeb46d88df0c3ca8888e858ca24d6182",
+      "canonical_knowledge_sha256": "eab30510f225fd0c4c08a38769c27964df0d5b2efb2e3b8e9d749d8831089230",
+      "commit_sha": "61ee27de67174377afa0f4955b3cb5abeecb4f03",
+      "component_id": "seminartext",
+      "component_identity_sha256": "65ed2755782eb56bd1f853c3036086e9677b61fae5da4c666b9456c32e008448",
+      "contract_sha256": {
+        "seminartext.reviewed_knowledge_admission_v1": "0c2903e427d85b6fe731a8153920a63dea37e0f660e2430776c7d94409f4daa6"
+      },
+      "source_evidence_content_sha256": "baf9bf7ec70862ddc96caf963580b209d25d7d880fb3aad0301a00f306fb7f7a",
+      "source_evidence_id": "admission_evidence_6d0902d5a897f762619bba91420700d5af689873990d436e4af5bc31d51561e6",
+      "source_evidence_sha256": "3a45d8c0a92343740ab988d9551856242bf3ffd6ef94c146e270d886659cdfe1",
+      "tree_sha": "066a4029d791585410afd0aa45de974638b5e1ff"
+    },
+    "terms": [
+      {
+        "concept_id": "concept_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1",
+        "evidence_refs": [
+          "evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e"
+        ],
+        "kind": "PREFERRED_LABEL",
+        "semantic_status": "ACCEPTED",
+        "term_id": "urn:integra:evidence:a5a98156-744a-5dfb-b670-ea46a0087923",
+        "term_sha256": "b2787d65e5230014e9c7c0e485617c34db96f06ae70421c7de6c4ed0fbdfdab5",
+        "traceability": "CONCEPT_SEMANTIC_EVIDENCE",
+        "value": "Проверка распознавания речи"
+      }
+    ],
+    "view_id": "urn:integra:artifact:67b8aea4-fd0c-58d3-bf93-689f8c0f2fd3"
+  },
+  "notebook_id": "urn:integra:artifact:bcb146a1-2afa-5cb4-881c-af3269113e9d",
+  "package_applied": true,
+  "package_sha256": "11057a844eba910b7a88ed311be3552f85cc758daae74241597f2b04d21065ed",
+  "parent_revision_sha256": null,
+  "project_id": "urn:integra:project:c0b7a120-c257-4514-b077-7b6a6fce0c15",
+  "proposals": [
+    {
+      "after": {
+        "aliases": [],
+        "created_from": [
+          "evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e"
+        ],
+        "description": "Этот сегмент демонстрирует процесс распознавания речи, включая создание субтитров и определение временной шкалы слов и тем.",
+        "evidence_refs": [
+          "evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e"
+        ],
+        "id": "concept_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1",
+        "preferred_label": "Проверка распознавания речи",
+        "provenance": {
+          "origin": "derived",
+          "source_artifact_id": "proposals_9e6888c72e2f26f3cb4cd54795494f6d03ff275b8834e137b46a21de8bea5880"
+        },
+        "redirects": [],
+        "scope": "source-bound",
+        "status": "PROVISIONAL",
+        "supersedes": [],
+        "topic_refs": [],
+        "version": 1
+      },
+      "before": null,
+      "before_sha256": null,
+      "editable_fields": [
+        "preferred_label",
+        "description",
+        "aliases"
+      ],
+      "entity_kind": "concepts",
+      "evidence": [
+        {
+          "canonical_evidence_provenance": {
+            "source_id": "source_source_655b4871962cc06480dca0fb",
+            "transcript_revision_id": "transcript_revision_source_655b4871962cc06480dca0fb_r1",
+            "word_end_id": "transcript_revision_source_655b4871962cc06480dca0fb_r1:word:000008",
+            "word_start_id": "transcript_revision_source_655b4871962cc06480dca0fb_r1:word:000000"
+          },
+          "context": "Здравствуйте! Это короткая проверка полного процесса распознавания речи, субтитров,\nвременной шкалы слов и тем.\n",
+          "evidence_id": "evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e",
+          "evidence_refs": [
+            "evidence_topic_4cafb7d45db9f08cc2bb_0000"
+          ],
+          "id": "fragment_be53d8140f6e7424f823de8dc420c702635a3ad6f4444a38e8f48a594c78495d",
+          "locator": {
+            "end_seconds": 5.728,
+            "start_seconds": 0.08,
+            "type": "time_interval"
+          },
+          "precision": "WORD_RANGE",
+          "quote": "Здравствуйте! Это короткая проверка полного процесса распознавания речи, субтитров,",
+          "review_decision_provenance": {
+            "actor_id": "synthetic-qa-k1-reviewer",
+            "actor_type": "human_domain_reviewer",
+            "boundary_decision_refs": [],
+            "decision_artifact_id": "review_decisions_80cf10d09a24ef5c5bde407d337017a11946012b06c65b7d29200c62cd829226",
+            "decision_artifact_sha256": "135f54b027280dbf561323ee3c372386cc389c360cc88666bd6467174f12a90f",
+            "review_decision_id": "decision_be53d8140f6e7424f823de8dc420c702635a3ad6f4444a38e8f48a594c78495d",
+            "semantic_decision_refs": []
+          },
+          "source_id": "source_source_655b4871962cc06480dca0fb",
+          "source_revision_sha256": "db0cbfd61a3861442114d27633d0b8115af792f6532674298886d86fd57cf3e4",
+          "source_topic_id": "topic_draft_4cafb7d45db9f08cc2bb_0000",
+          "source_topic_sha256": "afd5decb7deb85c9a70bf7b1bb079a677398975478530fe0b171d88a455c5513",
+          "summary": "Этот сегмент демонстрирует процесс распознавания речи, включая создание субтитров и определение временной шкалы слов и тем.",
+          "title": "Проверка распознавания речи",
+          "transcript_assurance": {
+            "method": "integra_machine_transcript_import",
+            "origin": "machine_generated",
+            "reviewer": null,
+            "verification_ranges": [],
+            "verification_state": "machine_unverified"
+          },
+          "transcript_provenance": {
+            "method": "integra_machine_transcript_import",
+            "origin": "machine_generated",
+            "reviewer": null,
+            "verification_ranges": [],
+            "verification_state": "machine_unverified"
+          },
+          "transcript_revision_id": "transcript_revision_source_655b4871962cc06480dca0fb_r1",
+          "word_end_id": "transcript_revision_source_655b4871962cc06480dca0fb_r1:word:000008",
+          "word_end_sequence": 8,
+          "word_start_id": "transcript_revision_source_655b4871962cc06480dca0fb_r1:word:000000",
+          "word_start_sequence": 0,
+          "word_timeline_provenance": {
+            "path": "evidence/word_timeline.json",
+            "sha256": "d1baeeceaab29d13a313766886318ce4fbdfeeda3a8c7228c1cc4b281c1253f7"
+          }
+        }
+      ],
+      "fragment_refs": [
+        {
+          "id": "fragment_be53d8140f6e7424f823de8dc420c702635a3ad6f4444a38e8f48a594c78495d",
+          "sha256": "be26c83f4a3848248eca0a4090e3e646d5926d343ffbe82b211e5b9c4f23af83"
+        }
+      ],
+      "generation_provenance": {
+        "method": "deterministic-reviewed-unit-proposal-v1",
+        "producer_sha256": "acfcc3a8c81f3c4e6b7de43e071c490c49a0f7bd94214e0097fb8afa9b6afa1c"
+      },
+      "id": "proposal_7db5bce6193e7d3a5f06ffa90e6f1df8e9bd9c353614be229e32c68d69d64dd5",
+      "operation": "CREATE",
+      "possible_duplicate_ids": [],
+      "proposal_sha256": "0974bdd0ce83769c497a19a26fa7c20d6d372b39d6b44d9e3d0f10c7500fedaa",
+      "record": {
+        "aliases": [],
+        "created_from": [
+          "evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e"
+        ],
+        "description": "Этот сегмент демонстрирует процесс распознавания речи, включая создание субтитров и определение временной шкалы слов и тем.",
+        "evidence_refs": [
+          "evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e"
+        ],
+        "id": "concept_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1",
+        "preferred_label": "Проверка распознавания речи",
+        "provenance": {
+          "origin": "derived",
+          "source_artifact_id": "proposals_9e6888c72e2f26f3cb4cd54795494f6d03ff275b8834e137b46a21de8bea5880"
+        },
+        "redirects": [],
+        "scope": "source-bound",
+        "status": "PROVISIONAL",
+        "supersedes": [],
+        "topic_refs": [],
+        "version": 1
+      },
+      "review_status": "REVIEW_REQUIRED"
+    },
+    {
+      "after": {
+        "concept_refs": [],
+        "evidence_refs": [
+          "evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e"
+        ],
+        "id": "topic_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1",
+        "provenance": {
+          "origin": "derived",
+          "source_artifact_id": "proposals_9e6888c72e2f26f3cb4cd54795494f6d03ff275b8834e137b46a21de8bea5880"
+        },
+        "seminar_id": "seminar_fbbac44927544a1b7dcef587ecd917bc00d34af0221b5137aa1d5b9c8ec0d73a",
+        "source_scope": {
+          "source_ids": [
+            "source_source_655b4871962cc06480dca0fb"
+          ],
+          "transcript_revision_ids": [
+            "transcript_revision_source_655b4871962cc06480dca0fb_r1"
+          ]
+        },
+        "status": "PROVISIONAL",
+        "summary": "Этот сегмент демонстрирует процесс распознавания речи, включая создание субтитров и определение временной шкалы слов и тем.",
+        "title": "Проверка распознавания речи",
+        "version": 1
+      },
+      "before": null,
+      "before_sha256": null,
+      "editable_fields": [
+        "title",
+        "summary"
+      ],
+      "entity_kind": "topics",
+      "evidence": [
+        {
+          "canonical_evidence_provenance": {
+            "source_id": "source_source_655b4871962cc06480dca0fb",
+            "transcript_revision_id": "transcript_revision_source_655b4871962cc06480dca0fb_r1",
+            "word_end_id": "transcript_revision_source_655b4871962cc06480dca0fb_r1:word:000008",
+            "word_start_id": "transcript_revision_source_655b4871962cc06480dca0fb_r1:word:000000"
+          },
+          "context": "Здравствуйте! Это короткая проверка полного процесса распознавания речи, субтитров,\nвременной шкалы слов и тем.\n",
+          "evidence_id": "evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e",
+          "evidence_refs": [
+            "evidence_topic_4cafb7d45db9f08cc2bb_0000"
+          ],
+          "id": "fragment_be53d8140f6e7424f823de8dc420c702635a3ad6f4444a38e8f48a594c78495d",
+          "locator": {
+            "end_seconds": 5.728,
+            "start_seconds": 0.08,
+            "type": "time_interval"
+          },
+          "precision": "WORD_RANGE",
+          "quote": "Здравствуйте! Это короткая проверка полного процесса распознавания речи, субтитров,",
+          "review_decision_provenance": {
+            "actor_id": "synthetic-qa-k1-reviewer",
+            "actor_type": "human_domain_reviewer",
+            "boundary_decision_refs": [],
+            "decision_artifact_id": "review_decisions_80cf10d09a24ef5c5bde407d337017a11946012b06c65b7d29200c62cd829226",
+            "decision_artifact_sha256": "135f54b027280dbf561323ee3c372386cc389c360cc88666bd6467174f12a90f",
+            "review_decision_id": "decision_be53d8140f6e7424f823de8dc420c702635a3ad6f4444a38e8f48a594c78495d",
+            "semantic_decision_refs": []
+          },
+          "source_id": "source_source_655b4871962cc06480dca0fb",
+          "source_revision_sha256": "db0cbfd61a3861442114d27633d0b8115af792f6532674298886d86fd57cf3e4",
+          "source_topic_id": "topic_draft_4cafb7d45db9f08cc2bb_0000",
+          "source_topic_sha256": "afd5decb7deb85c9a70bf7b1bb079a677398975478530fe0b171d88a455c5513",
+          "summary": "Этот сегмент демонстрирует процесс распознавания речи, включая создание субтитров и определение временной шкалы слов и тем.",
+          "title": "Проверка распознавания речи",
+          "transcript_assurance": {
+            "method": "integra_machine_transcript_import",
+            "origin": "machine_generated",
+            "reviewer": null,
+            "verification_ranges": [],
+            "verification_state": "machine_unverified"
+          },
+          "transcript_provenance": {
+            "method": "integra_machine_transcript_import",
+            "origin": "machine_generated",
+            "reviewer": null,
+            "verification_ranges": [],
+            "verification_state": "machine_unverified"
+          },
+          "transcript_revision_id": "transcript_revision_source_655b4871962cc06480dca0fb_r1",
+          "word_end_id": "transcript_revision_source_655b4871962cc06480dca0fb_r1:word:000008",
+          "word_end_sequence": 8,
+          "word_start_id": "transcript_revision_source_655b4871962cc06480dca0fb_r1:word:000000",
+          "word_start_sequence": 0,
+          "word_timeline_provenance": {
+            "path": "evidence/word_timeline.json",
+            "sha256": "d1baeeceaab29d13a313766886318ce4fbdfeeda3a8c7228c1cc4b281c1253f7"
+          }
+        }
+      ],
+      "fragment_refs": [
+        {
+          "id": "fragment_be53d8140f6e7424f823de8dc420c702635a3ad6f4444a38e8f48a594c78495d",
+          "sha256": "be26c83f4a3848248eca0a4090e3e646d5926d343ffbe82b211e5b9c4f23af83"
+        }
+      ],
+      "generation_provenance": {
+        "method": "deterministic-reviewed-unit-proposal-v1",
+        "producer_sha256": "acfcc3a8c81f3c4e6b7de43e071c490c49a0f7bd94214e0097fb8afa9b6afa1c"
+      },
+      "id": "proposal_c498e88b58d7f4a6019cc3e58ab1eacdce84dd0ee9010194c8397dfc4e942aae",
+      "operation": "CREATE",
+      "possible_duplicate_ids": [],
+      "proposal_sha256": "f90716979b834074eadfbf2ca4a060e8d898f7c950a8da6e1831451b9e5ca038",
+      "record": {
+        "concept_refs": [],
+        "evidence_refs": [
+          "evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e"
+        ],
+        "id": "topic_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1",
+        "provenance": {
+          "origin": "derived",
+          "source_artifact_id": "proposals_9e6888c72e2f26f3cb4cd54795494f6d03ff275b8834e137b46a21de8bea5880"
+        },
+        "seminar_id": "seminar_fbbac44927544a1b7dcef587ecd917bc00d34af0221b5137aa1d5b9c8ec0d73a",
+        "source_scope": {
+          "source_ids": [
+            "source_source_655b4871962cc06480dca0fb"
+          ],
+          "transcript_revision_ids": [
+            "transcript_revision_source_655b4871962cc06480dca0fb_r1"
+          ]
+        },
+        "status": "PROVISIONAL",
+        "summary": "Этот сегмент демонстрирует процесс распознавания речи, включая создание субтитров и определение временной шкалы слов и тем.",
+        "title": "Проверка распознавания речи",
+        "version": 1
+      },
+      "review_status": "REVIEW_REQUIRED"
+    }
+  ],
+  "revision_history": [
+    "834d1c61449adbfc7e9a453a1646ed8c7f798ae27fcaa8e40344729e8a780465"
+  ],
+  "revision_sha256": "834d1c61449adbfc7e9a453a1646ed8c7f798ae27fcaa8e40344729e8a780465",
+  "run_id": "urn:integra:run:e95bfc37-7134-4ad5-b675-93de9cf8bf4c",
+  "semantic_authority": "READ_ONLY_SOURCE_LIFECYCLE",
+  "semantic_decisions": [
+    {
+      "action": "ACCEPT",
+      "proposal_id": "proposal_7db5bce6193e7d3a5f06ffa90e6f1df8e9bd9c353614be229e32c68d69d64dd5",
+      "proposal_sha256": "0974bdd0ce83769c497a19a26fa7c20d6d372b39d6b44d9e3d0f10c7500fedaa",
+      "reason": "GENERATED DEMO GUI QA ONLY; not Product Owner acceptance",
+      "timestamp": "2026-10-23T22:01:28.369885Z"
+    },
+    {
+      "action": "ACCEPT",
+      "proposal_id": "proposal_c498e88b58d7f4a6019cc3e58ab1eacdce84dd0ee9010194c8397dfc4e942aae",
+      "proposal_sha256": "f90716979b834074eadfbf2ca4a060e8d898f7c950a8da6e1831451b9e5ca038",
+      "reason": "GENERATED DEMO GUI QA ONLY; explicit topic decision",
+      "timestamp": "2026-10-23T22:01:28.369885Z"
+    }
+  ],
+  "semantic_reviewer": {
+    "actor_id": "synthetic-gui-demo",
+    "actor_type": "human_domain_reviewer"
+  },
+  "source_id": "urn:integra:source:f8f2239a-599c-5f4a-98de-ae7f60436efa",
+  "source_revision_sha256": "db0cbfd61a3861442114d27633d0b8115af792f6532674298886d86fd57cf3e4",
+  "state_sha256": "411d2cb7b9e23a4c55c05302eb0411114b19ccae86db65a4a8ac247152999d24",
+  "status": "CANONICAL_KNOWLEDGE",
+  "supported_relation_types": [
+    "associated_with",
+    "contradicts",
+    "depends_on",
+    "refines",
+    "supports"
+  ],
+  "upstream_processing_performed": false
+}

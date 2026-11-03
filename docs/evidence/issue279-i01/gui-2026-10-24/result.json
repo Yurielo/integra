@@ -1,0 +1,50 @@
+{
+  "status": "PASS_BOUNDED_NATIVE_K2_GUI_QA",
+  "candidate_id": "candidate-v1-e8064cba8acad3282d86b9d7eea043f85c5eed54ac7db015ccdf089943dee943",
+  "bundle_digest": "1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+  "source": {
+    "commit_sha": "6e6978a5f88930158058df8e90dbe4275f11c29a",
+    "dirty": false,
+    "dirty_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "tree_sha": "d6a4ba71a2939e62bf7d765270b148ea67034dae"
+  },
+  "candidate_manifest_sha256": "25255077dfd65185268ba152c50a1a5ba66d1a425ff9bcab342263f6fbb2c58e",
+  "bundle_validation_before_after_equal": true,
+  "two_unit_fixture": {
+    "semantic_ledger_decisions": 5,
+    "view_review_decisions": 3,
+    "concepts": 2,
+    "relations": 1,
+    "topics": 0,
+    "explicit_actions": [
+      "ACCEPT",
+      "EDIT",
+      "REJECT",
+      "DEFER"
+    ],
+    "revision_sha256": "1d8854c426563d66be32696b5051847a5d910fcf16c59c2655c1b65ff864121f",
+    "gui_quit_relaunch_reopen": true,
+    "before_after_revision_json_identical": true,
+    "source_inputs_unchanged": true
+  },
+  "generated_demo": {
+    "source_navigation": "PASS",
+    "native_player_presentation": "PASS",
+    "start_seconds": 0.08,
+    "end_seconds": 5.728,
+    "exact_quote_and_hash": true,
+    "audio_video_metadata_valid": true,
+    "original_project_unchanged": true,
+    "audible_playback_assessed": false
+  },
+  "semantic_product_acceptance": false,
+  "upstream_process_run": false,
+  "current_unchanged": true,
+  "current_hashes": {
+    "current_product_baseline_v2.json": "bdd2ea30b3102c59cd8e47bc56a0d53c6b57d3bfb0347e667663b1be951e52e2",
+    "current_canonical_baseline_v1.json": "0493fbad50f1a5518b01be90e3ffb0cd10d3d8b7a97ae12918fc4595c4438840"
+  },
+  "retained_publication": "BLOCKED_EIGHT_PROTECTED_COPIES",
+  "valid_proposal": false,
+  "ci_readiness": false
+}

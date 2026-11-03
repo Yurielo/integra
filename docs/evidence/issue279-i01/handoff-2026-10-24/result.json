@@ -1,0 +1,18 @@
+{
+  "status": "BLOCKED_OUTGOING_ARCHIVE_INTEGRITY_RECOVERY",
+  "lifecycle_decision": "WITHDRAWN_SUPERSEDED",
+  "lifecycle_merge": "a3fb04e177dc31edb435fc5073b9eacade37aa3f",
+  "authority_ref": "https://github.com/Yurielo/integra/issues/279#issuecomment-6380155631",
+  "retired_archives": [],
+  "new_app_built": false,
+  "new_archive_published": false,
+  "valid_proposal": false,
+  "owner_acceptance": null,
+  "current_unchanged": true,
+  "current_hashes": {
+    "current_product_baseline_v2.json": "bdd2ea30b3102c59cd8e47bc56a0d53c6b57d3bfb0347e667663b1be951e52e2",
+    "current_canonical_baseline_v1.json": "0493fbad50f1a5518b01be90e3ffb0cd10d3d8b7a97ae12918fc4595c4438840"
+  },
+  "recovery_authorized": false,
+  "recovery_plan_sha256": "d89bed43693b767fc510076ff9a8330a9222c63af960173241137d134fa89b50"
+}

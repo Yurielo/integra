@@ -1,0 +1,36 @@
+{
+  "archive_payload_scanned_or_executed_by_reviewer": false,
+  "candidate_id": "candidate-v1-19e3438fea443e1d917b6575131fd67b47b5f44f71202a6940f85adda12b3b56",
+  "catalog_added_paths": [],
+  "catalog_removed_paths": [
+    "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-19e3438fea443e1d917b6575131fd67b47b5f44f71202a6940f85adda12b3b56/1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0"
+  ],
+  "current_hashes": {
+    "current_canonical_baseline_v1.json": "0493fbad50f1a5518b01be90e3ffb0cd10d3d8b7a97ae12918fc4595c4438840",
+    "current_product_baseline_v2.json": "bdd2ea30b3102c59cd8e47bc56a0d53c6b57d3bfb0347e667663b1be951e52e2"
+  },
+  "current_unchanged": true,
+  "durable_retirement_equals_receipt": true,
+  "exact_trash_path_absent": true,
+  "findings": [],
+  "new_retirement_transactions": [
+    "retirement-v1-500128a869bd4077b708612b8b50dc28"
+  ],
+  "other_artifact_records_changed": [],
+  "outgoing_path_absent": true,
+  "pending_transaction_journal_absent_snapshot_and_live": true,
+  "preexisting_retirement_records_unchanged": true,
+  "preserved_inventory_sha256": "5757104c109496b703a09fa3a73ceade18d931c4f0a2825100a1ec59abec77e2",
+  "proposal_approval": false,
+  "quarantine_deletion_authorized": false,
+  "quarantine_modes_and_ownership_match": true,
+  "quarantine_preserved_file_bytes": 1568777,
+  "quarantine_preserved_files_hashed": 45,
+  "real_data_mutated_by_reviewer": false,
+  "receipt_sha256": "9d7ff656a59df1eb7789f320acb70a77580045887b236b811ca47510262d9c2d",
+  "reviewer": "i01_governance_review",
+  "semantic_product_acceptance": false,
+  "status": "PASS_EXACT_WITHDRAWAL_RETIREMENT_REVIEW",
+  "strategy": "EXACT_OWNER_AUTHORIZED_WITHDRAWAL_RETIREMENT",
+  "transaction_id": "retirement-v1-500128a869bd4077b708612b8b50dc28"
+}

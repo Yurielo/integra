@@ -105,6 +105,8 @@ cp "$repo_root/macos/Resources/Integra.icns" "$app/Contents/Resources/Integra.ic
 cp "$repo_root/macos/Resources/bridge.py" "$app/Contents/Resources/bridge.py"
 cp "$repo_root/macos/Resources/source_first_workflow.json" "$app/Contents/Resources/source_first_workflow.json"
 cp "$repo_root/macos/Resources/deferred_features.json" "$app/Contents/Resources/deferred_features.json"
+mkdir -p "$app/Contents/Resources/schemas"
+cp "$repo_root/schemas/knowledge_view_v1.schema.json" "$app/Contents/Resources/schemas/knowledge_view_v1.schema.json"
 mkdir -p "$app/Contents/Resources/workers"
 cp "$repo_root/workers/seminartext_topics_worker.py" "$app/Contents/Resources/workers/seminartext_topics_worker.py"
 cp "$repo_root/workers/seminartext_word_alignment_worker.py" "$app/Contents/Resources/workers/seminartext_word_alignment_worker.py"
@@ -127,6 +129,8 @@ cp "$seminartext_evidence_validator" "$app/Contents/Resources/runtime/seminartex
 # This script's stdout is the sole machine-readable app path. Keep packaging
 # diagnostics on stderr so callers can safely capture that path.
 python3 "$repo_root/scripts/package_review_runtime.py" "$seminartext_checkout" "$app/Contents/Resources" >&2
+PYTHONPATH="$app/Contents/Resources/runtime/review-python/site-packages${PYTHONPATH:+:$PYTHONPATH}" \
+  python3 "$repo_root/scripts/package_knowledge_admission_runtime.py" "$app/Contents/Resources" >&2
 printf '{"component":"seminartext","commit_sha":"%s","entrypoint_sha256":"%s","evidence_foundation_sha256":"%s","evidence_validator_sha256":"%s","personal_use_only":true}\n' "$seminartext_commit" "$seminartext_cli_sha256" "$seminartext_evidence_sha256" "$seminartext_evidence_validator_sha256" > "$app/Contents/Resources/runtime/seminartext/runtime.json"
 mkdir -p "$app/Contents/Resources/runtime/word-alignment/site-packages" "$app/Contents/Resources/runtime/word-alignment/model"
 rsync -aL --exclude '__pycache__' --exclude '*.pyc' "$alignment_packages/" "$app/Contents/Resources/runtime/word-alignment/site-packages/"

@@ -1,0 +1,241 @@
+test_accepted_foundation_stage_cannot_regress (tests.test_governance.GovernanceValidationTests.test_accepted_foundation_stage_cannot_regress) ... ok
+test_active_chain_rejects_extra_accepted_dependency (tests.test_governance.GovernanceValidationTests.test_active_chain_rejects_extra_accepted_dependency) ... ok
+test_adapter_spike_controller_identity_is_pinned (tests.test_governance.GovernanceValidationTests.test_adapter_spike_controller_identity_is_pinned) ... ok
+test_adapter_spike_evidence_is_valid (tests.test_governance.GovernanceValidationTests.test_adapter_spike_evidence_is_valid) ... ok
+test_adapter_spike_must_match_pinned_source_commit (tests.test_governance.GovernanceValidationTests.test_adapter_spike_must_match_pinned_source_commit) ... ok
+test_adapter_spike_source_mutation_is_forbidden (tests.test_governance.GovernanceValidationTests.test_adapter_spike_source_mutation_is_forbidden) ... ok
+test_agent_team_contract_is_pinned (tests.test_governance.GovernanceValidationTests.test_agent_team_contract_is_pinned) ... ok
+test_candidate_identity_substitution_fails (tests.test_governance.GovernanceValidationTests.test_candidate_identity_substitution_fails) ... ok
+test_capability_benchmark_cannot_claim_semantic_superiority (tests.test_governance.GovernanceValidationTests.test_capability_benchmark_cannot_claim_semantic_superiority) ... ok
+test_capability_benchmark_cannot_mutate_source_repositories (tests.test_governance.GovernanceValidationTests.test_capability_benchmark_cannot_mutate_source_repositories) ... ok
+test_capability_benchmark_fixture_hash_is_bound (tests.test_governance.GovernanceValidationTests.test_capability_benchmark_fixture_hash_is_bound) ... ok
+test_capability_benchmark_is_valid (tests.test_governance.GovernanceValidationTests.test_capability_benchmark_is_valid) ... ok
+test_component_baselines_are_valid (tests.test_governance.GovernanceValidationTests.test_component_baselines_are_valid) ... ok
+test_core_alpha_cannot_claim_semantic_acceptance (tests.test_governance.GovernanceValidationTests.test_core_alpha_cannot_claim_semantic_acceptance) ... ok
+test_core_alpha_evidence_is_pinned (tests.test_governance.GovernanceValidationTests.test_core_alpha_evidence_is_pinned) ... ok
+test_core_alpha_evidence_is_valid (tests.test_governance.GovernanceValidationTests.test_core_alpha_evidence_is_valid) ... ok
+test_core_alpha_fixture_hash_is_bound (tests.test_governance.GovernanceValidationTests.test_core_alpha_fixture_hash_is_bound) ... ok
+test_core_alpha_real_evidence_cannot_promote_semantics (tests.test_governance.GovernanceValidationTests.test_core_alpha_real_evidence_cannot_promote_semantics) ... ok
+test_core_alpha_real_evidence_is_valid (tests.test_governance.GovernanceValidationTests.test_core_alpha_real_evidence_is_valid) ... ok
+test_core_alpha_real_evidence_requires_repeatable_stage_hashes (tests.test_governance.GovernanceValidationTests.test_core_alpha_real_evidence_requires_repeatable_stage_hashes) ... ok
+test_core_alpha_real_implementation_inventory_is_exact (tests.test_governance.GovernanceValidationTests.test_core_alpha_real_implementation_inventory_is_exact) ... ok
+test_core_alpha_real_record_is_immutably_bound (tests.test_governance.GovernanceValidationTests.test_core_alpha_real_record_is_immutably_bound) ... ok
+test_core_alpha_real_rejects_unknown_top_level_field (tests.test_governance.GovernanceValidationTests.test_core_alpha_real_rejects_unknown_top_level_field) ... ok
+test_corrupt_current_baseline_record_fails_closed (tests.test_governance.GovernanceValidationTests.test_corrupt_current_baseline_record_fails_closed) ... ok
+test_cross_navigation_cannot_claim_semantic_promotion (tests.test_governance.GovernanceValidationTests.test_cross_navigation_cannot_claim_semantic_promotion) ... ok
+test_cross_navigation_evidence_is_valid (tests.test_governance.GovernanceValidationTests.test_cross_navigation_evidence_is_valid) ... ok
+test_cross_navigation_implementation_hashes_are_pinned (tests.test_governance.GovernanceValidationTests.test_cross_navigation_implementation_hashes_are_pinned) ... ok
+test_current_baseline_exact_contract_passes (tests.test_governance.GovernanceValidationTests.test_current_baseline_exact_contract_passes) ... FAIL
+test_current_governed_byte_mutation_fails_closed (tests.test_governance.GovernanceValidationTests.test_current_governed_byte_mutation_fails_closed) ... ok
+test_data_ownership_contract_is_valid (tests.test_governance.GovernanceValidationTests.test_data_ownership_contract_is_valid) ... ok
+test_deferred_capability_must_follow_r14 (tests.test_governance.GovernanceValidationTests.test_deferred_capability_must_follow_r14) ... ok
+test_deferred_capability_registry_is_exact (tests.test_governance.GovernanceValidationTests.test_deferred_capability_registry_is_exact) ... ok
+test_deferred_capability_status_is_enforced (tests.test_governance.GovernanceValidationTests.test_deferred_capability_status_is_enforced) ... ok
+test_document_pipeline_evidence_cannot_expand_protected_scope (tests.test_governance.GovernanceValidationTests.test_document_pipeline_evidence_cannot_expand_protected_scope) ... ok
+test_document_pipeline_evidence_is_pinned_and_valid (tests.test_governance.GovernanceValidationTests.test_document_pipeline_evidence_is_pinned_and_valid) ... ok
+test_document_pipeline_implementation_and_fixtures_are_hash_bound (tests.test_governance.GovernanceValidationTests.test_document_pipeline_implementation_and_fixtures_are_hash_bound) ... ok
+test_duplicate_field_owner_fails (tests.test_governance.GovernanceValidationTests.test_duplicate_field_owner_fails) ... ok
+test_forward_dependency_fails (tests.test_governance.GovernanceValidationTests.test_forward_dependency_fails) ... ok
+test_historical_certification_records_are_not_rewritten (tests.test_governance.GovernanceValidationTests.test_historical_certification_records_are_not_rewritten) ... FAIL
+test_identity_hash_collision_must_hard_fail (tests.test_governance.GovernanceValidationTests.test_identity_hash_collision_must_hard_fail) ... ok
+test_knowledge_integration_cannot_claim_machine_acceptance (tests.test_governance.GovernanceValidationTests.test_knowledge_integration_cannot_claim_machine_acceptance) ... ok
+test_knowledge_integration_evidence_is_valid (tests.test_governance.GovernanceValidationTests.test_knowledge_integration_evidence_is_valid) ... FAIL
+test_knowledge_integration_proposal_preserves_exact_historical_hashes (tests.test_governance.GovernanceValidationTests.test_knowledge_integration_proposal_preserves_exact_historical_hashes) ... ok
+test_knowledge_integration_source_baseline_is_pinned (tests.test_governance.GovernanceValidationTests.test_knowledge_integration_source_baseline_is_pinned) ... ok
+test_media_integration_cannot_claim_knowledge_mutation (tests.test_governance.GovernanceValidationTests.test_media_integration_cannot_claim_knowledge_mutation) ... ok
+test_media_integration_evidence_is_valid (tests.test_governance.GovernanceValidationTests.test_media_integration_evidence_is_valid) ... ok
+test_media_integration_source_baseline_and_hashes_are_pinned (tests.test_governance.GovernanceValidationTests.test_media_integration_source_baseline_and_hashes_are_pinned) ... ok
+test_merge_requires_fail_closed_automation_policy (tests.test_governance.GovernanceValidationTests.test_merge_requires_fail_closed_automation_policy) ... ok
+test_missing_current_baseline_does_not_bypass_historical_drift (tests.test_governance.GovernanceValidationTests.test_missing_current_baseline_does_not_bypass_historical_drift) ... ok
+test_missing_deferred_social_platform_fails (tests.test_governance.GovernanceValidationTests.test_missing_deferred_social_platform_fails) ... ok
+test_module_completion_dependencies_are_required (tests.test_governance.GovernanceValidationTests.test_module_completion_dependencies_are_required) ... ok
+test_multi_source_alignment_cannot_claim_semantic_acceptance (tests.test_governance.GovernanceValidationTests.test_multi_source_alignment_cannot_claim_semantic_acceptance) ... ok
+test_multi_source_alignment_evidence_is_valid (tests.test_governance.GovernanceValidationTests.test_multi_source_alignment_evidence_is_valid) ... ok
+test_multi_source_alignment_implementation_hash_is_bound (tests.test_governance.GovernanceValidationTests.test_multi_source_alignment_implementation_hash_is_bound) ... ok
+test_native_app_cannot_depend_on_deferred_capability (tests.test_governance.GovernanceValidationTests.test_native_app_cannot_depend_on_deferred_capability) ... ok
+test_native_app_requires_onedrive_publication (tests.test_governance.GovernanceValidationTests.test_native_app_requires_onedrive_publication) ... ok
+test_obsidian_export_cannot_claim_external_or_user_vault_access (tests.test_governance.GovernanceValidationTests.test_obsidian_export_cannot_claim_external_or_user_vault_access) ... ok
+test_obsidian_export_evidence_is_valid (tests.test_governance.GovernanceValidationTests.test_obsidian_export_evidence_is_valid) ... ok
+test_operations_evidence_cannot_expand_protected_scope (tests.test_governance.GovernanceValidationTests.test_operations_evidence_cannot_expand_protected_scope) ... ok
+test_operations_evidence_is_pinned_and_valid (tests.test_governance.GovernanceValidationTests.test_operations_evidence_is_pinned_and_valid) ... ok
+test_operations_implementation_and_fixtures_are_hash_bound (tests.test_governance.GovernanceValidationTests.test_operations_implementation_and_fixtures_are_hash_bound) ... ok
+test_operations_ownership_is_exact (tests.test_governance.GovernanceValidationTests.test_operations_ownership_is_exact) ... ok
+test_playlist_evidence_cannot_expand_external_scope (tests.test_governance.GovernanceValidationTests.test_playlist_evidence_cannot_expand_external_scope) ... ok
+test_playlist_evidence_is_pinned_and_valid (tests.test_governance.GovernanceValidationTests.test_playlist_evidence_is_pinned_and_valid) ... ok
+test_playlist_implementation_and_fixtures_are_hash_bound (tests.test_governance.GovernanceValidationTests.test_playlist_implementation_and_fixtures_are_hash_bound) ... ok
+test_projects_sources_evidence_cannot_expand_scope (tests.test_governance.GovernanceValidationTests.test_projects_sources_evidence_cannot_expand_scope) ... ok
+test_projects_sources_evidence_is_pinned_and_valid (tests.test_governance.GovernanceValidationTests.test_projects_sources_evidence_is_pinned_and_valid) ... ok
+test_projects_sources_implementation_is_hash_bound (tests.test_governance.GovernanceValidationTests.test_projects_sources_implementation_is_hash_bound) ... ok
+test_protocol_trace_namespaces_are_registered (tests.test_governance.GovernanceValidationTests.test_protocol_trace_namespaces_are_registered) ... ok
+test_r14_acceptance_cannot_regress_to_human_gate (tests.test_governance.GovernanceValidationTests.test_r14_acceptance_cannot_regress_to_human_gate) ... ok
+test_r15_is_deferred_after_r14 (tests.test_governance.GovernanceValidationTests.test_r15_is_deferred_after_r14) ... ok
+test_r1_cannot_pass_without_supported_standalone_gates (tests.test_governance.GovernanceValidationTests.test_r1_cannot_pass_without_supported_standalone_gates) ... ok
+test_r1_cannot_promote_source_application_release (tests.test_governance.GovernanceValidationTests.test_r1_cannot_promote_source_application_release) ... ok
+test_r6_acceptance_requires_pinned_real_media_evidence (tests.test_governance.GovernanceValidationTests.test_r6_acceptance_requires_pinned_real_media_evidence) ... ok
+test_ready_app_priority_order_is_exact (tests.test_governance.GovernanceValidationTests.test_ready_app_priority_order_is_exact) ... ok
+test_repository_state_is_valid (tests.test_governance.GovernanceValidationTests.test_repository_state_is_valid) ... ok
+test_required_module_has_executable_stage (tests.test_governance.GovernanceValidationTests.test_required_module_has_executable_stage) ... ok
+test_roadmap_issue_inventory_is_complete (tests.test_governance.GovernanceValidationTests.test_roadmap_issue_inventory_is_complete) ... ok
+test_runtime_reconciliation_requires_governed_fail_closed_policy (tests.test_governance.GovernanceValidationTests.test_runtime_reconciliation_requires_governed_fail_closed_policy) ... ok
+test_standalone_products_cannot_be_disabled (tests.test_governance.GovernanceValidationTests.test_standalone_products_cannot_be_disabled) ... ok
+test_transcript_topic_studio_cannot_accept_machine_semantics (tests.test_governance.GovernanceValidationTests.test_transcript_topic_studio_cannot_accept_machine_semantics) ... ok
+test_transcript_topic_studio_capability_owners_are_pinned (tests.test_governance.GovernanceValidationTests.test_transcript_topic_studio_capability_owners_are_pinned) ... ok
+test_transcript_topic_studio_evidence_is_valid (tests.test_governance.GovernanceValidationTests.test_transcript_topic_studio_evidence_is_valid) ... ok
+test_transcript_topic_studio_implementation_hash_is_bound (tests.test_governance.GovernanceValidationTests.test_transcript_topic_studio_implementation_hash_is_bound) ... ok
+test_unknown_dependency_fails (tests.test_governance.GovernanceValidationTests.test_unknown_dependency_fails) ... ok
+test_unmerged_component_work_cannot_be_enabled (tests.test_governance.GovernanceValidationTests.test_unmerged_component_work_cannot_be_enabled) ... ok
+test_valid_superseding_baseline_suppresses_only_explained_historical_drift (tests.test_governance.GovernanceValidationTests.test_valid_superseding_baseline_suppresses_only_explained_historical_drift) ... FAIL
+test_worker_protocol_cannot_enable_network_requirement (tests.test_governance.GovernanceValidationTests.test_worker_protocol_cannot_enable_network_requirement) ... ok
+test_worker_protocol_contract_is_valid (tests.test_governance.GovernanceValidationTests.test_worker_protocol_contract_is_valid) ... ok
+test_worker_protocol_fixture_inventory_is_complete (tests.test_governance.GovernanceValidationTests.test_worker_protocol_fixture_inventory_is_complete) ... ok
+test_worker_protocol_schema_registry_is_exact (tests.test_governance.GovernanceValidationTests.test_worker_protocol_schema_registry_is_exact) ... ok
+test_worker_protocol_unknown_outcome_retry_must_be_denied (tests.test_governance.GovernanceValidationTests.test_worker_protocol_unknown_outcome_retry_must_be_denied) ... ok
+test_branch_name_and_generic_technical_claim_are_not_authority_fields (tests.test_proposed_baseline_lite.ProposedBaselineLiteTests.test_branch_name_and_generic_technical_claim_are_not_authority_fields) ... ok
+test_current_v2_passes_and_is_not_v1_rewrite (tests.test_proposed_baseline_lite.ProposedBaselineLiteTests.test_current_v2_passes_and_is_not_v1_rewrite) ... ok
+test_exact_r12_test_successor_is_accepted_but_wrong_authority_hashes_fail (tests.test_proposed_baseline_lite.ProposedBaselineLiteTests.test_exact_r12_test_successor_is_accepted_but_wrong_authority_hashes_fail) ... ok
+test_explicit_owner_reference_constructs_next_current_without_mutating_prior (tests.test_proposed_baseline_lite.ProposedBaselineLiteTests.test_explicit_owner_reference_constructs_next_current_without_mutating_prior) ... ok
+test_governed_byte_drift_without_proposal_fails_closed (tests.test_proposed_baseline_lite.ProposedBaselineLiteTests.test_governed_byte_drift_without_proposal_fails_closed) ... ok
+test_historical_r12_r13_records_remain_unchanged_by_successor_generation (tests.test_proposed_baseline_lite.ProposedBaselineLiteTests.test_historical_r12_r13_records_remain_unchanged_by_successor_generation) ... ok
+test_malformed_delta_missing_gate_or_unbound_evidence_fails (tests.test_proposed_baseline_lite.ProposedBaselineLiteTests.test_malformed_delta_missing_gate_or_unbound_evidence_fails) ... ok
+test_malformed_or_stale_current_cannot_be_selected (tests.test_proposed_baseline_lite.ProposedBaselineLiteTests.test_malformed_or_stale_current_cannot_be_selected) ... ok
+test_mutated_historical_r12_or_r13_evidence_is_not_accepted (tests.test_proposed_baseline_lite.ProposedBaselineLiteTests.test_mutated_historical_r12_or_r13_evidence_is_not_accepted) ... ok
+test_pilot_acceptance_is_not_current_promotion (tests.test_proposed_baseline_lite.ProposedBaselineLiteTests.test_pilot_acceptance_is_not_current_promotion) ... ok
+test_previously_governed_path_cannot_disappear_from_successor (tests.test_proposed_baseline_lite.ProposedBaselineLiteTests.test_previously_governed_path_cannot_disappear_from_successor) ... ok
+test_promoted_current_exactly_supersedes_hash_closed_history (tests.test_proposed_baseline_lite.ProposedBaselineLiteTests.test_promoted_current_exactly_supersedes_hash_closed_history) ... ok
+test_promoted_current_history_hash_matches_written_bytes (tests.test_proposed_baseline_lite.ProposedBaselineLiteTests.test_promoted_current_history_hash_matches_written_bytes) ... ok
+test_promoted_current_retains_exact_historical_test_successor (tests.test_proposed_baseline_lite.ProposedBaselineLiteTests.test_promoted_current_retains_exact_historical_test_successor) ... ok
+test_promotion_material_requires_exact_head_and_real_bound_artifacts (tests.test_proposed_baseline_lite.ProposedBaselineLiteTests.test_promotion_material_requires_exact_head_and_real_bound_artifacts) ... ok
+test_proposal_cannot_substitute_current_or_candidate (tests.test_proposed_baseline_lite.ProposedBaselineLiteTests.test_proposal_cannot_substitute_current_or_candidate) ... ok
+test_sequential_promotion_accumulates_previous_and_new_governed_paths (tests.test_proposed_baseline_lite.ProposedBaselineLiteTests.test_sequential_promotion_accumulates_previous_and_new_governed_paths) ... ok
+test_sequential_promotion_replaces_existing_path_only_with_matching_current_hash (tests.test_proposed_baseline_lite.ProposedBaselineLiteTests.test_sequential_promotion_replaces_existing_path_only_with_matching_current_hash) ... ok
+test_technical_green_never_self_accepts_or_promotes (tests.test_proposed_baseline_lite.ProposedBaselineLiteTests.test_technical_green_never_self_accepts_or_promotes) ... ok
+test_test_successor_cannot_authorize_wildcard_noninventory_or_executable_path (tests.test_proposed_baseline_lite.ProposedBaselineLiteTests.test_test_successor_cannot_authorize_wildcard_noninventory_or_executable_path) ... ok
+test_valid_proposal_is_awaiting_owner_acceptance_not_current (tests.test_proposed_baseline_lite.ProposedBaselineLiteTests.test_valid_proposal_is_awaiting_owner_acceptance_not_current) ... ok
+test_acceptance_lineage_survives_merge_without_proposal_change (tests.test_proposed_baseline_lite.ProposedOverlayLineageTests.test_acceptance_lineage_survives_merge_without_proposal_change) ... ok
+test_addition_paths_are_literal_including_git_pathspec_characters (tests.test_proposed_baseline_lite.ProposedOverlayLineageTests.test_addition_paths_are_literal_including_git_pathspec_characters) ... ok
+test_arbitrary_product_change_after_proposal_declaration_fails (tests.test_proposed_baseline_lite.ProposedOverlayLineageTests.test_arbitrary_product_change_after_proposal_declaration_fails) ... ok
+test_candidate_source_and_stale_evidence_fail (tests.test_proposed_baseline_lite.ProposedOverlayLineageTests.test_candidate_source_and_stale_evidence_fail) ... ok
+test_canonical_media_dependency_sync_cannot_change_existing_gates (tests.test_proposed_baseline_lite.ProposedOverlayLineageTests.test_canonical_media_dependency_sync_cannot_change_existing_gates) ... ok
+test_exact_declared_historical_test_successor_passes (tests.test_proposed_baseline_lite.ProposedOverlayLineageTests.test_exact_declared_historical_test_successor_passes) ... ok
+test_forged_absence_existing_in_base_but_not_inventory_fails (tests.test_proposed_baseline_lite.ProposedOverlayLineageTests.test_forged_absence_existing_in_base_but_not_inventory_fails) ... ok
+test_forged_absence_existing_in_inventory_but_not_base_fails (tests.test_proposed_baseline_lite.ProposedOverlayLineageTests.test_forged_absence_existing_in_inventory_but_not_base_fails) ... ok
+test_historical_test_drift_without_successor_or_with_wrong_after_fails (tests.test_proposed_baseline_lite.ProposedOverlayLineageTests.test_historical_test_drift_without_successor_or_with_wrong_after_fails) ... ok
+test_malformed_addition_deltas_fail_all_entry_points (tests.test_proposed_baseline_lite.ProposedOverlayLineageTests.test_malformed_addition_deltas_fail_all_entry_points) ... ok
+test_missing_current_and_invalid_inventory_cannot_authorize_addition (tests.test_proposed_baseline_lite.ProposedOverlayLineageTests.test_missing_current_and_invalid_inventory_cannot_authorize_addition) ... ok
+test_missing_or_mismatched_git_identities_do_not_prove_absence (tests.test_proposed_baseline_lite.ProposedOverlayLineageTests.test_missing_or_mismatched_git_identities_do_not_prove_absence) ... ok
+test_non_tree_ancestor_is_not_absence (tests.test_proposed_baseline_lite.ProposedOverlayLineageTests.test_non_tree_ancestor_is_not_absence) ... ok
+test_nonregular_base_and_after_entries_are_not_additions (tests.test_proposed_baseline_lite.ProposedOverlayLineageTests.test_nonregular_base_and_after_entries_are_not_additions) ... ok
+test_omitted_addition_and_deletion_remain_unaccounted (tests.test_proposed_baseline_lite.ProposedOverlayLineageTests.test_omitted_addition_and_deletion_remain_unaccounted) ... ok
+test_one_declared_historical_test_successor_cannot_hide_another_drift (tests.test_proposed_baseline_lite.ProposedOverlayLineageTests.test_one_declared_historical_test_successor_cannot_hide_another_drift) ... ok
+test_product_byte_in_overlay_fails (tests.test_proposed_baseline_lite.ProposedOverlayLineageTests.test_product_byte_in_overlay_fails) ... ok
+test_proposal_declaration_survives_exact_canonical_protection_sync (tests.test_proposed_baseline_lite.ProposedOverlayLineageTests.test_proposal_declaration_survives_exact_canonical_protection_sync) ... ok
+test_regular_and_executable_additions_pass_entire_chain_without_writes (tests.test_proposed_baseline_lite.ProposedOverlayLineageTests.test_regular_and_executable_additions_pass_entire_chain_without_writes) ... ok
+test_rename_cannot_hide_unsupported_deletion (tests.test_proposed_baseline_lite.ProposedOverlayLineageTests.test_rename_cannot_hide_unsupported_deletion) ... ok
+test_undeclared_previously_governed_product_mutation_fails (tests.test_proposed_baseline_lite.ProposedOverlayLineageTests.test_undeclared_previously_governed_product_mutation_fails) ... ok
+test_unreadable_base_tree_or_source_blob_is_not_absence (tests.test_proposed_baseline_lite.ProposedOverlayLineageTests.test_unreadable_base_tree_or_source_blob_is_not_absence) ... ok
+test_valid_product_source_and_evidence_overlay_pass (tests.test_proposed_baseline_lite.ProposedOverlayLineageTests.test_valid_product_source_and_evidence_overlay_pass) ... ok
+test_wrong_after_hash_and_missing_after_blob_fail (tests.test_proposed_baseline_lite.ProposedOverlayLineageTests.test_wrong_after_hash_and_missing_after_blob_fail) ... ok
+test_bundled_schema_builds_and_reopens_real_knowledge_view (tests.test_packaged_knowledge_view.PackagedKnowledgeViewTests.test_bundled_schema_builds_and_reopens_real_knowledge_view) ... ok
+test_missing_bundle_schema_reproduces_failure_without_source_fallback (tests.test_packaged_knowledge_view.PackagedKnowledgeViewTests.test_missing_bundle_schema_reproduces_failure_without_source_fallback) ... ok
+test_schema_is_executed_not_merely_present (tests.test_packaged_knowledge_view.PackagedKnowledgeViewTests.test_schema_is_executed_not_merely_present) ... ok
+
+======================================================================
+FAIL: test_current_baseline_exact_contract_passes (tests.test_governance.GovernanceValidationTests.test_current_baseline_exact_contract_passes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/integra-issue-279-k2-canonical-knowledge/tests/test_governance.py", line 130, in test_current_baseline_exact_contract_passes
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        VALIDATOR.validate_current(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            self.current_product_baseline_v2, ROOT, self.proposed_baseline
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ), []
+        ^^^^^
+    )
+    ^
+AssertionError: Lists differ: ['CURRENT v2 governed byte drift: integra_[706 chars]son'] != []
+
+First list contains 11 additional elements.
+First extra element 0:
+'CURRENT v2 governed byte drift: integra_core/candidate_identity.py'
+
+Diff is 797 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_historical_certification_records_are_not_rewritten (tests.test_governance.GovernanceValidationTests.test_historical_certification_records_are_not_rewritten)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/integra-issue-279-k2-canonical-knowledge/tests/test_governance.py", line 206, in test_historical_certification_records_are_not_rewritten
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        VALIDATOR.validate_current(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            self.current_product_baseline_v2, ROOT, self.proposed_baseline
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ), []
+        ^^^^^
+    )
+    ^
+AssertionError: Lists differ: ['CURRENT v2 governed byte drift: integra_[706 chars]son'] != []
+
+First list contains 11 additional elements.
+First extra element 0:
+'CURRENT v2 governed byte drift: integra_core/candidate_identity.py'
+
+Diff is 797 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_knowledge_integration_evidence_is_valid (tests.test_governance.GovernanceValidationTests.test_knowledge_integration_evidence_is_valid)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/integra-issue-279-k2-canonical-knowledge/tests/test_governance.py", line 835, in test_knowledge_integration_evidence_is_valid
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        VALIDATOR.validate_knowledge_integration_evidence(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+        [],
+        ^^^
+    )
+    ^
+AssertionError: Lists differ: ['R9A implementation hash differs: integra[89 chars]son'] != []
+
+First list contains 2 additional elements.
+First extra element 0:
+'R9A implementation hash differs: integra_core/knowledge.py'
+
++ []
+- ['R9A implementation hash differs: integra_core/knowledge.py',
+-  'R9A implementation hash differs: schemas/knowledge_view_v1.schema.json']
+
+======================================================================
+FAIL: test_valid_superseding_baseline_suppresses_only_explained_historical_drift (tests.test_governance.GovernanceValidationTests.test_valid_superseding_baseline_suppresses_only_explained_historical_drift)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/integra-issue-279-k2-canonical-knowledge/tests/test_governance.py", line 186, in test_valid_superseding_baseline_suppresses_only_explained_historical_drift
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        VALIDATOR.validate_native_macos_app_evidence(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        [],
+        ^^^
+    )
+    ^
+AssertionError: Lists differ: ['R12 implementation hash differs: macos/I[199 chars].sh'] != []
+
+First list contains 4 additional elements.
+First extra element 0:
+'R12 implementation hash differs: macos/IntegraApp.swift'
+
++ []
+- ['R12 implementation hash differs: macos/IntegraApp.swift',
+-  'R12 implementation hash differs: macos/Resources/bridge.py',
+-  'R12 implementation hash differs: scripts/build_macos_app.sh',
+-  'R12 implementation hash differs: scripts/test_macos_app.sh']
+
+----------------------------------------------------------------------
+Ran 140 tests in 37.845s
+
+FAILED (failures=4)

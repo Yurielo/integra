@@ -1,0 +1,25 @@
+{
+  "status": "PASS",
+  "media_sha256": "db0cbfd61a3861442114d27633d0b8115af792f6532674298886d86fd57cf3e4",
+  "navigation_source_hash_matches": true,
+  "read_only_metadata_probe": {
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "codec_type": "video",
+        "duration": "7.440000"
+      },
+      {
+        "codec_name": "aac",
+        "codec_type": "audio",
+        "duration": "7.464989"
+      }
+    ],
+    "format": {
+      "duration": "7.464989"
+    }
+  },
+  "audible_playback_assessed": false
+}

@@ -1,0 +1,30 @@
+{
+  "candidate_id": "candidate-v1-e8064cba8acad3282d86b9d7eea043f85c5eed54ac7db015ccdf089943dee943",
+  "app": "/private/tmp/integra-owned-issue279-i01-sg2zbkk8/candidate/Integra.app",
+  "launch": {
+    "pid": 92931,
+    "app": "/private/tmp/integra-owned-issue279-i01-sg2zbkk8/candidate/Integra.app",
+    "data_root": "/private/tmp/integra-owned-issue279-i01-sg2zbkk8/gui-two-unit"
+  },
+  "qa_only": true,
+  "semantic_product_acceptance": false,
+  "observed": [
+    "reviewed two-unit notebook with exact source and transcript revisions",
+    "K2 state remains preliminary before decisions",
+    "both fragment selectors unchecked by default",
+    "four provisional proposals generated after explicit fragment selection",
+    "relation dialog requires explicit concept IDs, relation type and evidence choices"
+  ],
+  "status": "PENDING_MAC_UNLOCK",
+  "not_completed": [
+    "GUI semantic review/apply",
+    "GUI relation admission",
+    "GUI process quit/relaunch and persistence",
+    "playable generated-source navigation"
+  ],
+  "blocker": "CUA reported Mac locked and automatic unlock unavailable; user unlock requested",
+  "current_files": {
+    "current_product_baseline_v2.json": "bdd2ea30b3102c59cd8e47bc56a0d53c6b57d3bfb0347e667663b1be951e52e2",
+    "current_canonical_baseline_v1.json": "0493fbad50f1a5518b01be90e3ffb0cd10d3d8b7a97ae12918fc4595c4438840"
+  }
+}

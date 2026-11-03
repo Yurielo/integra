@@ -30,6 +30,103 @@ from .seminartext_topic_review_runtime import (_environment, _locked, _python, a
 TYPE = "integra.reviewed_result_package"
 V1 = "CANONICAL_KNOWLEDGE_V1"
 V2 = "REVIEWED_FRAGMENTS_V2"
+K2 = "CANONICAL_KNOWLEDGE_ADMISSION_V1"
+
+
+_ADMISSION_RENDER = '''
+import base64,json,sys
+sys.path.insert(0,sys.argv[1])
+from seminartext_modules.project_knowledge_bridge import build_vault,make_manifest
+request=json.load(sys.stdin)
+evidence=request['evidence']; revision=request['revision']
+knowledge=revision['canonical_knowledge']; source=revision['source_evidence']
+coverage={'full_seminar_coverage':False,'sources':[{'source_id':item['id'],'status':'PARTIAL',
+    'reason':'Only explicitly selected and semantically reviewed K1 fragments are admitted.'} for item in evidence['sources']]}
+resolver={item['id']:'RESOLVER_UNAVAILABLE' for item in evidence['sources']}
+files=build_vault(evidence,source,knowledge,coverage,resolver)
+manifest=make_manifest(files,{'kind':'obsidian_derived_view','canonical_evidence_artifact_id':evidence['artifact_id'],
+    'canonical_evidence_sha256':request['evidence_sha256'],'canonical_knowledge_artifact_id':knowledge['artifact_id'],
+    'canonical_knowledge_sha256':revision['canonical_knowledge_sha256'],'coverage':coverage,'resolver_states':resolver})
+print(json.dumps({'files':{name:base64.b64encode(payload).decode('ascii') for name,payload in files.items()},'manifest':manifest}))
+'''
+
+
+def _render_admitted(revision, evidence_payload):
+    """Use the existing source-owned Obsidian renderer without recompiling semantics."""
+    from .knowledge_admission_runtime import exact_owner_snapshot
+    with exact_owner_snapshot() as runtime:
+        result = subprocess.run([_python(), "-c", _ADMISSION_RENDER, str(runtime)],
+            input=json.dumps({"evidence": json.loads(evidence_payload), "evidence_sha256": _sha(evidence_payload), "revision": revision}, ensure_ascii=False),
+            capture_output=True, text=True, timeout=120, env=_environment())
+    _require(result.returncode == 0, "source-owned admitted view renderer failed: " + result.stderr[-1000:])
+    value = json.loads(result.stdout)
+    files = {name: base64.b64decode(data, validate=True) for name, data in value["files"].items()}
+    validate_source_export(files, value["manifest"])
+    return files, value["manifest"]
+
+
+def _admitted_navigation_markdown(revision, context):
+    lines = ["# Canonical Knowledge", "", "Owner: SeminarText. Revision: `" + revision["revision_sha256"] + "`.", ""]
+    for item in revision["source_evidence"]["evidence"]:
+        query = {key: context[key] for key in ("project_id", "run_id", "source_id", "notebook_id", "source_revision_sha256")}
+        query["fragment_id"] = item["reviewed_fragment_id"]
+        lines.extend(["## " + item["id"], "", "[Открыть точный источник](integra://knowledge/fragment?" + urlencode(query) + ")", "",
+                      "> " + item["quote"].replace("\n", "\n> "), ""])
+    return "\n".join(lines).encode("utf-8")
+
+
+def build_admitted_knowledge_package(*, revision, evidence_payload, project_id, project_slug, source_id, navigation_context):
+    """Additive owner-admission receipt inside the existing managed package path."""
+    from .knowledge_admission_runtime import owner
+    admission = owner()
+    admission.validate_revision(revision, evidence_payload)
+    view, derived = _render_admitted(revision, evidence_payload)
+    files = {"provenance/canonical_evidence.json": evidence_payload,
+             "provenance/canonical_revision.json": admission.canonical_bytes(revision),
+             "provenance/navigation.json": canonical_json(navigation_context) + b"\n",
+             "provenance/derived_manifest.json": admission.canonical_bytes(derived),
+             "result/result.json": admission.canonical_bytes(revision["canonical_knowledge"]),
+             "result/result.md": _admitted_navigation_markdown(revision, navigation_context),
+             "view/_meta/integra_navigation.md": _admitted_navigation_markdown(revision, navigation_context),
+             **{"view/" + name: data for name, data in view.items()}}
+    refs = {role: {"path": path, "sha256": _sha(files[path])} for role, path in {
+        "evidence": "provenance/canonical_evidence.json", "revision": "provenance/canonical_revision.json",
+        "navigation": "provenance/navigation.json", "derived_manifest": "provenance/derived_manifest.json"}.items()}
+    manifest = {"artifact_type": TYPE, "schema_version": "1.0", "project_id": project_id, "project_slug": project_slug,
+        "source_id": source_id, "created_at": max(item["timestamp"] for item in revision["semantic_decisions"]),
+        "result_kind": K2, "result": {"path": "result/result.json", "sha256": _sha(files["result/result.json"]),
+            "markdown": {"path": "result/result.md", "sha256": _sha(files["result/result.md"])}},
+        "provenance": refs, "semantic_authority": "DERIVED_SOURCE_TRUTH_PRESERVED", "source_artifacts_modified": False,
+        "files": [{"path": name, "size_bytes": len(data), "sha256": _sha(data), "ownership_class": "MANAGED_GENERATED"}
+                  for name, data in sorted(files.items())]}
+    manifest["version_sha256"] = content_sha256(_identity(manifest))
+    manifest["package_id"] = derive_imported_id("artifact", "integra.reviewed_result", project_id, manifest["version_sha256"])
+    validate_reviewed_result_package(manifest, files)
+    return manifest, dict(sorted(files.items()))
+
+
+def _validate_admitted(manifest, files, record, payload):
+    from .knowledge_admission_runtime import owner
+    admission = owner()
+    refs = manifest["provenance"]
+    _require(isinstance(refs, dict) and set(refs) == {"evidence", "revision", "navigation", "derived_manifest"}, "K2 provenance differs")
+    evidence_payload = payload(refs["evidence"])
+    evidence, revision, context, derived = (record(refs[name]) for name in ("evidence", "revision", "navigation", "derived_manifest"))
+    admission.validate_revision(revision, evidence_payload)
+    _validate_navigation_context(context, manifest, evidence)
+    binding = revision["source_evidence"]["admission"]["package"]["k1_binding"]
+    _require(binding["notebook_id"] == context["notebook_id"], "K2 notebook lineage differs")
+    result = manifest["result"]
+    _require(isinstance(result, dict) and set(result) == {"path", "sha256", "markdown"}, "K2 result fields differ")
+    _require(payload({key: result[key] for key in ("path", "sha256")}) == admission.canonical_bytes(revision["canonical_knowledge"]), "K2 canonical result differs")
+    markdown = _admitted_navigation_markdown(revision, context)
+    _require(payload(result["markdown"]) == markdown and files.get("view/_meta/integra_navigation.md") == markdown, "K2 source links differ")
+    expected_view, expected_manifest = _render_admitted(revision, evidence_payload)
+    _require(derived == expected_manifest, "K2 derived manifest differs from existing renderer")
+    _require({name: files.get("view/" + name) for name in expected_view} == expected_view, "K2 managed notes differ from existing renderer")
+    expected = {ref["path"] for ref in refs.values()} | {result["path"], result["markdown"]["path"], "view/_meta/integra_navigation.md"} | {"view/" + name for name in expected_view}
+    _require(set(files) == expected, "K2 unbound files")
+    _require(manifest["created_at"] == max(item["timestamp"] for item in revision["semantic_decisions"]), "K2 decision timestamp differs")
 
 
 _RENDER_VERIFICATION = """
@@ -196,6 +293,9 @@ def _validate(manifest, files):
         return value
 
     kind = manifest["result_kind"]
+    if kind == K2:
+        _validate_admitted(manifest, files, record, payload)
+        return
     _require(kind in {V1, V2}, "unknown result kind")
     roles = {"evidence", "decisions", "review_package", "receipt", "binding", "topic_output", "draft_input"}
     roles |= {"knowledge_input", "compiled_evidence", "source_evidence", "derived_manifest"} if kind == V1 else {"word_timeline"}

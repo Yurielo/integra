@@ -1,0 +1,23 @@
+test_activity_change_between_moves_preserves_partial_journal (__main__.ExactCacheRecoveryQA.test_activity_change_between_moves_preserves_partial_journal) ... ok
+test_ancestor_quarantine_parent_is_rejected_before_mutation (__main__.ExactCacheRecoveryQA.test_ancestor_quarantine_parent_is_rejected_before_mutation) ... ok
+test_bad_and_overlapping_roots_fail_before_moves (__main__.ExactCacheRecoveryQA.test_bad_and_overlapping_roots_fail_before_moves) ... ok
+test_cache_changed_during_first_move_stops_before_second_move (__main__.ExactCacheRecoveryQA.test_cache_changed_during_first_move_stops_before_second_move) ... ok
+test_changed_extra_bytes_fail_before_any_move (__main__.ExactCacheRecoveryQA.test_changed_extra_bytes_fail_before_any_move) ... ok
+test_changed_recorded_bytes_fail_before_any_move (__main__.ExactCacheRecoveryQA.test_changed_recorded_bytes_fail_before_any_move) ... ok
+test_final_verifier_failure_keeps_all_moved_bytes (__main__.ExactCacheRecoveryQA.test_final_verifier_failure_keeps_all_moved_bytes) ... ok
+test_hardlinked_cache_fails_even_if_diff_declares_link_count (__main__.ExactCacheRecoveryQA.test_hardlinked_cache_fails_even_if_diff_declares_link_count) ... ok
+test_linked_archive_or_quarantine_parent_is_rejected (__main__.ExactCacheRecoveryQA.test_linked_archive_or_quarantine_parent_is_rejected) ... ok
+test_missing_authority_and_active_consumer_fail_before_moves (__main__.ExactCacheRecoveryQA.test_missing_authority_and_active_consumer_fail_before_moves) ... ok
+test_move_committed_then_exception_retains_pending_root_for_recovery (__main__.ExactCacheRecoveryQA.test_move_committed_then_exception_retains_pending_root_for_recovery) ... ok
+test_preserves_all_extra_bytes_modes_and_original_payload (__main__.ExactCacheRecoveryQA.test_preserves_all_extra_bytes_modes_and_original_payload) ... ok
+test_quarantine_parent_inside_archive_is_rejected_before_mutation (__main__.ExactCacheRecoveryQA.test_quarantine_parent_inside_archive_is_rejected_before_mutation) ... ok
+test_recorded_payload_cannot_be_inside_move_root (__main__.ExactCacheRecoveryQA.test_recorded_payload_cannot_be_inside_move_root) ... ok
+test_second_move_failure_preserves_every_file_and_durable_pending_root (__main__.ExactCacheRecoveryQA.test_second_move_failure_preserves_every_file_and_durable_pending_root) ... ok
+test_symlink_cache_entry_is_rejected_before_moves (__main__.ExactCacheRecoveryQA.test_symlink_cache_entry_is_rejected_before_moves) ... ok
+test_unknown_extra_entry_fails_before_any_move (__main__.ExactCacheRecoveryQA.test_unknown_extra_entry_fails_before_any_move) ... ok
+test_wrong_extra_owner_and_changed_mode_fail (__main__.ExactCacheRecoveryQA.test_wrong_extra_owner_and_changed_mode_fail) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 0.063s
+
+OK

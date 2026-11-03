@@ -1,0 +1,207 @@
+Window: "Integra — Новая обработка", App: Integra.
+0 standard window Integra — Новая обработка, Secondary Actions: Raise
+	1 split group
+		2 scroll area Secondary Actions: Scroll Up, Scroll Down
+			3 table
+				4 row (selectable)
+					5 cell
+						6 text INTEGRA
+				7 row (selectable)
+					8 cell
+						9 text ＋ Новая обработка
+				10 row (selectable)
+					11 cell
+						12 text БИБЛИОТЕКА
+				13 row (selectable)
+					14 cell
+						15 text Исходники
+				16 row (selectable)
+					17 cell
+						18 text Проекты
+				19 row (selectable)
+					20 cell
+						21 text Обработанные материалы
+				22 row (selectable)
+					23 cell
+						24 text РАБОТА
+				25 row (selectable)
+					26 cell
+						27 text Выполняется
+				28 row (selectable)
+					29 cell
+						30 text Требует проверки — В разработке
+				31 row (selectable)
+					32 cell
+						33 text ЗНАНИЯ
+				34 row (selected)
+					35 cell (selected)
+						36 text База знаний
+				37 row (selectable)
+					38 cell
+						39 text Поиск — В разработке
+				40 row (selectable)
+					41 cell
+						42 text СОЗДАТЬ
+				43 row (selectable)
+					44 cell
+						45 text Видео и клипы — В разработке
+				46 row (selectable)
+					47 cell
+						48 text Учебные материалы — В разработке
+				49 row (selectable)
+					50 cell
+						51 text Маркетинг — В разработке
+				52 row (selectable)
+					53 cell
+						54 text ПУБЛИКАЦИЯ
+				55 row (selectable)
+					56 cell
+						57 text Готово
+				58 row (selectable)
+					59 cell
+						60 text История
+				61 row (selectable)
+					62 cell
+						63 text SYSTEM
+				64 row (selectable)
+					65 cell
+						66 text Диагностика
+				67 row (selectable)
+					68 cell
+						69 text Настройки — В разработке
+			70 scroll bar (disabled, settable, float) 0
+		71 splitter (disabled, settable, float) 370
+		72 scroll area Secondary Actions: Scroll Up, Scroll Down
+			73 text Структурированные знания Смысловая проверка понятий и связей. Принятие знаний не изменяет проверку исходной расшифровки. Сохранённая каноническая версия проверена
+			74 button Вернуться к конспекту
+			75 button Выбрать проверенные фрагменты
+			76 text Пакет предложений: 11057a844eba910b7a88ed311be3552f85cc758daae74241597f2b04d21065ed
+Число предложений: 2. Для каждого требуется отдельное решение. Пакет уже рассмотрен. Для новой проверки или изменения существующих записей снова выберите их исходные фрагменты; ID принятых понятий сохраняются. Понятие · Принято
+Предложение: proposal_7db5bce6193e7d3a5f06ffa90e6f1df8e9bd9c353614be229e32c68d69d64dd5
+Действие: Создать новую запись
+Сейчас: Записи нет
+Предлагается:
+ID: concept_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1
+Варианты названия:
+Описание понятия: Этот сегмент демонстрирует процесс распознавания речи, включая создание субтитров и определение временной шкалы слов и тем.
+Название понятия: Проверка распознавания речи
+Происхождение предложения: {
+  "method" : "deterministic-reviewed-unit-proposal-v1",
+  "producer_sha256" : "acfcc3a8c81f3c4e6b7de43e071c490c49a0f7bd94214e0097fb8afa9b6afa1c"
+}
+
+Цитата: Здравствуйте! Это короткая проверка полного процесса распознавания речи, субтитров,
+Контекст: Здравствуйте! Это короткая проверка полного процесса распознавания речи, субтитров,
+временной шкалы слов и тем.
+
+Источник: source_source_655b4871962cc06480dca0fb
+Версия источника: db0cbfd61a3861442114d27633d0b8115af792f6532674298886d86fd57cf3e4
+Версия текста: transcript_revision_source_655b4871962cc06480dca0fb_r1
+Машинная расшифровка, не проверена человеком
+Фрагмент: fragment_be53d8140f6e7424f823de8dc420c702635a3ad6f4444a38e8f48a594c78495d
+Основание: evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e
+Точность: диапазон слов · 0.08–5.728 с
+Границы: transcript_revision_source_655b4871962cc06480dca0fb_r1:word:000000 — transcript_revision_source_655b4871962cc06480dca0fb_r1:word:000008 Тема · Принято
+Предложение: proposal_c498e88b58d7f4a6019cc3e58ab1eacdce84dd0ee9010194c8397dfc4e942aae
+Действие: Создать новую запись
+Сейчас: Записи нет
+Предлагается:
+ID: topic_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1
+Описание: Этот сегмент демонстрирует процесс распознавания речи, включая создание субтитров и определение временной шкалы слов и тем.
+Название темы: Проверка распознавания речи
+Происхождение предложения: {
+  "method" : "deterministic-reviewed-unit-proposal-v1",
+  "producer_sha256" : "acfcc3a8c81f3c4e6b7de43e071c490c49a0f7bd94214e0097fb8afa9b6afa1c"
+}
+
+Цитата: Здравствуйте! Это короткая проверка полного процесса распознавания речи, субтитров,
+Контекст: Здравствуйте! Это короткая проверка полного процесса распознавания речи, субтитров,
+временной шкалы слов и тем.
+
+Источник: source_source_655b4871962cc06480dca0fb
+Версия источника: db0cbfd61a3861442114d27633d0b8115af792f6532674298886d86fd57cf3e4
+Версия текста: transcript_revision_source_655b4871962cc06480dca0fb_r1
+Машинная расшифровка, не проверена человеком
+Фрагмент: fragment_be53d8140f6e7424f823de8dc420c702635a3ad6f4444a38e8f48a594c78495d
+Основание: evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e
+Точность: диапазон слов · 0.08–5.728 с
+Границы: transcript_revision_source_655b4871962cc06480dca0fb_r1:word:000000 — transcript_revision_source_655b4871962cc06480dca0fb_r1:word:000008 Решение: Принято · proposal_7db5bce6193e7d3a5f06ffa90e6f1df8e9bd9c353614be229e32c68d69d64dd5
+Проверяющий: synthetic-gui-demo
+Обоснование: GENERATED DEMO GUI QA ONLY; not Product Owner acceptance Решение: Принято · proposal_c498e88b58d7f4a6019cc3e58ab1eacdce84dd0ee9010194c8397dfc4e942aae
+Проверяющий: synthetic-gui-demo
+Обоснование: GENERATED DEMO GUI QA ONLY; explicit topic decision Каноническая версия: 834d1c61449adbfc7e9a453a1646ed8c7f798ae27fcaa8e40344729e8a780465
+Родительская версия: —
+Владелец: SeminarText. Здесь показано сохранённое представление.
+			77 button Обновить сохранённое представление
+			78 button Предпросмотр / экспорт знаний в Obsidian
+			79 text Принятые понятия, темы и связи ID: topic_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1
+Описание: Этот сегмент демонстрирует процесс распознавания речи, включая создание субтитров и определение временной шкалы слов и тем.
+Название темы: Проверка распознавания речи
+			80 button Открыть источник · evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e, Help: evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e
+			81 text ID: concept_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1
+Варианты названия:
+Описание понятия: Этот сегмент демонстрирует процесс распознавания речи, включая создание субтитров и определение временной шкалы слов и тем.
+Название понятия: Проверка распознавания речи
+			82 button Открыть источник · evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e, Help: evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e
+			83 text Термины — названия и варианты понятий:
+Проверка распознавания речи → concept_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1 Граф знаний · 0472531be580eabce9c8c304ff078f462786e8ba88d96d79da4e609ee114179b
+concept_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1 → SUPPORTED_BY → evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e
+decision_b67a7baafcc6a664660471c84ec0bb2cb2db747a48466bddbdc4725907502ac4 → REVIEW_RESULT → topic_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1
+decision_b67a7baafcc6a664660471c84ec0bb2cb2db747a48466bddbdc4725907502ac4 → REVIEW_TARGET → topic_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1
+decision_edd659c5bbc975a9452ce8bbc8f06ed38c5b8da5fdc94fc93855b6d7317cb3bf → REVIEW_RESULT → concept_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1
+decision_edd659c5bbc975a9452ce8bbc8f06ed38c5b8da5fdc94fc93855b6d7317cb3bf → REVIEW_TARGET → concept_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1
+seminar_fbbac44927544a1b7dcef587ecd917bc00d34af0221b5137aa1d5b9c8ec0d73a → CONTAINS → topic_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1
+topic_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1 → SUPPORTED_BY → evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e
+urn:integra:evidence:a5a98156-744a-5dfb-b670-ea46a0087923 → SUPPORTED_BY → evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e
+urn:integra:evidence:a5a98156-744a-5dfb-b670-ea46a0087923 → TERM_OF → concept_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1 Изменения версии (механическое сравнение записей):
+Добавлено: [
+  {
+    "id" : "concept_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1",
+    "kind" : "CONCEPT"
+  },
+  {
+    "id" : "evidence_eef898695858564f9d349b5fab4d0f3f57ae1bc1e5dbf9e15e3302e2c0cc446e",
+    "kind" : "EVIDENCE"
+  },
+  {
+    "id" : "decision_b67a7baafcc6a664660471c84ec0bb2cb2db747a48466bddbdc4725907502ac4",
+    "kind" : "REVIEW_DECISION"
+  },
+  {
+    "id" : "decision_edd659c5bbc975a9452ce8bbc8f06ed38c5b8da5fdc94fc93855b6d7317cb3bf",
+    "kind" : "REVIEW_DECISION"
+  },
+  {
+    "id" : "seminar_fbbac44927544a1b7dcef587ecd917bc00d34af0221b5137aa1d5b9c8ec0d73a",
+    "kind" : "SEMINAR"
+  },
+  {
+    "id" : "urn:integra:evidence:a5a98156-744a-5dfb-b670-ea46a0087923",
+    "kind" : "TERM"
+  },
+  {
+    "id" : "topic_a26d0ca8ab07daf5959ce74b190ba856648dad5f522eaf85dcbdf73140d01da1",
+    "kind" : "TOPIC"
+  }
+]
+Удалено:
+Изменены байты:
+Смысловые противоречия этим сравнением не определяются.
+			84 scroll bar (settable, float) 0
+				85 value indicator (settable, float) 0
+				86 increment arrow button
+				87 decrement arrow button
+				88 increment page button
+				89 decrement page button
+	90 close button
+	91 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	92 minimize button
+	93 text Integra — Новая обработка
+94 menu bar
+	95 Integra
+	96 Правка
+
+Selected:
+	34 row (selected)
+
+Note: Pay special attention to the content selected by the user. If the user asks a question or refers to the content they are looking at on-screen, they might be referring to the selected content (but they might be referring to something else that's visible, too).

@@ -1,0 +1,1388 @@
+{
+  "automatic_acceptance": false,
+  "available_concepts": [
+    {
+      "id": "concept_24ce9f02025f14e5492ab963a9256bba1a01cbc380fc94c1a45d78a6b44e658c",
+      "label": "Солнечная панель: преобразование света"
+    },
+    {
+      "id": "concept_4aceb0557963500858a08630e45daa922b2926c25eb113e15816e217a8e95749",
+      "label": "Аккумулятор: хранение энергии"
+    }
+  ],
+  "confirmed_proposal_ids": [
+    "proposal_017dbce4f610ad182355455dba37151970f5f1a1f81dbb2b508ae2ea1b069d1d",
+    "proposal_2e59d6b5c644b4759107f4bdfcb938742d67ceb66c099ca9175c1666c979d991",
+    "proposal_58ba716ade16c434e1e9bdc0768d3ffb166ba04a9f9feea16722532306602c74",
+    "proposal_89a158725083baf9d161a0a79135dc0237cf099cbdadc7c76e575edd3aa5593c",
+    "proposal_d56befd64a7d1a9a9e86634f87a12026212fd7176796940320e4b138028f0e63"
+  ],
+  "diff": {
+    "added_ids": [
+      {
+        "id": "concept_24ce9f02025f14e5492ab963a9256bba1a01cbc380fc94c1a45d78a6b44e658c",
+        "kind": "CONCEPT"
+      },
+      {
+        "id": "concept_4aceb0557963500858a08630e45daa922b2926c25eb113e15816e217a8e95749",
+        "kind": "CONCEPT"
+      },
+      {
+        "id": "evidence_16bb05e976425e18adf5167ccafe6046cf5085e351cf3af80fcb15f1ac643da7",
+        "kind": "EVIDENCE"
+      },
+      {
+        "id": "evidence_ee9d2ab0bcc964c637e42f05f90478d5b702321612f559b0d0479a99d4edec0b",
+        "kind": "EVIDENCE"
+      },
+      {
+        "id": "relation_626625b30d197d64590a6a324fc4ff58b35b245ff5bef7d0849898caf8ea8150",
+        "kind": "RELATION"
+      },
+      {
+        "id": "decision_46687afee4ba8945238a17ad3c30a88d1fb9e64e29be10a972e6160402fca31e",
+        "kind": "REVIEW_DECISION"
+      },
+      {
+        "id": "decision_59dac19db059b36a43010d5564f68cf235175f282b05a4b51d2e7ab34f7a6eed",
+        "kind": "REVIEW_DECISION"
+      },
+      {
+        "id": "decision_7af5a5b1662ab5079ebf6cde341c8d8ebace30ee84d516c35e87aed9cc2e2e10",
+        "kind": "REVIEW_DECISION"
+      },
+      {
+        "id": "seminar_81e752cd2b57e70671290b668f2dc4e2ada369cbbebdd69827b1b68a1ab7ef03",
+        "kind": "SEMINAR"
+      },
+      {
+        "id": "urn:integra:evidence:bfe217c8-2518-538b-9ef3-db70a5727d72",
+        "kind": "TERM"
+      },
+      {
+        "id": "urn:integra:evidence:f35c75ce-32e7-5415-911b-f85103406daa",
+        "kind": "TERM"
+      }
+    ],
+    "after_view_id": "urn:integra:artifact:18bd5871-1327-5aa6-8e6e-5270f1633250",
+    "before_view_id": null,
+    "changed_ids": [],
+    "diff_sha256": "60f91dbf882191a75eb3e9e104abefea288beb10f520646f94ebcabb60ff11cc",
+    "removed_ids": [],
+    "schema_version": "1.0",
+    "semantic_interpretation": "NOT_PERFORMED"
+  },
+  "eligible_fragments": [
+    {
+      "canonical_evidence_provenance": {
+        "source_id": "source_source_ef3a411d2d782c6001ae2874",
+        "transcript_revision_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1",
+        "word_end_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000054",
+        "word_start_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000000"
+      },
+      "context": "Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света ",
+      "evidence_id": "evidence_ee9d2ab0bcc964c637e42f05f90478d5b702321612f559b0d0479a99d4edec0b",
+      "evidence_refs": [
+        "evidence_topic_67c4254a885b41d6b405_0000"
+      ],
+      "id": "fragment_3b1ea3096639f7c5d271a4bdc7c97e34a11f1a6b7a0834c9011893875541e726",
+      "locator": {
+        "end_seconds": 54.8,
+        "start_seconds": 0.1,
+        "type": "time_interval"
+      },
+      "precision": "WORD_RANGE",
+      "quote": "Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов",
+      "review_decision_provenance": {
+        "actor_id": "synthetic-gui-k1",
+        "actor_type": "human_domain_reviewer",
+        "boundary_decision_refs": [],
+        "decision_artifact_id": "review_decisions_6a7f49e8354d7e2fd3db1d94a180e0a89459528ef8591deca261da5b5a47c24c",
+        "decision_artifact_sha256": "45782ff1361bc17172366c74f25c0e204d0edef110db0ad9bc6a0fc40ab66a3a",
+        "review_decision_id": "decision_3b1ea3096639f7c5d271a4bdc7c97e34a11f1a6b7a0834c9011893875541e726",
+        "semantic_decision_refs": []
+      },
+      "source_id": "source_source_ef3a411d2d782c6001ae2874",
+      "source_revision_sha256": "66ee018d71e6728d194d0774d927cac69c8d7f6dc7b42c2d4d904911e05c34a3",
+      "source_topic_id": "topic_draft_67c4254a885b41d6b405_0000",
+      "source_topic_sha256": "481c5b60b89f96bb66efd64527c2f2cfe3bec6e786d2a9fd8d880670f79bacca",
+      "summary": "Солнечная панель: преобразование света",
+      "title": "Солнечная панель: преобразование света",
+      "transcript_assurance": {
+        "method": "integra_machine_transcript_import",
+        "origin": "machine_generated",
+        "reviewer": null,
+        "verification_ranges": [],
+        "verification_state": "machine_unverified"
+      },
+      "transcript_provenance": {
+        "method": "integra_machine_transcript_import",
+        "origin": "machine_generated",
+        "reviewer": null,
+        "verification_ranges": [],
+        "verification_state": "machine_unverified"
+      },
+      "transcript_revision_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1",
+      "word_end_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000054",
+      "word_end_sequence": 54,
+      "word_start_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000000",
+      "word_start_sequence": 0,
+      "word_timeline_provenance": {
+        "path": "evidence/word_timeline.json",
+        "sha256": "d6590fb4c07126cd898a937b84f7da3a020cb8aa0596b6c6717c4371d2e52e21"
+      }
+    },
+    {
+      "canonical_evidence_provenance": {
+        "source_id": "source_source_ef3a411d2d782c6001ae2874",
+        "transcript_revision_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1",
+        "word_end_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000109",
+        "word_start_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000055"
+      },
+      "context": "я приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света\n",
+      "evidence_id": "evidence_16bb05e976425e18adf5167ccafe6046cf5085e351cf3af80fcb15f1ac643da7",
+      "evidence_refs": [
+        "evidence_topic_67c4254a885b41d6b405_0001"
+      ],
+      "id": "fragment_e933e265b4fc1d4345287f9345143f52366501dbb44f32f8acca79769a077933",
+      "locator": {
+        "end_seconds": 109.8,
+        "start_seconds": 55.1,
+        "type": "time_interval"
+      },
+      "precision": "WORD_RANGE",
+      "quote": "Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света",
+      "review_decision_provenance": {
+        "actor_id": "synthetic-gui-k1",
+        "actor_type": "human_domain_reviewer",
+        "boundary_decision_refs": [],
+        "decision_artifact_id": "review_decisions_6a7f49e8354d7e2fd3db1d94a180e0a89459528ef8591deca261da5b5a47c24c",
+        "decision_artifact_sha256": "45782ff1361bc17172366c74f25c0e204d0edef110db0ad9bc6a0fc40ab66a3a",
+        "review_decision_id": "decision_e933e265b4fc1d4345287f9345143f52366501dbb44f32f8acca79769a077933",
+        "semantic_decision_refs": []
+      },
+      "source_id": "source_source_ef3a411d2d782c6001ae2874",
+      "source_revision_sha256": "66ee018d71e6728d194d0774d927cac69c8d7f6dc7b42c2d4d904911e05c34a3",
+      "source_topic_id": "topic_draft_67c4254a885b41d6b405_0001",
+      "source_topic_sha256": "7888647c0ae707cee7a216dcdd54db2a599289e527f5cf56767403c6832da35f",
+      "summary": "Аккумулятор: хранение энергии",
+      "title": "Аккумулятор: хранение энергии",
+      "transcript_assurance": {
+        "method": "integra_machine_transcript_import",
+        "origin": "machine_generated",
+        "reviewer": null,
+        "verification_ranges": [],
+        "verification_state": "machine_unverified"
+      },
+      "transcript_provenance": {
+        "method": "integra_machine_transcript_import",
+        "origin": "machine_generated",
+        "reviewer": null,
+        "verification_ranges": [],
+        "verification_state": "machine_unverified"
+      },
+      "transcript_revision_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1",
+      "word_end_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000109",
+      "word_end_sequence": 109,
+      "word_start_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000055",
+      "word_start_sequence": 55,
+      "word_timeline_provenance": {
+        "path": "evidence/word_timeline.json",
+        "sha256": "d6590fb4c07126cd898a937b84f7da3a020cb8aa0596b6c6717c4371d2e52e21"
+      }
+    }
+  ],
+  "knowledge_view": {
+    "created_at": "2026-10-23T21:57:46.088541Z",
+    "evidence": [
+      {
+        "claim": "Exact reviewed source fragment",
+        "evidence_sha256": "96518ded90bb5bfeb5978eac4b56cf1cb8258a4d6e45f2d4c23375cdd6836a7b",
+        "id": "evidence_16bb05e976425e18adf5167ccafe6046cf5085e351cf3af80fcb15f1ac643da7",
+        "locator": {
+          "end_seconds": 109.8,
+          "start_seconds": 55.1,
+          "type": "time_interval"
+        },
+        "precision": "WORD_RANGE",
+        "quote": "Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света",
+        "reviewed_fragment_id": "fragment_e933e265b4fc1d4345287f9345143f52366501dbb44f32f8acca79769a077933",
+        "reviewed_fragment_sha256": "445bfb841d21dc02fad860a94c6600bc61272ceb2d1a8a935ca4ff058a00bf06",
+        "source_id": "source_source_ef3a411d2d782c6001ae2874",
+        "timing_status": "aligned_word_range",
+        "transcript_assurance": {
+          "authority": "candidate",
+          "lifecycle_status": "active",
+          "provenance": {
+            "method": "integra_machine_transcript_import",
+            "origin": "machine_generated",
+            "reviewer": null,
+            "verification_ranges": [],
+            "verification_state": "machine_unverified"
+          },
+          "revision_kind": "asr"
+        },
+        "transcript_revision_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1",
+        "unaligned_word_ids": [],
+        "word_end_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000109",
+        "word_start_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000055"
+      },
+      {
+        "claim": "Exact reviewed source fragment",
+        "evidence_sha256": "e978dedb20460ca34c44c82d931e7001b6fcdf41f3331f7f703a9dbb2f891fc0",
+        "id": "evidence_ee9d2ab0bcc964c637e42f05f90478d5b702321612f559b0d0479a99d4edec0b",
+        "locator": {
+          "end_seconds": 54.8,
+          "start_seconds": 0.1,
+          "type": "time_interval"
+        },
+        "precision": "WORD_RANGE",
+        "quote": "Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов",
+        "reviewed_fragment_id": "fragment_3b1ea3096639f7c5d271a4bdc7c97e34a11f1a6b7a0834c9011893875541e726",
+        "reviewed_fragment_sha256": "39cf7ae31bba955f342ee5488964c32c67dec6a737327e01436a4250edad6369",
+        "source_id": "source_source_ef3a411d2d782c6001ae2874",
+        "timing_status": "aligned_word_range",
+        "transcript_assurance": {
+          "authority": "candidate",
+          "lifecycle_status": "active",
+          "provenance": {
+            "method": "integra_machine_transcript_import",
+            "origin": "machine_generated",
+            "reviewer": null,
+            "verification_ranges": [],
+            "verification_state": "machine_unverified"
+          },
+          "revision_kind": "asr"
+        },
+        "transcript_revision_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1",
+        "unaligned_word_ids": [],
+        "word_end_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000054",
+        "word_start_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000000"
+      }
+    ],
+    "graph": {
+      "edges": [
+        {
+          "from_id": "concept_24ce9f02025f14e5492ab963a9256bba1a01cbc380fc94c1a45d78a6b44e658c",
+          "kind": "SUPPORTED_BY",
+          "to_id": "evidence_ee9d2ab0bcc964c637e42f05f90478d5b702321612f559b0d0479a99d4edec0b"
+        },
+        {
+          "from_id": "concept_4aceb0557963500858a08630e45daa922b2926c25eb113e15816e217a8e95749",
+          "kind": "SUPPORTED_BY",
+          "to_id": "evidence_16bb05e976425e18adf5167ccafe6046cf5085e351cf3af80fcb15f1ac643da7"
+        },
+        {
+          "from_id": "decision_46687afee4ba8945238a17ad3c30a88d1fb9e64e29be10a972e6160402fca31e",
+          "kind": "REVIEW_RESULT",
+          "to_id": "concept_4aceb0557963500858a08630e45daa922b2926c25eb113e15816e217a8e95749"
+        },
+        {
+          "from_id": "decision_46687afee4ba8945238a17ad3c30a88d1fb9e64e29be10a972e6160402fca31e",
+          "kind": "REVIEW_TARGET",
+          "to_id": "concept_4aceb0557963500858a08630e45daa922b2926c25eb113e15816e217a8e95749"
+        },
+        {
+          "from_id": "decision_59dac19db059b36a43010d5564f68cf235175f282b05a4b51d2e7ab34f7a6eed",
+          "kind": "REVIEW_RESULT",
+          "to_id": "concept_24ce9f02025f14e5492ab963a9256bba1a01cbc380fc94c1a45d78a6b44e658c"
+        },
+        {
+          "from_id": "decision_59dac19db059b36a43010d5564f68cf235175f282b05a4b51d2e7ab34f7a6eed",
+          "kind": "REVIEW_TARGET",
+          "to_id": "concept_24ce9f02025f14e5492ab963a9256bba1a01cbc380fc94c1a45d78a6b44e658c"
+        },
+        {
+          "from_id": "decision_7af5a5b1662ab5079ebf6cde341c8d8ebace30ee84d516c35e87aed9cc2e2e10",
+          "kind": "REVIEW_RESULT",
+          "to_id": "relation_626625b30d197d64590a6a324fc4ff58b35b245ff5bef7d0849898caf8ea8150"
+        },
+        {
+          "from_id": "decision_7af5a5b1662ab5079ebf6cde341c8d8ebace30ee84d516c35e87aed9cc2e2e10",
+          "kind": "REVIEW_TARGET",
+          "to_id": "relation_626625b30d197d64590a6a324fc4ff58b35b245ff5bef7d0849898caf8ea8150"
+        },
+        {
+          "from_id": "relation_626625b30d197d64590a6a324fc4ff58b35b245ff5bef7d0849898caf8ea8150",
+          "kind": "RELATION_SOURCE",
+          "to_id": "concept_24ce9f02025f14e5492ab963a9256bba1a01cbc380fc94c1a45d78a6b44e658c"
+        },
+        {
+          "from_id": "relation_626625b30d197d64590a6a324fc4ff58b35b245ff5bef7d0849898caf8ea8150",
+          "kind": "RELATION_TARGET",
+          "to_id": "concept_4aceb0557963500858a08630e45daa922b2926c25eb113e15816e217a8e95749"
+        },
+        {
+          "from_id": "relation_626625b30d197d64590a6a324fc4ff58b35b245ff5bef7d0849898caf8ea8150",
+          "kind": "SUPPORTED_BY",
+          "to_id": "evidence_16bb05e976425e18adf5167ccafe6046cf5085e351cf3af80fcb15f1ac643da7"
+        },
+        {
+          "from_id": "relation_626625b30d197d64590a6a324fc4ff58b35b245ff5bef7d0849898caf8ea8150",
+          "kind": "SUPPORTED_BY",
+          "to_id": "evidence_ee9d2ab0bcc964c637e42f05f90478d5b702321612f559b0d0479a99d4edec0b"
+        },
+        {
+          "from_id": "urn:integra:evidence:bfe217c8-2518-538b-9ef3-db70a5727d72",
+          "kind": "SUPPORTED_BY",
+          "to_id": "evidence_ee9d2ab0bcc964c637e42f05f90478d5b702321612f559b0d0479a99d4edec0b"
+        },
+        {
+          "from_id": "urn:integra:evidence:bfe217c8-2518-538b-9ef3-db70a5727d72",
+          "kind": "TERM_OF",
+          "to_id": "concept_24ce9f02025f14e5492ab963a9256bba1a01cbc380fc94c1a45d78a6b44e658c"
+        },
+        {
+          "from_id": "urn:integra:evidence:f35c75ce-32e7-5415-911b-f85103406daa",
+          "kind": "SUPPORTED_BY",
+          "to_id": "evidence_16bb05e976425e18adf5167ccafe6046cf5085e351cf3af80fcb15f1ac643da7"
+        },
+        {
+          "from_id": "urn:integra:evidence:f35c75ce-32e7-5415-911b-f85103406daa",
+          "kind": "TERM_OF",
+          "to_id": "concept_4aceb0557963500858a08630e45daa922b2926c25eb113e15816e217a8e95749"
+        }
+      ],
+      "graph_sha256": "59b54efa7aab377225a5540a4a23b24b1e57df21fffed845f3c8749e8bdde417",
+      "nodes": [
+        {
+          "id": "concept_24ce9f02025f14e5492ab963a9256bba1a01cbc380fc94c1a45d78a6b44e658c",
+          "kind": "CONCEPT",
+          "sha256": "f94933317bf6a9f81d36f9bb0fcda63dd582cefc3a2d3dccf3401afb613756a6",
+          "status": "ACCEPTED"
+        },
+        {
+          "id": "concept_4aceb0557963500858a08630e45daa922b2926c25eb113e15816e217a8e95749",
+          "kind": "CONCEPT",
+          "sha256": "6c7cf521341ebaa6d605494630260dc486ec66ce08365a67c1abb399e1586b3e",
+          "status": "ACCEPTED"
+        },
+        {
+          "id": "decision_46687afee4ba8945238a17ad3c30a88d1fb9e64e29be10a972e6160402fca31e",
+          "kind": "REVIEW_DECISION",
+          "sha256": "f115f889c7734aa4cc89484888547f984809e3bfe7cdd86c45e3605921f04d39",
+          "status": "DECISION"
+        },
+        {
+          "id": "decision_59dac19db059b36a43010d5564f68cf235175f282b05a4b51d2e7ab34f7a6eed",
+          "kind": "REVIEW_DECISION",
+          "sha256": "7b10ab9d03bf456f57c8a4db23496c315eb06402d955ffba11a271419210d0e3",
+          "status": "DECISION"
+        },
+        {
+          "id": "decision_7af5a5b1662ab5079ebf6cde341c8d8ebace30ee84d516c35e87aed9cc2e2e10",
+          "kind": "REVIEW_DECISION",
+          "sha256": "53aeb8a9d71790d81fc185a0302c1d110e6f260244803bad3a9ceb7e2d160cba",
+          "status": "DECISION"
+        },
+        {
+          "id": "evidence_16bb05e976425e18adf5167ccafe6046cf5085e351cf3af80fcb15f1ac643da7",
+          "kind": "EVIDENCE",
+          "sha256": "96518ded90bb5bfeb5978eac4b56cf1cb8258a4d6e45f2d4c23375cdd6836a7b",
+          "status": "SOURCE_EVIDENCE"
+        },
+        {
+          "id": "evidence_ee9d2ab0bcc964c637e42f05f90478d5b702321612f559b0d0479a99d4edec0b",
+          "kind": "EVIDENCE",
+          "sha256": "e978dedb20460ca34c44c82d931e7001b6fcdf41f3331f7f703a9dbb2f891fc0",
+          "status": "SOURCE_EVIDENCE"
+        },
+        {
+          "id": "relation_626625b30d197d64590a6a324fc4ff58b35b245ff5bef7d0849898caf8ea8150",
+          "kind": "RELATION",
+          "sha256": "d2cc4d1f0987586b8a7bef6faf5242bc0e2d9d5de503f3a9e6fc586f06fb34b9",
+          "status": "ACCEPTED"
+        },
+        {
+          "id": "seminar_81e752cd2b57e70671290b668f2dc4e2ada369cbbebdd69827b1b68a1ab7ef03",
+          "kind": "SEMINAR",
+          "sha256": "84a7909b846b85e0cfa7bb3fd9678d3e038f90ce25ebef322d35a3d7e42eb7ca",
+          "status": "PROVISIONAL"
+        },
+        {
+          "id": "urn:integra:evidence:bfe217c8-2518-538b-9ef3-db70a5727d72",
+          "kind": "TERM",
+          "sha256": "88bf240ef9f8d66adc3e04685bb4723fd71b3eb7642a5768ac00e53cfa52aabf",
+          "status": "ACCEPTED"
+        },
+        {
+          "id": "urn:integra:evidence:f35c75ce-32e7-5415-911b-f85103406daa",
+          "kind": "TERM",
+          "sha256": "0dafb8d3e06e8f3137caeae8c03b5296ed701dbd373c7ca55f436b0e439f88c9",
+          "status": "ACCEPTED"
+        }
+      ]
+    },
+    "record_sha256": "ab20b40884c493854946d31b6ecdf7e0afebce0e1e04c6c40ff91b6974bab5d0",
+    "records": {
+      "concepts": [
+        {
+          "aliases": [],
+          "created_from": [
+            "evidence_ee9d2ab0bcc964c637e42f05f90478d5b702321612f559b0d0479a99d4edec0b"
+          ],
+          "description": "Солнечная панель: преобразование света",
+          "evidence_refs": [
+            "evidence_ee9d2ab0bcc964c637e42f05f90478d5b702321612f559b0d0479a99d4edec0b"
+          ],
+          "id": "concept_24ce9f02025f14e5492ab963a9256bba1a01cbc380fc94c1a45d78a6b44e658c",
+          "preferred_label": "Синтетический GUI термин",
+          "provenance": {
+            "notes": "Semantic review of proposal_2e59d6b5c644b4759107f4bdfcb938742d67ceb66c099ca9175c1666c979d991; K1 review is separate.",
+            "origin": "human_review",
+            "source_artifact_id": "proposals_7c5cbeae5f77416cbb3235e27fd2cc08c3490644c3d5648c5e6b06ad0089d8dd"
+          },
+          "redirects": [],
+          "scope": "source-bound",
+          "status": "ACCEPTED",
+          "supersedes": [],
+          "topic_refs": [],
+          "version": 1
+        },
+        {
+          "aliases": [],
+          "created_from": [
+            "evidence_16bb05e976425e18adf5167ccafe6046cf5085e351cf3af80fcb15f1ac643da7"
+          ],
+          "description": "Аккумулятор: хранение энергии",
+          "evidence_refs": [
+            "evidence_16bb05e976425e18adf5167ccafe6046cf5085e351cf3af80fcb15f1ac643da7"
+          ],
+          "id": "concept_4aceb0557963500858a08630e45daa922b2926c25eb113e15816e217a8e95749",
+          "preferred_label": "Аккумулятор: хранение энергии",
+          "provenance": {
+            "notes": "Semantic review of proposal_58ba716ade16c434e1e9bdc0768d3ffb166ba04a9f9feea16722532306602c74; K1 review is separate.",
+            "origin": "human_review",
+            "source_artifact_id": "proposals_7c5cbeae5f77416cbb3235e27fd2cc08c3490644c3d5648c5e6b06ad0089d8dd"
+          },
+          "redirects": [],
+          "scope": "source-bound",
+          "status": "ACCEPTED",
+          "supersedes": [],
+          "topic_refs": [],
+          "version": 1
+        }
+      ],
+      "relations": [
+        {
+          "evidence_refs": [
+            "evidence_16bb05e976425e18adf5167ccafe6046cf5085e351cf3af80fcb15f1ac643da7",
+            "evidence_ee9d2ab0bcc964c637e42f05f90478d5b702321612f559b0d0479a99d4edec0b"
+          ],
+          "id": "relation_626625b30d197d64590a6a324fc4ff58b35b245ff5bef7d0849898caf8ea8150",
+          "provenance": {
+            "notes": "Semantic review of proposal_017dbce4f610ad182355455dba37151970f5f1a1f81dbb2b508ae2ea1b069d1d; K1 review is separate.",
+            "origin": "human_review",
+            "source_artifact_id": "proposals_7c5cbeae5f77416cbb3235e27fd2cc08c3490644c3d5648c5e6b06ad0089d8dd"
+          },
+          "relation_type": "associated_with",
+          "source_concept_id": "concept_24ce9f02025f14e5492ab963a9256bba1a01cbc380fc94c1a45d78a6b44e658c",
+          "status": "ACCEPTED",
+          "target_concept_id": "concept_4aceb0557963500858a08630e45daa922b2926c25eb113e15816e217a8e95749",
+          "version": 1
+        }
+      ],
+      "review_decisions": [
+        {
+          "action": "ACCEPT",
+          "actor_id": "synthetic-gui-k2",
+          "actor_type": "human_domain_reviewer",
+          "id": "decision_46687afee4ba8945238a17ad3c30a88d1fb9e64e29be10a972e6160402fca31e",
+          "input_version": 1,
+          "output_version": 1,
+          "provenance": {
+            "origin": "human_review",
+            "source_artifact_id": "proposals_7c5cbeae5f77416cbb3235e27fd2cc08c3490644c3d5648c5e6b06ad0089d8dd"
+          },
+          "reason": "SYNTHETIC GUI QA ONLY; explicit concept decision",
+          "result_ids": [
+            "concept_4aceb0557963500858a08630e45daa922b2926c25eb113e15816e217a8e95749"
+          ],
+          "target_ids": [
+            "concept_4aceb0557963500858a08630e45daa922b2926c25eb113e15816e217a8e95749"
+          ],
+          "timestamp": "2026-10-23T21:57:46.088541Z"
+        },
+        {
+          "action": "ACCEPT",
+          "actor_id": "synthetic-gui-k2",
+          "actor_type": "human_domain_reviewer",
+          "id": "decision_59dac19db059b36a43010d5564f68cf235175f282b05a4b51d2e7ab34f7a6eed",
+          "input_version": 1,
+          "output_version": 1,
+          "provenance": {
+            "origin": "human_review",
+            "source_artifact_id": "proposals_7c5cbeae5f77416cbb3235e27fd2cc08c3490644c3d5648c5e6b06ad0089d8dd"
+          },
+          "reason": "SYNTHETIC GUI QA ONLY; explicit label edit",
+          "result_ids": [
+            "concept_24ce9f02025f14e5492ab963a9256bba1a01cbc380fc94c1a45d78a6b44e658c"
+          ],
+          "target_ids": [
+            "concept_24ce9f02025f14e5492ab963a9256bba1a01cbc380fc94c1a45d78a6b44e658c"
+          ],
+          "timestamp": "2026-10-23T21:57:46.088541Z"
+        },
+        {
+          "action": "ACCEPT",
+          "actor_id": "synthetic-gui-k2",
+          "actor_type": "human_domain_reviewer",
+          "id": "decision_7af5a5b1662ab5079ebf6cde341c8d8ebace30ee84d516c35e87aed9cc2e2e10",
+          "input_version": 1,
+          "output_version": 1,
+          "provenance": {
+            "origin": "human_review",
+            "source_artifact_id": "proposals_7c5cbeae5f77416cbb3235e27fd2cc08c3490644c3d5648c5e6b06ad0089d8dd"
+          },
+          "reason": "SYNTHETIC GUI QA ONLY; not Product Owner acceptance",
+          "result_ids": [
+            "relation_626625b30d197d64590a6a324fc4ff58b35b245ff5bef7d0849898caf8ea8150"
+          ],
+          "target_ids": [
+            "relation_626625b30d197d64590a6a324fc4ff58b35b245ff5bef7d0849898caf8ea8150"
+          ],
+          "timestamp": "2026-10-23T21:57:46.088541Z"
+        }
+      ],
+      "seminars": [
+        {
+          "id": "seminar_81e752cd2b57e70671290b668f2dc4e2ada369cbbebdd69827b1b68a1ab7ef03",
+          "project_id": "project_source_ef3a411d2d782c6001ae2874",
+          "provenance": {
+            "origin": "derived",
+            "source_artifact_id": "proposals_7c5cbeae5f77416cbb3235e27fd2cc08c3490644c3d5648c5e6b06ad0089d8dd"
+          },
+          "status": "PROVISIONAL",
+          "title": "source_ef3a411d2d782c6001ae2874",
+          "topic_refs": [],
+          "version": 1
+        }
+      ],
+      "topics": []
+    },
+    "schema_version": "1.0",
+    "semantic_authority": "READ_ONLY_SOURCE_LIFECYCLE",
+    "source_artifacts_modified": false,
+    "source_binding": {
+      "canonical_evidence_content_sha256": "7ef5b24491df04512e9d93ea6d2192f7b85718152bca3c8ee5e79c678c53a8ad",
+      "canonical_evidence_id": "artifact_project_source_ef3a411d2d782c6001ae2874_multi_source_v1",
+      "canonical_evidence_sha256": "9f67f772860e4879f2962c586560def67791ed3e73b0396829d39b7e8dd9d532",
+      "canonical_knowledge_content_sha256": "37efcdf37a874ffc491dbc96a8729678111f78e02fda79211478b9f238134acb",
+      "canonical_knowledge_id": "knowledge_f2f563c6d3dcd6baa0a48e318751e9377b55b800c67f7b96d168d450c62ac59e",
+      "canonical_knowledge_sha256": "51bef07fd74eadff6cf7088807df96768415478ca625dd829ce00ac92bd4c662",
+      "commit_sha": "61ee27de67174377afa0f4955b3cb5abeecb4f03",
+      "component_id": "seminartext",
+      "component_identity_sha256": "65ed2755782eb56bd1f853c3036086e9677b61fae5da4c666b9456c32e008448",
+      "contract_sha256": {
+        "seminartext.reviewed_knowledge_admission_v1": "0c2903e427d85b6fe731a8153920a63dea37e0f660e2430776c7d94409f4daa6"
+      },
+      "source_evidence_content_sha256": "033535ae26dca38b2867cc155162e89980d4ecfc38ceda26ad6af3174af89068",
+      "source_evidence_id": "admission_evidence_a8c335e833c28c493257dcd574adacbd046d5d333be24b62f95dce8cf96acf83",
+      "source_evidence_sha256": "3c8d7115dceee7172c04acb8139d632fbab348b7354c6b69d4fd75d407c756c7",
+      "tree_sha": "066a4029d791585410afd0aa45de974638b5e1ff"
+    },
+    "terms": [
+      {
+        "concept_id": "concept_24ce9f02025f14e5492ab963a9256bba1a01cbc380fc94c1a45d78a6b44e658c",
+        "evidence_refs": [
+          "evidence_ee9d2ab0bcc964c637e42f05f90478d5b702321612f559b0d0479a99d4edec0b"
+        ],
+        "kind": "PREFERRED_LABEL",
+        "semantic_status": "ACCEPTED",
+        "term_id": "urn:integra:evidence:bfe217c8-2518-538b-9ef3-db70a5727d72",
+        "term_sha256": "88bf240ef9f8d66adc3e04685bb4723fd71b3eb7642a5768ac00e53cfa52aabf",
+        "traceability": "CONCEPT_SEMANTIC_EVIDENCE",
+        "value": "Синтетический GUI термин"
+      },
+      {
+        "concept_id": "concept_4aceb0557963500858a08630e45daa922b2926c25eb113e15816e217a8e95749",
+        "evidence_refs": [
+          "evidence_16bb05e976425e18adf5167ccafe6046cf5085e351cf3af80fcb15f1ac643da7"
+        ],
+        "kind": "PREFERRED_LABEL",
+        "semantic_status": "ACCEPTED",
+        "term_id": "urn:integra:evidence:f35c75ce-32e7-5415-911b-f85103406daa",
+        "term_sha256": "0dafb8d3e06e8f3137caeae8c03b5296ed701dbd373c7ca55f436b0e439f88c9",
+        "traceability": "CONCEPT_SEMANTIC_EVIDENCE",
+        "value": "Аккумулятор: хранение энергии"
+      }
+    ],
+    "view_id": "urn:integra:artifact:18bd5871-1327-5aa6-8e6e-5270f1633250"
+  },
+  "notebook_id": "urn:integra:artifact:afedd614-9ab6-51b3-a6eb-f9daec3c5fb5",
+  "package_applied": true,
+  "package_sha256": "521a9d24c82a800b23eb2b14e7900ce54943835220ba2c6cf55b88095632df9b",
+  "parent_revision_sha256": null,
+  "project_id": "urn:integra:project:02d62b4a-c2a5-54a4-a6e1-51d63a75096e",
+  "proposals": [
+    {
+      "after": {
+        "evidence_refs": [
+          "evidence_16bb05e976425e18adf5167ccafe6046cf5085e351cf3af80fcb15f1ac643da7",
+          "evidence_ee9d2ab0bcc964c637e42f05f90478d5b702321612f559b0d0479a99d4edec0b"
+        ],
+        "id": "relation_626625b30d197d64590a6a324fc4ff58b35b245ff5bef7d0849898caf8ea8150",
+        "provenance": {
+          "origin": "derived",
+          "source_artifact_id": "proposals_7c5cbeae5f77416cbb3235e27fd2cc08c3490644c3d5648c5e6b06ad0089d8dd"
+        },
+        "relation_type": "associated_with",
+        "source_concept_id": "concept_24ce9f02025f14e5492ab963a9256bba1a01cbc380fc94c1a45d78a6b44e658c",
+        "status": "PROVISIONAL",
+        "target_concept_id": "concept_4aceb0557963500858a08630e45daa922b2926c25eb113e15816e217a8e95749",
+        "version": 1
+      },
+      "before": null,
+      "before_sha256": null,
+      "editable_fields": [
+        "relation_type"
+      ],
+      "entity_kind": "relations",
+      "evidence": [
+        {
+          "canonical_evidence_provenance": {
+            "source_id": "source_source_ef3a411d2d782c6001ae2874",
+            "transcript_revision_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1",
+            "word_end_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000054",
+            "word_start_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000000"
+          },
+          "context": "Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света ",
+          "evidence_id": "evidence_ee9d2ab0bcc964c637e42f05f90478d5b702321612f559b0d0479a99d4edec0b",
+          "evidence_refs": [
+            "evidence_topic_67c4254a885b41d6b405_0000"
+          ],
+          "id": "fragment_3b1ea3096639f7c5d271a4bdc7c97e34a11f1a6b7a0834c9011893875541e726",
+          "locator": {
+            "end_seconds": 54.8,
+            "start_seconds": 0.1,
+            "type": "time_interval"
+          },
+          "precision": "WORD_RANGE",
+          "quote": "Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов",
+          "review_decision_provenance": {
+            "actor_id": "synthetic-gui-k1",
+            "actor_type": "human_domain_reviewer",
+            "boundary_decision_refs": [],
+            "decision_artifact_id": "review_decisions_6a7f49e8354d7e2fd3db1d94a180e0a89459528ef8591deca261da5b5a47c24c",
+            "decision_artifact_sha256": "45782ff1361bc17172366c74f25c0e204d0edef110db0ad9bc6a0fc40ab66a3a",
+            "review_decision_id": "decision_3b1ea3096639f7c5d271a4bdc7c97e34a11f1a6b7a0834c9011893875541e726",
+            "semantic_decision_refs": []
+          },
+          "source_id": "source_source_ef3a411d2d782c6001ae2874",
+          "source_revision_sha256": "66ee018d71e6728d194d0774d927cac69c8d7f6dc7b42c2d4d904911e05c34a3",
+          "source_topic_id": "topic_draft_67c4254a885b41d6b405_0000",
+          "source_topic_sha256": "481c5b60b89f96bb66efd64527c2f2cfe3bec6e786d2a9fd8d880670f79bacca",
+          "summary": "Солнечная панель: преобразование света",
+          "title": "Солнечная панель: преобразование света",
+          "transcript_assurance": {
+            "method": "integra_machine_transcript_import",
+            "origin": "machine_generated",
+            "reviewer": null,
+            "verification_ranges": [],
+            "verification_state": "machine_unverified"
+          },
+          "transcript_provenance": {
+            "method": "integra_machine_transcript_import",
+            "origin": "machine_generated",
+            "reviewer": null,
+            "verification_ranges": [],
+            "verification_state": "machine_unverified"
+          },
+          "transcript_revision_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1",
+          "word_end_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000054",
+          "word_end_sequence": 54,
+          "word_start_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000000",
+          "word_start_sequence": 0,
+          "word_timeline_provenance": {
+            "path": "evidence/word_timeline.json",
+            "sha256": "d6590fb4c07126cd898a937b84f7da3a020cb8aa0596b6c6717c4371d2e52e21"
+          }
+        },
+        {
+          "canonical_evidence_provenance": {
+            "source_id": "source_source_ef3a411d2d782c6001ae2874",
+            "transcript_revision_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1",
+            "word_end_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000109",
+            "word_start_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000055"
+          },
+          "context": "я приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света\n",
+          "evidence_id": "evidence_16bb05e976425e18adf5167ccafe6046cf5085e351cf3af80fcb15f1ac643da7",
+          "evidence_refs": [
+            "evidence_topic_67c4254a885b41d6b405_0001"
+          ],
+          "id": "fragment_e933e265b4fc1d4345287f9345143f52366501dbb44f32f8acca79769a077933",
+          "locator": {
+            "end_seconds": 109.8,
+            "start_seconds": 55.1,
+            "type": "time_interval"
+          },
+          "precision": "WORD_RANGE",
+          "quote": "Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света",
+          "review_decision_provenance": {
+            "actor_id": "synthetic-gui-k1",
+            "actor_type": "human_domain_reviewer",
+            "boundary_decision_refs": [],
+            "decision_artifact_id": "review_decisions_6a7f49e8354d7e2fd3db1d94a180e0a89459528ef8591deca261da5b5a47c24c",
+            "decision_artifact_sha256": "45782ff1361bc17172366c74f25c0e204d0edef110db0ad9bc6a0fc40ab66a3a",
+            "review_decision_id": "decision_e933e265b4fc1d4345287f9345143f52366501dbb44f32f8acca79769a077933",
+            "semantic_decision_refs": []
+          },
+          "source_id": "source_source_ef3a411d2d782c6001ae2874",
+          "source_revision_sha256": "66ee018d71e6728d194d0774d927cac69c8d7f6dc7b42c2d4d904911e05c34a3",
+          "source_topic_id": "topic_draft_67c4254a885b41d6b405_0001",
+          "source_topic_sha256": "7888647c0ae707cee7a216dcdd54db2a599289e527f5cf56767403c6832da35f",
+          "summary": "Аккумулятор: хранение энергии",
+          "title": "Аккумулятор: хранение энергии",
+          "transcript_assurance": {
+            "method": "integra_machine_transcript_import",
+            "origin": "machine_generated",
+            "reviewer": null,
+            "verification_ranges": [],
+            "verification_state": "machine_unverified"
+          },
+          "transcript_provenance": {
+            "method": "integra_machine_transcript_import",
+            "origin": "machine_generated",
+            "reviewer": null,
+            "verification_ranges": [],
+            "verification_state": "machine_unverified"
+          },
+          "transcript_revision_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1",
+          "word_end_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000109",
+          "word_end_sequence": 109,
+          "word_start_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000055",
+          "word_start_sequence": 55,
+          "word_timeline_provenance": {
+            "path": "evidence/word_timeline.json",
+            "sha256": "d6590fb4c07126cd898a937b84f7da3a020cb8aa0596b6c6717c4371d2e52e21"
+          }
+        }
+      ],
+      "fragment_refs": [
+        {
+          "id": "fragment_3b1ea3096639f7c5d271a4bdc7c97e34a11f1a6b7a0834c9011893875541e726",
+          "sha256": "39cf7ae31bba955f342ee5488964c32c67dec6a737327e01436a4250edad6369"
+        },
+        {
+          "id": "fragment_e933e265b4fc1d4345287f9345143f52366501dbb44f32f8acca79769a077933",
+          "sha256": "445bfb841d21dc02fad860a94c6600bc61272ceb2d1a8a935ca4ff058a00bf06"
+        }
+      ],
+      "generation_provenance": {
+        "method": "deterministic-reviewed-unit-proposal-v1",
+        "producer_sha256": "acfcc3a8c81f3c4e6b7de43e071c490c49a0f7bd94214e0097fb8afa9b6afa1c"
+      },
+      "id": "proposal_017dbce4f610ad182355455dba37151970f5f1a1f81dbb2b508ae2ea1b069d1d",
+      "operation": "CREATE",
+      "possible_duplicate_ids": [],
+      "proposal_sha256": "9f728ef5dc9df5ab8b143bd9b920f99e7b98f0d37d7c5590ed6062c5c3b8aa1c",
+      "record": {
+        "evidence_refs": [
+          "evidence_16bb05e976425e18adf5167ccafe6046cf5085e351cf3af80fcb15f1ac643da7",
+          "evidence_ee9d2ab0bcc964c637e42f05f90478d5b702321612f559b0d0479a99d4edec0b"
+        ],
+        "id": "relation_626625b30d197d64590a6a324fc4ff58b35b245ff5bef7d0849898caf8ea8150",
+        "provenance": {
+          "origin": "derived",
+          "source_artifact_id": "proposals_7c5cbeae5f77416cbb3235e27fd2cc08c3490644c3d5648c5e6b06ad0089d8dd"
+        },
+        "relation_type": "associated_with",
+        "source_concept_id": "concept_24ce9f02025f14e5492ab963a9256bba1a01cbc380fc94c1a45d78a6b44e658c",
+        "status": "PROVISIONAL",
+        "target_concept_id": "concept_4aceb0557963500858a08630e45daa922b2926c25eb113e15816e217a8e95749",
+        "version": 1
+      },
+      "review_status": "REVIEW_REQUIRED"
+    },
+    {
+      "after": {
+        "aliases": [],
+        "created_from": [
+          "evidence_ee9d2ab0bcc964c637e42f05f90478d5b702321612f559b0d0479a99d4edec0b"
+        ],
+        "description": "Солнечная панель: преобразование света",
+        "evidence_refs": [
+          "evidence_ee9d2ab0bcc964c637e42f05f90478d5b702321612f559b0d0479a99d4edec0b"
+        ],
+        "id": "concept_24ce9f02025f14e5492ab963a9256bba1a01cbc380fc94c1a45d78a6b44e658c",
+        "preferred_label": "Солнечная панель: преобразование света",
+        "provenance": {
+          "origin": "derived",
+          "source_artifact_id": "proposals_7c5cbeae5f77416cbb3235e27fd2cc08c3490644c3d5648c5e6b06ad0089d8dd"
+        },
+        "redirects": [],
+        "scope": "source-bound",
+        "status": "PROVISIONAL",
+        "supersedes": [],
+        "topic_refs": [],
+        "version": 1
+      },
+      "before": null,
+      "before_sha256": null,
+      "editable_fields": [
+        "preferred_label",
+        "description",
+        "aliases"
+      ],
+      "entity_kind": "concepts",
+      "evidence": [
+        {
+          "canonical_evidence_provenance": {
+            "source_id": "source_source_ef3a411d2d782c6001ae2874",
+            "transcript_revision_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1",
+            "word_end_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000054",
+            "word_start_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000000"
+          },
+          "context": "Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света ",
+          "evidence_id": "evidence_ee9d2ab0bcc964c637e42f05f90478d5b702321612f559b0d0479a99d4edec0b",
+          "evidence_refs": [
+            "evidence_topic_67c4254a885b41d6b405_0000"
+          ],
+          "id": "fragment_3b1ea3096639f7c5d271a4bdc7c97e34a11f1a6b7a0834c9011893875541e726",
+          "locator": {
+            "end_seconds": 54.8,
+            "start_seconds": 0.1,
+            "type": "time_interval"
+          },
+          "precision": "WORD_RANGE",
+          "quote": "Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов",
+          "review_decision_provenance": {
+            "actor_id": "synthetic-gui-k1",
+            "actor_type": "human_domain_reviewer",
+            "boundary_decision_refs": [],
+            "decision_artifact_id": "review_decisions_6a7f49e8354d7e2fd3db1d94a180e0a89459528ef8591deca261da5b5a47c24c",
+            "decision_artifact_sha256": "45782ff1361bc17172366c74f25c0e204d0edef110db0ad9bc6a0fc40ab66a3a",
+            "review_decision_id": "decision_3b1ea3096639f7c5d271a4bdc7c97e34a11f1a6b7a0834c9011893875541e726",
+            "semantic_decision_refs": []
+          },
+          "source_id": "source_source_ef3a411d2d782c6001ae2874",
+          "source_revision_sha256": "66ee018d71e6728d194d0774d927cac69c8d7f6dc7b42c2d4d904911e05c34a3",
+          "source_topic_id": "topic_draft_67c4254a885b41d6b405_0000",
+          "source_topic_sha256": "481c5b60b89f96bb66efd64527c2f2cfe3bec6e786d2a9fd8d880670f79bacca",
+          "summary": "Солнечная панель: преобразование света",
+          "title": "Солнечная панель: преобразование света",
+          "transcript_assurance": {
+            "method": "integra_machine_transcript_import",
+            "origin": "machine_generated",
+            "reviewer": null,
+            "verification_ranges": [],
+            "verification_state": "machine_unverified"
+          },
+          "transcript_provenance": {
+            "method": "integra_machine_transcript_import",
+            "origin": "machine_generated",
+            "reviewer": null,
+            "verification_ranges": [],
+            "verification_state": "machine_unverified"
+          },
+          "transcript_revision_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1",
+          "word_end_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000054",
+          "word_end_sequence": 54,
+          "word_start_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000000",
+          "word_start_sequence": 0,
+          "word_timeline_provenance": {
+            "path": "evidence/word_timeline.json",
+            "sha256": "d6590fb4c07126cd898a937b84f7da3a020cb8aa0596b6c6717c4371d2e52e21"
+          }
+        }
+      ],
+      "fragment_refs": [
+        {
+          "id": "fragment_3b1ea3096639f7c5d271a4bdc7c97e34a11f1a6b7a0834c9011893875541e726",
+          "sha256": "39cf7ae31bba955f342ee5488964c32c67dec6a737327e01436a4250edad6369"
+        }
+      ],
+      "generation_provenance": {
+        "method": "deterministic-reviewed-unit-proposal-v1",
+        "producer_sha256": "acfcc3a8c81f3c4e6b7de43e071c490c49a0f7bd94214e0097fb8afa9b6afa1c"
+      },
+      "id": "proposal_2e59d6b5c644b4759107f4bdfcb938742d67ceb66c099ca9175c1666c979d991",
+      "operation": "CREATE",
+      "possible_duplicate_ids": [],
+      "proposal_sha256": "48bce3eea374a71947dcacd7ae6ac0363f9468752f69f08a2302583b8b780644",
+      "record": {
+        "aliases": [],
+        "created_from": [
+          "evidence_ee9d2ab0bcc964c637e42f05f90478d5b702321612f559b0d0479a99d4edec0b"
+        ],
+        "description": "Солнечная панель: преобразование света",
+        "evidence_refs": [
+          "evidence_ee9d2ab0bcc964c637e42f05f90478d5b702321612f559b0d0479a99d4edec0b"
+        ],
+        "id": "concept_24ce9f02025f14e5492ab963a9256bba1a01cbc380fc94c1a45d78a6b44e658c",
+        "preferred_label": "Солнечная панель: преобразование света",
+        "provenance": {
+          "origin": "derived",
+          "source_artifact_id": "proposals_7c5cbeae5f77416cbb3235e27fd2cc08c3490644c3d5648c5e6b06ad0089d8dd"
+        },
+        "redirects": [],
+        "scope": "source-bound",
+        "status": "PROVISIONAL",
+        "supersedes": [],
+        "topic_refs": [],
+        "version": 1
+      },
+      "review_status": "REVIEW_REQUIRED"
+    },
+    {
+      "after": {
+        "aliases": [],
+        "created_from": [
+          "evidence_16bb05e976425e18adf5167ccafe6046cf5085e351cf3af80fcb15f1ac643da7"
+        ],
+        "description": "Аккумулятор: хранение энергии",
+        "evidence_refs": [
+          "evidence_16bb05e976425e18adf5167ccafe6046cf5085e351cf3af80fcb15f1ac643da7"
+        ],
+        "id": "concept_4aceb0557963500858a08630e45daa922b2926c25eb113e15816e217a8e95749",
+        "preferred_label": "Аккумулятор: хранение энергии",
+        "provenance": {
+          "origin": "derived",
+          "source_artifact_id": "proposals_7c5cbeae5f77416cbb3235e27fd2cc08c3490644c3d5648c5e6b06ad0089d8dd"
+        },
+        "redirects": [],
+        "scope": "source-bound",
+        "status": "PROVISIONAL",
+        "supersedes": [],
+        "topic_refs": [],
+        "version": 1
+      },
+      "before": null,
+      "before_sha256": null,
+      "editable_fields": [
+        "preferred_label",
+        "description",
+        "aliases"
+      ],
+      "entity_kind": "concepts",
+      "evidence": [
+        {
+          "canonical_evidence_provenance": {
+            "source_id": "source_source_ef3a411d2d782c6001ae2874",
+            "transcript_revision_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1",
+            "word_end_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000109",
+            "word_start_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000055"
+          },
+          "context": "я приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света\n",
+          "evidence_id": "evidence_16bb05e976425e18adf5167ccafe6046cf5085e351cf3af80fcb15f1ac643da7",
+          "evidence_refs": [
+            "evidence_topic_67c4254a885b41d6b405_0001"
+          ],
+          "id": "fragment_e933e265b4fc1d4345287f9345143f52366501dbb44f32f8acca79769a077933",
+          "locator": {
+            "end_seconds": 109.8,
+            "start_seconds": 55.1,
+            "type": "time_interval"
+          },
+          "precision": "WORD_RANGE",
+          "quote": "Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света",
+          "review_decision_provenance": {
+            "actor_id": "synthetic-gui-k1",
+            "actor_type": "human_domain_reviewer",
+            "boundary_decision_refs": [],
+            "decision_artifact_id": "review_decisions_6a7f49e8354d7e2fd3db1d94a180e0a89459528ef8591deca261da5b5a47c24c",
+            "decision_artifact_sha256": "45782ff1361bc17172366c74f25c0e204d0edef110db0ad9bc6a0fc40ab66a3a",
+            "review_decision_id": "decision_e933e265b4fc1d4345287f9345143f52366501dbb44f32f8acca79769a077933",
+            "semantic_decision_refs": []
+          },
+          "source_id": "source_source_ef3a411d2d782c6001ae2874",
+          "source_revision_sha256": "66ee018d71e6728d194d0774d927cac69c8d7f6dc7b42c2d4d904911e05c34a3",
+          "source_topic_id": "topic_draft_67c4254a885b41d6b405_0001",
+          "source_topic_sha256": "7888647c0ae707cee7a216dcdd54db2a599289e527f5cf56767403c6832da35f",
+          "summary": "Аккумулятор: хранение энергии",
+          "title": "Аккумулятор: хранение энергии",
+          "transcript_assurance": {
+            "method": "integra_machine_transcript_import",
+            "origin": "machine_generated",
+            "reviewer": null,
+            "verification_ranges": [],
+            "verification_state": "machine_unverified"
+          },
+          "transcript_provenance": {
+            "method": "integra_machine_transcript_import",
+            "origin": "machine_generated",
+            "reviewer": null,
+            "verification_ranges": [],
+            "verification_state": "machine_unverified"
+          },
+          "transcript_revision_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1",
+          "word_end_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000109",
+          "word_end_sequence": 109,
+          "word_start_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000055",
+          "word_start_sequence": 55,
+          "word_timeline_provenance": {
+            "path": "evidence/word_timeline.json",
+            "sha256": "d6590fb4c07126cd898a937b84f7da3a020cb8aa0596b6c6717c4371d2e52e21"
+          }
+        }
+      ],
+      "fragment_refs": [
+        {
+          "id": "fragment_e933e265b4fc1d4345287f9345143f52366501dbb44f32f8acca79769a077933",
+          "sha256": "445bfb841d21dc02fad860a94c6600bc61272ceb2d1a8a935ca4ff058a00bf06"
+        }
+      ],
+      "generation_provenance": {
+        "method": "deterministic-reviewed-unit-proposal-v1",
+        "producer_sha256": "acfcc3a8c81f3c4e6b7de43e071c490c49a0f7bd94214e0097fb8afa9b6afa1c"
+      },
+      "id": "proposal_58ba716ade16c434e1e9bdc0768d3ffb166ba04a9f9feea16722532306602c74",
+      "operation": "CREATE",
+      "possible_duplicate_ids": [],
+      "proposal_sha256": "29e0efe410203be48680b99f34891b27ee5325aeaf5ec872cedf34bf16257cf7",
+      "record": {
+        "aliases": [],
+        "created_from": [
+          "evidence_16bb05e976425e18adf5167ccafe6046cf5085e351cf3af80fcb15f1ac643da7"
+        ],
+        "description": "Аккумулятор: хранение энергии",
+        "evidence_refs": [
+          "evidence_16bb05e976425e18adf5167ccafe6046cf5085e351cf3af80fcb15f1ac643da7"
+        ],
+        "id": "concept_4aceb0557963500858a08630e45daa922b2926c25eb113e15816e217a8e95749",
+        "preferred_label": "Аккумулятор: хранение энергии",
+        "provenance": {
+          "origin": "derived",
+          "source_artifact_id": "proposals_7c5cbeae5f77416cbb3235e27fd2cc08c3490644c3d5648c5e6b06ad0089d8dd"
+        },
+        "redirects": [],
+        "scope": "source-bound",
+        "status": "PROVISIONAL",
+        "supersedes": [],
+        "topic_refs": [],
+        "version": 1
+      },
+      "review_status": "REVIEW_REQUIRED"
+    },
+    {
+      "after": {
+        "concept_refs": [],
+        "evidence_refs": [
+          "evidence_16bb05e976425e18adf5167ccafe6046cf5085e351cf3af80fcb15f1ac643da7"
+        ],
+        "id": "topic_4aceb0557963500858a08630e45daa922b2926c25eb113e15816e217a8e95749",
+        "provenance": {
+          "origin": "derived",
+          "source_artifact_id": "proposals_7c5cbeae5f77416cbb3235e27fd2cc08c3490644c3d5648c5e6b06ad0089d8dd"
+        },
+        "seminar_id": "seminar_81e752cd2b57e70671290b668f2dc4e2ada369cbbebdd69827b1b68a1ab7ef03",
+        "source_scope": {
+          "source_ids": [
+            "source_source_ef3a411d2d782c6001ae2874"
+          ],
+          "transcript_revision_ids": [
+            "transcript_revision_source_ef3a411d2d782c6001ae2874_r1"
+          ]
+        },
+        "status": "PROVISIONAL",
+        "summary": "Аккумулятор: хранение энергии",
+        "title": "Аккумулятор: хранение энергии",
+        "version": 1
+      },
+      "before": null,
+      "before_sha256": null,
+      "editable_fields": [
+        "title",
+        "summary"
+      ],
+      "entity_kind": "topics",
+      "evidence": [
+        {
+          "canonical_evidence_provenance": {
+            "source_id": "source_source_ef3a411d2d782c6001ae2874",
+            "transcript_revision_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1",
+            "word_end_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000109",
+            "word_start_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000055"
+          },
+          "context": "я приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света\n",
+          "evidence_id": "evidence_16bb05e976425e18adf5167ccafe6046cf5085e351cf3af80fcb15f1ac643da7",
+          "evidence_refs": [
+            "evidence_topic_67c4254a885b41d6b405_0001"
+          ],
+          "id": "fragment_e933e265b4fc1d4345287f9345143f52366501dbb44f32f8acca79769a077933",
+          "locator": {
+            "end_seconds": 109.8,
+            "start_seconds": 55.1,
+            "type": "time_interval"
+          },
+          "precision": "WORD_RANGE",
+          "quote": "Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света",
+          "review_decision_provenance": {
+            "actor_id": "synthetic-gui-k1",
+            "actor_type": "human_domain_reviewer",
+            "boundary_decision_refs": [],
+            "decision_artifact_id": "review_decisions_6a7f49e8354d7e2fd3db1d94a180e0a89459528ef8591deca261da5b5a47c24c",
+            "decision_artifact_sha256": "45782ff1361bc17172366c74f25c0e204d0edef110db0ad9bc6a0fc40ab66a3a",
+            "review_decision_id": "decision_e933e265b4fc1d4345287f9345143f52366501dbb44f32f8acca79769a077933",
+            "semantic_decision_refs": []
+          },
+          "source_id": "source_source_ef3a411d2d782c6001ae2874",
+          "source_revision_sha256": "66ee018d71e6728d194d0774d927cac69c8d7f6dc7b42c2d4d904911e05c34a3",
+          "source_topic_id": "topic_draft_67c4254a885b41d6b405_0001",
+          "source_topic_sha256": "7888647c0ae707cee7a216dcdd54db2a599289e527f5cf56767403c6832da35f",
+          "summary": "Аккумулятор: хранение энергии",
+          "title": "Аккумулятор: хранение энергии",
+          "transcript_assurance": {
+            "method": "integra_machine_transcript_import",
+            "origin": "machine_generated",
+            "reviewer": null,
+            "verification_ranges": [],
+            "verification_state": "machine_unverified"
+          },
+          "transcript_provenance": {
+            "method": "integra_machine_transcript_import",
+            "origin": "machine_generated",
+            "reviewer": null,
+            "verification_ranges": [],
+            "verification_state": "machine_unverified"
+          },
+          "transcript_revision_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1",
+          "word_end_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000109",
+          "word_end_sequence": 109,
+          "word_start_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000055",
+          "word_start_sequence": 55,
+          "word_timeline_provenance": {
+            "path": "evidence/word_timeline.json",
+            "sha256": "d6590fb4c07126cd898a937b84f7da3a020cb8aa0596b6c6717c4371d2e52e21"
+          }
+        }
+      ],
+      "fragment_refs": [
+        {
+          "id": "fragment_e933e265b4fc1d4345287f9345143f52366501dbb44f32f8acca79769a077933",
+          "sha256": "445bfb841d21dc02fad860a94c6600bc61272ceb2d1a8a935ca4ff058a00bf06"
+        }
+      ],
+      "generation_provenance": {
+        "method": "deterministic-reviewed-unit-proposal-v1",
+        "producer_sha256": "acfcc3a8c81f3c4e6b7de43e071c490c49a0f7bd94214e0097fb8afa9b6afa1c"
+      },
+      "id": "proposal_89a158725083baf9d161a0a79135dc0237cf099cbdadc7c76e575edd3aa5593c",
+      "operation": "CREATE",
+      "possible_duplicate_ids": [],
+      "proposal_sha256": "ea0d7148288890a338ffa782e7133ae7b272883180d78ef0f76c61d8a9383808",
+      "record": {
+        "concept_refs": [],
+        "evidence_refs": [
+          "evidence_16bb05e976425e18adf5167ccafe6046cf5085e351cf3af80fcb15f1ac643da7"
+        ],
+        "id": "topic_4aceb0557963500858a08630e45daa922b2926c25eb113e15816e217a8e95749",
+        "provenance": {
+          "origin": "derived",
+          "source_artifact_id": "proposals_7c5cbeae5f77416cbb3235e27fd2cc08c3490644c3d5648c5e6b06ad0089d8dd"
+        },
+        "seminar_id": "seminar_81e752cd2b57e70671290b668f2dc4e2ada369cbbebdd69827b1b68a1ab7ef03",
+        "source_scope": {
+          "source_ids": [
+            "source_source_ef3a411d2d782c6001ae2874"
+          ],
+          "transcript_revision_ids": [
+            "transcript_revision_source_ef3a411d2d782c6001ae2874_r1"
+          ]
+        },
+        "status": "PROVISIONAL",
+        "summary": "Аккумулятор: хранение энергии",
+        "title": "Аккумулятор: хранение энергии",
+        "version": 1
+      },
+      "review_status": "REVIEW_REQUIRED"
+    },
+    {
+      "after": {
+        "concept_refs": [],
+        "evidence_refs": [
+          "evidence_ee9d2ab0bcc964c637e42f05f90478d5b702321612f559b0d0479a99d4edec0b"
+        ],
+        "id": "topic_24ce9f02025f14e5492ab963a9256bba1a01cbc380fc94c1a45d78a6b44e658c",
+        "provenance": {
+          "origin": "derived",
+          "source_artifact_id": "proposals_7c5cbeae5f77416cbb3235e27fd2cc08c3490644c3d5648c5e6b06ad0089d8dd"
+        },
+        "seminar_id": "seminar_81e752cd2b57e70671290b668f2dc4e2ada369cbbebdd69827b1b68a1ab7ef03",
+        "source_scope": {
+          "source_ids": [
+            "source_source_ef3a411d2d782c6001ae2874"
+          ],
+          "transcript_revision_ids": [
+            "transcript_revision_source_ef3a411d2d782c6001ae2874_r1"
+          ]
+        },
+        "status": "PROVISIONAL",
+        "summary": "Солнечная панель: преобразование света",
+        "title": "Солнечная панель: преобразование света",
+        "version": 1
+      },
+      "before": null,
+      "before_sha256": null,
+      "editable_fields": [
+        "title",
+        "summary"
+      ],
+      "entity_kind": "topics",
+      "evidence": [
+        {
+          "canonical_evidence_provenance": {
+            "source_id": "source_source_ef3a411d2d782c6001ae2874",
+            "transcript_revision_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1",
+            "word_end_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000054",
+            "word_start_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000000"
+          },
+          "context": "Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Аккумулятор сохраняет электрическую энергию для последующего питания приборов без солнечного света ",
+          "evidence_id": "evidence_ee9d2ab0bcc964c637e42f05f90478d5b702321612f559b0d0479a99d4edec0b",
+          "evidence_refs": [
+            "evidence_topic_67c4254a885b41d6b405_0000"
+          ],
+          "id": "fragment_3b1ea3096639f7c5d271a4bdc7c97e34a11f1a6b7a0834c9011893875541e726",
+          "locator": {
+            "end_seconds": 54.8,
+            "start_seconds": 0.1,
+            "type": "time_interval"
+          },
+          "precision": "WORD_RANGE",
+          "quote": "Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов Солнечная панель преобразует солнечный свет в электрическую энергию для питания приборов",
+          "review_decision_provenance": {
+            "actor_id": "synthetic-gui-k1",
+            "actor_type": "human_domain_reviewer",
+            "boundary_decision_refs": [],
+            "decision_artifact_id": "review_decisions_6a7f49e8354d7e2fd3db1d94a180e0a89459528ef8591deca261da5b5a47c24c",
+            "decision_artifact_sha256": "45782ff1361bc17172366c74f25c0e204d0edef110db0ad9bc6a0fc40ab66a3a",
+            "review_decision_id": "decision_3b1ea3096639f7c5d271a4bdc7c97e34a11f1a6b7a0834c9011893875541e726",
+            "semantic_decision_refs": []
+          },
+          "source_id": "source_source_ef3a411d2d782c6001ae2874",
+          "source_revision_sha256": "66ee018d71e6728d194d0774d927cac69c8d7f6dc7b42c2d4d904911e05c34a3",
+          "source_topic_id": "topic_draft_67c4254a885b41d6b405_0000",
+          "source_topic_sha256": "481c5b60b89f96bb66efd64527c2f2cfe3bec6e786d2a9fd8d880670f79bacca",
+          "summary": "Солнечная панель: преобразование света",
+          "title": "Солнечная панель: преобразование света",
+          "transcript_assurance": {
+            "method": "integra_machine_transcript_import",
+            "origin": "machine_generated",
+            "reviewer": null,
+            "verification_ranges": [],
+            "verification_state": "machine_unverified"
+          },
+          "transcript_provenance": {
+            "method": "integra_machine_transcript_import",
+            "origin": "machine_generated",
+            "reviewer": null,
+            "verification_ranges": [],
+            "verification_state": "machine_unverified"
+          },
+          "transcript_revision_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1",
+          "word_end_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000054",
+          "word_end_sequence": 54,
+          "word_start_id": "transcript_revision_source_ef3a411d2d782c6001ae2874_r1:word:000000",
+          "word_start_sequence": 0,
+          "word_timeline_provenance": {
+            "path": "evidence/word_timeline.json",
+            "sha256": "d6590fb4c07126cd898a937b84f7da3a020cb8aa0596b6c6717c4371d2e52e21"
+          }
+        }
+      ],
+      "fragment_refs": [
+        {
+          "id": "fragment_3b1ea3096639f7c5d271a4bdc7c97e34a11f1a6b7a0834c9011893875541e726",
+          "sha256": "39cf7ae31bba955f342ee5488964c32c67dec6a737327e01436a4250edad6369"
+        }
+      ],
+      "generation_provenance": {
+        "method": "deterministic-reviewed-unit-proposal-v1",
+        "producer_sha256": "acfcc3a8c81f3c4e6b7de43e071c490c49a0f7bd94214e0097fb8afa9b6afa1c"
+      },
+      "id": "proposal_d56befd64a7d1a9a9e86634f87a12026212fd7176796940320e4b138028f0e63",
+      "operation": "CREATE",
+      "possible_duplicate_ids": [],
+      "proposal_sha256": "5ac6c9e650ba1e7c2cd1c73445d4d1a06e36be6ae743a89c7a4798fb8eef2cb8",
+      "record": {
+        "concept_refs": [],
+        "evidence_refs": [
+          "evidence_ee9d2ab0bcc964c637e42f05f90478d5b702321612f559b0d0479a99d4edec0b"
+        ],
+        "id": "topic_24ce9f02025f14e5492ab963a9256bba1a01cbc380fc94c1a45d78a6b44e658c",
+        "provenance": {
+          "origin": "derived",
+          "source_artifact_id": "proposals_7c5cbeae5f77416cbb3235e27fd2cc08c3490644c3d5648c5e6b06ad0089d8dd"
+        },
+        "seminar_id": "seminar_81e752cd2b57e70671290b668f2dc4e2ada369cbbebdd69827b1b68a1ab7ef03",
+        "source_scope": {
+          "source_ids": [
+            "source_source_ef3a411d2d782c6001ae2874"
+          ],
+          "transcript_revision_ids": [
+            "transcript_revision_source_ef3a411d2d782c6001ae2874_r1"
+          ]
+        },
+        "status": "PROVISIONAL",
+        "summary": "Солнечная панель: преобразование света",
+        "title": "Солнечная панель: преобразование света",
+        "version": 1
+      },
+      "review_status": "REVIEW_REQUIRED"
+    }
+  ],
+  "revision_history": [
+    "1d8854c426563d66be32696b5051847a5d910fcf16c59c2655c1b65ff864121f"
+  ],
+  "revision_sha256": "1d8854c426563d66be32696b5051847a5d910fcf16c59c2655c1b65ff864121f",
+  "run_id": "urn:integra:run:6aa1efcf-0e03-58d3-a5e2-105ce6965258",
+  "semantic_authority": "READ_ONLY_SOURCE_LIFECYCLE",
+  "semantic_decisions": [
+    {
+      "action": "ACCEPT",
+      "proposal_id": "proposal_017dbce4f610ad182355455dba37151970f5f1a1f81dbb2b508ae2ea1b069d1d",
+      "proposal_sha256": "9f728ef5dc9df5ab8b143bd9b920f99e7b98f0d37d7c5590ed6062c5c3b8aa1c",
+      "reason": "SYNTHETIC GUI QA ONLY; not Product Owner acceptance",
+      "timestamp": "2026-10-23T21:57:46.088541Z"
+    },
+    {
+      "action": "EDIT",
+      "edited_fields": {
+        "aliases": [],
+        "description": "Солнечная панель: преобразование света",
+        "preferred_label": "Синтетический GUI термин"
+      },
+      "proposal_id": "proposal_2e59d6b5c644b4759107f4bdfcb938742d67ceb66c099ca9175c1666c979d991",
+      "proposal_sha256": "48bce3eea374a71947dcacd7ae6ac0363f9468752f69f08a2302583b8b780644",
+      "reason": "SYNTHETIC GUI QA ONLY; explicit label edit",
+      "timestamp": "2026-10-23T21:57:46.088541Z"
+    },
+    {
+      "action": "ACCEPT",
+      "proposal_id": "proposal_58ba716ade16c434e1e9bdc0768d3ffb166ba04a9f9feea16722532306602c74",
+      "proposal_sha256": "29e0efe410203be48680b99f34891b27ee5325aeaf5ec872cedf34bf16257cf7",
+      "reason": "SYNTHETIC GUI QA ONLY; explicit concept decision",
+      "timestamp": "2026-10-23T21:57:46.088541Z"
+    },
+    {
+      "action": "REJECT",
+      "proposal_id": "proposal_89a158725083baf9d161a0a79135dc0237cf099cbdadc7c76e575edd3aa5593c",
+      "proposal_sha256": "ea0d7148288890a338ffa782e7133ae7b272883180d78ef0f76c61d8a9383808",
+      "reason": "SYNTHETIC GUI QA ONLY; rejected topic remains absent",
+      "timestamp": "2026-10-23T21:57:46.088541Z"
+    },
+    {
+      "action": "DEFER",
+      "proposal_id": "proposal_d56befd64a7d1a9a9e86634f87a12026212fd7176796940320e4b138028f0e63",
+      "proposal_sha256": "5ac6c9e650ba1e7c2cd1c73445d4d1a06e36be6ae743a89c7a4798fb8eef2cb8",
+      "reason": "SYNTHETIC GUI QA ONLY; deferred topic remains absent",
+      "timestamp": "2026-10-23T21:57:46.088541Z"
+    }
+  ],
+  "semantic_reviewer": {
+    "actor_id": "synthetic-gui-k2",
+    "actor_type": "human_domain_reviewer"
+  },
+  "source_id": "urn:integra:source:361055a1-3701-51bd-bc14-2f1e27dde566",
+  "source_revision_sha256": "66ee018d71e6728d194d0774d927cac69c8d7f6dc7b42c2d4d904911e05c34a3",
+  "state_sha256": "d87af708f7d93d4351363725f1c1baa23b0e066ab5922b93babbcf1b41b72290",
+  "status": "CANONICAL_KNOWLEDGE",
+  "supported_relation_types": [
+    "associated_with",
+    "contradicts",
+    "depends_on",
+    "refines",
+    "supports"
+  ],
+  "upstream_processing_performed": false
+}

@@ -1,0 +1,16 @@
+{
+  "reviewer": "i01_governance_review",
+  "status": "APPROVED_READ_ONLY_EVIDENCE_REVIEW",
+  "findings": [],
+  "verified": [
+    "exact reproduced candidate/source/bundle",
+    "five explicit semantic ledger decisions yield two concepts, one relation and zero topics",
+    "exact persisted/reopened revision JSON and label/reviewer",
+    "generated navigation quote/source hash/time interval match native dialog",
+    "CURRENT equal to origin/main"
+  ],
+  "audible_playback_assessed": false,
+  "archive_publication": "BLOCKED",
+  "valid_proposal": false,
+  "semantic_product_acceptance": false
+}

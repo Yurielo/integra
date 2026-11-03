@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.exact_archive_recovery_plan",
+  "status": "AWAITING_EXPLICIT_RECOVERY_AUTHORIZATION",
+  "executed": false,
+  "issue": 279,
+  "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-19e3438fea443e1d917b6575131fd67b47b5f44f71202a6940f85adda12b3b56/1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+  "candidate_id": "candidate-v1-19e3438fea443e1d917b6575131fd67b47b5f44f71202a6940f85adda12b3b56",
+  "bundle_digest": "1fe98fb2822b50077f78f22db960dc1f457f5b6374736a3dace704e99e8fe7e0",
+  "manifest_digest": "0704fd913f525d050cdf52f16eefae938cd6d2c9776c92abaf39881f7973efbb",
+  "inventory_sha256": "d4e090dd54241e080ef2bc59ca247968b284113b03f16d122a2826828f711f16",
+  "complete_sha256": "dce7e0002ca2d6e487381172f9f4567e036da1734305cd0f839764a146979022",
+  "integrity_diff_sha256": "6471383fa283dc77d05908b4886823c69e44dffd7e7d8bb64ceaafb74de344c3",
+  "recorded_bytes_proof_sha256": "e427583a0db59c6e8e64361b7bb45a0ab9ad87afd37d49704739133cdd5b560c",
+  "operation": "PRESERVE_EXACT_UNRECORDED_CACHE_TREES_OUTSIDE_ARCHIVE_THEN_REVERIFY",
+  "move_roots": [
+    "Integra.app/Contents/Resources/integra_core/__pycache__",
+    "Integra.app/Contents/Resources/integra_core/_vendor/__pycache__",
+    "Integra.app/Contents/Resources/integra_core/_vendor/seminartext_a94936c/__pycache__"
+  ],
+  "unexpected_files": 45,
+  "unexpected_file_bytes": 1568777,
+  "quarantine_parent": "/Users/yurielokhin/Library/Application Support/Integra/Integrity Quarantine",
+  "quarantine_destination_rule": "new uniquely named owned child for Issue279, never overwrite an existing destination",
+  "authority_required": "Exact Product Owner exception to the immutable-archive repair boundary; supersession remains already authorized by issuecomment6380155631",
+  "preconditions": [
+    "record exact new recovery authority reference before mutation",
+    "canonical supersession and exact outgoing identity/grant remain valid",
+    "all three roots and every extra file exactly match the retained integrity diff; no symlinks, hardlinks, unknown additions or active consumers",
+    "reverify all 29,626 recorded files, modes, inventory, COMPLETE and both manifests immediately before operation",
+    "create a durable recovery journal and unique owned quarantine on the same volume",
+    "preserve all unexpected file bytes/modes and their directory structure; execute no archived code"
+  ],
+  "steps": [
+    "rename only the three listed cache trees into the owned quarantine; remove no recorded payload and overwrite no path",
+    "record and verify quarantined bytes against every extra-file hash; preserve quarantine and journal",
+    "run the unchanged strict archive verifier against the original inventory/COMPLETE/identity; do not rewrite receipts, manifest, publisher identity or catalog ownership",
+    "on any mismatch preserve evidence, stop and restore a moved tree only where an exact safe no-overwrite rollback is proven",
+    "only after archive integrity is restored, resume the existing governed oldest-eligible maintenance and normal admitted fresh build/archive/proposal flow"
+  ],
+  "unchanged": [
+    "CURRENT files and accepted baseline",
+    "8-copy/20-GiB/15-GiB reserve limits",
+    "SeminarText/VideoText/BookText repositories and runtime pins",
+    "installed application and original projects",
+    "all other archives and protected identities"
+  ],
+  "quarantine_deletion_authorized": false
+}
