@@ -72,9 +72,11 @@ def generate(app: Path, source_root: Path, build_command: str, word_python: Path
     word_root = resources / "runtime" / "word-alignment"
     video_root = resources / "runtime" / "videotext"
     book_root = resources / "runtime" / "booktext"
+    semantic_root = resources / "runtime" / "seminartext-semantic"
     seminar = json.loads((seminar_root / "runtime.json").read_text(encoding="utf-8"))
     video = json.loads((video_root / "runtime.json").read_text(encoding="utf-8"))
     book = json.loads((book_root / "runtime.json").read_text(encoding="utf-8"))
+    semantic = json.loads((semantic_root / "runtime.json").read_text(encoding="utf-8"))
     word = json.loads((word_root / "runtime.json").read_text(encoding="utf-8"))
     from integra_core.word_timeline_runtime import resolve_ffmpeg
     ffmpeg = resolve_ffmpeg()
@@ -88,7 +90,8 @@ def generate(app: Path, source_root: Path, build_command: str, word_python: Path
         "source": source_identity(source_root),
         "build_command": {"path": "scripts/build_macos_app.sh", "identity": build_command,
                           "script_sha256": sha256_file(ROOT / "scripts" / "build_macos_app.sh")},
-        "components": {"seminartext": seminar, "videotext": video, "booktext": book,
+        "components": {"seminartext": seminar, "seminartext.semantic_workflow": semantic,
+                       "videotext": video, "booktext": book,
                        "integra.translation": translation},
         "execution": {
             "gui_python": executable_identity(Path("/usr/bin/python3")),

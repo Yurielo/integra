@@ -23,6 +23,14 @@ from integra_core.topic_translation import load_topic_translation
 from integra_core.shutdown_runtime import cancel_run, reconcile_stale_runs, register_worker, requires_shutdown, run_with_timeout
 from integra_core.seminartext_runtime import preflight as seminartext_preflight
 from integra_core.seminartext_evidence_runtime import prepare_transcript_review, apply_human_transcript_review, prepare_topic_review_input
+from integra_core.semantic_review_runtime import (
+    apply_review as semantic_apply_review,
+    next_round as semantic_next_round,
+    open_review as semantic_open_review,
+    recent_reviews as semantic_recent_reviews,
+    review_projection as semantic_review_projection,
+    submit_review as semantic_submit_review,
+)
 
 OPERATIONS = {"workflow", "deferred", "projects", "create-project", "open-project", "jobs", "start-job", "cancel-job", "resume-job", "import-media", "media-preflight", "seminartext-preflight", "process-media-job", "project-view", "detect-sources", "discover-folder-sources", "discover-zoom-folder-sources", "discover-youtube-playlist", "capability-registry", "build-plan", "execute-plan", "translate-transcript", "translate-topics", "topic-translation", "process-plan", "run-status", "recent-runs", "available-packages", "cancel-run", "retry-run", "media-navigation", "create-media-clip", "prepare-transcript-review", "apply-transcript-review", "prepare-topic-review", "prepare-process-topic-review", "apply-process-topic-review", "process-topics", "package-preview", "package-publish", "obsidian-preview", "onedrive-preview"}
 
@@ -30,6 +38,8 @@ OPERATIONS.add("build-reviewed-package")
 OPERATIONS.add("transcript-text")
 OPERATIONS.add("shutdown-active-runs")
 OPERATIONS.update({"knowledge-sources", "knowledge-open", "knowledge-save", "knowledge-navigation", "knowledge-package"})
+OPERATIONS.update({"semantic-review-recent", "semantic-review-open", "semantic-review-projection",
+                   "semantic-review-submit", "semantic-review-apply", "semantic-review-next-round"})
 
 def _safe_error(error):
     message = str(error).replace(str(Path.home()), "<HOME>")
@@ -868,6 +878,14 @@ def main():
         elif operation == "available-packages": result = _available_packages(root)
         elif operation == "knowledge-sources": result = _knowledge_sources(root)
         elif operation.startswith("knowledge-"): result = _knowledge(root, request, operation.removeprefix("knowledge-"))
+        elif operation == "semantic-review-recent": result = semantic_recent_reviews(RESOURCES, root)
+        elif operation == "semantic-review-open": result = semantic_open_review(RESOURCES, root, package_dir=request.get("package_dir", ""))
+        elif operation == "semantic-review-projection": result = semantic_review_projection(RESOURCES, root, package_dir=request.get("package_dir", ""))
+        elif operation == "semantic-review-submit": result = semantic_submit_review(
+            RESOURCES, root, package_dir=request.get("package_dir", ""), reviewer_id=request.get("reviewer_id", ""),
+            decisions=request.get("decisions"))
+        elif operation == "semantic-review-apply": result = semantic_apply_review(RESOURCES, root, package_dir=request.get("package_dir", ""))
+        elif operation == "semantic-review-next-round": result = semantic_next_round(RESOURCES, root, package_dir=request.get("package_dir", ""))
         elif operation == "media-navigation": result = _media_navigation(root, request)
         elif operation == "create-media-clip": result = _create_media_clip(root, request)
         elif operation == "prepare-transcript-review": result = _prepare_transcript_review(root, request)
