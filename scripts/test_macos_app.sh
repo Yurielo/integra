@@ -38,7 +38,12 @@ chmod 755 "$fake_ollama"
 echo "INTEGRA_BUNDLED_SEMINARTEXT_PREFLIGHT: PASS"
 (
   cd "$test_root"
-  PYTHONPATH="$app/Contents/Resources" /opt/homebrew/opt/python@3.13/bin/python3.13 -c 'from integra_core.word_timeline_runtime import preflight; value=preflight(); assert value["capability"] == "word_timeline"'
+  # A packaged Candidate must prove its own copied alignment closure.  Do not
+  # let the build host's source-runtime overrides mask a missing bundled model.
+  env -u INTEGRA_WORD_ALIGNMENT_PYTHON \
+      -u INTEGRA_WORD_ALIGNMENT_SITE_PACKAGES \
+      -u INTEGRA_WORD_ALIGNMENT_MODEL_DIR \
+      PYTHONPATH="$app/Contents/Resources" /opt/homebrew/opt/python@3.13/bin/python3.13 -c 'from integra_core.word_timeline_runtime import preflight; value=preflight(); assert value["capability"] == "word_timeline"'
 )
 echo "INTEGRA_BUNDLED_WORD_TIMELINE_PREFLIGHT: PASS"
 (
