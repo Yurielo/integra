@@ -77,15 +77,20 @@ def require_asr_runtime():
 def require_subtitle_runtime():
     candidate = os.environ.get("INTEGRA_CANDIDATE_APP")
     if candidate:
-        worker = (
-            Path(candidate).resolve(strict=True)
-            / "Contents/Resources/runtime/videotext/translation-worker"
-        )
-        expected = "22ba7bbfd827a1f2937f3757070b74b2e5d4d1200ebea954c48c1eaac1162d28"
+        app = Path(candidate).resolve(strict=True)
+        worker = app / "Contents/Resources/runtime/videotext/translation-worker"
+        manifest = app / "Contents/Resources/candidate-manifest.json"
         try:
-            if not worker.is_file() or hashlib.sha256(worker.read_bytes()).hexdigest() != expected:
+            component = json.loads(manifest.read_text(encoding="utf-8"))["identity"]["components"]["videotext"]
+            expected = component["worker_sha256"]
+            if (component.get("commit_sha") != "2e098d1705b6815628bee1e023f4742718eabf02"
+                    or component.get("srt_service_sha256") != "417017a6a3becc395e88e2554e8d7c2dca51b09de9743e8c5c0cf81ac9ba6205"
+                    or not isinstance(expected, str)
+                    or len(expected) != 64
+                    or not worker.is_file()
+                    or hashlib.sha256(worker.read_bytes()).hexdigest() != expected):
                 raise ValueError("Candidate bundled VideoText runtime differs from pinned bytes")
-        except (OSError, ValueError) as error:
+        except (OSError, ValueError, KeyError, json.JSONDecodeError) as error:
             raise unittest.SkipTest(str(error)) from error
         return
     from integra_core.videotext_subtitles import preflight
