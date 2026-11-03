@@ -136,7 +136,12 @@ def _optional_remote_file(path: str, ref: str) -> tuple[bytes, dict] | None:
         # as "HTTP 404" or as the shorter "Not Found".  Both are the same
         # absent-Proposal result; authentication, transport and other errors
         # remain fail-closed.
-        if 'HTTP 404' in run.stderr or 'Not Found' in run.stderr:
+        try:
+            response_status = json.loads(run.stdout).get('status')
+        except (ValueError, AttributeError):
+            response_status = None
+        if ('HTTP 404' in run.stderr or 'Not Found' in run.stderr
+                or response_status in (404, '404')):
             return None
         raise ValueError('canonical GitHub read failed: ' + endpoint)
     value = json.loads(run.stdout)
