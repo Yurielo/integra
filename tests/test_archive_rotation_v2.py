@@ -76,6 +76,26 @@ class RotationOrderTests(unittest.TestCase):
                 retention._ordered_rotation_rows(original + newer, baseline,
                                                  'a' * 64, {}, 2)
 
+    def test_persisted_order_allows_only_observed_device_drift(self):
+        binding = {'path': '/fixture/legacy', 'candidate_id': 'candidate-legacy',
+                   'bundle_digest': 'b' * 64, 'manifest_digest': 'c' * 64,
+                   'owner_uid': os.getuid(), 'device': 2, 'inode': 10,
+                   'birthtime': 100.0,
+                   'order_provenance': {'timestamp': 100.0,
+                                        'source': 'APFS_DIRECTORY_BIRTHTIME_OBSERVED_NOW',
+                                        'recorded_value': 100.0}}
+        row = {'path': binding['path'], 'candidate_id': binding['candidate_id'],
+               'capacity_rotation_order': binding['order_provenance'], 'binding': binding}
+        baseline = {'schema_version': '2.0', 'policy_sha256': 'a' * 64,
+                    'entries': [{**binding, 'device': 1, 'ordinal': 0}]}
+        with patch.object(retention, '_rotation_binding', side_effect=lambda item: item['binding']):
+            ordered = retention._ordered_rotation_rows([row], baseline, 'a' * 64, {}, 1)
+            self.assertEqual(ordered, [row])
+            changed_inode = {**binding, 'inode': 11}
+            with self.assertRaisesRegex(ValueError, 'identity or birthtime changed'):
+                retention._ordered_rotation_rows(
+                    [{**row, 'binding': changed_inode}], baseline, 'a' * 64, {}, 1)
+
 
 @unittest.skipUnless(hasattr(Path.home().stat(), 'st_birthtime'), 'APFS birthtime integration needs macOS')
 class LegacyRotationTests(unittest.TestCase):
@@ -355,7 +375,7 @@ class LegacyRotationTests(unittest.TestCase):
                         'promotion_contract_integration_ref': 'fixture',
                         'deletion_enabled': True,
                         'managed_roots': ['Candidate Builds'],
-                        'selected_survivors': {identity['candidate_id']: relative}}
+                        'selected_survivors': {}}
             registry_path.write_text(json.dumps(registry))
             proposal = {204: {'candidate': {'candidate_id': identity['candidate_id']}}}
 
@@ -368,8 +388,7 @@ class LegacyRotationTests(unittest.TestCase):
                 return {'authority_state': 'COMPLETE', 'blockers': [],
                         'canonical': canonical, 'full_copies': 1,
                         'entries': synthetic_scan(), 'rotated_unavailable': {},
-                        'protected_identities': {
-                            identity['candidate_id']: {'identity': identity}}}
+                        'protected_identities': {}}
 
             original_publish = archive._publish
 
@@ -383,8 +402,7 @@ class LegacyRotationTests(unittest.TestCase):
                     patch.object(protection, 'scan_local', side_effect=synthetic_scan), \
                     patch.object(protection, 'resolve', side_effect=synthetic_resolve), \
                     patch.object(protection, '_accepted_historical_gaps', return_value=set()), \
-                    patch.object(protection, '_validate_registry', return_value={
-                        identity['candidate_id']: {'identity': identity}}), \
+                    patch.object(protection, '_validate_registry', return_value={}), \
                     patch.object(retention, '_context_valid', side_effect=lambda *args, **kwargs: legacy.exists()), \
                     patch.object(retention, '_inactive', return_value=True), \
                     patch.object(retention, 'MAX_COPIES', 1):

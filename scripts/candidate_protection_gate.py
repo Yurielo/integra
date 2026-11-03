@@ -353,7 +353,10 @@ def require_capacity_rotation(path: Path, *, purpose: str = 'CAPACITY') -> dict:
             policy['max_full_copies'])
         ordered = retention._ordered_rotation_rows(
             ordered, initial_order, policy['sha256'], {}, policy['max_full_copies'])
-    first = ordered[0]
+    protected_paths = {path for path in registry['selected_survivors'].values() if path is not None}
+    first = next((row for row in ordered if row['path'] not in protected_paths), None)
+    if first is None:
+        raise ValueError('capacity rotation has no unprotected physical copy')
     if first['path'] != relative:
         raise ValueError('rotation target is not the oldest physical copy')
     row = first
