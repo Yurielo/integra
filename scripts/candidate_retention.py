@@ -390,10 +390,22 @@ def _ordered_rotation_rows(rows, baseline, policy_sha256, retired_paths, expecte
         if path in retired_paths and not any(
                 all(receipt.get(key) == saved[key] for key in
                     ('candidate_id', 'bundle_digest', 'manifest_digest'))
-                and (receipt.get('observed_device'), receipt.get('observed_inode'),
+                # Device number may change when APFS exposes an unchanged
+                # directory through another volume.  Preserve the original
+                # order record and accept only an explicitly journaled
+                # observation that binds the changed device to the same
+                # inode, birthtime and ordering evidence.
+                and (receipt.get('observed_device') == saved['device']
+                     or receipt.get('canonical_snapshot', {}).get('device')
+                        == receipt.get('observed_device'))
+                and (receipt.get('observed_inode'),
                      receipt.get('canonical_snapshot', {}).get('birthtime'),
-                     receipt.get('order_provenance')) ==
-                    (saved['device'], saved['inode'], saved['birthtime'],
+                     # Earlier completed rotation receipts called this exact
+                     # immutable field ``order``.  Accept that spelling only
+                     # as the same complete identity tuple; never infer an
+                     # ordering value for a legacy receipt.
+                     receipt.get('order_provenance', receipt.get('order'))) ==
+                    (saved['inode'], saved['birthtime'],
                      saved['order_provenance'])
                 for receipt in retired_paths[path]):
             raise ValueError('retirement receipt does not bind original initial incarnation')
