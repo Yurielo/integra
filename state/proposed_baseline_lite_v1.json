@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "integra.proposed_product_baseline",
+  "proposal_id": "proposal-issue-317-local-semantic-review-v1",
+  "status": "PROPOSED_BASELINE_VALID",
+  "base_current_id": "current-v2-1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434",
+  "base_main": {
+    "commit_sha": "989e15dfb2b5e20e4c628e4e44ac7baee63b1cc6",
+    "tree_sha": "310dca953426494e6433dd3c9948271cc2348351"
+  },
+  "proposed_source": {
+    "commit_sha": "5c6e31465572950dcb4a6ad630627d3b5c159d32",
+    "tree_sha": "253487bba4d9edaae49951a100843590ac51302c"
+  },
+  "proposed_head": {
+    "commit_sha": "c4e3515f1f0297386b5ca739e0d21858af9e70a3",
+    "tree_sha": "7135dded6bb7a70816ff10928c9d39a21d3fc989"
+  },
+  "intended_scope": {
+    "wp": "GitHub Issue #317 / LOCAL_SEMANTIC_REVIEW_GUI_V1",
+    "journey": "Local Semantic Review: человек читает доказательство, выбирает явное решение, при необходимости исправляет только разрешённые поля и подтверждает неизменяемую запись решения."
+  },
+  "candidate": {
+    "candidate_id": "candidate-v1-46bacd60f3f9320aafae735575e07c20666e7eaa8fdb7ed6a68223b5a558fd6f",
+    "identity_sha256": "46bacd60f3f9320aafae735575e07c20666e7eaa8fdb7ed6a68223b5a558fd6f",
+    "bundle_digest": "1df9cfead00e90f37e4e824cc786d3227377b19b4b24765d4bdced0d312a6bc6",
+    "manifest_digest": "18000ea07734126cdbef5d472ba1ef87056a1f0bb01de737d099c399cd6fd11b"
+  },
+  "delta": [
+    {"path": "integra_core/candidate_identity.py", "before_sha256": "d76076250ee4135bfd546450009416e7bad900c135db708854cf815c482a0eea", "after_sha256": "91ac000f951e8165913961a73af6582f07b79d75219feb3409879b506facb890"},
+    {"path": "integra_core/semantic_review_runtime.py", "before_sha256": null, "after_sha256": "c864adb2791ac1e1c3c15d8eb32b4a39e6dd5eea7a2736d400ac7b01bd2ef751"},
+    {"path": "macos/IntegraApp.swift", "before_sha256": "7c0976c3cf1d6b615150a3c0df5c66175c55faaaabdcea93dff750814b6dc0de", "after_sha256": "4646a5816fc67c8f3681410524d46dfeb3c54deb2938f3bd492a3016abeff33f"},
+    {"path": "macos/Resources/bridge.py", "before_sha256": "0ecc20d4f38db43ec6519abd26c7983a7ce97932c4484250b36827e10efa8528", "after_sha256": "dbbb386aa36892ff3e6dd90675d60ef89944c1a2556812e4f2285340d6855b60"},
+    {"path": "scripts/build_macos_app.sh", "before_sha256": "c2fc0ad755c84a4067b65df39267b86d72e547a5683988db8f674b3d402d2a78", "after_sha256": "4f261b78f9ebe2171382d65c758c511dab58300462b9d4095215d8eb61b5bfb4"},
+    {"path": "scripts/candidate_manifest.py", "before_sha256": "ccaeb550aa1653aed47eac450310ae2e4bb9ec60f519d4ae359fb10e652f2d85", "after_sha256": "20b71fd4e004a4a74ece3475023c2f55b47391426d030e6d4153e0a87bf59267"},
+    {"path": "scripts/test_macos_app.sh", "before_sha256": "bded70e8c256344412c1ae2818e1f8fd4a1d12fd4bbcaba219b5cd0a416c552c", "after_sha256": "e498e603197087efbdb1ae50cabaad33ea569fac31b3c8170c30cbf1d0513a5c"},
+    {"path": "tests/test_macos_app.py", "before_sha256": "4519d9ff2e9d7d1f10165e45de288f921c4596f093b047a66e7473879d2372b9", "after_sha256": "c2027453dbd289a8aa2368596a738b2600ea6db03b82e21b46663e9755c3ed58"}
+  ],
+  "historical_test_successors": [],
+  "gates": [
+    {"name": "Candidate archive byte integrity", "result": "PASS", "evidence_ref": "docs/evidence/issue317/automated-gates.json"},
+    {"name": "Candidate protection audit", "result": "PASS", "evidence_ref": "docs/evidence/issue317/automated-gates.json"},
+    {"name": "Archive rotation and deletion safety", "result": "PASS", "evidence_ref": "docs/evidence/issue317/automated-gates.json"},
+    {"name": "Native macOS Semantic Review and component runtime suite", "result": "PASS", "evidence_ref": "docs/evidence/issue317/automated-gates.json"},
+    {"name": "Ready app package", "result": "PASS", "evidence_ref": "docs/evidence/issue317/automated-gates.json"}
+  ],
+  "evidence": {
+    "candidate_manifest": {"path": "docs/evidence/issue317/candidate-manifest.json", "sha256": "18000ea07734126cdbef5d472ba1ef87056a1f0bb01de737d099c399cd6fd11b"},
+    "candidate_evidence": {"path": "docs/evidence/issue317/candidate-evidence.json", "sha256": "a3a39c958c6b284af531d65348fae0dd355bcc398570469591b4b3d938bc7ec5"},
+    "report": {"path": "docs/ISSUE_317_SEMANTIC_REVIEW_CANDIDATE.md", "sha256": "86e8e8f80116171af73a1be96b26256e7669dd611d1eca10ff6f64b7596dd4f0"}
+  },
+  "owner_acceptance": null,
+  "allowed_overlay_paths": [
+    "docs/ISSUE_317_SEMANTIC_REVIEW_CANDIDATE.md",
+    "docs/evidence/issue317/automated-gates.json",
+    "docs/evidence/issue317/candidate-evidence.json",
+    "docs/evidence/issue317/candidate-manifest.json"
+  ]
+}
