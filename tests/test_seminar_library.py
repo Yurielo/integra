@@ -101,6 +101,13 @@ class SeminarLibraryTests(unittest.TestCase):
         stale=build([specs[2]])
         self.assertEqual(stale["summary"]["unsupported_manifests"],1)
 
+    def test_manifest_parent_symlink_is_rejected(self):
+        specs = self.fixtures()
+        alias = self.root / "manifest-alias"
+        alias.symlink_to(specs[0][1].parent, target_is_directory=True)
+        with self.assertRaisesRegex(ValueError, "manifest path is unsafe"):
+            build([("seminartext", alias / "sources.json")])
+
     def test_duplicate_content_candidate_is_never_merged(self):
         specs=self.fixtures()
         bt=specs[2][1]

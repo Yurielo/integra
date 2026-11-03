@@ -1,0 +1,14 @@
+{
+  "archive_path": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-9a009cecd86aeb72550e7ecdbf820a3d7683a7ccf830c20143a3f04c0c976144/3b20a60744a8a20ff856778df0e1ea250da735a49ae6ec35f3b02cdf6ad9f5fe",
+  "archive_verification": "ARCHIVAL_BYTE_INTEGRITY",
+  "artifact_type": "integra.candidate_evidence",
+  "bundle_digest": "3b20a60744a8a20ff856778df0e1ea250da735a49ae6ec35f3b02cdf6ad9f5fe",
+  "candidate_id": "candidate-v1-9a009cecd86aeb72550e7ecdbf820a3d7683a7ccf830c20143a3f04c0c976144",
+  "manifest_identity_sha256": "9a009cecd86aeb72550e7ecdbf820a3d7683a7ccf830c20143a3f04c0c976144",
+  "native_test": "PASS",
+  "owner_acceptance": null,
+  "product_source": {
+    "commit_sha": "827f1531374ab38c73612ccafe84515a716fac88",
+    "tree_sha": "869d979b7f0ff0b2ea4d8412b5271b8d335adfda"
+  }
+}

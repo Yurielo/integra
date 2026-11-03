@@ -58,6 +58,11 @@ INTEGRA_APP_DATA_ROOT="$test_root/app-data" INTEGRA_CLOSE_PROBE="$close_marker" 
 grep -q '^TERMINATED_AFTER_LAST_WINDOW_CLOSED$' "$close_marker"
 echo "INTEGRA_MACOS_CLOSE_TEST: PASS"
 
+test -f "$app/Contents/Resources/scripts/seminar_library_preview.py"
+cmp "$repo_root/schemas/seminar_library_preview_v1.schema.json" "$app/Contents/Resources/schemas/seminar_library_preview_v1.schema.json"
+echo "INTEGRA_BUNDLED_SEMINAR_LIBRARY_RESOURCES: PASS"
+INTEGRA_CANDIDATE_APP="$app" python3 "$repo_root/tests/native_seminar_library_probe.py" "$app" "$test_root/native-seminar-library"
+
 INTEGRA_CANDIDATE_APP="$app" python3 "$repo_root/tests/native_workflow_probe.py" "$app" "$test_root/native-workflow"
 INTEGRA_CANDIDATE_APP="$app" python3 "$repo_root/tests/native_shutdown_probe.py" "$app" "$test_root/native-shutdown"
 INTEGRA_CANDIDATE_APP="$app" python3 "$repo_root/tests/native_asr_retry_probe.py" "$app" "$test_root/native-asr-retry"

@@ -1,0 +1,30 @@
+{
+  "archive_kind": "UNARCHIVED_CANDIDATE_BUILD",
+  "artifact_type": "integra.candidate_physical_retirement",
+  "bundle_digest": "ab53369d4d46fc8a4dece0b8e0f777f5017731b2256ff34ecb27738a849d8c94",
+  "candidate_id": "candidate-v1-14b3c10e4d779ff8b5a520bf15e2b7087673aec2cd0abd25aac4e1d0ded77892",
+  "execution_result": "PASS",
+  "full_catalog_record_location": "~/Library/Application Support/Integra/Retention/catalog-501.json:retirements",
+  "full_catalog_record_sha256": "5d681375a0b8d4f8f3ef5e30ad49969d0a1488d671b7645c30b6b08610e61228",
+  "manifest_digest": "55eb3562826006ca90be7f698877bfd709882eabe6605e1b12431b3f3cc791fb",
+  "observed_at": "2026-10-29T11:02:49.901679+00:00",
+  "order_provenance": {
+    "recorded_value": 1790583194.454213,
+    "source": "APFS_DIRECTORY_BIRTHTIME_OBSERVED_NOW",
+    "timestamp": 1790583194.454213
+  },
+  "physical_available": false,
+  "policy_authority_ref": "Product Owner direct instruction, 2026-10-29, Integra archive rotation task",
+  "policy_sha256": "3d6e3fe82962db9d90d8f864652634afe6594818a2f75295d484b72e3beaa6a0",
+  "reason": "OWNER_POLICY_CAPACITY_ROTATION",
+  "state": "RETIRED_NOT_AVAILABLE",
+  "transaction_id": "rotation-v2-3456cb579bb04874b4c023c1da0fbb4f",
+  "verification_evidence": {
+    "app_bundle_digest": "ab53369d4d46fc8a4dece0b8e0f777f5017731b2256ff34ecb27738a849d8c94",
+    "inventory_entries": 32448,
+    "inventory_sha256": "f97971ee678b2a73fdc1ff37f59599799fe9f18f0832286d143c8eea723f43db",
+    "manifest_digest": "55eb3562826006ca90be7f698877bfd709882eabe6605e1b12431b3f3cc791fb",
+    "method": "OBSERVED_NOW_FULL_APP_AND_PACKAGE_INVENTORY",
+    "rotation_inventory_sha256": "f97971ee678b2a73fdc1ff37f59599799fe9f18f0832286d143c8eea723f43db"
+  }
+}

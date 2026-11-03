@@ -1,0 +1,210 @@
+{
+  "artifact_type": "integra.issue312_preserved_bytecode",
+  "extra_entries": [
+    {
+      "mode": 493,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__",
+      "type": "directory"
+    },
+    {
+      "mode": 420,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/__init__.cpython-313.pyc",
+      "sha256": "27ede3159340d28173092c43c8728582db047cbf4711b836e6393613df1e3869",
+      "size": 2886,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_cmp.cpython-313.pyc",
+      "sha256": "f9fe0455453668b2c240a0ed3ecd608a050811d09a0a0b22f4588e3b418ce32f",
+      "size": 5208,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_compat.cpython-313.pyc",
+      "sha256": "599cd0d01cbf0d0427422810dc105099413f39237740e387dc22a96f1272ea32",
+      "size": 3895,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_config.cpython-313.pyc",
+      "sha256": "4927e3ec350884f933192f5876ad906161ae6afb320b4141d36168e44f212d42",
+      "size": 1301,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_funcs.cpython-313.pyc",
+      "sha256": "34c1033e3fbc105af7cc861f60735c81d1435bc7fea5e09450a64832da457a6a",
+      "size": 13956,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_make.cpython-313.pyc",
+      "sha256": "526e5c33d7ca95d12ce0e5ef567ab4f3531b168a9557c9c55f449d723b5e15fb",
+      "size": 108852,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_next_gen.cpython-313.pyc",
+      "sha256": "49b1d48b2c66645187f1a4f7cfa69ebed72e311b937b94651082f63d808f54e3",
+      "size": 25065,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/_version_info.cpython-313.pyc",
+      "sha256": "e0832549eef99ee4050b19522a07f7502be3a85c421faa00c9e9a4245beb6c00",
+      "size": 3558,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/converters.cpython-313.pyc",
+      "sha256": "f434804a7cbd20480d8957250cf2f925dd0e69430303adf50b8defa23afd3a2e",
+      "size": 4688,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/exceptions.cpython-313.pyc",
+      "sha256": "b87bfa7b617e0fc4739e5c14f52793e424540bec9278f460a88e59c4dd3c44f7",
+      "size": 3992,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/filters.cpython-313.pyc",
+      "sha256": "ef2adbd8fd8f15bae9210ed91dbcb327ad750fe181500747338ba1f32b4277b1",
+      "size": 3195,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/setters.cpython-313.pyc",
+      "sha256": "d52fd4a5d43588ecf6c2ef0b3af10eba5d021c301e73d3a7370097ceefc4acb6",
+      "size": 2101,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/attr/__pycache__/validators.cpython-313.pyc",
+      "sha256": "5bddd6dd67602f6412e3515579d197d994828c20e52701687561a11b41efc92a",
+      "size": 27478,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__",
+      "type": "directory"
+    },
+    {
+      "mode": 420,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/__init__.cpython-313.pyc",
+      "sha256": "fd73640f7309c5ef74641ddc67eb7db87acce4cf3801c6a772689329ddf44ed9",
+      "size": 1429,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/converters.cpython-313.pyc",
+      "sha256": "bcd7082833b784aca9dd4568797fee61b49af1ebd283e470567acbfe5d7da03d",
+      "size": 437,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/exceptions.cpython-313.pyc",
+      "sha256": "1f5830f9c48e13366e686c0416ad4c70d95361ef2472b069e0875be38567f954",
+      "size": 437,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/filters.cpython-313.pyc",
+      "sha256": "3586a4ea89454c58c133cc218892918992d3c569f8884518cfbc6ca303a3a1f9",
+      "size": 431,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/setters.cpython-313.pyc",
+      "sha256": "c99c012824d840604ddf95da5e216905697da1f50ef71bd17906d3bcbee3279e",
+      "size": 431,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/attrs/__pycache__/validators.cpython-313.pyc",
+      "sha256": "cd4c67a9379e67727d7ec4b20cf2be77bf4174db72d73cc53e80600b2fb353c2",
+      "size": 437,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__",
+      "type": "directory"
+    },
+    {
+      "mode": 420,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/__init__.cpython-313.pyc",
+      "sha256": "f34aeaf0a69b14bdf733de11c089b6c3a25de42614a4fddd36b4bee759499eb7",
+      "size": 3982,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/_format.cpython-313.pyc",
+      "sha256": "a62b380a9f1cd9fc5ba3f3b9c5da4bfacc48af8ec12f297ce0909d47116f06df",
+      "size": 18833,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/jsonschema/__pycache__/exceptions.cpython-313.pyc",
+      "sha256": "cf84fd2263e2be4e668124c6ddd6f7241eedd1d31d332e03a2c413f20082030f",
+      "size": 21949,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__",
+      "type": "directory"
+    },
+    {
+      "mode": 420,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__/__init__.cpython-313.pyc",
+      "sha256": "61ffdad9582e03a4bb90b069f6ca1e2982c0aaf328f96a6f61f118d9dacff556",
+      "size": 627,
+      "type": "file"
+    },
+    {
+      "mode": 420,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/referencing/__pycache__/_core.cpython-313.pyc",
+      "sha256": "cb637c63736e088a552ceac9ce815babbaaa9d79cfa983a024eb6e773fa8e2d8",
+      "size": 29520,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/rpds/__pycache__",
+      "type": "directory"
+    },
+    {
+      "mode": 420,
+      "path": "Integra.app/Contents/Resources/runtime/review-python/site-packages/rpds/__pycache__/__init__.cpython-313.pyc",
+      "sha256": "74a5997c0dfe08403371ed37098fdb83381d8473fea04de4402bc45dd33badb5",
+      "size": 567,
+      "type": "file"
+    }
+  ],
+  "inventory_sha256": "7f21559a79e644ddcd23417344a5b000fd1f9c79fd5c33827bb6ff06a318607d",
+  "owner_authorization_ref": "Direct Product Owner authorization for Integra Issue #312, 2026-10-29",
+  "preserved_at_utc": "2026-10-29T10:54:11.735536+00:00",
+  "proof_sha256": "788ff056966572da4b90960ffd695f816f7bab295f12f799c810c588ece391f9",
+  "source_archive": "/Users/yurielokhin/Library/Application Support/Integra/Build Archive/candidate-v1-073396d37f3f70fe2a550a481cbacdb645204a188d8b4a6c1ad18cdfac77e4a8/c157e30deac94a14a0ae253d71c599ba5fe42d172f796b9a952d92cd21670b15"
+}
