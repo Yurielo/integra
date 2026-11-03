@@ -65,7 +65,7 @@ seminartext_evidence_validator_sha256="889e6cdf3dc2dd7504f76923c04e2d8d1eceabdb8
 # Semantic review is a separately pinned provider closure.  Keeping this
 # outside runtime/seminartext preserves the active ASR runtime identity.
 semantic_review_checkout="${INTEGRA_SEMANTIC_REVIEW_BUILD_CHECKOUT:-$repo_root/.runtime-components/seminartext-semantic}"
-semantic_review_commit="4bebaede4a190eb9ebd49d52de5ef370b7dcd36e"
+semantic_review_commit="ba4dc987b8fe48303ea4343a93e7b24c7eaf43ce"
 semantic_review_workflow="$semantic_review_checkout/seminartext_modules/semantic_workflow.py"
 semantic_review_workflow_sha256="f4280f30a2290a11a95e496a69a24b62a67d44799bf960536fdfe48da56e12c4"
 alignment_packages="${INTEGRA_WORD_ALIGNMENT_SITE_PACKAGES:-$repo_root/.runtime-word-alignment/lib/python3.13/site-packages}"

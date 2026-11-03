@@ -121,7 +121,7 @@ class MacOSApplicationTests(unittest.TestCase):
         unknown = subprocess.run(["python3", str(bridge), "publish"], capture_output=True, text=True)
         self.assertNotEqual(unknown.returncode, 0)
         for operation in ("obsidian-preview", "onedrive-preview"):
-            result = subprocess.run(["python3", str(bridge), operation], check=True, capture_output=True, text=True)
+            result = subprocess.run(["python3", str(bridge), operation], input="", check=True, capture_output=True, text=True, timeout=10)
             payload = json.loads(result.stdout)
             self.assertFalse(payload["writes_performed"]); self.assertFalse(payload["external_actions_performed"])
             self.assertFalse(payload["cloud_verified"])
