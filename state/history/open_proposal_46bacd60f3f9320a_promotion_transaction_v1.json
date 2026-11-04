@@ -1,0 +1,36 @@
+{
+  "artifact_type": "integra.open_proposal_promotion_transaction",
+  "inputs": {
+    "archive_inventory_sha256": "30255e9fdc253df11f4bfaba3159e7f34cd93afbdf17e40f9512bd68ef03548d",
+    "authorization": "PROMOTE_CURRENT proposal-issue-317-local-semantic-review-v1 candidate-v1-46bacd60f3f9320aafae735575e07c20666e7eaa8fdb7ed6a68223b5a558fd6f",
+    "base": "a29153bb60ee78131533107f9a8e70c34ca48282",
+    "candidate": {
+      "bundle_digest": "1df9cfead00e90f37e4e824cc786d3227377b19b4b24765d4bdced0d312a6bc6",
+      "candidate_id": "candidate-v1-46bacd60f3f9320aafae735575e07c20666e7eaa8fdb7ed6a68223b5a558fd6f",
+      "manifest_digest": "18000ea07734126cdbef5d472ba1ef87056a1f0bb01de737d099c399cd6fd11b"
+    },
+    "head": "c97c6476e1b7d466e9463a964daa64209b25c355",
+    "outgoing_current_id": "current-v2-1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434",
+    "pr": 321,
+    "proposal_id": "proposal-issue-317-local-semantic-review-v1",
+    "proposal_sha256": "e1f77abb6436ebd2c2d5514082dab1d507644caecf75cb8b113715f80fa47708"
+  },
+  "result": {
+    "current_id": "current-v2-46bacd60f3f9320aafae735575e07c20666e7eaa8fdb7ed6a68223b5a558fd6f",
+    "files": {
+      "state/candidate_protection_registry_v1.json": "9f281dcb842b6fec052aaa3fe861c0cb96cb8f27171a01f81f8b45ce8e5d1013",
+      "state/current_product_baseline_v2.json": "253b6b2a579b48898e285ccc482be3f9222e137fb52da30e507d6b36aaabf3e0",
+      "state/history/open_proposal_46bacd60f3f9320a_accepted_proposal_lite_v1.json": "e1f77abb6436ebd2c2d5514082dab1d507644caecf75cb8b113715f80fa47708",
+      "state/history/open_proposal_46bacd60f3f9320a_outgoing_current_v2.json": "d4529c393fbeaa9e340cebb8c24b685e674422b68880d326244e2c2068af49a4",
+      "state/history/open_proposal_46bacd60f3f9320a_outgoing_protection_registry_v1.json": "2046395f3040e5d966387eb3d0654b0bef4a09d9dd3fe03480cf87e1351cf543",
+      "state/proposed_baseline_lite_v1.json": null
+    }
+  },
+  "schema_version": "1.0",
+  "semantics": {
+    "post": "CURRENT_PROTECTED_PROPOSAL_CONSUMED",
+    "pre": "OPEN_PROPOSAL_PROTECTED",
+    "retry": "EXACT_ALREADY_APPLIED_ONLY"
+  },
+  "transaction_id": "open-proposal-v1-d92698e6cb3c01a6d314ce3f32d10cbbdfa0b8e3f1311dad2e812c1a95de212f"
+}

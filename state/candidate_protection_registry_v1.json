@@ -15,12 +15,12 @@
   "artifact_type": "integra.candidate_protection_registry",
   "bootstrap_authorization_ref": "https://github.com/Yurielo/integra/issues/214#issuecomment-5951189263",
   "canonical_current": {
-    "bundle_digest": "0147f1a0ff7d740fd4f66847da906f6dd821833e5f1419b18e63d2bd07f74edc",
-    "candidate_id": "candidate-v1-1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434",
-    "current_id": "current-v2-1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434",
-    "manifest_digest": "708e8482fdf18f451cfefe242ea17e75c66f3b52792405c340568a35677a6753",
+    "bundle_digest": "1df9cfead00e90f37e4e824cc786d3227377b19b4b24765d4bdced0d312a6bc6",
+    "candidate_id": "candidate-v1-46bacd60f3f9320aafae735575e07c20666e7eaa8fdb7ed6a68223b5a558fd6f",
+    "current_id": "current-v2-46bacd60f3f9320aafae735575e07c20666e7eaa8fdb7ed6a68223b5a558fd6f",
+    "manifest_digest": "18000ea07734126cdbef5d472ba1ef87056a1f0bb01de737d099c399cd6fd11b",
     "path": "state/current_product_baseline_v2.json",
-    "sha256": "d4529c393fbeaa9e340cebb8c24b685e674422b68880d326244e2c2068af49a4"
+    "sha256": "253b6b2a579b48898e285ccc482be3f9222e137fb52da30e507d6b36aaabf3e0"
   },
   "decision_authority_ref": "https://github.com/Yurielo/integra/issues/214#issuecomment-5951189263",
   "decision_token_sha256": "c0fbc7699ae3caa6ea56a59987410977515881043f2ce2fd9b4f39382cc132f8",
@@ -62,7 +62,7 @@
     }
   ],
   "issue_ref": "https://github.com/Yurielo/integra/issues/214",
-  "latest_accepted_candidate_id": "candidate-v1-1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434",
+  "latest_accepted_candidate_id": "candidate-v1-46bacd60f3f9320aafae735575e07c20666e7eaa8fdb7ed6a68223b5a558fd6f",
   "limits": {
     "max_attributed_bytes": 21474836480,
     "max_full_copies": 8,
@@ -144,16 +144,16 @@
     "state": "NO_VERIFIED_ARCHIVE_ACCEPTED_HISTORICAL_GAP"
   },
   "rollback": {
-    "bundle_digest": "e3215a28c9ce0a1a54c35dc535bad42a9334cae7ddc5eb3b0533a480e0296d95",
-    "candidate_id": "candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f",
-    "confirmation_ref": "state/history/open_proposal_1b29ea21cb9dbab3_promotion_transaction_v1.json",
-    "manifest_digest": "aa581c025edfc09cb7e2c59bf7d1ee98c78a5c17bc3d670e33b0fa351ce6b3e6"
+    "bundle_digest": "0147f1a0ff7d740fd4f66847da906f6dd821833e5f1419b18e63d2bd07f74edc",
+    "candidate_id": "candidate-v1-1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434",
+    "confirmation_ref": "state/history/open_proposal_46bacd60f3f9320a_promotion_transaction_v1.json",
+    "manifest_digest": "708e8482fdf18f451cfefe242ea17e75c66f3b52792405c340568a35677a6753"
   },
   "schema_version": "1.0",
   "selected_survivors": {
     "candidate-v1-14b3c10e4d779ff8b5a520bf15e2b7087673aec2cd0abd25aac4e1d0ded77892": null,
     "candidate-v1-1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434": "Build Archive/candidate-v1-1b29ea21cb9dbab3c423b5770f6f2eb972bb6dcdfbbb694b7a19a0c9db9fc434/0147f1a0ff7d740fd4f66847da906f6dd821833e5f1419b18e63d2bd07f74edc",
-    "candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f": "Build Archive/candidate-v1-675acf457d65e7633481bcea700036b7e9ef6298e0c6d6eb097e513d3bff249f/e3215a28c9ce0a1a54c35dc535bad42a9334cae7ddc5eb3b0533a480e0296d95",
+    "candidate-v1-46bacd60f3f9320aafae735575e07c20666e7eaa8fdb7ed6a68223b5a558fd6f": "Build Archive/candidate-v1-46bacd60f3f9320aafae735575e07c20666e7eaa8fdb7ed6a68223b5a558fd6f/1df9cfead00e90f37e4e824cc786d3227377b19b4b24765d4bdced0d312a6bc6",
     "candidate-v1-7a254e707443a278606ffa956cc76e8374f5c20115077351e093230547f8bd62": null,
     "candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29": "Validation/integra-212-native-35e6f9101278/candidate-v1-82ba92224a7dcdc0f1738155ba2e3f73dbdfc529ce2a8ffc461be73fa1351f29/fedc5481c20a8829f92fd6f6579e53197b1495bd960c238efe9fdd14c2cb5582",
     "candidate-v1-9a009cecd86aeb72550e7ecdbf820a3d7683a7ccf830c20143a3f04c0c976144": "Build Archive/candidate-v1-9a009cecd86aeb72550e7ecdbf820a3d7683a7ccf830c20143a3f04c0c976144/3b20a60744a8a20ff856778df0e1ea250da735a49ae6ec35f3b02cdf6ad9f5fe",
