@@ -67,7 +67,8 @@ def _paths(proposal: dict) -> dict:
     }
 
 
-def _virtual_pre_registry(registry: dict, proposal: dict, pr: int, head: str) -> dict:
+def _virtual_pre_registry(registry: dict, proposal: dict, pr: int, head: str,
+                          proposal_sha256: str | None = None) -> dict:
     result = copy.deepcopy(registry)
     candidate = _identity(proposal["candidate"])
     reference = {"pr": pr, "head_sha": head, **candidate}
@@ -78,7 +79,7 @@ def _virtual_pre_registry(registry: dict, proposal: dict, pr: int, head: str) ->
         # binding as the required pre-state protection; reject every partial or
         # conflicting registration instead of replacing it with a synthetic row.
         expected = {"path": PROPOSAL, "pr": pr, "proposal_id": proposal["proposal_id"],
-                    "proposal_sha256": digest(proposal), **candidate}
+                    "proposal_sha256": proposal_sha256 or digest(proposal), **candidate}
         if len(registered) != 1 or any(registered[0].get(key) != value
                                        for key, value in expected.items()):
             raise ValueError("registered promotion Proposal binding differs from exact target")
@@ -102,7 +103,8 @@ def preflight(root: Path, *, pr: int, expected_head: str, expected_base: str,
             or remote_pr.get("base", {}).get("sha") != expected_base):
         raise ValueError("promotion PR head/base/state differs from external preflight")
     proposal = proposals.get(pr)
-    if proposal is None or json.loads(_blob(root, expected_head, PROPOSAL)) != proposal:
+    proposal_raw = _blob(root, expected_head, PROPOSAL)
+    if proposal is None or json.loads(proposal_raw) != proposal:
         raise ValueError("exact open Proposal is unavailable or differs")
     _authority(authorization, proposal)
     errors = (baseline.validate_current(current, root, proposal)
@@ -112,7 +114,8 @@ def preflight(root: Path, *, pr: int, expected_head: str, expected_base: str,
     if errors:
         raise ValueError("; ".join(errors))
     base = Path.home() / "Library/Application Support/Integra"
-    virtual = _virtual_pre_registry(registry, proposal, pr, expected_head)
+    virtual = _virtual_pre_registry(registry, proposal, pr, expected_head,
+                                    protection.sha(proposal_raw))
     virtual['selected_survivors'] = protection.reconcile_survivors(
         virtual, current, proposals, canonical, incoming=proposal['candidate'])
     packages = protection.scan_local(virtual, base)

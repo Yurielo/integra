@@ -46,6 +46,15 @@ class OpenProposalTransactionTests(unittest.TestCase):
         self.assertEqual(len([row for row in virtual["proposed"] if row["pr"] == 22]), 1)
         self.assertEqual(virtual["proposed"][-1]["proposal_sha256"], tx.digest(self.proposal))
 
+    def test_04a_registered_target_uses_immutable_file_digest_when_supplied(self):
+        file_digest = "9" * 64
+        self.registry["proposed"].append({"pr": 22, "path": tx.PROPOSAL,
+                                           "proposal_id": self.proposal["proposal_id"],
+                                           "proposal_sha256": file_digest, **self.target})
+        virtual = tx._virtual_pre_registry(self.registry, self.proposal, 22, "6" * 40,
+                                            proposal_sha256=file_digest)
+        self.assertEqual(virtual["proposed"][-1]["proposal_sha256"], file_digest)
+
     def test_04b_partial_registered_target_is_rejected(self):
         self.registry["proposed"].append({"pr": 22, "head_sha": "6" * 40, **self.target})
         with self.assertRaisesRegex(ValueError, "binding differs"):
