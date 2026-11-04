@@ -142,7 +142,7 @@
       "path": "state/proposed_baseline_lite_v1.json",
       "pr": 321,
       "proposal_id": "proposal-issue-317-local-semantic-review-v1",
-      "proposal_sha256": "ce5ee35291ddefaa08e3f636d3d050b637c103e925c3ebfd2fecb4fa01cbb405"
+      "proposal_sha256": "e1f77abb6436ebd2c2d5514082dab1d507644caecf75cb8b113715f80fa47708"
     }
   ],
   "recovery": null,
