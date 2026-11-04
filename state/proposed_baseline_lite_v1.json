@@ -49,7 +49,12 @@
     "candidate_evidence": {"path": "docs/evidence/issue317/candidate-evidence.json", "sha256": "a3a39c958c6b284af531d65348fae0dd355bcc398570469591b4b3d938bc7ec5"},
     "report": {"path": "docs/ISSUE_317_SEMANTIC_REVIEW_CANDIDATE.md", "sha256": "86e8e8f80116171af73a1be96b26256e7669dd611d1eca10ff6f64b7596dd4f0"}
   },
-  "owner_acceptance": null,
+  "owner_acceptance": {
+    "decision": "PILOT_ACCEPTED",
+    "authority_ref": "Product Owner direct authorization 2026-11-04: PROMOTE_CURRENT proposal-issue-317-local-semantic-review-v1 candidate-v1-46bacd60f3f9320aafae735575e07c20666e7eaa8fdb7ed6a68223b5a558fd6f",
+    "scope": "Semantic Review Candidate functional suitability accepted; usability improvements are deferred and non-blocking.",
+    "promotion_authorized": false
+  },
   "allowed_overlay_paths": [
     "docs/ISSUE_317_SEMANTIC_REVIEW_CANDIDATE.md",
     "docs/evidence/issue317/automated-gates.json",
